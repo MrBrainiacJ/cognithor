@@ -24,7 +24,7 @@ We aim to acknowledge reports within 48 hours and provide a fix within 7 days fo
 
 ## Security Architecture
 
-Cognithor implements defense-in-depth with multiple security layers:
+Cognithor implements defense-in-depth with multiple security layers (supporting Ollama and LM Studio as local backends):
 
 - **Gatekeeper** — Deterministic policy engine (no LLM). Every tool call is validated against security policies with 4 risk levels: GREEN (auto-approve) → YELLOW (inform) → ORANGE (require approval) → RED (block).
 - **Sandbox** — Multi-level execution isolation: Process-level → Linux Namespaces (nsjail) → Docker containers → Windows Job Objects.

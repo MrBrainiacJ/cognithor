@@ -96,7 +96,7 @@ python -m pytest tests/ -x -q
 - **Test method naming:** `test_specific_behavior_under_condition`
 - **Use fixtures** from `conftest.py` (`tmp_jarvis_home`, `config`, etc.)
 - **Mock external services** — tests must run without network access
-- **Target:** maintain 89%+ coverage, 0 test failures
+- **Target:** maintain 87%+ coverage, 0 test failures
 
 ## Review Process
 
