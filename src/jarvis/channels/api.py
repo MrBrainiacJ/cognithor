@@ -27,6 +27,7 @@ from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.rate_limiter import RateLimiter
 from jarvis.security.token_store import get_token_store
 from jarvis.utils.logging import get_logger
+from jarvis.utils.ttl_dict import TTLDict
 
 log = get_logger(__name__)
 
@@ -129,7 +130,7 @@ class APIChannel(Channel):
         self._app: Any = None
         self._server: Any = None
         self._start_time = 0.0
-        self._sessions: dict[str, SessionInfo] = {}
+        self._sessions: TTLDict[str, SessionInfo] = TTLDict(max_size=50000, ttl_seconds=86400)
         self._pending_approvals: dict[str, asyncio.Future[bool]] = {}
         self._serve_task: asyncio.Task[None] | None = None
         self._rate_limiter = RateLimiter()

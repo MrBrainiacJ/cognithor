@@ -62,3 +62,11 @@ from jarvis.core.performance import (  # noqa: F401
     VectorStore,
     LoadBalancer,
 )
+from jarvis.core.distributed_lock import (  # noqa: F401
+    DistributedLock,
+    LockBackend,
+    LocalLockBackend,
+    FileLockBackend,
+    RedisLockBackend,
+    create_lock,
+)

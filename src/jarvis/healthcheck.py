@@ -30,6 +30,7 @@ def health_status(
     memory_stats: dict[str, Any] | None = None,
     models_loaded: list[str] | None = None,
     errors: list[str] | None = None,
+    queue_stats: dict[str, Any] | None = None,
     # Rückwärtskompatibilität
     ollama_available: bool | None = None,
 ) -> dict[str, Any]:
@@ -47,6 +48,7 @@ def health_status(
             "channels": ["cli", "telegram"],
             "memory": {...},
             "models": ["gpt-5.2"],
+            "queue": {...},
             "errors": [],
         }
     """
@@ -77,5 +79,6 @@ def health_status(
         "channels": channels_active or [],
         "memory": memory_stats or {},
         "models": models_loaded or [],
+        "queue": queue_stats or {},
         "errors": error_list,
     }

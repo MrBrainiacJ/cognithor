@@ -197,6 +197,7 @@ class TestExecutorRetry:
     def setup_method(self) -> None:
         """Erstellt Executor mit Mock-MCP-Client."""
         self.config = MagicMock()
+        self.config.executor = None  # Defaults statt MagicMock-Attribute
         self.mcp = MagicMock()
         self.executor = Executor(self.config, self.mcp)
         # Schnelle Tests — kein echtes Warten

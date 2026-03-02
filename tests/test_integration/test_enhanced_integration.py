@@ -97,6 +97,7 @@ class TestExecutorGapDetection:
     @pytest.fixture
     def executor(self, gap_detector: GapDetector) -> Executor:
         config = MagicMock()
+        config.executor = None  # Defaults statt MagicMock-Attribute
         mock_client = AsyncMock()
         exec_ = Executor(config, mcp_client=mock_client, gap_detector=gap_detector)
         return exec_
@@ -161,6 +162,7 @@ class TestExecutorGapDetection:
     async def test_no_gap_detector_no_crash(self) -> None:
         """Executor ohne GapDetector crasht nicht bei Fehlern."""
         config = MagicMock()
+        config.executor = None  # Defaults statt MagicMock-Attribute
         mock_client = AsyncMock()
         mock_client.call_tool = AsyncMock(
             side_effect=PermissionError("Nope"),

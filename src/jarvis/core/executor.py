@@ -102,17 +102,20 @@ class Executor:
         self._task_profiler = task_profiler
         self._task_telemetry = task_telemetry
         self._error_clusterer = error_clusterer
-        self._default_timeout = 30  # Sekunden
+        # Executor-Limits aus Config lesen (mit sicheren Defaults)
+        _exec = getattr(config, "executor", None)
+        self._default_timeout: int = getattr(_exec, "default_timeout_seconds", 30)
+        self._max_retries: int = getattr(_exec, "max_retries", 3)
+        self._base_delay: float = getattr(_exec, "backoff_base_delay_seconds", 1.0)
+        self._max_output: int = getattr(_exec, "max_output_chars", 10000)
         # Längere Timeouts für Tools, die große Modelle laden (z.B. Vision 20 GB+)
         self._tool_timeouts: dict[str, int] = {
-            "media_analyze_image": 180,
-            "media_transcribe_audio": 120,
-            "media_extract_text": 120,
-            "media_tts": 120,
-            "run_python": 120,
+            "media_analyze_image": getattr(_exec, "media_analyze_image_timeout", 180),
+            "media_transcribe_audio": getattr(_exec, "media_transcribe_audio_timeout", 120),
+            "media_extract_text": getattr(_exec, "media_extract_text_timeout", 120),
+            "media_tts": getattr(_exec, "media_tts_timeout", 120),
+            "run_python": getattr(_exec, "run_python_timeout", 120),
         }
-        self._max_retries = 3
-        self._base_delay = 1.0  # Sekunden (exponentiell: 1s, 2s, 4s)
         # Agent context tokens (for contextvar reset)
         self._ctx_tokens: list[contextvars.Token] = []
 
@@ -335,9 +338,8 @@ class Executor:
                 # Output kürzen wenn zu lang
                 content = result.content if hasattr(result, "content") else str(result)
                 truncated = False
-                max_output = 10000  # 10k Zeichen maximal
-                if len(content) > max_output:
-                    content = content[:max_output]
+                if len(content) > self._max_output:
+                    content = content[:self._max_output]
                     truncated = True
 
                 is_error = result.is_error if hasattr(result, "is_error") else False

@@ -28,11 +28,16 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-# Maximale Code-Groesse (1 MB)
-MAX_CODE_SIZE = 1_048_576
+# Maximale Code-Groesse (Default: 1 MB, überschreibbar via config.code.max_code_size)
+_DEFAULT_MAX_CODE_SIZE = 1_048_576
+_DEFAULT_TIMEOUT = 60
+
+# Backward-compatible alias for external imports (tests, etc.)
+MAX_CODE_SIZE = _DEFAULT_MAX_CODE_SIZE
 
 __all__ = [
     "CodeTools",
+    "MAX_CODE_SIZE",
     "register_code_tools",
 ]
 
@@ -49,10 +54,15 @@ class CodeTools:
     def __init__(self, config: "JarvisConfig") -> None:
         self._config = config
 
+        # Limits aus Config lesen (mit sicheren Defaults)
+        _code = getattr(config, "code", None)
+        self._max_code_size: int = getattr(_code, "max_code_size", _DEFAULT_MAX_CODE_SIZE)
+        self._default_timeout: int = getattr(_code, "default_timeout_seconds", _DEFAULT_TIMEOUT)
+
         # Sandbox-Konfiguration (gleich wie ShellTools)
         sandbox_config = SandboxConfig(
             workspace_dir=config.workspace_dir,
-            default_timeout=60,
+            default_timeout=self._default_timeout,
         )
 
         sandbox_level = getattr(config, "sandbox_level", "bwrap")
@@ -75,7 +85,7 @@ class CodeTools:
     async def run_python(
         self,
         code: str,
-        timeout: int = 60,
+        timeout: int | None = None,
         working_dir: str | None = None,
     ) -> str:
         """Führt Python-Code in der Sandbox aus.
@@ -85,18 +95,21 @@ class CodeTools:
 
         Args:
             code: Python-Code als String.
-            timeout: Timeout in Sekunden (Default: 60).
+            timeout: Timeout in Sekunden (Default: aus Config oder 60).
             working_dir: Arbeitsverzeichnis (Default: Workspace).
 
         Returns:
             Kombinierter stdout + stderr Output.
         """
+        if timeout is None:
+            timeout = self._default_timeout
+
         if not code.strip():
             return "Kein Code angegeben."
 
         code_size = len(code.encode("utf-8"))
-        if code_size > MAX_CODE_SIZE:
-            return f"Code zu gross ({code_size / 1_048_576:.1f} MB, max 1 MB)"
+        if code_size > self._max_code_size:
+            return f"Code zu gross ({code_size / 1_048_576:.1f} MB, max {self._max_code_size / 1_048_576:.0f} MB)"
 
         cwd = working_dir or str(self._workspace)
 
@@ -309,8 +322,8 @@ def register_code_tools(
                 },
                 "timeout": {
                     "type": "integer",
-                    "description": "Timeout in Sekunden (Default: 60)",
-                    "default": 60,
+                    "description": f"Timeout in Sekunden (Default: {tools._default_timeout})",
+                    "default": tools._default_timeout,
                 },
                 "working_dir": {
                     "type": "string",

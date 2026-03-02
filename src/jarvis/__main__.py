@@ -102,6 +102,16 @@ def main() -> None:
 
     log = get_logger("jarvis")
 
+    # 3.5 Startup-Check: Fehlende Abhängigkeiten automatisch laden
+    from jarvis.core.startup_check import StartupChecker
+
+    checker = StartupChecker(config)
+    report = checker.check_and_fix_all()
+    if report.fixes_applied:
+        log.info("startup_auto_fixes", fixes=report.fixes_applied, warnings=report.warnings)
+    if report.errors:
+        log.warning("startup_check_errors", errors=report.errors)
+
     # 4. Startup-Info
     log.info(
         "jarvis_starting",
@@ -200,6 +210,16 @@ def main() -> None:
                 config_mgr = ConfigManager(config=config)
                 create_config_routes(api_app, config_mgr, gateway=gateway)
 
+                # Skill Marketplace API Router einbinden
+                if getattr(config, "marketplace", None) and config.marketplace.enabled:
+                    try:
+                        from jarvis.skills.api import router as skills_router
+                        if skills_router is not None:
+                            api_app.include_router(skills_router)
+                            log.info("skills_marketplace_api_registered")
+                    except Exception as _skills_exc:
+                        log.warning("skills_marketplace_api_failed", error=str(_skills_exc))
+
                 # TLS-Durchreichung
                 uvi_kwargs: dict[str, Any] = {
                     "app": api_app,
@@ -231,12 +251,23 @@ def main() -> None:
                 from jarvis.channels.telegram import TelegramChannel
 
                 allowed = [int(u) for u in os.environ.get("JARVIS_TELEGRAM_ALLOWED_USERS", "").split(",") if u]
+                _tg_use_webhook = config.channels.telegram_use_webhook
+                _tg_webhook_url = config.channels.telegram_webhook_url
+                _tg_webhook_port = config.channels.telegram_webhook_port
+                _tg_webhook_host = config.channels.telegram_webhook_host
                 gateway.register_channel(TelegramChannel(
                     token=telegram_token,
                     allowed_users=allowed,
                     session_store=_session_store,
+                    use_webhook=_tg_use_webhook,
+                    webhook_url=_tg_webhook_url,
+                    webhook_port=_tg_webhook_port,
+                    webhook_host=_tg_webhook_host,
+                    ssl_certfile=_ssl_cert,
+                    ssl_keyfile=_ssl_key,
                 ))
-                log.info("telegram_channel_registered", allowed_users=len(allowed))
+                _tg_mode = "webhook" if (_tg_use_webhook and _tg_webhook_url) else "polling"
+                log.info("telegram_channel_registered", allowed_users=len(allowed), mode=_tg_mode)
 
             # Slack-Channel (auto-detect: token + channel in env → start)
             slack_token = os.environ.get("JARVIS_SLACK_TOKEN")

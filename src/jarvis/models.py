@@ -13,9 +13,11 @@ Design principles:
 
 from __future__ import annotations
 
+import tempfile
 import uuid
 from datetime import UTC, date, datetime
 from enum import StrEnum
+from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -302,7 +304,10 @@ class SandboxConfig(BaseModel):
     max_memory_mb: int = Field(default=512, ge=64, le=8192)
     max_cpu_seconds: int = Field(default=10, ge=1, le=300)
     allowed_paths: list[str] = Field(
-        default_factory=lambda: ["~/.jarvis/workspace/", "/tmp/jarvis/"]
+        default_factory=lambda: [
+            "~/.jarvis/workspace/",
+            str(Path(tempfile.gettempdir()) / "jarvis") + "/",
+        ]
     )
     network_access: bool = False
     env_vars: dict[str, str] = Field(default_factory=dict)

@@ -464,6 +464,14 @@ class WindowsJobObjectSandbox:
                 stdout_bytes, stderr_bytes
             )
 
+            if truncated:
+                log.warning(
+                    "output_truncated",
+                    original_stdout_bytes=len(stdout_bytes),
+                    original_stderr_bytes=len(stderr_bytes),
+                    max_output_bytes=MAX_OUTPUT_BYTES,
+                )
+
             log.info(
                 "jobobject_exec_done",
                 exit_code=proc.returncode,
@@ -674,6 +682,14 @@ class SandboxExecutor:
 
             stdout, stderr, truncated = self._decode_and_truncate(stdout_bytes, stderr_bytes)
 
+            if truncated:
+                log.warning(
+                    "output_truncated",
+                    original_stdout_bytes=len(stdout_bytes),
+                    original_stderr_bytes=len(stderr_bytes),
+                    max_output_bytes=MAX_OUTPUT_BYTES,
+                )
+
             log.info(
                 "sandbox_exec_done",
                 level=level.value,
@@ -788,6 +804,14 @@ class SandboxExecutor:
                 return SandboxResult(timed_out=True, sandbox_level="bare", exit_code=-1)
 
             stdout, stderr, truncated = self._decode_and_truncate(stdout_bytes, stderr_bytes)
+
+            if truncated:
+                log.warning(
+                    "output_truncated",
+                    original_stdout_bytes=len(stdout_bytes),
+                    original_stderr_bytes=len(stderr_bytes),
+                    max_output_bytes=MAX_OUTPUT_BYTES,
+                )
 
             return SandboxResult(
                 stdout=stdout,

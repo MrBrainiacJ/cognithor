@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from pathlib import PurePath
 
 from jarvis.config import MemoryConfig
+from jarvis.memory.chunker import _estimate_tokens
 from jarvis.models import (
     ActionPlan,
     MemorySearchResult,
@@ -20,15 +22,24 @@ from jarvis.models import (
 
 logger = logging.getLogger("jarvis.memory.working")
 
-# Token-Budget Verteilung [B§4.6]
-BUDGET_CORE_MEMORY = 500
-BUDGET_SYSTEM_PROMPT = 800
-BUDGET_PROCEDURES = 600
-BUDGET_INJECTED_MEMORIES = 1500
-BUDGET_TOOL_DESCRIPTIONS = 1200
-BUDGET_RESPONSE_RESERVE = 3000
+# Default Token-Budget Verteilung [B§4.6]
+# Diese Werte werden von MemoryConfig.budget_* überschrieben wenn konfiguriert.
+_DEFAULT_BUDGET_CORE_MEMORY = 500
+_DEFAULT_BUDGET_SYSTEM_PROMPT = 800
+_DEFAULT_BUDGET_PROCEDURES = 600
+_DEFAULT_BUDGET_INJECTED_MEMORIES = 1500
+_DEFAULT_BUDGET_TOOL_DESCRIPTIONS = 1200
+_DEFAULT_BUDGET_RESPONSE_RESERVE = 3000
 
-# Statische Budgets (immer reserviert)
+# Backward-kompatible Aliase
+BUDGET_CORE_MEMORY = _DEFAULT_BUDGET_CORE_MEMORY
+BUDGET_SYSTEM_PROMPT = _DEFAULT_BUDGET_SYSTEM_PROMPT
+BUDGET_PROCEDURES = _DEFAULT_BUDGET_PROCEDURES
+BUDGET_INJECTED_MEMORIES = _DEFAULT_BUDGET_INJECTED_MEMORIES
+BUDGET_TOOL_DESCRIPTIONS = _DEFAULT_BUDGET_TOOL_DESCRIPTIONS
+BUDGET_RESPONSE_RESERVE = _DEFAULT_BUDGET_RESPONSE_RESERVE
+
+# Statische Budgets (immer reserviert) — wird pro Instance berechnet
 STATIC_BUDGET = (
     BUDGET_CORE_MEMORY
     + BUDGET_SYSTEM_PROMPT
@@ -37,6 +48,9 @@ STATIC_BUDGET = (
     + BUDGET_TOOL_DESCRIPTIONS
     + BUDGET_RESPONSE_RESERVE
 )
+
+# Overhead-Tokens pro Nachricht (Rolle, Formatierung, Separator)
+_MESSAGE_OVERHEAD_TOKENS = 10
 
 
 @dataclass
@@ -68,6 +82,17 @@ class WorkingMemoryManager:
         self._config = config or MemoryConfig()
         self._max_tokens = max_tokens
         self._memory = WorkingMemory(max_tokens=max_tokens)
+        # Budget-Werte aus Config lesen (mit Module-Defaults als Fallback)
+        self._budget_core = getattr(self._config, "budget_core_memory", _DEFAULT_BUDGET_CORE_MEMORY)
+        self._budget_system = getattr(self._config, "budget_system_prompt", _DEFAULT_BUDGET_SYSTEM_PROMPT)
+        self._budget_procedures = getattr(self._config, "budget_procedures", _DEFAULT_BUDGET_PROCEDURES)
+        self._budget_memories = getattr(self._config, "budget_injected_memories", _DEFAULT_BUDGET_INJECTED_MEMORIES)
+        self._budget_tools = getattr(self._config, "budget_tool_descriptions", _DEFAULT_BUDGET_TOOL_DESCRIPTIONS)
+        self._budget_response = getattr(self._config, "budget_response_reserve", _DEFAULT_BUDGET_RESPONSE_RESERVE)
+        self._static_budget = (
+            self._budget_core + self._budget_system + self._budget_procedures
+            + self._budget_memories + self._budget_tools + self._budget_response
+        )
 
     @property
     def memory(self) -> WorkingMemory:
@@ -82,7 +107,7 @@ class WorkingMemoryManager:
     @property
     def available_chat_tokens(self) -> int:
         """Verfügbare Tokens für Chat-History."""
-        return max(0, self._max_tokens - STATIC_BUDGET)
+        return max(0, self._max_tokens - self._static_budget)
 
     @property
     def current_chat_tokens(self) -> int:
@@ -213,11 +238,7 @@ class WorkingMemoryManager:
         if self._memory.injected_memories:
             memory_texts = []
             for mr in self._memory.injected_memories:
-                source = (
-                    mr.chunk.source_path.split("/")[-1]
-                    if "/" in mr.chunk.source_path
-                    else mr.chunk.source_path
-                )
+                source = PurePath(mr.chunk.source_path).name or mr.chunk.source_path
                 memory_texts.append(f"[{source} | Score: {mr.score:.2f}]\n{mr.chunk.text}")
             parts["memories"] = "\n\n---\n\n".join(memory_texts)
 
@@ -230,14 +251,14 @@ class WorkingMemoryManager:
 
         lines = [
             f"Token-Budget ({self._max_tokens} gesamt):",
-            f"  Core Memory:       ~{BUDGET_CORE_MEMORY}",
-            f"  System-Prompt:     ~{BUDGET_SYSTEM_PROMPT}",
-            f"  Procedures:        ~{BUDGET_PROCEDURES}",
-            f"  Injected Memories: ~{BUDGET_INJECTED_MEMORIES}",
-            f"  Tool-Beschreibungen: ~{BUDGET_TOOL_DESCRIPTIONS}",
-            f"  Antwort-Reserve:   ~{BUDGET_RESPONSE_RESERVE}",
+            f"  Core Memory:       ~{self._budget_core}",
+            f"  System-Prompt:     ~{self._budget_system}",
+            f"  Procedures:        ~{self._budget_procedures}",
+            f"  Injected Memories: ~{self._budget_memories}",
+            f"  Tool-Beschreibungen: ~{self._budget_tools}",
+            f"  Antwort-Reserve:   ~{self._budget_response}",
             "  ──────────────────────",
-            f"  Statisch:          ~{STATIC_BUDGET}",
+            f"  Statisch:          ~{self._static_budget}",
             f"  Chat verfügbar:    ~{avail}",
             f"  Chat genutzt:      ~{chat_tokens} ({self.usage_ratio:.0%})",
             f"  Nachrichten:       {len(self._memory.chat_history)}",
@@ -249,12 +270,15 @@ class WorkingMemoryManager:
 
     @staticmethod
     def _estimate_message_tokens(msg: Message) -> int:
-        """Schätzt Token-Anzahl einer Nachricht."""
+        """Sprachbewusste Token-Schätzung pro Nachricht.
+
+        Nutzt die Heuristik aus dem Chunker (Wort-basiert + Komposita-Korrektur)
+        statt der groben ``len(text) // 4`` Schätzung.
+        """
         text = msg.content or ""
-        # ~4 Zeichen pro Token + Overhead für Rolle etc.
-        return len(text) // 4 + 10
+        return _estimate_tokens(text) + _MESSAGE_OVERHEAD_TOKENS
 
     def _update_token_count(self) -> None:
         """Aktualisiert den Token-Counter."""
         chat_tokens = self.current_chat_tokens
-        self._memory.token_count = STATIC_BUDGET + chat_tokens
+        self._memory.token_count = self._static_budget + chat_tokens

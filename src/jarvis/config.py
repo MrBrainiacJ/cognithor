@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import os
+import tempfile
 from pathlib import Path
 from typing import Any, Literal
 
@@ -138,6 +139,150 @@ class WebConfig(BaseModel):
     domain_allowlist: list[str] = Field(default_factory=list)
     """Wenn nicht leer: NUR diese Domains sind erlaubt (Whitelist-Modus)."""
 
+    # ── Limits (bisher hardcoded in web.py) ────────────────────────────────
+    max_fetch_bytes: int = Field(default=500_000, ge=10_000, le=10_000_000)
+    """Maximale Antwortgröße beim URL-Fetch (Bytes)."""
+
+    max_text_chars: int = Field(default=20_000, ge=1000, le=200_000)
+    """Maximale Zeichenzahl des extrahierten Textes."""
+
+    fetch_timeout_seconds: int = Field(default=15, ge=5, le=120)
+    """HTTP-Timeout für URL-Fetch (Sekunden)."""
+
+    search_timeout_seconds: int = Field(default=10, ge=5, le=60)
+    """Timeout für Suchmaschinen-Anfragen (Sekunden)."""
+
+    max_search_results: int = Field(default=10, ge=1, le=50)
+    """Maximale Anzahl Suchergebnisse."""
+
+    ddg_min_delay_seconds: float = Field(default=2.0, ge=0.5, le=10.0)
+    """Mindestabstand zwischen DuckDuckGo-Suchen (Sekunden)."""
+
+    ddg_ratelimit_wait_seconds: int = Field(default=30, ge=5, le=120)
+    """Wartezeit bei DuckDuckGo Rate-Limiting (Sekunden)."""
+
+    ddg_cache_ttl_seconds: int = Field(default=3600, ge=60, le=86400)
+    """Cache-TTL für DuckDuckGo-Ergebnisse (Sekunden)."""
+
+    search_and_read_max_chars: int = Field(default=5000, ge=1000, le=50_000)
+    """Maximale Zeichenzahl pro Seite bei search_and_read."""
+
+
+class BrowserConfig(BaseModel):
+    """Browser-Automation Konfiguration (Playwright)."""
+
+    max_text_length: int = Field(default=8000, ge=1000, le=100_000)
+    """Maximale Textlänge die ans LLM zurückgegeben wird."""
+
+    max_js_length: int = Field(default=50_000, ge=1000, le=500_000)
+    """Maximale JavaScript-Scriptlänge (Zeichen)."""
+
+    default_timeout_ms: int = Field(default=30_000, ge=5000, le=120_000)
+    """Standard-Browser-Timeout (Millisekunden)."""
+
+    default_viewport_width: int = Field(default=1280, ge=320, le=3840)
+    """Standard-Viewport-Breite (Pixel)."""
+
+    default_viewport_height: int = Field(default=720, ge=240, le=2160)
+    """Standard-Viewport-Höhe (Pixel)."""
+
+
+class FilesystemConfig(BaseModel):
+    """Dateisystem-Tools Konfiguration."""
+
+    max_tree_entries: int = Field(default=200, ge=10, le=10_000)
+    """Maximale Einträge im Verzeichnisbaum-Listing."""
+
+
+class ShellConfig(BaseModel):
+    """Shell-Execution Konfiguration."""
+
+    default_timeout_seconds: int = Field(default=30, ge=5, le=600)
+    """Standard-Timeout für Shell-Befehle (Sekunden)."""
+
+    max_log_command_length: int = Field(default=200, ge=50, le=2000)
+    """Maximale Befehlslänge im Log."""
+
+    max_redacted_log_prefix: int = Field(default=50, ge=10, le=500)
+    """Maximale Präfixlänge für geschwärzte Log-Einträge."""
+
+
+class MediaConfig(BaseModel):
+    """Media-Pipeline Konfiguration."""
+
+    max_extract_length: int = Field(default=15_000, ge=1000, le=100_000)
+    """Maximale Textlänge für LLM-Kontext bei Extraktion."""
+
+    max_image_file_size: int = Field(default=10_485_760, ge=1_048_576, le=104_857_600)
+    """Maximale Bilddateigröße für Base64-Encoding (Bytes)."""
+
+    max_extract_file_size: int = Field(default=52_428_800, ge=1_048_576, le=524_288_000)
+    """Maximale Dateigröße für Dokument-Extraktion (Bytes)."""
+
+    max_audio_file_size: int = Field(default=104_857_600, ge=1_048_576, le=1_073_741_824)
+    """Maximale Audio-Dateigröße (Bytes)."""
+
+    max_image_dimension: int = Field(default=8192, ge=256, le=16384)
+    """Maximale Bilddimension in Pixel."""
+
+    default_max_width: int = Field(default=1024, ge=64, le=8192)
+    """Standard-Maximalbreite bei Bild-Resize."""
+
+    default_max_height: int = Field(default=1024, ge=64, le=8192)
+    """Standard-Maximalhöhe bei Bild-Resize."""
+
+
+class SynthesisConfig(BaseModel):
+    """Knowledge-Synthesis Konfiguration."""
+
+    max_source_chars: int = Field(default=4000, ge=500, le=50_000)
+    """Maximale Zeichenzahl pro Quelle für LLM-Kontext."""
+
+    max_context_chars: int = Field(default=25_000, ge=5000, le=200_000)
+    """Maximale Gesamtgröße des Kontexts für das LLM."""
+
+
+class CodeConfig(BaseModel):
+    """Code-Execution Konfiguration."""
+
+    max_code_size: int = Field(default=1_048_576, ge=1024, le=10_485_760)
+    """Maximale Code-Größe (Bytes)."""
+
+    default_timeout_seconds: int = Field(default=60, ge=5, le=600)
+    """Standard-Timeout für Python-Ausführung (Sekunden)."""
+
+
+class ExecutorConfig(BaseModel):
+    """Executor Konfiguration."""
+
+    default_timeout_seconds: int = Field(default=30, ge=5, le=600)
+    """Standard-Timeout für Tool-Ausführung (Sekunden)."""
+
+    max_output_chars: int = Field(default=10_000, ge=1000, le=100_000)
+    """Maximale Tool-Output-Länge (Zeichen)."""
+
+    max_retries: int = Field(default=3, ge=0, le=10)
+    """Maximale Wiederholungsversuche bei transienten Fehlern."""
+
+    backoff_base_delay_seconds: float = Field(default=1.0, ge=0.1, le=30.0)
+    """Basis-Verzögerung für exponentiellen Backoff (Sekunden)."""
+
+    # Tool-spezifische Timeouts
+    media_analyze_image_timeout: int = Field(default=180, ge=30, le=600)
+    """Timeout für Bildanalyse (Sekunden)."""
+
+    media_transcribe_audio_timeout: int = Field(default=120, ge=30, le=600)
+    """Timeout für Audio-Transkription (Sekunden)."""
+
+    media_extract_text_timeout: int = Field(default=120, ge=30, le=600)
+    """Timeout für Text-Extraktion (Sekunden)."""
+
+    media_tts_timeout: int = Field(default=120, ge=30, le=600)
+    """Timeout für Text-to-Speech (Sekunden)."""
+
+    run_python_timeout: int = Field(default=120, ge=30, le=600)
+    """Timeout für Python-Code-Ausführung (Sekunden)."""
+
 
 class VaultConfig(BaseModel):
     """Knowledge Vault Konfiguration — Obsidian-kompatibles Markdown-Vault.
@@ -209,6 +354,13 @@ class MemoryConfig(BaseModel):
     # Working Memory [B§4.6]
     compaction_threshold: float = Field(default=0.80, ge=0.5, le=0.95)
     compaction_keep_last_n: int = Field(default=4, ge=2, le=20)
+    # Token-Budget Verteilung (statische Anteile, geschaetzte Tokens)
+    budget_core_memory: int = Field(default=500, ge=100, le=5000)
+    budget_system_prompt: int = Field(default=800, ge=200, le=5000)
+    budget_procedures: int = Field(default=600, ge=100, le=5000)
+    budget_injected_memories: int = Field(default=1500, ge=200, le=10000)
+    budget_tool_descriptions: int = Field(default=1200, ge=200, le=10000)
+    budget_response_reserve: int = Field(default=3000, ge=500, le=15000)
 
     # Episodic Memory: Wie viele Tage an Tageslogs sollen behalten werden?
     # Ältere Dateien werden beim Initialisieren des Memory-Systems gelöscht.
@@ -303,6 +455,50 @@ class PluginsConfig(BaseModel):
     """Legt fest, ob Jarvis beim Start automatisch nach Updates für
     installierte Plugins sucht und diese einspielt. Standardmäßig
     deaktiviert, um ungewollte Änderungen zu verhindern."""
+
+
+class MarketplaceConfig(BaseModel):
+    """Konfiguration fuer den Skill Marketplace.
+
+    Der Marketplace bietet eine zentrale Anlaufstelle fuer Browse, Search
+    und Install von Skills. Daten werden in einer lokalen SQLite-Datenbank
+    persistiert. Der Marketplace ist optional und kann deaktiviert werden.
+    """
+
+    enabled: bool = Field(
+        default=True,
+        description="Skill Marketplace aktivieren",
+    )
+    """Aktiviert oder deaktiviert den Marketplace. Wenn ``False``, werden
+    keine Marketplace-API-Endpoints registriert und keine DB angelegt."""
+
+    db_path: str = Field(
+        default="",
+        description="Pfad zur Marketplace-DB (leer = ~/.jarvis/marketplace.db)",
+    )
+    """Pfad zur SQLite-Datenbank. Wenn leer, wird ``~/.jarvis/marketplace.db``
+    verwendet."""
+
+    auto_update: bool = Field(
+        default=False,
+        description="Skills automatisch aktualisieren",
+    )
+    """Wenn ``True``, prueft der Marketplace beim Start ob Updates fuer
+    installierte Skills verfuegbar sind und installiert diese automatisch."""
+
+    require_signatures: bool = Field(
+        default=True,
+        description="Nur signierte Skills installieren",
+    )
+    """Wenn ``True``, werden nur Skills mit gueltiger Signatur installiert.
+    Unsignierte Skills werden abgelehnt."""
+
+    auto_seed: bool = Field(
+        default=True,
+        description="Marketplace beim ersten Start mit Built-in-Prozeduren fuellen",
+    )
+    """Wenn ``True`` und die Marketplace-DB leer ist, werden die
+    Built-in-Prozeduren aus ``data/procedures/`` als Seed-Daten eingefuegt."""
 
 
 # --------------------------------------------------------------------------
@@ -969,6 +1165,24 @@ class ChannelConfig(BaseModel):
     cli_enabled: bool = True
     telegram_enabled: bool = False
     telegram_whitelist: list[str] = Field(default_factory=list)
+    telegram_use_webhook: bool = Field(
+        default=False,
+        description="Telegram Webhook statt Polling verwenden",
+    )
+    telegram_webhook_url: str = Field(
+        default="",
+        description="Externe Webhook-URL (z.B. https://jarvis.example.com/telegram/webhook)",
+    )
+    telegram_webhook_port: int = Field(
+        default=8443,
+        ge=1024,
+        le=65535,
+        description="Lokaler Port fuer Telegram-Webhook-Server",
+    )
+    telegram_webhook_host: str = Field(
+        default="0.0.0.0",
+        description="Lokaler Bind-Host fuer Webhook-Server",
+    )
     webui_enabled: bool = False
     webui_port: int = Field(default=8080, ge=1024, le=65535)
     voice_enabled: bool = False
@@ -1043,7 +1257,12 @@ class SecurityConfig(BaseModel):
     # Maximale Agent-Loop Iterationen pro Anfrage
     max_iterations: int = Field(default=25, ge=1, le=50)
     # Erlaubte Dateipfade (Gatekeeper prüft dagegen)
-    allowed_paths: list[str] = Field(default_factory=lambda: ["~/.jarvis/", "/tmp/jarvis/"])
+    allowed_paths: list[str] = Field(
+        default_factory=lambda: [
+            "~/.jarvis/",
+            str(Path(tempfile.gettempdir()) / "jarvis") + "/",
+        ]
+    )
     # Regex-Patterns für destruktive Shell-Befehle [B§3.2]
     blocked_commands: list[str] = Field(
         default_factory=lambda: [
@@ -1104,6 +1323,19 @@ class DatabaseConfig(BaseModel):
     pg_pool_max: int = Field(default=10, ge=1, le=100)
 
 
+class QueueConfig(BaseModel):
+    """Konfiguration für die Durable Message Queue."""
+
+    enabled: bool = Field(default=False, description="Durable message queue aktivieren")
+    max_size: int = Field(default=10_000, ge=100, le=1_000_000)
+    ttl_hours: int = Field(default=24, ge=1, le=168)
+    max_retries: int = Field(default=3, ge=0, le=10)
+    priority_boost_channels: list[str] = Field(
+        default_factory=lambda: ["api", "telegram"],
+        description="Channels die automatisch höhere Priorität bekommen",
+    )
+
+
 # ============================================================================
 # Haupt-Konfiguration
 # ============================================================================
@@ -1116,7 +1348,7 @@ class JarvisConfig(BaseModel):
     """
 
     # Meta
-    version: str = "0.25.0"
+    version: str = "0.26.0"
     owner_name: str = Field(
         default="User",
         description="Name des Besitzers/Benutzers. Wird in Prompts und CORE.md verwendet.",
@@ -1173,12 +1405,21 @@ class JarvisConfig(BaseModel):
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     channels: ChannelConfig = Field(default_factory=ChannelConfig)
     web: WebConfig = Field(default_factory=WebConfig)
+    browser: BrowserConfig = Field(default_factory=BrowserConfig)
+    filesystem: FilesystemConfig = Field(default_factory=FilesystemConfig)
+    shell: ShellConfig = Field(default_factory=ShellConfig)
+    media: MediaConfig = Field(default_factory=MediaConfig)
+    synthesis: SynthesisConfig = Field(default_factory=SynthesisConfig)
+    code: CodeConfig = Field(default_factory=CodeConfig)
+    executor: ExecutorConfig = Field(default_factory=ExecutorConfig)
     vault: VaultConfig = Field(default_factory=VaultConfig)
     context_pipeline: ContextPipelineConfig = Field(default_factory=ContextPipelineConfig)
     sandbox: SandboxConfig = Field(default_factory=SandboxConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    queue: QueueConfig = Field(default_factory=QueueConfig)
+    marketplace: MarketplaceConfig = Field(default_factory=MarketplaceConfig)
 
     # Heartbeat- und Plugin-Konfigurationen
     # Die HeartbeatConfig steuert einen periodischen Check (Heartbeat), der
@@ -1196,6 +1437,16 @@ class JarvisConfig(BaseModel):
 
     dashboard: 'DashboardConfig' = Field(default_factory=lambda: DashboardConfig())
     model_overrides: 'ModelOverrideConfig' = Field(default_factory=lambda: ModelOverrideConfig())
+
+    # Multi-Instance / Distributed Locking
+    lock_backend: Literal["local", "file", "redis"] = Field(
+        default="local",
+        description="Lock-Backend für Multi-Instance: local, file, redis",
+    )
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description="Redis-URL für distributed locking und queuing",
+    )
 
     # ---- Auto-Adaptation: Modelle an LLM-Backend anpassen ----
 
@@ -1862,6 +2113,7 @@ def ensure_directory_structure(config: JarvisConfig) -> list[str]:
         config.jarvis_home / "mcp",
         config.jarvis_home / "mcp" / "servers",
         config.jarvis_home / "cron",
+        config.jarvis_home / "locks",
         # Verzeichnis für Plugins/Skills
         config.jarvis_home / config.plugins.skills_dir,
     ]

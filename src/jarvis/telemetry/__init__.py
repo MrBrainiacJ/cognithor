@@ -47,6 +47,7 @@ from jarvis.telemetry.tracer import (
     OTLPJsonExporter,
 )
 from jarvis.telemetry.metrics import MetricsProvider
+from jarvis.telemetry.prometheus import PrometheusExporter
 from jarvis.telemetry.instrumentation import (
     TelemetryHub,
     trace,
@@ -67,6 +68,8 @@ __all__ = [
     "SpanExporter", "OTLPJsonExporter",
     # Metrics
     "MetricsProvider",
+    # Prometheus
+    "PrometheusExporter",
     # Instrumentation
     "TelemetryHub", "trace", "measure",
 ]

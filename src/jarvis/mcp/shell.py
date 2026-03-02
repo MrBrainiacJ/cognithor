@@ -14,6 +14,8 @@ Bibel-Referenz: §5.3 (jarvis-shell Server), §4.3 (Sandbox)
 
 from __future__ import annotations
 
+import re
+import shlex
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -33,6 +35,15 @@ log = get_logger(__name__)
 # Log-Limits
 MAX_LOG_COMMAND_LENGTH = 200
 MAX_REDACTED_LOG_PREFIX = 50
+
+# Pfad-Validierung (Layer 0)
+_NULL_BYTE_RE = re.compile(r"\x00")
+_PATH_TRAVERSAL_RE = re.compile(r"(?:^|[\s;|&])(?:\.\.[/\\]){2,}")
+_FILE_COMMANDS = frozenset({
+    "cat", "head", "tail", "less", "more", "cp", "mv",
+    "rm", "chmod", "chown", "ln", "readlink", "stat",
+    "file", "touch", "mkdir", "rmdir",
+})
 
 __all__ = [
     "ShellTools",
@@ -61,10 +72,16 @@ class ShellTools:
         """
         self._config = config
 
+        # Konfigurierbare Limits aus config.shell (mit sicheren Defaults)
+        _shell_cfg = getattr(config, 'shell', None)
+        self._default_timeout: int = getattr(_shell_cfg, 'default_timeout_seconds', 30)
+        self._max_log_command_length: int = getattr(_shell_cfg, 'max_log_command_length', MAX_LOG_COMMAND_LENGTH)
+        self._max_redacted_log_prefix: int = getattr(_shell_cfg, 'max_redacted_log_prefix', MAX_REDACTED_LOG_PREFIX)
+
         # Sandbox-Konfiguration aus JarvisConfig ableiten
         sandbox_config = SandboxConfig(
             workspace_dir=config.workspace_dir,
-            default_timeout=30,
+            default_timeout=self._default_timeout,
         )
 
         # Sandbox-Level aus Config übernehmen (wenn vorhanden)
@@ -90,6 +107,50 @@ class ShellTools:
     def sandbox_level(self) -> str:
         """Aktives Sandbox-Level."""
         return self._sandbox.level.value
+
+    @staticmethod
+    def _validate_command(command: str, workspace_root: str) -> str | None:
+        """Layer-0-Validierung: Null-Bytes, Path-Traversal, File-Path-Escape.
+
+        Returns:
+            Fehlermeldung bei Hard Block, None wenn ok.
+        """
+        # 1. Null-Byte → Hard Block
+        if _NULL_BYTE_RE.search(command):
+            log.warning("shell_null_byte_blocked", command_prefix=command[:50])
+            return "Befehl blockiert: Null-Byte erkannt."
+
+        # 2. Path Traversal (../../..) → Warning
+        if _PATH_TRAVERSAL_RE.search(command):
+            log.warning("shell_path_traversal_detected", command_prefix=command[:80])
+
+        # 3. File-Path-Escape: Prüfe ob File-Commands Pfade ausserhalb Workspace nutzen
+        try:
+            parts = shlex.split(command)
+        except ValueError:
+            return None  # Unparsbares Command → Sandbox entscheidet
+
+        if not parts:
+            return None
+
+        base_cmd = Path(parts[0]).name  # Nur Basisname (z.B. /usr/bin/cat → cat)
+        if base_cmd in _FILE_COMMANDS:
+            ws_root = Path(workspace_root).resolve()
+            for arg in parts[1:]:
+                if arg.startswith("-"):
+                    continue
+                try:
+                    resolved = (ws_root / arg).resolve()
+                    resolved.relative_to(ws_root)
+                except (ValueError, OSError):
+                    log.warning(
+                        "shell_path_escape_detected",
+                        command=base_cmd,
+                        argument=arg[:100],
+                        workspace=str(ws_root),
+                    )
+
+        return None
 
     async def exec_command(
         self,
@@ -130,6 +191,12 @@ class ShellTools:
             )
         cwd_path.mkdir(parents=True, exist_ok=True)
 
+        # Layer-0-Validierung: Null-Bytes, Path-Traversal
+        if getattr(self._config, "security", None) and getattr(self._config.security, "shell_validate_paths", True):
+            validation_error = self._validate_command(command, str(workspace_root))
+            if validation_error:
+                return validation_error
+
         # Per-Agent Overrides
         network_override = None
         if _sandbox_network:
@@ -139,10 +206,10 @@ class ShellTools:
                 pass
 
         # Befehls-Logging: Kuerzen und sensitive Muster maskieren
-        _log_cmd = command[:MAX_LOG_COMMAND_LENGTH]
+        _log_cmd = command[:self._max_log_command_length]
         for _pattern in ("API_KEY=", "TOKEN=", "PASSWORD=", "SECRET=", "BEARER "):
             if _pattern.lower() in _log_cmd.lower():
-                _log_cmd = _log_cmd[:MAX_REDACTED_LOG_PREFIX] + " [REDACTED]"
+                _log_cmd = _log_cmd[:self._max_redacted_log_prefix] + " [REDACTED]"
                 break
 
         log.info(
@@ -166,7 +233,8 @@ class ShellTools:
             max_processes=_sandbox_max_processes,
         )
 
-        log.info(
+        log_method = log.warning if result.truncated else log.info
+        log_method(
             "shell_exec_done",
             command=_log_cmd,
             exit_code=result.exit_code,

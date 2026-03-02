@@ -10,11 +10,13 @@ Features:
   - Reconnect bei Verbindungsabbruch
   - Streaming-Simulation (lange Nachrichten in Teilen)
   - Graceful Shutdown
+  - Webhook-Modus (<100ms Latenz) mit Fallback auf Polling
 
 Bibel-Referenz: §9.3 (Telegram Channel)
 
 Benötigt: pip install 'python-telegram-bot>=21.0,<22'
 Konfiguration: JARVIS_TELEGRAM_TOKEN und JARVIS_TELEGRAM_ALLOWED_USERS
+Optional für Webhook: JARVIS_TELEGRAM_USE_WEBHOOK, JARVIS_TELEGRAM_WEBHOOK_URL
 """
 
 from __future__ import annotations
@@ -29,6 +31,8 @@ from typing import TYPE_CHECKING, Any
 from jarvis.channels.base import Channel, MessageHandler
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.token_store import get_token_store
+from jarvis.utils.circuit_breaker import CircuitBreaker, CircuitBreakerOpen
+from jarvis.utils.ttl_dict import TTLDict
 
 if TYPE_CHECKING:
     from jarvis.gateway.session_store import SessionStore
@@ -70,6 +74,13 @@ class TelegramChannel(Channel):
         workspace_dir: Path | None = None,
         max_reconnect_attempts: int = 5,
         session_store: SessionStore | None = None,
+        *,
+        use_webhook: bool = False,
+        webhook_url: str = "",
+        webhook_port: int = 8443,
+        webhook_host: str = "0.0.0.0",
+        ssl_certfile: str = "",
+        ssl_keyfile: str = "",
     ) -> None:
         """Initialisiert den Telegram-Channel.
 
@@ -79,6 +90,12 @@ class TelegramChannel(Channel):
             workspace_dir: Verzeichnis für heruntergeladene Medien.
             max_reconnect_attempts: Maximale Reconnect-Versuche.
             session_store: Optionaler SessionStore für persistente Mappings.
+            use_webhook: Webhook statt Polling verwenden.
+            webhook_url: Externe URL, die Telegram für Updates nutzt.
+            webhook_port: Lokaler Port für den Webhook-Server.
+            webhook_host: Lokaler Bind-Host für den Webhook-Server.
+            ssl_certfile: Pfad zum SSL-Zertifikat (PEM) für TLS.
+            ssl_keyfile: Pfad zum SSL-Privat-Key (PEM) für TLS.
         """
         self._token_store = get_token_store()
         self._token_store.store("telegram_bot_token", token)
@@ -91,11 +108,21 @@ class TelegramChannel(Channel):
         self._approval_events: dict[str, asyncio.Event] = {}
         self._approval_results: dict[str, bool] = {}
         self._approval_lock = asyncio.Lock()
-        self._session_chat_map: dict[str, int] = {}
-        self._user_chat_map: dict[str, int] = {}  # user_id → chat_id (Fallback)
+        self._session_chat_map: TTLDict[str, int] = TTLDict(max_size=10000, ttl_seconds=86400)
+        self._user_chat_map: TTLDict[str, int] = TTLDict(max_size=10000, ttl_seconds=86400)
         self._running = False
-        self._typing_tasks: dict[int, asyncio.Task[None]] = {}
+        self._typing_tasks: TTLDict[int, asyncio.Task[None]] = TTLDict(max_size=1000, ttl_seconds=300)
+        self._circuit_breaker = CircuitBreaker(name="telegram_api", failure_threshold=5, recovery_timeout=60.0)
         self._whisper_model: Any | None = None
+
+        # Webhook-Konfiguration
+        self._use_webhook = use_webhook
+        self._webhook_url = webhook_url
+        self._webhook_port = webhook_port
+        self._webhook_host = webhook_host
+        self._ssl_certfile = ssl_certfile
+        self._ssl_keyfile = ssl_keyfile
+        self._webhook_runner: Any | None = None  # aiohttp.web.AppRunner
 
     @property
     def token(self) -> str:
@@ -179,11 +206,16 @@ class TelegramChannel(Channel):
         # Bot starten (non-blocking)
         await self._app.initialize()
         await self._app.start()
-        if self._app.updater is not None:
-            await self._app.updater.start_polling(drop_pending_updates=True)
+
+        if self._use_webhook and self._webhook_url:
+            await self._start_webhook()
+            logger.info("Telegram-Bot gestartet (Webhook-Modus)")
+        else:
+            if self._app.updater is not None:
+                await self._app.updater.start_polling(drop_pending_updates=True)
+            logger.info("Telegram-Bot gestartet (Polling-Modus)")
 
         self._running = True
-        logger.info("Telegram-Bot gestartet")
 
     async def stop(self) -> None:
         """Stoppt den Telegram-Bot sauber."""
@@ -191,8 +223,16 @@ class TelegramChannel(Channel):
             return
 
         try:
-            if self._app.updater is not None:
-                await self._app.updater.stop()
+            if self._use_webhook:
+                # Webhook bei Telegram abmelden und lokalen Server stoppen
+                with contextlib.suppress(Exception):
+                    await self._app.bot.delete_webhook(drop_pending_updates=False)
+                if self._webhook_runner:
+                    await self._webhook_runner.cleanup()
+                    self._webhook_runner = None
+            else:
+                if self._app.updater is not None:
+                    await self._app.updater.stop()
             await self._app.stop()
             await self._app.shutdown()
         except Exception:
@@ -201,6 +241,72 @@ class TelegramChannel(Channel):
         self._running = False
         self._app = None
         logger.info("Telegram-Bot gestoppt")
+
+    # === Webhook-Methoden ===
+
+    async def _start_webhook(self) -> None:
+        """Startet Webhook-Server und registriert bei Telegram."""
+        from aiohttp import web
+
+        app = web.Application()
+        app.router.add_post("/telegram/webhook", self._handle_webhook)
+        app.router.add_get("/telegram/health", self._handle_health)
+
+        self._webhook_runner = web.AppRunner(app)
+        await self._webhook_runner.setup()
+
+        # TLS-Support (optional)
+        ssl_ctx = None
+        if self._ssl_certfile and self._ssl_keyfile:
+            from jarvis.security.token_store import create_ssl_context
+
+            ssl_ctx = create_ssl_context(self._ssl_certfile, self._ssl_keyfile)
+
+        site = web.TCPSite(
+            self._webhook_runner,
+            self._webhook_host,
+            self._webhook_port,
+            ssl_context=ssl_ctx,
+        )
+        await site.start()
+
+        # Webhook bei Telegram registrieren
+        await self._app.bot.set_webhook(
+            url=self._webhook_url,
+            drop_pending_updates=True,
+            allowed_updates=["message", "callback_query"],
+        )
+
+        logger.info(
+            "Telegram-Webhook gestartet: url=%s port=%d",
+            self._webhook_url,
+            self._webhook_port,
+        )
+
+    async def _handle_webhook(self, request: Any) -> Any:
+        """Verarbeitet eingehende Telegram-Updates via Webhook."""
+        from aiohttp import web
+        from telegram import Update
+
+        try:
+            data = await request.json()
+            update = Update.de_json(data, self._app.bot)
+            await self._app.process_update(update)
+            return web.Response(status=200)
+        except Exception as exc:
+            logger.error("Telegram-Webhook-Fehler: %s", exc)
+            return web.Response(status=500)
+
+    async def _handle_health(self, request: Any) -> Any:
+        """Health-Check-Endpoint für den Webhook-Server."""
+        from aiohttp import web
+
+        return web.json_response({
+            "status": "ok",
+            "channel": "telegram",
+            "mode": "webhook",
+            "running": self._running,
+        })
 
     async def send(self, message: OutgoingMessage) -> None:
         """Sendet eine Nachricht an den User.
@@ -224,19 +330,29 @@ class TelegramChannel(Channel):
 
         for chunk in chunks:
             try:
-                await self._app.bot.send_message(
-                    chat_id=int(chat_id),
-                    text=chunk,
-                    parse_mode="Markdown",
+                await self._circuit_breaker.call(
+                    self._app.bot.send_message(
+                        chat_id=int(chat_id),
+                        text=chunk,
+                        parse_mode="Markdown",
+                    )
                 )
+            except CircuitBreakerOpen:
+                logger.warning("telegram_circuit_open", extra={"chat_id": chat_id})
+                return
             except Exception:
                 logger.debug("Markdown-Parsing fehlgeschlagen, Fallback auf Plain-Text", exc_info=True)
                 # Fallback ohne Markdown falls Parsing fehlschlägt
                 try:
-                    await self._app.bot.send_message(
-                        chat_id=int(chat_id),
-                        text=chunk,
+                    await self._circuit_breaker.call(
+                        self._app.bot.send_message(
+                            chat_id=int(chat_id),
+                            text=chunk,
+                        )
                     )
+                except CircuitBreakerOpen:
+                    logger.warning("telegram_circuit_open", extra={"chat_id": chat_id})
+                    return
                 except Exception:
                     logger.exception("Fehler beim Senden an chat_id=%s", chat_id)
 

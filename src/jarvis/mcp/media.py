@@ -27,14 +27,25 @@ from jarvis.utils.logging import get_logger
 log = get_logger(__name__)
 
 # Maximale Textlänge für LLM-Kontext
-MAX_EXTRACT_LENGTH = 15_000
+_DEFAULT_MAX_EXTRACT_LENGTH = 15_000
 
 # Maximale Bilddateigroesse fuer Base64-Encoding (10 MB)
-MAX_IMAGE_FILE_SIZE = 10_485_760
+_DEFAULT_MAX_IMAGE_FILE_SIZE = 10_485_760
 
 # Maximale Dateigroessen fuer Security-Limits
-MAX_EXTRACT_FILE_SIZE = 52_428_800   # 50 MB für Dokument-Extraktion
-MAX_AUDIO_FILE_SIZE = 104_857_600    # 100 MB für Audio-Transkription
+_DEFAULT_MAX_EXTRACT_FILE_SIZE = 52_428_800   # 50 MB für Dokument-Extraktion
+_DEFAULT_MAX_AUDIO_FILE_SIZE = 104_857_600    # 100 MB für Audio-Transkription
+
+# Maximale Bilddimensionen und Standard-Resize-Werte
+_DEFAULT_MAX_IMAGE_DIMENSION = 8192
+_DEFAULT_MAX_WIDTH = 1024
+_DEFAULT_MAX_HEIGHT = 1024
+
+# Backward compatibility aliases
+MAX_EXTRACT_LENGTH = _DEFAULT_MAX_EXTRACT_LENGTH
+MAX_IMAGE_FILE_SIZE = _DEFAULT_MAX_IMAGE_FILE_SIZE
+MAX_EXTRACT_FILE_SIZE = _DEFAULT_MAX_EXTRACT_FILE_SIZE
+MAX_AUDIO_FILE_SIZE = _DEFAULT_MAX_AUDIO_FILE_SIZE
 
 # Standard-Modelle und -Stimmen (Fallbacks, wenn kein Config verfügbar)
 _DEFAULT_VISION_MODEL = "openbmb/minicpm-v4.5"
@@ -68,13 +79,24 @@ class MediaPipeline:
     für CPU-intensive Operationen (Whisper, Pillow, etc.).
     """
 
-    def __init__(self, workspace_dir: Path | None = None) -> None:
+    def __init__(self, workspace_dir: Path | None = None, config: Any = None) -> None:
         self._workspace = workspace_dir or Path.home() / ".jarvis" / "workspace" / "media"
         self._workspace.mkdir(parents=True, exist_ok=True)
         # LLM + Vault injection (gesetzt via _set_llm_fn / _set_vault)
         self._llm_fn: Any = None
         self._llm_model: str = ""
         self._vault: Any = None
+        self._config = config
+
+        # Konfigurierbare Limits (aus config.media.* mit Fallback auf Defaults)
+        _media = getattr(config, "media", None)
+        self._max_extract_length: int = getattr(_media, "max_extract_length", _DEFAULT_MAX_EXTRACT_LENGTH)
+        self._max_image_file_size: int = getattr(_media, "max_image_file_size", _DEFAULT_MAX_IMAGE_FILE_SIZE)
+        self._max_extract_file_size: int = getattr(_media, "max_extract_file_size", _DEFAULT_MAX_EXTRACT_FILE_SIZE)
+        self._max_audio_file_size: int = getattr(_media, "max_audio_file_size", _DEFAULT_MAX_AUDIO_FILE_SIZE)
+        self._max_image_dimension: int = getattr(_media, "max_image_dimension", _DEFAULT_MAX_IMAGE_DIMENSION)
+        self._default_max_width: int = getattr(_media, "default_max_width", _DEFAULT_MAX_WIDTH)
+        self._default_max_height: int = getattr(_media, "default_max_height", _DEFAULT_MAX_HEIGHT)
 
     def _set_llm_fn(self, llm_fn: Any, model_name: str = "") -> None:
         """Injiziert eine LLM-Funktion für Dokument-Analyse.
@@ -135,10 +157,10 @@ class MediaPipeline:
             return MediaResult(success=False, error=f"Datei nicht gefunden oder ungueltig: {audio_path}")
 
         file_size = path.stat().st_size
-        if file_size > MAX_AUDIO_FILE_SIZE:
+        if file_size > self._max_audio_file_size:
             return MediaResult(
                 success=False,
-                error=f"Audiodatei zu gross ({file_size / 1_048_576:.1f} MB, max {MAX_AUDIO_FILE_SIZE // 1_048_576} MB)",
+                error=f"Audiodatei zu gross ({file_size / 1_048_576:.1f} MB, max {self._max_audio_file_size // 1_048_576} MB)",
             )
 
         try:
@@ -211,10 +233,10 @@ class MediaPipeline:
 
             # Dateigroesse pruefen
             file_size = path.stat().st_size
-            if file_size > MAX_IMAGE_FILE_SIZE:
+            if file_size > self._max_image_file_size:
                 return MediaResult(
                     success=False,
-                    error=f"Bild zu gross ({file_size / 1_048_576:.1f} MB, max {MAX_IMAGE_FILE_SIZE // 1_048_576} MB)",
+                    error=f"Bild zu gross ({file_size / 1_048_576:.1f} MB, max {self._max_image_file_size // 1_048_576} MB)",
                 )
 
             # Bild als Base64 laden
@@ -279,10 +301,10 @@ class MediaPipeline:
             return MediaResult(success=False, error=f"Datei nicht gefunden oder ungueltig: {file_path}")
 
         file_size = path.stat().st_size
-        if file_size > MAX_EXTRACT_FILE_SIZE:
+        if file_size > self._max_extract_file_size:
             return MediaResult(
                 success=False,
-                error=f"Datei zu gross ({file_size / 1_048_576:.1f} MB, max {MAX_EXTRACT_FILE_SIZE // 1_048_576} MB)",
+                error=f"Datei zu gross ({file_size / 1_048_576:.1f} MB, max {self._max_extract_file_size // 1_048_576} MB)",
             )
 
         suffix = path.suffix.lower()
@@ -304,8 +326,8 @@ class MediaPipeline:
                     f"Unterstützt: PDF, DOCX, TXT, MD, HTML, CSV, JSON, XML",
                 )
 
-            if len(text) > MAX_EXTRACT_LENGTH:
-                text = text[:MAX_EXTRACT_LENGTH] + f"\n\n[... gekürzt, {len(text)} Zeichen gesamt]"
+            if len(text) > self._max_extract_length:
+                text = text[:self._max_extract_length] + f"\n\n[... gekürzt, {len(text)} Zeichen gesamt]"
 
             log.info("text_extracted", path=file_path, length=len(text), format=suffix)
             return MediaResult(
@@ -364,10 +386,10 @@ class MediaPipeline:
         """HTML-Textextraktion (einfach, ohne BeautifulSoup-Pflicht)."""
         import re
 
-        if path.stat().st_size > MAX_EXTRACT_FILE_SIZE:
+        if path.stat().st_size > self._max_extract_file_size:
             raise ValueError(
                 f"HTML-Datei zu gross ({path.stat().st_size / 1_048_576:.1f} MB, "
-                f"max {MAX_EXTRACT_FILE_SIZE // 1_048_576} MB)"
+                f"max {self._max_extract_file_size // 1_048_576} MB)"
             )
         html = path.read_text(encoding="utf-8", errors="replace")
         # Script/Style-Tags entfernen
@@ -532,28 +554,29 @@ class MediaPipeline:
     # Bildgröße ändern (Pillow)
     # ========================================================================
 
-    # Maximale erlaubte Bilddimensionen
-    MAX_IMAGE_DIMENSION = 8192
-
     async def resize_image(
         self,
         image_path: str,
         *,
-        max_width: int = 1024,
-        max_height: int = 1024,
+        max_width: int | None = None,
+        max_height: int | None = None,
         output_format: str | None = None,
     ) -> MediaResult:
         """Ändert die Bildgröße (behält Seitenverhältnis).
 
         Args:
             image_path: Quellbild.
-            max_width: Maximale Breite (1-8192).
-            max_height: Maximale Höhe (1-8192).
+            max_width: Maximale Breite (1-max_image_dimension). Default aus Config.
+            max_height: Maximale Höhe (1-max_image_dimension). Default aus Config.
             output_format: Optionales Ausgabeformat (jpg, png, webp).
         """
+        if max_width is None:
+            max_width = self._default_max_width
+        if max_height is None:
+            max_height = self._default_max_height
         # Dimensionen validieren
-        max_width = max(1, min(max_width, self.MAX_IMAGE_DIMENSION))
-        max_height = max(1, min(max_height, self.MAX_IMAGE_DIMENSION))
+        max_width = max(1, min(max_width, self._max_image_dimension))
+        max_height = max(1, min(max_height, self._max_image_dimension))
 
         path = self._validate_input_path(image_path)
         if path is None:
@@ -1094,7 +1117,7 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
     vision_model_detail = getattr(config, "vision_model_detail", _DEFAULT_VISION_MODEL_DETAIL) if config else _DEFAULT_VISION_MODEL_DETAIL
     ollama_url = getattr(getattr(config, "ollama", None), "base_url", "http://localhost:11434") if config else "http://localhost:11434"
 
-    pipeline = MediaPipeline()
+    pipeline = MediaPipeline(config=config)
 
     async def _transcribe(audio_path: str, language: str = "de", model: str = "base", **_: Any) -> str:
         result = await pipeline.transcribe_audio(
@@ -1120,7 +1143,7 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
         )
         return result.text if result.success else f"Fehler: {result.error}"
 
-    async def _resize_image(image_path: str, max_width: int = 1024, max_height: int = 1024, **_: Any) -> str:
+    async def _resize_image(image_path: str, max_width: int | None = None, max_height: int | None = None, **_: Any) -> str:
         result = await pipeline.resize_image(
             image_path, max_width=max_width, max_height=max_height,
         )

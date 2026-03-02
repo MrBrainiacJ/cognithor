@@ -32,6 +32,8 @@ from jarvis.channels.interactive import (
 )
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.token_store import get_token_store
+from jarvis.utils.circuit_breaker import CircuitBreaker, CircuitBreakerOpen
+from jarvis.utils.ttl_dict import TTLDict
 
 if TYPE_CHECKING:
     from jarvis.gateway.session_store import SessionStore
@@ -62,9 +64,10 @@ class DiscordChannel(Channel):
         self._bidirectional = False
         self._approval_messages: dict[int, tuple[asyncio.Future[bool], int]] = {}
         self._approval_lock = asyncio.Lock()
-        self._session_users: dict[str, int] = {}  # session_id → Discord user_id
-        self._stream_buffers: dict[str, list[str]] = {}
+        self._session_users: TTLDict[str, int] = TTLDict(max_size=10000, ttl_seconds=86400)
+        self._stream_buffers: TTLDict[str, list[str]] = TTLDict(max_size=1000, ttl_seconds=60)
         self._stream_lock = asyncio.Lock()
+        self._circuit_breaker = CircuitBreaker(name="discord_api", failure_threshold=5, recovery_timeout=60.0)
 
     @property
     def token(self) -> str:
@@ -238,7 +241,9 @@ class DiscordChannel(Channel):
             if channel is None:
                 logger.error("Unbekannter Discord-Channel: %s", target_id)
                 return
-            await channel.send(message.text)
+            await self._circuit_breaker.call(channel.send(message.text))
+        except CircuitBreakerOpen:
+            logger.warning("discord_circuit_open", extra={"channel_id": target_id})
         except Exception:
             logger.exception("Fehler beim Senden über Discord")
 

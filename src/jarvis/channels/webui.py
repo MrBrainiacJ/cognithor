@@ -32,6 +32,7 @@ from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.rate_limiter import RateLimiter
 from jarvis.security.token_store import get_token_store
 from jarvis.utils.logging import get_logger
+from jarvis.utils.ttl_dict import TTLDict
 
 log = get_logger(__name__)
 
@@ -110,11 +111,11 @@ class WebUIChannel(Channel):
         self._start_time = 0.0
 
         # WebSocket-Verbindungen: session_id → WebSocket
-        self._connections: dict[str, Any] = {}
-        # Pending Approvals: request_id → Future
+        self._connections: TTLDict[str, Any] = TTLDict(max_size=1000, ttl_seconds=86400)
+        # Pending Approvals: request_id → Future (finally-Cleanup in request_approval)
         self._pending_approvals: dict[str, asyncio.Future[bool]] = {}
         # Session-Tracking
-        self._session_messages: dict[str, int] = {}
+        self._session_messages: TTLDict[str, int] = TTLDict(max_size=10000, ttl_seconds=86400)
         self._rate_limiter = RateLimiter()
 
     @property

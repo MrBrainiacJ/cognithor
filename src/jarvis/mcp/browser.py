@@ -35,14 +35,20 @@ from jarvis.utils.logging import get_logger
 log = get_logger(__name__)
 
 # Maximale Textlänge die ans LLM zurückgegeben wird
-MAX_TEXT_LENGTH = 8000
+_DEFAULT_MAX_TEXT_LENGTH = 8000
 
 # Maximale JS-Script-Laenge (Zeichen)
-MAX_JS_LENGTH = 50_000
+_DEFAULT_MAX_JS_LENGTH = 50_000
 
 # Default-Timeouts
-DEFAULT_TIMEOUT_MS = 30_000
-DEFAULT_VIEWPORT = {"width": 1280, "height": 720}
+_DEFAULT_TIMEOUT_MS = 30_000
+_DEFAULT_VIEWPORT = {"width": 1280, "height": 720}
+
+# Backward-compatible aliases
+MAX_TEXT_LENGTH = _DEFAULT_MAX_TEXT_LENGTH
+MAX_JS_LENGTH = _DEFAULT_MAX_JS_LENGTH
+DEFAULT_TIMEOUT_MS = _DEFAULT_TIMEOUT_MS
+DEFAULT_VIEWPORT = _DEFAULT_VIEWPORT
 
 __all__ = [
     "BrowserTool",
@@ -86,15 +92,34 @@ class BrowserTool:
         self,
         workspace_dir: Path | None = None,
         headless: bool = True,
-        timeout_ms: int = DEFAULT_TIMEOUT_MS,
+        timeout_ms: int | None = None,
+        config: Any = None,
     ) -> None:
         self._workspace_dir = workspace_dir or Path.home() / ".jarvis" / "workspace"
         self._headless = headless
-        self._timeout_ms = timeout_ms
         self._browser: Any = None
         self._context: Any = None
         self._page: Any = None
         self._initialized = False
+
+        # Read browser config values, falling back to module-level defaults
+        browser_cfg = getattr(config, "browser", None) if config else None
+        self._max_text_length: int = getattr(
+            browser_cfg, "max_text_length", _DEFAULT_MAX_TEXT_LENGTH
+        )
+        self._max_js_length: int = getattr(
+            browser_cfg, "max_js_length", _DEFAULT_MAX_JS_LENGTH
+        )
+        self._timeout_ms: int = timeout_ms if timeout_ms is not None else getattr(
+            browser_cfg, "default_timeout_ms", _DEFAULT_TIMEOUT_MS
+        )
+        vp_width: int = getattr(
+            browser_cfg, "default_viewport_width", _DEFAULT_VIEWPORT["width"]
+        )
+        vp_height: int = getattr(
+            browser_cfg, "default_viewport_height", _DEFAULT_VIEWPORT["height"]
+        )
+        self._viewport: dict[str, int] = {"width": vp_width, "height": vp_height}
 
     async def initialize(self) -> bool:
         """Startet den Browser. Gibt False zurück wenn Playwright nicht installiert."""
@@ -114,7 +139,7 @@ class BrowserTool:
                 ],
             )
             self._context = await self._browser.new_context(
-                viewport=DEFAULT_VIEWPORT,
+                viewport=self._viewport,
                 user_agent=(
                     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -215,8 +240,8 @@ class BrowserTool:
             text = ""
             if extract_text:
                 text = await self._page.inner_text("body")
-                if len(text) > MAX_TEXT_LENGTH:
-                    text = text[:MAX_TEXT_LENGTH] + f"\n\n[... gekürzt, {len(text)} Zeichen gesamt]"
+                if len(text) > self._max_text_length:
+                    text = text[:self._max_text_length] + f"\n\n[... gekürzt, {len(text)} Zeichen gesamt]"
 
             status = response.status if response else 0
             log.info("browser_navigate", url=url, status=status, title=title)
@@ -332,18 +357,18 @@ class BrowserTool:
         if not self._initialized:
             return BrowserResult(success=False, error="Browser nicht initialisiert")
 
-        if len(script) > MAX_JS_LENGTH:
+        if len(script) > self._max_js_length:
             return BrowserResult(
                 success=False,
-                error=f"Script zu lang ({len(script)} Zeichen, max {MAX_JS_LENGTH})",
+                error=f"Script zu lang ({len(script)} Zeichen, max {self._max_js_length})",
             )
 
         try:
             result = await self._page.evaluate(script)
             result_str = str(result) if result is not None else ""
 
-            if len(result_str) > MAX_TEXT_LENGTH:
-                result_str = result_str[:MAX_TEXT_LENGTH] + " [gekürzt]"
+            if len(result_str) > self._max_text_length:
+                result_str = result_str[:self._max_text_length] + " [gekürzt]"
 
             log.info("browser_js_executed", script_length=len(script))
             return BrowserResult(
@@ -496,18 +521,19 @@ BROWSER_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
 }
 
 
-def register_browser_tools(mcp_client: Any) -> BrowserTool:
+def register_browser_tools(mcp_client: Any, config: Any = None) -> BrowserTool:
     """Registriert Browser-MCP-Tools beim MCP-Client.
 
     Args:
         mcp_client: JarvisMCPClient-Instanz.
+        config: Optionale Konfiguration mit ``config.browser.*`` Werten.
 
     Returns:
         BrowserTool-Instanz.
     """
     from typing import Any as _Any
 
-    tool = BrowserTool()
+    tool = BrowserTool(config=config)
 
     async def _ensure_initialized() -> str | None:
         """Stellt sicher, dass der Browser initialisiert ist."""

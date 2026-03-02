@@ -32,8 +32,8 @@ EXCLUDED_DIRECTORIES = frozenset({
     "node_modules", "__pycache__", ".git", "venv", ".venv",
 })
 
-# Maximale Eintraege im Verzeichnisbaum
-MAX_TREE_ENTRIES = 200
+# Maximale Eintraege im Verzeichnisbaum (Default)
+_DEFAULT_MAX_TREE_ENTRIES = 200
 
 __all__ = [
     "FileSystemTools",
@@ -55,6 +55,9 @@ class FileSystemTools:
         self._allowed_roots: list[Path] = [
             Path(p).expanduser().resolve() for p in config.security.allowed_paths
         ]
+        self._max_tree_entries: int = getattr(
+            getattr(config, 'filesystem', None), 'max_tree_entries', _DEFAULT_MAX_TREE_ENTRIES,
+        )
 
     def _validate_path(self, path_str: str) -> Path:
         """Validiert und normalisiert einen Dateipfad.
@@ -262,10 +265,10 @@ class FileSystemTools:
         lines: list[str] = [f"{validated.name}/"]
         self._tree(validated, lines, prefix="", depth=depth, max_depth=depth)
 
-        if len(lines) > MAX_TREE_ENTRIES:
+        if len(lines) > self._max_tree_entries:
             total = len(lines)
-            lines = lines[:MAX_TREE_ENTRIES]
-            lines.append(f"... ({total - MAX_TREE_ENTRIES} weitere Eintraege)")
+            lines = lines[:self._max_tree_entries]
+            lines.append(f"... ({total - self._max_tree_entries} weitere Eintraege)")
 
         return "\n".join(lines)
 

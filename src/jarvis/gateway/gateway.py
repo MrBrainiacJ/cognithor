@@ -61,6 +61,7 @@ from jarvis.utils.logging import get_logger, setup_logging
 
 if TYPE_CHECKING:
     from jarvis.channels.base import Channel
+    from jarvis.core.message_queue import DurableMessageQueue
 
 log = get_logger(__name__)
 
@@ -83,6 +84,7 @@ class Gateway:
         self._last_session_cleanup: float = time.monotonic()
         self._running = False
         self._context_pipeline = None
+        self._message_queue: DurableMessageQueue | None = None
 
         # Declare all subsystem attributes via phase modules
         apply_phase(self, declare_core_attrs(self._config))
@@ -158,6 +160,24 @@ class Gateway:
                 log.info("context_pipeline_initialized")
         except Exception:
             log.debug("context_pipeline_init_skipped", exc_info=True)
+
+        # --- Phase D.2: Message Queue (optional, durable message buffering) ---
+        if self._config.queue.enabled:
+            try:
+                from jarvis.core.message_queue import DurableMessageQueue as _DMQ
+
+                queue_path = self._config.jarvis_home / "memory" / "message_queue.db"
+                self._message_queue = _DMQ(
+                    queue_path,
+                    max_size=self._config.queue.max_size,
+                    max_retries=self._config.queue.max_retries,
+                    ttl_hours=self._config.queue.ttl_hours,
+                )
+                # Trigger lazy DB init
+                _ = self._message_queue.conn
+                log.info("message_queue_initialized", db=str(queue_path))
+            except Exception:
+                log.warning("message_queue_init_failed", exc_info=True)
 
         # --- Phase E: PGE + Agents in parallel (both depend on phases A-D) ---
         pge_coro = init_pge(
@@ -498,6 +518,9 @@ class Gateway:
         """
         _handle_start = time.monotonic()
 
+        # Prometheus: Zähle eingehende Requests
+        self._record_metric("requests_total", 1, channel=msg.channel)
+
         # Phase 1: Agent-Routing, Session, WM, Skills, Workspace
         route_decision, session, wm, active_skill, agent_workspace, agent_name = \
             await self._resolve_agent_route(msg)
@@ -608,6 +631,13 @@ class Gateway:
 
         # Phase 5: Session persistieren
         await self._persist_session(session, wm)
+
+        # Prometheus: Request-Dauer und Token-Metriken
+        _duration_ms = (time.monotonic() - _handle_start) * 1000
+        self._record_metric("request_duration_ms", _duration_ms, channel=msg.channel)
+        _model_used = agent_result.model_used or ""
+        if _model_used:
+            self._record_metric("tokens_used_total", 1, model=_model_used, role="request")
 
         # Attachments aus Tool-Ergebnissen extrahieren (z.B. document_export)
         attachments = self._extract_attachments(all_results)
@@ -798,10 +828,15 @@ class Gateway:
         while not session.iterations_exhausted and self._running:
             session.iteration_count += 1
 
+            # Token-Budget prüfen und ggf. kompaktieren
+            self._check_and_compact(wm, session)
+
             log.info(
                 "agent_loop_iteration",
                 iteration=session.iteration_count,
                 session=session.session_id[:8],
+                chat_messages=len(wm.chat_history),
+                token_estimate=wm.token_count,
             )
 
             # Planner
@@ -908,6 +943,18 @@ class Gateway:
                     decision_reason=f"executed success={result.success}",
                     execution_result="ok" if result.success else result.error_message or "error",
                 ))
+                # Prometheus: Tool-Aufruf-Metriken
+                self._record_metric("tool_calls_total", 1, tool_name=result.tool_name)
+                if hasattr(result, "duration_ms") and result.duration_ms:
+                    self._record_metric(
+                        "tool_duration_ms", result.duration_ms, tool_name=result.tool_name,
+                    )
+                if result.is_error:
+                    self._record_metric(
+                        "errors_total", 1,
+                        channel=msg.channel,
+                        error_type="tool_error",
+                    )
 
             for result in results:
                 wm.add_tool_result(result)
@@ -1310,6 +1357,39 @@ class Gateway:
     _ATTACHMENT_EXTENSIONS: frozenset[str] = frozenset({
         ".pdf", ".docx", ".doc", ".xlsx", ".csv", ".png", ".jpg", ".jpeg", ".gif",
     })
+
+    # ── Prometheus Metric Recording ──────────────────────────────
+
+    def _record_metric(self, name: str, value: float, **labels: str) -> None:
+        """Zeichnet eine Metrik auf (wenn MonitoringHub oder TelemetryHub verfügbar).
+
+        Schreibt in beide Subsysteme wenn vorhanden:
+          - MonitoringHub.metrics (MetricCollector) -- für Dashboard + Prometheus
+          - TelemetryHub.metrics (MetricsProvider)  -- für OTLP + Prometheus
+        """
+        # MetricCollector (gateway/monitoring.py)
+        hub = getattr(self, "_monitoring_hub", None)
+        if hub is not None:
+            collector = getattr(hub, "metrics", None)
+            if collector is not None:
+                try:
+                    collector.increment(name, value, **labels)
+                except Exception:
+                    pass
+
+        # MetricsProvider (telemetry/metrics.py) via TelemetryHub
+        telemetry = getattr(self, "_telemetry_hub", None)
+        if telemetry is not None:
+            provider = getattr(telemetry, "metrics", None)
+            if provider is not None:
+                try:
+                    # Determine metric type based on name
+                    if name.endswith("_ms"):
+                        provider.histogram(name, value, **labels)
+                    else:
+                        provider.counter(name, value, **labels)
+                except Exception:
+                    pass
 
     def _extract_attachments(self, results: list[ToolResult]) -> list[str]:
         """Extrahiert Dateipfade aus Tool-Ergebnissen für den Anhang-Versand.
@@ -1734,6 +1814,29 @@ class Gateway:
             self._working_memories[session.session_id] = wm
 
         return self._working_memories[session.session_id]
+
+    def _check_and_compact(self, wm: WorkingMemory, session: SessionContext) -> None:
+        """Prüft Token-Budget und kompaktiert Chat-History wenn nötig.
+
+        Nutzt den WorkingMemoryManager für sprachbewusste Token-Schätzung
+        und FIFO-Entfernung alter Nachrichten.
+        """
+        from jarvis.memory.working import WorkingMemoryManager
+
+        mem_cfg = self._config.memory
+        mgr = WorkingMemoryManager(config=mem_cfg, max_tokens=wm.max_tokens)
+        mgr._memory = wm  # Manager auf aktuelle WM zeigen
+
+        if mgr.needs_compaction:
+            result = mgr.compact()
+            if result.messages_removed > 0:
+                log.info(
+                    "auto_compaction",
+                    session=session.session_id[:8],
+                    messages_removed=result.messages_removed,
+                    tokens_freed=result.tokens_freed,
+                    usage_after=f"{mgr.usage_ratio:.0%}",
+                )
 
     async def _handle_approvals(
         self,

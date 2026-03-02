@@ -264,10 +264,10 @@ class TestHelpers:
 
     def test_truncate_long_text(self) -> None:
         """Langer Text wird an Satzende gekürzt."""
-        text = "Erster Satz. Zweiter Satz. Dritter Satz. Vierter Satz."
-        result = _truncate(text, 30)
+        text = "Erster Satz. Zweiter Satz. Dritter Satz. Vierter Satz. " * 10
+        result = _truncate(text, 100)
         assert len(result) < len(text)
-        assert "[... gekürzt]" in result
+        assert "gekürzt" in result
 
     def test_truncate_exact_limit(self) -> None:
         """Text genau am Limit wird nicht gekürzt."""

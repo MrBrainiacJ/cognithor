@@ -31,6 +31,7 @@ from urllib.parse import urlparse
 import httpx
 
 from jarvis.utils.logging import get_logger
+from jarvis.utils.ttl_dict import TTLDict
 
 if TYPE_CHECKING:
     from jarvis.config import JarvisConfig
@@ -39,11 +40,11 @@ log = get_logger(__name__)
 
 # ── Konstanten ─────────────────────────────────────────────────────────────
 
-MAX_FETCH_BYTES = 500_000  # 500 KB maximaler Fetch
-MAX_TEXT_CHARS = 20_000  # 20K Zeichen extrahierter Text
-FETCH_TIMEOUT = 15  # Sekunden
-SEARCH_TIMEOUT = 10  # Sekunden
-MAX_SEARCH_RESULTS = 10
+_DEFAULT_MAX_FETCH_BYTES = 500_000  # 500 KB maximaler Fetch
+_DEFAULT_MAX_TEXT_CHARS = 20_000  # 20K Zeichen extrahierter Text
+_DEFAULT_FETCH_TIMEOUT = 15  # Sekunden
+_DEFAULT_SEARCH_TIMEOUT = 10  # Sekunden
+_DEFAULT_MAX_SEARCH_RESULTS = 10
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -52,11 +53,13 @@ DEFAULT_USER_AGENT = (
 # DuckDuckGo-Optimierung: Backends in Fallback-Reihenfolge
 DDG_BACKENDS = ("duckduckgo", "bing", "google", "brave")
 # Mindestabstand zwischen DuckDuckGo-Suchen (Sekunden)
-DDG_MIN_DELAY = 2.0
+_DEFAULT_DDG_MIN_DELAY = 2.0
 # Wartezeit bei Rate-Limiting (Sekunden)
-DDG_RATELIMIT_WAIT = 30
+_DEFAULT_DDG_RATELIMIT_WAIT = 30
 # Cache-TTL (Sekunden) — Standard: 1 Stunde
-DDG_CACHE_TTL = 3600
+_DEFAULT_DDG_CACHE_TTL = 3600
+# search_and_read: maximale Zeichen pro Seite
+_DEFAULT_SEARCH_AND_READ_MAX_CHARS = 5000
 
 # Blocked Domains (Sicherheit)
 BLOCKED_DOMAINS = frozenset(
@@ -135,6 +138,17 @@ class WebTools:
         self._ddg_last_search: float = 0.0
         self._ddg_cache_dir: Path | None = None
 
+        # Konfigurierbare Konstanten (Defaults aus Modul-Konstanten)
+        self._max_fetch_bytes: int = _DEFAULT_MAX_FETCH_BYTES
+        self._max_text_chars: int = _DEFAULT_MAX_TEXT_CHARS
+        self._fetch_timeout: int = _DEFAULT_FETCH_TIMEOUT
+        self._search_timeout: int = _DEFAULT_SEARCH_TIMEOUT
+        self._max_search_results: int = _DEFAULT_MAX_SEARCH_RESULTS
+        self._ddg_min_delay: float = _DEFAULT_DDG_MIN_DELAY
+        self._ddg_ratelimit_wait: int = _DEFAULT_DDG_RATELIMIT_WAIT
+        self._ddg_cache_ttl: int = _DEFAULT_DDG_CACHE_TTL
+        self._search_and_read_max_chars: int = _DEFAULT_SEARCH_AND_READ_MAX_CHARS
+
         # Aus Config laden falls vorhanden
         if config is not None:
             web_cfg = getattr(config, "web", None)
@@ -148,6 +162,17 @@ class WebTools:
                 self._domain_blocklist = list(getattr(web_cfg, "domain_blocklist", []))
                 self._domain_allowlist = list(getattr(web_cfg, "domain_allowlist", []))
 
+                # Konfigurierbare Konstanten aus web-Config übernehmen
+                self._max_fetch_bytes = getattr(web_cfg, "max_fetch_bytes", self._max_fetch_bytes)
+                self._max_text_chars = getattr(web_cfg, "max_text_chars", self._max_text_chars)
+                self._fetch_timeout = getattr(web_cfg, "fetch_timeout_seconds", self._fetch_timeout)
+                self._search_timeout = getattr(web_cfg, "search_timeout_seconds", self._search_timeout)
+                self._max_search_results = getattr(web_cfg, "max_search_results", self._max_search_results)
+                self._ddg_min_delay = getattr(web_cfg, "ddg_min_delay_seconds", self._ddg_min_delay)
+                self._ddg_ratelimit_wait = getattr(web_cfg, "ddg_ratelimit_wait_seconds", self._ddg_ratelimit_wait)
+                self._ddg_cache_ttl = getattr(web_cfg, "ddg_cache_ttl_seconds", self._ddg_cache_ttl)
+                self._search_and_read_max_chars = getattr(web_cfg, "search_and_read_max_chars", self._search_and_read_max_chars)
+
             # Cache-Verzeichnis: ~/.jarvis/cache/web_search/
             jarvis_home = getattr(config, "jarvis_home", None)
             if jarvis_home:
@@ -155,6 +180,11 @@ class WebTools:
 
         if self._ddg_cache_dir is None:
             self._ddg_cache_dir = Path.home() / ".jarvis" / "cache" / "web_search"
+
+        # DNS-Cache: vermeidet wiederholte DNS-Auflösung pro Request
+        self._dns_cache: TTLDict[str, list[str]] = TTLDict(
+            max_size=1000, ttl_seconds=300, cleanup_interval=60,
+        )
 
     def _validate_url(self, url: str) -> str:
         """Validiert eine URL gegen SSRF-Angriffe.
@@ -189,14 +219,29 @@ class WebTools:
 
         # DNS-Resolution prüfen um DNS-Rebinding/Bypass zu verhindern
         import socket
-        try:
-            resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-            for family, _type, _proto, _canonname, sockaddr in resolved:
-                ip = sockaddr[0]
+
+        cached_ips = self._dns_cache.get(hostname)
+        if cached_ips is not None:
+            # Cache-Hit: IPs erneut validieren (Paranoia-Check)
+            for ip in cached_ips:
                 if ip in BLOCKED_DOMAINS or _is_private_host(ip):
-                    raise WebError(f"DNS für {hostname} zeigt auf blockierte Adresse: {ip}")
-        except socket.gaierror:
-            raise WebError(f"DNS-Aufloesung fehlgeschlagen fuer {hostname}") from None
+                    # Invalide IP im Cache → löschen und neu auflösen
+                    del self._dns_cache[hostname]
+                    cached_ips = None
+                    break
+
+        if cached_ips is None:
+            try:
+                resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+                ips: list[str] = []
+                for _family, _type, _proto, _canonname, sockaddr in resolved:
+                    ip = sockaddr[0]
+                    if ip in BLOCKED_DOMAINS or _is_private_host(ip):
+                        raise WebError(f"DNS für {hostname} zeigt auf blockierte Adresse: {ip}")
+                    ips.append(ip)
+                self._dns_cache.set(hostname, ips)
+            except socket.gaierror:
+                raise WebError(f"DNS-Aufloesung fehlgeschlagen fuer {hostname}") from None
 
         return url
 
@@ -260,7 +305,7 @@ class WebTools:
         if not query.strip():
             return "Keine Suchanfrage angegeben."
 
-        num_results = min(max(num_results, 1), MAX_SEARCH_RESULTS)
+        num_results = min(max(num_results, 1), self._max_search_results)
         provider_errors: list[str] = []
 
         # SearXNG versuchen
@@ -325,7 +370,7 @@ class WebTools:
             "categories": "general",
         }
 
-        async with httpx.AsyncClient(timeout=SEARCH_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=self._search_timeout) as client:
             resp = await client.get(url, params=params)
             resp.raise_for_status()
             data = resp.json()
@@ -358,7 +403,7 @@ class WebTools:
             "country": "DE",
         }
 
-        async with httpx.AsyncClient(timeout=SEARCH_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=self._search_timeout) as client:
             resp = await client.get(url, headers=headers, params=params)
             resp.raise_for_status()
             data = resp.json()
@@ -394,7 +439,7 @@ class WebTools:
             "lr": f"lang_{language}",
         }
 
-        async with httpx.AsyncClient(timeout=SEARCH_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=self._search_timeout) as client:
             resp = await client.get(url, params=params)
             resp.raise_for_status()
             data = resp.json()
@@ -455,8 +500,8 @@ class WebTools:
         # 2. Rate-Limiting: Mindestabstand einhalten
         now = time.monotonic()
         elapsed = now - self._ddg_last_search
-        if elapsed < DDG_MIN_DELAY:
-            wait = DDG_MIN_DELAY - elapsed
+        if elapsed < self._ddg_min_delay:
+            wait = self._ddg_min_delay - elapsed
             log.debug("ddg_rate_limit_wait", wait_s=round(wait, 1))
             await anyio.sleep(wait)
 
@@ -502,7 +547,7 @@ class WebTools:
             try:
                 log.debug("ddg_backend_try", backend=backend, query=query[:60])
                 raw = list(
-                    DDGS(timeout=SEARCH_TIMEOUT).text(
+                    DDGS(timeout=self._search_timeout).text(
                         query,
                         region=region,
                         safesearch="moderate",
@@ -540,7 +585,7 @@ class WebTools:
                         query=query[:60],
                     )
                     # Bei Rate-Limit kurz warten bevor nächstes Backend versucht wird
-                    time.sleep(min(DDG_RATELIMIT_WAIT, 5))
+                    time.sleep(min(self._ddg_ratelimit_wait, 5))
                 else:
                     log.warning(
                         "ddg_backend_error",
@@ -576,7 +621,7 @@ class WebTools:
         if not query.strip():
             return "Keine Suchanfrage angegeben."
 
-        num_results = min(max(num_results, 1), MAX_SEARCH_RESULTS)
+        num_results = min(max(num_results, 1), self._max_search_results)
 
         import anyio
 
@@ -589,8 +634,10 @@ class WebTools:
         # Rate-Limiting
         now = time.monotonic()
         elapsed = now - self._ddg_last_search
-        if elapsed < DDG_MIN_DELAY:
-            await anyio.sleep(DDG_MIN_DELAY - elapsed)
+        if elapsed < self._ddg_min_delay:
+            await anyio.sleep(self._ddg_min_delay - elapsed)
+
+        search_timeout = self._search_timeout
 
         def _sync_news() -> list[dict[str, Any]]:
             try:
@@ -602,7 +649,7 @@ class WebTools:
                     raise WebError("ddgs nicht installiert. pip install ddgs") from None
 
             raw = list(
-                DDGS(timeout=SEARCH_TIMEOUT).news(
+                DDGS(timeout=search_timeout).news(
                     query,
                     region=region,
                     safesearch="moderate",
@@ -667,7 +714,7 @@ class WebTools:
             if not cache_file.exists():
                 return None
             data = json.loads(cache_file.read_text(encoding="utf-8"))
-            if time.time() - data.get("ts", 0) > DDG_CACHE_TTL:
+            if time.time() - data.get("ts", 0) > self._ddg_cache_ttl:
                 # Abgelaufen → löschen
                 cache_file.unlink(missing_ok=True)
                 return None
@@ -715,7 +762,7 @@ class WebTools:
         Args:
             url: Die abzurufende URL.
             extract_text: Text extrahieren (True) oder Raw-HTML (False).
-            max_chars: Maximale Zeichenanzahl (Default: MAX_TEXT_CHARS).
+            max_chars: Maximale Zeichenanzahl (Default: self._max_text_chars).
             reader_mode: Extraktions-Modus:
                 'auto' = trafilatura, bei <200 Zeichen Fallback auf Jina
                 'trafilatura' = nur trafilatura
@@ -725,7 +772,7 @@ class WebTools:
             Extrahierter Text oder HTML-Inhalt.
         """
         validated = self._validate_url(url)
-        max_chars = max_chars or MAX_TEXT_CHARS
+        max_chars = max_chars or self._max_text_chars
 
         # Domain-Filter prüfen
         parsed = urlparse(validated)
@@ -741,7 +788,7 @@ class WebTools:
         fetch_failed = False
         try:
             async with httpx.AsyncClient(
-                timeout=FETCH_TIMEOUT,
+                timeout=self._fetch_timeout,
                 follow_redirects=True,
                 max_redirects=5,
                 headers={"User-Agent": DEFAULT_USER_AGENT},
@@ -762,8 +809,8 @@ class WebTools:
         content_type = resp.headers.get("content-type", "")
         raw = resp.content
 
-        if len(raw) > MAX_FETCH_BYTES:
-            raw = raw[:MAX_FETCH_BYTES]
+        if len(raw) > self._max_fetch_bytes:
+            raw = raw[:self._max_fetch_bytes]
 
         # Nicht-HTML → als Plaintext zurückgeben
         if "text/html" not in content_type and extract_text:
@@ -857,7 +904,7 @@ class WebTools:
 
         for i, url in enumerate(urls[:num_results], 1):
             try:
-                content = await self.web_fetch(url, max_chars=5000)
+                content = await self.web_fetch(url, max_chars=self._search_and_read_max_chars)
                 parts.append(f"\n### [{i}] {url}\n{content}\n")
                 fetched_contents.append({"url": url, "content": content})
             except WebError as exc:
@@ -1049,7 +1096,7 @@ def _truncate_text(text: str, max_chars: int, url: str = "") -> str:
     if last_period > max_chars * 0.5:
         truncated = truncated[: last_period + 1]
 
-    return truncated + f"\n\n[... gekürzt, Quelle: {url}]"
+    return truncated + f"\n\n[... gekürzt: {len(truncated)}/{len(text)} Zeichen, Quelle: {url}]"
 
 
 def _is_private_host(hostname: str) -> bool:

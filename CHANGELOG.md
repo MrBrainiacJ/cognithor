@@ -5,6 +5,31 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.26.3] – 2026-03-02
+
+### Added — Scaling & Quality
+
+**Scaling (Skalierung)**
+- **Distributed Locking** (`core/distributed_lock.py`) — Abstract `DistributedLock` interface with 3 backends: `LocalLockBackend` (asyncio.Lock), `FileLockBackend` (cross-process file locking with msvcrt/fcntl), `RedisLockBackend` (SET NX EX + Lua release). Automatic fallback from Redis → File when redis package unavailable. `create_lock(config)` factory, `lock_backend` and `redis_url` config fields. 39 tests
+- **Durable Message Queue** (`core/message_queue.py`) — SQLite-backed async message queue with priority levels (LOW/NORMAL/HIGH/CRITICAL), FIFO within priority, retry with exponential backoff, dead-letter queue (DLQ), configurable TTL and max size. `QueueConfig` with `enabled`, `max_size`, `ttl_hours`, `max_retries`. Gateway integration (Phase D.2). 34 tests
+- **Telegram Webhook Support** (`channels/telegram.py`) — Webhook mode for <100ms latency alongside existing polling. aiohttp server with `/telegram/webhook` and `/telegram/health` endpoints. Optional TLS. Config fields: `telegram_use_webhook`, `telegram_webhook_url`, `telegram_webhook_port`, `telegram_webhook_host`. Automatic fallback to polling when webhook URL empty. 16 tests
+- **Prometheus Metrics** (`telemetry/prometheus.py`) — Zero-dependency Prometheus text exposition format exporter. Exports counters, gauges, histograms from MetricsProvider + MetricCollector. `GET /metrics` endpoint on Control Center API. 10 standard metrics (requests_total, request_duration_ms, errors_total, tokens_used_total, active_sessions, queue_depth, tool_calls_total, tool_duration_ms, memory_usage_bytes, uptime_seconds). Gateway PGE loop instrumentation. 49 tests
+- **Grafana Dashboard** (`deploy/grafana-dashboard.json`) — 14-panel dashboard (3 rows: Overview, System Health, Tool Execution) with channel/model template variables, 30s auto-refresh
+- **Skill Marketplace Persistence** (`skills/persistence.py`) — SQLite-backed store for marketplace listings, reviews, reputation, install history. 6 tables with indexes. CRUD, search (fulltext + category + rating + sort), featured/trending, reputation scoring. REST API (`skills/api.py`) with 12 endpoints under `/api/v1/skills`. Seed data from built-in procedures. `MarketplaceConfig` with `enabled`, `db_path`, `auto_seed`, `require_signatures`. 71 tests
+- **Auto-Dependency Loading** (`core/startup_check.py`) — Comprehensive startup checker that auto-installs missing Python packages, auto-starts Ollama, auto-pulls missing LLM models, verifies directory structure. Integrated into `__main__.py` for seamless startup experience
+
+**Quality**
+- **Magic Numbers → Config** — 30+ hardcoded constants extracted to typed Pydantic config classes (`BrowserConfig`, `FilesystemConfig`, `ShellConfig`, `MediaConfig`, `SynthesisConfig`, `CodeConfig`, `ExecutorConfig`, extended `WebConfig`). Safe config access with `getattr()` fallback pattern
+- **Parametrized Channel Tests** — 122 cross-channel tests covering all 11 channel types with consistent interface validation
+- **Windows Path Handling** — 34 new tests, `tempfile.gettempdir()` instead of hardcoded `/tmp/jarvis/`
+- **Vault Frontmatter → PyYAML** — Replaced 4 regex-based frontmatter methods with `yaml.safe_load()` for Obsidian-compatible parsing. 47 vault tests
+- **Token Estimation** — Language-aware token counting using `_estimate_tokens()` from chunker (word-based + German compound correction) instead of naive `len/4`. Configurable budget allocation via `MemoryConfig`. Auto-compaction in Gateway PGE loop. 8 new tests
+
+### Changed
+- Test count: 4,879 → 5,304+ (425+ new tests across all scaling and quality features)
+- LOC tests: ~53,000 → ~56,000+
+- Version `JarvisConfig.version` fixed: 0.25.0 → 0.26.0
+
 ## [0.26.2] – 2026-03-02
 
 ### Added

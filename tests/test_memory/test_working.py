@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from jarvis.config import MemoryConfig
+from jarvis.memory.chunker import _estimate_tokens
 from jarvis.memory.working import STATIC_BUDGET, WorkingMemoryManager
 from jarvis.models import Message, ToolResult
 
@@ -149,3 +150,87 @@ class TestWorkingMemoryManager:
 
         wm.set_plan(None)
         assert wm.memory.active_plan is None
+
+
+class TestTokenEstimation:
+    """Tests für die verbesserte Token-Schätzung (sprachbewusst statt len/4)."""
+
+    def test_uses_chunker_estimate(self) -> None:
+        """_estimate_message_tokens nutzt _estimate_tokens aus chunker."""
+        text = "Dies ist ein Test mit einigen Wörtern."
+        msg = Message(role="user", content=text)
+        wm = WorkingMemoryManager()
+        tokens = wm._estimate_message_tokens(msg)
+        # Sprachbewusste Schätzung + Overhead (10)
+        expected = _estimate_tokens(text) + 10
+        assert tokens == expected
+
+    def test_german_composita_more_tokens(self) -> None:
+        """Deutsche Komposita erzeugen mehr Tokens als len/4."""
+        text = "Berufsunfähigkeitsversicherung Haftpflichtversicherungsgesellschaft"
+        msg = Message(role="user", content=text)
+        wm = WorkingMemoryManager()
+        tokens = wm._estimate_message_tokens(msg)
+        naive = len(text) // 4 + 10
+        # Sprachbewusste Schätzung sollte höher sein als naive len/4
+        assert tokens >= naive
+
+    def test_empty_message(self) -> None:
+        """Leere Nachricht ergibt Minimum-Tokens."""
+        msg = Message(role="user", content="")
+        wm = WorkingMemoryManager()
+        tokens = wm._estimate_message_tokens(msg)
+        # _estimate_tokens("") = 1 + Overhead 10
+        assert tokens == 11
+
+    def test_whitespace_only(self) -> None:
+        """Whitespace-only Content ergibt Minimum-Tokens."""
+        msg = Message(role="user", content="   ")
+        wm = WorkingMemoryManager()
+        tokens = wm._estimate_message_tokens(msg)
+        assert tokens >= 11  # Minimum + Overhead
+
+
+class TestConfigurableBudgets:
+    """Tests für konfigurierbare Token-Budget-Verteilung."""
+
+    def test_default_budgets(self) -> None:
+        """Default-Budgets stimmen mit Modul-Konstanten überein."""
+        wm = WorkingMemoryManager()
+        assert wm._static_budget == STATIC_BUDGET
+
+    def test_custom_budgets(self) -> None:
+        """Konfigurierte Budgets werden korrekt angewendet."""
+        config = MemoryConfig(
+            budget_core_memory=1000,
+            budget_system_prompt=1000,
+            budget_procedures=1000,
+            budget_injected_memories=1000,
+            budget_tool_descriptions=1000,
+            budget_response_reserve=1000,
+        )
+        wm = WorkingMemoryManager(config=config, max_tokens=32768)
+        assert wm._static_budget == 6000
+        assert wm.available_chat_tokens == 32768 - 6000
+
+    def test_budget_report_uses_instance_values(self) -> None:
+        """Budget-Report zeigt konfigurierte Werte, nicht Modul-Konstanten."""
+        config = MemoryConfig(budget_response_reserve=5000)
+        wm = WorkingMemoryManager(config=config)
+        report = wm.build_budget_report()
+        assert "~5000" in report
+
+    def test_compaction_with_custom_budget(self) -> None:
+        """Compaction berücksichtigt konfigurierte Budgets."""
+        config = MemoryConfig(
+            compaction_threshold=0.5,
+            compaction_keep_last_n=2,
+            budget_response_reserve=500,  # Kleiner → mehr Chat-Budget
+        )
+        wm = WorkingMemoryManager(config=config, max_tokens=5000)
+        for _ in range(20):
+            wm.add_message(_msg(content="x" * 500))
+        assert wm.needs_compaction
+        result = wm.compact()
+        assert result.messages_removed > 0
+        assert len(wm.memory.chat_history) == 2

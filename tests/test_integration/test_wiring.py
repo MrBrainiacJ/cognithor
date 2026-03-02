@@ -47,6 +47,7 @@ def runtime_monitor() -> RuntimeMonitor:
 def mock_config() -> MagicMock:
     config = MagicMock()
     config.jarvis_home = Path("/tmp/jarvis_test")
+    config.executor = None  # Defaults statt MagicMock-Attribute
     return config
 
 

@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from jarvis.utils.logging import get_logger
+from jarvis.utils.ttl_dict import TTLDict
 
 log = get_logger(__name__)
 
@@ -101,7 +102,7 @@ class VoiceWebSocketBridge:
         self._whisper_model = whisper_model
         self._language = language
         self._stt_engine: Any = None
-        self._active_sessions: dict[str, AudioAccumulator] = {}
+        self._active_sessions: TTLDict[str, AudioAccumulator] = TTLDict(max_size=100, ttl_seconds=600)
 
     async def initialize(self) -> bool:
         """Lädt das Whisper-Modell. Gibt False zurück wenn nicht verfügbar."""

@@ -22,6 +22,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import yaml
+
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -532,54 +534,118 @@ class VaultTools:
 
         return None
 
+    # ── Frontmatter-Parsing (PyYAML) ─────────────────────────────────────
+
+    @staticmethod
+    def _parse_frontmatter(content: str) -> tuple[dict[str, Any], int, int]:
+        """Parst YAML-Frontmatter aus Markdown-Inhalt.
+
+        Returns:
+            (frontmatter_dict, start_pos, end_pos) wobei start/end die
+            Positionen des gesamten Frontmatter-Blocks inkl. --- Delimiter sind.
+            Bei fehlendem Frontmatter: ({}, -1, -1).
+        """
+        if not content.startswith("---"):
+            return {}, -1, -1
+        # Finde das schließende --- (nach dem öffnenden)
+        close = content.find("\n---", 3)
+        if close < 0:
+            return {}, -1, -1
+        yaml_text = content[4:close]  # Zwischen erstem --- und zweitem ---
+        try:
+            data = yaml.safe_load(yaml_text)
+            if not isinstance(data, dict):
+                return {}, -1, -1
+            return data, 0, close + 4  # +4 für "\n---"
+        except yaml.YAMLError:
+            log.debug("vault_frontmatter_parse_error", content_start=content[:80])
+            return {}, -1, -1
+
+    @staticmethod
+    def _serialize_frontmatter(data: dict[str, Any]) -> str:
+        """Serialisiert ein Dict als YAML-Frontmatter-Block."""
+        lines = ["---"]
+        for key, value in data.items():
+            if isinstance(value, list):
+                # Inline-Array: [a, b, c] — Obsidian-kompatibel
+                items = []
+                for item in value:
+                    s = str(item)
+                    if "," in s or '"' in s or "'" in s:
+                        items.append(f'"{s}"')
+                    else:
+                        items.append(s)
+                lines.append(f"{key}: [{', '.join(items)}]")
+            elif isinstance(value, str) and ('"' in value or ":" in value or "," in value):
+                lines.append(f'{key}: "{value}"')
+            else:
+                lines.append(f"{key}: {value}")
+        lines.append("---")
+        return "\n".join(lines)
+
     def _extract_frontmatter_tags(self, content: str) -> list[str]:
         """Extrahiert Tags aus dem YAML-Frontmatter."""
-        match = re.search(r"^tags:\s*\[([^\]]*)\]", content, re.MULTILINE)
-        if match:
-            return [t.strip().lower() for t in match.group(1).split(",") if t.strip()]
+        data, _, _ = self._parse_frontmatter(content)
+        tags = data.get("tags", [])
+        if isinstance(tags, list):
+            return [str(t).strip().lower() for t in tags if str(t).strip()]
+        if isinstance(tags, str):
+            return [t.strip().lower() for t in tags.split(",") if t.strip()]
         return []
 
     def _extract_frontmatter_field(self, content: str, field: str) -> str:
         """Extrahiert ein einzelnes Feld aus dem Frontmatter."""
-        match = re.search(rf'^{field}:\s*"?([^"\n]*)"?', content, re.MULTILINE)
-        if match:
-            return match.group(1).strip()
-        return ""
+        data, _, _ = self._parse_frontmatter(content)
+        value = data.get(field, "")
+        if value is None:
+            return ""
+        return str(value).strip()
 
-    def _replace_frontmatter_field(self, content: str, field: str, value: str) -> str:
-        """Ersetzt ein Feld im YAML-Frontmatter."""
-        pattern = rf'^({field}:\s*).*$'
-        replacement = rf'\g<1>{value}'
-        new_content, count = re.subn(pattern, replacement, content, count=1, flags=re.MULTILINE)
-        if count == 0:
-            # Feld existiert nicht → vor dem schließenden --- einfügen
-            new_content = content.replace("\n---\n", f"\n{field}: {value}\n---\n", 1)
-        return new_content
+    def _replace_frontmatter_field(self, content: str, field: str, value: Any) -> str:
+        """Ersetzt oder fügt ein Feld im YAML-Frontmatter hinzu."""
+        data, start, end = self._parse_frontmatter(content)
+        if start < 0:
+            # Kein Frontmatter vorhanden — nichts zu ersetzen
+            return content
+
+        # Wert parsen wenn es ein YAML-String ist (z.B. "[a, b]")
+        if isinstance(value, str):
+            try:
+                parsed = yaml.safe_load(value)
+                if isinstance(parsed, (list, dict)):
+                    value = parsed
+            except yaml.YAMLError:
+                pass
+
+        data[field] = value
+        new_fm = self._serialize_frontmatter(data)
+        body = content[end:]
+        return new_fm + body
 
     def _add_linked_note(self, content: str, note_title: str) -> str:
         """Fügt eine Notiz zur linked_notes-Liste im Frontmatter hinzu."""
-        match = re.search(r'^linked_notes:\s*\[([^\]]*)\]', content, re.MULTILINE)
-        if match:
-            existing = [n.strip().strip('"') for n in match.group(1).split(",") if n.strip()]
-            if note_title not in existing:
-                existing.append(note_title)
-            escaped = [f'"{n}"' for n in existing]
-            new_val = f"[{', '.join(escaped)}]"
-            content = self._replace_frontmatter_field(content, "linked_notes", new_val)
-        else:
-            # Feld hinzufügen
-            content = self._replace_frontmatter_field(
-                content, "linked_notes", f'["{note_title}"]',
-            )
-        return content
+        data, start, _ = self._parse_frontmatter(content)
+        if start < 0:
+            return content
+
+        existing = data.get("linked_notes", [])
+        if not isinstance(existing, list):
+            existing = []
+
+        # Bereinigung: Strings ohne Quotes
+        existing = [str(n).strip().strip('"') for n in existing if str(n).strip()]
+        if note_title not in existing:
+            existing.append(note_title)
+
+        escaped = [f'"{n}"' for n in existing]
+        new_val = f"[{', '.join(escaped)}]"
+        return self._replace_frontmatter_field(content, "linked_notes", new_val)
 
     def _extract_snippet(self, content: str, query: str, context_chars: int = 100) -> str:
         """Extrahiert einen kurzen Kontext-Snippet um den Suchbegriff."""
-        # Frontmatter überspringen
-        body = content
-        fm_end = content.find("---", 3)
-        if fm_end > 0:
-            body = content[fm_end + 3:]
+        # Frontmatter überspringen via Parser
+        _, _, fm_end = self._parse_frontmatter(content)
+        body = content[fm_end:] if fm_end > 0 else content
 
         idx = body.lower().find(query)
         if idx < 0:

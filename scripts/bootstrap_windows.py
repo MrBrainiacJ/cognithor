@@ -677,7 +677,34 @@ def quick_start(repo_root: str) -> bool:
     elif ollama_is_running():
         result.add_pass("Ollama laeuft")
     else:
-        result.add_warn("Ollama nicht gefunden")
+        # Auto-fix: Ollama nicht gefunden -- versuche Installation via winget
+        info("Ollama nicht gefunden -- versuche Installation via winget...")
+        try:
+            winget_proc = subprocess.run(
+                ["winget", "install", "--id", "Ollama.Ollama", "-e", "--accept-source-agreements", "--accept-package-agreements"],
+                capture_output=True, text=True, timeout=600,
+            )
+            if winget_proc.returncode == 0:
+                result.add_pass("Ollama via winget installiert")
+                ollama_path = find_ollama()
+                if ollama_path and not ollama_is_running():
+                    info("Ollama wird gestartet...")
+                    if start_ollama(ollama_path):
+                        result.add_pass("Ollama gestartet")
+                    else:
+                        result.add_warn("Ollama installiert, konnte aber nicht gestartet werden")
+            else:
+                result.add_warn(
+                    "Ollama konnte nicht via winget installiert werden. "
+                    "Bitte manuell installieren: https://ollama.com/download"
+                )
+        except FileNotFoundError:
+            result.add_warn(
+                "winget nicht verfuegbar. Ollama bitte manuell installieren: "
+                "https://ollama.com/download"
+            )
+        except Exception as e:
+            result.add_warn(f"Ollama-Installation fehlgeschlagen: {e}")
 
     # ── 2. Modelle pruefen ─────────────────────────────────────────────
     if ollama_is_running():
@@ -686,7 +713,22 @@ def quick_start(repo_root: str) -> bool:
         if has_qwen:
             result.add_pass(f"Modelle OK ({len(models)} installiert)")
         else:
-            result.add_warn("Kein qwen3-Modell gefunden -- ollama pull qwen3:8b")
+            # Auto-fix: Fehlende Modelle automatisch pullen
+            info("Kein qwen3-Modell gefunden -- starte automatischen Download...")
+            if ollama_path:
+                for model_name in ["qwen3:8b", "qwen3:32b"]:
+                    if pull_model(model_name, ollama_path):
+                        result.add_pass(f"Modell installiert: {model_name}")
+                    else:
+                        result.add_warn(
+                            f"Modell {model_name} konnte nicht geladen werden. "
+                            f"Manuell: ollama pull {model_name}"
+                        )
+            else:
+                result.add_warn(
+                    "Kein qwen3-Modell gefunden und Ollama-Binary nicht auffindbar. "
+                    "Manuell: ollama pull qwen3:8b"
+                )
     else:
         result.add_warn("Modell-Check uebersprungen (Ollama nicht erreichbar)")
 
@@ -711,10 +753,22 @@ def quick_start(repo_root: str) -> bool:
         if check.returncode == 0:
             result.add_pass("Import OK")
         else:
-            result.add_fail(
-                "jarvis Import fehlgeschlagen",
-                "pip install -e \".[all]\" im Repo-Root ausfuehren"
+            # Auto-fix: Import fehlgeschlagen -- pip install -e ".[all]"
+            info("Import fehlgeschlagen -- versuche automatische Reparatur...")
+            pip_proc = subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-e", ".[all]",
+                 "--quiet", "--disable-pip-version-check"],
+                capture_output=True, text=True, timeout=600, cwd=repo_root,
             )
+            if pip_proc.returncode == 0:
+                result.add_pass("Abhaengigkeiten repariert (pip install -e '.[all]')")
+            else:
+                stderr = pip_proc.stderr.strip()[-300:] if pip_proc.stderr else ""
+                result.add_fail(
+                    "jarvis Import fehlgeschlagen und Reparatur schlug fehl",
+                    f"Manuell: cd \"{repo_root}\" && pip install -e \".[all]\"\n"
+                    f"  Fehler: {stderr}"
+                )
     except Exception as e:
         result.add_fail("Import-Test", str(e))
 

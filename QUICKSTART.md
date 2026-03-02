@@ -107,7 +107,7 @@ python -m jarvis
 Du siehst das CLI-REPL:
 ```
 ┌──────────────────────────────────┐
-│  Jarvis · Agent OS v0.7.0       │
+│  Jarvis · Agent OS v0.26.0      │
 │  Modell: qwen3:32b              │
 │  Tools: 12 registriert          │
 └──────────────────────────────────┘
@@ -187,7 +187,7 @@ security:
 ```bash
 make smoke        # 26 Installations-Checks
 make health       # Laufzeit-Check (Ollama, Disk, Memory)
-make test         # 1.236 Tests ausführen
+make test         # 5.304+ Tests ausführen
 ```
 
 Logs:

@@ -28,3 +28,5 @@ from .ecosystem_control import (  # noqa: F401
     SkillCurator,
     TrustBoundaryManager,
 )
+from .persistence import MarketplaceStore  # noqa: F401
+from .seed_data import seed_marketplace  # noqa: F401

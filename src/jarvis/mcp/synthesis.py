@@ -38,12 +38,10 @@ __all__ = [
     "register_synthesis_tools",
 ]
 
-# ── Konstanten ────────────────────────────────────────────────────────────
+# ── Konstanten (Defaults, überschreibbar via config.synthesis.*) ──────────
 
-# Maximale Zeichenanzahl pro Quelle die ans LLM geht
-MAX_SOURCE_CHARS = 4000
-# Maximale Gesamtgröße des Kontexts für das LLM
-MAX_CONTEXT_CHARS = 25000
+_DEFAULT_MAX_SOURCE_CHARS = 4000
+_DEFAULT_MAX_CONTEXT_CHARS = 25000
 
 
 class KnowledgeSynthesizer:
@@ -56,12 +54,17 @@ class KnowledgeSynthesizer:
       - WebTools: async web_search(), search_and_read()
     """
 
-    def __init__(self) -> None:
+    def __init__(self, config: "JarvisConfig | None" = None) -> None:
         self._llm_fn: Any = None
         self._llm_model: str = ""
         self._memory_tools: Any = None
         self._vault_tools: Any = None
         self._web_tools: Any = None
+
+        # Limits aus Config lesen (mit sicheren Defaults)
+        _synth = getattr(config, "synthesis", None)
+        self._max_source_chars: int = getattr(_synth, "max_source_chars", _DEFAULT_MAX_SOURCE_CHARS)
+        self._max_context_chars: int = getattr(_synth, "max_context_chars", _DEFAULT_MAX_CONTEXT_CHARS)
 
     # ── Dependency Injection ─────────────────────────────────────────
 
@@ -130,7 +133,7 @@ class KnowledgeSynthesizer:
             try:
                 memory_result = self._memory_tools.search_memory(topic, top_k=8)
                 if memory_result and "Fehler" not in memory_result and "Keine" not in memory_result:
-                    sources["memory"] = _truncate(memory_result, MAX_SOURCE_CHARS)
+                    sources["memory"] = _truncate(memory_result, self._max_source_chars)
                     log.info("synthesis_memory_found", topic=topic[:50], chars=len(memory_result))
             except Exception as exc:
                 log.debug("synthesis_memory_error", error=str(exc))
@@ -146,7 +149,7 @@ class KnowledgeSynthesizer:
                     if entity_result and "Keine Entität" not in entity_result:
                         entity_parts.append(entity_result)
                 if entity_parts:
-                    sources["entities"] = _truncate("\n\n".join(entity_parts), MAX_SOURCE_CHARS)
+                    sources["entities"] = _truncate("\n\n".join(entity_parts), self._max_source_chars)
                     log.info("synthesis_entities_found", topic=topic[:50], count=len(entity_parts))
             except Exception as exc:
                 log.debug("synthesis_entity_error", error=str(exc))
@@ -159,7 +162,7 @@ class KnowledgeSynthesizer:
                     # Nur Einträge behalten die zum Thema passen
                     relevant = _filter_relevant_text(episodes, topic)
                     if relevant:
-                        sources["episodes"] = _truncate(relevant, MAX_SOURCE_CHARS)
+                        sources["episodes"] = _truncate(relevant, self._max_source_chars)
                         log.info("synthesis_episodes_found", topic=topic[:50])
             except Exception as exc:
                 log.debug("synthesis_episodes_error", error=str(exc))
@@ -169,7 +172,7 @@ class KnowledgeSynthesizer:
             try:
                 vault_result = await self._vault_tools.vault_search(topic, limit=5)
                 if vault_result and "Keine Notizen" not in vault_result:
-                    sources["vault"] = _truncate(vault_result, MAX_SOURCE_CHARS)
+                    sources["vault"] = _truncate(vault_result, self._max_source_chars)
                     log.info("synthesis_vault_found", topic=topic[:50])
             except Exception as exc:
                 log.debug("synthesis_vault_error", error=str(exc))
@@ -181,7 +184,7 @@ class KnowledgeSynthesizer:
                     topic, num_results=web_results, cross_check=True,
                 )
                 if web_result and "Keine" not in web_result[:30]:
-                    sources["web"] = _truncate(web_result, MAX_SOURCE_CHARS * 2)
+                    sources["web"] = _truncate(web_result, self._max_source_chars * 2)
                     log.info("synthesis_web_found", topic=topic[:50], chars=len(web_result))
             except Exception as exc:
                 log.debug("synthesis_web_error", error=str(exc))
@@ -207,8 +210,8 @@ class KnowledgeSynthesizer:
         combined = "\n\n---\n\n".join(parts)
 
         # Gesamtgröße begrenzen
-        if len(combined) > MAX_CONTEXT_CHARS:
-            combined = combined[:MAX_CONTEXT_CHARS] + "\n\n[... Kontext gekürzt]"
+        if len(combined) > self._max_context_chars:
+            combined = combined[:self._max_context_chars] + "\n\n[... Kontext gekürzt]"
 
         return combined
 
@@ -666,11 +669,12 @@ def _truncate(text: str, max_chars: int) -> str:
     """Kürzt Text auf max_chars, am letzten Satzende."""
     if len(text) <= max_chars:
         return text
+    original_len = len(text)
     truncated = text[:max_chars]
     last_period = truncated.rfind(".")
     if last_period > max_chars * 0.5:
         truncated = truncated[:last_period + 1]
-    return truncated + "\n[... gekürzt]"
+    return truncated + f"\n[... gekürzt: {len(truncated)}/{original_len} Zeichen]"
 
 
 def _extract_keywords(text: str) -> list[str]:
@@ -743,7 +747,7 @@ def register_synthesis_tools(
     Returns:
         KnowledgeSynthesizer-Instanz (Abhängigkeiten werden später injiziert).
     """
-    synth = KnowledgeSynthesizer()
+    synth = KnowledgeSynthesizer(config=config)
 
     mcp_client.register_builtin_handler(
         "knowledge_synthesize",

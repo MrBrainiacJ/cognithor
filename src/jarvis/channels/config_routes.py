@@ -70,6 +70,7 @@ def create_config_routes(
     _register_memory_routes(app, deps, gateway)
     _register_skill_routes(app, deps, gateway)
     _register_monitoring_routes(app, deps, _get_hub)
+    _register_prometheus_routes(app, _get_hub, gateway)
     _register_security_routes(app, deps, gateway)
     _register_governance_routes(app, deps, gateway)
     _register_infrastructure_routes(app, deps, gateway)
@@ -1224,6 +1225,53 @@ def _register_monitoring_routes(
             event_generator(),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+        )
+
+
+# ======================================================================
+# Prometheus metrics endpoint
+# ======================================================================
+
+
+def _register_prometheus_routes(
+    app: Any,
+    get_hub: Any,
+    gateway: Any,
+) -> None:
+    """Prometheus /metrics endpoint -- no auth required (standard practice)."""
+
+    @app.get("/metrics")
+    async def prometheus_metrics() -> Any:
+        """Prometheus-Metriken im Text Exposition Format."""
+        from starlette.responses import Response
+        from jarvis.telemetry.prometheus import PrometheusExporter
+
+        # Collect sources: MetricsProvider from TelemetryHub, MetricCollector from MonitoringHub
+        metrics_provider = None
+        metric_collector = None
+
+        # TelemetryHub -> MetricsProvider (telemetry/metrics.py)
+        if gateway is not None:
+            telemetry_hub = getattr(gateway, "_telemetry_hub", None)
+            if telemetry_hub is not None:
+                metrics_provider = getattr(telemetry_hub, "metrics", None)
+
+        # MonitoringHub -> MetricCollector (gateway/monitoring.py)
+        try:
+            hub = get_hub()
+            if hub is not None:
+                metric_collector = getattr(hub, "metrics", None)
+        except Exception:
+            pass
+
+        exporter = PrometheusExporter(
+            metrics_provider=metrics_provider,
+            metric_collector=metric_collector,
+        )
+        content = exporter.export()
+        return Response(
+            content=content,
+            media_type="text/plain; version=0.0.4; charset=utf-8",
         )
 
 
