@@ -314,10 +314,20 @@ class StartupChecker:
     def check_ollama(self) -> StartupReport:
         """Check whether Ollama is running; auto-start if possible.
 
+        Only relevant for backends that use Ollama (``ollama``, ``lmstudio``
+        with Ollama-based models).  Cloud backends skip this check entirely.
+
         Uses the same discovery pattern as ``bootstrap_windows.py``:
         PATH lookup, then LOCALAPPDATA, then Program Files.
         """
         report = StartupReport()
+
+        # Skip Ollama check for cloud backends
+        if self._config is not None:
+            backend_type = getattr(self._config, "llm_backend_type", "ollama")
+            if backend_type not in ("ollama", "lmstudio"):
+                report.checks_passed.append(f"Backend is {backend_type} -- Ollama check skipped")
+                return report
 
         ollama_url = _OLLAMA_URL
         if self._config is not None:
@@ -358,17 +368,31 @@ class StartupChecker:
     # 3. LLM models
     # ------------------------------------------------------------------
 
+    # Backends where models are accessed via API, not downloaded locally
+    _CLOUD_BACKENDS = frozenset({
+        "openai", "anthropic", "gemini", "groq", "deepseek", "mistral",
+        "together", "openrouter", "xai", "cerebras", "github", "bedrock",
+        "huggingface", "moonshot",
+    })
+
     def check_models(self) -> StartupReport:
         """Check if required LLM models are available; auto-pull if missing.
 
-        Queries Ollama's ``GET /api/tags`` endpoint to list installed
-        models, then compares with the planner and executor model names
-        from config.
+        Only runs for local backends (ollama, lmstudio).  Cloud backends
+        (OpenAI, Anthropic, etc.) access models via API — no local
+        download needed.
         """
         report = StartupReport()
 
         if self._config is None:
             report.warnings.append("No config provided -- model check skipped")
+            return report
+
+        # Skip model pulling for cloud backends
+        backend_type = getattr(self._config, "llm_backend_type", "ollama")
+        if backend_type in self._CLOUD_BACKENDS:
+            report.checks_passed.append(f"Cloud backend ({backend_type}) -- model pull skipped")
+            log.debug("startup_skip_model_pull_cloud", backend=backend_type)
             return report
 
         ollama_url = getattr(

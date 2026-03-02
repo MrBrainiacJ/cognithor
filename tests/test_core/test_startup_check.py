@@ -32,6 +32,7 @@ def mock_config() -> MagicMock:
     """Minimal mock of JarvisConfig with models + ollama sub-configs."""
     config = MagicMock()
     config.jarvis_home = Path("/tmp/test_jarvis_home")
+    config.llm_backend_type = "ollama"
     config.ollama.base_url = "http://localhost:11434"
 
     # Models
