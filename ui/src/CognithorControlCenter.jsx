@@ -103,7 +103,7 @@ const PAGES = [
 
 // ── Default Config ─────────────────────────────────────────────────────
 const defaults = () => ({
-  owner_name: "User", version: "0.22.0",
+  owner_name: "User", version: "0.26.6",
   operation_mode: "auto", llm_backend_type: "ollama",
   cost_tracking_enabled: true, daily_budget_usd: 0, monthly_budget_usd: 0,
   openai_api_key: "", openai_base_url: "https://api.openai.com/v1",

@@ -1367,7 +1367,7 @@ class JarvisConfig(BaseModel):
     """
 
     # Meta
-    version: str = "0.26.0"
+    version: str = "0.26.6"
     owner_name: str = Field(
         default="User",
         description="Name des Besitzers/Benutzers. Wird in Prompts und CORE.md verwendet.",

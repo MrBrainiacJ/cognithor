@@ -1,6 +1,6 @@
 {
   "name": "jarvis-pwa",
-  "version": "0.22.0",
+  "version": "0.26.6",
   "private": true,
   "type": "module",
   "scripts": {

@@ -56,7 +56,7 @@ const Settings: FunctionComponent<SettingsProps> = ({ onSave, currentUrl }) => {
 
       <div class="settings-group">
         <h3>Info</h3>
-        <p>Jarvis PWA v0.22.0</p>
+        <p>Jarvis PWA v0.26.6</p>
         <p>Verbinde dich mit deinem lokalen Jarvis-Server.</p>
       </div>
     </div>
