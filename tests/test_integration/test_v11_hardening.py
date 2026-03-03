@@ -149,9 +149,21 @@ class TestCredentialScanner:
 
 class TestWebhookNotifier:
     def test_notify(self) -> None:
+        from unittest.mock import MagicMock, patch
+        import httpx as real_httpx
+
         notifier = WebhookNotifier()
         notifier.add_webhook(WebhookConfig("https://example.com/hook", ["critical_finding"]))
-        sent = notifier.notify("critical_finding", {"details": "test"})
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_client = MagicMock()
+        mock_client.__enter__ = MagicMock(return_value=mock_client)
+        mock_client.__exit__ = MagicMock(return_value=False)
+        mock_client.post = MagicMock(return_value=mock_response)
+
+        with patch.object(real_httpx, "Client", return_value=mock_client):
+            sent = notifier.notify("critical_finding", {"details": "test"})
         assert sent == 1
 
     def test_event_filter(self) -> None:

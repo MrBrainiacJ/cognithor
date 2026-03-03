@@ -313,7 +313,7 @@ class JarvisMCPClient:
         if config.transport == "stdio":
             await self._connect_stdio_server(name, config)
         elif config.transport == "http":
-            log.warning("mcp_http_not_yet_implemented", server=name)
+            await self._connect_http_server(name, config)
         else:
             log.error("mcp_unknown_transport", server=name, transport=config.transport)
 
@@ -392,6 +392,76 @@ class JarvisMCPClient:
             raise MCPClientError(f"Timeout beim Verbinden mit MCP-Server '{name}'") from None
         except Exception as exc:
             log.error("mcp_server_error", server=name, error=str(exc))
+            raise
+
+    async def _connect_http_server(
+        self,
+        name: str,
+        config: MCPServerConfig,
+    ) -> None:
+        """Verbindet sich mit einem HTTP/SSE-basierten MCP-Server.
+
+        Nutzt das MCP SDK fuer die Kommunikation ueber HTTP + SSE.
+        Erwartet config.url als Server-URL.
+        """
+        try:
+            from mcp.client import ClientSession  # type: ignore[attr-defined]
+            from mcp.client.sse import sse_client  # type: ignore[attr-defined]
+        except ImportError:
+            log.warning(
+                "mcp_sdk_sse_not_available",
+                message="MCP SDK SSE-Client nicht verfuegbar. pip install mcp[sse]",
+                server=name,
+            )
+            return
+
+        url = getattr(config, "url", "") or ""
+        if not url:
+            log.error("mcp_http_no_url", server=name)
+            return
+
+        try:
+            read_stream, write_stream = await asyncio.wait_for(
+                sse_client(url).__aenter__(),
+                timeout=STDIO_CONNECT_TIMEOUT,
+            )
+
+            session = await asyncio.wait_for(
+                ClientSession(read_stream, write_stream).__aenter__(),
+                timeout=CLIENT_SESSION_TIMEOUT,
+            )
+
+            await asyncio.wait_for(session.initialize(), timeout=SESSION_INIT_TIMEOUT)
+
+            tools_result = await session.list_tools()
+            tools = {}
+            for tool in tools_result.tools:
+                tool_info = MCPToolInfo(
+                    name=tool.name,
+                    server=name,
+                    description=tool.description or "",
+                    input_schema=tool.inputSchema if hasattr(tool, "inputSchema") else {},
+                )
+                tools[tool.name] = tool_info
+                self._tool_registry[tool.name] = tool_info
+
+            conn = ServerConnection(
+                name=name,
+                config=config,
+                session=session,
+                read_stream=read_stream,
+                write_stream=write_stream,
+                tools=tools,
+                connected=True,
+            )
+            self._servers[name] = conn
+            log.info("mcp_http_server_connected", server=name, tools=len(tools))
+
+        except TimeoutError:
+            log.error("mcp_http_server_timeout", server=name, url=url)
+            raise MCPClientError(f"Timeout beim Verbinden mit MCP-HTTP-Server '{name}'") from None
+        except Exception as exc:
+            log.error("mcp_http_server_error", server=name, error=str(exc))
             raise
 
     def _load_server_configs(self) -> dict[str, MCPServerConfig]:

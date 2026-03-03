@@ -31,6 +31,7 @@ def declare_agents_attrs(config: Any) -> PhaseResult:
         "agent_heartbeat": None,
         "command_registry": None,
         "interaction_store": None,
+        "orchestrator": None,
     }
 
     # Phase 8: Per-Agent Heartbeat-Scheduler
@@ -39,6 +40,13 @@ def declare_agents_attrs(config: Any) -> PhaseResult:
         result["agent_heartbeat"] = AgentHeartbeatScheduler()
     except Exception:
         log.debug("agent_heartbeat_init_skipped", exc_info=True)
+
+    # Phase 8b: Multi-Agent Orchestrator
+    try:
+        from jarvis.core.orchestrator import Orchestrator
+        result["orchestrator"] = Orchestrator()
+    except Exception:
+        log.debug("orchestrator_init_skipped", exc_info=True)
 
     # Phase 9: Slash-Commands + Interaction-State
     try:

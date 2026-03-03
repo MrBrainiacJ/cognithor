@@ -75,9 +75,25 @@ def declare_compliance_attrs(config: Any) -> PhaseResult:
     return result
 
 
-async def init_compliance(config: Any) -> PhaseResult:
-    """Initialize compliance subsystems (currently all eagerly constructed in declare).
+async def init_compliance(config: Any, **attrs: Any) -> PhaseResult:
+    """Initialize compliance subsystems — validates eagerly-declared components.
 
-    Reserved for future async compliance initialization.
+    Logs which compliance components are available and operational.
     """
-    return {}
+    result: PhaseResult = {}
+    available = []
+    for name in (
+        "compliance_framework", "decision_log", "remediation_tracker",
+        "economic_governor", "compliance_exporter", "impact_assessor",
+        "explainability",
+    ):
+        obj = attrs.get(name)
+        if obj is not None:
+            available.append(name)
+
+    if available:
+        log.info("compliance_init_complete", components=available)
+    else:
+        log.debug("compliance_init_skipped", reason="no_components_available")
+
+    return result

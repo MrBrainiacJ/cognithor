@@ -265,7 +265,7 @@ class TestMattermostStart:
         mock_http = AsyncMock()
         mock_http.get = AsyncMock(return_value=mock_resp)
 
-        with patch("jarvis.channels.mattermost.httpx.AsyncClient", return_value=mock_http):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             with patch.object(ch, "_websocket_loop", new_callable=AsyncMock):
                 await ch.start(handler)
 
@@ -282,7 +282,7 @@ class TestMattermostStart:
         mock_http = AsyncMock()
         mock_http.get = AsyncMock(return_value=mock_resp)
 
-        with patch("jarvis.channels.mattermost.httpx.AsyncClient", return_value=mock_http):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             with patch.object(ch, "_websocket_loop", new_callable=AsyncMock):
                 await ch.start(handler)
 
@@ -296,7 +296,7 @@ class TestMattermostStart:
         mock_http = AsyncMock()
         mock_http.get = AsyncMock(side_effect=RuntimeError("connection refused"))
 
-        with patch("jarvis.channels.mattermost.httpx.AsyncClient", return_value=mock_http):
+        with patch("httpx.AsyncClient", return_value=mock_http):
             with patch.object(ch, "_websocket_loop", new_callable=AsyncMock):
                 await ch.start(handler)
 
@@ -317,14 +317,20 @@ class TestMattermostWebsocketLoop:
 
         mock_ws_module = MagicMock()
 
-        async def fake_connect(*args, **kwargs):
-            nonlocal call_count
-            call_count += 1
-            if call_count >= 2:
-                ch._running = False
-            raise ConnectionError("refused")
+        class _FakeConnect:
+            """Fake async context manager that raises on __aenter__."""
 
-        mock_ws_module.connect = fake_connect
+            async def __aenter__(self_inner):
+                nonlocal call_count
+                call_count += 1
+                if call_count >= 2:
+                    ch._running = False
+                raise ConnectionError("refused")
+
+            async def __aexit__(self_inner, *args):
+                pass
+
+        mock_ws_module.connect = MagicMock(return_value=_FakeConnect())
 
         with patch.dict("sys.modules", {"websockets": mock_ws_module}):
             with patch("jarvis.channels.mattermost.asyncio.sleep", new_callable=AsyncMock):

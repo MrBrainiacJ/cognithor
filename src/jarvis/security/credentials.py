@@ -17,7 +17,6 @@ Bibel-Referenz: §11.2 (Credential-Management)
 from __future__ import annotations
 
 import base64
-import contextlib
 import hashlib
 import json
 import os
@@ -378,8 +377,14 @@ class CredentialStore:
     @staticmethod
     def _set_file_permissions(path: Path) -> None:
         """Setzt Datei-Permissions auf Owner-only (0600)."""
-        with contextlib.suppress(OSError):
+        try:
             path.chmod(stat.S_IRUSR | stat.S_IWUSR)
+        except OSError as exc:
+            log.warning(
+                "credential_chmod_failed",
+                path=str(path),
+                error=str(exc),
+            )
 
 
 class _StoredCredential:

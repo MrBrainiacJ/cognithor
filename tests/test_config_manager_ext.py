@@ -178,7 +178,7 @@ class TestUpdateTopLevelSecretField:
     def test_update_api_key_masked_value_treated_as_no_value(self, tmp_path: Path) -> None:
         config = JarvisConfig(
             jarvis_home=tmp_path / ".jarvis",
-            openai_api_key="sk-real",
+            openai_api_key="sk-real-key",
         )
         mgr = ConfigManager(config=config)
         # "***" is the mask placeholder -- treated as "gets no value"

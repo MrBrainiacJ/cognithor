@@ -280,7 +280,15 @@ class SkillUpdater:
         from_version = self._installed.get(package_id, "0.0.0")
         to_version = check.available_version
 
-        # Simuliere Installation (in Realität: Download + Verify + Install)
+        # TODO(marketplace): Echten Download + Verify + Install implementieren
+        # wenn ein Skills-Repository-Server verfuegbar ist.
+        # Aktuell: Nur Version-Tracking (kein Filesystem-I/O).
+        log.warning(
+            "skill_install_version_tracking_only",
+            package_id=package_id,
+            to_version=to_version,
+            note="Kein Download — nur Versions-Tracking. Skill-Dateien manuell bereitstellen.",
+        )
         self._installed[package_id] = to_version
         self._auto_updates_today += 1
 

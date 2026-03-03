@@ -15,10 +15,15 @@ Architektur-Bibel: §11.8 (DevSecOps), §14.5 (Container-Security)
 from __future__ import annotations
 
 import hashlib
+import hmac
+import json
+import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -463,10 +468,10 @@ class WebhookNotifier:
         return len(self._webhooks) < before
 
     def notify(self, event: str, payload: dict[str, Any]) -> int:
-        """Benachrichtigt alle registrierten Webhooks.
+        """Benachrichtigt alle registrierten Webhooks via HTTP POST.
 
         Returns:
-            Anzahl gesendeter Nachrichten.
+            Anzahl erfolgreich gesendeter Nachrichten.
         """
         sent = 0
         for webhook in self._webhooks:
@@ -474,15 +479,50 @@ class WebhookNotifier:
                 continue
             if event not in webhook.events:
                 continue
-            # In Produktion: HTTP POST an webhook.url
+
+            body = {
+                "event": event,
+                "payload": payload,
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            body_bytes = json.dumps(body, ensure_ascii=False).encode("utf-8")
+
+            headers: dict[str, str] = {"Content-Type": "application/json"}
+            if webhook.secret:
+                sig = hmac.new(
+                    webhook.secret.encode(), body_bytes, hashlib.sha256,
+                ).hexdigest()
+                headers["X-Signature-SHA256"] = sig
+
             notification = {
                 "event": event,
                 "url": webhook.url,
                 "payload_keys": list(payload.keys()),
-                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "timestamp": body["timestamp"],
+                "success": False,
             }
+
+            try:
+                import httpx
+                with httpx.Client(timeout=webhook.timeout_seconds) as client:
+                    resp = client.post(webhook.url, content=body_bytes, headers=headers)
+                    notification["status_code"] = resp.status_code
+                    notification["success"] = 200 <= resp.status_code < 300
+            except ImportError:
+                logger.warning(
+                    "webhook_httpx_not_installed: pip install httpx "
+                    "fuer echte Webhook-Zustellung"
+                )
+                notification["success"] = False
+                notification["error"] = "httpx_not_installed"
+            except Exception as exc:
+                logger.warning("webhook_send_failed", exc_info=True)
+                notification["success"] = False
+                notification["error"] = str(exc)[:200]
+
             self._sent.append(notification)
-            sent += 1
+            if notification["success"]:
+                sent += 1
         return sent
 
     @property

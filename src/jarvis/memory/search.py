@@ -99,7 +99,6 @@ class HybridSearch:
         self._weight_optimizer = weight_optimizer
         # Gecachtes Mapping content_hash → [chunk_ids] (wird lazy aufgebaut)
         self._chunk_hash_map: dict[str, list[str]] | None = None
-        self._chunk_hash_map_version: int = 0
         # LRU cache for graph search results keyed by frozenset of query words
         self._graph_search_cache: OrderedDict[frozenset[str], dict[str, float]] = OrderedDict()
 

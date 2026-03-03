@@ -1566,8 +1566,8 @@ class TestAuditDeep:
         trail = AuditTrail(log_dir=tmp_path)
         # Force write error by making log_path a directory
         trail._log_path.mkdir(parents=True, exist_ok=True)
-        h = trail.record_event("s1", "test")
-        assert h == ""  # Write failed
+        with pytest.raises(OSError):
+            trail.record_event("s1", "test")
 
     def test_query_with_tool_and_status_filters(self, tmp_path):
         from jarvis.security.audit import AuditTrail

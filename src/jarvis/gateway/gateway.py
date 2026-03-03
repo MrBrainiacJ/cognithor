@@ -35,6 +35,7 @@ from jarvis.gateway.phases import (
     declare_tools_attrs,
     init_advanced,
     init_agents,
+    init_compliance,
     init_core,
     init_memory,
     init_pge,
@@ -64,6 +65,10 @@ if TYPE_CHECKING:
     from jarvis.core.message_queue import DurableMessageQueue
 
 log = get_logger(__name__)
+
+# Presearch result markers — used to detect empty/failed search results
+_PRESEARCH_NO_RESULTS = "Keine Ergebnisse"
+_PRESEARCH_NO_ENGINE = "Keine Suchengine"
 
 # ── Tool-Status-Map für Progress-Feedback ────────────────────────
 
@@ -243,6 +248,17 @@ class Gateway:
         )
         apply_phase(self, advanced_result)
 
+        # --- Phase G: Compliance validation ---
+        compliance_attrs = {
+            k: getattr(self, f"_{k}", None)
+            for k in (
+                "compliance_framework", "decision_log", "remediation_tracker",
+                "economic_governor", "compliance_exporter", "impact_assessor",
+                "explainability",
+            )
+        }
+        await init_compliance(self._config, **compliance_attrs)
+
         # Governance-Cron-Job registrieren (taeglich um 02:00)
         if self._cron_engine and hasattr(self, "_governance_agent") and self._governance_agent:
             try:
@@ -296,7 +312,7 @@ class Gateway:
                     status = "aktiv" if skill.enabled else "inaktiv"
                     skill_lines.append(f"- **{skill.name}** (`{slug}`) — {status}")
             except Exception:
-                pass
+                log.debug("core_inventory_skills_failed", exc_info=True)
         if not skill_lines:
             skill_lines = ["- (keine Skills registriert)"]
 
@@ -311,7 +327,7 @@ class Gateway:
                     suffix = f" [{kw}]" if kw else ""
                     proc_lines.append(f"- `{meta.name}` ({uses} genutzt){suffix}")
             except Exception:
-                pass
+                log.debug("core_inventory_procedures_failed", exc_info=True)
         if not proc_lines:
             proc_lines = ["- (keine Prozeduren gespeichert)"]
 
@@ -520,7 +536,7 @@ class Gateway:
                         wm.core_memory_text = text
                     reloaded.append("core_memory")
                 except Exception:
-                    pass
+                    log.debug("reload_core_memory_failed", exc_info=True)
         if skills and self._skill_registry:
             try:
                 skill_dirs = [
@@ -830,7 +846,7 @@ class Gateway:
                     task_description=msg.text[:200],
                 )
             except Exception:
-                pass
+                log.debug("task_profiler_start_failed", exc_info=True)
 
         if hasattr(self, "_cost_tracker") and self._cost_tracker:
             try:
@@ -889,7 +905,7 @@ class Gateway:
                     timeout=2.0,
                 )
             except Exception:
-                pass  # fire-and-forget
+                log.debug("status_send_failed", exc_info=True)  # fire-and-forget
 
         return _send_status
 
@@ -954,7 +970,7 @@ class Gateway:
                 try:
                     self._run_recorder.record_plan(run_id, plan)
                 except Exception:
-                    pass
+                    log.debug("run_recorder_plan_failed", exc_info=True)
 
             # Direkte Antwort
             if not plan.has_actions and plan.direct_response:
@@ -1037,7 +1053,7 @@ class Gateway:
                     self._run_recorder.record_gate_decisions(run_id, approved_decisions)
                     self._run_recorder.record_tool_results(run_id, results)
                 except Exception:
-                    pass
+                    log.debug("run_recorder_results_failed", exc_info=True)
 
             all_results.extend(results)
 
@@ -1137,7 +1153,7 @@ class Gateway:
                     try:
                         self._run_recorder.record_reflection(run_id, reflection)
                     except Exception:
-                        pass
+                        log.debug("run_recorder_reflection_failed", exc_info=True)
             except Exception as exc:
                 log.error("reflection_error", error=str(exc))
 
@@ -1152,6 +1168,16 @@ class Gateway:
                 self._skill_registry.record_usage(
                     active_skill.skill.slug, success=success, score=score,
                 )
+                # Failure-Pattern in Prozedur speichern (für Lerneffekt)
+                if not success and self._memory_manager and active_skill.procedure_name:
+                    try:
+                        error_summary = agent_result.error[:200] if agent_result.error else "unknown"
+                        self._memory_manager.procedural.add_failure_pattern(
+                            active_skill.procedure_name, error_summary,
+                        )
+                    except Exception:
+                        log.debug("procedure_failure_pattern_save_failed", exc_info=True)
+
                 # Gap Detection: Melde niedrige Erfolgsrate
                 if not success and hasattr(self, "_skill_generator") and self._skill_generator:
                     try:
@@ -1163,7 +1189,7 @@ class Gateway:
                                     skill_obj.slug, success_rate,
                                 )
                     except Exception:
-                        pass
+                        log.debug("skill_gap_detection_failed", exc_info=True)
             except Exception:
                 log.debug("skill_usage_tracking_skipped", exc_info=True)
 
@@ -1234,7 +1260,7 @@ class Gateway:
                     try:
                         self._sync_core_inventory()
                     except Exception:
-                        pass
+                        log.debug("core_inventory_sync_after_skill_gen_failed", exc_info=True)
             except Exception:
                 log.debug("skill_gap_processing_failed", exc_info=True)
 
@@ -1486,7 +1512,7 @@ class Gateway:
                 try:
                     collector.increment(name, value, **labels)
                 except Exception:
-                    pass
+                    log.debug("metric_collector_failed", metric=name, exc_info=True)
 
         # MetricsProvider (telemetry/metrics.py) via TelemetryHub
         telemetry = getattr(self, "_telemetry_hub", None)
@@ -1500,7 +1526,7 @@ class Gateway:
                     else:
                         provider.counter(name, value, **labels)
                 except Exception:
-                    pass
+                    log.debug("metric_provider_failed", metric=name, exc_info=True)
 
     def _extract_attachments(self, results: list[ToolResult]) -> list[str]:
         """Extrahiert Dateipfade aus Tool-Ergebnissen für den Anhang-Versand.
@@ -1723,7 +1749,7 @@ class Gateway:
                 timelimit="m",
             )
 
-            if result_text and "Keine Ergebnisse" not in result_text and "Keine Suchengine" not in result_text:
+            if result_text and _PRESEARCH_NO_RESULTS not in result_text and _PRESEARCH_NO_ENGINE not in result_text:
                 log.info("presearch_found", chars=len(result_text))
                 return result_text[:4000]
             else:

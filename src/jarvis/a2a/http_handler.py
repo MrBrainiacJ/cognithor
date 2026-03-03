@@ -262,6 +262,20 @@ class A2AHTTPHandler:
                 if method == "GET" and path == "/.well-known/agent.json":
                     card = await self.handle_agent_card()
                     body = json.dumps(card)
+                elif method == "POST" and path == "/a2a":
+                    # JSON-RPC body aus HTTP-Request extrahieren
+                    header_end = data.find(b"\r\n\r\n")
+                    rpc_body = data[header_end + 4:] if header_end != -1 else b""
+                    try:
+                        rpc_request = json.loads(rpc_body.decode("utf-8"))
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        body = json.dumps({
+                            "jsonrpc": "2.0", "id": None,
+                            "error": {"code": -32700, "message": "Parse error"},
+                        })
+                    else:
+                        result = await self.adapter.handle_a2a_request(rpc_request)
+                        body = json.dumps(result)
                 elif method == "GET" and path == "/a2a/health":
                     result = await self.handle_health()
                     body = json.dumps(result)

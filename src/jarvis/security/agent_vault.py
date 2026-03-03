@@ -176,13 +176,15 @@ class AgentVault:
         return secret
 
     def revoke(self, secret_id: str) -> bool:
-        """Widerruft ein Geheimnis sofort."""
+        """Widerruft ein Geheimnis und entfernt es aus dem Tresor."""
         secret = self._secrets.get(secret_id)
         if not secret:
             return False
         secret.status = SecretStatus.REVOKED
         secret._encrypted_value = ""
         self._log("revoke", secret_id)
+        # Revoked secrets aus dem Tresor entfernen (kein Grund sie zu behalten)
+        del self._secrets[secret_id]
         return True
 
     def expire_check(self) -> list[AgentSecret]:
@@ -216,12 +218,12 @@ class AgentVault:
         """Fernet-based decryption with fallback for legacy XOR-encrypted data."""
         try:
             return self._fernet.decrypt(encrypted.encode("ascii")).decode("utf-8")
-        except (InvalidToken, Exception):
-            # Fallback: attempt to decrypt legacy XOR-encrypted hex data.
+        except InvalidToken:
+            # Fallback: attempt to detect legacy XOR-encrypted hex data.
             # This path is only reached for data encrypted before the Fernet
             # migration and will be removed in a future release.
             try:
-                enc_bytes = bytes.fromhex(encrypted)
+                bytes.fromhex(encrypted)
                 # Legacy XOR cannot be decrypted without the old key material,
                 # so we surface the failure clearly.
             except ValueError:

@@ -843,9 +843,10 @@ class TestAgentVault:
         s1 = vault.store("k1", "v1")
         s2 = vault.store("k2", "v2")
         vault.revoke(s1.secret_id)
+        # H-19: revoke() entfernt Secrets aus dem Tresor
         assert len(vault.active_secrets()) == 1
-        assert len(vault.all_secrets()) == 2
-        assert vault.secret_count == 2
+        assert len(vault.all_secrets()) == 1
+        assert vault.secret_count == 1
 
     def test_vault_access_log(self):
         from jarvis.security.agent_vault import AgentVault

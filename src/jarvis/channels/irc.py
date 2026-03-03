@@ -197,10 +197,24 @@ class IRCChannel(Channel):
 
         reply_target = nick if is_private else target
 
+        clean_text = text.strip()
+
+        # Approval-Antworten abfangen
+        if clean_text.lower() in ("ja", "yes", "j", "y"):
+            for sid, fut in list(self._approval_futures.items()):
+                if not fut.done():
+                    fut.set_result(True)
+                    return
+        elif clean_text.lower() in ("nein", "no", "n"):
+            for sid, fut in list(self._approval_futures.items()):
+                if not fut.done():
+                    fut.set_result(False)
+                    return
+
         incoming = IncomingMessage(
             channel="irc",
             user_id=nick,
-            text=text.strip(),
+            text=clean_text,
             metadata={
                 "target": target,
                 "reply_target": reply_target,
@@ -262,9 +276,27 @@ class IRCChannel(Channel):
     async def request_approval(
         self, session_id: str, action: PlannedAction, reason: str,
     ) -> bool:
-        """IRC hat keine Buttons -- Approval via Textnachricht (ja/nein)."""
-        logger.warning("IRC: Interaktive Approvals nicht unterstützt, verwende Fallback")
-        return False
+        """IRC: Textbasierte Approval via ja/nein-Antwort."""
+        reply_target = self._channels[0] if self._channels else None
+        if not reply_target:
+            logger.warning("IRC: Kein Channel fuer Approval-Anfrage")
+            return False
+
+        tool = action.tool_name if hasattr(action, "tool_name") else str(action)
+        prompt = f"[Approval] Tool: {tool} — Grund: {reason}. Antwort mit 'ja' oder 'nein'."
+        await self._send_message(reply_target, prompt)
+
+        future: asyncio.Future[bool] = asyncio.get_event_loop().create_future()
+        async with self._approval_lock:
+            self._approval_futures[session_id] = future
+
+        try:
+            return await asyncio.wait_for(future, timeout=120.0)
+        except asyncio.TimeoutError:
+            logger.info("IRC: Approval-Timeout fuer Session %s", session_id[:8])
+            return False
+        finally:
+            self._approval_futures.pop(session_id, None)
 
     async def send_streaming_token(self, session_id: str, token: str) -> None:
         """Buffert Streaming-Tokens und sendet sie als eine Nachricht."""

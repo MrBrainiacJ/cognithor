@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from jarvis.models import ModelConfig, SandboxConfig
 
@@ -1395,7 +1395,7 @@ class JarvisConfig(BaseModel):
         description="Base-URL für OpenAI-kompatibles Backend (auch für Together, Groq, vLLM)",
     )
     anthropic_api_key: str = Field(default="", description="API-Key für Anthropic Claude")
-    anthropic_max_tokens: int = Field(default=4096, description="Max Output-Tokens für Claude")
+    anthropic_max_tokens: int = Field(default=4096, ge=1, le=1_000_000, description="Max Output-Tokens für Claude")
     gemini_api_key: str = Field(default="", description="API-Key für Google Gemini")
     groq_api_key: str = Field(default="", description="API-Key für Groq")
     deepseek_api_key: str = Field(default="", description="API-Key für DeepSeek")
@@ -1465,8 +1465,26 @@ class JarvisConfig(BaseModel):
     )
     redis_url: str = Field(
         default="redis://localhost:6379/0",
+        pattern=r"^rediss?://",
         description="Redis-URL für distributed locking und queuing",
     )
+
+    @field_validator(
+        "openai_api_key", "anthropic_api_key", "gemini_api_key",
+        "groq_api_key", "deepseek_api_key", "mistral_api_key",
+        "together_api_key", "openrouter_api_key", "xai_api_key",
+        "cerebras_api_key", "github_api_key", "bedrock_api_key",
+        "huggingface_api_key", "moonshot_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _validate_api_key_length(cls, v: str) -> str:
+        if v and v != "***" and len(v) < 8:
+            raise ValueError(
+                f"API-Key zu kurz ({len(v)} Zeichen, mind. 8). "
+                "Prüfe ob der Key korrekt kopiert wurde."
+            )
+        return v
 
     # ---- Auto-Adaptation: Modelle an LLM-Backend anpassen ----
 

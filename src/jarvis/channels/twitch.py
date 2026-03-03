@@ -61,6 +61,8 @@ class TwitchChannel(Channel):
         self._recv_task: asyncio.Task[None] | None = None
         self._last_msg_time: float = 0
         self._stream_buffers: dict[str, list[str]] = {}
+        self._approval_futures: dict[str, asyncio.Future[bool]] = {}
+        self._approval_lock = asyncio.Lock()
 
     @property
     def name(self) -> str:
@@ -188,6 +190,18 @@ class TwitchChannel(Channel):
         is_sub = tags.get("subscriber") == "1"
         is_broadcaster = tags.get("badges", "").startswith("broadcaster")
 
+        # Approval-Antworten abfangen
+        if text.lower() in ("ja", "yes", "j", "y"):
+            for sid, fut in list(self._approval_futures.items()):
+                if not fut.done():
+                    fut.set_result(True)
+                    return
+        elif text.lower() in ("nein", "no", "n"):
+            for sid, fut in list(self._approval_futures.items()):
+                if not fut.done():
+                    fut.set_result(False)
+                    return
+
         incoming = IncomingMessage(
             channel="twitch",
             user_id=nick.lower(),
@@ -255,9 +269,26 @@ class TwitchChannel(Channel):
     async def request_approval(
         self, session_id: str, action: PlannedAction, reason: str,
     ) -> bool:
-        """Twitch hat keine Buttons -- Approval nicht unterstützt."""
-        logger.warning("Twitch: Interaktive Approvals nicht unterstützt")
-        return False
+        """Twitch: Textbasierte Approval via ja/nein im Chat."""
+        if not self._writer:
+            logger.warning("Twitch: Nicht verbunden fuer Approval-Anfrage")
+            return False
+
+        tool = action.tool_name if hasattr(action, "tool_name") else str(action)
+        prompt = f"[Approval] Tool: {tool} — {reason}. Antworte 'ja' oder 'nein'."
+        await self._send_chat(prompt)
+
+        future: asyncio.Future[bool] = asyncio.get_event_loop().create_future()
+        async with self._approval_lock:
+            self._approval_futures[session_id] = future
+
+        try:
+            return await asyncio.wait_for(future, timeout=120.0)
+        except asyncio.TimeoutError:
+            logger.info("Twitch: Approval-Timeout fuer Session %s", session_id[:8])
+            return False
+        finally:
+            self._approval_futures.pop(session_id, None)
 
     async def send_streaming_token(self, session_id: str, token: str) -> None:
         """Buffert Streaming-Tokens und sendet sie als eine Nachricht."""

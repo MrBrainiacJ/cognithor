@@ -274,7 +274,7 @@ class A2AServer:
                 task.transition(TaskState.WORKING, message)
             if self._task_handler:
                 t = asyncio.create_task(self._execute_task(task))
-                t.add_done_callback(self._handle_task_exception)
+                t.add_done_callback(self._make_task_done_callback(task))
             return task.to_dict()
 
         # Neuer Task
@@ -294,7 +294,7 @@ class A2AServer:
 
         if self._task_handler:
             t = asyncio.create_task(self._execute_task(task))
-            t.add_done_callback(self._handle_task_exception)
+            t.add_done_callback(self._make_task_done_callback(task))
 
         return task.to_dict()
 
@@ -429,13 +429,27 @@ class A2AServer:
 
     # ── Task Execution ───────────────────────────────────────────
 
-    def _handle_task_exception(self, task: asyncio.Task[None]) -> None:
-        """Callback for fire-and-forget tasks -- logs unhandled exceptions."""
-        if task.cancelled():
-            return
-        exc = task.exception()
-        if exc is not None:
-            log.error("a2a_task_background_error", error=str(exc), exc_type=type(exc).__name__)
+    def _make_task_done_callback(self, a2a_task: Task):  # noqa: ANN201
+        """Creates a done-callback that transitions the A2A task on failure."""
+        def _callback(asyncio_task: asyncio.Task[None]) -> None:
+            if asyncio_task.cancelled():
+                return
+            exc = asyncio_task.exception()
+            if exc is not None:
+                log.error(
+                    "a2a_task_background_error",
+                    task_id=a2a_task.id,
+                    error=str(exc),
+                    exc_type=type(exc).__name__,
+                )
+                # Safety net: transition to FAILED if still in non-terminal state
+                if a2a_task.is_active:
+                    a2a_task.transition(TaskState.FAILED, Message(
+                        role=MessageRole.AGENT,
+                        parts=[TextPart(text=f"Unexpected error: {exc}")],
+                    ))
+                    self._tasks_failed += 1
+        return _callback
 
     async def _execute_task(self, task: Task) -> None:
         if not self._task_handler:

@@ -346,7 +346,7 @@ class TestModelAutoAdaptation:
         config = JarvisConfig(
             jarvis_home=tmp_path,
             anthropic_api_key="sk-ant-test",
-            openai_api_key="sk-test",
+            openai_api_key="sk-test-key",
         )
         assert config.llm_backend_type == "anthropic"
         assert config.models.planner.name == "claude-opus-4-6"
@@ -528,7 +528,7 @@ class TestMultiProviderAutoAdaptation:
         assert config.models.planner.name == "us.anthropic.claude-opus-4-6-v1:0"
 
     def test_huggingface_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, huggingface_api_key="hf_test")
+        config = JarvisConfig(jarvis_home=tmp_path, huggingface_api_key="hf_test1")
         assert config.llm_backend_type == "huggingface"
         assert config.models.planner.name == "meta-llama/Llama-3.3-70B-Instruct"
 
@@ -560,12 +560,12 @@ class TestMultiProviderAutoAdaptation:
         assert config.models.embedding.name == "text-embedding-3-large"
 
     def test_bedrock_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="bedrock", bedrock_api_key="test")
+        config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="bedrock", bedrock_api_key="test-bedrock")
         assert config.models.planner.name == "us.anthropic.claude-opus-4-6-v1:0"
         assert config.models.embedding.name == "amazon.titan-embed-text-v2:0"
 
     def test_moonshot_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="moonshot", moonshot_api_key="test")
+        config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="moonshot", moonshot_api_key="test-moon")
         assert config.models.planner.name == "kimi-k2.5"
         assert config.models.executor.name == "kimi-k2-turbo-preview"
 

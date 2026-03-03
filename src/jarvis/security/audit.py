@@ -153,8 +153,8 @@ class AuditTrail:
             with open(self._log_path, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
         except OSError as exc:
-            log.error("audit_write_failed", error=str(exc))
-            return ""
+            log.error("audit_write_failed", error=str(exc), path=str(self._log_path))
+            raise
 
         self._last_hash = entry_hash
         self._entry_count += 1
@@ -202,8 +202,8 @@ class AuditTrail:
             with open(self._log_path, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
         except OSError as exc:
-            log.error("audit_event_write_failed", error=str(exc))
-            return ""
+            log.error("audit_event_write_failed", error=str(exc), path=str(self._log_path))
+            raise
 
         self._last_hash = entry_hash
         self._entry_count += 1

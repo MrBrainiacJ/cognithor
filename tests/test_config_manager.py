@@ -185,7 +185,7 @@ class TestConfigManagerPersistence:
     def test_save_does_not_store_masked_secrets(self, tmp_path: Path) -> None:
         config = JarvisConfig(
             jarvis_home=tmp_path / ".jarvis",
-            openai_api_key="sk-real",
+            openai_api_key="sk-real-key",
         )
         mgr = ConfigManager(config=config)
 
@@ -194,7 +194,7 @@ class TestConfigManagerPersistence:
 
         content = target.read_text()
         # Echter Key sollte gespeichert sein
-        assert "sk-real" in content
+        assert "sk-real-key" in content
 
     def test_save_triggers_on_reload(self, tmp_path: Path) -> None:
         reloaded: list[JarvisConfig] = []

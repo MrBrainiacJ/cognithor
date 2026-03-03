@@ -541,22 +541,29 @@ class TestA2AServerTaskExecution:
     @pytest.mark.asyncio
     async def test_handle_task_exception_callback(self):
         server = A2AServer()
-        # Create a mock asyncio.Task
+        # _make_task_done_callback needs an a2a Task for the closure
+        a2a_task = Task.create(message=Message(role=MessageRole.USER, parts=[TextPart(text="x")]))
+        a2a_task._state = TaskState.WORKING
+        server._tasks_failed = 0
+        callback = server._make_task_done_callback(a2a_task)
+
+        # Create a mock asyncio.Task with exception
         mock_task = MagicMock()
         mock_task.cancelled.return_value = False
         mock_task.exception.return_value = RuntimeError("test")
-        server._handle_task_exception(mock_task)  # should just log
+        callback(mock_task)  # should transition task to FAILED
+        assert server._tasks_failed == 1
 
         # Cancelled task
         mock_task2 = MagicMock()
         mock_task2.cancelled.return_value = True
-        server._handle_task_exception(mock_task2)  # should return early
+        callback(mock_task2)  # should return early
 
         # No exception
         mock_task3 = MagicMock()
         mock_task3.cancelled.return_value = False
         mock_task3.exception.return_value = None
-        server._handle_task_exception(mock_task3)
+        callback(mock_task3)
 
 
 # ============================================================================
