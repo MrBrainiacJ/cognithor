@@ -544,6 +544,9 @@ class TestSignalHelpers:
     async def test_webhook_health(self, signal_webhook: SignalChannel) -> None:
         """_handle_health gibt OK zurueck."""
         request = MagicMock()
-        with patch("jarvis.channels.signal.web", create=True) as mock_web:
-            mock_web.json_response = MagicMock(return_value={"status": "ok"})
+        mock_web = MagicMock()
+        mock_web.json_response = MagicMock(return_value={"status": "ok"})
+        mock_aiohttp = MagicMock()
+        mock_aiohttp.web = mock_web
+        with patch.dict("sys.modules", {"aiohttp": mock_aiohttp, "aiohttp.web": mock_web}):
             result = await signal_webhook._handle_health(request)
