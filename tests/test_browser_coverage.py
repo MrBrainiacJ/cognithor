@@ -104,7 +104,8 @@ class TestBrowserAgentLifecycle:
     @pytest.mark.asyncio
     async def test_start_already_running(self):
         agent = _make_running_agent()
-        result = await agent.start()
+        with patch("jarvis.browser.agent._HAS_PLAYWRIGHT", True):
+            result = await agent.start()
         assert result is True
 
     @pytest.mark.asyncio
