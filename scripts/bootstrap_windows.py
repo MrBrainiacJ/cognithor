@@ -466,6 +466,35 @@ def _download_piper_voice(voice: str, dest: Path) -> None:
     ok(f"  Modell gespeichert: {onnx_path}")
 
 
+# ── Installer-Erkennung (uv / pip) ────────────────────────────────────────
+def _detect_python_installer(repo_root: str) -> tuple[str, list[str]]:
+    """Erkennt uv oder pip und gibt (backend_name, install_command) zurueck.
+
+    uv wird bevorzugt wenn vorhanden (10x schneller als pip).
+    """
+    uv_path = shutil.which("uv")
+    if uv_path:
+        try:
+            ver = subprocess.run(
+                [uv_path, "--version"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if ver.returncode == 0:
+                ok(f"uv erkannt ({ver.stdout.strip()}) -- wird bevorzugt")
+                return "uv", [
+                    uv_path, "pip", "install", "-e", ".[all]",
+                    "--quiet", "--python", sys.executable,
+                ]
+        except Exception:
+            pass
+
+    # Fallback: pip
+    return "pip", [
+        sys.executable, "-m", "pip", "install", "-e", ".[all]",
+        "--quiet", "--disable-pip-version-check",
+    ]
+
+
 # ── Erster Start (13 Schritte) ─────────────────────────────────────────────
 def first_start(repo_root: str) -> bool:
     result = BootResult()
@@ -553,19 +582,20 @@ def first_start(repo_root: str) -> bool:
         pass
 
     if not jarvis_ok:
-        info("Installiere Python-Abhaengigkeiten (pip install -e '.[all]')...")
+        # uv bevorzugen wenn vorhanden (10x schneller)
+        installer_backend, installer_cmd = _detect_python_installer(repo_root)
+        info(f"Installiere Python-Abhaengigkeiten mit {installer_backend}...")
         info("Das kann beim ersten Mal einige Minuten dauern.")
-        pip_proc = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-e", ".[all]",
-             "--quiet", "--disable-pip-version-check"],
+        inst_proc = subprocess.run(
+            installer_cmd,
             capture_output=True, text=True, timeout=600, cwd=repo_root,
         )
-        if pip_proc.returncode == 0:
-            result.add_pass("Python-Abhaengigkeiten installiert")
+        if inst_proc.returncode == 0:
+            result.add_pass(f"Python-Abhaengigkeiten installiert (via {installer_backend})")
         else:
-            stderr = pip_proc.stderr.strip()[-300:] if pip_proc.stderr else ""
+            stderr = inst_proc.stderr.strip()[-300:] if inst_proc.stderr else ""
             result.add_fail(
-                "pip install fehlgeschlagen",
+                f"{installer_backend} install fehlgeschlagen",
                 f"Manuell ausfuehren: cd \"{repo_root}\" && pip install -e \".[all]\"\n"
                 f"  Fehler: {stderr}"
             )
@@ -805,17 +835,17 @@ def quick_start(repo_root: str) -> bool:
         if check.returncode == 0:
             result.add_pass("Import OK")
         else:
-            # Auto-fix: Import fehlgeschlagen -- pip install -e ".[all]"
+            # Auto-fix: Import fehlgeschlagen -- automatische Reparatur
             info("Import fehlgeschlagen -- versuche automatische Reparatur...")
-            pip_proc = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-e", ".[all]",
-                 "--quiet", "--disable-pip-version-check"],
+            repair_backend, repair_cmd = _detect_python_installer(repo_root)
+            repair_proc = subprocess.run(
+                repair_cmd,
                 capture_output=True, text=True, timeout=600, cwd=repo_root,
             )
-            if pip_proc.returncode == 0:
-                result.add_pass("Abhaengigkeiten repariert (pip install -e '.[all]')")
+            if repair_proc.returncode == 0:
+                result.add_pass(f"Abhaengigkeiten repariert (via {repair_backend})")
             else:
-                stderr = pip_proc.stderr.strip()[-300:] if pip_proc.stderr else ""
+                stderr = repair_proc.stderr.strip()[-300:] if repair_proc.stderr else ""
                 result.add_fail(
                     "jarvis Import fehlgeschlagen und Reparatur schlug fehl",
                     f"Manuell: cd \"{repo_root}\" && pip install -e \".[all]\"\n"

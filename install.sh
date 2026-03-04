@@ -7,12 +7,13 @@
 #   ./install.sh              Vollinstallation (interaktiv)
 #   ./install.sh --minimal    Nur Core (kein Web, kein Telegram)
 #   ./install.sh --full       Alles inkl. Voice
+#   ./install.sh --use-uv     uv statt pip verwenden (10x schneller)
 #   ./install.sh --systemd    Nur Systemd-Services installieren
 #   ./install.sh --uninstall  Deinstallation
 #
 # Voraussetzungen:
 #   - Python 3.12+
-#   - pip
+#   - pip (oder uv mit --use-uv)
 #   - Ollama (installiert und gestartet)
 #
 # ============================================================================
@@ -33,6 +34,8 @@ VENV_DIR="${JARVIS_HOME}/venv"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIN_PYTHON="3.12"
 OLLAMA_URL="${JARVIS_OLLAMA_BASE_URL:-http://localhost:11434}"
+USE_UV=false
+PKG_INSTALLER=""  # "uv" or "pip", set in detect_installer
 
 # ============================================================================
 # Hilfsfunktionen
@@ -72,6 +75,54 @@ show_banner() {
 
 BANNER
     echo -e "${NC}"
+}
+
+# ============================================================================
+# Installer-Erkennung (uv / pip)
+# ============================================================================
+
+detect_installer() {
+    if [[ "$USE_UV" == true ]]; then
+        if check_command uv; then
+            local uv_ver
+            uv_ver=$(uv --version 2>/dev/null | head -1)
+            PKG_INSTALLER="uv"
+            success "uv gefunden ($uv_ver)"
+            return 0
+        else
+            warn "uv nicht gefunden, installiere automatisch..."
+            if curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null; then
+                # Pfad aktualisieren
+                export PATH="$HOME/.local/bin:$PATH"
+                if check_command uv; then
+                    local uv_ver
+                    uv_ver=$(uv --version 2>/dev/null | head -1)
+                    PKG_INSTALLER="uv"
+                    success "uv installiert ($uv_ver)"
+                    return 0
+                fi
+            fi
+            warn "uv konnte nicht installiert werden -- Fallback auf pip"
+        fi
+    fi
+
+    # Auto-Detect: uv bevorzugen wenn vorhanden
+    if check_command uv; then
+        local uv_ver
+        uv_ver=$(uv --version 2>/dev/null | head -1)
+        PKG_INSTALLER="uv"
+        success "uv erkannt ($uv_ver) -- wird bevorzugt verwendet"
+        return 0
+    fi
+
+    # Fallback: pip
+    if python3 -m pip --version &>/dev/null; then
+        PKG_INSTALLER="pip"
+        success "pip wird verwendet"
+        return 0
+    fi
+
+    fatal "Weder uv noch pip gefunden"
 }
 
 # ============================================================================
@@ -209,11 +260,18 @@ setup_venv() {
         source "$VENV_DIR/bin/activate"
         success "venv aktiviert"
     else
-        info "Erstelle venv in $VENV_DIR ..."
-        python3 -m venv "$VENV_DIR"
+        if [[ "$PKG_INSTALLER" == "uv" ]]; then
+            info "Erstelle venv mit uv in $VENV_DIR ..."
+            uv venv "$VENV_DIR" --python python3
+        else
+            info "Erstelle venv in $VENV_DIR ..."
+            python3 -m venv "$VENV_DIR"
+        fi
         # shellcheck disable=SC1091
         source "$VENV_DIR/bin/activate"
-        pip install --upgrade pip setuptools wheel --quiet
+        if [[ "$PKG_INSTALLER" == "pip" ]]; then
+            pip install --upgrade pip setuptools wheel --quiet
+        fi
         success "venv erstellt und aktiviert"
     fi
 }
@@ -222,9 +280,18 @@ install_jarvis() {
     header "Jarvis installieren"
 
     local install_extras="$1"
+    local spec="${REPO_DIR}"
+    if [[ -n "$install_extras" ]]; then
+        spec="${REPO_DIR}[${install_extras}]"
+    fi
 
-    info "Installiere jarvis[$install_extras] aus $REPO_DIR ..."
-    pip install -e "${REPO_DIR}[${install_extras}]" --quiet 2>&1 | tail -5
+    if [[ "$PKG_INSTALLER" == "uv" ]]; then
+        info "Installiere jarvis[$install_extras] mit uv aus $REPO_DIR ..."
+        uv pip install -e "$spec" --quiet 2>&1 | tail -5
+    else
+        info "Installiere jarvis[$install_extras] mit pip aus $REPO_DIR ..."
+        pip install -e "$spec" --quiet 2>&1 | tail -5
+    fi
 
     # Verifiziere Installation
     if python3 -c "import jarvis; print(f'Jarvis v{jarvis.__version__}')" 2>/dev/null; then
@@ -535,7 +602,14 @@ DONE
 main() {
     show_banner
 
-    local mode="${1:-interactive}"
+    # Parse Argumente
+    local mode="interactive"
+    for arg in "$@"; do
+        case "$arg" in
+            --use-uv) USE_UV=true ;;
+            --minimal|--full|--systemd|--uninstall|--help|-h) mode="$arg" ;;
+        esac
+    done
 
     case "$mode" in
         --uninstall)
@@ -548,6 +622,7 @@ main() {
             ;;
         --minimal)
             check_prerequisites
+            detect_installer
             setup_venv
             install_jarvis ""
             setup_directories
@@ -556,6 +631,7 @@ main() {
             ;;
         --full)
             check_prerequisites
+            detect_installer
             ensure_ollama_models
             setup_venv
             install_jarvis "full"
@@ -567,11 +643,12 @@ main() {
             show_summary
             ;;
         --help|-h)
-            echo "Nutzung: $0 [--minimal|--full|--systemd|--uninstall|--help]"
+            echo "Nutzung: $0 [--minimal|--full|--use-uv|--systemd|--uninstall|--help]"
             echo ""
             echo "  (ohne Argumente)  Interaktive Installation"
             echo "  --minimal         Nur Core-Pakete"
             echo "  --full            Alles inkl. Voice + Systemd"
+            echo "  --use-uv          uv statt pip verwenden (10x schneller)"
             echo "  --systemd         Nur Systemd-Services installieren"
             echo "  --uninstall       Deinstallation"
             exit 0
@@ -579,6 +656,7 @@ main() {
         *)
             # Interaktive Installation (Default)
             check_prerequisites
+            detect_installer
             ensure_ollama_models
             setup_venv
             install_jarvis "all,dev"
