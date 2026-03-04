@@ -207,10 +207,23 @@ class TTLDict(Generic[KT, VT]):
         self._last_cleanup = now
         self._purge_expired()
 
-    def _purge_expired(self) -> None:
-        """Entfernt alle abgelaufenen Einträge."""
+    def purge_expired(self) -> int:
+        """Entfernt alle abgelaufenen Einträge (public API).
+
+        Returns:
+            Anzahl entfernter Einträge.
+        """
+        return self._purge_expired()
+
+    def _purge_expired(self) -> int:
+        """Entfernt alle abgelaufenen Einträge.
+
+        Returns:
+            Anzahl entfernter Einträge.
+        """
         now = time.monotonic()
         expired_keys = [k for k, e in self._data.items() if now >= e.expires_at]
         for k in expired_keys:
             del self._data[k]
             self._expired_count += 1
+        return len(expired_keys)

@@ -90,11 +90,16 @@ class TestNotifyEmbeddingAdded:
         hybrid_search.notify_embedding_added("hash1", [1.0, 0.0, 0.0])
         assert hybrid_search._vector_index.size == 1
 
-    def test_invalidates_cache(self, hybrid_search: HybridSearch) -> None:
+    def test_incremental_cache_update(self, hybrid_search: HybridSearch) -> None:
+        """Inkrementelles Update: Hash-Map wird erweitert statt invalidiert (#44)."""
         hybrid_search._chunk_hash_map = {"a": ["b"]}
         hybrid_search._graph_search_cache["test"] = {}
         hybrid_search.notify_embedding_added("hash1", [1.0, 0.0, 0.0])
-        assert hybrid_search._chunk_hash_map is None
+        # Hash-Map bleibt erhalten und wird um den neuen Key erweitert
+        assert hybrid_search._chunk_hash_map is not None
+        assert "a" in hybrid_search._chunk_hash_map
+        assert "hash1" in hybrid_search._chunk_hash_map
+        # Graph-Cache wird weiterhin invalidiert
         assert len(hybrid_search._graph_search_cache) == 0
 
 

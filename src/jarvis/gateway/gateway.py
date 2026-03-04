@@ -576,22 +576,11 @@ class Gateway:
         if budget_response is not None:
             return budget_response
 
-        # Phase 2.3: Adaptive Context Pipeline — Memory/Vault/Episoden injizieren
-        if self._context_pipeline is not None:
-            try:
-                ctx_result = await self._context_pipeline.enrich(msg.text, wm)
-                if not ctx_result.skipped:
-                    log.info(
-                        "context_enriched",
-                        memories=len(ctx_result.memory_results),
-                        vault=len(ctx_result.vault_snippets),
-                        episodes=len(ctx_result.episode_snippets),
-                        ms=f"{ctx_result.duration_ms:.1f}",
-                    )
-            except Exception:
-                log.debug("context_pipeline_failed", exc_info=True)
+        # Phase 2.3+2.5: Parallel ausführen (#43 Optimierung)
+        # Context-Pipeline, Coding-Klassifizierung und Presearch sind unabhängig
+        # voneinander und können parallel laufen.
 
-        # Tool-Schemas (gefiltert nach Agent-Rechten)
+        # Tool-Schemas (gefiltert nach Agent-Rechten) — synchron, schnell
         tool_schemas = self._mcp_client.get_tool_schemas() if self._mcp_client else {}
         if route_decision and route_decision.agent.has_tool_restrictions:
             tool_schemas = route_decision.agent.filter_tools(tool_schemas)
@@ -600,28 +589,49 @@ class Gateway:
         if self._planner is None or self._gatekeeper is None or self._executor is None:
             raise RuntimeError("Gateway.initialize() must be called before handle_message()")
 
-        # Phase 2.5a: Task-Klassifizierung -- Coding-Modell waehlen wenn noetig
-        is_coding = False
-        coding_model = ""
-        coding_complexity = "simple"
-        try:
-            is_coding, coding_complexity = await self._classify_coding_task(msg.text)
-            if is_coding and self._model_router:
-                if coding_complexity == "complex":
-                    coding_model = self._model_router._config.models.coder.name
-                else:
-                    coding_model = self._model_router._config.models.coder_fast.name
-                self._model_router.set_coding_override(coding_model)
-                log.info("coding_task_detected", complexity=coding_complexity, model=coding_model)
-        except Exception:
-            log.debug("coding_classification_skipped", exc_info=True)
+        async def _run_context_pipeline():
+            if self._context_pipeline is not None:
+                try:
+                    ctx_result = await self._context_pipeline.enrich(msg.text, wm)
+                    if not ctx_result.skipped:
+                        log.info(
+                            "context_enriched",
+                            memories=len(ctx_result.memory_results),
+                            vault=len(ctx_result.vault_snippets),
+                            episodes=len(ctx_result.episode_snippets),
+                            ms=f"{ctx_result.duration_ms:.1f}",
+                        )
+                except Exception:
+                    log.debug("context_pipeline_failed", exc_info=True)
 
-        # Phase 2.5b: Automatische Vor-Suche für Faktenfragen
-        # Wenn die Nachricht eine Faktenfrage ist, suchen wir VORAB im Web
-        # und generieren die Antwort DIREKT aus den Suchergebnissen.
-        # Der Planner wird komplett umgangen, damit das LLM nicht auf
-        # veraltetes Trainingswissen zurückgreifen kann.
-        presearch_results = await self._maybe_presearch(msg, wm)
+        async def _run_coding_classification():
+            _is_coding = False
+            _coding_model = ""
+            _coding_complexity = "simple"
+            try:
+                _is_coding, _coding_complexity = await self._classify_coding_task(msg.text)
+                if _is_coding and self._model_router:
+                    if _coding_complexity == "complex":
+                        _coding_model = self._model_router._config.models.coder.name
+                    else:
+                        _coding_model = self._model_router._config.models.coder_fast.name
+                    self._model_router.set_coding_override(_coding_model)
+                    log.info("coding_task_detected", complexity=_coding_complexity, model=_coding_model)
+            except Exception:
+                log.debug("coding_classification_skipped", exc_info=True)
+            return _is_coding, _coding_model, _coding_complexity
+
+        async def _run_presearch():
+            return await self._maybe_presearch(msg, wm)
+
+        import asyncio as _aio
+        _ctx_task = _aio.create_task(_run_context_pipeline())
+        _coding_task = _aio.create_task(_run_coding_classification())
+        _presearch_task = _aio.create_task(_run_presearch())
+
+        await _ctx_task  # Muss vor PGE fertig sein (modifiziert wm)
+        is_coding, coding_model, coding_complexity = await _coding_task
+        presearch_results = await _presearch_task
 
         # ── Sentiment Detection (Modul 3) ──
         try:

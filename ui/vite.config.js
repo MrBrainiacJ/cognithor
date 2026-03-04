@@ -138,11 +138,10 @@ function jarvisLauncher() {
     name: 'jarvis-launcher',
 
     configureServer(server) {
-      // On startup: adopt or kill any pre-existing backend
+      // On startup: if Jarvis is already running, adopt it (don't kill!)
       const existingPid = findPidOnPort()
       if (existingPid) {
-        console.log(`  Jarvis already running on port ${BACKEND_PORT} (PID ${existingPid}) — killing to take ownership...`)
-        killPortProcess()
+        console.log(`  Jarvis already running on port ${BACKEND_PORT} (PID ${existingPid}) — adopting existing instance`)
       }
 
       server.middlewares.use(async (req, res, next) => {
@@ -227,7 +226,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': { target: `http://localhost:${BACKEND_PORT}`, changeOrigin: true },
-      '/ws':  { target: `ws://localhost:${BACKEND_PORT}`, ws: true },
+      '/ws':  { target: `http://localhost:${BACKEND_PORT}`, ws: true, changeOrigin: true },
     },
   },
 })

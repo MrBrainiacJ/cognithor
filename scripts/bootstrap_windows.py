@@ -444,13 +444,35 @@ def write_marker(hw: HardwareProfile, models: list[str], shortcut: bool) -> None
     MARKER_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-# ── Erster Start (12 Schritte) ─────────────────────────────────────────────
+# ── Piper TTS Voice Download ──────────────────────────────────────────────
+def _download_piper_voice(voice: str, dest: Path) -> None:
+    """Laedt ein Piper-Voicemodell von HuggingFace herunter."""
+    parts = voice.split("-")  # de_DE-pavoque-low
+    lang = parts[0]  # de_DE
+    name = parts[1]  # pavoque
+    quality = parts[2] if len(parts) > 2 else "low"
+    lang_short = lang.split("_")[0]  # de
+
+    base = f"https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/{lang_short}/{lang}/{name}/{quality}"
+    onnx_url = f"{base}/{voice}.onnx?download=true"
+    json_url = f"{base}/{voice}.onnx.json?download=true"
+
+    onnx_path = dest / f"{voice}.onnx"
+    json_path = dest / f"{voice}.onnx.json"
+
+    info(f"  Download: {onnx_url}")
+    urllib.request.urlretrieve(onnx_url, str(onnx_path))
+    urllib.request.urlretrieve(json_url, str(json_path))
+    ok(f"  Modell gespeichert: {onnx_path}")
+
+
+# ── Erster Start (13 Schritte) ─────────────────────────────────────────────
 def first_start(repo_root: str) -> bool:
     result = BootResult()
     t0 = time.time()
 
     # ── 1. Python-Version ──────────────────────────────────────────────
-    header("1/12  Python-Version")
+    header("1/13  Python-Version")
     v = sys.version_info
     if v >= (3, 12):
         result.add_pass(f"Python {v.major}.{v.minor}.{v.micro}")
@@ -459,7 +481,7 @@ def first_start(repo_root: str) -> bool:
         return False
 
     # ── 2. Hardware-Erkennung ──────────────────────────────────────────
-    header("2/12  Hardware-Erkennung")
+    header("2/13  Hardware-Erkennung")
     hw = detect_hardware(repo_root)
 
     if hw.gpu.cuda_available:
@@ -484,7 +506,7 @@ def first_start(repo_root: str) -> bool:
     info(f"Hardware-Tier: {BOLD}{hw.tier.upper()}{RESET}")
 
     # ── 3. Ollama pruefen ──────────────────────────────────────────────
-    header("3/12  Ollama")
+    header("3/13  Ollama")
     ollama_path = find_ollama()
 
     if ollama_path is None:
@@ -507,7 +529,7 @@ def first_start(repo_root: str) -> bool:
                 ollama_ready = False
 
     # ── 4. Ollama-Modelle ──────────────────────────────────────────────
-    header("4/12  Modelle")
+    header("4/13  Modelle")
     models_installed: list[str] = []
     if ollama_ready and ollama_path:
         models_installed = ensure_models(hw.tier, result, ollama_path)
@@ -515,7 +537,7 @@ def first_start(repo_root: str) -> bool:
         result.add_warn("Modell-Download uebersprungen (Ollama nicht bereit)")
 
     # ── 5. Python-Abhaengigkeiten ──────────────────────────────────────
-    header("5/12  Python-Abhaengigkeiten")
+    header("5/13  Python-Abhaengigkeiten")
 
     # Pruefe ob jarvis bereits importierbar ist
     jarvis_ok = False
@@ -550,7 +572,7 @@ def first_start(repo_root: str) -> bool:
             return False
 
     # ── 6. Node-Abhaengigkeiten ────────────────────────────────────────
-    header("6/12  Node-Abhaengigkeiten")
+    header("6/13  Node-Abhaengigkeiten")
     ui_dir = os.path.join(repo_root, "ui")
     node_modules = os.path.join(ui_dir, "node_modules")
 
@@ -575,7 +597,7 @@ def first_start(repo_root: str) -> bool:
             return False
 
     # ── 7. Verzeichnisstruktur ─────────────────────────────────────────
-    header("7/12  Verzeichnisstruktur")
+    header("7/13  Verzeichnisstruktur")
     try:
         init_proc = subprocess.run(
             [sys.executable, "-m", "jarvis", "--init-only"],
@@ -592,7 +614,7 @@ def first_start(repo_root: str) -> bool:
         ok("Verzeichnisstruktur manuell erstellt")
 
     # ── 8. Konfiguration ───────────────────────────────────────────────
-    header("8/12  Konfiguration")
+    header("8/13  Konfiguration")
     config_dest = JARVIS_HOME / "config.yaml"
     config_src = Path(repo_root) / "config.yaml.example"
     if not config_dest.exists() and config_src.exists():
@@ -613,8 +635,38 @@ def first_start(repo_root: str) -> bool:
     else:
         result.add_warn(".env.example nicht gefunden -- uebersprungen")
 
-    # ── 9. Schnelltest ─────────────────────────────────────────────────
-    header("9/12  Schnelltest")
+    # ── 9. Piper TTS Voice-Modell ────────────────────────────────────
+    header("9/13  Piper TTS Voice-Modell")
+    voices_dir = JARVIS_HOME / "voices"
+    voices_dir.mkdir(parents=True, exist_ok=True)
+    piper_voice = "de_DE-pavoque-low"
+    # Stimme aus Config lesen, falls vorhanden
+    config_yaml = JARVIS_HOME / "config.yaml"
+    if config_yaml.exists():
+        try:
+            import yaml  # noqa: E402
+            with open(config_yaml, encoding="utf-8") as _cf:
+                _ycfg = yaml.safe_load(_cf) or {}
+            _vc = (_ycfg.get("channels") or {}).get("voice_config") or {}
+            piper_voice = _vc.get("piper_voice", piper_voice)
+        except Exception:
+            pass
+    model_path = voices_dir / f"{piper_voice}.onnx"
+    if model_path.exists():
+        ok(f"Piper-Stimme vorhanden: {piper_voice}")
+    else:
+        info(f"Lade Piper-Stimme herunter: {piper_voice}...")
+        try:
+            _download_piper_voice(piper_voice, voices_dir)
+            if model_path.exists():
+                result.add_pass(f"Piper-Stimme installiert: {piper_voice}")
+            else:
+                result.add_warn(f"Piper-Download abgeschlossen, aber Datei fehlt: {model_path}")
+        except Exception as e:
+            result.add_warn(f"Piper-Voice Download fehlgeschlagen: {e}")
+
+    # ── 10. Schnelltest ─────────────────────────────────────────────────
+    header("10/13  Schnelltest")
     try:
         qt = subprocess.run(
             [sys.executable, "-c",
@@ -633,8 +685,8 @@ def first_start(repo_root: str) -> bool:
     else:
         result.add_warn("Ollama nicht erreichbar")
 
-    # ── 10. Desktop-Verknuepfung ───────────────────────────────────────
-    header("10/12  Desktop-Verknuepfung")
+    # ── 11. Desktop-Verknuepfung ───────────────────────────────────────
+    header("11/13  Desktop-Verknuepfung")
     bat_path = os.path.join(repo_root, "start_cognithor.bat")
     shortcut_ok = False
     if os.path.isfile(bat_path):
@@ -646,12 +698,12 @@ def first_start(repo_root: str) -> bool:
     else:
         result.add_warn(f"start_cognithor.bat nicht gefunden: {bat_path}")
 
-    # ── 11. Marker schreiben ───────────────────────────────────────────
-    header("11/12  Marker")
+    # ── 12. Marker schreiben ───────────────────────────────────────────
+    header("12/13  Marker")
     write_marker(hw, models_installed, shortcut_ok)
     ok(f"Marker geschrieben: {MARKER_FILE}")
 
-    # ── 12. Zusammenfassung ────────────────────────────────────────────
+    # ── 13. Zusammenfassung ────────────────────────────────────────────
     elapsed = time.time() - t0
     result.timings["total"] = elapsed
     print_summary(result, elapsed, first=True)
@@ -771,6 +823,30 @@ def quick_start(repo_root: str) -> bool:
                 )
     except Exception as e:
         result.add_fail("Import-Test", str(e))
+
+    # ── 5. Piper TTS Voice-Modell ───────────────────────────────────
+    voices_dir = JARVIS_HOME / "voices"
+    piper_voice = "de_DE-pavoque-low"
+    config_yaml = JARVIS_HOME / "config.yaml"
+    if config_yaml.exists():
+        try:
+            import yaml
+            with open(config_yaml, encoding="utf-8") as _cf:
+                _ycfg = yaml.safe_load(_cf) or {}
+            _vc = (_ycfg.get("channels") or {}).get("voice_config") or {}
+            piper_voice = _vc.get("piper_voice", piper_voice)
+        except Exception:
+            pass
+    model_path = voices_dir / f"{piper_voice}.onnx"
+    if model_path.exists():
+        result.add_pass(f"Piper-Stimme: {piper_voice}")
+    else:
+        voices_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            _download_piper_voice(piper_voice, voices_dir)
+            result.add_pass(f"Piper-Stimme heruntergeladen: {piper_voice}")
+        except Exception as e:
+            result.add_warn(f"Piper-Voice Download fehlgeschlagen: {e}")
 
     elapsed = time.time() - t0
     print_summary(result, elapsed, first=False)

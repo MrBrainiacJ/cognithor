@@ -5,6 +5,50 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] – 2026-03-04
+
+### 🎉 Major Release — Chat, Voice Mode, TTS
+
+Cognithor graduates from beta to **v1.0.0**. This release adds a fully integrated chat experience
+with voice conversation mode, German TTS, and natural language responses — completing the
+transition from a CLI-first tool to a full Agent OS.
+
+### Added
+
+**Chat-Seite im Control Center**
+- **ChatPage** (`ui/src/pages/ChatPage.jsx`) — Full chat integration in the React UI with WebSocket streaming, auto-scroll, session management
+- **MessageList** (`ui/src/components/chat/MessageList.jsx`) — Threaded message display with Markdown rendering, timestamps, sender avatars
+- **ChatInput** (`ui/src/components/chat/ChatInput.jsx`) — Rich input bar with send button, Enter-to-submit, multiline support
+- **ChatCanvas** (`ui/src/components/chat/ChatCanvas.jsx`) — Side panel for canvas artifacts (code, tables, diagrams)
+- **ToolIndicator** (`ui/src/components/chat/ToolIndicator.jsx`) — Real-time tool execution indicators during agent processing
+- **ApprovalBanner** (`ui/src/components/chat/ApprovalBanner.jsx`) — Inline approval/deny banner for ORANGE-risk actions
+- **useJarvisChat** (`ui/src/hooks/useJarvisChat.js`) — React hook for WebSocket connection, message state, streaming
+- Chat is now the default start page in the Control Center
+
+**Voice Mode**
+- **VoiceIndicator** (`ui/src/components/chat/VoiceIndicator.jsx`) — Visual feedback for listening/speaking/processing states
+- **useVoiceMode** (`ui/src/hooks/useVoiceMode.js`) — React hook for wake word detection, STT, TTS playback
+- **Wake Word** — "Jarvis" detection with Levenshtein distance + phonetic normalization for robust matching despite Chrome STT errors
+- **Konversationsmodus** — Continuous listening after wake word until "Jarvis Ende" dismissal
+- **TTS-Wiedergabe** — Automatic text-to-speech playback of agent responses in voice mode
+
+**Piper TTS (Thorsten Emotional)**
+- German speech synthesis with `de_DE-thorsten_emotional-medium` voice model
+- Multi-speaker support for future voice variants
+- Automatic model download on first use (~80 MB)
+
+**Natürliche Sprache**
+- System prompt tuned for spoken, human responses (no bullet points, flowing sentences)
+- Adapted `formulate_response()` in Planner for voice-optimized output
+
+### Changed
+- 16 existing files modified (planner.py, config.py, __main__.py, CognithorControlCenter.jsx, vite.config.js, gateway.py, executor.py, telegram.py, indexer.py, memory manager, search, ttl_dict, bootstrap_windows.py, icons.jsx, test_search_coverage.py, pyproject.toml)
+- ~776 lines added, ~118 removed
+- Version: 0.26.6 → **1.0.0**
+- Development Status: Beta → **Production/Stable**
+
+---
+
 ## [0.26.5] – 2026-03-03
 
 ### Added — Human Feel

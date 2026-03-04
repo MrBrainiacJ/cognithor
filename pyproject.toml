@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cognithor"
-version = "0.26.6"
+version = "1.0.0"
 description = "Cognithor · Agent OS — Local-first autonomous agent operating system"
 readme = "README.md"
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["ai", "agent", "ollama", "local-first", "automation"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: End Users/Desktop",
     "Operating System :: POSIX :: Linux",
@@ -113,7 +113,7 @@ browser = [
     "playwright>=1.40",
 ]
 all = [
-    "cognithor[memory,vector,mcp,telegram,web,search,cron,postgresql,documents]",
+    "cognithor[memory,vector,mcp,telegram,web,search,cron,postgresql,documents,voice]",
 ]
 full = [
     "cognithor[all,voice,elevenlabs,google-chat,irc,twitch,distributed,browser,dev]",

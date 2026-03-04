@@ -1168,12 +1168,14 @@ class VoiceConfig(BaseModel):
     """Voice-spezifische Konfiguration (TTS/STT/Wake Word)."""
 
     tts_backend: str = "piper"  # "piper" | "espeak" | "elevenlabs"
+    piper_voice: str = "de_DE-thorsten_emotional-medium"  # Piper-Stimme (HuggingFace-ID)
+    piper_length_scale: float = Field(default=1.0, ge=0.5, le=2.0)  # Sprechgeschwindigkeit
     elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = "hJAaR77ekN23CNyp0byH"
     elevenlabs_model: str = "eleven_multilingual_v2"
-    wake_word_enabled: bool = False
+    wake_word_enabled: bool = True
     wake_word: str = "jarvis"
-    wake_word_backend: str = "vosk"  # "vosk" | "porcupine"
+    wake_word_backend: str = "browser"  # "browser" | "vosk" | "porcupine"
     talk_mode_enabled: bool = False
     talk_mode_auto_listen: bool = False
 
@@ -1367,7 +1369,7 @@ class JarvisConfig(BaseModel):
     """
 
     # Meta
-    version: str = "0.26.6"
+    version: str = "1.0.0"
     owner_name: str = Field(
         default="User",
         description="Name des Besitzers/Benutzers. Wird in Prompts und CORE.md verwendet.",
@@ -1599,6 +1601,47 @@ class JarvisConfig(BaseModel):
             vision_default = provider_defaults.get("vision", {})
             if vision_default:
                 object.__setattr__(self, "vision_model", vision_default["name"])
+
+        # Timeout Cross-Validation (#48 Optimierung)
+        self._cross_validate_timeouts()
+
+    def _cross_validate_timeouts(self) -> None:
+        """Prüft Timeout-Konsistenz zwischen Subsystemen."""
+        base = self.executor.default_timeout_seconds
+        issues: list[str] = []
+
+        # Tool-spezifische Timeouts müssen >= default_timeout sein
+        for field_name in (
+            "media_analyze_image_timeout",
+            "media_transcribe_audio_timeout",
+            "media_extract_text_timeout",
+            "media_tts_timeout",
+            "run_python_timeout",
+        ):
+            val = getattr(self.executor, field_name, base)
+            if val < base:
+                issues.append(
+                    f"executor.{field_name} ({val}s) < executor.default_timeout_seconds ({base}s)"
+                )
+
+        # Shell-Timeout sollte nicht größer als Executor-Timeout sein
+        shell_timeout = self.shell.default_timeout_seconds
+        if shell_timeout > base * 10:
+            issues.append(
+                f"shell.default_timeout_seconds ({shell_timeout}s) ist unverhältnismäßig groß "
+                f"vs executor.default_timeout_seconds ({base}s)"
+            )
+
+        # Ollama-Timeout sollte >= Executor-Timeout sein
+        ollama_timeout = self.ollama.timeout_seconds
+        if ollama_timeout < base:
+            issues.append(
+                f"ollama.timeout_seconds ({ollama_timeout}s) < executor.default_timeout_seconds ({base}s) — "
+                f"LLM-Calls könnten vom Executor vorzeitig abgebrochen werden"
+            )
+
+        for issue in issues:
+            log.warning("config_timeout_warning: %s", issue)
 
     # ---- Convenience Properties ----
 

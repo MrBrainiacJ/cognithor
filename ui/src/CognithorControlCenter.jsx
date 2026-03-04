@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { GlobalSearch } from "./components/GlobalSearch";
 import { ThemeToggle, useTheme } from "./components/ThemeToggle";
 import { ConfirmModal } from "./components/ConfirmModal";
+import ChatPage from "./pages/ChatPage";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Cognithor · Control Center v2 — UX-Rewrite mit allen 23 Fixes
@@ -82,10 +83,12 @@ const I = {
   terminal: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>,
   play: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   stop: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"></rect></svg>,
+  chat: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
 };
 
 // ── Navigation ─────────────────────────────────────────────────────────
 const PAGES = [
+  { id: "chat", label: "Chat", icon: I.chat, key: "0" },
   { id: "general", label: "Allgemein", icon: I.home, key: "1" },
   { id: "providers", label: "LLM Provider", icon: I.llm, key: "2" },
   { id: "models", label: "Modelle", icon: I.model, key: "3" },
@@ -95,7 +98,7 @@ const PAGES = [
   { id: "security", label: "Sicherheit", icon: I.shield, key: "7" },
   { id: "web", label: "Web-Tools", icon: I.web, key: "8" },
   { id: "mcp", label: "MCP & A2A", icon: I.plug, key: "9" },
-  { id: "cron", label: "Cron & Heartbeat", icon: I.clock, key: "0" },
+  { id: "cron", label: "Cron & Heartbeat", icon: I.clock, key: null },
   { id: "database", label: "Datenbank", icon: I.db, key: null },
   { id: "logging", label: "Logging", icon: I.terminal, key: null },
   { id: "prompts", label: "Prompts & Policies", icon: I.file, key: null },
@@ -736,15 +739,22 @@ function ChannelsPage({ cfg, set }) {
       </Card>
     ))}
     <Card title="Voice-Konfiguration" open={!!ch.voice_enabled} forceOpen={!!ch.voice_enabled}>
-      <SelectInput label="TTS Backend" value={ch.voice_config?.tts_backend} onChange={v => set("channels.voice_config.tts_backend", v)} options={["piper","espeak","elevenlabs"]} />
-      <TextInput label="ElevenLabs API Key" value={ch.voice_config?.elevenlabs_api_key} onChange={v => set("channels.voice_config.elevenlabs_api_key", v)} type="password" />
-      <TextInput label="ElevenLabs Voice ID" value={ch.voice_config?.elevenlabs_voice_id} onChange={v => set("channels.voice_config.elevenlabs_voice_id", v)} mono />
-      <TextInput label="ElevenLabs Model" value={ch.voice_config?.elevenlabs_model} onChange={v => set("channels.voice_config.elevenlabs_model", v)} mono />
-      <Toggle label="Wake-Word aktiviert" value={ch.voice_config?.wake_word_enabled} onChange={v => set("channels.voice_config.wake_word_enabled", v)} />
-      <TextInput label="Wake Word" value={ch.voice_config?.wake_word} onChange={v => set("channels.voice_config.wake_word", v)} />
-      <SelectInput label="Wake-Word Backend" value={ch.voice_config?.wake_word_backend} onChange={v => set("channels.voice_config.wake_word_backend", v)} options={["vosk","porcupine"]} />
-      <Toggle label="Talk-Mode" value={ch.voice_config?.talk_mode_enabled} onChange={v => set("channels.voice_config.talk_mode_enabled", v)} />
-      <Toggle label="Auto-Listen" value={ch.voice_config?.talk_mode_auto_listen} onChange={v => set("channels.voice_config.talk_mode_auto_listen", v)} />
+      <Toggle label="Voice aktiviert" value={ch.voice_enabled} onChange={v => set("channels.voice_enabled", v)} desc="Sprachsteuerung im Chat aktivieren" />
+      <SelectInput label="TTS Backend" value={ch.voice_config?.tts_backend} onChange={v => set("channels.voice_config.tts_backend", v)} options={["piper","espeak","elevenlabs"]} desc="Sprachausgabe-Engine" />
+      {(ch.voice_config?.tts_backend || "piper") === "piper" && <>
+        <SelectInput label="Piper-Stimme" value={ch.voice_config?.piper_voice || "de_DE-pavoque-low"} onChange={v => set("channels.voice_config.piper_voice", v)} options={["de_DE-pavoque-low","de_DE-karlsson-low","de_DE-thorsten-high","de_DE-thorsten-medium","de_DE-thorsten_emotional-medium","de_DE-kerstin-low","de_DE-ramona-low","de_DE-eva_k-x_low"]} desc="Wird beim ersten Aufruf automatisch heruntergeladen" />
+        <SliderInput label="Sprechgeschwindigkeit" value={ch.voice_config?.piper_length_scale ?? 1.0} onChange={v => set("channels.voice_config.piper_length_scale", v)} min={0.5} max={2.0} step={0.1} desc="1.0 = normal, kleiner = schneller" />
+      </>}
+      {(ch.voice_config?.tts_backend) === "elevenlabs" && <>
+        <TextInput label="ElevenLabs API Key" value={ch.voice_config?.elevenlabs_api_key} onChange={v => set("channels.voice_config.elevenlabs_api_key", v)} type="password" />
+        <TextInput label="ElevenLabs Voice ID" value={ch.voice_config?.elevenlabs_voice_id} onChange={v => set("channels.voice_config.elevenlabs_voice_id", v)} mono />
+        <TextInput label="ElevenLabs Model" value={ch.voice_config?.elevenlabs_model} onChange={v => set("channels.voice_config.elevenlabs_model", v)} mono />
+      </>}
+      <Toggle label="Wake-Word aktiviert" value={ch.voice_config?.wake_word_enabled} onChange={v => set("channels.voice_config.wake_word_enabled", v)} desc="Sprachbefehl durch Wake-Word ausloesen" />
+      <TextInput label="Wake Word" value={ch.voice_config?.wake_word || "jarvis"} onChange={v => set("channels.voice_config.wake_word", v)} desc="Standardmaessig: jarvis" />
+      <SelectInput label="Wake-Word Backend" value={ch.voice_config?.wake_word_backend} onChange={v => set("channels.voice_config.wake_word_backend", v)} options={["browser","vosk","porcupine"]} desc="browser = Web Speech API (kein Setup noetig)" />
+      <Toggle label="Talk-Mode" value={ch.voice_config?.talk_mode_enabled} onChange={v => set("channels.voice_config.talk_mode_enabled", v)} desc="Dauerhaftes Zuhoeren im Chat" />
+      <Toggle label="Auto-Listen" value={ch.voice_config?.talk_mode_auto_listen} onChange={v => set("channels.voice_config.talk_mode_auto_listen", v)} desc="Nach Antwort automatisch wieder zuhoeren" />
     </Card>
   </>);
 }
@@ -1121,7 +1131,7 @@ function SystemPage({ cfg, onRestart, onExport, onImport, restartState, presets,
 // ═══════════════════════════════════════════════════════════════════════
 
 export default function App() {
-  const [page, setPage] = useState("general");
+  const [page, setPage] = useState("chat");
   const [cfg, setCfg] = useState(defaults());
   const [saveState, setSaveState] = useState("idle");
   const [restartState, setRestartState] = useState("idle");
@@ -1488,6 +1498,7 @@ export default function App() {
   // Render current page
   const renderPage = () => {
     switch (page) {
+      case "chat": return <ChatPage />;
       case "general": return <GeneralPage cfg={cfg} set={set} />;
       case "providers": return <ProvidersPage cfg={cfg} set={set} />;
       case "models": return <ModelsPage cfg={cfg} set={set} setValidationErrors={setValidationErrors} />;
@@ -1516,8 +1527,8 @@ export default function App() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         .cc-root {
           font-family: 'DM Sans', -apple-system, sans-serif;
-          background: #08080f;
-          color: #e0e0e8;
+          background: var(--bg);
+          color: var(--text);
           min-height: 100vh;
           display: flex;
           flex-direction: column;
@@ -1751,6 +1762,106 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
+
+        /* ══════════════════════════════════════════════ */
+        /* Chat Page                                      */
+        /* ══════════════════════════════════════════════ */
+        .cc-main-chat { max-width: none !important; padding: 0 !important; margin: 0 !important; overflow: hidden; }
+
+        /* Layout */
+        .cc-chat-layout { display: flex; height: calc(100vh - 52px); width: 100%; }
+        .cc-chat-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .cc-canvas-panel { flex: 1; border-left: 1px solid var(--border); min-width: 300px; display: flex; flex-direction: column; }
+        @media (max-width: 768px) { .cc-canvas-panel { display: none; } }
+
+        /* Chat Header */
+        .cc-chat-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
+        .cc-chat-header-left { display: flex; align-items: center; gap: 8px; }
+        .cc-chat-header-right { display: flex; align-items: center; gap: 8px; }
+        .cc-chat-title { font-size: 14px; font-weight: 600; }
+        .cc-chat-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+        .cc-chat-status-dot.cc-connected { background: var(--success); }
+        .cc-chat-header-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .cc-chat-header-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Message List */
+        .cc-msg-list { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .cc-msg-row { display: flex; }
+        .cc-msg-row-user { justify-content: flex-end; }
+        .cc-msg-row-assistant, .cc-msg-row-system { justify-content: flex-start; }
+        .cc-msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; word-break: break-word; }
+        .cc-msg-user { background: var(--accent); color: #000; border-bottom-right-radius: 4px; }
+        .cc-msg-assistant { background: var(--bg3); color: var(--text); border-bottom-left-radius: 4px; }
+        .cc-msg-system { background: rgba(255,68,102,0.1); color: var(--danger); border: 1px solid rgba(255,68,102,0.2); font-size: 13px; }
+        .cc-msg-time { font-size: 10px; color: var(--text2); margin-top: 4px; opacity: 0.7; }
+        .cc-msg-user .cc-msg-time { color: rgba(0,0,0,0.5); }
+        .cc-msg-streaming::after { content: '\u258B'; animation: blink 1s step-end infinite; color: var(--accent); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .cc-msg-content p { margin: 0 0 8px; }
+        .cc-msg-content p:last-child { margin-bottom: 0; }
+        .cc-msg-codeblock { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin: 8px 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+        .cc-msg-inline-code { background: var(--bg); padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+        /* Empty State */
+        .cc-msg-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 300px; gap: 12px; color: var(--text2); }
+        .cc-msg-empty-text { font-size: 16px; font-weight: 500; }
+
+        /* Chat Input */
+        .cc-chat-input { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
+        .cc-chat-input-row { display: flex; align-items: flex-end; gap: 8px; }
+        .cc-chat-textarea { flex: 1; resize: none; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border 0.15s; min-height: 42px; max-height: 130px; line-height: 22px; }
+        .cc-chat-textarea:focus { border-color: var(--accent); }
+        .cc-chat-textarea::placeholder { color: var(--text2); }
+        .cc-chat-textarea:disabled { opacity: 0.5; }
+        .cc-chat-input-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .cc-chat-input-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; transition: all 0.15s; }
+        .cc-chat-input-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .cc-chat-input-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .cc-chat-send-btn { background: var(--accent); color: #000; border-color: var(--accent); }
+        .cc-chat-send-btn:hover { opacity: 0.85; }
+        .cc-chat-send-btn:disabled { background: var(--bg3); color: var(--text2); border-color: var(--border); opacity: 0.4; }
+        .cc-recording { border-color: var(--danger) !important; color: var(--danger) !important; animation: pulse 1s infinite; }
+
+        /* Tool Indicator */
+        .cc-tool-bar { display: flex; align-items: center; gap: 8px; padding: 6px 16px; color: var(--accent); font-size: 13px; border-top: 1px solid var(--border); background: rgba(0,212,255,0.04); flex-shrink: 0; }
+        .cc-tool-spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+        .cc-tool-label { opacity: 0.9; }
+
+        /* Approval Banner */
+        .cc-approval { padding: 10px 16px; background: rgba(255,171,64,0.08); border-top: 1px solid rgba(255,171,64,0.2); flex-shrink: 0; }
+        .cc-approval-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .cc-approval-info { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+        .cc-approval-icon { color: var(--warn); display: flex; }
+        .cc-approval-tool { font-weight: 600; color: var(--warn); }
+        .cc-approval-reason { color: var(--text2); }
+        .cc-approval-actions { display: flex; align-items: center; gap: 6px; }
+        .cc-approval-toggle { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; font-size: 11px; color: var(--text2); cursor: pointer; font-family: inherit; }
+        .cc-approval-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .cc-approval-btn { padding: 5px 14px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .cc-approval-allow { background: var(--success); color: #000; }
+        .cc-approval-allow:hover { opacity: 0.85; }
+        .cc-approval-deny { background: var(--danger); color: #fff; }
+        .cc-approval-deny:hover { opacity: 0.85; }
+        .cc-approval-params { margin-top: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); overflow-x: auto; white-space: pre-wrap; }
+
+        /* Canvas */
+        .cc-canvas-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
+        .cc-canvas-title { font-size: 13px; font-weight: 600; }
+        .cc-canvas-close { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; transition: all 0.15s; }
+        .cc-canvas-close:hover { border-color: var(--danger); color: var(--danger); }
+        .cc-canvas-frame { width: 100%; flex: 1; border: none; background: var(--bg3); }
+
+        /* Voice Mode */
+        .cc-voice-active { border-color: var(--success) !important; color: var(--success) !important; background: rgba(0,230,118,0.1) !important; }
+        .cc-voice-bar { display: flex; align-items: center; gap: 8px; padding: 6px 16px; font-size: 13px; border-bottom: 1px solid var(--border); background: rgba(0,230,118,0.04); flex-shrink: 0; }
+        .cc-voice-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .cc-voice-pulse { background: var(--success); animation: pulse 2s infinite; }
+        .cc-voice-flash { background: var(--accent); animation: blink 0.5s 3; }
+        .cc-voice-record { background: var(--danger); animation: pulse 0.8s infinite; }
+        .cc-voice-spin { width: 10px; height: 10px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .cc-voice-speak { background: var(--accent); animation: pulse 1s infinite; }
+        .cc-voice-label { color: var(--text2); }
+        .cc-voice-transcript { color: var(--text); font-style: italic; margin-left: auto; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       `}</style>
 
       {/* Toast container */}
@@ -1820,9 +1931,10 @@ export default function App() {
         </nav>
 
         {/* Main */}
-        <main className="cc-main" role="main">
-          {/* Fix #5+#25: Loading — spinner if backend starting, message if stopped */}
-          {!loaded ? (
+        <main className={`cc-main ${page === "chat" ? "cc-main-chat" : ""}`} role="main">
+          {page === "chat" ? (
+            renderPage()
+          ) : !loaded ? (
             appStatus === "running" || appStatus === "starting" ? <Spinner /> : (
               <div className="cc-spinner-wrap">
                 <span className="cc-spinner-text" style={{textAlign:"center",lineHeight:"1.6"}}>
@@ -1831,12 +1943,12 @@ export default function App() {
               </div>
             )
           ) : renderPage()}
-          <div style={{ height: 80 }} />
+          {page !== "chat" && <div style={{ height: 80 }} />}
         </main>
       </div>
 
       {/* Fix #1 + #18: Save bar with dirty state + safe area */}
-      <div className="cc-save-bar">
+      <div className="cc-save-bar" style={page === "chat" ? { display: "none" } : undefined}>
         {hasChanges && <span className="cc-save-hint">Ungespeicherte Änderungen</span>}
         <button
           className={`cc-save-btn ${saveState === "saved" ? "saved" : "primary"}`}

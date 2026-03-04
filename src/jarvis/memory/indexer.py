@@ -317,6 +317,14 @@ class MemoryIndex:
         ).fetchall()
         return [self._row_to_chunk(r) for r in rows]
 
+    def get_chunk_ids_by_hash(self, content_hash: str) -> list[str]:
+        """Chunk-IDs für einen Content-Hash (für inkrementelle Hash-Map-Updates)."""
+        rows = self.conn.execute(
+            "SELECT id FROM chunks WHERE content_hash = ?",
+            (content_hash,),
+        ).fetchall()
+        return [r["id"] for r in rows]
+
     def get_all_content_hashes(self) -> set[str]:
         """Alle content_hashes im Index (für Embedding-Cache)."""
         rows = self.conn.execute("SELECT DISTINCT content_hash FROM chunks").fetchall()

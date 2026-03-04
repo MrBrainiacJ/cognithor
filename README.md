@@ -37,7 +37,7 @@
 ## Table of Contents
 
 - [Why Cognithor?](#why-cognithor)
-- [What's New in v0.26](#whats-new-in-v026)
+- [What's New in v1.0](#whats-new-in-v10)
 - [Highlights](#highlights)
 - [Architecture](#architecture)
 - [LLM Providers](#llm-providers)
@@ -56,31 +56,26 @@
 
 ---
 
-## What's New in v0.26
+## What's New in v1.0
 
-### v0.26.5 — Human Feel
+### v1.0.0 — Chat, Voice Mode, TTS (Major Release)
 
-This update makes Cognithor feel **less robotic and more human**:
+Cognithor graduates from beta to **v1.0.0 Production/Stable**:
 
-- **Status Callbacks** — Real-time progress feedback during processing ("Denke nach...", "Suche im Web...", "Formuliere Antwort..."). Implemented across CLI (Rich), Telegram (typing indicator), Discord (typing), and WebUI (WebSocket events).
-- **Personality Engine** — Configurable warmth, humor, time-of-day greetings, follow-up questions, and success celebration. Injected into SYSTEM_PROMPT via `PersonalityConfig`.
-- **Sentiment Detection** — Lightweight keyword/regex-based detection for German text (frustrated, urgent, confused, positive, neutral). Adapts response style automatically.
-- **User Preferences** — SQLite-backed per-user preference store with auto-learned verbosity (terse/normal/verbose from message length patterns), greeting name, formality level.
-- **Friendly Error Messages** — All channels now show user-friendly German error messages instead of raw exceptions. Gatekeeper blocks explain *why* with suggestions. Retry exhaustion messages are empathetic.
-- **105 new tests** across 5 new test files, bringing the total to **8,411 tests**.
+- **Integrated Chat** — Full chat page in the Control Center with WebSocket streaming, tool execution indicators, canvas side-panel, and inline approval banners. Chat is now the default start page.
+- **Voice Mode** — Wake word detection ("Jarvis") with Levenshtein distance + phonetic normalization for robust matching. Konversationsmodus: continuous listening until "Jarvis Ende".
+- **Piper TTS (Thorsten Emotional)** — German speech synthesis with `de_DE-thorsten_emotional-medium`, multi-speaker support, automatic model download.
+- **Natural Language Responses** — System prompt tuned for spoken, human responses — flowing sentences instead of bullet points when in voice mode.
+- **9 new UI files**: ChatPage, MessageList, ChatInput, ChatCanvas, ToolIndicator, ApprovalBanner, VoiceIndicator, useJarvisChat, useVoiceMode
 
-### v0.26.4 — Coverage & Skills
+### Previous Releases (v0.26.x)
 
-This release focuses on **production scaling** and **operational maturity**:
-
-- **Distributed Locking** — Redis-backed (with file-based fallback) distributed locks for safe multi-instance deployments. Prevents concurrent plan execution and resource contention across nodes.
-- **Durable Message Queue** — SQLite-backed persistent message queue with priority levels, dead-letter queue (DLQ), and automatic retry. Messages survive restarts and crashes.
-- **Telegram Webhook Mode** — In addition to polling, Telegram now supports webhook mode with sub-100ms latency. Automatically configures TLS when certificates are provided.
-- **Prometheus /metrics Endpoint** — Full Prometheus-compatible metrics export: request counts, latency histograms, memory usage, queue depths, LLM token consumption. Ships with a ready-made Grafana dashboard JSON.
-- **Skill Marketplace Persistence** — Skill marketplace now backed by SQLite with full CRUD, ratings, search, and a REST API for marketplace operations.
-- **Auto-Dependency Loading** — On startup, Cognithor inspects enabled features and installs missing optional dependencies automatically, eliminating manual `pip install` steps for feature groups.
-- **2,700+ new tests** covering all scaling features, security hardening, and comprehensive coverage improvements, bringing the total to **8,411 tests** at **89% coverage**.
-- **LM Studio Support** — LM Studio als zweites lokales Backend neben Ollama. OpenAI-kompatible API auf `localhost:1234`, kein API-Key nötig. Einfach `llm_backend_type: "lmstudio"` setzen.
+- **v0.26.5** — Human Feel: Personality Engine, sentiment detection, user preferences, status callbacks, friendly error messages
+- **v0.26.4** — Coverage & Skills: 255 new tests, BaseSkill, skill package init
+- **v0.26.3** — Scaling: distributed locking, durable message queue, Prometheus metrics, Telegram webhook, skill marketplace, auto-dependency loading, LM Studio
+- **v0.26.2** — LM Studio backend
+- **v0.26.1** — Docker prod, bare-metal installer, Nginx/Caddy, health endpoints
+- **v0.26.0** — Security hardening: token encryption, TLS, file-size limits, session persistence, one-click launcher
 
 ---
 
@@ -102,6 +97,7 @@ This release focuses on **production scaling** and **operational maturity**:
 - **Telegram Webhook** — Polling + webhook mode with sub-100ms latency
 - **Auto-Dependency Loading** — Missing optional packages detected and installed at startup
 - **Agent-to-Agent Protocol (A2A)** — Linux Foundation RC v1.0 for inter-agent communication
+- **Integrated Chat** — Full chat page in the Control Center with WebSocket streaming, tool indicators, canvas panel, approval banners, and voice mode
 - **React Control Center** — Full web dashboard (React 19 + Vite 7) with integrated backend launcher, live config editing, agent management, prompt editing, cron jobs, MCP servers, and A2A settings
 - **Human Feel** — Personality Engine (warmth, humor, greetings), sentiment detection (frustrated/urgent/confused/positive), user preference learning, real-time status callbacks, user-friendly German error messages
 - **Auto-Detect Channels** — Channels activate automatically when tokens are present in `.env` — no manual config flags needed
@@ -118,7 +114,7 @@ This release focuses on **production scaling** and **operational maturity**:
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │            Control Center UI (React 19 + Vite 7)                  │
-│   Config · Agents · Prompts · Cron · MCP · A2A · Status          │
+│   Config · Agents · Chat · Voice · Prompts · Cron · MCP · A2A    │
 ├───────────────────────────────────────────────────────────────────┤
 │         Prometheus /metrics · Grafana Dashboard                    │
 ├───────────────────────────────────────────────────────────────────┤
@@ -241,7 +237,7 @@ llm_backend_type: "lmstudio"
 | **Feishu/Lark** | Bot API | ByteDance enterprise messaging |
 | **IRC** | IRC protocol | Classic internet relay chat |
 | **Twitch** | TwitchIO | Live stream chat integration |
-| **Voice** | Whisper + Piper + ElevenLabs | STT, TTS, wake word, talk mode |
+| **Voice** | Whisper + Piper + ElevenLabs | STT, TTS, wake word (Levenshtein), Konversationsmodus, Piper TTS (Thorsten Emotional) |
 
 ## Demo
 
@@ -320,7 +316,7 @@ npm install
 npm run dev    # -> http://localhost:5173
 ```
 
-Click **Power On** to start the backend directly from the UI. The Vite dev server automatically spawns and manages the Python backend process on port 8741 — including orphan detection, clean shutdown, and process lifecycle management.
+Click **Power On** to start the backend directly from the UI. The Vite dev server automatically spawns and manages the Python backend process on port 8741 — including orphan detection, clean shutdown, and process lifecycle management. The **Chat page** opens as the default start page — start talking to Jarvis immediately, or activate **Voice Mode** for hands-free conversation.
 
 All configuration — agents, prompts, cron jobs, MCP servers, A2A settings — can be edited and saved through the dashboard. Changes persist to YAML files under `~/.jarvis/`.
 
@@ -590,6 +586,18 @@ cognithor/
 │   ├── index.html                 # Entry point
 │   └── src/
 │       ├── CognithorControlCenter.jsx  # Main dashboard (1,700 LOC)
+│       ├── pages/
+│       │   └── ChatPage.jsx       # Integrated chat page (default start)
+│       ├── components/chat/
+│       │   ├── MessageList.jsx    # Message display with Markdown
+│       │   ├── ChatInput.jsx      # Rich input bar
+│       │   ├── ChatCanvas.jsx     # Canvas side panel
+│       │   ├── ToolIndicator.jsx  # Tool execution indicators
+│       │   ├── ApprovalBanner.jsx # Inline approval/deny banner
+│       │   └── VoiceIndicator.jsx # Voice mode visual feedback
+│       ├── hooks/
+│       │   ├── useJarvisChat.js   # WebSocket chat hook
+│       │   └── useVoiceMode.js    # Voice mode hook (wake word, STT, TTS)
 │       ├── App.jsx                # App shell
 │       └── main.jsx               # React entry
 ├── tests/                         # 8,411 tests, ~77,000 LOC
@@ -698,12 +706,13 @@ See [`deploy/README.md`](deploy/README.md) for full deployment documentation (Do
 | **Deploy** | Installer, systemd, Docker, backup, smoke test, one-click launcher | Done |
 
 | **Phase 12** | Human Feel: personality engine, sentiment detection, user preferences, status callbacks, friendly error messages | Done |
+| **Phase 13** | Voice & Chat Integration: integrated chat page, voice conversation mode, Piper TTS (Thorsten Emotional), natural language responses | Done |
 
 ### What's Next
 
-- **Phase 13** — Horizontal scaling: multi-node Gateway with Redis Streams, auto-sharding of memory tiers, load-balanced LLM backend pools
-- **Phase 14** — Advanced agents: multi-agent collaboration workflows, shared memory spaces, agent specialization profiles
-- **Phase 15** — Mobile: native Android/iOS apps via Capacitor, push notifications, offline mode with local LLM
+- **Phase 14** — Horizontal scaling: multi-node Gateway with Redis Streams, auto-sharding of memory tiers, load-balanced LLM backend pools
+- **Phase 15** — Advanced agents: multi-agent collaboration workflows, shared memory spaces, agent specialization profiles
+- **Phase 16** — Mobile: native Android/iOS apps via Capacitor, push notifications, offline mode with local LLM
 
 ## Recording a Demo
 

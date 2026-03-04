@@ -460,20 +460,49 @@ class MemoryManager:
         # Chunks speichern
         self._index.upsert_chunks(chunks)
 
-        # Embeddings generieren
-        texts = [c.text for c in chunks]
-        hashes = [c.content_hash for c in chunks]
+        # Embeddings generieren (Cache-aware, #46 Optimierung)
+        # Nur Chunks ohne existierendes Embedding an embed_batch senden
+        existing_hashes = self._index.get_all_content_hashes() & {c.content_hash for c in chunks}
+        existing_embeddings = self._index.get_all_embeddings()
+        texts_to_embed = []
+        hashes_to_embed = []
+        cached_results: dict[str, Any] = {}
+        for c in chunks:
+            if c.content_hash in existing_embeddings:
+                cached_results[c.content_hash] = existing_embeddings[c.content_hash]
+            else:
+                texts_to_embed.append(c.text)
+                hashes_to_embed.append(c.content_hash)
 
-        results = await self._embeddings.embed_batch(texts, hashes)
+        if texts_to_embed:
+            new_results = await self._embeddings.embed_batch(texts_to_embed, hashes_to_embed)
+        else:
+            new_results = []
+
+        # Merge: Baue results-Liste in Chunk-Reihenfolge
+        new_iter = iter(new_results)
+        results = []
+        for c in chunks:
+            if c.content_hash in cached_results:
+                # Erstelle ein Pseudo-EmbeddingResult für gecachte Embeddings
+                results.append(None)  # Signal: schon gespeichert
+            else:
+                results.append(next(new_iter, None))
         if len(results) != len(chunks):
             logger.warning(
                 "Embedding-Mismatch: %d Chunks, %d Ergebnisse -- überschüssige ignoriert",
                 len(chunks),
                 len(results),
             )
+        new_embedding_count = 0
         for chunk, emb_result in zip(chunks, results, strict=False):
             if emb_result is None:
-                logger.debug("Embedding fehlgeschlagen fuer chunk %s -- uebersprungen", chunk.content_hash[:8])
+                # Gecachte Embeddings: VectorIndex trotzdem aktualisieren
+                if chunk.content_hash in cached_results:
+                    vec = cached_results[chunk.content_hash]
+                    self._search.notify_embedding_added(chunk.content_hash, vec)
+                else:
+                    logger.debug("Embedding fehlgeschlagen fuer chunk %s -- uebersprungen", chunk.content_hash[:8])
                 continue
             if not emb_result.cached:
                 self._index.store_embedding(
@@ -481,6 +510,7 @@ class MemoryManager:
                     emb_result.vector,
                     emb_result.model,
                 )
+                new_embedding_count += 1
             # Immer den Vector-Index aktualisieren (inkrementell)
             self._search.notify_embedding_added(chunk.content_hash, emb_result.vector)
 
@@ -488,14 +518,14 @@ class MemoryManager:
             "Indexiert mit Embeddings: %s → %d Chunks (%d neue Embeddings)",
             path_str,
             len(chunks),
-            sum(1 for r in results if r is not None and not r.cached),
+            new_embedding_count,
         )
 
         # Audit: Indexierung protokollieren
         if self._audit_logger:
             self._audit_logger.log_memory_op(
                 f"index: {path_str}",
-                result=f"{len(chunks)} Chunks, {sum(1 for r in results if r is not None and not r.cached)} neue Embeddings",
+                result=f"{len(chunks)} Chunks, {new_embedding_count} neue Embeddings",
             )
 
         return len(chunks)

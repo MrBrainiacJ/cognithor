@@ -122,8 +122,16 @@ class HybridSearch:
             vector: Der Embedding-Vektor.
         """
         self._vector_index.add(key, vector)
-        # Chunk-Hash-Map und Graph-Cache invalidieren, da sich Zuordnungen geaendert haben koennten
-        self._chunk_hash_map = None
+        # Inkrementelles Hash-Map-Update (#44 Optimierung):
+        # Nur den neuen Key einfügen statt die gesamte Map zu invalidieren.
+        if self._chunk_hash_map is not None:
+            # Lade die Chunk-IDs für diesen Content-Hash aus der DB
+            try:
+                chunk_ids = self._index.get_chunk_ids_by_hash(key)
+                self._chunk_hash_map[key] = chunk_ids
+            except (AttributeError, Exception):
+                # Fallback: Volle Invalidierung wenn DB-Methode nicht existiert
+                self._chunk_hash_map = None
         self._graph_search_cache.clear()
 
     def invalidate_chunk_hash_map(self) -> None:

@@ -64,6 +64,14 @@ erstellst du einen Plan. Der Executor führt ihn aus.
 - Unterschätze deine Fähigkeiten NICHT. Du kannst Code generieren, Software \
 erstellen, Webrecherchen durchführen und komplexe Aufgaben autonom lösen.
 
+## Sprachstil
+- Antworte in natuerlicher, gesprochener Sprache -- so wie ein Mensch in einem Gespraech reden wuerde.
+- Vermeide Aufzaehlungen, Bullet-Points und technische Formatierung, wenn nicht explizit verlangt. Formuliere fliessende Saetze.
+- Sei direkt und praegnant, aber nicht roboterhaft. Kurze, klare Saetze statt verschachtelter Konstruktionen.
+- Du darfst umgangssprachlich sein -- "also", "na ja", "schau mal", "okay" klingt menschlicher.
+- Wenn du etwas erklaerst, stell dir vor du redest mit einem Freund: locker, verstaendlich, auf den Punkt.
+- Bei Faktenfragen: 2-3 Saetze, nicht als Liste. Nur bei expliziten Listen-Anfragen darfst du Aufzaehlungen nutzen.
+
 ## Verfügbare Tools
 {tools_section}
 
@@ -332,6 +340,19 @@ class Planner:
         self._cost_tracker = cost_tracker
         self._personality_engine = personality_engine
 
+        # Tool-Descriptions-Cache (#40 Optimierung)
+        self._cached_tools_section: str | None = None
+        self._cached_tools_hash: int = 0
+
+        # Circuit Breaker für LLM-Calls (#42 Optimierung)
+        from jarvis.utils.circuit_breaker import CircuitBreaker
+        self._llm_circuit_breaker = CircuitBreaker(
+            name="planner_llm",
+            failure_threshold=3,
+            recovery_timeout=30.0,
+            half_open_max_calls=1,
+        )
+
         # Prompts von Disk laden (mit Fallback auf hardcoded Konstanten)
         self._system_prompt_template = self._load_prompt_from_file(
             "SYSTEM_PROMPT.md", SYSTEM_PROMPT)
@@ -419,15 +440,31 @@ class Planner:
             user_message=user_message,
         )
 
-        # LLM aufrufen
+        # LLM aufrufen (mit Circuit Breaker, #42 Optimierung)
         _plan_start = time.monotonic()
         try:
-            response = await self._ollama.chat(
-                model=model,
-                messages=messages,
-                temperature=model_config.get("temperature", 0.7),
-                top_p=model_config.get("top_p", 0.9),
-                options={"num_predict": getattr(self._config.planner, "response_token_budget", 3000)},
+            from jarvis.utils.circuit_breaker import CircuitBreakerOpen
+            response = await self._llm_circuit_breaker.call(
+                self._ollama.chat(
+                    model=model,
+                    messages=messages,
+                    temperature=model_config.get("temperature", 0.7),
+                    top_p=model_config.get("top_p", 0.9),
+                    options={"num_predict": getattr(self._config.planner, "response_token_budget", 3000)},
+                )
+            )
+        except CircuitBreakerOpen as exc:
+            _plan_ms = int((time.monotonic() - _plan_start) * 1000)
+            log.warning("planner_circuit_open", remaining_s=f"{exc.remaining_seconds:.1f}")
+            return ActionPlan(
+                goal=user_message,
+                reasoning="LLM nicht erreichbar (Circuit Breaker offen)",
+                direct_response=(
+                    "Das Sprachmodell ist gerade nicht erreichbar — ich pausiere kurz "
+                    f"und versuche es in {exc.remaining_seconds:.0f} Sekunden erneut. "
+                    "Bitte versuch es gleich noch einmal."
+                ),
+                confidence=0.0,
             )
         except OllamaError as exc:
             _plan_ms = int((time.monotonic() - _plan_start) * 1000)
@@ -606,17 +643,20 @@ class Planner:
                 f"Suchergebnisse das Gegenteil zeigen.\n"
                 f"4. Zitiere konkrete Daten, Namen, Orte und Fakten DIREKT aus den Suchergebnissen.\n"
                 f"5. Erfinde KEINE Details, die nicht in den Suchergebnissen stehen.\n"
-                f"6. Antworte auf Deutsch, prägnant und faktenbasiert."
+                f"6. Antworte auf Deutsch, prägnant und faktenbasiert.\n"
+                f"7. Antworte in natürlicher, gesprochener Sprache -- wie ein Mensch im Gespräch. "
+                f"Keine Bullet-Points oder Listen, sondern fließende Sätze."
             )
         else:
             prompt = (
                 f"Der User hat gefragt: {user_message}\n\n"
                 f"Du hast folgende Aktionen ausgeführt und Ergebnisse erhalten:\n\n"
                 f"{results_text}\n\n"
-                f"Formuliere jetzt eine hilfreiche Antwort auf Deutsch.\n"
+                f"Formuliere jetzt eine hilfreiche Antwort auf Deutsch in natuerlicher, gesprochener Sprache.\n"
                 f"WICHTIG: Nutze die ERFOLGREICHEN Ergebnisse (✓) direkt in deiner Antwort. "
                 f"Ignoriere fehlgeschlagene/blockierte Schritte, wenn das Ziel trotzdem erreicht wurde. "
-                f"Gib dem User KEINE Anleitungen für Dinge, die du bereits erledigt hast."
+                f"Gib dem User KEINE Anleitungen fuer Dinge, die du bereits erledigt hast. "
+                f"Antworte wie ein Mensch im Gespraech -- fliessende Saetze, keine Bullet-Points oder Listen."
             )
 
         # Aktuelles Datum/Uhrzeit für korrekte zeitliche Bezüge
@@ -627,7 +667,8 @@ class Planner:
 
         if has_search_results:
             system_content = (
-                "Du bist Jarvis, ein autonomer Agent. Du beantwortest Fragen auf Deutsch.\n"
+                "Du bist Jarvis, ein autonomer Agent. Du beantwortest Fragen auf Deutsch "
+                "in natuerlicher, gesprochener Sprache -- wie ein Mensch im Gespraech.\n"
                 f"{date_line}"
                 "KRITISCHE REGEL: Dein Trainingswissen ist VERALTET. "
                 "Bei Suchergebnissen aus dem Internet basiert deine Antwort AUSSCHLIEẞLICH "
@@ -638,10 +679,11 @@ class Planner:
             )
         else:
             system_content = (
-                "Du bist Jarvis, ein autonomer Agent. Antworte hilfreich auf Deutsch.\n"
+                "Du bist Jarvis, ein autonomer Agent. Antworte hilfreich auf Deutsch "
+                "in natuerlicher, gesprochener Sprache -- wie ein Mensch im Gespraech.\n"
                 f"{date_line}"
                 "Du nutzt Tool-Ergebnisse direkt und gibst dem User NICHT Anleitungen, "
-                "Dinge selbst zu tun. Du löst Probleme eigenständig."
+                "Dinge selbst zu tun. Du loest Probleme eigenstaendig."
             )
 
         messages = [
@@ -682,28 +724,44 @@ class Planner:
         tool_schemas: dict[str, Any],
     ) -> str:
         """Baut den System-Prompt mit Kontext und Tools."""
-        # Tools-Section
+        # Tools-Section (gecacht, #40 Optimierung)
         if tool_schemas:
-            tools_lines = []
-            for name, schema in tool_schemas.items():
-                desc = schema.get("description", "Keine Beschreibung")
-                params = schema.get("inputSchema", {}).get("properties", {})
-                param_list = ", ".join(f"{k}: {v.get('type', '?')}" for k, v in params.items())
-                tools_lines.append(f"- **{name}**({param_list}): {desc}")
-            tools_section = "\n".join(tools_lines)
+            schemas_hash = hash(frozenset(tool_schemas.keys()))
+            if schemas_hash != self._cached_tools_hash or self._cached_tools_section is None:
+                tools_lines = []
+                for name, schema in tool_schemas.items():
+                    desc = schema.get("description", "Keine Beschreibung")
+                    params = schema.get("inputSchema", {}).get("properties", {})
+                    param_list = ", ".join(f"{k}: {v.get('type', '?')}" for k, v in params.items())
+                    tools_lines.append(f"- **{name}**({param_list}): {desc}")
+                self._cached_tools_section = "\n".join(tools_lines)
+                self._cached_tools_hash = schemas_hash
+            tools_section = self._cached_tools_section
         else:
             tools_section = "Keine Tools verfügbar."
 
-        # Context-Section (Memory)
+        # Context-Section (Memory) — Relevanz-Ranking nach Score (#41 Optimierung)
         context_parts: list[str] = []
 
         if working_memory.core_memory_text:
             context_parts.append(f"### Kern-Wissen\n{working_memory.core_memory_text}")
 
         if working_memory.injected_memories:
+            # Nach Score sortieren (höchster zuerst) mit Token-Budget
+            sorted_mems = sorted(
+                working_memory.injected_memories,
+                key=lambda m: getattr(m, "score", 0.0),
+                reverse=True,
+            )
             mem_texts = []
-            for mem in working_memory.injected_memories[:6]:
-                mem_texts.append(f"- [{mem.chunk.memory_tier.value}] {mem.chunk.text[:200]}")
+            budget_chars = 1200  # ~300 Tokens Budget für Memories
+            used = 0
+            for mem in sorted_mems:
+                line = f"- [{mem.chunk.memory_tier.value}] {mem.chunk.text[:200]}"
+                if used + len(line) > budget_chars:
+                    break
+                mem_texts.append(line)
+                used += len(line)
             context_parts.append("### Relevantes Wissen\n" + "\n".join(mem_texts))
 
         if working_memory.injected_procedures:

@@ -10,11 +10,21 @@ Usage: cognithor
 from __future__ import annotations
 
 import argparse
+import contextlib
 from pathlib import Path
 import os
 from typing import Any
 
 from jarvis import __version__
+
+# WebSocket/FastAPI types must be at module level so that
+# `from __future__ import annotations` (PEP 563) can resolve
+# string-ified type hints via get_type_hints().
+try:
+    from starlette.websockets import WebSocket, WebSocketDisconnect
+except ImportError:  # pragma: no cover
+    WebSocket = None  # type: ignore[assignment,misc]
+    WebSocketDisconnect = None  # type: ignore[assignment,misc]
 
 
 def parse_args() -> argparse.Namespace:
@@ -219,6 +229,261 @@ def main() -> None:
                             log.info("skills_marketplace_api_registered")
                     except Exception as _skills_exc:
                         log.warning("skills_marketplace_api_failed", error=str(_skills_exc))
+
+                # ── WebSocket Chat-Endpoint ──────────────────────────────
+                import json as _json
+                _ws_connections: dict[str, WebSocket] = {}
+
+                @api_app.websocket("/ws/{session_id}")
+                async def _cc_ws(websocket: WebSocket, session_id: str) -> None:
+                    await websocket.accept()
+                    _ws_connections[session_id] = websocket
+                    log.info("cc_ws_connected", session_id=session_id)
+                    try:
+                        while True:
+                            raw = await websocket.receive_text()
+                            try:
+                                msg = _json.loads(raw)
+                            except _json.JSONDecodeError:
+                                await websocket.send_json({"type": "error", "error": "Ungültiges JSON"})
+                                continue
+
+                            msg_type = msg.get("type", "")
+
+                            if msg_type == "ping":
+                                await websocket.send_json({"type": "pong"})
+                                continue
+
+                            if msg_type in ("user_message", "message"):
+                                text = (msg.get("text") or "").strip()
+                                metadata = msg.get("metadata", {})
+                                if not text:
+                                    await websocket.send_json({"type": "error", "error": "Leere Nachricht"})
+                                    continue
+
+                                # ── Audio transcription ────────────────────
+                                audio_b64 = metadata.get("audio_base64")
+                                if not audio_b64 and metadata.get("file_type", "").startswith("audio/"):
+                                    audio_b64 = metadata.get("file_base64")
+                                if audio_b64:
+                                    import base64 as _b64
+                                    import tempfile as _tmpfile
+                                    audio_type = metadata.get("audio_type") or metadata.get("file_type") or "audio/webm"
+                                    ext = {"audio/webm": ".webm", "audio/ogg": ".ogg", "audio/wav": ".wav", "audio/mp3": ".mp3", "audio/mpeg": ".mp3", "audio/m4a": ".m4a", "audio/flac": ".flac"}.get(audio_type, ".webm")
+                                    tmp_path = None
+                                    try:
+                                        raw_audio = _b64.b64decode(audio_b64)
+                                        with _tmpfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                                            tmp.write(raw_audio)
+                                            tmp_path = tmp.name
+                                        from jarvis.mcp.media import MediaPipeline
+                                        _media = MediaPipeline()
+                                        result = await _media.transcribe_audio(tmp_path, language="de")
+                                        if result.success and result.text and result.text.strip():
+                                            text = result.text.strip()
+                                            log.info("ws_audio_transcribed", text=text[:80])
+                                            # Remove raw audio from metadata so gateway
+                                            # doesn't see the placeholder context
+                                            metadata.pop("audio_base64", None)
+                                            metadata.pop("file_base64", None)
+                                            metadata["transcribed_from"] = "audio"
+                                            # Tell frontend the real text so it can
+                                            # update the user bubble
+                                            await websocket.send_json({
+                                                "type": "transcription",
+                                                "text": text,
+                                                "session_id": session_id,
+                                            })
+                                        else:
+                                            log.warning("ws_audio_transcription_failed", error=getattr(result, "error", ""))
+                                            await websocket.send_json({"type": "error", "error": "Audiodatei konnte nicht transkribiert werden."})
+                                            continue
+                                    except Exception as _audio_exc:
+                                        log.error("ws_audio_transcription_error", error=str(_audio_exc))
+                                        await websocket.send_json({"type": "error", "error": "Fehler bei der Audio-Transkription."})
+                                        continue
+                                    finally:
+                                        if tmp_path:
+                                            try:
+                                                import os as _os
+                                                _os.unlink(tmp_path)
+                                            except Exception:
+                                                pass
+
+                                from jarvis.models import IncomingMessage
+                                incoming = IncomingMessage(
+                                    text=text,
+                                    channel="webui",
+                                    session_id=session_id,
+                                    user_id="web_user",
+                                    metadata=metadata,
+                                )
+                                try:
+                                    response = await gateway.handle_message(incoming)
+                                    await websocket.send_json({
+                                        "type": "assistant_message",
+                                        "text": response.text,
+                                        "session_id": session_id,
+                                    })
+                                    await websocket.send_json({
+                                        "type": "stream_end",
+                                        "session_id": session_id,
+                                    })
+                                except Exception as _ws_exc:
+                                    log.error("cc_ws_handler_error", error=str(_ws_exc))
+                                    await websocket.send_json({
+                                        "type": "error",
+                                        "error": "Verarbeitungsfehler aufgetreten.",
+                                    })
+                                continue
+
+                            await websocket.send_json({"type": "error", "error": f"Unbekannter Typ: {msg_type}"})
+                    except WebSocketDisconnect:
+                        log.info("cc_ws_disconnected", session_id=session_id)
+                    except Exception as _ws_exc:
+                        log.error("cc_ws_error", error=str(_ws_exc), session_id=session_id)
+                    finally:
+                        _ws_connections.pop(session_id, None)
+
+                log.info("cc_websocket_endpoint_registered")
+
+                # ── TTS-Endpoint (Piper) ─────────────────────────────────
+                _voice_cfg = getattr(getattr(config, "channels", None), "voice_config", None)
+                _default_piper_voice = getattr(_voice_cfg, "piper_voice", "de_DE-thorsten_emotional-medium") if _voice_cfg else "de_DE-thorsten_emotional-medium"
+                _default_length_scale = getattr(_voice_cfg, "piper_length_scale", 1.0) if _voice_cfg else 1.0
+
+                @api_app.post("/api/v1/tts")
+                async def _cc_tts(body: dict[str, Any]) -> Any:
+                    """Text-to-Speech via Piper TTS."""
+                    from fastapi.responses import Response
+                    text = (body.get("text") or "").strip()
+                    if not text:
+                        return {"error": "Kein Text angegeben"}
+
+                    voice = body.get("voice", _default_piper_voice)
+                    length_scale = body.get("length_scale", _default_length_scale)
+                    try:
+                        wav_bytes = await _run_piper_tts(text, voice, length_scale)
+                        return Response(content=wav_bytes, media_type="audio/wav")
+                    except FileNotFoundError:
+                        return {"error": "Piper TTS nicht installiert. Bitte: pip install piper-tts"}
+                    except Exception as _tts_exc:
+                        log.error("tts_error", error=str(_tts_exc))
+                        return {"error": f"TTS-Fehler: {_tts_exc}"}
+
+                @api_app.get("/api/v1/tts/voices")
+                async def _cc_tts_voices() -> dict[str, Any]:
+                    """Listet verfuegbare Piper-Stimmen und die aktuell konfigurierte."""
+                    voices_dir = Path(config.jarvis_home) / "voices"
+                    installed: list[str] = []
+                    if voices_dir.exists():
+                        installed = [f.stem for f in voices_dir.glob("*.onnx")]
+                    return {
+                        "current": _default_piper_voice,
+                        "installed": installed,
+                        "available": [
+                            {"id": "de_DE-pavoque-low", "name": "Pavoque (Maennlich, Bariton)", "quality": "low"},
+                            {"id": "de_DE-karlsson-low", "name": "Karlsson (Maennlich)", "quality": "low"},
+                            {"id": "de_DE-thorsten-high", "name": "Thorsten (Maennlich)", "quality": "high"},
+                            {"id": "de_DE-thorsten-medium", "name": "Thorsten (Maennlich)", "quality": "medium"},
+                            {"id": "de_DE-thorsten_emotional-medium", "name": "Thorsten Emotional", "quality": "medium"},
+                            {"id": "de_DE-kerstin-low", "name": "Kerstin (Weiblich)", "quality": "low"},
+                            {"id": "de_DE-ramona-low", "name": "Ramona (Weiblich)", "quality": "low"},
+                            {"id": "de_DE-eva_k-x_low", "name": "Eva K (Weiblich)", "quality": "x_low"},
+                        ],
+                    }
+
+                async def _run_piper_tts(text: str, voice: str, length_scale: float = 1.0) -> bytes:
+                    """Generiert WAV-Audio via Piper TTS."""
+                    import tempfile
+
+                    # Voice-Modell-Pfad ermitteln
+                    voices_dir = Path(config.jarvis_home) / "voices"
+                    voices_dir.mkdir(exist_ok=True)
+                    model_path = voices_dir / f"{voice}.onnx"
+
+                    # Auto-Download wenn nicht vorhanden
+                    if not model_path.exists():
+                        await _download_piper_voice(voice, voices_dir)
+
+                    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                        tmp_path = tmp.name
+
+                    try:
+                        # Write text to a temp file with explicit UTF-8 encoding
+                        # to avoid Windows cp1252 stdin encoding issues with umlauts
+                        import tempfile as _tts_tmpfile
+                        with _tts_tmpfile.NamedTemporaryFile(
+                            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+                        ) as txt_tmp:
+                            txt_tmp.write(text)
+                            txt_input_path = txt_tmp.name
+
+                        cmd = [
+                            "python", "-m", "piper",
+                            "--model", str(model_path),
+                            "--output_file", tmp_path,
+                            "--length-scale", str(length_scale),
+                        ]
+                        # Multi-speaker models (e.g. thorsten_emotional) need --speaker
+                        model_json = model_path.with_suffix(".onnx.json")
+                        if model_json.exists():
+                            try:
+                                import json as _mj
+                                _model_cfg = _mj.loads(model_json.read_text(encoding="utf-8"))
+                                _speaker_map = _model_cfg.get("speaker_id_map", {})
+                                if _model_cfg.get("num_speakers", 1) > 1 and _speaker_map:
+                                    # Prefer "neutral", fallback to first speaker
+                                    _spk = "neutral" if "neutral" in _speaker_map else next(iter(_speaker_map))
+                                    cmd.extend(["--speaker", str(_speaker_map[_spk])])
+                            except Exception:
+                                pass
+                        # Read the UTF-8 text file as bytes for stdin
+                        with open(txt_input_path, "rb") as _tts_in:
+                            _tts_input_bytes = _tts_in.read()
+                        proc = await asyncio.create_subprocess_exec(
+                            *cmd,
+                            stdin=asyncio.subprocess.PIPE,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                        )
+                        stdout, stderr = await proc.communicate(input=_tts_input_bytes)
+
+                        if proc.returncode != 0:
+                            raise RuntimeError(f"Piper fehlgeschlagen: {stderr.decode()[:200]}")
+
+                        with open(tmp_path, "rb") as f:
+                            return f.read()
+                    finally:
+                        with contextlib.suppress(OSError):
+                            os.unlink(tmp_path)
+                        with contextlib.suppress(OSError, NameError):
+                            os.unlink(txt_input_path)
+
+                async def _download_piper_voice(voice: str, dest: Path) -> None:
+                    """Lädt ein Piper-Voicemodell von HuggingFace herunter."""
+                    import urllib.request
+
+                    parts = voice.split("-")  # de_DE-pavoque-low
+                    lang = parts[0]  # de_DE
+                    name = parts[1]  # pavoque
+                    quality = parts[2] if len(parts) > 2 else "low"
+                    lang_short = lang.split("_")[0]  # de
+
+                    base = f"https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/{lang_short}/{lang}/{name}/{quality}"
+                    onnx_url = f"{base}/{voice}.onnx?download=true"
+                    json_url = f"{base}/{voice}.onnx.json?download=true"
+
+                    log.info("downloading_piper_voice", voice=voice, url=onnx_url)
+
+                    def _dl() -> None:
+                        urllib.request.urlretrieve(onnx_url, str(dest / f"{voice}.onnx"))
+                        urllib.request.urlretrieve(json_url, str(dest / f"{voice}.onnx.json"))
+
+                    await asyncio.get_event_loop().run_in_executor(None, _dl)
+                    log.info("piper_voice_downloaded", voice=voice)
+
+                log.info("cc_tts_endpoint_registered")
 
                 # TLS-Durchreichung
                 uvi_kwargs: dict[str, Any] = {

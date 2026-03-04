@@ -217,10 +217,36 @@ class TelegramChannel(Channel):
 
         self._running = True
 
+        # Periodischer TTLDict-Cleanup (#47 Optimierung)
+        self._cleanup_task = asyncio.create_task(self._periodic_ttl_cleanup())
+
+    async def _periodic_ttl_cleanup(self) -> None:
+        """Periodischer Sweep abgelaufener TTLDict-Einträge (alle 5 Minuten)."""
+        while self._running:
+            try:
+                await asyncio.sleep(300)  # 5 Minuten
+                n1 = self._session_chat_map.purge_expired()
+                n2 = self._user_chat_map.purge_expired()
+                n3 = self._typing_tasks.purge_expired()
+                total = n1 + n2 + n3
+                if total > 0:
+                    logger.debug("TTLDict cleanup: %d abgelaufene Einträge entfernt", total)
+            except asyncio.CancelledError:
+                break
+            except Exception:
+                logger.debug("ttl_cleanup_error", exc_info=True)
+
     async def stop(self) -> None:
         """Stoppt den Telegram-Bot sauber."""
         if not self._running or self._app is None:
             return
+
+        # Cleanup-Task stoppen
+        if hasattr(self, "_cleanup_task") and self._cleanup_task is not None:
+            self._cleanup_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._cleanup_task
+            self._cleanup_task = None
 
         try:
             if self._use_webhook:

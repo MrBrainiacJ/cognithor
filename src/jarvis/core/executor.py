@@ -452,7 +452,9 @@ class Executor:
                 )
 
             if attempt < self._max_retries:
-                delay = self._base_delay * (2 ** (attempt - 1))
+                import random
+                _exp_delay = self._base_delay * (2 ** (attempt - 1))
+                delay = min(_exp_delay * (0.5 + random.random()), 30.0)
                 log.warning(
                     "executor_retry",
                     tool=tool_name,
@@ -460,7 +462,7 @@ class Executor:
                     max_retries=self._max_retries,
                     error_type=last_error_type,
                     error=last_error,
-                    delay_s=delay,
+                    delay_s=round(delay, 2),
                 )
                 # Status callback: retry visibility
                 if self._status_callback is not None:
