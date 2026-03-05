@@ -36,8 +36,8 @@ class TestRecencyDecay:
         half_life = 30
         d = date.today() - timedelta(days=half_life)
         result = recency_decay(d, half_life_days=half_life)
-        # At exactly half_life, decay should be ~0.368 (1/e)
-        assert 0.3 < result < 0.4
+        # At exactly half_life, decay should be exactly 0.5
+        assert 0.49 < result < 0.51
 
     def test_datetime_input(self):
         dt = datetime.now() - timedelta(days=10)

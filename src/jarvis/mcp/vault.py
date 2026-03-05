@@ -75,6 +75,26 @@ class VaultTools:
         └── _index.json     # Schnell-Lookup (Titel → Pfad, Tags, Datum)
     """
 
+    def _validate_vault_path(self, path: Path) -> Path | None:
+        """Validiert, dass ein Pfad innerhalb des Vault-Roots liegt.
+
+        Verhindert Path-Traversal-Angriffe (../../etc/passwd).
+
+        Returns:
+            Aufgelöster Pfad wenn gültig, sonst None.
+        """
+        try:
+            resolved = path.resolve()
+            resolved.relative_to(self._vault_root.resolve())
+            return resolved
+        except (ValueError, OSError):
+            log.warning(
+                "vault_path_traversal_blocked",
+                attempted_path=str(path),
+                vault_root=str(self._vault_root),
+            )
+            return None
+
     def __init__(self, config: JarvisConfig | None = None) -> None:
         vault_cfg = getattr(config, "vault", None)
 
@@ -387,17 +407,17 @@ class VaultTools:
         if not identifier.strip():
             return "Fehler: Kein Identifier angegeben."
 
-        # 1. Direkt als Pfad versuchen
-        direct_path = self._vault_root / identifier
-        if direct_path.exists() and direct_path.is_file():
+        # 1. Direkt als Pfad versuchen (mit Path-Traversal-Schutz)
+        direct_path = self._validate_vault_path(self._vault_root / identifier)
+        if direct_path and direct_path.exists() and direct_path.is_file():
             return direct_path.read_text(encoding="utf-8")
 
         # 2. Im Index nach Titel suchen
         index = self._read_index()
         for title, meta in index.items():
             if title.lower() == identifier.lower():
-                note_path = self._vault_root / meta["path"]
-                if note_path.exists():
+                note_path = self._validate_vault_path(self._vault_root / meta["path"])
+                if note_path and note_path.exists():
                     return note_path.read_text(encoding="utf-8")
 
         # 3. Nach Slug suchen
@@ -513,17 +533,17 @@ class VaultTools:
 
     def _find_note(self, identifier: str) -> Path | None:
         """Findet eine Notiz per Titel, Pfad oder Slug."""
-        # 1. Direkt als relativer Pfad
-        direct = self._vault_root / identifier
-        if direct.exists() and direct.is_file():
+        # 1. Direkt als relativer Pfad (mit Path-Traversal-Schutz)
+        direct = self._validate_vault_path(self._vault_root / identifier)
+        if direct and direct.exists() and direct.is_file():
             return direct
 
         # 2. Index-Lookup per Titel
         index = self._read_index()
         for title, meta in index.items():
             if title.lower() == identifier.lower():
-                path = self._vault_root / meta["path"]
-                if path.exists():
+                path = self._validate_vault_path(self._vault_root / meta["path"])
+                if path and path.exists():
                     return path
 
         # 3. Slug-Suche

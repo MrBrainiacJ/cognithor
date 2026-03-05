@@ -192,7 +192,16 @@ class CodeTools:
         source_name = "<inline>"
         if file_path and not code:
             try:
-                path = Path(file_path)
+                path = Path(file_path).expanduser().resolve()
+                # Path-Traversal-Schutz: muss innerhalb Workspace liegen
+                workspace_root = self._workspace.expanduser().resolve()
+                try:
+                    path.relative_to(workspace_root)
+                except ValueError:
+                    return (
+                        f"Zugriff verweigert: '{file_path}' liegt außerhalb "
+                        f"des Workspace ({workspace_root})"
+                    )
                 if not path.exists():
                     return f"Fehler: Datei '{file_path}' nicht gefunden."
                 if not path.suffix == ".py":

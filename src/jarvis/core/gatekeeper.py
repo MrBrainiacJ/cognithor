@@ -84,6 +84,10 @@ class Gatekeeper:
         self._audit_path = config.logs_dir / "gatekeeper.jsonl"
         self._initialized = False
 
+        # Buffered Audit-Writes (vermeidet Blocking I/O pro evaluate()-Aufruf)
+        self._audit_buffer: list[str] = []
+        self._AUDIT_FLUSH_THRESHOLD = 10
+
         # Optional: Capability Matrix (F8)
         self._capability_matrix: Any = None
         try:
@@ -231,7 +235,15 @@ class Gatekeeper:
             self._write_audit(action, path_check, context)
             return path_check
 
-        # --- Schritt 4: Destruktive Shell-Befehle ---
+        # --- Schritt 4a: Gefährlicher Python-Code ---
+        if action.tool == "run_python":
+            code = str(action.params.get("code", ""))
+            code_check = self._check_python_code(code, action)
+            if code_check is not None:
+                self._write_audit(action, code_check, context)
+                return code_check
+
+        # --- Schritt 4b: Destruktive Shell-Befehle ---
         if action.tool in ("exec_command", "shell_exec", "shell"):
             cmd = str(action.params.get("command", ""))
             cmd_check = self._check_command(cmd, action)
@@ -496,6 +508,54 @@ class Gatekeeper:
             policy_name="path_validation",
         )
 
+    # Compiled patterns for dangerous Python code (class-level, compiled once)
+    _DANGEROUS_PYTHON_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+        # OS-level command execution
+        (re.compile(r"\bos\.system\s*\(", re.IGNORECASE), "os.system()"),
+        (re.compile(r"\bos\.popen\s*\(", re.IGNORECASE), "os.popen()"),
+        (re.compile(r"\bos\.exec", re.IGNORECASE), "os.exec*()"),
+        # OS-level file destruction
+        (re.compile(r"\bos\.remove\s*\(", re.IGNORECASE), "os.remove()"),
+        (re.compile(r"\bos\.unlink\s*\(", re.IGNORECASE), "os.unlink()"),
+        (re.compile(r"\bos\.rmdir\s*\(", re.IGNORECASE), "os.rmdir()"),
+        # subprocess module
+        (re.compile(r"\bsubprocess\.", re.IGNORECASE), "subprocess"),
+        # shutil destructive operations
+        (re.compile(r"\bshutil\.rmtree\s*\(", re.IGNORECASE), "shutil.rmtree()"),
+        (re.compile(r"\bshutil\.move\s*\(", re.IGNORECASE), "shutil.move()"),
+        # Dynamic code execution / import
+        (re.compile(r"\b__import__\s*\(", re.IGNORECASE), "__import__()"),
+        (re.compile(r"\beval\s*\(", re.IGNORECASE), "eval()"),
+        (re.compile(r"\bexec\s*\(", re.IGNORECASE), "exec()"),
+        # open() with write/append/create modes
+        (re.compile(r"\bopen\s*\([^)]*['\"][wax][^'\"]*['\"]", re.IGNORECASE), "open() with write mode"),
+    ]
+
+    def _check_python_code(
+        self,
+        code: str,
+        action: PlannedAction,
+    ) -> GateDecision | None:
+        """Prüft Python-Code auf gefährliche Patterns (os.system, subprocess, etc.).
+
+        Returns:
+            GateDecision(BLOCK) wenn gefährlicher Code erkannt, sonst None.
+        """
+        if not code.strip():
+            return None
+
+        for pattern, description in self._DANGEROUS_PYTHON_PATTERNS:
+            if pattern.search(code):
+                return GateDecision(
+                    status=GateStatus.BLOCK,
+                    reason=f"Gefährlicher Python-Code erkannt: {description}",
+                    risk_level=RiskLevel.RED,
+                    original_action=action,
+                    policy_name="blocked_python_code",
+                )
+
+        return None
+
     def _check_command(
         self,
         command: str,
@@ -655,13 +715,18 @@ class Gatekeeper:
             policy_name=decision.policy_name,
         )
 
-        # JSONL schreiben (append)
-        try:
-            self._audit_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._audit_path, "a", encoding="utf-8") as f:
-                f.write(entry.model_dump_json() + "\n")
-        except OSError as exc:
-            log.error("audit_write_failed", error=str(exc))
+        # Audit-Eintrag in Buffer schreiben (non-blocking)
+        self._audit_buffer.append(entry.model_dump_json() + "\n")
+        if len(self._audit_buffer) >= self._AUDIT_FLUSH_THRESHOLD:
+            self._flush_audit_buffer()
+
+        # Zentrales Audit-Logging (AuditLogger-Integration)
+        if self._audit_logger:
+            self._audit_logger.log_gatekeeper(
+                decision.status.value,
+                decision.reason,
+                tool_name=action.tool,
+            )
 
         # Auch ins structlog
         log.info(
@@ -674,10 +739,14 @@ class Gatekeeper:
             session=context.session_id[:8],
         )
 
-        # Zentrales Audit-Logging (AuditLogger-Integration)
-        if self._audit_logger:
-            self._audit_logger.log_gatekeeper(
-                decision.status.value,
-                decision.reason,
-                tool_name=action.tool,
-            )
+    def _flush_audit_buffer(self) -> None:
+        """Schreibt den Audit-Buffer gesammelt auf Disk (batch I/O)."""
+        if not self._audit_buffer:
+            return
+        try:
+            self._audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._audit_path, "a", encoding="utf-8") as f:
+                f.writelines(self._audit_buffer)
+            self._audit_buffer.clear()
+        except OSError as exc:
+            log.error("audit_write_failed", error=str(exc))

@@ -214,7 +214,15 @@ class MemoryTools:
             source_path += ".md"
 
         proc_dir = self._memory.procedural._dir
-        target = proc_dir / source_path
+        target = (proc_dir / source_path).resolve()
+        # Path-Traversal-Schutz: target muss innerhalb proc_dir bleiben
+        try:
+            target.relative_to(proc_dir.resolve())
+        except ValueError:
+            return (
+                f"Zugriff verweigert: Pfad '{source_path}' liegt außerhalb "
+                f"des Procedural-Verzeichnisses."
+            )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
 

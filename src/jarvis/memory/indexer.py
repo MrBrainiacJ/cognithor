@@ -420,6 +420,37 @@ class MemoryIndex:
         rows = self.conn.execute("SELECT content_hash, vector FROM embeddings").fetchall()
         return {r["content_hash"]: _deserialize_vector(r["vector"]) for r in rows}
 
+    def get_embeddings_by_hashes(
+        self, content_hashes: set[str],
+    ) -> dict[str, list[float]]:
+        """Lädt nur Embeddings für die angegebenen Hashes (statt alle).
+
+        Deutlich RAM-effizienter als get_all_embeddings() wenn nur wenige
+        Hashes geprüft werden müssen.
+        """
+        if not content_hashes:
+            return {}
+        result: dict[str, list[float]] = {}
+        # SQLite hat ein SQLITE_MAX_VARIABLE_NUMBER Limit (default 999).
+        # Batch in Gruppen von 900 um sicher zu bleiben.
+        hash_list = list(content_hashes)
+        for i in range(0, len(hash_list), 900):
+            batch = hash_list[i : i + 900]
+            placeholders = ",".join("?" * len(batch))
+            rows = self.conn.execute(
+                f"SELECT content_hash, vector FROM embeddings "  # noqa: S608
+                f"WHERE content_hash IN ({placeholders})",
+                batch,
+            ).fetchall()
+            for r in rows:
+                result[r["content_hash"]] = _deserialize_vector(r["vector"])
+        return result
+
+    def get_embedding_hashes(self) -> set[str]:
+        """Gibt alle content_hashes zurück die ein Embedding haben (ohne Vektoren zu laden)."""
+        rows = self.conn.execute("SELECT content_hash FROM embeddings").fetchall()
+        return {r["content_hash"] for r in rows}
+
     def count_embeddings(self) -> int:
         """Anzahl gespeicherter Embeddings."""
         row = self.conn.execute("SELECT COUNT(*) as cnt FROM embeddings").fetchone()
@@ -558,40 +589,59 @@ class MemoryIndex:
     ) -> list[Entity]:
         """Traversiert den Wissens-Graph ab einer Entität.
 
+        Verwendet eine iterative BFS-Suche (statt rekursiver CTE) um
+        Zyklen im Graphen sicher zu handhaben und exponentielle Blowups
+        bei dicht vernetzten Entitäten zu vermeiden.
+
         Args:
             entity_id: Start-Entität.
             max_depth: Maximale Tiefe.
 
         Returns:
-            Alle erreichbaren Entitäten.
+            Alle erreichbaren Entitäten (ohne Start-Entität).
         """
-        rows = self.conn.execute(
-            """
-            WITH RECURSIVE reachable AS (
-                SELECT target_entity AS entity_id, 1 AS depth
-                FROM relations WHERE source_entity = ?
-                UNION ALL
-                SELECT source_entity AS entity_id, 1 AS depth
-                FROM relations WHERE target_entity = ?
-                UNION ALL
-                SELECT CASE
-                    WHEN r.source_entity = rc.entity_id THEN r.target_entity
-                    ELSE r.source_entity
-                END, rc.depth + 1
-                FROM relations r
-                JOIN reachable rc ON (
-                    r.source_entity = rc.entity_id
-                    OR r.target_entity = rc.entity_id
-                )
-                WHERE rc.depth < ?
-            )
-            SELECT DISTINCT e.* FROM reachable rc
-            JOIN entities e ON rc.entity_id = e.id
-            WHERE e.id != ?
-            """,
-            (entity_id, entity_id, max_depth, entity_id),
-        ).fetchall()
-        return [self._row_to_entity(r) for r in rows]
+        visited: set[str] = {entity_id}
+        frontier: set[str] = {entity_id}
+
+        for _ in range(max_depth):
+            if not frontier:
+                break
+            # Alle Nachbarn der aktuellen Frontier in einem Query laden
+            frontier_list = list(frontier)
+            next_frontier: set[str] = set()
+            for i in range(0, len(frontier_list), 900):
+                batch = frontier_list[i : i + 900]
+                placeholders = ",".join("?" * len(batch))
+                rows = self.conn.execute(
+                    f"SELECT source_entity, target_entity FROM relations "  # noqa: S608
+                    f"WHERE source_entity IN ({placeholders}) "
+                    f"OR target_entity IN ({placeholders})",
+                    batch + batch,
+                ).fetchall()
+                for r in rows:
+                    for neighbor in (r["source_entity"], r["target_entity"]):
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            next_frontier.add(neighbor)
+            frontier = next_frontier
+
+        # Start-Entität entfernen
+        visited.discard(entity_id)
+        if not visited:
+            return []
+
+        # Entitäten laden
+        result_list = list(visited)
+        entities: list[Entity] = []
+        for i in range(0, len(result_list), 900):
+            batch = result_list[i : i + 900]
+            placeholders = ",".join("?" * len(batch))
+            rows = self.conn.execute(
+                f"SELECT * FROM entities WHERE id IN ({placeholders})",  # noqa: S608
+                batch,
+            ).fetchall()
+            entities.extend(self._row_to_entity(r) for r in rows)
+        return entities
 
     def count_relations(self) -> int:
         """Zählt die Anzahl der Relationen im Index."""

@@ -274,6 +274,14 @@ class TestOllamaError:
 class TestModelRouterExtended:
     """Erweiterte Tests für ModelRouter – get_model_config und Fallback-Edges."""
 
+    @pytest.fixture(autouse=True)
+    def _reset_coding_override(self):
+        """Reset ContextVar before/after each test to prevent cross-test contamination."""
+        from jarvis.core.model_router import _coding_override_var
+        _coding_override_var.set(None)
+        yield
+        _coding_override_var.set(None)
+
     @pytest.fixture()
     def config(self, tmp_path: Path):
         return JarvisConfig(jarvis_home=tmp_path)

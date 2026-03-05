@@ -461,9 +461,10 @@ class MemoryManager:
         self._index.upsert_chunks(chunks)
 
         # Embeddings generieren (Cache-aware, #46 Optimierung)
-        # Nur Chunks ohne existierendes Embedding an embed_batch senden
-        existing_hashes = self._index.get_all_content_hashes() & {c.content_hash for c in chunks}
-        existing_embeddings = self._index.get_all_embeddings()
+        # Nur Chunks ohne existierendes Embedding an embed_batch senden.
+        # Optimiert: Lade nur die Hashes der neuen Chunks statt ALLER Embeddings.
+        chunk_hashes = {c.content_hash for c in chunks}
+        existing_embeddings = self._index.get_embeddings_by_hashes(chunk_hashes)
         texts_to_embed = []
         hashes_to_embed = []
         cached_results: dict[str, Any] = {}

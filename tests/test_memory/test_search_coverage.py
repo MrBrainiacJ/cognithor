@@ -29,13 +29,14 @@ class TestRecencyDecay:
     def test_30_days_ago(self) -> None:
         old = date.today() - timedelta(days=30)
         decay = recency_decay(old, half_life_days=30)
-        # exp(-30/30) = exp(-1) ≈ 0.368
-        assert 0.3 < decay < 0.4
+        # 2^(-30/30) = 2^(-1) = 0.5 (true half-life)
+        assert 0.49 < decay < 0.51
 
     def test_datetime_input(self) -> None:
         old = datetime.now() - timedelta(days=30)
         decay = recency_decay(old, half_life_days=30)
-        assert 0.3 < decay < 0.4
+        # 2^(-30/30) = 0.5 (true half-life)
+        assert 0.49 < decay < 0.51
 
 
 # ============================================================================

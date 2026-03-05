@@ -18,6 +18,7 @@ import hashlib
 import json as _json
 import re
 import signal
+import threading
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -114,7 +115,7 @@ class Gateway:
         self._working_memories: dict[str, WorkingMemory] = {}
         self._session_last_accessed: dict[str, float] = {}
         self._last_session_cleanup: float = time.monotonic()
-        self._session_lock = asyncio.Lock()
+        self._session_lock = threading.Lock()
         self._running = False
         self._context_pipeline = None
         self._message_queue: DurableMessageQueue | None = None
@@ -1838,16 +1839,17 @@ class Gateway:
         prevent unbounded growth of the in-memory session and working-memory dicts.
         """
         now = time.monotonic()
-        stale_keys = [
-            key
-            for key, last_ts in self._session_last_accessed.items()
-            if (now - last_ts) > self._SESSION_TTL_SECONDS
-        ]
-        for key in stale_keys:
-            session = self._sessions.pop(key, None)
-            if session:
-                self._working_memories.pop(session.session_id, None)
-            self._session_last_accessed.pop(key, None)
+        with self._session_lock:
+            stale_keys = [
+                key
+                for key, last_ts in self._session_last_accessed.items()
+                if (now - last_ts) > self._SESSION_TTL_SECONDS
+            ]
+            for key in stale_keys:
+                session = self._sessions.pop(key, None)
+                if session:
+                    self._working_memories.pop(session.session_id, None)
+                self._session_last_accessed.pop(key, None)
         if stale_keys:
             log.info("stale_sessions_cleaned", count=len(stale_keys))
         self._last_session_cleanup = now
@@ -1880,37 +1882,38 @@ class Gateway:
 
         key = f"{channel}:{user_id}:{agent_name}"
 
-        # 1. RAM-Cache
-        if key in self._sessions:
-            self._session_last_accessed[key] = time.monotonic()
-            return self._sessions[key]
-
-        # 2. SQLite-Persistenz
-        if self._session_store:
-            stored = self._session_store.load_session(channel, user_id, agent_name)
-            if stored and stored.agent_name == agent_name:
-                self._sessions[key] = stored
+        with self._session_lock:
+            # 1. RAM-Cache
+            if key in self._sessions:
                 self._session_last_accessed[key] = time.monotonic()
-                log.info(
-                    "session_restored",
-                    session=stored.session_id[:8],
-                    channel=channel,
-                    agent=agent_name,
-                    messages=stored.message_count,
-                )
-                return stored
+                return self._sessions[key]
 
-        # 3. Neue Session
-        session = SessionContext(
-            user_id=user_id,
-            channel=channel,
-            agent_name=agent_name,
-            max_iterations=self._config.security.max_iterations,
-        )
-        self._sessions[key] = session
-        self._session_last_accessed[key] = time.monotonic()
+            # 2. SQLite-Persistenz
+            if self._session_store:
+                stored = self._session_store.load_session(channel, user_id, agent_name)
+                if stored and stored.agent_name == agent_name:
+                    self._sessions[key] = stored
+                    self._session_last_accessed[key] = time.monotonic()
+                    log.info(
+                        "session_restored",
+                        session=stored.session_id[:8],
+                        channel=channel,
+                        agent=agent_name,
+                        messages=stored.message_count,
+                    )
+                    return stored
 
-        # Sofort persistieren
+            # 3. Neue Session
+            session = SessionContext(
+                user_id=user_id,
+                channel=channel,
+                agent_name=agent_name,
+                max_iterations=self._config.security.max_iterations,
+            )
+            self._sessions[key] = session
+            self._session_last_accessed[key] = time.monotonic()
+
+        # Persistieren (außerhalb Lock, blockiert nicht andere Sessions)
         if self._session_store:
             self._session_store.save_session(session)
 
@@ -1927,40 +1930,46 @@ class Gateway:
 
         Bei existierenden Sessions wird die Chat-History aus SQLite geladen.
         """
-        if session.session_id not in self._working_memories:
-            wm = WorkingMemory(
-                session_id=session.session_id,
-                max_tokens=self._config.models.planner.context_window,
-            )
+        with self._session_lock:
+            if session.session_id in self._working_memories:
+                return self._working_memories[session.session_id]
 
-            # Core Memory laden (wenn vorhanden)
-            core_path = self._config.core_memory_path
-            if core_path.exists():
-                try:
-                    wm.core_memory_text = core_path.read_text(encoding="utf-8")
-                except Exception as exc:
-                    log.warning("core_memory_load_failed", error=str(exc))
+        # Außerhalb Lock erstellen (I/O-Operationen blockieren nicht andere Sessions)
+        wm = WorkingMemory(
+            session_id=session.session_id,
+            max_tokens=self._config.models.planner.context_window,
+        )
 
-            # Chat-History aus SessionStore wiederherstellen
-            if self._session_store:
-                try:
-                    history = self._session_store.load_chat_history(
-                        session.session_id,
-                        limit=20,
+        # Core Memory laden (wenn vorhanden)
+        core_path = self._config.core_memory_path
+        if core_path.exists():
+            try:
+                wm.core_memory_text = core_path.read_text(encoding="utf-8")
+            except Exception as exc:
+                log.warning("core_memory_load_failed", error=str(exc))
+
+        # Chat-History aus SessionStore wiederherstellen
+        if self._session_store:
+            try:
+                history = self._session_store.load_chat_history(
+                    session.session_id,
+                    limit=20,
+                )
+                if history:
+                    wm.chat_history = history
+                    log.info(
+                        "chat_history_restored",
+                        session=session.session_id[:8],
+                        messages=len(history),
                     )
-                    if history:
-                        wm.chat_history = history
-                        log.info(
-                            "chat_history_restored",
-                            session=session.session_id[:8],
-                            messages=len(history),
-                        )
-                except Exception as exc:
-                    log.warning("chat_history_load_failed", error=str(exc))
+            except Exception as exc:
+                log.warning("chat_history_load_failed", error=str(exc))
 
-            self._working_memories[session.session_id] = wm
-
-        return self._working_memories[session.session_id]
+        with self._session_lock:
+            # Double-check: anderer Thread könnte schneller gewesen sein
+            if session.session_id not in self._working_memories:
+                self._working_memories[session.session_id] = wm
+            return self._working_memories[session.session_id]
 
     def _check_and_compact(self, wm: WorkingMemory, session: SessionContext) -> None:
         """Prüft Token-Budget und kompaktiert Chat-History wenn nötig.

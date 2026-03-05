@@ -72,6 +72,7 @@ class CircuitBreaker:
         self._state = CircuitState.closed
         self._failure_count = 0
         self._half_open_successes = 0
+        self._half_open_inflight = 0  # Anzahl aktiver Calls in HALF_OPEN
         self._opened_at = 0.0
         self._lock = asyncio.Lock()
 
@@ -125,17 +126,34 @@ class CircuitBreaker:
                 # Timeout abgelaufen → HALF_OPEN
                 self._transition(CircuitState.half_open)
                 self._half_open_successes = 0
+                self._half_open_inflight = 0
+
+            # HALF_OPEN Admission Control: nur max N Calls gleichzeitig
+            if self._state == CircuitState.half_open:
+                if self._half_open_inflight >= self._half_open_max_calls:
+                    self._total_rejections += 1
+                    raise CircuitBreakerOpen(
+                        self._name, self._recovery_timeout
+                    )
+                self._half_open_inflight += 1
 
         try:
             result = await coro
         except BaseException as exc:
             if isinstance(exc, self._excluded_exceptions):
+                async with self._lock:
+                    if self._state == CircuitState.half_open:
+                        self._half_open_inflight = max(0, self._half_open_inflight - 1)
                 raise
             async with self._lock:
+                if self._state == CircuitState.half_open:
+                    self._half_open_inflight = max(0, self._half_open_inflight - 1)
                 self._record_failure()
             raise
         else:
             async with self._lock:
+                if self._state == CircuitState.half_open:
+                    self._half_open_inflight = max(0, self._half_open_inflight - 1)
                 self._record_success()
             return result
 

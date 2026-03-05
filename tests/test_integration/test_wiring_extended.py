@@ -62,6 +62,7 @@ class TestGatekeeperAuditIntegration:
         session = SessionContext(session_id="s1", channel="cli", user_id="u1")
 
         decision = gk.evaluate(action, session)
+        gk._flush_audit_buffer()
 
         assert decision.status == GateStatus.BLOCK
 
@@ -85,6 +86,7 @@ class TestGatekeeperAuditIntegration:
         session = SessionContext(session_id="s2", channel="cli", user_id="u1")
 
         decision = gk.evaluate(action, session)
+        gk._flush_audit_buffer()
 
         # Status kann ALLOW, INFORM oder APPROVE sein – alles wird auditiert
         assert decision.status in (GateStatus.ALLOW, GateStatus.INFORM, GateStatus.APPROVE)
@@ -114,6 +116,7 @@ class TestGatekeeperAuditIntegration:
         session = SessionContext(session_id="s3", channel="cli", user_id="u1")
 
         decision = gk.evaluate(action, session)
+        gk._flush_audit_buffer()
 
         assert decision.status == GateStatus.MASK
 

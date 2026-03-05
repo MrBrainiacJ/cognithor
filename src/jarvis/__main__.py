@@ -236,7 +236,30 @@ def main() -> None:
 
                 @api_app.websocket("/ws/{session_id}")
                 async def _cc_ws(websocket: WebSocket, session_id: str) -> None:
+                    # ── Token-based authentication ────────────────────────
+                    required_token = os.environ.get("JARVIS_API_TOKEN")
+                    if required_token:
+                        client_token = websocket.query_params.get("token")
+                        if not client_token or client_token != required_token:
+                            await websocket.close(code=4001, reason="Unauthorized")
+                            log.warning(
+                                "cc_ws_auth_rejected",
+                                session_id=session_id,
+                                reason="missing_or_invalid_token",
+                            )
+                            return
+
                     await websocket.accept()
+
+                    # ── Session collision: close existing connection ──────
+                    existing = _ws_connections.get(session_id)
+                    if existing is not None:
+                        log.info("cc_ws_closing_stale", session_id=session_id)
+                        try:
+                            await existing.close(code=4002, reason="Session replaced")
+                        except Exception:
+                            pass  # already closed / broken
+
                     _ws_connections[session_id] = websocket
                     log.info("cc_ws_connected", session_id=session_id)
                     try:

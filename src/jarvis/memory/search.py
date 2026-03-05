@@ -63,8 +63,8 @@ def recency_decay(
     if age_days <= 0:
         return 1.0
 
-    # Exponentieller Decay: nach half_life_days ist der Wert ~0.368 (1/e)
-    return math.exp(-age_days / half_life_days)
+    # Halbwertszeit-Decay: nach half_life_days ist der Wert exakt 0.5
+    return 2.0 ** (-age_days / half_life_days)
 
 
 class HybridSearch:

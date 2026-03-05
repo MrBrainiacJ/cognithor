@@ -139,15 +139,17 @@ class TestAnalyzeCode:
         assert "Fehler" in result
 
     @pytest.mark.asyncio()
-    async def test_file_not_found(self, code_tools: CodeTools) -> None:
+    async def test_file_not_found(self, code_tools: CodeTools, config: JarvisConfig) -> None:
         """Nicht existierende Datei gibt Fehler."""
-        result = await code_tools.analyze_code(file_path="/nonexistent/file.py")
+        fake_path = str(config.workspace_dir / "nonexistent" / "file.py")
+        result = await code_tools.analyze_code(file_path=fake_path)
         assert "nicht gefunden" in result
 
     @pytest.mark.asyncio()
-    async def test_non_python_file(self, code_tools: CodeTools) -> None:
+    async def test_non_python_file(self, code_tools: CodeTools, config: JarvisConfig) -> None:
         """Nicht-Python-Datei wird abgelehnt."""
-        result = await code_tools.analyze_code(file_path="/some/file.txt")
+        fake_path = str(config.workspace_dir / "file.txt")
+        result = await code_tools.analyze_code(file_path=fake_path)
         assert "Nur Python" in result or "nicht gefunden" in result
 
     @pytest.mark.asyncio()

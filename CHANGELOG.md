@@ -5,6 +5,52 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] – 2026-03-05
+
+### Security & Performance Hardening — 10 Critical Fixes
+
+Deep-analysis release addressing 10 security vulnerabilities and performance issues
+discovered through comprehensive line-by-line code review. 107 new tests added,
+full suite at 9,356 tests (0 failures).
+
+### Fixed
+
+**Security**
+- **Path Traversal Prevention** — `vault.py`, `memory_server.py`, `code_tools.py` now validate
+  all file paths with `.resolve()` + `.relative_to()`, blocking `../../` traversal attacks
+- **run_python Gatekeeper Bypass** — 14 dangerous Python patterns (os.system, subprocess, eval,
+  exec, shutil.rmtree, etc.) are now detected and blocked before execution
+- **WebSocket Authentication** — API WebSocket endpoint now validates `?token=` against
+  `JARVIS_API_TOKEN` env var; session collision handling added
+- **ModelRouter Race Condition** — Coding override now uses `contextvars.ContextVar` for
+  per-async-task isolation, preventing cross-request model contamination
+
+**Performance**
+- **Embedding Memory Explosion** — `get_all_embeddings()` replaced with targeted
+  `get_embeddings_by_hashes()` using batched SQL queries (max 900 params per batch)
+- **Graph Traversal Cycle Guard** — Recursive CTE replaced with iterative BFS using
+  `visited` set, preventing infinite loops on cyclic entity graphs
+- **Blocking I/O in Async Context** — `UserPreferenceStore` uses persistent SQLite connection
+  with WAL mode; Gatekeeper uses buffered audit writes; MCP Server wraps sync handlers in
+  `run_in_executor`
+
+**Reliability**
+- **Session Lock Unused** — `asyncio.Lock()` replaced with `threading.Lock()` and applied to
+  `_get_or_create_session()`, `_get_or_create_working_memory()`, `_cleanup_stale_sessions()`
+- **recency_decay Formula** — Changed from `e^(-x)` (gives 0.368 at half-life) to `2^(-x)`
+  (gives exact 0.5 at half-life) for correct half-life decay behavior
+- **CircuitBreaker HALF_OPEN Race** — Added inflight counter with admission control limiting
+  concurrent probe calls to `half_open_max_calls`
+
+### Added
+- 10 new test files with 107 tests covering all fixes
+- `get_embeddings_by_hashes()` and `get_embedding_hashes()` methods on `MemoryIndex`
+- `_validate_vault_path()` method on `VaultTools`
+- `_check_python_code()` method on `Gatekeeper` with 14 compiled regex patterns
+- `_flush_audit_buffer()` for batched audit I/O
+
+---
+
 ## [1.1.0] – 2026-03-05
 
 ### Agent Infrastructure Release — 15 New Subsystems

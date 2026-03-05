@@ -356,7 +356,12 @@ class JarvisMCPServer:
                     handler(**(arguments or {})), timeout=self.HANDLER_TIMEOUT,
                 )
             else:
-                result = handler(**(arguments or {}))
+                # Sync-Handler in Thread-Pool ausführen (blockiert nicht den Event Loop)
+                loop = asyncio.get_running_loop()
+                result = await asyncio.wait_for(
+                    loop.run_in_executor(None, lambda: handler(**(arguments or {}))),
+                    timeout=self.HANDLER_TIMEOUT,
+                )
 
             if progress_token:
                 await self._send_progress(progress_token, 1.0, "Fertig")

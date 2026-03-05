@@ -16,6 +16,7 @@ Bible reference: §8 (Model Router)
 
 from __future__ import annotations
 
+import contextvars
 import json
 import time
 from typing import TYPE_CHECKING, Any
@@ -31,6 +32,13 @@ if TYPE_CHECKING:
     from jarvis.config import JarvisConfig
 
 log = get_logger(__name__)
+
+# Per-task coding override using ContextVar for concurrency safety.
+# Each async task (asyncio.Task / contextvars.copy_context()) gets its own
+# value, preventing one request's coding override from leaking into another.
+_coding_override_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "_coding_override", default=None
+)
 
 
 class OllamaError(Exception):
@@ -364,14 +372,22 @@ class ModelRouter:
         Wird vom Gateway gesetzt wenn eine Coding-Aufgabe erkannt wird.
         Alle select_model()-Aufrufe (planning, reflection, etc.) liefern
         dann das Coding-Modell zurueck.
+
+        Uses a ContextVar so concurrent async tasks each get their own
+        override value, preventing cross-request contamination.
         """
+        _coding_override_var.set(model_name)
+        # Keep instance attribute as fallback for legacy / non-async callers.
         self._coding_override = model_name
         log.info("coding_override_set", model=model_name)
 
     def clear_coding_override(self) -> None:
         """Entfernt den Coding-Override nach dem PGE-Zyklus."""
-        if self._coding_override:
-            log.info("coding_override_cleared", model=self._coding_override)
+        current = _coding_override_var.get()
+        if current:
+            log.info("coding_override_cleared", model=current)
+        _coding_override_var.set(None)
+        # Keep instance attribute in sync for legacy callers.
         self._coding_override = None
 
     async def initialize(self) -> None:
@@ -407,8 +423,16 @@ class ModelRouter:
         # Coding-Override: Wenn gesetzt, wird fuer ALLE task_types das
         # Coding-Modell verwendet (gesamter PGE-Zyklus bei Coding-Aufgaben).
         # Ausnahme: Embeddings bleiben beim Embedding-Modell.
-        if self._coding_override and task_type != "embedding":
-            return self._coding_override
+        #
+        # Uses the ContextVar exclusively for concurrency safety.
+        # The ContextVar is set by set_coding_override() and is isolated
+        # per async task, so concurrent requests cannot interfere.
+        # The instance attribute self._coding_override is still maintained
+        # for backwards compatibility (external readers) but is NOT used
+        # for model selection to prevent cross-task contamination.
+        _effective_override = _coding_override_var.get()
+        if _effective_override and task_type != "embedding":
+            return _effective_override
 
         # Prüfe zunächst, ob ein Override für den gegebenen task_type existiert.
         # Der Schlüssel in model_overrides.skill_models kann den task_type

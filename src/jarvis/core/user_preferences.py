@@ -66,45 +66,58 @@ class UserPreferenceStore:
             db_path = Path.home() / ".jarvis" / "sessions.db"
         self._db_path = Path(db_path)
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
+        # Persistente Connection statt pro-Aufruf connect (Performance)
+        self._conn = sqlite3.connect(
+            str(self._db_path),
+            check_same_thread=False,
+            timeout=5.0,
+        )
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA busy_timeout=5000")
+        self._conn.row_factory = sqlite3.Row
         self._ensure_table()
 
     def _ensure_table(self) -> None:
         """Creates the user_preferences table if it doesn't exist."""
         try:
-            with sqlite3.connect(str(self._db_path)) as conn:
-                conn.execute(self._CREATE_TABLE)
-                conn.commit()
+            self._conn.execute(self._CREATE_TABLE)
+            self._conn.commit()
         except Exception as exc:
             log.warning("user_preferences_table_creation_failed", exc_info=exc)
+
+    def close(self) -> None:
+        """Schließt die DB-Verbindung."""
+        try:
+            self._conn.close()
+        except Exception:
+            pass
 
     def get_or_create(self, user_id: str) -> UserPreference:
         """Gets or creates a user preference record."""
         try:
-            with sqlite3.connect(str(self._db_path)) as conn:
-                conn.row_factory = sqlite3.Row
-                row = conn.execute(
-                    "SELECT * FROM user_preferences WHERE user_id = ?",
-                    (user_id,),
-                ).fetchone()
+            row = self._conn.execute(
+                "SELECT * FROM user_preferences WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
 
-                if row:
-                    return UserPreference(
-                        user_id=row["user_id"],
-                        verbosity=row["verbosity"],
-                        greeting_name=row["greeting_name"],
-                        formality=row["formality"],
-                        avg_message_length=row["avg_message_length"],
-                        interaction_count=row["interaction_count"],
-                    )
-
-                # Create new
-                pref = UserPreference(user_id=user_id)
-                conn.execute(
-                    "INSERT INTO user_preferences (user_id) VALUES (?)",
-                    (user_id,),
+            if row:
+                return UserPreference(
+                    user_id=row["user_id"],
+                    verbosity=row["verbosity"],
+                    greeting_name=row["greeting_name"],
+                    formality=row["formality"],
+                    avg_message_length=row["avg_message_length"],
+                    interaction_count=row["interaction_count"],
                 )
-                conn.commit()
-                return pref
+
+            # Create new
+            pref = UserPreference(user_id=user_id)
+            self._conn.execute(
+                "INSERT INTO user_preferences (user_id) VALUES (?)",
+                (user_id,),
+            )
+            self._conn.commit()
+            return pref
         except Exception as exc:
             log.warning("user_preferences_get_failed", exc_info=exc)
             return UserPreference(user_id=user_id)
@@ -112,30 +125,29 @@ class UserPreferenceStore:
     def update(self, pref: UserPreference) -> None:
         """Updates a user preference record."""
         try:
-            with sqlite3.connect(str(self._db_path)) as conn:
-                conn.execute(
-                    """\
-                    INSERT INTO user_preferences
-                        (user_id, verbosity, greeting_name, formality,
-                         avg_message_length, interaction_count)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(user_id) DO UPDATE SET
-                        verbosity = excluded.verbosity,
-                        greeting_name = excluded.greeting_name,
-                        formality = excluded.formality,
-                        avg_message_length = excluded.avg_message_length,
-                        interaction_count = excluded.interaction_count
-                    """,
-                    (
-                        pref.user_id,
-                        pref.verbosity,
-                        pref.greeting_name,
-                        pref.formality,
-                        pref.avg_message_length,
-                        pref.interaction_count,
-                    ),
-                )
-                conn.commit()
+            self._conn.execute(
+                """\
+                INSERT INTO user_preferences
+                    (user_id, verbosity, greeting_name, formality,
+                     avg_message_length, interaction_count)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(user_id) DO UPDATE SET
+                    verbosity = excluded.verbosity,
+                    greeting_name = excluded.greeting_name,
+                    formality = excluded.formality,
+                    avg_message_length = excluded.avg_message_length,
+                    interaction_count = excluded.interaction_count
+                """,
+                (
+                    pref.user_id,
+                    pref.verbosity,
+                    pref.greeting_name,
+                    pref.formality,
+                    pref.avg_message_length,
+                    pref.interaction_count,
+                ),
+            )
+            self._conn.commit()
         except Exception as exc:
             log.warning("user_preferences_update_failed", exc_info=exc)
 

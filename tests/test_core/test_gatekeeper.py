@@ -256,6 +256,7 @@ class TestAuditTrail:
     def test_audit_file_created(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = PlannedAction(tool="read_file", params={"path": "/test"})
         gatekeeper.evaluate(action, session)
+        gatekeeper._flush_audit_buffer()
         assert gatekeeper._audit_path.exists()
 
     def test_audit_entries_accumulate(
@@ -265,6 +266,7 @@ class TestAuditTrail:
             action = PlannedAction(tool="read_file", params={"path": f"/test_{i}"})
             gatekeeper.evaluate(action, session)
 
+        gatekeeper._flush_audit_buffer()
         lines = gatekeeper._audit_path.read_text().strip().split("\n")
         assert len(lines) == 3
 
@@ -273,6 +275,7 @@ class TestAuditTrail:
 
         action = PlannedAction(tool="exec_command", params={"command": "rm -rf /"})
         gatekeeper.evaluate(action, session)
+        gatekeeper._flush_audit_buffer()
         line = gatekeeper._audit_path.read_text().strip()
         data = json.loads(line)
         assert data["decision_status"] == "BLOCK"
