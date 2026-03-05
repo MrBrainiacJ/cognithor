@@ -1370,6 +1370,11 @@ class JarvisConfig(BaseModel):
 
     # Meta
     version: str = "1.2.0"
+    language: Literal["de", "en"] = Field(
+        default="de",
+        description="UI language for error messages, greetings, and status texts. "
+                    "Set to 'en' for English. Also settable via JARVIS_LANGUAGE env var.",
+    )
     owner_name: str = Field(
         default="User",
         description="Name des Besitzers/Benutzers. Wird in Prompts und CORE.md verwendet.",

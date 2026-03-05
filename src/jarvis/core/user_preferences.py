@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any, Literal
 
@@ -75,6 +76,7 @@ class UserPreferenceStore:
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA busy_timeout=5000")
         self._conn.row_factory = sqlite3.Row
+        self._lock = threading.Lock()
         self._ensure_table()
 
     def _ensure_table(self) -> None:
@@ -91,32 +93,34 @@ class UserPreferenceStore:
             self._conn.close()
         except Exception:
             pass
+        self._conn = None  # type: ignore[assignment]
 
     def get_or_create(self, user_id: str) -> UserPreference:
         """Gets or creates a user preference record."""
         try:
-            row = self._conn.execute(
-                "SELECT * FROM user_preferences WHERE user_id = ?",
-                (user_id,),
-            ).fetchone()
+            with self._lock:
+                row = self._conn.execute(
+                    "SELECT * FROM user_preferences WHERE user_id = ?",
+                    (user_id,),
+                ).fetchone()
 
-            if row:
-                return UserPreference(
-                    user_id=row["user_id"],
-                    verbosity=row["verbosity"],
-                    greeting_name=row["greeting_name"],
-                    formality=row["formality"],
-                    avg_message_length=row["avg_message_length"],
-                    interaction_count=row["interaction_count"],
+                if row:
+                    return UserPreference(
+                        user_id=row["user_id"],
+                        verbosity=row["verbosity"],
+                        greeting_name=row["greeting_name"],
+                        formality=row["formality"],
+                        avg_message_length=row["avg_message_length"],
+                        interaction_count=row["interaction_count"],
+                    )
+
+                # Create new
+                pref = UserPreference(user_id=user_id)
+                self._conn.execute(
+                    "INSERT INTO user_preferences (user_id) VALUES (?)",
+                    (user_id,),
                 )
-
-            # Create new
-            pref = UserPreference(user_id=user_id)
-            self._conn.execute(
-                "INSERT INTO user_preferences (user_id) VALUES (?)",
-                (user_id,),
-            )
-            self._conn.commit()
+                self._conn.commit()
             return pref
         except Exception as exc:
             log.warning("user_preferences_get_failed", exc_info=exc)
@@ -125,29 +129,30 @@ class UserPreferenceStore:
     def update(self, pref: UserPreference) -> None:
         """Updates a user preference record."""
         try:
-            self._conn.execute(
-                """\
-                INSERT INTO user_preferences
-                    (user_id, verbosity, greeting_name, formality,
-                     avg_message_length, interaction_count)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT(user_id) DO UPDATE SET
-                    verbosity = excluded.verbosity,
-                    greeting_name = excluded.greeting_name,
-                    formality = excluded.formality,
-                    avg_message_length = excluded.avg_message_length,
-                    interaction_count = excluded.interaction_count
-                """,
-                (
-                    pref.user_id,
-                    pref.verbosity,
-                    pref.greeting_name,
-                    pref.formality,
-                    pref.avg_message_length,
-                    pref.interaction_count,
-                ),
-            )
-            self._conn.commit()
+            with self._lock:
+                self._conn.execute(
+                    """\
+                    INSERT INTO user_preferences
+                        (user_id, verbosity, greeting_name, formality,
+                         avg_message_length, interaction_count)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                        verbosity = excluded.verbosity,
+                        greeting_name = excluded.greeting_name,
+                        formality = excluded.formality,
+                        avg_message_length = excluded.avg_message_length,
+                        interaction_count = excluded.interaction_count
+                    """,
+                    (
+                        pref.user_id,
+                        pref.verbosity,
+                        pref.greeting_name,
+                        pref.formality,
+                        pref.avg_message_length,
+                        pref.interaction_count,
+                    ),
+                )
+                self._conn.commit()
         except Exception as exc:
             log.warning("user_preferences_update_failed", exc_info=exc)
 

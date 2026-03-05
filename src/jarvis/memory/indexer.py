@@ -609,8 +609,8 @@ class MemoryIndex:
             # Alle Nachbarn der aktuellen Frontier in einem Query laden
             frontier_list = list(frontier)
             next_frontier: set[str] = set()
-            for i in range(0, len(frontier_list), 900):
-                batch = frontier_list[i : i + 900]
+            for i in range(0, len(frontier_list), 450):
+                batch = frontier_list[i : i + 450]
                 placeholders = ",".join("?" * len(batch))
                 rows = self.conn.execute(
                     f"SELECT source_entity, target_entity FROM relations "  # noqa: S608

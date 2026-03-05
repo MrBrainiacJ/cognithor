@@ -5,6 +5,26 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Beta/Experimental label** — README now clearly marks Cognithor as Beta software
+  with a maturity matrix, deployment cautions, and honest scope of test coverage (#4)
+- **Internationalization (i18n)** — Error messages, tool names, and gatekeeper messages
+  now support English via `JARVIS_LANGUAGE=en` env var or `language: "en"` in config.yaml (#4)
+- **Language documentation** — New "Language & Internationalization" section in README
+  documents German-first strings and how to customize/translate them (#4)
+- **Status & Maturity section** — README now includes a maturity matrix per component
+  (Core: Stable, Voice: Alpha, Enterprise: Alpha, etc.) (#4)
+
+### Fixed
+- **Shutdown audit data loss** — Gatekeeper now registers `atexit` handler to flush
+  pending audit buffer entries on process exit (weakref-safe)
+- **ContextVar gateway propagation** — Removed redundant `set_coding_override()` call
+  inside `asyncio.create_task()` where ContextVar changes are invisible; override is
+  now only applied in the parent context after task completion
+- **Version sync** — `__init__.py` version now matches `pyproject.toml` and `config.py` (1.2.0)
+
 ## [1.2.0] – 2026-03-05
 
 ### Security & Performance Hardening — 10 Critical Fixes

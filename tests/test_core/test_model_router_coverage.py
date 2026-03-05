@@ -52,6 +52,14 @@ class TestOllamaError:
 
 
 class TestModelRouterCoverage:
+    @pytest.fixture(autouse=True)
+    def _reset_coding_override(self):
+        """Reset ContextVar before/after each test to prevent cross-test contamination."""
+        from jarvis.core.model_router import _coding_override_var
+        _coding_override_var.set(None)
+        yield
+        _coding_override_var.set(None)
+
     def test_select_model_planning(self, config: JarvisConfig) -> None:
         mock = _mock_ollama_client(config)
         router = ModelRouter(config, mock)

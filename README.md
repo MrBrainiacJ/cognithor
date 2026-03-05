@@ -1,22 +1,25 @@
 <p align="center">
   <h1 align="center">Cognithor &middot; Agent OS</h1>
   <p align="center">
-    <strong>The local-first, autonomous agent operating system that replaces your entire AI toolchain.</strong>
+    <strong>A local-first, autonomous agent operating system for AI experimentation and personal automation.</strong>
   </p>
   <p align="center">
     <em>Cognition + Thor — Intelligence with Power</em>
   </p>
   <p align="center">
-    <a href="#llm-providers">16 LLM Providers</a> &middot; <a href="#channels">17 Channels</a> &middot; <a href="#5-tier-cognitive-memory">5-Tier Memory</a> &middot; <a href="#knowledge-vault">Knowledge Vault</a> &middot; <a href="#security">Enterprise Security</a> &middot; <a href="LICENSE">Apache 2.0</a>
+    <a href="#llm-providers">16 LLM Providers</a> &middot; <a href="#channels">17 Channels</a> &middot; <a href="#5-tier-cognitive-memory">5-Tier Memory</a> &middot; <a href="#knowledge-vault">Knowledge Vault</a> &middot; <a href="#security">Security</a> &middot; <a href="LICENSE">Apache 2.0</a>
   </p>
   <p align="center">
+    <img src="https://img.shields.io/badge/status-Beta%20%2F%20Experimental-orange?style=flat-square" alt="Status: Beta">
     <a href="#quick-start"><img src="https://img.shields.io/badge/python-%3E%3D3.12-blue?style=flat-square" alt="Python"></a>
-    <a href="#tests"><img src="https://img.shields.io/badge/tests-9%2C251%20passing-brightgreen?style=flat-square" alt="Tests"></a>
+    <a href="#tests"><img src="https://img.shields.io/badge/tests-9%2C356%20passing-brightgreen?style=flat-square" alt="Tests"></a>
     <a href="#tests"><img src="https://img.shields.io/badge/coverage-89%25-brightgreen?style=flat-square" alt="Coverage"></a>
     <a href="#tests"><img src="https://img.shields.io/badge/lint-0%20errors-brightgreen?style=flat-square" alt="Lint"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License"></a>
   </p>
 </p>
+
+> **Note:** Cognithor is in **active development (Beta)**. While the test suite is extensive (9,356 tests, 89% coverage), the project has not been battle-tested in production environments. Expect rough edges, breaking changes between versions, and some German-language strings in system prompts and error messages. Contributions, bug reports, and feedback are very welcome. See [Status & Maturity](#status--maturity) for details.
 
 ---
 
@@ -24,7 +27,36 @@
 
 - **Your data never leaves your machine.** Runs 100% locally with Ollama or LM Studio — no cloud, no API keys required, full GDPR compliance. Cloud providers are optional, not mandatory.
 - **One system, not twenty tools.** 17 channels, 18+ MCP tool servers, 5-tier memory, knowledge vault, cron, voice, browser automation, distributed locking, durable message queues — integrated from day one. No glue code, no plugin hell.
-- **Production-grade, not a demo.** 9,251 tests, 89% coverage, 4-level sandbox, SHA-256 audit chain, runtime token encryption, Prometheus metrics, and battle-tested deployment options from one-click Windows launcher to Docker Compose to bare-metal servers.
+- **Extensively tested.** 9,356 tests, 89% coverage, 4-level sandbox, SHA-256 audit chain, runtime token encryption, Prometheus metrics, and multiple deployment options from one-click Windows launcher to Docker Compose to bare-metal servers. See [Status & Maturity](#status--maturity) for what this does and does not guarantee.
+
+---
+
+## Status & Maturity
+
+**Cognithor is Beta / Experimental software.** It is under rapid, active development.
+
+| Aspect | Status |
+|--------|--------|
+| **Core agent loop (PGE)** | Stable — well-tested and functional |
+| **Memory system** | Stable — 5-tier architecture works reliably |
+| **CLI channel** | Stable — primary development interface |
+| **Web UI / Control Center** | Beta — functional but may have rough edges |
+| **Messaging channels** (Telegram, Discord, etc.) | Beta — basic flows work, edge cases may break |
+| **Voice mode / TTS** | Alpha — experimental, hardware-dependent |
+| **Browser automation** | Alpha — requires Playwright setup |
+| **Deployment (Docker, bare-metal)** | Beta — tested on limited configurations |
+| **Enterprise features** (GDPR, A2A, Governance) | Alpha — implemented but not audited for compliance |
+
+**What the test suite covers:** Unit tests, integration tests, and mocked end-to-end tests for all modules. The 9,356 tests verify code correctness in controlled environments.
+
+**What the test suite does NOT cover:** Real-world deployment scenarios, network edge cases, long-running stability, multi-user load, hardware-specific voice/GPU issues, or actual LLM response quality.
+
+**Important notes for users:**
+- This project is developed by a solo developer with AI assistance. Code is human-reviewed, but the pace is fast.
+- Breaking changes may occur between minor versions. Pin your version if stability matters.
+- The default language for system prompts, error messages, and UI strings is **German**. See [Language & Internationalization](#language--internationalization).
+- For production use, thorough testing in your specific environment is strongly recommended.
+- Bug reports and contributions are welcome — see [Issues](https://github.com/Alex8791-cyber/cognithor/issues).
 
 ---
 
@@ -37,7 +69,8 @@
 ## Table of Contents
 
 - [Why Cognithor?](#why-cognithor)
-- [What's New in v1.0](#whats-new-in-v10)
+- [Status & Maturity](#status--maturity)
+- [What's New](#whats-new)
 - [Highlights](#highlights)
 - [Architecture](#architecture)
 - [LLM Providers](#llm-providers)
@@ -50,6 +83,7 @@
 - [Code Quality](#code-quality)
 - [Project Structure](#project-structure)
 - [Deployment](#deployment)
+- [Language & Internationalization](#language--internationalization)
 - [Roadmap](#roadmap)
 - [Recording a Demo](#recording-a-demo)
 - [License](#license)
@@ -57,6 +91,10 @@
 ---
 
 ## What's New
+
+### v1.2.0 — Security & Performance Hardening (10 Fixes)
+
+Focused on hardening and correctness: path traversal prevention, gatekeeper bypass protection, WebSocket auth, race condition fixes, memory optimization, and blocking I/O elimination. **107 new tests** (9,356 total). See [CHANGELOG.md](CHANGELOG.md) for full details.
 
 ### v1.1.0 — Agent Infrastructure (15 New Subsystems)
 
@@ -103,7 +141,7 @@ Major infrastructure release adding **840 new tests** (9,251 total) and 15 enter
 - **5-Tier Cognitive Memory** — Core identity, episodic logs, semantic knowledge graph, procedural skills, working memory
 - **3-Channel Hybrid Search** — BM25 full-text + vector embeddings + knowledge graph traversal with score fusion
 - **PGE Architecture** — Planner (LLM) -> Gatekeeper (deterministic policy engine) -> Executor (sandboxed)
-- **Enterprise Security** — 4-level sandbox, SHA-256 audit chain, EU AI Act compliance, credential vault, red-teaming, runtime token encryption (Fernet AES-256), TLS support, file-size limits
+- **Security** — 4-level sandbox, SHA-256 audit chain, EU AI Act compliance module, credential vault, red-teaming, runtime token encryption (Fernet AES-256), TLS support, file-size limits (not independently audited — see [Status & Maturity](#status--maturity))
 - **Knowledge Vault** — Obsidian-compatible Markdown vault with YAML frontmatter, tags, `[[backlinks]]`, full-text search
 - **Document Analysis** — LLM-powered structured analysis of PDF/DOCX/HTML (summary, risks, action items, decisions)
 - **Model Context Protocol (MCP)** — 18+ tool servers (filesystem, shell, memory, web, browser, media, vault, synthesis)
@@ -134,7 +172,7 @@ Major infrastructure release adding **840 new tests** (9,251 total) and 15 enter
 - **Agent SDK** — Decorator-based agent registration (`@agent`, `@tool`, `@hook`), project scaffolding
 - **Plugin Remote Registry** — Remote manifests with SHA-256 checksums, dependency resolution, install/update/rollback
 - **uv Installer Support** — Automatic uv detection for 10x faster installs, transparent pip fallback
-- **9,251 tests** · **89% coverage** · **0 lint errors**
+- **9,356 tests** · **89% coverage** · **0 lint errors**
 
 ## Architecture
 
@@ -401,6 +439,7 @@ Cognithor is configured via `~/.cognithor/config.yaml`. All values can be overri
 ```yaml
 # Example: ~/.cognithor/config.yaml
 owner_name: "Alex"
+language: "de"  # "de" (German, default) or "en" (English)
 
 # LLM Backend — set a key, backend is auto-detected
 # openai_api_key: "sk-..."
@@ -465,7 +504,7 @@ telemetry:
 
 ## Security
 
-Cognithor implements enterprise-grade security:
+Cognithor implements multi-layered security (not independently audited):
 
 | Feature | Description |
 |---------|-------------|
@@ -509,7 +548,7 @@ python -m pytest tests/test_memory/ -v
 python -m pytest tests/test_channels/ -v
 ```
 
-Current status: **9,251 tests** · **100% pass rate** · **89% coverage** · **~106,000 LOC source** · **~90,000 LOC tests**
+Current status: **9,356 tests** · **100% pass rate** · **89% coverage** · **~106,000 LOC source** · **~90,000 LOC tests**
 
 | Area | Tests | Description |
 |------|-------|-------------|
@@ -645,7 +684,7 @@ cognithor/
 │       │   └── useVoiceMode.js    # Voice mode hook (wake word, STT, TTS)
 │       ├── App.jsx                # App shell
 │       └── main.jsx               # React entry
-├── tests/                         # 9,251 tests, ~90,000 LOC
+├── tests/                         # 9,356 tests, ~90,000 LOC
 │   ├── test_core/                 # Planner, Gatekeeper, Executor, Distributed Lock
 │   ├── test_memory/               # All 5 memory tiers, hybrid search
 │   ├── test_mcp/                  # MCP tools and client
@@ -671,6 +710,8 @@ cognithor/
 ```
 
 ## Deployment
+
+> **Caution:** Cognithor is Beta software. Test thoroughly in your environment before relying on it for important workflows. Back up your data regularly. See [Status & Maturity](#status--maturity).
 
 ### One-Click (Windows)
 
@@ -733,6 +774,25 @@ curl http://localhost:9090/metrics           # Prometheus metrics
 
 See [`deploy/README.md`](deploy/README.md) for full deployment documentation (Docker profiles, TLS, Nginx/Caddy, bare-metal install, monitoring, troubleshooting).
 
+## Language & Internationalization
+
+Cognithor was originally developed in German. The following areas contain German-language strings:
+
+| Area | Language | Notes |
+|------|----------|-------|
+| **README & docs** | English | Fully translated |
+| **Code & comments** | Mixed (EN/DE) | Variable names in English, some comments in German |
+| **System prompts** (Planner) | German | The LLM is instructed in German by default |
+| **Error messages** | German | User-facing error templates in `utils/error_messages.py` |
+| **Vault folders** | German | `recherchen/`, `meetings/`, `wissen/`, `projekte/`, `daily/` |
+| **Personality / Greetings** | German | "Guten Morgen!", "Guten Abend!", etc. |
+| **Gatekeeper reasons** | English | Policy decisions are in English |
+| **Log messages** | English | structlog keys and messages |
+
+**To customize the language:** Override the system prompt in `~/.jarvis/CORE.md` or modify `core/planner.py:SYSTEM_PROMPT`. Full i18n support is planned but not yet implemented.
+
+**Contributing translations:** If you'd like to help translate Cognithor to other languages, please open an issue or PR. The main areas to translate are: system prompts, error messages, and vault folder names.
+
 ## Roadmap
 
 | Phase | Description | Status |
@@ -782,7 +842,7 @@ Alternatively, use [terminalizer](https://github.com/faressoft/terminalizer) for
 
 ---
 
-**Metrics:** ~106,000 LOC source · ~90,000 LOC tests · 9,251 tests · 89% coverage · 0 lint errors
+**Metrics:** ~106,000 LOC source · ~90,000 LOC tests · 9,356 tests · 89% coverage · 0 lint errors · **Status: Beta**
 
 ## License
 

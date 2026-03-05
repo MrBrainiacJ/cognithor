@@ -14,9 +14,11 @@ Bible reference: §3.2 (Gatekeeper), §11 (Security)
 
 from __future__ import annotations
 
+import atexit
 import hashlib
 import json
 import re
+import weakref
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -87,6 +89,17 @@ class Gatekeeper:
         # Buffered Audit-Writes (vermeidet Blocking I/O pro evaluate()-Aufruf)
         self._audit_buffer: list[str] = []
         self._AUDIT_FLUSH_THRESHOLD = 10
+
+        # atexit-Handler: Flush bei Prozess-Ende (Schutz vor Datenverlust)
+        # weakref verhindert, dass atexit den Gatekeeper am Leben hält
+        _weak_self = weakref.ref(self)
+
+        def _atexit_flush() -> None:
+            obj = _weak_self()
+            if obj is not None:
+                obj._flush_audit_buffer()
+
+        atexit.register(_atexit_flush)
 
         # Optional: Capability Matrix (F8)
         self._capability_matrix: Any = None
@@ -513,7 +526,7 @@ class Gatekeeper:
         # OS-level command execution
         (re.compile(r"\bos\.system\s*\(", re.IGNORECASE), "os.system()"),
         (re.compile(r"\bos\.popen\s*\(", re.IGNORECASE), "os.popen()"),
-        (re.compile(r"\bos\.exec", re.IGNORECASE), "os.exec*()"),
+        (re.compile(r"\bos\.exec[lv]", re.IGNORECASE), "os.exec*()"),
         # OS-level file destruction
         (re.compile(r"\bos\.remove\s*\(", re.IGNORECASE), "os.remove()"),
         (re.compile(r"\bos\.unlink\s*\(", re.IGNORECASE), "os.unlink()"),
@@ -525,10 +538,18 @@ class Gatekeeper:
         (re.compile(r"\bshutil\.move\s*\(", re.IGNORECASE), "shutil.move()"),
         # Dynamic code execution / import
         (re.compile(r"\b__import__\s*\(", re.IGNORECASE), "__import__()"),
+        (re.compile(r"\bimportlib\.", re.IGNORECASE), "importlib"),
         (re.compile(r"\beval\s*\(", re.IGNORECASE), "eval()"),
         (re.compile(r"\bexec\s*\(", re.IGNORECASE), "exec()"),
-        # open() with write/append/create modes
-        (re.compile(r"\bopen\s*\([^)]*['\"][wax][^'\"]*['\"]", re.IGNORECASE), "open() with write mode"),
+        # Dangerous deserialization / native code
+        (re.compile(r"\bpickle\.load", re.IGNORECASE), "pickle.load/loads()"),
+        (re.compile(r"\bctypes\.", re.IGNORECASE), "ctypes"),
+        # Network access
+        (re.compile(r"\bsocket\.", re.IGNORECASE), "socket"),
+        # pathlib file deletion
+        (re.compile(r"\.unlink\s*\(", re.IGNORECASE), "Path.unlink()"),
+        # open() with write/append/create modes — match mode argument, not filename
+        (re.compile(r"\bopen\s*\([^)]*,\s*['\"][wax]", re.IGNORECASE), "open() with write mode"),
     ]
 
     def _check_python_code(

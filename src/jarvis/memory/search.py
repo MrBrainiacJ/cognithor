@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import math
 from collections import OrderedDict
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any

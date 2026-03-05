@@ -507,6 +507,20 @@ class Gateway:
             except Exception:
                 log.debug("governance_agent_close_skipped", exc_info=True)
 
+        # Gatekeeper Audit-Buffer flushen (keine Einträge verlieren)
+        if self._gatekeeper:
+            try:
+                self._gatekeeper._flush_audit_buffer()
+            except Exception:
+                log.debug("gatekeeper_flush_skipped", exc_info=True)
+
+        # UserPreferenceStore schließen
+        if hasattr(self, "_user_pref_store") and self._user_pref_store:
+            try:
+                self._user_pref_store.close()
+            except Exception:
+                log.debug("user_pref_store_close_skipped", exc_info=True)
+
         # MCP-Client trennen
         if self._mcp_client:
             await self._mcp_client.disconnect_all()
@@ -616,7 +630,9 @@ class Gateway:
                         _coding_model = self._model_router._config.models.coder.name
                     else:
                         _coding_model = self._model_router._config.models.coder_fast.name
-                    self._model_router.set_coding_override(_coding_model)
+                    # NOTE: Do NOT call set_coding_override() here — asyncio.create_task()
+                    # runs in a copied context, so ContextVar changes are invisible to the
+                    # parent. The override is applied in the parent after await (line below).
                     log.info("coding_task_detected", complexity=_coding_complexity, model=_coding_model)
             except Exception:
                 log.debug("coding_classification_skipped", exc_info=True)
@@ -633,6 +649,11 @@ class Gateway:
         await _ctx_task  # Muss vor PGE fertig sein (modifiziert wm)
         is_coding, coding_model, coding_complexity = await _coding_task
         presearch_results = await _presearch_task
+
+        # Apply coding override in parent context (ContextVar must be set here,
+        # not inside the create_task — asyncio tasks get a copied context)
+        if coding_model and self._model_router:
+            self._model_router.set_coding_override(coding_model)
 
         # ── Sentiment Detection (Modul 3) ──
         try:

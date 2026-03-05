@@ -239,8 +239,9 @@ def main() -> None:
                     # ── Token-based authentication ────────────────────────
                     required_token = os.environ.get("JARVIS_API_TOKEN")
                     if required_token:
-                        client_token = websocket.query_params.get("token")
-                        if not client_token or client_token != required_token:
+                        import hmac as _hmac
+                        client_token = websocket.query_params.get("token") or ""
+                        if not _hmac.compare_digest(client_token, required_token):
                             await websocket.close(code=4001, reason="Unauthorized")
                             log.warning(
                                 "cc_ws_auth_rejected",
