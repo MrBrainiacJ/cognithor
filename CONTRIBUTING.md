@@ -17,6 +17,41 @@ By submitting a pull request, you agree to the following:
 
 No separate CLA document needs to be signed. Submitting a PR constitutes acceptance of these terms. If your employer has intellectual property claims on your work, please ensure you have permission before contributing.
 
+## Branch Strategy
+
+Cognithor uses a two-branch model:
+
+| Branch | Purpose | Releases |
+|--------|---------|----------|
+| `main` | **Stable** — production-ready code | Tagged releases (`v0.27.0`) published to PyPI |
+| `beta` | **Active development & testing** — new features land here first | Auto-generated pre-releases (`v0.27.0-beta`) on every push |
+
+### Workflow
+
+1. **Feature development**: Create feature branches from `beta`, open PRs against `beta`.
+2. **Testing**: Every push to `beta` triggers CI (lint + tests) and creates a GitHub pre-release with built packages.
+3. **Stabilization**: When `beta` is tested and stable, it gets merged into `main` for a production release.
+4. **Hotfixes**: Critical bug fixes can target `main` directly via a hotfix branch.
+
+### Version Scheme
+
+- **Patch** (`0.27.1`): Bug fixes, small improvements
+- **Minor** (`0.28.0`): New features, non-breaking changes
+- **Major** (`1.0.0`): Breaking changes (reserved for future)
+- **Beta tags** (`v0.27.0-beta`): Automatically created from the `beta` branch — not for production use
+
+### Installing the Beta
+
+```bash
+# From the beta GitHub release:
+pip install https://github.com/Alex8791-cyber/cognithor/releases/download/v0.27.0-beta/cognithor-0.27.0-py3-none-any.whl
+
+# Or from source:
+git clone -b beta https://github.com/Alex8791-cyber/cognithor.git
+cd cognithor
+pip install -e ".[all]"
+```
+
 ## How to Contribute
 
 ### Reporting Bugs
@@ -56,10 +91,12 @@ pip install -e ".[all,dev]"
 python -m pytest tests/ -x -q
 ```
 
-#### Workflow
+#### Development Workflow
 
-1. **Create a branch** from `main`:
+1. **Create a branch** from `beta`:
    ```bash
+   git checkout beta
+   git pull origin beta
    git checkout -b feature/your-feature-name
    ```
 2. **Write code** following the project conventions (see below).
@@ -71,11 +108,13 @@ python -m pytest tests/ -x -q
    ruff format --check src/ tests/     # Formatting correct
    mypy src/jarvis/ --strict           # Type checking passes
    ```
-5. **Commit** with a clear message:
+5. **Commit** with a clear, conventional message:
    ```
-   Add Grok-4 model defaults to xAI provider config
+   feat: Add Grok-4 model defaults to xAI provider config
+   fix: Correct Python version check in deploy script
    ```
-6. **Push** and open a Pull Request against `main`.
+6. **Push** and open a Pull Request against `beta`.
+   PRs against `main` are reserved for stable releases and hotfixes.
 
 #### Code Conventions
 
