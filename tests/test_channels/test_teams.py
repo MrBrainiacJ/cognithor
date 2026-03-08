@@ -30,13 +30,6 @@ sys.modules.setdefault("botbuilder.schema", _mock_botbuilder_schema)
 sys.modules.setdefault("botbuilder.integration", MagicMock())
 sys.modules.setdefault("botbuilder.integration.aiohttp", MagicMock())
 
-# Mock aiohttp so lazy imports inside teams.py don't fail in CI
-_mock_aiohttp = MagicMock()
-_mock_aiohttp_web = MagicMock()
-_mock_aiohttp_web.Response = MagicMock
-sys.modules.setdefault("aiohttp", _mock_aiohttp)
-sys.modules.setdefault("aiohttp.web", _mock_aiohttp_web)
-
 from jarvis.channels.teams import (
     TeamsChannel,
     _split_message,
@@ -526,6 +519,9 @@ class TestTeamsHelpers:
     @pytest.mark.asyncio
     async def test_handle_health(self, teams_ch: TeamsChannel) -> None:
         request = MagicMock()
-        with patch("jarvis.channels.teams.web", create=True) as mock_web:
-            mock_web.json_response = MagicMock(return_value={"status": "ok"})
+        mock_web = MagicMock()
+        mock_web.json_response = MagicMock(return_value={"status": "ok"})
+        mock_aiohttp = MagicMock()
+        mock_aiohttp.web = mock_web
+        with patch.dict(sys.modules, {"aiohttp": mock_aiohttp, "aiohttp.web": mock_web}):
             result = await teams_ch._handle_health(request)
