@@ -97,7 +97,7 @@ class StateManager:
             ]
         if not candidates:
             return None
-        return max(candidates, key=lambda c: (c.created_at, c.checkpoint_id))
+        return max(candidates, key=lambda c: (c.created_at, c._seq))
 
     def delete_checkpoint(self, checkpoint_id: str) -> bool:
         self._checkpoints.pop(checkpoint_id, None)

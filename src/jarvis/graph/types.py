@@ -17,12 +17,14 @@ from __future__ import annotations
 import copy
 import json
 import time
+import itertools
 import uuid
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Awaitable
 
+_checkpoint_counter = itertools.count()
 
 # ── Constants ────────────────────────────────────────────────────
 
@@ -278,12 +280,14 @@ class Checkpoint:
     status: ExecutionStatus = ExecutionStatus.PAUSED
     created_at: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+    _seq: int = field(default=0, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if not self.checkpoint_id:
             self.checkpoint_id = uuid.uuid4().hex[:12]
         if not self.created_at:
             self.created_at = datetime.now(timezone.utc).isoformat()
+        self._seq = next(_checkpoint_counter)
 
     def to_dict(self) -> dict[str, Any]:
         return {

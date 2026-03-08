@@ -16,13 +16,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # Mock nio before importing matrix module
+_mock_client_instance = MagicMock()
+_mock_client_instance.add_event_callback = MagicMock()
+_mock_client_instance.login = AsyncMock()
+_mock_client_instance.sync = AsyncMock()
+_mock_client_instance.close = AsyncMock()
+_mock_client_instance.access_token = ""
+_mock_client_instance.user_id = ""
+
 _mock_nio = MagicMock()
-_mock_nio.AsyncClient = MagicMock
+_mock_nio.AsyncClient = MagicMock(return_value=_mock_client_instance)
 _mock_nio.LoginResponse = type("LoginResponse", (), {})
 _mock_nio.MatrixRoom = MagicMock
-_mock_nio.RoomMessageText = MagicMock
-_mock_nio.UnknownEvent = MagicMock
-_mock_nio.InviteMemberEvent = MagicMock
+_mock_nio.RoomMessageText = MagicMock()
+_mock_nio.UnknownEvent = MagicMock()
+_mock_nio.InviteMemberEvent = MagicMock()
 sys.modules.setdefault("nio", _mock_nio)
 
 from jarvis.channels.matrix import (

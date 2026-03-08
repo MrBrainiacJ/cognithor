@@ -8,9 +8,31 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+# Ensure aiohttp is mockable even when not installed.
+# Provide a minimal Response class so `web.Response(status=200).status` works.
+if "aiohttp" not in sys.modules:
+
+    class _FakeResponse:
+        def __init__(self, *, status: int = 200, text: str = "", body: bytes = b"") -> None:
+            self.status = status
+            self.text = text
+            self.body = body
+
+    def _fake_json_response(data: Any, **kwargs: Any) -> _FakeResponse:
+        return _FakeResponse(status=200, body=json.dumps(data).encode())
+
+    _mock_aiohttp_web = MagicMock()
+    _mock_aiohttp_web.Response = _FakeResponse
+    _mock_aiohttp_web.json_response = _fake_json_response
+    _mock_aiohttp = MagicMock()
+    _mock_aiohttp.web = _mock_aiohttp_web
+    sys.modules["aiohttp"] = _mock_aiohttp
+    sys.modules["aiohttp.web"] = _mock_aiohttp_web
 
 from jarvis.channels.telegram import TelegramChannel
 
