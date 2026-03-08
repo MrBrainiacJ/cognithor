@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getToken } from "../utils/api";
 import { useJarvisChat } from "../hooks/useJarvisChat";
 import { useVoiceMode } from "../hooks/useVoiceMode";
 import { MessageList } from "../components/chat/MessageList";
@@ -28,13 +29,17 @@ export default function ChatPage() {
   // Load wake word from config API
   const [wakeWord, setWakeWord] = useState("jarvis");
   useEffect(() => {
-    fetch("/api/v1/config")
-      .then(r => r.ok ? r.json() : null)
-      .then(cfg => {
-        const ww = cfg?.channels?.voice_config?.wake_word;
-        if (ww) setWakeWord(ww);
-      })
-      .catch(() => {});
+    (async () => {
+      const token = await getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      fetch("/api/v1/config", { headers })
+        .then(r => r.ok ? r.json() : null)
+        .then(cfg => {
+          const ww = cfg?.channels?.voice_config?.wake_word;
+          if (ww) setWakeWord(ww);
+        })
+        .catch(() => {});
+    })();
   }, []);
 
   // Track previous message count to detect new assistant messages

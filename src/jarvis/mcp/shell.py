@@ -141,9 +141,10 @@ class ShellTools:
             log.warning("shell_null_byte_blocked", command_prefix=command[:50])
             return "Befehl blockiert: Null-Byte erkannt."
 
-        # 2. Path Traversal (../../..) → Warning
+        # 2. Path Traversal (../../..) → Hard Block
         if _PATH_TRAVERSAL_RE.search(command):
-            log.warning("shell_path_traversal_detected", command_prefix=command[:80])
+            log.warning("shell_path_traversal_blocked", command_prefix=command[:80])
+            return "Befehl blockiert: Path-Traversal erkannt."
 
         # 3. File-Path-Escape: Prüfe ob File-Commands Pfade ausserhalb Workspace nutzen
         try:
@@ -165,11 +166,12 @@ class ShellTools:
                     resolved.relative_to(ws_root)
                 except (ValueError, OSError):
                     log.warning(
-                        "shell_path_escape_detected",
+                        "shell_path_escape_blocked",
                         command=base_cmd,
                         argument=arg[:100],
                         workspace=str(ws_root),
                     )
+                    return f"Befehl blockiert: Pfad '{arg[:100]}' liegt außerhalb des Workspace."
 
         return None
 

@@ -113,7 +113,18 @@ function GraphRenderer({ entities, relations, width, height, onNodeClick, select
   const { nodes, links } = layoutForceDirected(entities, relations, width, height);
 
   if (!nodes.length) {
-    return <div className="cc-kg-empty">Keine Entitäten im Wissensgraph</div>;
+    return (
+      <div className="cc-kg-empty">
+        <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ opacity: 0.3, marginBottom: 12 }}>
+          <circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/>
+          <path d="M6 7l4 4M14 13l4-6M6 17l4-4"/>
+        </svg>
+        <div>Keine Entitäten im Wissensgraph</div>
+        <div style={{ fontSize: 12, marginTop: 6, opacity: 0.6 }}>
+          Entitäten werden automatisch aus Gesprächen extrahiert.
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -224,6 +235,7 @@ export default function KnowledgeGraphPage() {
   const [relations, setRelations] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [selectedEntity, setSelectedEntity] = useState(null);
@@ -231,18 +243,25 @@ export default function KnowledgeGraphPage() {
   const containerRef = useRef(null);
 
   const fetchData = useCallback(async () => {
+    setError(null);
     try {
       const [sRes, eRes] = await Promise.all([
         api("GET", "/memory/graph/stats"),
         api("GET", "/memory/graph/entities"),
       ]);
-      if (sRes && !sRes.error) setStats(sRes);
-      if (eRes?.entities) {
+      if (sRes?.error) {
+        setError(`Stats konnten nicht geladen werden (${sRes.error})`);
+      } else if (sRes) {
+        setStats(sRes);
+      }
+      if (eRes?.error) {
+        setError(`Entitäten konnten nicht geladen werden (${eRes.error})`);
+      } else if (eRes?.entities) {
         setEntities(eRes.entities);
         setRelations(eRes.relations || []);
       }
-    } catch {
-      // Silent fail
+    } catch (e) {
+      setError(`Verbindungsfehler: ${e.message || "Backend nicht erreichbar"}`);
     } finally {
       setLoading(false);
     }
@@ -286,8 +305,23 @@ export default function KnowledgeGraphPage() {
         <div className="cc-kg-stats">
           <span>{stats.entities || 0} Entitäten</span>
           <span>{stats.relations || 0} Beziehungen</span>
+          <button className="cc-kg-refresh" onClick={fetchData} title="Aktualisieren">
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M23 4v6h-6M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+          </button>
         </div>
       </div>
+
+      {error && (
+        <div className="cc-kg-error">
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          {error}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="cc-kg-filters">
@@ -345,7 +379,10 @@ const KG_STYLES = `
 .cc-kg-stats { display: flex; gap: 12px; font-size: 13px; color: var(--text2); }
 .cc-kg-stats span { background: var(--bg2); padding: 4px 12px; border-radius: 12px; border: 1px solid var(--border); }
 .cc-kg-loading { text-align: center; padding: 60px 0; color: var(--text2); }
-.cc-kg-empty { text-align: center; padding: 40px 0; color: var(--text2); font-size: 14px; }
+.cc-kg-empty { text-align: center; padding: 40px 0; color: var(--text2); font-size: 14px; display: flex; flex-direction: column; align-items: center; }
+.cc-kg-error { background: rgba(255,82,82,0.1); border: 1px solid rgba(255,82,82,0.3); color: #ff5252; padding: 10px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.cc-kg-refresh { background: none; border: 1px solid var(--border); color: var(--text2); padding: 4px 8px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.15s; }
+.cc-kg-refresh:hover { border-color: var(--accent); color: var(--accent); }
 
 .cc-kg-filters { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
 .cc-kg-search { background: var(--bg2); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 8px; font-size: 13px; width: 220px; font-family: inherit; }

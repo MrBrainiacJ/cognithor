@@ -4,15 +4,42 @@ const WS_RECONNECT_DELAY = 3000;
 const WS_MAX_RETRIES = 10;
 const WS_HEARTBEAT_INTERVAL = 30000;
 
+// Fetch auth token from bootstrap endpoint (cached)
+let _wsTokenCache = null;
+async function getWsToken() {
+  if (_wsTokenCache) return _wsTokenCache;
+  try {
+    const r = await fetch("/api/v1/bootstrap");
+    if (r.ok) {
+      const data = await r.json();
+      _wsTokenCache = data?.token || null;
+    }
+  } catch {}
+  return _wsTokenCache;
+}
+
 function makeSessionId() {
+  // Persist session ID across page navigation so chat can resume
+  const stored = sessionStorage.getItem("jarvis-session-id");
+  if (stored) return stored;
   const buf = new Uint8Array(6);
   crypto.getRandomValues(buf);
   const hex = Array.from(buf, b => b.toString(16).padStart(2, "0")).join("");
-  return `web_${Date.now()}_${hex}`;
+  const id = `web_${Date.now()}_${hex}`;
+  sessionStorage.setItem("jarvis-session-id", id);
+  return id;
+}
+
+function loadPersistedMessages() {
+  try {
+    const raw = sessionStorage.getItem("jarvis-messages");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
 }
 
 export function useJarvisChat() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(loadPersistedMessages);
   const [streamText, setStreamText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -168,8 +195,13 @@ export function useJarvisChat() {
     }
     wsRef.current = ws;
 
-    ws.onopen = () => {
+    ws.onopen = async () => {
       console.log("[WS] Connected to", url);
+      // Send auth token as first message before any chat traffic
+      const token = await getWsToken();
+      if (token) {
+        ws.send(JSON.stringify({ type: "auth", token }));
+      }
       setIsConnected(true);
       retriesRef.current = 0; // reset retries on successful connection
       startHeartbeat(ws);
@@ -210,6 +242,15 @@ export function useJarvisChat() {
     }
     setIsConnected(false);
   }, [stopHeartbeat]);
+
+  // Persist messages to sessionStorage for cross-page-nav recovery
+  useEffect(() => {
+    try {
+      // Keep last 100 messages to avoid storage bloat
+      const toStore = messages.slice(-100);
+      sessionStorage.setItem("jarvis-messages", JSON.stringify(toStore));
+    } catch {}
+  }, [messages]);
 
   // Connect on mount, disconnect on unmount
   useEffect(() => {
@@ -292,6 +333,7 @@ export function useJarvisChat() {
     setCanvasHtml("");
     setCanvasTitle("");
     setStatusText("");
+    try { sessionStorage.removeItem("jarvis-messages"); } catch {}
   }, []);
 
   return {

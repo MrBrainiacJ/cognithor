@@ -127,7 +127,7 @@ class MediaPipeline:
         self._vault = vault
 
     def _validate_input_path(self, file_path: str) -> Path | None:
-        """Validates input file path against path traversal.
+        """Validates input file path against path traversal and workspace confinement.
 
         Returns resolved Path or None if invalid.
         """
@@ -135,10 +135,18 @@ class MediaPipeline:
             path = Path(file_path).expanduser().resolve()
         except (ValueError, OSError):
             return None
-        # Block path traversal: must not contain '..' after resolution
-        # and must be a real file (not symlink to sensitive location)
         if not path.exists():
             return None
+        # Workspace confinement: path must be inside workspace or home/.jarvis
+        jarvis_home = Path.home() / ".jarvis"
+        try:
+            path.relative_to(self._workspace)
+        except ValueError:
+            try:
+                path.relative_to(jarvis_home)
+            except ValueError:
+                log.warning("media_path_outside_workspace", path=str(path), workspace=str(self._workspace))
+                return None
         return path
 
     # ========================================================================

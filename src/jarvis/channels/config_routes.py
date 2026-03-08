@@ -671,10 +671,33 @@ def _register_config_routes(
         try:
             config_manager.update_section(section, cleaned)
             config_manager.save()
-            # Trigger live-reload of runtime components (executor, web tools)
+            # Trigger live-reload of runtime components (executor, web tools, model router)
             if gateway is not None and hasattr(gateway, "reload_components"):
                 gateway.reload_components(config=True)
-            return {"status": "ok", "section": section, "updated_keys": list(cleaned.keys())}
+
+            # Validate model availability when saving 'models' section
+            model_warnings: list[str] = []
+            if section == "models":
+                router = getattr(gateway, "_model_router", None) if gateway else None
+                if router and router._available_models:
+                    available = router._available_models
+                    cfg_models = config_manager.config.models
+                    for role, model_cfg in [
+                        ("planner", cfg_models.planner),
+                        ("executor", cfg_models.executor),
+                        ("coder", cfg_models.coder),
+                        ("embedding", cfg_models.embedding),
+                    ]:
+                        if model_cfg.name and model_cfg.name not in available:
+                            model_warnings.append(
+                                f"Modell '{model_cfg.name}' ({role}) nicht in Ollama gefunden. "
+                                f"Bitte installieren: ollama pull {model_cfg.name}"
+                            )
+
+            result: dict[str, Any] = {"status": "ok", "section": section, "updated_keys": list(cleaned.keys())}
+            if model_warnings:
+                result["warnings"] = model_warnings
+            return result
         except ValueError as exc:
             log.warning("config_section_update_failed", section=section, error=str(exc))
             return {"error": "Ungueltige Konfiguration", "status": 400}
@@ -1257,6 +1280,37 @@ def _register_skill_routes(
         if reg is None:
             return {"models": [], "count": 0}
         return {"models": reg.list_all(), "count": reg.model_count}
+
+    @app.get("/api/v1/models/available", dependencies=deps)
+    async def available_models() -> dict[str, Any]:
+        """Listet alle in Ollama/Backend verfügbaren Modelle auf."""
+        router = getattr(gateway, "_model_router", None)
+        if router is None:
+            return {"models": [], "source": "none"}
+        # Refresh the model list
+        try:
+            await router.initialize()
+        except Exception:
+            pass
+        models = sorted(router._available_models) if router._available_models else []
+        # Also return currently configured models for reference
+        cfg = config_manager.config
+        configured = {
+            "planner": cfg.models.planner.name,
+            "executor": cfg.models.executor.name,
+            "coder": cfg.models.coder.name,
+            "embedding": cfg.models.embedding.name,
+        }
+        warnings = []
+        for role, name in configured.items():
+            if models and name not in models:
+                warnings.append(f"Modell '{name}' ({role}) ist nicht verfügbar. Installieren: ollama pull {name}")
+        return {
+            "models": models,
+            "configured": configured,
+            "warnings": warnings,
+            "source": "backend" if router._backend else "ollama",
+        }
 
     @app.get("/api/v1/models/stats", dependencies=deps)
     async def model_stats() -> dict[str, Any]:

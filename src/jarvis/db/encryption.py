@@ -47,7 +47,9 @@ def open_sqlite(
             from pysqlcipher3 import dbapi2 as sqlcipher  # type: ignore[import-untyped]
 
             conn = sqlcipher.connect(db_path, check_same_thread=False)
-            conn.execute(f"PRAGMA key='{encryption_key}'")
+            # PRAGMA key cannot use parameterized queries; escape single quotes
+            safe_key = encryption_key.replace("'", "''")
+            conn.execute(f"PRAGMA key='{safe_key}'")
             log.info("SQLCipher-Verbindung hergestellt: %s", db_path)
             return conn
         except ImportError:

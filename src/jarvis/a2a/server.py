@@ -400,8 +400,8 @@ class A2AServer:
         from urllib.parse import urlparse
 
         parsed = urlparse(url)
-        if parsed.scheme not in ("https", "http"):
-            return self._error(A2AErrorCode.INVALID_PARAMS, "Push URL must use http(s) scheme")
+        if parsed.scheme != "https":
+            return self._error(A2AErrorCode.INVALID_PARAMS, "Push URL must use https scheme")
         if not parsed.hostname:
             return self._error(A2AErrorCode.INVALID_PARAMS, "Push URL must have a valid hostname")
 

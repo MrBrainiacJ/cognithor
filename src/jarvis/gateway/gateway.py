@@ -760,6 +760,28 @@ class Gateway:
                 except Exception:
                     log.debug("executor_config_reload_failed", exc_info=True)
 
+            # Live-update ModelRouter with new config + schedule model list refresh
+            if self._model_router and hasattr(self._model_router, '_config'):
+                try:
+                    self._model_router._config = new_config
+                    # Schedule async re-initialization to refresh _available_models
+                    import asyncio
+                    try:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(self._model_router.initialize())
+                    except RuntimeError:
+                        pass  # no loop — model list refresh skipped
+                    log.info("model_router_config_reloaded")
+                except Exception:
+                    log.debug("model_router_config_reload_failed", exc_info=True)
+
+            # Live-update Planner with new config
+            if self._planner and hasattr(self._planner, '_config'):
+                try:
+                    self._planner._config = new_config
+                except Exception:
+                    log.debug("planner_config_reload_failed", exc_info=True)
+
             # Live-update WebTools runtime parameters
             web_tools = None
             if self._mcp_client:
@@ -1241,11 +1263,10 @@ class Gateway:
             try:
                 from jarvis.channels.base import StatusType
 
-                st = (
-                    StatusType(status_type)
-                    if status_type in StatusType.__members__.values()
-                    else StatusType.PROCESSING
-                )
+                try:
+                    st = StatusType(status_type) if isinstance(status_type, str) else status_type
+                except ValueError:
+                    st = StatusType.PROCESSING
                 await asyncio.wait_for(
                     channel.send_status(session_id, st, text),
                     timeout=2.0,

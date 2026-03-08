@@ -88,8 +88,10 @@ class MemoryManager:
 
             db_path = str(self._config.db_path.with_name("memory_episodic.db"))
             self._episodic_store = _ES(db_path)
-        except Exception:
-            logger.debug("EpisodicStore init skipped")
+        except ImportError:
+            logger.debug("EpisodicStore init skipped: module not available")
+        except Exception as exc:
+            logger.warning("EpisodicStore init failed: %s", exc)
 
         # Search Weight Optimizer (EMA-basiert, optional) -- VOR HybridSearch
         self._weight_optimizer: SearchWeightOptimizer | None = None
@@ -98,8 +100,10 @@ class MemoryManager:
 
             opt_db = str(self._config.db_path.with_name("memory_weights.db"))
             self._weight_optimizer = _SWO(opt_db)
-        except Exception:
-            logger.debug("SearchWeightOptimizer init skipped")
+        except ImportError:
+            logger.debug("SearchWeightOptimizer init skipped: module not available")
+        except Exception as exc:
+            logger.warning("SearchWeightOptimizer init failed: %s", exc)
 
         # Vector Index (FAISS HNSW oder BruteForce Fallback)
         self._vector_index: VectorIndex = create_vector_index(

@@ -234,15 +234,15 @@ class AgentSecret:
         }
 
 
-def _derive_fernet(agent_id: str, salt: bytes) -> Fernet:
-    """Leitet einen Fernet-Key aus agent_id + zufaelligem Salt ab."""
+def _derive_fernet(agent_id: str, salt: bytes, master_secret: bytes) -> Fernet:
+    """Leitet einen Fernet-Key aus master_secret + agent_id + zufaelligem Salt ab."""
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
         salt=salt,
         iterations=600_000,
     )
-    raw_key = kdf.derive(f"per-agent-vault:{agent_id}".encode())
+    raw_key = kdf.derive(master_secret + f":per-agent-vault:{agent_id}".encode())
     return Fernet(base64.urlsafe_b64encode(raw_key))
 
 
@@ -260,13 +260,14 @@ class PerAgentSecretVault:
         self._fernets: dict[str, Fernet] = {}  # agent_id -> Fernet instance
         self._salts: dict[str, bytes] = {}  # agent_id -> random salt
         self._access_log: list[dict[str, Any]] = []
+        self._master_secret: bytes = os.urandom(32)
 
     def _get_fernet(self, agent_id: str) -> Fernet:
         """Gibt den Fernet-Cipher fuer einen Agenten zurueck (erstellt bei Bedarf)."""
         if agent_id not in self._fernets:
             salt = os.urandom(16)
             self._salts[agent_id] = salt
-            self._fernets[agent_id] = _derive_fernet(agent_id, salt)
+            self._fernets[agent_id] = _derive_fernet(agent_id, salt, self._master_secret)
         return self._fernets[agent_id]
 
     def store(self, agent_id: str, key: str, value: str, tenant_id: str = "default") -> AgentSecret:

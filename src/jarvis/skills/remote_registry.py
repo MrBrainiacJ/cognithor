@@ -367,7 +367,17 @@ class RemoteRegistry:
 
         # Write to skills directory
         try:
-            plugin_dir = self._skills_dir / name
+            plugin_dir = (self._skills_dir / name).resolve()
+            try:
+                plugin_dir.relative_to(self._skills_dir.resolve())
+            except ValueError:
+                return InstallResult(
+                    plugin=name,
+                    version=manifest.version,
+                    status=InstallStatus.FAILED,
+                    message=f"Path traversal detected in skill name: {name}",
+                    duration_ms=(time.monotonic() - start) * 1000,
+                )
             plugin_dir.mkdir(parents=True, exist_ok=True)
             skill_file = plugin_dir / "skill.md"
             skill_content = (

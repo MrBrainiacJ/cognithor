@@ -11,6 +11,7 @@ Bibel-Referenz: §5.3 (MCP-Tools), §4.3 (Sandbox)
 
 from __future__ import annotations
 
+import sys
 import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -141,7 +142,7 @@ class CodeTools:
             )
 
             # Via Sandbox ausführen
-            command = f"python {temp_name}"
+            command = f"{sys.executable} {temp_name}"
             result = await self._sandbox.execute(
                 command,
                 working_dir=str(cwd_path),

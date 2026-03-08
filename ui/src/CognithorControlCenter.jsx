@@ -36,13 +36,47 @@ import KnowledgeGraphPage from "./pages/KnowledgeGraphPage";
 
 const API = "/api/v1";
 
+// ── Auth token (fetched once from bootstrap endpoint) ──────────────────
+let _ccToken = null;
+let _ccTokenPromise = null;
+async function getCCToken() {
+  if (_ccToken) return _ccToken;
+  if (!_ccTokenPromise) {
+    _ccTokenPromise = fetch(`${API}/bootstrap`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { _ccToken = d?.token || null; return _ccToken; })
+      .catch(() => null);
+  }
+  return _ccTokenPromise;
+}
+
 // ── API Helper ─────────────────────────────────────────────────────────
+const HTTP_ERRORS = {
+  400: "Ungültige Anfrage – bitte Eingaben prüfen",
+  401: "Nicht autorisiert – bitte neu anmelden",
+  403: "Zugriff verweigert",
+  404: "Endpunkt nicht gefunden – Backend-Version prüfen",
+  409: "Konflikt – Daten wurden anderweitig geändert",
+  422: "Validierungsfehler – Eingaben prüfen",
+  429: "Zu viele Anfragen – bitte kurz warten und erneut versuchen",
+  500: "Interner Serverfehler – Backend-Logs prüfen",
+  502: "Backend nicht erreichbar",
+  503: "Backend überlastet – bitte warten",
+  504: "Backend-Timeout – Anfrage dauert zu lange",
+};
+
 async function api(method, path, body) {
-  const opts = { method, headers: { "Content-Type": "application/json" } };
+  const token = await getCCToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
   try {
     const r = await fetch(`${API}${path}`, opts);
-    if (!r.ok) return { error: `HTTP ${r.status}`, status: r.status };
+    if (!r.ok) {
+      const friendly = HTTP_ERRORS[r.status] || `HTTP ${r.status}`;
+      return { error: friendly, status: r.status };
+    }
     const text = await r.text();
     if (!text) return {};
     // Fix #19: Prevent precision loss for large integers (like Discord IDs)
@@ -50,6 +84,9 @@ async function api(method, path, body) {
     return JSON.parse(safeText);
   } catch (e) {
     console.error(`API ${method} ${path}:`, e);
+    if (e.name === "TypeError" && e.message.includes("fetch")) {
+      return { error: "Backend nicht erreichbar – ist Jarvis gestartet?" };
+    }
     return { error: e.message };
   }
 }
@@ -86,6 +123,8 @@ const I = {
   play: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
   stop: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"></rect></svg>,
   chat: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
+  workflow: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="5" cy="6" r="3"/><circle cx="19" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><path d="M7.5 7.5L10.5 16M16.5 7.5L13.5 16"/></svg>,
+  graph: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 6h6M6 9v6M18 9v6M9 18h6M8.5 8.5l7 7"/></svg>,
 };
 
 // ── Navigation ─────────────────────────────────────────────────────────
@@ -114,7 +153,7 @@ const PAGES = [
 
 // ── Default Config ─────────────────────────────────────────────────────
 const defaults = () => ({
-  owner_name: "User", version: "1.0.0",
+  owner_name: "User", version: "0.30.0",
   operation_mode: "auto", llm_backend_type: "ollama",
   cost_tracking_enabled: true, daily_budget_usd: 0, monthly_budget_usd: 0,
   openai_api_key: "", openai_base_url: "https://api.openai.com/v1",
@@ -601,8 +640,8 @@ function PromptEvolutionCard() {
         <ReadOnly label="Laufende Tests" value={String(stats.running_tests ?? 0)} />
         <ReadOnly label="Abgeschlossene Tests" value={String(stats.completed_tests ?? 0)} />
         <div style={{ marginTop: 8 }}>
-          <button className="cc-btn cc-btn-sm" onClick={handleEvolve} disabled={evolving}>
-            {evolving ? "Evolviert…" : "Jetzt evolvieren"}
+          <button className="cc-btn" onClick={handleEvolve} disabled={evolving} style={{ whiteSpace: "nowrap" }}>
+            {evolving ? "⏳ Evolviert…" : "Jetzt evolvieren"}
           </button>
           {evolveResult && (
             <span style={{ marginLeft: 8, fontSize: 13 }}>
@@ -1432,31 +1471,53 @@ export default function App() {
     return () => clearInterval(interval);
   }, [loadAllConfig]);
 
-  const toggleAppStatus = async () => {
-    if (appStatus === "running") {
-      setAppStatus("stopping");
-      const res = await api("POST", "/system/stop");
-      if (!res.error) {
-        setAppStatus("stopped");
-        toast("Cognithor/Jarvis wurde beendet.", "info");
+  const toggleLockRef = useRef(false);
+  const toggleAppStatus = useCallback(async () => {
+    if (toggleLockRef.current) return;
+    toggleLockRef.current = true;
+    try {
+      if (appStatus === "running") {
+        setAppStatus("stopping");
+        const res = await api("POST", "/system/stop");
+        if (!res.error) {
+          setAppStatus("stopped");
+          toast("Cognithor/Jarvis wurde beendet.", "info");
+        } else {
+          setAppStatus("running");
+          toast(`Fehler beim Beenden: ${res.error}`, "error");
+        }
       } else {
-        setAppStatus("running");
-        toast(`Fehler beim Beenden: ${res.error}`, "error");
+        setAppStatus("starting");
+        const res = await api("POST", "/system/start");
+        if (!res.error) {
+          setAppStatus("running");
+          toast("Cognithor/Jarvis wurde gestartet.", "success");
+          await loadAllConfig();
+        } else {
+          setAppStatus("stopped");
+          toast(`Fehler beim Starten: ${res.error}`, "error");
+        }
       }
-    } else {
-      setAppStatus("starting");
-      const res = await api("POST", "/system/start");
-      if (!res.error) {
-        setAppStatus("running");
-        toast("Cognithor/Jarvis wurde gestartet.", "success");
-        // Reload all config data from the now-running backend
-        await loadAllConfig();
-      } else {
-        setAppStatus("stopped");
-        toast(`Fehler beim Starten: ${res.error}`, "error");
-      }
+    } finally {
+      setTimeout(() => { toggleLockRef.current = false; }, 2000);
     }
-  };
+  }, [appStatus, loadAllConfig, toast]);
+
+  // Revert all changes to last saved state
+  const revertChanges = useCallback(async () => {
+    if (!savedSnapshot) return;
+    try {
+      const snap = JSON.parse(savedSnapshot);
+      if (snap.cfg) setCfg(snap.cfg);
+      if (snap.agents) setAgents(snap.agents);
+      if (snap.bindings) setBindings(snap.bindings);
+      if (snap.cronJobs) setCronJobs(snap.cronJobs);
+      if (snap.mcpServers) setMcpServers(snap.mcpServers);
+      if (snap.a2a) setA2a(snap.a2a);
+      if (snap.prompts) setPrompts(snap.prompts);
+      toast("Änderungen verworfen", "info");
+    } catch {}
+  }, [savedSnapshot, toast]);
 
   // Fix #4: Structured deep-setter (no JSON roundtrip)
   const set = useCallback((path, value) => {
@@ -1484,7 +1545,13 @@ export default function App() {
 
   // Fix #2: Parallel save with error tracking + Fix #15: includes prompts
   // Fix #23: Block save before config loads + only send changed API keys
+  const saveLockRef = useRef(false);
   const save = useCallback(async () => {
+    // Debounce: prevent double-save from rapid clicks
+    if (saveLockRef.current) return;
+    saveLockRef.current = true;
+    setTimeout(() => { saveLockRef.current = false; }, 2000);
+
     // Guard: don't save until config has been successfully loaded from backend.
     // This prevents default/empty values from overwriting real config on disk.
     if (!loaded || !configLoadedRef.current) {
@@ -1501,10 +1568,12 @@ export default function App() {
     setSaveState("saving");
     const errors = [];
     const sections = ["ollama","models","gatekeeper","planner","memory","channels","sandbox","logging","security","heartbeat","plugins","dashboard","model_overrides","web","database","executor"];
+    const warnings = [];
     const sectionPromises = sections.map(async (s) => {
       if (cfg[s]) {
         const r = await api("PATCH", `/config/${s}`, cfg[s]);
         if (r?.error) errors.push(`${s}: ${r.error}`);
+        if (r?.warnings) warnings.push(...r.warnings);
       }
     });
 
@@ -1561,7 +1630,11 @@ export default function App() {
       const data = await api("GET", "/config");
       if (data && !data.error) setCfg(prev => ({ ...prev, ...data }));
       setSavedSnapshot(JSON.stringify({ cfg: data || cfg, agents, bindings, cronJobs, mcpServers, a2a, prompts }));
-      toast("Konfiguration gespeichert", "success");
+      if (warnings.length > 0) {
+        toast(`Gespeichert mit Hinweisen: ${warnings.join("; ")}`, "warn");
+      } else {
+        toast("Konfiguration gespeichert", "success");
+      }
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2000);
     }
@@ -1573,7 +1646,7 @@ export default function App() {
     setRestartState("restarting");
     await save();
     await api("POST", "/config/reload");
-    try { await fetch(`${API}/shutdown`, { method: "POST" }); } catch {}
+    try { const _t = await getCCToken(); await fetch(`${API}/shutdown`, { method: "POST", headers: _t ? { Authorization: `Bearer ${_t}` } : {} }); } catch {}
     setTimeout(() => { setRestartState("done"); toast("Jarvis wurde neu gestartet", "success"); setTimeout(() => setRestartState("idle"), 3000); }, 3000);
   }, [save, toast, styledConfirm]);
 
@@ -1612,11 +1685,9 @@ export default function App() {
     if (!await styledConfirm({ title: "Preset anwenden", message: `Preset "${name}" anwenden? Aktuelle Einstellungen werden überschrieben.` })) return;
     const r = await api("POST", `/config/presets/${name}`);
     if (!r.error) {
-      const data = await api("GET", "/config");
-      if (data && !data.error) {
-        setCfg(prev => ({ ...prev, ...data }));
-        toast(`Preset „${name}" angewendet`, "success");
-      }
+      // Full reload to pick up all preset changes
+      await loadAllConfig();
+      toast(`Preset „${name}" angewendet – Einstellungen aktualisiert`, "success");
     } else {
       toast(`Preset-Fehler: ${r.error}`, "error");
     }
@@ -1837,6 +1908,8 @@ export default function App() {
         .cc-btn-sm-full:hover { background: rgba(0,212,255,0.2); }
         .cc-btn-danger { border-color: rgba(255,68,102,0.3); color: var(--danger); }
         .cc-btn-danger:hover { background: rgba(255,68,102,0.1); border-color: var(--danger); }
+        .cc-btn-success { border-color: rgba(0,230,118,0.3); color: var(--success); }
+        .cc-btn-success:hover { background: rgba(0,230,118,0.1); border-color: var(--success); }
         .cc-btn-restart { background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(108,99,255,0.1)); border-color: var(--accent); color: var(--accent); font-size: 15px; padding: 14px 28px; width: 100%; justify-content: center; }
         .cc-btn-restart:hover { background: linear-gradient(135deg, rgba(0,212,255,0.25), rgba(108,99,255,0.2)); }
         .cc-btn-restart.pulsing { animation: pulse 1.5s infinite; }
@@ -1847,6 +1920,8 @@ export default function App() {
         .cc-save-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; }
         .cc-save-btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .cc-save-btn.saved { background: var(--success); color: #000; }
+        .cc-save-btn-revert { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); padding: 8px 18px; font-size: 13px; }
+        .cc-save-btn-revert:hover { border-color: var(--warn); color: var(--warn); }
         /* Fix #1: dirty indicator */
         .cc-dirty-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); animation: pulse 2s infinite; }
         .cc-save-hint { font-size: 11px; color: var(--text2); }
@@ -1881,6 +1956,7 @@ export default function App() {
         .cc-toast-success { background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.3); }
         .cc-toast-error { background: rgba(255,68,102,0.15); border: 1px solid rgba(255,68,102,0.3); }
         .cc-toast-info { background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.3); }
+        .cc-toast-warn { background: rgba(255,215,64,0.15); border: 1px solid rgba(255,215,64,0.3); color: #ffd740; }
         .cc-toast-msg { flex: 1; }
         .cc-toast-close { background: none; border: none; color: var(--text2); cursor: pointer; padding: 2px; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -1998,7 +2074,7 @@ export default function App() {
 
         /* Chat Input */
         .cc-chat-input { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
-        .cc-chat-input-row { display: flex; align-items: flex-end; gap: 8px; }
+        .cc-chat-input-row { display: flex; align-items: center; gap: 8px; }
         .cc-chat-textarea { flex: 1; resize: none; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border 0.15s; min-height: 42px; max-height: 130px; line-height: 22px; }
         .cc-chat-textarea:focus { border-color: var(--accent); }
         .cc-chat-textarea::placeholder { color: var(--text2); }
@@ -2011,6 +2087,7 @@ export default function App() {
         .cc-chat-send-btn:hover { opacity: 0.85; }
         .cc-chat-send-btn:disabled { background: var(--bg3); color: var(--text2); border-color: var(--border); opacity: 0.4; }
         .cc-recording { border-color: var(--danger) !important; color: var(--danger) !important; animation: pulse 1s infinite; }
+        .cc-voice-active { border-color: var(--success) !important; color: var(--success) !important; background: rgba(0,230,118,0.1) !important; }
 
         /* Tool Indicator */
         .cc-tool-bar { display: flex; align-items: center; gap: 8px; padding: 6px 16px; color: var(--accent); font-size: 13px; border-top: 1px solid var(--border); background: rgba(0,212,255,0.04); flex-shrink: 0; }
@@ -2138,18 +2215,33 @@ export default function App() {
       </div>
 
       {/* Fix #1 + #18: Save bar with dirty state + safe area */}
-      <div className="cc-save-bar" style={page === "chat" || page === "workflows" || page === "knowledge-graph" ? { display: "none" } : undefined}>
-        {hasChanges && <span className="cc-save-hint">Ungespeicherte Änderungen</span>}
-        <button
-          className={`cc-save-btn ${saveState === "saved" ? "saved" : "primary"}`}
-          onClick={save}
-          disabled={saveState === "saving"}
-          type="button"
-        >
-          {saveState === "saving" ? "⏳ Speichern..." : saveState === "saved" ? <>{I.check} Gespeichert!</> : <>{I.save} {hasChanges ? "Änderungen speichern" : "Speichern"}</>}
-        </button>
-        <span className="cc-save-hint" style={{opacity: 0.4}}>⌘S</span>
-      </div>
+      {page !== "chat" && page !== "workflows" && page !== "knowledge-graph" && (
+        <div className="cc-save-bar">
+          {hasChanges ? (
+            <>
+              <span className="cc-save-hint">Ungespeicherte Änderungen</span>
+              <button
+                className="cc-save-btn cc-save-btn-revert"
+                onClick={revertChanges}
+                type="button"
+              >
+                {I.reset} Verwerfen
+              </button>
+              <button
+                className={`cc-save-btn ${saveState === "saved" ? "saved" : "primary"}`}
+                onClick={save}
+                disabled={saveState === "saving"}
+                type="button"
+              >
+                {saveState === "saving" ? "⏳ Speichern..." : saveState === "saved" ? <>{I.check} Gespeichert!</> : <>{I.save} Änderungen speichern</>}
+              </button>
+              <span className="cc-save-hint" style={{opacity: 0.4}}>⌘S</span>
+            </>
+          ) : (
+            <span className="cc-save-hint" style={{opacity: 0.5}}>Keine Änderungen</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

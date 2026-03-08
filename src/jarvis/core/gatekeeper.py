@@ -648,8 +648,13 @@ class Gatekeeper:
         ),
         # pathlib file deletion
         (re.compile(r"\.unlink\s*\(", re.IGNORECASE), "Path.unlink()"),
-        # open() with write/append/create modes — match mode argument, not filename
-        (re.compile(r"\bopen\s*\([^)]*,\s*['\"][wax]", re.IGNORECASE), "open() with write mode"),
+        # open() with write/append/create modes — positional or keyword
+        (re.compile(r"\bopen\s*\([^)]*,\s*['\"][waxr+]+", re.IGNORECASE), "open() with write mode"),
+        (re.compile(r"\bopen\s*\([^)]*\bmode\s*=\s*['\"][waxr+]+", re.IGNORECASE), "open() with write mode (keyword)"),
+        # pathlib write/delete methods
+        (re.compile(r"\.write_text\s*\(", re.IGNORECASE), "Path.write_text()"),
+        (re.compile(r"\.write_bytes\s*\(", re.IGNORECASE), "Path.write_bytes()"),
+        (re.compile(r"\.rmdir\s*\(", re.IGNORECASE), "Path.rmdir()"),
     ]
 
     def _check_python_code(

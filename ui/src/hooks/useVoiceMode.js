@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { getToken } from "../utils/api";
 
 /**
  * Voice Mode Hook: Wake-Word → Conversation → "Jarvis Ende"
@@ -224,9 +225,12 @@ export function useVoiceMode({ onCommand, wakeWord }) {
     stopRecognition();
     setState(VoiceState.SPEAKING);
     try {
+      const token = await getToken();
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const resp = await fetch("/api/v1/tts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ text }),
       });
       if (!resp.ok || !(resp.headers.get("content-type") || "").includes("audio")) {

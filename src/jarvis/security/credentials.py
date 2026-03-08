@@ -378,8 +378,11 @@ class CredentialStore:
                 "agent_id": entry.agent_id,
             }
         raw = json.dumps(data, ensure_ascii=False, indent=2)
-        self._store_path.write_text(raw, encoding="utf-8")
-        self._set_file_permissions(self._store_path)
+        # Atomic write: write to temp file first, then rename
+        tmp_path = self._store_path.with_suffix(".tmp")
+        tmp_path.write_text(raw, encoding="utf-8")
+        self._set_file_permissions(tmp_path)
+        tmp_path.replace(self._store_path)
 
     @staticmethod
     def _set_file_permissions(path: Path) -> None:

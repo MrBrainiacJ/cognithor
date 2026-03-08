@@ -508,7 +508,11 @@ class Sandbox:
                 command, working_dir=working_dir, env=env, timeout=timeout
             )
 
-        work_dir = working_dir or tempfile.mkdtemp(prefix="jarvis_ns_")
+        _created_tmp = False
+        work_dir = working_dir
+        if not work_dir:
+            work_dir = tempfile.mkdtemp(prefix="jarvis_ns_")
+            _created_tmp = True
 
         bwrap_args = [
             "bwrap",
@@ -587,6 +591,10 @@ class Sandbox:
                 duration_ms=0,
                 sandbox_level=SandboxLevel.NAMESPACE,
             )
+        finally:
+            if _created_tmp:
+                import shutil
+                shutil.rmtree(work_dir, ignore_errors=True)
 
     # ========================================================================
     # L2: Container-Level (Docker)
@@ -787,6 +795,7 @@ class Sandbox:
                 log.warning("jobobject_setinfo_failed", error=ctypes.get_last_error())
 
             # 4. Subprocess starten
+            _created_job_tmp = not working_dir
             work_dir = working_dir or tempfile.mkdtemp(prefix="jarvis_job_")
             cmd_args = shlex.split(command)
 
@@ -846,6 +855,9 @@ class Sandbox:
                 kernel32.CloseHandle(proc_handle)
             if job_handle:
                 kernel32.CloseHandle(job_handle)
+            if _created_job_tmp:
+                import shutil
+                shutil.rmtree(work_dir, ignore_errors=True)
 
     # ========================================================================
     # Hilfsmethoden

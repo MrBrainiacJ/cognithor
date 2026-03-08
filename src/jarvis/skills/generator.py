@@ -23,7 +23,9 @@ Bibel-Referenz: §6.4 (Prozedurale Selbstverbesserung)
 from __future__ import annotations
 
 import hashlib
+import shlex
 import shutil
+import sys
 import textwrap
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -563,7 +565,7 @@ class SkillGenerator:
             # Mit Sandbox: pytest ausführen
             try:
                 result = await self._sandbox.execute(
-                    f"cd {test_dir} && python -m pytest {test_file.name} -v --tb=short 2>&1",
+                    f"{shlex.quote(sys.executable)} -m pytest {shlex.quote(test_file.name)} -v --tb=short 2>&1",
                     working_dir=str(test_dir),
                     timeout=30,
                 )

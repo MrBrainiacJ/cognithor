@@ -11,9 +11,12 @@ export function ChatInput({ onSend, onFile, onVoice, disabled }) {
   const chunksRef = useRef([]);
   const recordTimerRef = useRef(null);
 
+  const sendLockRef = useRef(false);
   const handleSend = useCallback(() => {
-    if (!text.trim() || disabled) return;
-    onSend(text);
+    if (!text.trim() || disabled || sendLockRef.current) return;
+    sendLockRef.current = true;
+    setTimeout(() => { sendLockRef.current = false; }, 500);
+    onSend(text.trim());
     setText("");
     // Reset textarea height
     if (textareaRef.current) {

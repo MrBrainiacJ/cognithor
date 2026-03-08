@@ -51,9 +51,9 @@ def action_plan_to_workflow(
             name=step.tool,
             description=f"PGE step {i}: {step.tool}",
             tool_name=step.tool,
-            tool_params=dict(step.params),
+            tool_params={k: v for k, v in step.params.items() if k != "_timeout"},
             depends_on=deps,
-            timeout_seconds=step.params.pop("_timeout", 60) if "_timeout" in step.params else 60,
+            timeout_seconds=step.params.get("_timeout", 60),
         )
         nodes.append(node)
 

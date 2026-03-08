@@ -272,9 +272,19 @@ def main() -> None:
 
                 api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
 
+                # ── Internal session token ────────────────────────────────
+                # Always generate a per-session token.  An explicit env var
+                # JARVIS_API_TOKEN takes precedence; otherwise we mint a
+                # cryptographically random one so that even local malware
+                # cannot silently call the backend API.
+                import secrets as _secrets
+
+                api_token = os.environ.get("JARVIS_API_TOKEN") or _secrets.token_urlsafe(32)
+                # Expose to frontend via /api/v1/bootstrap (see below)
+                _internal_api_token = api_token
+
                 # CORS: Wenn API-Token gesetzt, Origins einschränken
-                api_token = os.environ.get("JARVIS_API_TOKEN")
-                if api_token:
+                if os.environ.get("JARVIS_API_TOKEN"):
                     cors_raw = os.environ.get("JARVIS_API_CORS_ORIGINS", "")
                     cors_origins = (
                         [o.strip() for o in cors_raw.split(",") if o.strip()] if cors_raw else []
@@ -339,8 +349,36 @@ def main() -> None:
                         "uptime_seconds": _time.monotonic() - _api_start,
                     }
 
+                # ── Bootstrap: one-time token delivery for the UI ─────
+                # The token is embedded in the page the browser loads, so
+                # only the same-origin frontend can read it.  External
+                # malware would have to scrape the running browser DOM.
+                @api_app.get("/api/v1/bootstrap")
+                async def _cc_bootstrap() -> dict[str, str]:
+                    return {"token": _internal_api_token}
+
+                # ── Token verification dependency ─────────────────────
+                import hmac as _hmac_verify
+                from fastapi import Depends as _Depends
+                from fastapi import HTTPException as _HTTPException
+                from fastapi.security import HTTPBearer as _HTTPBearer
+                from fastapi.security import HTTPAuthorizationCredentials as _HTTPAuthCreds
+
+                _bearer_scheme = _HTTPBearer(auto_error=False)
+
+                async def _verify_cc_token(
+                    creds: _HTTPAuthCreds | None = _Depends(_bearer_scheme),
+                ) -> None:
+                    if creds is None or not _hmac_verify.compare_digest(
+                        creds.credentials, _internal_api_token
+                    ):
+                        raise _HTTPException(status_code=401, detail="Unauthorized")
+
                 config_mgr = ConfigManager(config=config)
-                create_config_routes(api_app, config_mgr, gateway=gateway)
+                create_config_routes(
+                    api_app, config_mgr, gateway=gateway,
+                    verify_token_dep=_Depends(_verify_cc_token),
+                )
 
                 # Skill Marketplace API Router einbinden
                 if getattr(config, "marketplace", None) and config.marketplace.enabled:
@@ -380,7 +418,7 @@ def main() -> None:
                     # ── Token-based authentication ────────────────────────
                     # Token wird via erster WS-Nachricht gesendet, NICHT als
                     # Query-Parameter (vermeidet Log-Exposure).
-                    required_token = os.environ.get("JARVIS_API_TOKEN")
+                    required_token = _internal_api_token
                     await websocket.accept()
 
                     if required_token:
@@ -1081,13 +1119,47 @@ def main() -> None:
 
             # Start Dashboard falls aktiviert
             if config.dashboard.enabled:
-                try:
-                    from jarvis.dashboard import Dashboard
+                dashboard_port = config.dashboard.port or 9090
+                if dashboard_port != args.api_port and api_app is not None:
+                    # Dashboard auf separatem Port — lightweight redirect-server
+                    try:
+                        import uvicorn
+                        from starlette.applications import Starlette
+                        from starlette.responses import RedirectResponse
+                        from starlette.routing import Route
 
-                    dashboard = Dashboard(config, gateway)
-                    await dashboard.start()
-                except Exception:
-                    log.warning("dashboard_failed_to_start")
+                        api_base = f"http://127.0.0.1:{args.api_port}"
+
+                        async def _dash_redirect(request):
+                            return RedirectResponse(url=f"{api_base}/dashboard")
+
+                        dash_app = Starlette(routes=[
+                            Route("/", _dash_redirect),
+                            Route("/dashboard", _dash_redirect),
+                        ])
+                        dash_config = uvicorn.Config(
+                            dash_app, host="127.0.0.1", port=dashboard_port,
+                            log_level="warning",
+                        )
+                        dash_server = uvicorn.Server(dash_config)
+                        asyncio.create_task(dash_server.serve())
+                        log.info(
+                            "dashboard_redirect_started",
+                            port=dashboard_port,
+                            target=f"{api_base}/dashboard",
+                        )
+                    except Exception:
+                        log.warning(
+                            "dashboard_redirect_failed",
+                            port=dashboard_port,
+                            hint=f"Dashboard verfügbar unter http://127.0.0.1:{args.api_port}/dashboard",
+                            exc_info=True,
+                        )
+                else:
+                    log.info(
+                        "dashboard_available",
+                        url=f"http://127.0.0.1:{args.api_port}/dashboard",
+                    )
 
             log.info("jarvis_ready", channels=list(gateway._channels.keys()))
             await gateway.start()

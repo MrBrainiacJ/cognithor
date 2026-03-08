@@ -178,12 +178,16 @@ class MemoryIndex:
     # ── Chunk Operations ─────────────────────────────────────────
 
     def upsert_chunk(self, chunk: Chunk) -> None:
-        """Fügt einen Chunk ein oder aktualisiert ihn.
+        """Fügt einen Chunk ein oder aktualisiert ihn und committet.
 
-        NOTE: This method does NOT commit. Callers should use upsert_chunks()
-        for batch operations, or call self.conn.commit() explicitly after
-        one or more upsert_chunk() calls.
+        Thread-safe: Geschützt über Write-Lock.
         """
+        with self._write_lock:
+            self._upsert_chunk_impl(chunk)
+            self.conn.commit()
+
+    def _upsert_chunk_impl(self, chunk: Chunk) -> None:
+        """Internal: insert/update ohne Lock und ohne Commit (für Batch-Nutzung)."""
         now = datetime.now().timestamp()
         ts = chunk.timestamp.timestamp() if chunk.timestamp else None
 

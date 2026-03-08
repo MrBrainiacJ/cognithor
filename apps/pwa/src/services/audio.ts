@@ -47,14 +47,11 @@ export class AudioService {
   stopRecording(): Blob | null {
     if (!this.recorder || this.recorder.state !== 'recording') return null;
 
-    return new Promise<Blob | null>((resolve) => {
-      this.recorder!.onstop = () => {
-        const blob = new Blob(this.chunks, { type: 'audio/webm' });
-        this.chunks = [];
-        resolve(blob);
-      };
-      this.recorder!.stop();
-    }) as unknown as Blob | null;
+    this.recorder.stop();
+    if (this.chunks.length === 0) return null;
+    const blob = new Blob(this.chunks, { type: 'audio/webm' });
+    this.chunks = [];
+    return blob;
   }
 
   async stopRecordingAsync(): Promise<Blob | null> {

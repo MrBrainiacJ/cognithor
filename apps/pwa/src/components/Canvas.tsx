@@ -1,55 +1,45 @@
-import { useRef, useEffect } from 'preact/hooks';
-
 interface CanvasProps {
   html: string;
   onClose: () => void;
 }
 
 export function Canvas({ html, onClose }: CanvasProps) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const sanitizedHtml = html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/on\w+\s*=\s*'[^']*'/gi, '')
+    .replace(/javascript\s*:/gi, 'void:');
 
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-
-    const doc = iframe.contentDocument;
-    if (!doc) return;
-
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
-            color: #e0e0e0;
-            padding: 16px;
-            line-height: 1.6;
-          }
-          pre, code {
-            background: #0f0f23;
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 13px;
-          }
-          pre { padding: 12px; overflow-x: auto; }
-          table { border-collapse: collapse; width: 100%; }
-          th, td { border: 1px solid #333; padding: 8px 12px; text-align: left; }
-          th { background: #0f0f23; }
-          img { max-width: 100%; height: auto; }
-          a { color: #00d4ff; }
-        </style>
-      </head>
-      <body>${html}</body>
-      </html>
-    `);
-    doc.close();
-  }, [html]);
+  const srcdoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 16px;
+      line-height: 1.6;
+    }
+    pre, code {
+      background: #0f0f23;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 13px;
+    }
+    pre { padding: 12px; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #333; padding: 8px 12px; text-align: left; }
+    th { background: #0f0f23; }
+    img { max-width: 100%; height: auto; }
+    a { color: #00d4ff; }
+  </style>
+</head>
+<body>${sanitizedHtml}</body>
+</html>`;
 
   return (
     <div class="canvas-container" role="complementary" aria-label="Canvas">
@@ -66,9 +56,9 @@ export function Canvas({ html, onClose }: CanvasProps) {
         </button>
       </div>
       <iframe
-        ref={iframeRef}
         class="canvas-iframe"
-        sandbox="allow-scripts allow-same-origin"
+        sandbox=""
+        srcdoc={srcdoc}
         title="Jarvis Canvas"
       />
     </div>
