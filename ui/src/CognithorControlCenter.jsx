@@ -295,6 +295,9 @@ function Toggle({ label, value, onChange, desc }) {
 function TextInput({ label, value, onChange, desc, placeholder, type = "text", mono, error, disabled, tooltip }) {
   const [show, setShow] = useState(false);
   const isSecret = type === "password";
+  // Backend masks saved secrets as "***" — these aren't the real value.
+  // When masked, show a placeholder and clear on focus so user can type a new key.
+  const isMasked = isSecret && value === "***";
   return (
     <div className="cc-field">
       <div className="cc-label">{label} {tooltip && <span className="cc-tooltip-trigger" title={tooltip}>{I.help}</span>}</div>
@@ -303,17 +306,18 @@ function TextInput({ label, value, onChange, desc, placeholder, type = "text", m
         <input
           className={`cc-input ${mono ? "mono" : ""} ${error ? "cc-error" : ""} ${disabled ? "cc-input-disabled" : ""}`}
           type={isSecret && !show ? "password" : "text"}
-          value={value || ""}
+          value={isMasked ? "" : (value || "")}
           onChange={e => !disabled && onChange(e.target.value)}
-          placeholder={placeholder || ""}
+          placeholder={isMasked ? "(gespeichert — zum Ändern neuen Key eingeben)" : (placeholder || "")}
           readOnly={disabled}
           tabIndex={disabled ? -1 : 0}
           aria-label={label}
           aria-invalid={!!error}
         />
-        {isSecret && (
+        {isSecret && !isMasked && (
           <button className="cc-eye-btn" onClick={() => setShow(!show)} type="button" aria-label={show ? "Verbergen" : "Anzeigen"}>{show ? I.eyeOff : I.eye}</button>
         )}
+        {isMasked && <span className="cc-secret-badge">Gespeichert</span>}
       </div>
       {error && <div className="cc-field-error" role="alert">{error}</div>}
     </div>
@@ -1863,6 +1867,7 @@ export default function App() {
         .cc-input-disabled { opacity: 0.5; cursor: not-allowed; }
         .cc-field-error { font-size: 11px; color: var(--danger); margin-top: 4px; }
         .cc-eye-btn { position: absolute; right: 8px; background: none; border: none; color: var(--text2); cursor: pointer; padding: 4px; }
+        .cc-secret-badge { position: absolute; right: 8px; font-size: 11px; color: #00e676; background: rgba(0,230,118,0.1); padding: 2px 8px; border-radius: 4px; pointer-events: none; }
         .cc-select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 30px 8px 10px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238888a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
         .cc-select:focus { border-color: var(--accent); }
         .cc-textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; resize: vertical; min-height: 80px; transition: border 0.15s; }

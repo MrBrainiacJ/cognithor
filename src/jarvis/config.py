@@ -1514,8 +1514,8 @@ class JarvisConfig(BaseModel):
     Loaded once at startup and then used throughout the entire system.
     """
 
-    # Meta
-    version: str = "0.27.3"
+    # Meta — version is always read from the package's __version__
+    version: str = __import__("jarvis").__version__
     language: Literal["de", "en"] = Field(
         default="de",
         description="UI language for error messages, greetings, and status texts. "
