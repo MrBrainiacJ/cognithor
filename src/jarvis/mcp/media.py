@@ -387,11 +387,13 @@ class MediaPipeline:
                 text = path.read_text(encoding="utf-8", errors="replace")
             elif suffix in (".html", ".htm"):
                 text = await loop.run_in_executor(None, self._extract_html, path)
+            elif suffix == ".pptx":
+                text = await loop.run_in_executor(None, self._extract_ppt_text, path)
             else:
                 return MediaResult(
                     success=False,
                     error=f"Nicht unterstütztes Format: {suffix}. "
-                    f"Unterstützt: PDF, DOCX, TXT, MD, HTML, CSV, JSON, XML",
+                    f"Unterstützt: PDF, DOCX, PPTX, TXT, MD, HTML, CSV, JSON, XML",
                 )
 
             if len(text) > self._max_extract_length:
@@ -468,6 +470,406 @@ class MediaPipeline:
         # Mehrfach-Whitespace normalisieren
         text = re.sub(r"\s+", " ", text).strip()
         return text
+
+    def _extract_ppt_text(self, path: Path) -> str:
+        """PPTX-Textextraktion (einfach, nur Text)."""
+        try:
+            from pptx import Presentation
+
+            prs = Presentation(str(path))
+            texts = []
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text_frame") and shape.text_frame:
+                        texts.append(shape.text_frame.text)
+            return "\n\n".join(t for t in texts if t.strip())
+        except ImportError:
+            raise ImportError("python-pptx nicht installiert. pip install python-pptx") from None
+
+    # ========================================================================
+    # Strukturierte Dokument-Lese-Tools (PDF / PPT / DOCX)
+    # ========================================================================
+
+    async def read_pdf(
+        self,
+        file_path: str,
+        *,
+        extract_images: bool = False,
+        extract_tables: bool = False,
+        pages: str = "",
+    ) -> MediaResult:
+        """Liest ein PDF strukturiert mit Seiten, Metadaten, Bildern, Tabellen."""
+        path = self._validate_input_path(file_path)
+        if path is None:
+            return MediaResult(
+                success=False, error=f"Datei nicht gefunden oder ungueltig: {file_path}"
+            )
+
+        file_size = path.stat().st_size
+        if file_size > self._max_extract_file_size:
+            return MediaResult(
+                success=False,
+                error=f"Datei zu gross ({file_size / 1_048_576:.1f} MB, max {self._max_extract_file_size // 1_048_576} MB)",
+            )
+
+        loop = asyncio.get_running_loop()
+        try:
+            result = await loop.run_in_executor(
+                None,
+                self._read_pdf_structured,
+                path,
+                extract_images,
+                extract_tables,
+                pages,
+            )
+            return result
+        except Exception as exc:
+            log.error("read_pdf_failed", path=file_path, error=str(exc))
+            return MediaResult(success=False, error=f"PDF-Lesen fehlgeschlagen: {exc}")
+
+    def _read_pdf_structured(
+        self,
+        path: Path,
+        extract_images: bool,
+        extract_tables: bool,
+        pages: str,
+    ) -> MediaResult:
+        """Synchrone strukturierte PDF-Extraktion."""
+        try:
+            import fitz  # pymupdf
+        except ImportError:
+            raise ImportError(
+                "pymupdf nicht installiert. pip install pymupdf"
+            ) from None
+
+        doc = fitz.open(str(path))
+        total_pages = len(doc)
+
+        # Seitenbereich parsen (1-basiert -> 0-basiert)
+        if pages.strip():
+            if "-" in pages:
+                parts = pages.split("-", 1)
+                start = max(int(parts[0]) - 1, 0)
+                end = min(int(parts[1]), total_pages)
+                page_indices = list(range(start, end))
+            else:
+                idx = int(pages) - 1
+                page_indices = [idx] if 0 <= idx < total_pages else []
+        else:
+            page_indices = list(range(total_pages))
+
+        text_parts: list[str] = []
+        image_paths: list[str] = []
+        tables_md: list[str] = []
+
+        for i in page_indices:
+            page = doc[i]
+            page_text = page.get_text()
+            text_parts.append(f"--- Seite {i + 1} ---\n{page_text}")
+
+            if extract_images:
+                img_dir = self._workspace / "pdf_images"
+                img_dir.mkdir(parents=True, exist_ok=True)
+                for img_idx, img_info in enumerate(page.get_images(full=True)):
+                    xref = img_info[0]
+                    try:
+                        base_image = doc.extract_image(xref)
+                        ext = base_image.get("ext", "png")
+                        img_path = img_dir / f"page{i + 1}_img{img_idx + 1}.{ext}"
+                        img_path.write_bytes(base_image["image"])
+                        image_paths.append(str(img_path))
+                    except Exception:
+                        pass
+
+            if extract_tables:
+                try:
+                    found_tables = page.find_tables()
+                    for t_idx, table in enumerate(found_tables):
+                        rows = table.extract()
+                        if rows:
+                            md_rows = [
+                                "| " + " | ".join(str(c) if c else "" for c in row) + " |"
+                                for row in rows
+                            ]
+                            if len(md_rows) > 1:
+                                header_sep = (
+                                    "| "
+                                    + " | ".join("---" for _ in rows[0])
+                                    + " |"
+                                )
+                                md_rows.insert(1, header_sep)
+                            tables_md.append(
+                                f"Tabelle (Seite {i + 1}, #{t_idx + 1}):\n"
+                                + "\n".join(md_rows)
+                            )
+                except Exception:
+                    pass
+
+        # Metadaten
+        meta = doc.metadata or {}
+        metadata = {
+            "page_count": total_pages,
+            "pages_extracted": len(page_indices),
+            "title": meta.get("title", ""),
+            "author": meta.get("author", ""),
+            "subject": meta.get("subject", ""),
+            "creator": meta.get("creator", ""),
+            "creation_date": meta.get("creationDate", ""),
+        }
+        doc.close()
+
+        full_text = "\n\n".join(text_parts)
+        if tables_md:
+            full_text += "\n\n" + "\n\n".join(tables_md)
+        if image_paths:
+            full_text += "\n\nExtrahierte Bilder:\n" + "\n".join(image_paths)
+            metadata["images"] = image_paths
+        if tables_md:
+            metadata["tables_count"] = len(tables_md)
+
+        log.info(
+            "read_pdf_done",
+            path=str(path),
+            pages=len(page_indices),
+            images=len(image_paths),
+            tables=len(tables_md),
+        )
+        return MediaResult(success=True, text=full_text, metadata=metadata)
+
+    async def read_ppt(
+        self,
+        file_path: str,
+        *,
+        extract_images: bool = False,
+    ) -> MediaResult:
+        """Liest eine PowerPoint-Praesentation strukturiert."""
+        path = self._validate_input_path(file_path)
+        if path is None:
+            return MediaResult(
+                success=False, error=f"Datei nicht gefunden oder ungueltig: {file_path}"
+            )
+
+        file_size = path.stat().st_size
+        if file_size > self._max_extract_file_size:
+            return MediaResult(
+                success=False,
+                error=f"Datei zu gross ({file_size / 1_048_576:.1f} MB, max {self._max_extract_file_size // 1_048_576} MB)",
+            )
+
+        loop = asyncio.get_running_loop()
+        try:
+            result = await loop.run_in_executor(
+                None, self._read_ppt_structured, path, extract_images
+            )
+            return result
+        except Exception as exc:
+            log.error("read_ppt_failed", path=file_path, error=str(exc))
+            return MediaResult(success=False, error=f"PPT-Lesen fehlgeschlagen: {exc}")
+
+    def _read_ppt_structured(
+        self, path: Path, extract_images: bool
+    ) -> MediaResult:
+        """Synchrone strukturierte PPTX-Extraktion."""
+        try:
+            from pptx import Presentation
+            from pptx.enum.shapes import MSO_SHAPE_TYPE
+        except ImportError:
+            raise ImportError(
+                "python-pptx nicht installiert. pip install python-pptx"
+            ) from None
+
+        prs = Presentation(str(path))
+        slide_texts: list[str] = []
+        image_paths: list[str] = []
+
+        for slide_idx, slide in enumerate(prs.slides, start=1):
+            title = ""
+            if slide.shapes.title and slide.shapes.title.text:
+                title = slide.shapes.title.text
+
+            content_parts: list[str] = []
+            for shape in slide.shapes:
+                if hasattr(shape, "text_frame") and shape.text_frame:
+                    for paragraph in shape.text_frame.paragraphs:
+                        para_parts: list[str] = []
+                        for run in paragraph.runs:
+                            text = run.text
+                            if run.font.bold:
+                                text = f"**{text}**"
+                            if run.font.italic:
+                                text = f"*{text}*"
+                            para_parts.append(text)
+                        line = "".join(para_parts)
+                        if line.strip():
+                            content_parts.append(line)
+
+                if extract_images and shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+                    img_dir = self._workspace / "ppt_images"
+                    img_dir.mkdir(parents=True, exist_ok=True)
+                    try:
+                        image = shape.image
+                        ext = image.content_type.split("/")[-1] if image.content_type else "png"
+                        img_path = img_dir / f"slide{slide_idx}_{shape.shape_id}.{ext}"
+                        img_path.write_bytes(image.blob)
+                        image_paths.append(str(img_path))
+                    except Exception:
+                        pass
+
+            notes = ""
+            if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
+                notes = slide.notes_slide.notes_text_frame.text.strip()
+
+            slide_text = f"--- Folie {slide_idx}: {title} ---\n"
+            slide_text += "\n".join(content_parts)
+            if notes:
+                slide_text += f"\n\nNotizen: {notes}"
+            slide_texts.append(slide_text)
+
+        full_text = "\n\n".join(slide_texts)
+        metadata: dict[str, Any] = {"slide_count": len(prs.slides)}
+        if image_paths:
+            full_text += "\n\nExtrahierte Bilder:\n" + "\n".join(image_paths)
+            metadata["images"] = image_paths
+
+        log.info(
+            "read_ppt_done",
+            path=str(path),
+            slides=len(prs.slides),
+            images=len(image_paths),
+        )
+        return MediaResult(success=True, text=full_text, metadata=metadata)
+
+    async def read_docx(
+        self,
+        file_path: str,
+        *,
+        extract_images: bool = False,
+        extract_tables: bool = True,
+    ) -> MediaResult:
+        """Liest ein Word-Dokument strukturiert."""
+        path = self._validate_input_path(file_path)
+        if path is None:
+            return MediaResult(
+                success=False, error=f"Datei nicht gefunden oder ungueltig: {file_path}"
+            )
+
+        file_size = path.stat().st_size
+        if file_size > self._max_extract_file_size:
+            return MediaResult(
+                success=False,
+                error=f"Datei zu gross ({file_size / 1_048_576:.1f} MB, max {self._max_extract_file_size // 1_048_576} MB)",
+            )
+
+        loop = asyncio.get_running_loop()
+        try:
+            result = await loop.run_in_executor(
+                None, self._read_docx_structured, path, extract_images, extract_tables
+            )
+            return result
+        except Exception as exc:
+            log.error("read_docx_failed", path=file_path, error=str(exc))
+            return MediaResult(success=False, error=f"DOCX-Lesen fehlgeschlagen: {exc}")
+
+    def _read_docx_structured(
+        self, path: Path, extract_images: bool, extract_tables: bool
+    ) -> MediaResult:
+        """Synchrone strukturierte DOCX-Extraktion."""
+        try:
+            from docx import Document
+        except ImportError:
+            raise ImportError(
+                "python-docx nicht installiert. pip install python-docx"
+            ) from None
+
+        doc = Document(str(path))
+        text_parts: list[str] = []
+
+        # Absaetze mit Heading-Erkennung und Formatierung
+        for paragraph in doc.paragraphs:
+            style_name = paragraph.style.name if paragraph.style else ""
+            if style_name.startswith("Heading"):
+                try:
+                    level = int(style_name.replace("Heading", "").strip())
+                except ValueError:
+                    level = 1
+                text_parts.append("#" * level + " " + paragraph.text)
+            else:
+                # Runs mit Formatierung
+                para_parts: list[str] = []
+                for run in paragraph.runs:
+                    text = run.text
+                    if run.bold:
+                        text = f"**{text}**"
+                    if run.italic:
+                        text = f"*{text}*"
+                    para_parts.append(text)
+                line = "".join(para_parts)
+                if line.strip():
+                    text_parts.append(line)
+
+        # Tabellen als Markdown
+        tables_md: list[str] = []
+        if extract_tables:
+            for t_idx, table in enumerate(doc.tables):
+                rows: list[list[str]] = []
+                for row in table.rows:
+                    rows.append([cell.text.strip() for cell in row.cells])
+                if rows:
+                    md_rows = [
+                        "| " + " | ".join(rows[0]) + " |",
+                        "| " + " | ".join("---" for _ in rows[0]) + " |",
+                    ]
+                    for row in rows[1:]:
+                        md_rows.append("| " + " | ".join(row) + " |")
+                    tables_md.append(
+                        f"Tabelle #{t_idx + 1}:\n" + "\n".join(md_rows)
+                    )
+
+        # Bilder extrahieren
+        image_paths: list[str] = []
+        if extract_images:
+            img_dir = self._workspace / "docx_images"
+            img_dir.mkdir(parents=True, exist_ok=True)
+            img_idx = 0
+            for rel in doc.part.rels.values():
+                if "image" in rel.reltype:
+                    try:
+                        img_idx += 1
+                        blob = rel.target_part.blob
+                        content_type = rel.target_part.content_type or "image/png"
+                        ext = content_type.split("/")[-1]
+                        img_path = img_dir / f"image_{img_idx}.{ext}"
+                        img_path.write_bytes(blob)
+                        image_paths.append(str(img_path))
+                    except Exception:
+                        pass
+
+        # Metadaten
+        props = doc.core_properties
+        metadata: dict[str, Any] = {
+            "author": props.author or "",
+            "title": props.title or "",
+            "created": str(props.created) if props.created else "",
+            "modified": str(props.modified) if props.modified else "",
+            "paragraph_count": len(doc.paragraphs),
+            "table_count": len(doc.tables),
+        }
+
+        full_text = "\n\n".join(text_parts)
+        if tables_md:
+            full_text += "\n\n" + "\n\n".join(tables_md)
+        if image_paths:
+            full_text += "\n\nExtrahierte Bilder:\n" + "\n".join(image_paths)
+            metadata["images"] = image_paths
+
+        log.info(
+            "read_docx_done",
+            path=str(path),
+            paragraphs=len(doc.paragraphs),
+            tables=len(tables_md),
+            images=len(image_paths),
+        )
+        return MediaResult(success=True, text=full_text, metadata=metadata)
 
     # ========================================================================
     # Dokument-Analyse (LLM-gestützt)
@@ -1199,6 +1601,75 @@ MEDIA_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
             "required": ["content"],
         },
     },
+    "read_pdf": {
+        "description": (
+            "Liest ein PDF-Dokument strukturiert: Text pro Seite, Metadaten, "
+            "optional Bilder und Tabellen extrahieren. Lokal via PyMuPDF."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_path": {"type": "string", "description": "Pfad zur PDF-Datei"},
+                "extract_images": {
+                    "type": "boolean",
+                    "description": "Eingebettete Bilder extrahieren",
+                    "default": False,
+                },
+                "extract_tables": {
+                    "type": "boolean",
+                    "description": "Tabellen als Markdown extrahieren",
+                    "default": False,
+                },
+                "pages": {
+                    "type": "string",
+                    "description": "Seitenbereich (z.B. '1-5', '3', leer=alle)",
+                    "default": "",
+                },
+            },
+            "required": ["file_path"],
+        },
+    },
+    "read_ppt": {
+        "description": (
+            "Liest eine PowerPoint-Praesentation (.pptx): Folieninhalt mit Formatierung, "
+            "Sprechernotizen, optional Bilder. Lokal via python-pptx."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_path": {"type": "string", "description": "Pfad zur PPTX-Datei"},
+                "extract_images": {
+                    "type": "boolean",
+                    "description": "Eingebettete Bilder extrahieren",
+                    "default": False,
+                },
+            },
+            "required": ["file_path"],
+        },
+    },
+    "read_docx": {
+        "description": (
+            "Liest ein Word-Dokument (.docx) strukturiert: Absaetze mit Formatierung, "
+            "Tabellen als Markdown, Metadaten, optional Bilder. Lokal via python-docx."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_path": {"type": "string", "description": "Pfad zur DOCX-Datei"},
+                "extract_images": {
+                    "type": "boolean",
+                    "description": "Eingebettete Bilder extrahieren",
+                    "default": False,
+                },
+                "extract_tables": {
+                    "type": "boolean",
+                    "description": "Tabellen als Markdown extrahieren",
+                    "default": True,
+                },
+            },
+            "required": ["file_path"],
+        },
+    },
 }
 
 
@@ -1314,6 +1785,36 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
             return result.output_path or result.text
         return f"Fehler: {result.error}"
 
+    async def _read_pdf(
+        file_path: str,
+        extract_images: bool = False,
+        extract_tables: bool = False,
+        pages: str = "",
+        **_: Any,
+    ) -> str:
+        result = await pipeline.read_pdf(
+            file_path, extract_images=extract_images,
+            extract_tables=extract_tables, pages=pages,
+        )
+        return result.text if result.success else f"Fehler: {result.error}"
+
+    async def _read_ppt(
+        file_path: str, extract_images: bool = False, **_: Any,
+    ) -> str:
+        result = await pipeline.read_ppt(file_path, extract_images=extract_images)
+        return result.text if result.success else f"Fehler: {result.error}"
+
+    async def _read_docx(
+        file_path: str,
+        extract_images: bool = False,
+        extract_tables: bool = True,
+        **_: Any,
+    ) -> str:
+        result = await pipeline.read_docx(
+            file_path, extract_images=extract_images, extract_tables=extract_tables,
+        )
+        return result.text if result.success else f"Fehler: {result.error}"
+
     handlers = {
         "media_transcribe_audio": _transcribe,
         "media_analyze_image": _analyze_image,
@@ -1323,6 +1824,9 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
         "media_tts": _tts,
         "analyze_document": _analyze_document,
         "document_export": _export_document,
+        "read_pdf": _read_pdf,
+        "read_ppt": _read_ppt,
+        "read_docx": _read_docx,
     }
 
     for name, schema in MEDIA_TOOL_SCHEMAS.items():

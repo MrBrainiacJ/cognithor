@@ -423,6 +423,9 @@ class Gatekeeper:
             "analyze_code",
             "list_skills",
             "search_community_skills",
+            "read_pdf",
+            "read_ppt",
+            "read_docx",
         }
         if tool in green_tools:
             return RiskLevel.GREEN

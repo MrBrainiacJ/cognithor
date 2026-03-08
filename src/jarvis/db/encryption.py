@@ -4,7 +4,7 @@ Provides a centralized way to open SQLite connections with optional
 encryption via SQLCipher, storing the encryption key in the OS keyring
 (Windows Credential Locker, macOS Keychain, Linux SecretService).
 
-If sqlcipher3 or keyring are not installed, falls back gracefully to
+If pysqlcipher3 or keyring are not installed, falls back gracefully to
 plain sqlite3 with appropriate warnings.
 """
 
@@ -32,27 +32,27 @@ def open_sqlite(
 
     Args:
         db_path: Path to the database file.
-        encryption_key: Hex key for SQLCipher. If provided and sqlcipher3
+        encryption_key: Hex key for SQLCipher. If provided and pysqlcipher3
             is available, PRAGMA key is issued immediately after connect.
-            If sqlcipher3 is not installed, falls back to plain sqlite3
+            If pysqlcipher3 is not installed, falls back to plain sqlite3
             with a warning.
 
     Returns:
-        A sqlite3.Connection (or sqlcipher3-compatible Connection).
+        A sqlite3.Connection (or pysqlcipher3-compatible Connection).
     """
     db_path = str(db_path)
 
     if encryption_key:
         try:
-            import sqlcipher3  # type: ignore[import-untyped]
+            from pysqlcipher3 import dbapi2 as sqlcipher  # type: ignore[import-untyped]
 
-            conn = sqlcipher3.connect(db_path, check_same_thread=False)
+            conn = sqlcipher.connect(db_path, check_same_thread=False)
             conn.execute(f"PRAGMA key='{encryption_key}'")
             log.info("SQLCipher-Verbindung hergestellt: %s", db_path)
             return conn
         except ImportError:
             log.warning(
-                "SQLCipher angefordert aber sqlcipher3 nicht installiert. "
+                "SQLCipher angefordert aber pysqlcipher3 nicht installiert. "
                 "Fallback auf unverschluesseltes sqlite3: %s",
                 db_path,
             )

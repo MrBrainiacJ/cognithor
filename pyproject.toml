@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cognithor"
-version = "0.29.0"
+version = "0.30.0"
 description = "Cognithor · Agent OS — Local-first autonomous agent operating system"
 readme = "README.md"
 license = "Apache-2.0"
@@ -109,6 +109,8 @@ twitch = [
 documents = [
     "fpdf2>=2.7,<3",
     "python-docx>=1.0,<2",
+    "pymupdf>=1.23",
+    "python-pptx>=0.6",
 ]
 search = [
     "trafilatura>=2.0",
@@ -130,11 +132,11 @@ browser = [
     "playwright>=1.40",
 ]
 encryption = [
-    "sqlcipher3-binary>=0.5",
+    "pysqlcipher3==1.2.0",
     "keyring>=25.0",
 ]
 all = [
-    "cognithor[memory,vector,mcp,telegram,web,search,cron,documents,encryption]",
+    "cognithor[memory,vector,mcp,telegram,web,search,cron,documents]",
 ]
 full = [
     "cognithor[all,voice,elevenlabs,postgresql,google-chat,discord,slack,matrix,whatsapp,signal,teams,irc,twitch,distributed,browser,encryption,dev]",

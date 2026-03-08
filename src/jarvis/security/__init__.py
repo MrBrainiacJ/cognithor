@@ -74,6 +74,7 @@ from jarvis.security.capabilities import (
     STANDARD,
     PERMISSIVE,
 )
+from jarvis.security.mtls import ensure_mtls_certs
 from jarvis.security.token_store import (
     SecureTokenStore,
     create_ssl_context,
@@ -121,6 +122,7 @@ __all__ = [
     "PERMISSIVE",
     "SecureTokenStore",
     "create_ssl_context",
+    "ensure_mtls_certs",
     "get_token_store",
     "validate_model_path_containment",
     "validate_voice_name",

@@ -42,7 +42,7 @@ _MALWARE_DOMAINS: frozenset[str] = frozenset(
 
 
 # ============================================================================
-# Bekannte MCP-Tools (48 Tools ueber 10 Module)
+# Bekannte MCP-Tools (51 Tools ueber 10 Module)
 # ============================================================================
 
 KNOWN_MCP_TOOLS: frozenset[str] = frozenset(
@@ -73,6 +73,10 @@ KNOWN_MCP_TOOLS: frozenset[str] = frozenset(
         "media_convert_audio",
         "media_resize_image",
         "document_export",
+        "read_pdf",
+        "read_ppt",
+        "read_docx",
+        "analyze_document",
         # Memory
         "save_to_memory",
         "search_memory",

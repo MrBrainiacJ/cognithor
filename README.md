@@ -29,7 +29,7 @@
 
 Most AI assistants send your data to the cloud. Cognithor runs entirely on your machine — with Ollama or LM Studio, no API keys required. Cloud providers are optional, not mandatory.
 
-It replaces a patchwork of tools with one integrated system: 17 channels, 48 MCP tools, 5-tier memory, knowledge vault, voice, browser automation, and more — all wired together from day one. 10,178 tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
+It replaces a patchwork of tools with one integrated system: 17 channels, 51 MCP tools, 5-tier memory, knowledge vault, voice, browser automation, and more — all wired together from day one. 10,178 tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
 
 ---
 
@@ -94,7 +94,17 @@ It replaces a patchwork of tools with one integrated system: 17 channels, 48 MCP
 
 ## What's New
 
-### v0.29.0 — QA Fixes, SQLite Encryption, Token Tracking
+### v0.30.0 — mTLS, Document Reading, DB Retry
+
+- **Document Reading** — 3 new MCP tools: `read_pdf` (PyMuPDF), `read_ppt` (python-pptx), `read_docx` (python-docx) with structured output, formatting, tables, images, metadata
+- **mTLS for WebUI API** — Mutual TLS with auto-generated CA/server/client certificates; prevents unauthorized API access (`security.mtls.enabled`)
+- **DB Retry Logic** — SQLite retries "database is locked" with exponential backoff + jitter (configurable)
+- **MCP tools: 48 → 51**
+
+**Previous Releases**
+
+- **v0.29.1** — CI sandbox test fix, `pysqlcipher3` dependency fix, encryption extras fix
+- **v0.29.0** — QA fixes: UI wiggle, unsaved changes, keyboard shortcuts, token tracking, SQLite encryption
 
 - **UI Stability** — Layout wiggle fixed (`scrollbar-gutter: stable`), unsaved-changes false positives eliminated, keyboard shortcuts made sequential (Cmd+1..0)
 - **Token Tracking** — `WorkingMemory.add_message()` now updates `token_count` live (was always 0)
@@ -125,7 +135,7 @@ It replaces a patchwork of tools with one integrated system: 17 channels, 48 MCP
 - **Security** — 4-level sandbox, SHA-256 audit chain, EU AI Act compliance module, credential vault, red-teaming, runtime token encryption (Fernet AES-256), TLS support, file-size limits (not independently audited — see [Status & Maturity](#status--maturity))
 - **Knowledge Vault** — Obsidian-compatible Markdown vault with YAML frontmatter, tags, `[[backlinks]]`, full-text search
 - **Document Analysis** — LLM-powered structured analysis of PDF/DOCX/HTML (summary, risks, action items, decisions)
-- **Model Context Protocol (MCP)** — 48 tools across 10 modules (filesystem, shell, memory, web, browser, media, vault, synthesis, code, skills)
+- **Model Context Protocol (MCP)** — 51 tools across 10 modules (filesystem, shell, memory, web, browser, media, vault, synthesis, code, skills)
 - **Distributed Locking** — Redis-backed (with file-based fallback) locks for multi-instance deployments
 - **Durable Message Queue** — SQLite-backed persistent queue with priorities, DLQ, and automatic retry
 - **Prometheus Metrics** — /metrics endpoint with Grafana dashboard for production observability
@@ -184,7 +194,7 @@ It replaces a patchwork of tools with one integrated system: 17 channels, 48 MCP
 ├─────────────┴──────────────┴──────────────────────────────────────┤
 │  DAG Workflow Engine · Workflow Adapter · Benchmark Suite             │
 ├───────────────────────────────────────────────────────────────────┤
-│                   MCP Tool Layer (48 tools)                          │
+│                   MCP Tool Layer (51 tools)                          │
 │   Filesystem · Shell · Memory · Web · Browser · Media · Vault      │
 │   Synthesis · Skills Marketplace · Remote Registry                  │
 ├───────────────────────────────────────────────────────────────────┤

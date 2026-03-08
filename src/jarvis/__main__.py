@@ -135,6 +135,14 @@ def main() -> None:
     # 2. Verzeichnisstruktur sicherstellen
     created = ensure_directory_structure(config)
 
+    # 2.5 mTLS-Zertifikate sicherstellen (wenn aktiviert)
+    _mtls_certs_dir = None
+    try:
+        from jarvis.security.mtls import ensure_mtls_certs as _ensure_mtls
+        _mtls_certs_dir = _ensure_mtls(config)
+    except ImportError:
+        pass  # cryptography nicht installiert
+
     # 3. Logging initialisieren
     from jarvis.utils.logging import setup_logging
 
@@ -873,7 +881,14 @@ def main() -> None:
                     "port": args.api_port,
                     "log_level": "warning",
                 }
-                if _ssl_cert and _ssl_key:
+                if _mtls_certs_dir is not None:
+                    # mTLS: Server-Zertifikat + Client-Verifizierung
+                    import ssl as _ssl_mod
+                    uvi_kwargs["ssl_certfile"] = str(_mtls_certs_dir / "server.pem")
+                    uvi_kwargs["ssl_keyfile"] = str(_mtls_certs_dir / "server-key.pem")
+                    uvi_kwargs["ssl_ca_certs"] = str(_mtls_certs_dir / "ca.pem")
+                    uvi_kwargs["ssl_cert_reqs"] = _ssl_mod.CERT_REQUIRED
+                elif _ssl_cert and _ssl_key:
                     uvi_kwargs["ssl_certfile"] = _ssl_cert
                     uvi_kwargs["ssl_keyfile"] = _ssl_key
 

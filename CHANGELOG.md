@@ -5,6 +5,26 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.30.0] – 2026-03-08
+
+### Added
+- **Dokument-Lese-Tools**: 3 neue MCP-Tools (`read_pdf`, `read_ppt`, `read_docx`) fuer strukturiertes Lesen von PDF, PowerPoint und Word-Dokumenten mit Formatierung, Tabellen, Bilderextraktion und Metadaten
+- **mTLS fuer WebUI-API**: Mutual TLS mit automatischer CA/Server/Client-Zertifikatsgenerierung; Malware kann sich nicht mehr als Frontend ausgeben (`security.mtls.enabled`)
+- **DB Retry-Logik**: SQLite-Backend wiederholt bei "database is locked" automatisch mit exponentiellem Backoff und Jitter (konfigurierbar via `database.sqlite_max_retries`)
+- **PPTX-Textextraktion**: `media_extract_text` unterstuetzt jetzt auch `.pptx`-Dateien
+
+### Changed
+- MCP-Tool-Anzahl: 48 → **51** (3 neue Dokument-Lese-Tools)
+- Dependencies: `pymupdf>=1.23` und `python-pptx>=0.6` in `[documents]` Extras
+
+## [0.29.1] – 2026-03-08
+
+### Fixed
+- **CI sandbox test on Windows**: Assertion now accepts `container`/`timeout` keywords in stderr (not just `docker`), fixing false failure on GitHub Actions Windows runners without Docker
+- **Encryption dependency**: Changed `sqlcipher3-binary` (non-existent on PyPI) to `pysqlcipher3==1.2.0` — the only cross-platform SQLCipher binding that works on Linux and Windows
+- **Encryption import**: Updated `open_sqlite()` to import from `pysqlcipher3.dbapi2` instead of `sqlcipher3`
+- **Install safety**: Removed `encryption` from `[all]` extras to prevent install failures for users without native SQLCipher build dependencies; encryption remains available via `pip install cognithor[encryption]` or `cognithor[full]`
+
 ## [0.29.0] – 2026-03-08
 
 ### Fixed

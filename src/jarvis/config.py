@@ -1358,6 +1358,14 @@ class LoggingConfig(BaseModel):
     console: bool = True
 
 
+class MtlsConfig(BaseModel):
+    """Mutual TLS Konfiguration fuer Frontend-Backend-Kommunikation."""
+
+    enabled: bool = Field(default=False, description="mTLS fuer WebUI-API aktivieren")
+    certs_dir: str = Field(default="", description="Zertifikats-Verzeichnis (Standard: ~/.jarvis/certs/)")
+    auto_generate: bool = Field(default=True, description="Zertifikate automatisch generieren")
+
+
 class SecurityConfig(BaseModel):
     """Sicherheits-Konfiguration. [B§11]"""
 
@@ -1406,6 +1414,9 @@ class SecurityConfig(BaseModel):
     ssl_certfile: str = Field(default="", description="Pfad zum SSL-Zertifikat (PEM)")
     ssl_keyfile: str = Field(default="", description="Pfad zum SSL-Privat-Key (PEM)")
 
+    # Mutual TLS fuer WebUI-API
+    mtls: MtlsConfig = Field(default_factory=MtlsConfig)
+
     # TTLDict-Defaults für Channel-Dicts
     channel_dict_ttl_seconds: int = Field(default=86400, ge=300, le=604800)
     channel_dict_max_size: int = Field(default=10000, ge=100, le=100000)
@@ -1446,6 +1457,8 @@ class DatabaseConfig(BaseModel):
         default="keyring",
         description="Schluessel-Backend: 'keyring' (OS Credential Store)",
     )
+    sqlite_max_retries: int = Field(default=5, ge=0, le=20)
+    sqlite_retry_base_delay: float = Field(default=0.1, ge=0.01, le=5.0)
 
 
 class QueueConfig(BaseModel):
