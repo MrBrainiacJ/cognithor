@@ -3,12 +3,42 @@ interface CanvasProps {
   onClose: () => void;
 }
 
+/**
+ * Sanitize HTML using DOMParser instead of regex to avoid
+ * incomplete multi-character sanitization and regex bypass attacks.
+ */
+function sanitizeHtml(raw: string): string {
+  const doc = new DOMParser().parseFromString(raw, 'text/html');
+
+  // Remove all <script>, <style>, <iframe>, <object>, <embed>, <link> elements
+  const dangerous = doc.querySelectorAll(
+    'script, style, iframe, object, embed, link, base, form'
+  );
+  dangerous.forEach(el => el.remove());
+
+  // Walk all elements and strip event handlers + javascript: URIs
+  const allElements = doc.body.querySelectorAll('*');
+  allElements.forEach(el => {
+    const attrs = Array.from(el.attributes);
+    for (const attr of attrs) {
+      // Remove all on* event handlers
+      if (attr.name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+      }
+      // Remove javascript: URIs from href, src, action, etc.
+      if (['href', 'src', 'action', 'formaction', 'xlink:href', 'data'].includes(attr.name)) {
+        if (/^\s*javascript\s*:/i.test(attr.value)) {
+          el.removeAttribute(attr.name);
+        }
+      }
+    }
+  });
+
+  return doc.body.innerHTML;
+}
+
 export function Canvas({ html, onClose }: CanvasProps) {
-  const sanitizedHtml = html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
-    .replace(/on\w+\s*=\s*'[^']*'/gi, '')
-    .replace(/javascript\s*:/gi, 'void:');
+  const sanitizedHtml = sanitizeHtml(html);
 
   const srcdoc = `<!DOCTYPE html>
 <html>
