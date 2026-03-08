@@ -99,7 +99,12 @@ class TestSmokeTestScript:
         """smoke_test.py hat gültige Python-Syntax."""
         script = PROJECT_ROOT / "scripts" / "smoke_test.py"
         result = subprocess.run(
-            [sys.executable, "-c", "import ast, sys; ast.parse(open(sys.argv[1]).read()); print('OK')", str(script)],
+            [
+                sys.executable,
+                "-c",
+                "import ast, sys; ast.parse(open(sys.argv[1]).read()); print('OK')",
+                str(script),
+            ],
             capture_output=True,
             text=True,
         )
