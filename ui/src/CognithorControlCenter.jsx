@@ -65,14 +65,24 @@ const HTTP_ERRORS = {
   504: "Backend-Timeout – Anfrage dauert zu lange",
 };
 
-async function api(method, path, body) {
+async function _ccFetch(method, path, body) {
   const token = await getCCToken();
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
+  return fetch(`${API}${path}`, opts);
+}
+
+async function api(method, path, body) {
   try {
-    const r = await fetch(`${API}${path}`, opts);
+    let r = await _ccFetch(method, path, body);
+    // On 401, token may be stale — re-fetch and retry once
+    if (r.status === 401) {
+      _ccToken = null;
+      _ccTokenPromise = null;
+      r = await _ccFetch(method, path, body);
+    }
     if (!r.ok) {
       const friendly = HTTP_ERRORS[r.status] || `HTTP ${r.status}`;
       return { error: friendly, status: r.status };
@@ -1296,7 +1306,7 @@ function BindingsPage({ bindings, setBindings, agents }) {
 
 // ── System ──────────────────────────────────────────────────────────────
 // Fix #14: Preset details expandable + Fix #16: Import button
-function SystemPage({ cfg, onRestart, onExport, onImport, restartState, presets, onApplyPreset }) {
+function SystemPage({ cfg, onRestart, onExport, onImport, restartState, presets, onApplyPreset, onResetDefaults }) {
   const [expandedPreset, setExpandedPreset] = useState(null);
   const fileRef = useRef(null);
   const PRESET_DETAILS = {
@@ -1339,6 +1349,10 @@ function SystemPage({ cfg, onRestart, onExport, onImport, restartState, presets,
         <button className="cc-btn" onClick={() => fileRef.current?.click()} type="button">{I.upload} Konfiguration importieren</button>
         <input ref={fileRef} type="file" accept=".json" style={{display:"none"}} onChange={e => { if (e.target.files[0]) onImport(e.target.files[0]); e.target.value = ""; }} />
       </div>
+    </Card>
+    <Card title="Werkseinstellungen">
+      <p className="cc-desc">Setzt alle Konfigurationseinstellungen auf die Standardwerte zurück. API-Keys und gespeicherte Daten (Memory, Skills, Workflows) bleiben erhalten.</p>
+      <button className="cc-btn cc-btn-danger" onClick={onResetDefaults} type="button">{I.reset} Alle Einstellungen zurücksetzen</button>
     </Card>
     <Card title="System-Info">
       <div className="cc-info-grid">
@@ -1684,6 +1698,14 @@ export default function App() {
     }
   };
 
+  // Reset all settings to defaults
+  const resetToDefaults = useCallback(async () => {
+    if (!await styledConfirm({ title: "Werkseinstellungen", message: "ALLE Einstellungen auf Standardwerte zurücksetzen? API-Keys und gespeicherte Daten bleiben erhalten.", danger: true })) return;
+    if (!await styledConfirm({ title: "Wirklich zurücksetzen?", message: "Dies kann nicht rückgängig gemacht werden. Bist du sicher?", danger: true })) return;
+    setCfg(defaults());
+    toast("Einstellungen auf Standardwerte zurückgesetzt — bitte speichern!", "info");
+  }, [toast, styledConfirm]);
+
   // Apply preset
   const onApplyPreset = async (name) => {
     if (!await styledConfirm({ title: "Preset anwenden", message: `Preset "${name}" anwenden? Aktuelle Einstellungen werden überschrieben.` })) return;
@@ -1778,7 +1800,7 @@ export default function App() {
       case "bindings": return <BindingsPage bindings={bindings} setBindings={setBindings} agents={agents} />;
       case "workflows": return <WorkflowGraphPage />;
       case "knowledge-graph": return <KnowledgeGraphPage />;
-      case "system": return <SystemPage cfg={cfg} onRestart={restart} onExport={onExport} onImport={onImport} restartState={restartState} presets={presets} onApplyPreset={onApplyPreset} />;
+      case "system": return <SystemPage cfg={cfg} onRestart={restart} onExport={onExport} onImport={onImport} restartState={restartState} presets={presets} onApplyPreset={onApplyPreset} onResetDefaults={resetToDefaults} />;
       default: return null;
     }
   };
@@ -1920,7 +1942,8 @@ export default function App() {
         .cc-btn-restart.pulsing { animation: pulse 1.5s infinite; }
 
         /* Fix #18: Save bar with safe-area */
-        .cc-save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 100; backdrop-filter: blur(20px); }
+        .cc-save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 100; backdrop-filter: blur(20px); transform: translateY(100%); opacity: 0; pointer-events: none; transition: transform 0.25s ease, opacity 0.25s ease; }
+        .cc-save-bar-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
         .cc-save-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 32px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
         .cc-save-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; }
         .cc-save-btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
@@ -2219,32 +2242,26 @@ export default function App() {
         </main>
       </div>
 
-      {/* Fix #1 + #18: Save bar with dirty state + safe area */}
+      {/* Fix #1 + #18: Save bar — only visible when there are changes */}
       {page !== "chat" && page !== "workflows" && page !== "knowledge-graph" && (
-        <div className="cc-save-bar">
-          {hasChanges ? (
-            <>
-              <span className="cc-save-hint">Ungespeicherte Änderungen</span>
-              <button
-                className="cc-save-btn cc-save-btn-revert"
-                onClick={revertChanges}
-                type="button"
-              >
-                {I.reset} Verwerfen
-              </button>
-              <button
-                className={`cc-save-btn ${saveState === "saved" ? "saved" : "primary"}`}
-                onClick={save}
-                disabled={saveState === "saving"}
-                type="button"
-              >
-                {saveState === "saving" ? "⏳ Speichern..." : saveState === "saved" ? <>{I.check} Gespeichert!</> : <>{I.save} Änderungen speichern</>}
-              </button>
-              <span className="cc-save-hint" style={{opacity: 0.4}}>⌘S</span>
-            </>
-          ) : (
-            <span className="cc-save-hint" style={{opacity: 0.5}}>Keine Änderungen</span>
-          )}
+        <div className={`cc-save-bar ${hasChanges ? "cc-save-bar-visible" : ""}`}>
+          <span className="cc-save-hint">Ungespeicherte Änderungen</span>
+          <button
+            className="cc-save-btn cc-save-btn-revert"
+            onClick={revertChanges}
+            type="button"
+          >
+            {I.reset} Verwerfen
+          </button>
+          <button
+            className={`cc-save-btn ${saveState === "saved" ? "saved" : "primary"}`}
+            onClick={save}
+            disabled={saveState === "saving"}
+            type="button"
+          >
+            {saveState === "saving" ? "Speichern..." : saveState === "saved" ? <>{I.check} Gespeichert!</> : <>{I.save} Änderungen speichern</>}
+          </button>
+          <span className="cc-save-hint" style={{opacity: 0.4}}>Ctrl+S</span>
         </div>
       )}
     </div>

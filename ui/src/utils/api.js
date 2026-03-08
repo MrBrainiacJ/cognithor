@@ -26,14 +26,30 @@ export async function getToken() {
   return _tokenPromise;
 }
 
-export async function api(method, path, body) {
+/** Force re-fetch the token (e.g. after a 401). */
+function invalidateToken() {
+  _token = null;
+  _tokenPromise = null;
+}
+
+async function _doFetch(method, path, body) {
   const token = await getToken();
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${API}${path}`, opts);
+  return r;
+}
+
+export async function api(method, path, body) {
   try {
-    const r = await fetch(`${API}${path}`, opts);
+    let r = await _doFetch(method, path, body);
+    // On 401, the token may be stale — re-fetch and retry once
+    if (r.status === 401) {
+      invalidateToken();
+      r = await _doFetch(method, path, body);
+    }
     if (!r.ok) return { error: `HTTP ${r.status}`, status: r.status };
     const text = await r.text();
     if (!text) return {};
