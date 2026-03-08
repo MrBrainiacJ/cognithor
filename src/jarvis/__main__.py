@@ -586,10 +586,11 @@ def main() -> None:
                     model_path = voices_dir / f"{voice}.onnx"
 
                     # Defense-in-depth: ensure resolved path stays in voices_dir
-                    resolved_model = model_path.resolve()
-                    resolved_voices = voices_dir.resolve()
-                    if resolved_voices not in resolved_model.parents and resolved_voices != resolved_model.parent:
-                        raise ValueError(f"Modellpfad verletzt Verzeichnisgrenzen: {model_path}")
+                    import os.path as _osp
+                    _norm_model = _osp.normpath(_osp.realpath(str(model_path)))
+                    _norm_voices = _osp.normpath(_osp.realpath(str(voices_dir)))
+                    if not _norm_model.startswith(_norm_voices + _osp.sep):
+                        raise ValueError("Modellpfad verletzt Verzeichnisgrenzen")
 
                     # Auto-Download wenn nicht vorhanden
                     if not model_path.exists():
@@ -617,8 +618,9 @@ def main() -> None:
                         # Multi-speaker models (e.g. thorsten_emotional) need --speaker
                         model_json = model_path.with_suffix(".onnx.json")
                         # CWE-22: validate derived path stays within voices_dir
-                        if resolved_voices not in model_json.resolve().parents:
-                            raise ValueError(f"Modell-JSON verletzt Verzeichnisgrenzen: {model_json}")
+                        _norm_json = _osp.normpath(_osp.realpath(str(model_json)))
+                        if not _norm_json.startswith(_norm_voices + _osp.sep):
+                            raise ValueError("Modell-JSON verletzt Verzeichnisgrenzen")
                         if model_json.exists():
                             try:
                                 import json as _mj
