@@ -806,7 +806,7 @@ class WebTools:
             if not cache_file.exists():
                 return None
             data = json.loads(cache_file.read_text(encoding="utf-8"))
-            if time.time() - data.get("ts", 0) > self._ddg_cache_ttl:
+            if time.time() - data.get("ts", 0) >= self._ddg_cache_ttl:
                 # Abgelaufen → löschen
                 cache_file.unlink(missing_ok=True)
                 return None
