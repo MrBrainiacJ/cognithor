@@ -212,11 +212,10 @@ class TestValidateCommandExtended:
     """Erweiterte Tests fuer _validate_command."""
 
     def test_multiple_path_traversals(self) -> None:
-        """Drei-Level-Path-Traversal auf sensitive Datei -> kein Hard Block, nur Warning."""
+        """Drei-Level-Path-Traversal auf sensitive Datei -> Hard Block."""
         result = ShellTools._validate_command("cat ../../../etc/shadow", "/workspace")
-        # _validate_command gibt nur bei Null-Bytes einen Hard Block zurueck.
-        # Path Traversal wird nur geloggt (Warning), nicht blockiert.
-        assert result is None
+        assert result is not None
+        assert "Path-Traversal" in result
 
     def test_safe_file_command(self) -> None:
         """Datei-Zugriff innerhalb des Workspace -> kein Warning, kein Block."""
