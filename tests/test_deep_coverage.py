@@ -152,10 +152,10 @@ class TestBrowserTools:
         mcp = MagicMock()
         mcp._tools = {}
 
-        def register_tool(name, description, parameters, handler):
-            mcp._tools[name] = handler
+        def register_builtin_handler(tool_name="", description="", input_schema=None, handler=None):
+            mcp._tools[tool_name] = handler
 
-        mcp.register_tool = register_tool
+        mcp.register_builtin_handler = register_builtin_handler
         return mcp
 
     def test_register_browser_use_tools_returns_agent(self):

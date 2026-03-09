@@ -65,11 +65,11 @@ def register_browser_use_tools(
         state = await agent.navigate(url)
         return json.dumps(state.to_dict(), ensure_ascii=False)
 
-    mcp_client.register_tool(
-        name="browser_navigate",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_navigate",
         description="Navigiert zu einer URL und analysiert die Seite. "
         "Gibt Seitenstruktur zurück: Titel, Links, Buttons, Inputs, Formulare.",
-        parameters={"url": {"type": "string", "description": "Die zu ladende URL"}},
+        input_schema={"url": {"type": "string", "description": "Die zu ladende URL"}},
         handler=_navigate,
     )
 
@@ -88,10 +88,10 @@ def register_browser_use_tools(
 
         return json.dumps(result.to_dict())
 
-    mcp_client.register_tool(
-        name="browser_click",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_click",
         description="Klickt auf ein Element. Entweder per CSS-Selector oder Beschreibung.",
-        parameters={
+        input_schema={
             "selector": {"type": "string", "description": "CSS-Selector (optional)"},
             "description": {
                 "type": "string",
@@ -111,10 +111,10 @@ def register_browser_use_tools(
         result = await agent.fill(selector, value)
         return json.dumps(result.to_dict())
 
-    mcp_client.register_tool(
-        name="browser_fill",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_fill",
         description="Füllt ein Formularfeld aus.",
-        parameters={
+        input_schema={
             "selector": {"type": "string", "description": "CSS-Selector des Feldes"},
             "value": {"type": "string", "description": "Einzugebender Wert"},
         },
@@ -136,10 +136,10 @@ def register_browser_use_tools(
             }
         )
 
-    mcp_client.register_tool(
-        name="browser_fill_form",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_fill_form",
         description="Füllt ein ganzes Formular mit mehreren Feldern aus.",
-        parameters={
+        input_schema={
             "data": {"type": "object", "description": "Mapping Feldname → Wert"},
             "submit": {"type": "boolean", "description": "Formular absenden?"},
         },
@@ -161,10 +161,10 @@ def register_browser_use_tools(
             )
         return json.dumps(result.to_dict())
 
-    mcp_client.register_tool(
-        name="browser_screenshot",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_screenshot",
         description="Erstellt einen Screenshot der aktuellen Seite.",
-        parameters={
+        input_schema={
             "full_page": {"type": "boolean", "description": "Ganze Seite oder nur Viewport?"},
         },
         handler=_screenshot,
@@ -188,10 +188,10 @@ def register_browser_use_tools(
         else:
             return json.dumps({"error": f"Unknown mode: {mode}"})
 
-    mcp_client.register_tool(
-        name="browser_extract",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_extract",
         description="Extrahiert Inhalte von der Seite: Text, Tabellen oder Links.",
-        parameters={
+        input_schema={
             "mode": {"type": "string", "description": "text|tables|links"},
             "selector": {"type": "string", "description": "CSS-Selector (nur für text)"},
         },
@@ -210,10 +210,10 @@ def register_browser_use_tools(
             ensure_ascii=False,
         )
 
-    mcp_client.register_tool(
-        name="browser_analyze",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_analyze",
         description="Analysiert die aktuelle Seite: Formulare, Buttons, Links, Inputs.",
-        parameters={},
+        input_schema={},
         handler=_analyze,
     )
 
@@ -244,10 +244,10 @@ def register_browser_use_tools(
         result = await agent.execute_js(script)
         return json.dumps(result.to_dict())
 
-    mcp_client.register_tool(
-        name="browser_execute_js",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_execute_js",
         description="Führt JavaScript auf der Seite aus.",
-        parameters={"script": {"type": "string", "description": "JavaScript-Code"}},
+        input_schema={"script": {"type": "string", "description": "JavaScript-Code"}},
         handler=_execute_js,
     )
 
@@ -273,10 +273,10 @@ def register_browser_use_tools(
             )
         return json.dumps({"error": f"Unknown tab action: {action}"})
 
-    mcp_client.register_tool(
-        name="browser_tab",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_tab",
         description="Tab-Management: new, close, switch, list.",
-        parameters={
+        input_schema={
             "action": {"type": "string", "description": "new|close|switch|list"},
             "url": {"type": "string", "description": "URL für neuen Tab"},
             "index": {"type": "integer", "description": "Tab-Index"},
@@ -291,10 +291,10 @@ def register_browser_use_tools(
         result = await agent.press_key(key)
         return json.dumps(result.to_dict())
 
-    mcp_client.register_tool(
-        name="browser_key",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_key",
         description="Drückt eine Taste (Enter, Tab, Escape, ArrowDown, etc.).",
-        parameters={"key": {"type": "string", "description": "Taste (z.B. Enter, Tab)"}},
+        input_schema={"key": {"type": "string", "description": "Taste (z.B. Enter, Tab)"}},
         handler=_key,
     )
 
@@ -316,11 +316,11 @@ def register_browser_use_tools(
         result = await agent.analyze_page_with_vision(prompt)
         return json.dumps(result, ensure_ascii=False)
 
-    mcp_client.register_tool(
-        name="browser_vision_analyze",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_vision_analyze",
         description="Screenshot der Seite + KI-Vision-Analyse. "
         "Kombiniert DOM-Analyse mit visueller Beschreibung.",
-        parameters={
+        input_schema={
             "prompt": {"type": "string", "description": "Optionaler Analyse-Prompt"},
         },
         handler=_vision_analyze,
@@ -346,11 +346,11 @@ def register_browser_use_tools(
         result = await agent.find_and_click_with_vision(description)
         return json.dumps(result.to_dict())
 
-    mcp_client.register_tool(
-        name="browser_vision_find",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_vision_find",
         description="Element per Beschreibung finden (Text-Match + Vision-Fallback). "
         "Klickt das Element wenn gefunden.",
-        parameters={
+        input_schema={
             "description": {
                 "type": "string",
                 "description": "Beschreibung des Elements (z.B. 'blauer Login-Button')",
@@ -394,11 +394,11 @@ def register_browser_use_tools(
             ensure_ascii=False,
         )
 
-    mcp_client.register_tool(
-        name="browser_vision_screenshot",
+    mcp_client.register_builtin_handler(
+        tool_name="browser_vision_screenshot",
         description="Screenshot mit KI-Beschreibung statt rohem Base64. "
         "Gibt eine textuelle Beschreibung des Screenshots zurück.",
-        parameters={
+        input_schema={
             "full_page": {"type": "boolean", "description": "Ganze Seite oder nur Viewport?"},
         },
         handler=_vision_screenshot,

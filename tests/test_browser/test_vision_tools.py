@@ -22,10 +22,10 @@ class TestVisionToolRegistration:
         mcp_mock = MagicMock()
         registered_tools: dict[str, Any] = {}
 
-        def mock_register(name: str, **kwargs: Any) -> None:
-            registered_tools[name] = kwargs
+        def mock_register(tool_name: str = "", **kwargs: Any) -> None:
+            registered_tools[tool_name] = kwargs
 
-        mcp_mock.register_tool = mock_register
+        mcp_mock.register_builtin_handler = mock_register
 
         mock_vision = MagicMock()
         agent = register_browser_use_tools(mcp_mock, vision_analyzer=mock_vision)
@@ -39,10 +39,10 @@ class TestVisionToolRegistration:
         mcp_mock = MagicMock()
         registered_tools: dict[str, Any] = {}
 
-        def mock_register(name: str, **kwargs: Any) -> None:
-            registered_tools[name] = kwargs
+        def mock_register(tool_name: str = "", **kwargs: Any) -> None:
+            registered_tools[tool_name] = kwargs
 
-        mcp_mock.register_tool = mock_register
+        mcp_mock.register_builtin_handler = mock_register
 
         agent = register_browser_use_tools(mcp_mock)
 
@@ -56,10 +56,10 @@ class TestVisionToolRegistration:
         mcp_mock = MagicMock()
         registered_tools: dict[str, Any] = {}
 
-        def mock_register(name: str, **kwargs: Any) -> None:
-            registered_tools[name] = kwargs
+        def mock_register(tool_name: str = "", **kwargs: Any) -> None:
+            registered_tools[tool_name] = kwargs
 
-        mcp_mock.register_tool = mock_register
+        mcp_mock.register_builtin_handler = mock_register
 
         register_browser_use_tools(mcp_mock)
 
@@ -82,10 +82,10 @@ class TestVisionToolRegistration:
         mcp_mock = MagicMock()
         registered_tools: dict[str, Any] = {}
 
-        def mock_register(name: str, **kwargs: Any) -> None:
-            registered_tools[name] = kwargs
+        def mock_register(tool_name: str = "", **kwargs: Any) -> None:
+            registered_tools[tool_name] = kwargs
 
-        mcp_mock.register_tool = mock_register
+        mcp_mock.register_builtin_handler = mock_register
 
         register_browser_use_tools(mcp_mock, vision_analyzer=MagicMock())
         assert len(registered_tools) == 13

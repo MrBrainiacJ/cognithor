@@ -236,11 +236,16 @@ def setup_logging(
             **{_pad_kwarg: 40},
         )
 
+    # format_exc_info conflicts with ConsoleRenderer's pretty exceptions.
+    # Only include it when using JSON output.
+    exc_processors: list[structlog.types.Processor] = (
+        [structlog.processors.format_exc_info] if json_logs else []
+    )
+
     structlog.configure(
         processors=[
             *shared_processors,
-            # Format-Prüfung: Verhindert fehlerhafte Log-Calls
-            structlog.processors.format_exc_info,
+            *exc_processors,
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
