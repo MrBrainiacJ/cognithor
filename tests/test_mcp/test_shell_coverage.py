@@ -43,7 +43,8 @@ class TestValidateCommand:
 
     def test_file_command_escape(self) -> None:
         result = ShellTools._validate_command("cat /etc/passwd", "/workspace")
-        assert result is None  # Warns but does not block
+        assert result is not None  # Blocked: path outside workspace
+        assert "außerhalb" in result or "ausserhalb" in result or "blockiert" in result
 
 
 class TestExecCommand:
