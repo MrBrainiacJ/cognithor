@@ -29,7 +29,7 @@ class TestClassifyErrorForUser:
     def test_timeout_error(self) -> None:
         exc = TimeoutError("Operation timed out")
         msg = classify_error_for_user(exc)
-        assert "zu lange gedauert" in msg
+        assert "Zeitlimit" in msg
 
     def test_connection_error(self) -> None:
         exc = ConnectionError("Connection refused")
