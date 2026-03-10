@@ -2043,7 +2043,7 @@ export default function App() {
         .cc-global-search-trigger:hover { border-color: var(--accent); color: var(--accent); }
         .cc-global-search-hint { color: var(--text2); }
         .cc-global-search-kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 1px 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; margin-left: 4px; }
-        .cc-global-search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; display: flex; align-items: flex-start; justify-content: center; padding-top: 15vh; }
+        .cc-global-search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); z-index: 250; display: flex; align-items: flex-start; justify-content: center; padding-top: 15vh; animation: modalIn 0.15s ease-out; }
         .cc-global-search-dialog { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; width: 90%; max-width: 520px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
         .cc-global-search-input-wrap { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text2); }
         .cc-global-search-input { flex: 1; background: transparent; border: none; color: var(--text); font-size: 15px; font-family: inherit; outline: none; }

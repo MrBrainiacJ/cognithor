@@ -2060,7 +2060,16 @@ def load_config(config_path: Path | None = None) -> JarvisConfig:
     # 3. Version aus YAML ignorieren — immer aus dem Package nehmen
     data.pop("version", None)
 
-    # 4. Pydantic validiert und füllt Defaults
+    # 4. Model-Strings aus Env-Vars in ModelConfig-Dicts konvertieren
+    #    JARVIS_MODELS_PLANNER=qwen3.5:9b → {"name": "qwen3.5:9b"}
+    _MODEL_ROLES = {"planner", "executor", "coder", "coder_fast", "embedding"}
+    if "models" in data and isinstance(data["models"], dict):
+        for role in _MODEL_ROLES:
+            val = data["models"].get(role)
+            if isinstance(val, str):
+                data["models"][role] = {"name": val}
+
+    # 5. Pydantic validiert und füllt Defaults
     return JarvisConfig(**data)
 
 

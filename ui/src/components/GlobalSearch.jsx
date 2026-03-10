@@ -69,8 +69,11 @@ export function GlobalSearch({ onNavigate }) {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        setOpen(true);
-        setTimeout(() => inputRef.current?.focus(), 50);
+        setOpen(prev => {
+          if (!prev) setTimeout(() => inputRef.current?.focus(), 50);
+          else setQuery("");
+          return !prev;
+        });
       }
       if (e.key === "Escape") {
         setOpen(false);

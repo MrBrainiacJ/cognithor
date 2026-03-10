@@ -776,6 +776,37 @@ class Gateway:
                 except Exception:
                     log.debug("model_router_config_reload_failed", exc_info=True)
 
+            # Recreate UnifiedLLMClient if backend type changed
+            if self._llm is not None:
+                old_backend = getattr(self._llm, "backend_type", "ollama")
+                new_backend = new_config.llm_backend_type
+                if old_backend != new_backend:
+                    try:
+                        from jarvis.core.unified_llm import UnifiedLLMClient
+
+                        old_llm = self._llm
+                        self._llm = UnifiedLLMClient.create(new_config)
+                        # Update references in Planner/Executor
+                        if self._planner and hasattr(self._planner, "_ollama"):
+                            self._planner._ollama = self._llm
+                        if self._executor and hasattr(self._executor, "_ollama"):
+                            self._executor._ollama = self._llm
+                        # Close old client
+                        import asyncio
+
+                        try:
+                            loop = asyncio.get_running_loop()
+                            loop.create_task(old_llm.close())
+                        except RuntimeError:
+                            pass
+                        log.info(
+                            "llm_backend_switched",
+                            old=old_backend,
+                            new=new_backend,
+                        )
+                    except Exception:
+                        log.warning("llm_backend_switch_failed", exc_info=True)
+
             # Live-update Planner with new config
             if self._planner and hasattr(self._planner, "_config"):
                 try:

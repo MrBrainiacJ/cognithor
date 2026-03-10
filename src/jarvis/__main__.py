@@ -312,12 +312,22 @@ def main() -> None:
 
                 _rate_limit = int(os.environ.get("JARVIS_API_RATE_LIMIT", "60"))
                 _rate_window = 60.0  # seconds
-                _rate_exempt = {"/api/v1/health"}
+                _rate_exempt = {"/api/v1/health", "/api/v1/bootstrap"}
+                _rate_exempt_prefixes = (
+                    "/api/v1/config",
+                    "/api/v1/agents",
+                    "/api/v1/bindings",
+                    "/api/v1/cron-jobs",
+                    "/api/v1/mcp-servers",
+                    "/api/v1/a2a",
+                    "/api/v1/prompts",
+                )
                 _rate_hits: dict[str, list[float]] = _defaultdict(list)
 
                 class _RateLimitMiddleware(BaseHTTPMiddleware):
                     async def dispatch(self, request, call_next):
-                        if request.url.path in _rate_exempt:
+                        path = request.url.path
+                        if path in _rate_exempt or path.startswith(_rate_exempt_prefixes):
                             return await call_next(request)
                         client = request.client.host if request.client else "unknown"
                         now = _time.monotonic()
