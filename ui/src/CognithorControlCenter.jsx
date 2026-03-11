@@ -52,17 +52,17 @@ async function getCCToken() {
 
 // ── API Helper ─────────────────────────────────────────────────────────
 const HTTP_ERRORS = {
-  400: "Ungültige Anfrage – bitte Eingaben prüfen",
-  401: "Nicht autorisiert – bitte neu anmelden",
-  403: "Zugriff verweigert",
-  404: "Endpunkt nicht gefunden – Backend-Version prüfen",
-  409: "Konflikt – Daten wurden anderweitig geändert",
-  422: "Validierungsfehler – Eingaben prüfen",
-  429: "Zu viele Anfragen – bitte kurz warten und erneut versuchen",
-  500: "Interner Serverfehler – Backend-Logs prüfen",
-  502: "Backend nicht erreichbar",
-  503: "Backend überlastet – bitte warten",
-  504: "Backend-Timeout – Anfrage dauert zu lange",
+  400: "Bad request — please check your inputs",
+  401: "Unauthorized — please log in again",
+  403: "Access denied",
+  404: "Endpoint not found — check backend version",
+  409: "Conflict — data was modified elsewhere",
+  422: "Validation error — check your inputs",
+  429: "Too many requests — please wait and try again",
+  500: "Internal server error — check backend logs",
+  502: "Backend unreachable",
+  503: "Backend overloaded — please wait",
+  504: "Backend timeout — request took too long",
 };
 
 async function _ccFetch(method, path, body) {
@@ -95,7 +95,7 @@ async function api(method, path, body) {
   } catch (e) {
     console.error(`API ${method} ${path}:`, e);
     if (e.name === "TypeError" && e.message.includes("fetch")) {
-      return { error: "Backend nicht erreichbar – ist Jarvis gestartet?" };
+      return { error: "Backend unreachable — is Cognithor running?" };
     }
     return { error: e.message };
   }
@@ -140,24 +140,25 @@ const I = {
 // ── Navigation ─────────────────────────────────────────────────────────
 const PAGES = [
   { id: "chat", label: "Chat", icon: I.chat, key: "1" },
-  { id: "general", label: "Allgemein", icon: I.home, key: "2" },
-  { id: "providers", label: "LLM Provider", icon: I.llm, key: "3" },
-  { id: "models", label: "Modelle", icon: I.model, key: "4" },
-  { id: "planner", label: "PGE Trinity", icon: I.brain, key: "5" },
-  { id: "executor", label: "Executor", icon: I.terminal, key: "6" },
-  { id: "memory", label: "Memory", icon: I.mem, key: "7" },
-  { id: "channels", label: "Channels", icon: I.ch, key: "8" },
-  { id: "security", label: "Sicherheit", icon: I.shield, key: "9" },
-  { id: "web", label: "Web-Tools", icon: I.web, key: "0" },
+  { id: "general", label: "General", icon: I.home, key: "2" },
+  { id: "language", label: "Language", icon: I.language, key: "3" },
+  { id: "providers", label: "LLM Providers", icon: I.llm, key: "4" },
+  { id: "models", label: "Models", icon: I.model, key: "5" },
+  { id: "planner", label: "PGE Trinity", icon: I.brain, key: "6" },
+  { id: "executor", label: "Executor", icon: I.terminal, key: "7" },
+  { id: "memory", label: "Memory", icon: I.mem, key: "8" },
+  { id: "channels", label: "Channels", icon: I.ch, key: "9" },
+  { id: "security", label: "Security", icon: I.shield, key: "0" },
+  { id: "web", label: "Web Tools", icon: I.web, key: null },
   { id: "mcp", label: "MCP & A2A", icon: I.plug, key: null },
   { id: "cron", label: "Cron & Heartbeat", icon: I.clock, key: null },
-  { id: "database", label: "Datenbank", icon: I.db, key: null },
+  { id: "database", label: "Database", icon: I.db, key: null },
   { id: "logging", label: "Logging", icon: I.terminal, key: null },
   { id: "prompts", label: "Prompts & Policies", icon: I.file, key: null },
-  { id: "agents", label: "Agenten", icon: I.bot, key: null },
+  { id: "agents", label: "Agents", icon: I.bot, key: null },
   { id: "bindings", label: "Bindings", icon: I.link, key: null },
   { id: "workflows", label: "Workflows", icon: I.workflow, key: null },
-  { id: "knowledge-graph", label: "Wissensgraph", icon: I.graph, key: null },
+  { id: "knowledge-graph", label: "Knowledge Graph", icon: I.graph, key: null },
   { id: "system", label: "System", icon: I.gear, key: null },
 ];
 
@@ -222,14 +223,14 @@ const defaultPrompts = () => ({
 function cronToHuman(expr) {
   if (!expr || typeof expr !== "string") return "";
   const parts = expr.trim().split(/\s+/);
-  if (parts.length < 5) return "Ungültiger Ausdruck";
+  if (parts.length < 5) return "Invalid expression";
   const [min, hour, dom, mon, dow] = parts;
-  const dayNames = { 0: "So", 1: "Mo", 2: "Di", 3: "Mi", 4: "Do", 5: "Fr", 6: "Sa", 7: "So" };
-  const monNames = { 1: "Jan", 2: "Feb", 3: "Mär", 4: "Apr", 5: "Mai", 6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Dez" };
+  const dayNames = { 0: "Sun", 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
+  const monNames = { 1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec" };
   let time = "";
-  if (hour !== "*" && min !== "*") time = `um ${hour.padStart(2, "0")}:${min.padStart(2, "0")}`;
-  else if (hour !== "*") time = `zur Stunde ${hour}`;
-  else time = "jede Minute";
+  if (hour !== "*" && min !== "*") time = `at ${hour.padStart(2, "0")}:${min.padStart(2, "0")}`;
+  else if (hour !== "*") time = `at hour ${hour}`;
+  else time = "every minute";
   let days = "";
   if (dow !== "*") {
     const ranges = dow.split(",").map(d => {
@@ -246,7 +247,7 @@ function cronToHuman(expr) {
     months = mon.split(",").map(m => monNames[m] || m).join(", ");
   }
   let domStr = "";
-  if (dom !== "*") domStr = `am ${dom}.`;
+  if (dom !== "*") domStr = `on the ${dom}.`;
   let result = time;
   if (days) result += ` (${days})`;
   if (domStr) result += ` ${domStr}`;
@@ -318,16 +319,16 @@ function TextInput({ label, value, onChange, desc, placeholder, type = "text", m
           type={isSecret && !show ? "password" : "text"}
           value={isMasked ? "" : (value || "")}
           onChange={e => !disabled && onChange(e.target.value)}
-          placeholder={isMasked ? "(gespeichert — zum Ändern neuen Key eingeben)" : (placeholder || "")}
+          placeholder={isMasked ? "(saved — enter new key to change)" : (placeholder || "")}
           readOnly={disabled}
           tabIndex={disabled ? -1 : 0}
           aria-label={label}
           aria-invalid={!!error}
         />
         {isSecret && !isMasked && (
-          <button className="cc-eye-btn" onClick={() => setShow(!show)} type="button" aria-label={show ? "Verbergen" : "Anzeigen"}>{show ? I.eyeOff : I.eye}</button>
+          <button className="cc-eye-btn" onClick={() => setShow(!show)} type="button" aria-label={show ? "Hide" : "Show"}>{show ? I.eyeOff : I.eye}</button>
         )}
-        {isMasked && <span className="cc-secret-badge">Gespeichert</span>}
+        {isMasked && <span className="cc-secret-badge">Saved</span>}
       </div>
       {error && <div className="cc-field-error" role="alert">{error}</div>}
     </div>
@@ -336,7 +337,7 @@ function TextInput({ label, value, onChange, desc, placeholder, type = "text", m
 
 function NumberInput({ label, value, onChange, desc, min, max, step = 1, error }) {
   const localErr = (value !== undefined && value !== null) && ((min !== undefined && value < min) || (max !== undefined && value > max));
-  const displayErr = error || (localErr ? `Wert muss zwischen ${min} und ${max} liegen.` : null);
+  const displayErr = error || (localErr ? `Value must be between ${min} and ${max}.` : null);
   return (
     <div className="cc-field">
       <div className="cc-label">{label}</div>
@@ -382,7 +383,7 @@ function SliderInput({ label, value, onChange, min = 0, max = 1, step = 0.01, de
           <span
             className="cc-slider-val"
             onClick={() => { setDraft(typeof value === "number" ? value.toFixed(2) : String(value)); setEditing(true); }}
-            title="Klicken zum manuellen Eingeben"
+            title="Click to edit manually"
           >
             {typeof value === "number" ? value.toFixed(2) : value}
           </span>
@@ -421,7 +422,7 @@ function ListInput({ label, value = [], onChange, desc, placeholder }) {
         ))}
       </div>
       <div className="cc-list-add">
-        <input className="cc-input" value={draft} onChange={e => setDraft(e.target.value)} placeholder={placeholder || "Hinzufügen…"} onKeyDown={e => e.key === "Enter" && add()} />
+        <input className="cc-input" value={draft} onChange={e => setDraft(e.target.value)} placeholder={placeholder || "Add..."} onKeyDown={e => e.key === "Enter" && add()} />
         <button className="cc-btn-sm" onClick={add} type="button">{I.plus}</button>
       </div>
     </div>
@@ -434,13 +435,13 @@ function DomainListInput({ label, value = [], onChange, desc, placeholder }) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const validate = (d) => {
-    if (!d) return "Domain darf nicht leer sein";
-    if (d.includes("://")) return "Kein Schema (http/https) angeben — nur Hostname";
-    if (d.includes("/")) return "Kein Pfad erlaubt — nur Hostname (z.B. example.com)";
-    if (d.includes("*")) return "Keine Wildcards erlaubt — nur exakte Domains";
-    if (d.includes(" ")) return "Keine Leerzeichen erlaubt";
-    if (!_DOMAIN_RE.test(d)) return "Ungültiges Domain-Format (z.B. example.com)";
-    if (value.some(v => v.toLowerCase() === d.toLowerCase())) return "Domain bereits vorhanden";
+    if (!d) return "Domain must not be empty";
+    if (d.includes("://")) return "No scheme (http/https) — hostname only";
+    if (d.includes("/")) return "No paths allowed — hostname only (e.g. example.com)";
+    if (d.includes("*")) return "No wildcards allowed — exact domains only";
+    if (d.includes(" ")) return "No spaces allowed";
+    if (!_DOMAIN_RE.test(d)) return "Invalid domain format (e.g. example.com)";
+    if (value.some(v => v.toLowerCase() === d.toLowerCase())) return "Domain already exists";
     return "";
   };
   const add = () => {
@@ -488,7 +489,7 @@ function TextArea({ label, value, onChange, desc, rows = 8, mono, error, onReset
           {desc && <div className="cc-desc">{desc}</div>}
         </div>
         {onReset && (
-          <button className="cc-btn-reset" onClick={onReset} title={resetLabel || "Auf Standard zurücksetzen"} type="button">
+          <button className="cc-btn-reset" onClick={onReset} title={resetLabel || "Reset to default"} type="button">
             {I.reset} <span>Reset</span>
           </button>
         )}
@@ -534,7 +535,7 @@ function JsonEditor({ label, value, onChange, desc, rows = 6, onValidationError 
       if (onValidationErrorRef.current) onValidationErrorRef.current(null);
       onChange(parsed);
     } catch (e) {
-      const errorMsg = `JSON-Fehler: ${e.message.replace(/^JSON\.parse: /, "")}`;
+      const errorMsg = `JSON error: ${e.message.replace(/^JSON\.parse: /, "")}`;
       setErr(errorMsg);
       if (onValidationErrorRef.current) onValidationErrorRef.current(errorMsg);
     }
@@ -602,7 +603,7 @@ function Spinner() {
   return (
     <div className="cc-spinner-wrap">
       <div className="cc-spinner" />
-      <span className="cc-spinner-text">Konfiguration wird geladen…</span>
+      <span className="cc-spinner-text">Loading configuration...</span>
     </div>
   );
 }
@@ -645,25 +646,25 @@ function PromptEvolutionCard() {
   const enabled = stats?.enabled ?? false;
 
   return (
-    <Card title="Prompt-Evolution (A/B)" open={enabled}>
-      <Toggle label="Prompt-Evolution aktiviert" value={enabled} onChange={handleToggle} />
+    <Card title="Prompt Evolution (A/B)" open={enabled}>
+      <Toggle label="Prompt evolution enabled" value={enabled} onChange={handleToggle} />
       {enabled && stats && (<>
-        <ReadOnly label="Aktive Version" value={stats.active_version_id || "–"} />
-        <ReadOnly label="Versionen" value={String(stats.version_count ?? 0)} />
-        <ReadOnly label="Sessions gesamt" value={String(stats.total_sessions ?? 0)} />
-        <ReadOnly label="Laufende Tests" value={String(stats.running_tests ?? 0)} />
-        <ReadOnly label="Abgeschlossene Tests" value={String(stats.completed_tests ?? 0)} />
+        <ReadOnly label="Active version" value={stats.active_version_id || "–"} />
+        <ReadOnly label="Versions" value={String(stats.version_count ?? 0)} />
+        <ReadOnly label="Total sessions" value={String(stats.total_sessions ?? 0)} />
+        <ReadOnly label="Running tests" value={String(stats.running_tests ?? 0)} />
+        <ReadOnly label="Completed tests" value={String(stats.completed_tests ?? 0)} />
         <div style={{ marginTop: 8 }}>
           <button className="cc-btn" onClick={handleEvolve} disabled={evolving} style={{ whiteSpace: "nowrap" }}>
-            {evolving ? "⏳ Evolviert…" : "Jetzt evolvieren"}
+            {evolving ? "Evolving..." : "Evolve now"}
           </button>
           {evolveResult && (
             <span style={{ marginLeft: 8, fontSize: 13 }}>
               {evolveResult.error
-                ? `Fehler: ${evolveResult.error}`
+                ? `Error: ${evolveResult.error}`
                 : evolveResult.evolved
-                  ? `Neue Version: ${evolveResult.version_id}`
-                  : "Keine Evolution (noch nicht genug Daten)"}
+                  ? `New version: ${evolveResult.version_id}`
+                  : "No evolution (not enough data yet)"}
             </span>
           )}
         </div>
@@ -672,24 +673,235 @@ function PromptEvolutionCard() {
   );
 }
 
+// ── Language Settings ──────────────────────────────────────────────────
+function LanguagePage({ cfg, set }) {
+  const [locales, setLocales] = useState([]);
+  const [presetLocales, setPresetLocales] = useState([]);
+  const [activeLocale, setActiveLocale] = useState(cfg.language || "de");
+  const [method, setMethod] = useState("preset");
+  const [translating, setTranslating] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [showPromptTranslation, setShowPromptTranslation] = useState(false);
+  const pendingLocaleRef = useRef(null);
+
+  // Fetch available locales on mount
+  useEffect(() => {
+    (async () => {
+      const data = await api("GET", "/locales");
+      if (data && !data.error) {
+        setLocales(data.locales || []);
+        setActiveLocale(data.active || cfg.language || "de");
+        setPresetLocales(data.preset_locales || []);
+      }
+    })();
+  }, []);
+
+  const handleLocaleChange = useCallback((newLocale) => {
+    setActiveLocale(newLocale);
+    set("language", newLocale);
+    setError(null);
+    setSuccess(null);
+    setPreview(null);
+    if (newLocale !== (cfg.language || "de")) {
+      pendingLocaleRef.current = newLocale;
+      setShowPromptTranslation(true);
+    } else {
+      setShowPromptTranslation(false);
+    }
+  }, [cfg.language, set]);
+
+  const handleTranslate = useCallback(async () => {
+    const targetLocale = pendingLocaleRef.current || activeLocale;
+    setTranslating(true);
+    setError(null);
+    setPreview(null);
+
+    try {
+      if (method === "preset") {
+        const data = await api("POST", "/translate-prompts", {
+          target_locale: targetLocale,
+          method: "preset",
+        });
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setPreview(data.translations);
+        }
+      } else {
+        // First fetch current prompts
+        const prompts = await api("GET", "/prompts");
+        if (prompts.error) { setError("Failed to load current prompts"); return; }
+
+        const data = await api("POST", "/translate-prompts", {
+          target_locale: targetLocale,
+          method: "ollama",
+          prompts: {
+            plannerSystem: prompts.plannerSystem || "",
+            replanPrompt: prompts.replanPrompt || "",
+            escalationPrompt: prompts.escalationPrompt || "",
+          },
+        });
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setPreview(data.translations);
+          if (data.warnings?.length) {
+            setError("Warnings: " + data.warnings.join("; "));
+          }
+        }
+      }
+    } catch (e) {
+      setError(e.message || "Translation failed");
+    } finally {
+      setTranslating(false);
+    }
+  }, [method, activeLocale]);
+
+  const handleApply = useCallback(async () => {
+    if (!preview) return;
+    setError(null);
+    try {
+      const res = await api("PUT", "/prompts", preview);
+      if (res.error) {
+        setError("Failed to apply prompts: " + res.error);
+      } else {
+        setSuccess("Prompts updated successfully!");
+        setPreview(null);
+        setShowPromptTranslation(false);
+      }
+    } catch (e) {
+      setError(e.message || "Failed to apply");
+    }
+  }, [preview]);
+
+  const handleDiscard = useCallback(() => {
+    setPreview(null);
+    setError(null);
+  }, []);
+
+  const LOCALE_LABELS = {
+    de: "Deutsch (German)",
+    en: "English",
+    fr: "Français (French)",
+    es: "Español (Spanish)",
+    it: "Italiano (Italian)",
+    pt: "Português (Portuguese)",
+    zh: "中文 (Chinese)",
+    ja: "日本語 (Japanese)",
+    ko: "한국어 (Korean)",
+    ru: "Русский (Russian)",
+  };
+
+  return (<>
+    <Section title="Language Settings" desc="System language, locale selection, and prompt translation" />
+
+    {/* Card 1: Active Language */}
+    <Card title="Active Language">
+      <SelectInput
+        label="System language"
+        value={activeLocale}
+        onChange={handleLocaleChange}
+        options={locales.map(l => ({ value: l, label: LOCALE_LABELS[l] || l.toUpperCase() }))}
+        desc="Controls UI messages, error texts, and status outputs. Changing this triggers a prompt translation offer below."
+      />
+      <div className="cc-language-info">
+        <small>
+          Installed language packs: {locales.length > 0 ? locales.map(l => l.toUpperCase()).join(", ") : "loading..."}
+          {presetLocales.length > 0 && <> · Prompt presets available for: {presetLocales.map(l => l.toUpperCase()).join(", ")}</>}
+        </small>
+      </div>
+    </Card>
+
+    {/* Card 2: Prompt Translation — shown when locale changes */}
+    {showPromptTranslation && (
+      <Card title="System Prompt Translation" open>
+        <div className="cc-language-translation-intro">
+          You changed the language to <strong>{LOCALE_LABELS[activeLocale] || activeLocale.toUpperCase()}</strong>.
+          Would you like to translate the system prompts to match?
+        </div>
+
+        <SelectInput
+          label="Translation method"
+          value={method}
+          onChange={setMethod}
+          options={[
+            { value: "preset", label: "Use curated preset (instant)" + (presetLocales.includes(activeLocale) ? "" : " — not available for this language") },
+            { value: "ollama", label: "Translate via Ollama (uses local LLM)" },
+          ]}
+          desc={method === "preset"
+            ? "Pre-verified translations — instant, no LLM needed. Available for: " + presetLocales.map(l => l.toUpperCase()).join(", ")
+            : "Uses your configured planner model to translate prompts on-the-fly. May take 30-60 seconds."
+          }
+        />
+
+        <div className="cc-language-actions">
+          <button
+            className="cc-btn cc-btn-primary"
+            onClick={handleTranslate}
+            disabled={translating || (method === "preset" && !presetLocales.includes(activeLocale))}
+          >
+            {translating ? "Translating..." : "Translate Prompts"}
+          </button>
+          <button className="cc-btn" onClick={() => { setShowPromptTranslation(false); setPreview(null); }}>
+            Skip — keep current prompts
+          </button>
+        </div>
+
+        {error && <div className="cc-toast error" style={{ marginTop: 12 }}>{error}</div>}
+        {success && <div className="cc-toast success" style={{ marginTop: 12 }}>{success}</div>}
+      </Card>
+    )}
+
+    {/* Card 3: Translation Preview */}
+    {preview && (
+      <Card title="Translation Preview" open>
+        <div className="cc-language-preview-intro">
+          Review the translated prompts below. Click <strong>Accept &amp; Apply</strong> to write them, or <strong>Discard</strong> to keep the originals.
+        </div>
+
+        {Object.entries(preview).map(([key, text]) => (
+          <div key={key} className="cc-language-preview-block">
+            <label className="cc-label">{
+              key === "plannerSystem" ? "Planner System Prompt" :
+              key === "replanPrompt" ? "Replan Prompt" :
+              key === "escalationPrompt" ? "Escalation Prompt" : key
+            }</label>
+            <pre className="cc-language-preview-text">{text.slice(0, 800)}{text.length > 800 ? "\n…" : ""}</pre>
+          </div>
+        ))}
+
+        <div className="cc-language-actions" style={{ marginTop: 16 }}>
+          <button className="cc-btn cc-btn-primary" onClick={handleApply}>
+            {I.check} Accept &amp; Apply
+          </button>
+          <button className="cc-btn" onClick={handleDiscard}>
+            Discard
+          </button>
+        </div>
+      </Card>
+    )}
+
+    {!showPromptTranslation && !preview && success && (
+      <div className="cc-toast success">{success}</div>
+    )}
+  </>);
+}
+
 // ── General ────────────────────────────────────────────────────────────
 function GeneralPage({ cfg, set }) {
   return (<>
-    <Section title="Allgemein" desc="Identität, Betriebsmodus, Kosten und Dashboard" />
-    <Card title="Identität">
-      <TextInput label="Besitzer-Name" value={cfg.owner_name} onChange={v => set("owner_name", v)} desc="Wird in Prompts und CORE.md verwendet" error={!cfg.owner_name ? "Pflichtfeld" : null} />
-      <SelectInput label="Sprache / Language" value={cfg.language || "de"} onChange={v => set("language", v)} options={[{value:"de",label:"Deutsch"},{value:"en",label:"English"}]} desc="UI- und System-Sprache für Fehlermeldungen, Begrüßungen und Status-Texte" />
-      <SelectInput label="Betriebsmodus" value={cfg.operation_mode} onChange={v => set("operation_mode", v)} options={[{value:"auto",label:"Auto-Detect"},{value:"offline",label:"Offline (nur lokal)"},{value:"online",label:"Online (Cloud-APIs)"},{value:"hybrid",label:"Hybrid"}]} desc="auto erkennt den Modus aus vorhandenen API-Keys" />
-      <ReadOnly label="Version" value={cfg.version} desc="Systemversion (nur lesbar)" />
+    <Section title="General" desc="Identity, operation mode and cost tracking" />
+    <Card title="Identity">
+      <TextInput label="Owner name" value={cfg.owner_name} onChange={v => set("owner_name", v)} desc="Used in prompts and CORE.md" error={!cfg.owner_name ? "Required" : null} />
+      <SelectInput label="Operation mode" value={cfg.operation_mode} onChange={v => set("operation_mode", v)} options={[{value:"auto",label:"Auto-Detect"},{value:"offline",label:"Offline (local only)"},{value:"online",label:"Online (Cloud APIs)"},{value:"hybrid",label:"Hybrid"}]} desc="Auto detects the mode based on available API keys" />
+      <ReadOnly label="Version" value={cfg.version} desc="System version (read-only)" />
     </Card>
-    <Card title="Kosten-Tracking">
-      <Toggle label="Kosten-Tracking aktiviert" value={cfg.cost_tracking_enabled} onChange={v => set("cost_tracking_enabled", v)} />
-      <NumberInput label="Tageslimit (USD)" value={cfg.daily_budget_usd} onChange={v => set("daily_budget_usd", v)} min={0} step={0.5} desc="0 = kein Limit" />
-      <NumberInput label="Monatslimit (USD)" value={cfg.monthly_budget_usd} onChange={v => set("monthly_budget_usd", v)} min={0} step={1} desc="0 = kein Limit" />
-    </Card>
-    <Card title="Dashboard">
-      <Toggle label="Dashboard aktiviert" value={cfg.dashboard?.enabled} onChange={v => set("dashboard.enabled", v)} desc="Web-basiertes Monitoring-Dashboard" />
-      <NumberInput label="Port" value={cfg.dashboard?.port} onChange={v => set("dashboard.port", v)} min={1024} max={65535} />
+    <Card title="Cost Tracking">
+      <Toggle label="Cost tracking enabled" value={cfg.cost_tracking_enabled} onChange={v => set("cost_tracking_enabled", v)} />
+      <NumberInput label="Daily limit (USD)" value={cfg.daily_budget_usd} onChange={v => set("daily_budget_usd", v)} min={0} step={0.5} desc="0 = no limit" />
+      <NumberInput label="Monthly limit (USD)" value={cfg.monthly_budget_usd} onChange={v => set("monthly_budget_usd", v)} min={0} step={1} desc="0 = no limit" />
     </Card>
     <PromptEvolutionCard />
   </>);
@@ -721,13 +933,13 @@ function ProvidersPage({ cfg, set }) {
     !filter || p.name.toLowerCase().includes(filter.toLowerCase()) || p.id.includes(filter.toLowerCase())
   );
   return (<>
-    <Section title="LLM Provider" desc="15 Backends — API-Keys, Endpunkte, Backend-Auswahl" />
-    <Card title="Aktives Backend">
-      <SelectInput label="LLM Backend" value={cfg.llm_backend_type} onChange={v => set("llm_backend_type", v)} options={PROVIDERS.map(p => ({ value: p.id, label: p.name }))} desc="Alle Modelle nutzen dieses Backend" />
+    <Section title="LLM Providers" desc="15 backends — API keys, endpoints, backend selection" />
+    <Card title="Active Backend">
+      <SelectInput label="LLM Backend" value={cfg.llm_backend_type} onChange={v => set("llm_backend_type", v)} options={PROVIDERS.map(p => ({ value: p.id, label: p.name }))} desc="All models use this backend" />
     </Card>
     <div className="cc-search-bar">
       <span className="cc-search-icon">{I.search}</span>
-      <input className="cc-search-input" placeholder="Provider filtern…" value={filter} onChange={e => setFilter(e.target.value)} />
+      <input className="cc-search-input" placeholder="Filter providers..." value={filter} onChange={e => setFilter(e.target.value)} />
       {filter && <button className="cc-search-clear" onClick={() => setFilter("")}>{I.x}</button>}
     </div>
     {filtered.map(p => {
@@ -735,18 +947,18 @@ function ProvidersPage({ cfg, set }) {
         <Card key="ollama" title="Ollama (Lokal)" open={cfg.llm_backend_type === "ollama"}>
           <TextInput label="Base URL" value={cfg.ollama?.base_url} onChange={v => set("ollama.base_url", v)} mono />
           <NumberInput label="Timeout (Sek.)" value={cfg.ollama?.timeout_seconds} onChange={v => set("ollama.timeout_seconds", v)} min={10} max={600} />
-          <TextInput label="Keep-Alive" value={cfg.ollama?.keep_alive} onChange={v => set("ollama.keep_alive", v)} desc="Wie lange Modelle im VRAM bleiben (z.B. 30m)" />
+          <TextInput label="Keep-Alive" value={cfg.ollama?.keep_alive} onChange={v => set("ollama.keep_alive", v)} desc="How long models stay in VRAM (e.g. 30m)" />
         </Card>
       );
       return (
         <Card key={p.id} title={p.name} open={cfg.llm_backend_type === p.id}>
           <TextInput label="API Key" value={cfg[p.keyField]} onChange={v => set(p.keyField, v)} type="password" placeholder={`${p.id}-api-key...`} />
-          {p.extra?.includes("openai_base_url") && <TextInput label="Base URL" value={cfg.openai_base_url} onChange={v => set("openai_base_url", v)} mono desc="Auch für Together, Groq, vLLM, LM Studio" />}
+          {p.extra?.includes("openai_base_url") && <TextInput label="Base URL" value={cfg.openai_base_url} onChange={v => set("openai_base_url", v)} mono desc="Also for Together, Groq, vLLM, LM Studio" />}
           {p.extra?.includes("anthropic_max_tokens") && <NumberInput label="Max Output Tokens" value={cfg.anthropic_max_tokens} onChange={v => set("anthropic_max_tokens", v)} min={256} max={32768} />}
         </Card>
       );
     })}
-    {filtered.length === 0 && <div className="cc-empty">Kein Provider gefunden für „{filter}"</div>}
+    {filtered.length === 0 && <div className="cc-empty">No provider found for &ldquo;{filter}&rdquo;</div>}
   </>);
 }
 
@@ -769,24 +981,24 @@ const BACKEND_OPTIONS = [
 
 function ModelsPage({ cfg, set, setValidationErrors }) {
   return (<>
-    <Section title="Modelle" desc="Modell-Zuordnung pro Rolle, Vision-Modelle, Skill-Overrides. Jede Rolle kann einen eigenen API-Provider nutzen." />
+    <Section title="Models" desc="Model assignment per role, vision models, skill overrides. Each role can use its own API provider." />
     {ROLES.map(r => (
       <Card key={r} title={`${r.charAt(0).toUpperCase() + r.slice(1)}-Modell`}>
         <TextInput label="Modell-Name" value={cfg.models?.[r]?.name} onChange={v => set(`models.${r}.name`, v)} mono />
-        <SelectInput label="Backend / Provider" value={cfg.models?.[r]?.backend || ""} onChange={v => set(`models.${r}.backend`, v)} options={BACKEND_OPTIONS} desc="Eigener Provider fuer diese Rolle (leer = globales Backend)" />
+        <SelectInput label="Backend / Provider" value={cfg.models?.[r]?.backend || ""} onChange={v => set(`models.${r}.backend`, v)} options={BACKEND_OPTIONS} desc="Custom provider for this role (empty = global backend)" />
         <NumberInput label="Context Window" value={cfg.models?.[r]?.context_window} onChange={v => set(`models.${r}.context_window`, v)} min={1024} max={2000000} step={1024} />
         <NumberInput label="VRAM (GB)" value={cfg.models?.[r]?.vram_gb} onChange={v => set(`models.${r}.vram_gb`, v)} min={0} max={80} step={0.5} />
-        <SliderInput label="Temperature" value={cfg.models?.[r]?.temperature} onChange={v => set(`models.${r}.temperature`, v)} min={0} max={2} step={0.05} desc="Kreativität (0=deterministisch, 2=wild)" />
+        <SliderInput label="Temperature" value={cfg.models?.[r]?.temperature} onChange={v => set(`models.${r}.temperature`, v)} min={0} max={2} step={0.05} desc="Creativity (0=deterministic, 2=wild)" />
         <SliderInput label="Top P" value={cfg.models?.[r]?.top_p} onChange={v => set(`models.${r}.top_p`, v)} min={0} max={1} step={0.05} desc="Nucleus Sampling" />
-        <ListInput label="Stärken" value={cfg.models?.[r]?.strengths} onChange={v => set(`models.${r}.strengths`, v)} placeholder="z.B. reasoning" />
+        <ListInput label="Strengths" value={cfg.models?.[r]?.strengths} onChange={v => set(`models.${r}.strengths`, v)} placeholder="e.g. reasoning" />
       </Card>
     ))}
-    <Card title="Vision-Modelle">
-      <TextInput label="Standard Vision" value={cfg.vision_model} onChange={v => set("vision_model", v)} mono desc="Schnelles Vision-Modell" />
-      <TextInput label="Detail Vision" value={cfg.vision_model_detail} onChange={v => set("vision_model_detail", v)} mono desc="Höchste Qualität" />
+    <Card title="Vision Models">
+      <TextInput label="Standard Vision" value={cfg.vision_model} onChange={v => set("vision_model", v)} mono desc="Fast vision model" />
+      <TextInput label="Detail Vision" value={cfg.vision_model_detail} onChange={v => set("vision_model_detail", v)} mono desc="Highest quality" />
     </Card>
-    <Card title="Skill-Overrides" open={false}>
-      <div className="cc-desc" style={{marginBottom:8}}>Pro-Skill Modell-Zuordnung (JSON Key-Value)</div>
+    <Card title="Skill Overrides" open={false}>
+      <div className="cc-desc" style={{marginBottom:8}}>Per-skill model assignment (JSON key-value)</div>
       <JsonEditor 
         label="skill_models (JSON)" 
         value={cfg.model_overrides?.skill_models || {}} 
@@ -801,27 +1013,27 @@ function ModelsPage({ cfg, set, setValidationErrors }) {
 // ── PGE Trinity ────────────────────────────────────────────────────────
 function PlannerPage({ cfg, set, setValidationErrors }) {
   return (<>
-    <Section title="PGE Trinity" desc="Planner, Gatekeeper, Executor — Kern-Engine" />
-    <Card title="Planner (Denker)">
-      <NumberInput label="Max Iterationen" value={cfg.planner?.max_iterations} onChange={v => set("planner.max_iterations", v)} min={1} max={50} desc="Max Agent-Loop-Zyklen pro Anfrage" />
-      <NumberInput label="Eskalation nach" value={cfg.planner?.escalation_after} onChange={v => set("planner.escalation_after", v)} min={1} max={10} desc="Nach X Schritten den User informieren" />
-      <SliderInput label="Temperature" value={cfg.planner?.temperature} onChange={v => set("planner.temperature", v)} min={0} max={2} step={0.05} desc="Kreativität (0=deterministisch, 2=wild)" />
+    <Section title="PGE Trinity" desc="Planner, Gatekeeper, Executor — core engine" />
+    <Card title="Planner (Thinker)">
+      <NumberInput label="Max iterations" value={cfg.planner?.max_iterations} onChange={v => set("planner.max_iterations", v)} min={1} max={50} desc="Max agent loop cycles per request" />
+      <NumberInput label="Escalation after" value={cfg.planner?.escalation_after} onChange={v => set("planner.escalation_after", v)} min={1} max={10} desc="Inform user after X steps" />
+      <SliderInput label="Temperature" value={cfg.planner?.temperature} onChange={v => set("planner.temperature", v)} min={0} max={2} step={0.05} desc="Creativity (0=deterministic, 2=wild)" />
       <NumberInput label="Response Token Budget" value={cfg.planner?.response_token_budget} onChange={v => set("planner.response_token_budget", v)} min={500} max={8000} />
     </Card>
-    <Card title="Gatekeeper (Wächter)">
-      <TextInput label="Policies-Verzeichnis" value={cfg.gatekeeper?.policies_dir} onChange={v => set("gatekeeper.policies_dir", v)} mono desc="Relativ zu jarvis_home" />
-      <SelectInput label="Standard-Risikostufe" value={cfg.gatekeeper?.default_risk_level} onChange={v => set("gatekeeper.default_risk_level", v)} options={[{value:"green",label:"🟢 Green"},{value:"yellow",label:"🟡 Yellow"},{value:"orange",label:"🟠 Orange"},{value:"red",label:"🔴 Red"}]} />
-      <NumberInput label="Max. blockierte Wiederholungen" value={cfg.gatekeeper?.max_blocked_retries} onChange={v => set("gatekeeper.max_blocked_retries", v)} min={1} max={10} />
+    <Card title="Gatekeeper (Guardian)">
+      <TextInput label="Policies directory" value={cfg.gatekeeper?.policies_dir} onChange={v => set("gatekeeper.policies_dir", v)} mono desc="Relative to jarvis_home" />
+      <SelectInput label="Default risk level" value={cfg.gatekeeper?.default_risk_level} onChange={v => set("gatekeeper.default_risk_level", v)} options={[{value:"green",label:"🟢 Green"},{value:"yellow",label:"🟡 Yellow"},{value:"orange",label:"🟠 Orange"},{value:"red",label:"🔴 Red"}]} />
+      <NumberInput label="Max blocked retries" value={cfg.gatekeeper?.max_blocked_retries} onChange={v => set("gatekeeper.max_blocked_retries", v)} min={1} max={10} />
     </Card>
     <Card title="Sandbox (Executor)">
-      <SelectInput label="Sandbox Level" value={cfg.sandbox?.level} onChange={v => set("sandbox.level", v)} options={["process","namespace","container","jobobject"]} desc="Isolationsgrad der Code-Ausführung" />
-      <NumberInput label="Timeout (Sek.)" value={cfg.sandbox?.timeout_seconds} onChange={v => set("sandbox.timeout_seconds", v)} min={1} max={600} />
-      <NumberInput label="Max Memory (MB)" value={cfg.sandbox?.max_memory_mb} onChange={v => set("sandbox.max_memory_mb", v)} min={64} max={8192} />
-      <NumberInput label="Max CPU (Sek.)" value={cfg.sandbox?.max_cpu_seconds} onChange={v => set("sandbox.max_cpu_seconds", v)} min={1} max={300} />
-      <Toggle label="Netzwerkzugriff" value={cfg.sandbox?.network_access} onChange={v => set("sandbox.network_access", v)} />
-      <ListInput label="Erlaubte Pfade" value={cfg.sandbox?.allowed_paths} onChange={v => set("sandbox.allowed_paths", v)} placeholder="/pfad/..." />
-      <JsonEditor 
-        label="Umgebungsvariablen (JSON)" 
+      <SelectInput label="Sandbox level" value={cfg.sandbox?.level} onChange={v => set("sandbox.level", v)} options={["process","namespace","container","jobobject"]} desc="Code execution isolation level" />
+      <NumberInput label="Timeout (sec)" value={cfg.sandbox?.timeout_seconds} onChange={v => set("sandbox.timeout_seconds", v)} min={1} max={600} />
+      <NumberInput label="Max memory (MB)" value={cfg.sandbox?.max_memory_mb} onChange={v => set("sandbox.max_memory_mb", v)} min={64} max={8192} />
+      <NumberInput label="Max CPU (sec)" value={cfg.sandbox?.max_cpu_seconds} onChange={v => set("sandbox.max_cpu_seconds", v)} min={1} max={300} />
+      <Toggle label="Network access" value={cfg.sandbox?.network_access} onChange={v => set("sandbox.network_access", v)} />
+      <ListInput label="Allowed paths" value={cfg.sandbox?.allowed_paths} onChange={v => set("sandbox.allowed_paths", v)} placeholder="/path/..." />
+      <JsonEditor
+        label="Environment variables (JSON)" 
         value={cfg.sandbox?.env_vars || {}} 
         onChange={v => set("sandbox.env_vars", v)} 
         onValidationError={err => setValidationErrors(prev => ({ ...prev, sandbox_env_vars: err }))}
@@ -838,28 +1050,28 @@ function MemoryPage({ cfg, set }) {
   const sum = (m.weight_vector||0)+(m.weight_bm25||0)+(m.weight_graph||0);
   const sumColor = Math.abs(sum - 1.0) < 0.01 ? "var(--success)" : sum > 1.01 ? "var(--danger)" : "var(--warn)";
   return (<>
-    <Section title="Memory System" desc="5-Tier Memory: Indexierung, Hybrid-Suche, Recency, Compaction" />
-    <Card title="Indexierung">
+    <Section title="Memory System" desc="5-tier memory: indexing, hybrid search, recency, compaction" />
+    <Card title="Indexing">
       <NumberInput label="Chunk Size (Tokens)" value={m.chunk_size_tokens} onChange={v => set("memory.chunk_size_tokens", v)} min={100} max={2000} />
       <NumberInput label="Chunk Overlap" value={m.chunk_overlap_tokens} onChange={v => set("memory.chunk_overlap_tokens", v)} min={0} max={500} />
       <NumberInput label="Search Top-K" value={m.search_top_k} onChange={v => set("memory.search_top_k", v)} min={1} max={20} />
     </Card>
-    <Card title="Hybrid-Suche Gewichtung">
+    <Card title="Hybrid Search Weighting">
       <div className="cc-weight-sum" style={{ borderColor: sumColor }}>
-        <span>Summe:</span>
+        <span>Sum:</span>
         <span className="cc-weight-sum-val" style={{ color: sumColor }}>{sum.toFixed(2)}</span>
-        <span className="cc-weight-sum-hint">{Math.abs(sum - 1.0) < 0.01 ? "✓ Perfekt" : sum > 1.01 ? "⚠ Wird normalisiert" : "⚠ Unter 1.0"}</span>
+        <span className="cc-weight-sum-hint">{Math.abs(sum - 1.0) < 0.01 ? "✓ Perfect" : sum > 1.01 ? "⚠ Will be normalized" : "⚠ Below 1.0"}</span>
       </div>
       <SliderInput label="Vector (Embedding)" value={m.weight_vector} onChange={v => set("memory.weight_vector", v)} />
       <SliderInput label="BM25 (Keyword)" value={m.weight_bm25} onChange={v => set("memory.weight_bm25", v)} />
-      <SliderInput label="Graph (Wissen)" value={m.weight_graph} onChange={v => set("memory.weight_graph", v)} />
-      <Toggle label="Dynamische Gewichtung" value={m.dynamic_weighting} onChange={v => set("memory.dynamic_weighting", v)} desc="Gewichte automatisch je nach Anfrage anpassen" />
+      <SliderInput label="Graph (Knowledge)" value={m.weight_graph} onChange={v => set("memory.weight_graph", v)} />
+      <Toggle label="Dynamic weighting" value={m.dynamic_weighting} onChange={v => set("memory.dynamic_weighting", v)} desc="Automatically adjust weights based on query type" />
     </Card>
     <Card title="Recency & Compaction">
-      <NumberInput label="Recency Halbwertszeit (Tage)" value={m.recency_half_life_days} onChange={v => set("memory.recency_half_life_days", v)} min={1} max={365} />
-      <SliderInput label="Compaction Schwelle" value={m.compaction_threshold} onChange={v => set("memory.compaction_threshold", v)} min={0.5} max={0.95} />
-      <NumberInput label="Letzte N behalten" value={m.compaction_keep_last_n} onChange={v => set("memory.compaction_keep_last_n", v)} min={2} max={20} />
-      <NumberInput label="Episodic Retention (Tage)" value={m.episodic_retention_days} onChange={v => set("memory.episodic_retention_days", v)} min={1} max={3650} desc="Wie viele Tage an Tageslogs behalten" />
+      <NumberInput label="Recency half-life (days)" value={m.recency_half_life_days} onChange={v => set("memory.recency_half_life_days", v)} min={1} max={365} />
+      <SliderInput label="Compaction threshold" value={m.compaction_threshold} onChange={v => set("memory.compaction_threshold", v)} min={0.5} max={0.95} />
+      <NumberInput label="Keep last N" value={m.compaction_keep_last_n} onChange={v => set("memory.compaction_keep_last_n", v)} min={2} max={20} />
+      <NumberInput label="Episodic retention (days)" value={m.episodic_retention_days} onChange={v => set("memory.episodic_retention_days", v)} min={1} max={3650} desc="How many days of daily logs to keep" />
     </Card>
   </>);
 }
@@ -867,8 +1079,7 @@ function MemoryPage({ cfg, set }) {
 // ── Channels ───────────────────────────────────────────────────────────
 const CHANNEL_DEFS = [
   { id: "cli", label: "CLI (Terminal)", fields: [] },
-  { id: "webui", label: "Web UI", fields: [{ k: "webui_port", l: "Port", t: "num", min: 1024, max: 65535 }] },
-  { id: "telegram", label: "Telegram", fields: [{ k: "telegram_whitelist", l: "Whitelist (User-IDs)", t: "list" }] },
+  { id: "telegram", label: "Telegram", fields: [{ k: "telegram_whitelist", l: "Whitelist (User IDs)", t: "list" }] },
   { id: "slack", label: "Slack", fields: [{ k: "slack_default_channel", l: "Default Channel", t: "text" }] },
   { id: "discord", label: "Discord", fields: [{ k: "discord_channel_id", l: "Channel ID", t: "num" }] },
   { id: "whatsapp", label: "WhatsApp", fields: [
@@ -876,15 +1087,15 @@ const CHANNEL_DEFS = [
     { k: "whatsapp_phone_number_id", l: "Phone Number ID", t: "text" },
     { k: "whatsapp_webhook_port", l: "Webhook Port", t: "num", min: 1024, max: 65535 },
     { k: "whatsapp_verify_token", l: "Verify Token", t: "secret" },
-    { k: "whatsapp_allowed_numbers", l: "Erlaubte Nummern", t: "list" },
+    { k: "whatsapp_allowed_numbers", l: "Allowed numbers", t: "list" },
   ]},
   { id: "signal", label: "Signal", fields: [{ k: "signal_default_user", l: "Default User", t: "text" }] },
   { id: "matrix", label: "Matrix", fields: [{ k: "matrix_homeserver", l: "Homeserver URL", t: "text" }, { k: "matrix_user_id", l: "User ID", t: "text" }] },
   { id: "teams", label: "Microsoft Teams", fields: [{ k: "teams_default_channel", l: "Default Channel", t: "text" }] },
   { id: "imessage", label: "iMessage", fields: [{ k: "imessage_device_id", l: "Device ID", t: "text" }] },
   { id: "google_chat", label: "Google Chat", fields: [
-    { k: "google_chat_credentials_path", l: "Credentials Pfad", t: "text" },
-    { k: "google_chat_allowed_spaces", l: "Erlaubte Spaces", t: "list" },
+    { k: "google_chat_credentials_path", l: "Credentials path", t: "text" },
+    { k: "google_chat_allowed_spaces", l: "Allowed spaces", t: "list" },
   ]},
   { id: "mattermost", label: "Mattermost", fields: [
     { k: "mattermost_url", l: "Server URL", t: "text" },
@@ -901,7 +1112,7 @@ const CHANNEL_DEFS = [
   { id: "twitch", label: "Twitch", fields: [
     { k: "twitch_token", l: "Token", t: "secret" },
     { k: "twitch_channel", l: "Channel", t: "text" },
-    { k: "twitch_allowed_users", l: "Erlaubte User", t: "list" },
+    { k: "twitch_allowed_users", l: "Allowed users", t: "list" },
   ]},
   { id: "voice", label: "Voice (TTS/STT)", fields: [] },
 ];
@@ -910,10 +1121,10 @@ const CHANNEL_DEFS = [
 function ChannelsPage({ cfg, set }) {
   const ch = cfg.channels || {};
   return (<>
-    <Section title="Channels" desc="17 Kommunikationskanäle — aktivieren, konfigurieren" />
+    <Section title="Channels" desc="17 communication channels — enable and configure" />
     {CHANNEL_DEFS.map(cd => (
       <Card key={cd.id} title={cd.label} open={!!ch[`${cd.id}_enabled`]} forceOpen={!!ch[`${cd.id}_enabled`]}>
-        <Toggle label={`${cd.label} aktivieren`} value={ch[`${cd.id}_enabled`]} onChange={v => set(`channels.${cd.id}_enabled`, v)} />
+        <Toggle label={`Enable ${cd.label}`} value={ch[`${cd.id}_enabled`]} onChange={v => set(`channels.${cd.id}_enabled`, v)} />
         {cd.fields.map(f => {
           if (f.t === "text") return <TextInput key={f.k} label={f.l} value={ch[f.k]} onChange={v => set(`channels.${f.k}`, v)} />;
           if (f.t === "secret") return <TextInput key={f.k} label={f.l} value={ch[f.k]} onChange={v => set(`channels.${f.k}`, v)} type="password" />;
@@ -923,23 +1134,23 @@ function ChannelsPage({ cfg, set }) {
         })}
       </Card>
     ))}
-    <Card title="Voice-Konfiguration" open={!!ch.voice_enabled} forceOpen={!!ch.voice_enabled}>
-      <Toggle label="Voice aktiviert" value={ch.voice_enabled} onChange={v => set("channels.voice_enabled", v)} desc="Sprachsteuerung im Chat aktivieren" />
-      <SelectInput label="TTS Backend" value={ch.voice_config?.tts_backend} onChange={v => set("channels.voice_config.tts_backend", v)} options={["piper","espeak","elevenlabs"]} desc="Sprachausgabe-Engine" />
+    <Card title="Voice Configuration" open={!!ch.voice_enabled} forceOpen={!!ch.voice_enabled}>
+      <Toggle label="Voice enabled" value={ch.voice_enabled} onChange={v => set("channels.voice_enabled", v)} desc="Enable voice control in chat" />
+      <SelectInput label="TTS Backend" value={ch.voice_config?.tts_backend} onChange={v => set("channels.voice_config.tts_backend", v)} options={["piper","espeak","elevenlabs"]} desc="Text-to-speech engine" />
       {(ch.voice_config?.tts_backend || "piper") === "piper" && <>
-        <SelectInput label="Piper-Stimme" value={ch.voice_config?.piper_voice || "de_DE-pavoque-low"} onChange={v => set("channels.voice_config.piper_voice", v)} options={["de_DE-pavoque-low","de_DE-karlsson-low","de_DE-thorsten-high","de_DE-thorsten-medium","de_DE-thorsten_emotional-medium","de_DE-kerstin-low","de_DE-ramona-low","de_DE-eva_k-x_low"]} desc="Wird beim ersten Aufruf automatisch heruntergeladen" />
-        <SliderInput label="Sprechgeschwindigkeit" value={ch.voice_config?.piper_length_scale ?? 1.0} onChange={v => set("channels.voice_config.piper_length_scale", v)} min={0.5} max={2.0} step={0.1} desc="1.0 = normal, kleiner = schneller" />
+        <SelectInput label="Piper voice" value={ch.voice_config?.piper_voice || "de_DE-pavoque-low"} onChange={v => set("channels.voice_config.piper_voice", v)} options={["de_DE-pavoque-low","de_DE-karlsson-low","de_DE-thorsten-high","de_DE-thorsten-medium","de_DE-thorsten_emotional-medium","de_DE-kerstin-low","de_DE-ramona-low","de_DE-eva_k-x_low"]} desc="Downloaded automatically on first use" />
+        <SliderInput label="Speech rate" value={ch.voice_config?.piper_length_scale ?? 1.0} onChange={v => set("channels.voice_config.piper_length_scale", v)} min={0.5} max={2.0} step={0.1} desc="1.0 = normal, lower = faster" />
       </>}
       {(ch.voice_config?.tts_backend) === "elevenlabs" && <>
         <TextInput label="ElevenLabs API Key" value={ch.voice_config?.elevenlabs_api_key} onChange={v => set("channels.voice_config.elevenlabs_api_key", v)} type="password" />
         <TextInput label="ElevenLabs Voice ID" value={ch.voice_config?.elevenlabs_voice_id} onChange={v => set("channels.voice_config.elevenlabs_voice_id", v)} mono />
         <TextInput label="ElevenLabs Model" value={ch.voice_config?.elevenlabs_model} onChange={v => set("channels.voice_config.elevenlabs_model", v)} mono />
       </>}
-      <Toggle label="Wake-Word aktiviert" value={ch.voice_config?.wake_word_enabled} onChange={v => set("channels.voice_config.wake_word_enabled", v)} desc="Sprachbefehl durch Wake-Word ausloesen" />
-      <TextInput label="Wake Word" value={ch.voice_config?.wake_word || "jarvis"} onChange={v => set("channels.voice_config.wake_word", v)} desc="Standardmaessig: jarvis" />
-      <SelectInput label="Wake-Word Backend" value={ch.voice_config?.wake_word_backend} onChange={v => set("channels.voice_config.wake_word_backend", v)} options={["browser","vosk","porcupine"]} desc="browser = Web Speech API (kein Setup noetig)" />
-      <Toggle label="Talk-Mode" value={ch.voice_config?.talk_mode_enabled} onChange={v => set("channels.voice_config.talk_mode_enabled", v)} desc="Dauerhaftes Zuhoeren im Chat" />
-      <Toggle label="Auto-Listen" value={ch.voice_config?.talk_mode_auto_listen} onChange={v => set("channels.voice_config.talk_mode_auto_listen", v)} desc="Nach Antwort automatisch wieder zuhoeren" />
+      <Toggle label="Wake word enabled" value={ch.voice_config?.wake_word_enabled} onChange={v => set("channels.voice_config.wake_word_enabled", v)} desc="Trigger voice command by wake word" />
+      <TextInput label="Wake word" value={ch.voice_config?.wake_word || "jarvis"} onChange={v => set("channels.voice_config.wake_word", v)} desc="Default: jarvis" />
+      <SelectInput label="Wake word backend" value={ch.voice_config?.wake_word_backend} onChange={v => set("channels.voice_config.wake_word_backend", v)} options={["browser","vosk","porcupine"]} desc="browser = Web Speech API (no setup needed)" />
+      <Toggle label="Talk mode" value={ch.voice_config?.talk_mode_enabled} onChange={v => set("channels.voice_config.talk_mode_enabled", v)} desc="Continuous listening in chat" />
+      <Toggle label="Auto-listen" value={ch.voice_config?.talk_mode_auto_listen} onChange={v => set("channels.voice_config.talk_mode_auto_listen", v)} desc="Automatically listen again after response" />
     </Card>
   </>);
 }
@@ -948,18 +1159,18 @@ function ChannelsPage({ cfg, set }) {
 function SecurityPage({ cfg, set }) {
   const s = cfg.security || {};
   return (<>
-    <Section title="Sicherheit" desc="Iterations-Limits, Pfade, blockierte Befehle, Credential-Patterns" />
+    <Section title="Security" desc="Iteration limits, paths, blocked commands, credential patterns" />
     <Card title="Gatekeeper Limits">
-      <NumberInput label="Max Iterationen" value={s.max_iterations} onChange={v => set("security.max_iterations", v)} min={1} max={50} desc="Endlosschleifen-Schutz" />
-      <NumberInput label="Max Sub-Agent Tiefe" value={s.max_sub_agent_depth} onChange={v => set("security.max_sub_agent_depth", v)} min={1} max={10} desc="Maximale Rekursionstiefe fuer Sub-Agent-Delegationen" />
+      <NumberInput label="Max iterations" value={s.max_iterations} onChange={v => set("security.max_iterations", v)} min={1} max={50} desc="Infinite loop protection" />
+      <NumberInput label="Max sub-agent depth" value={s.max_sub_agent_depth} onChange={v => set("security.max_sub_agent_depth", v)} min={1} max={10} desc="Maximum recursion depth for sub-agent delegations" />
     </Card>
-    <Card title="Gatekeeper Dateisystem">
-      <ListInput label="Erlaubte Pfade" value={s.allowed_paths} onChange={v => set("security.allowed_paths", v)} placeholder="~/.jarvis/" />
+    <Card title="Gatekeeper Filesystem">
+      <ListInput label="Allowed paths" value={s.allowed_paths} onChange={v => set("security.allowed_paths", v)} placeholder="~/.jarvis/" />
     </Card>
-    <Card title="Gatekeeper Blockierte Befehle (Regex)">
+    <Card title="Gatekeeper Blocked Commands (Regex)">
       <ListInput label="Patterns" value={s.blocked_commands} onChange={v => set("security.blocked_commands", v)} placeholder="rm\\s+-rf\\s+/" />
     </Card>
-    <Card title="Gatekeeper Credential-Erkennung (Regex)">
+    <Card title="Gatekeeper Credential Detection (Regex)">
       <ListInput label="Patterns" value={s.credential_patterns} onChange={v => set("security.credential_patterns", v)} placeholder="sk-[a-zA-Z0-9]{20,}" />
     </Card>
   </>);
@@ -969,23 +1180,23 @@ function SecurityPage({ cfg, set }) {
 function ExecutorPage({ cfg, set }) {
   const e = cfg.executor || {};
   return (<>
-    <Section title="Executor" desc="Tool-Ausführung: Timeouts, Retries, Parallelität" />
-    <Card title="Allgemein">
-      <NumberInput label="LLM-Timeout (Sekunden)" value={cfg.ollama?.timeout_seconds} onChange={v => set("ollama.timeout_seconds", v)} min={10} max={600} desc="Timeout für LLM-Anfragen (Planner/Executor). Gilt für alle Backends (Ollama, OpenAI, etc.)" />
-      <NumberInput label="Standard-Timeout (Sekunden)" value={e.default_timeout_seconds} onChange={v => set("executor.default_timeout_seconds", v)} min={5} max={600} desc="Timeout für einzelne Tool-Aufrufe" />
-      <NumberInput label="Max. Output (Zeichen)" value={e.max_output_chars} onChange={v => set("executor.max_output_chars", v)} min={1000} max={100000} desc="Tool-Output wird ab dieser Länge abgeschnitten" />
-      <NumberInput label="Max. Retries" value={e.max_retries} onChange={v => set("executor.max_retries", v)} min={0} max={10} desc="Wiederholungsversuche bei transienten Fehlern" />
-      <SliderInput label="Backoff-Basis (Sekunden)" value={e.backoff_base_delay_seconds} onChange={v => set("executor.backoff_base_delay_seconds", v)} min={0.1} max={30} step={0.1} desc="Basis-Verzögerung für exponentiellen Backoff" />
+    <Section title="Executor" desc="Tool execution: timeouts, retries, parallelism" />
+    <Card title="General">
+      <NumberInput label="LLM timeout (seconds)" value={cfg.ollama?.timeout_seconds} onChange={v => set("ollama.timeout_seconds", v)} min={10} max={600} desc="Timeout for LLM requests (Planner/Executor). Applies to all backends (Ollama, OpenAI, etc.)" />
+      <NumberInput label="Default timeout (seconds)" value={e.default_timeout_seconds} onChange={v => set("executor.default_timeout_seconds", v)} min={5} max={600} desc="Timeout for individual tool calls" />
+      <NumberInput label="Max output (chars)" value={e.max_output_chars} onChange={v => set("executor.max_output_chars", v)} min={1000} max={100000} desc="Tool output is truncated after this length" />
+      <NumberInput label="Max retries" value={e.max_retries} onChange={v => set("executor.max_retries", v)} min={0} max={10} desc="Retry attempts for transient errors" />
+      <SliderInput label="Backoff base (seconds)" value={e.backoff_base_delay_seconds} onChange={v => set("executor.backoff_base_delay_seconds", v)} min={0.1} max={30} step={0.1} desc="Base delay for exponential backoff" />
     </Card>
-    <Card title="DAG-Parallelität">
-      <NumberInput label="Max. parallele Tools" value={e.max_parallel_tools} onChange={v => set("executor.max_parallel_tools", v)} min={1} max={16} desc="Maximale Anzahl gleichzeitig ausgeführter Tools (DAG-basiert)" />
+    <Card title="DAG Parallelism">
+      <NumberInput label="Max parallel tools" value={e.max_parallel_tools} onChange={v => set("executor.max_parallel_tools", v)} min={1} max={16} desc="Maximum number of simultaneously executed tools (DAG-based)" />
     </Card>
-    <Card title="Tool-spezifische Timeouts">
-      <NumberInput label="Bildanalyse (Sekunden)" value={e.media_analyze_image_timeout} onChange={v => set("executor.media_analyze_image_timeout", v)} min={30} max={600} desc="Vision-Modelle brauchen länger (20+ GB VRAM)" />
-      <NumberInput label="Audio-Transkription (Sekunden)" value={e.media_transcribe_audio_timeout} onChange={v => set("executor.media_transcribe_audio_timeout", v)} min={30} max={600} />
-      <NumberInput label="Text-Extraktion (Sekunden)" value={e.media_extract_text_timeout} onChange={v => set("executor.media_extract_text_timeout", v)} min={30} max={600} />
-      <NumberInput label="Text-to-Speech (Sekunden)" value={e.media_tts_timeout} onChange={v => set("executor.media_tts_timeout", v)} min={30} max={600} />
-      <NumberInput label="Python-Ausführung (Sekunden)" value={e.run_python_timeout} onChange={v => set("executor.run_python_timeout", v)} min={30} max={600} />
+    <Card title="Tool-specific Timeouts">
+      <NumberInput label="Image analysis (seconds)" value={e.media_analyze_image_timeout} onChange={v => set("executor.media_analyze_image_timeout", v)} min={30} max={600} desc="Vision models need more time (20+ GB VRAM)" />
+      <NumberInput label="Audio transcription (seconds)" value={e.media_transcribe_audio_timeout} onChange={v => set("executor.media_transcribe_audio_timeout", v)} min={30} max={600} />
+      <NumberInput label="Text extraction (seconds)" value={e.media_extract_text_timeout} onChange={v => set("executor.media_extract_text_timeout", v)} min={30} max={600} />
+      <NumberInput label="Text-to-speech (seconds)" value={e.media_tts_timeout} onChange={v => set("executor.media_tts_timeout", v)} min={30} max={600} />
+      <NumberInput label="Python execution (seconds)" value={e.run_python_timeout} onChange={v => set("executor.run_python_timeout", v)} min={30} max={600} />
     </Card>
   </>);
 }
@@ -994,42 +1205,42 @@ function ExecutorPage({ cfg, set }) {
 function WebPage({ cfg, set }) {
   const w = cfg.web || {};
   return (<>
-    <Section title="Web-Tools" desc="Such-Backends, Limits, Rate-Limiting, HTTP-Requests" />
+    <Section title="Web Tools" desc="Search backends, limits, rate limiting, HTTP requests" />
     <Card title="SearXNG (Self-hosted)">
-      <TextInput label="SearXNG URL" value={w.searxng_url} onChange={v => set("web.searxng_url", v)} mono placeholder="http://localhost:8888" desc="Höchste Priorität" />
+      <TextInput label="SearXNG URL" value={w.searxng_url} onChange={v => set("web.searxng_url", v)} mono placeholder="http://localhost:8888" desc="Highest priority" />
     </Card>
     <Card title="Brave Search">
-      <TextInput label="API Key" value={w.brave_api_key} onChange={v => set("web.brave_api_key", v)} type="password" desc="2000 Anfragen/Monat kostenlos" />
+      <TextInput label="API Key" value={w.brave_api_key} onChange={v => set("web.brave_api_key", v)} type="password" desc="2000 requests/month free" />
     </Card>
     <Card title="Google Custom Search Engine">
-      <TextInput label="API Key" value={w.google_cse_api_key} onChange={v => set("web.google_cse_api_key", v)} type="password" desc="100 Anfragen/Tag kostenlos" />
+      <TextInput label="API Key" value={w.google_cse_api_key} onChange={v => set("web.google_cse_api_key", v)} type="password" desc="100 requests/day free" />
       <TextInput label="Search Engine ID (cx)" value={w.google_cse_cx} onChange={v => set("web.google_cse_cx", v)} mono placeholder="a1b2c3d4e5f6g7h8i" />
     </Card>
     <Card title="Jina AI Reader">
-      <TextInput label="API Key" value={w.jina_api_key} onChange={v => set("web.jina_api_key", v)} type="password" desc="Optional — Free-Tier funktioniert ohne Key" />
+      <TextInput label="API Key" value={w.jina_api_key} onChange={v => set("web.jina_api_key", v)} type="password" desc="Optional — free tier works without key" />
     </Card>
     <Card title="DuckDuckGo">
-      <Toggle label="DuckDuckGo aktiviert" value={w.duckduckgo_enabled} onChange={v => set("web.duckduckgo_enabled", v)} desc="Kostenloser Fallback" />
-      <SliderInput label="Mindestabstand (Sekunden)" value={w.ddg_min_delay_seconds} onChange={v => set("web.ddg_min_delay_seconds", v)} min={0.5} max={10} step={0.5} desc="Rate-Limiting zwischen DuckDuckGo-Suchen" />
-      <NumberInput label="Rate-Limit-Wartezeit (Sekunden)" value={w.ddg_ratelimit_wait_seconds} onChange={v => set("web.ddg_ratelimit_wait_seconds", v)} min={5} max={120} desc="Wartezeit bei 429-Fehler" />
-      <NumberInput label="Cache-TTL (Sekunden)" value={w.ddg_cache_ttl_seconds} onChange={v => set("web.ddg_cache_ttl_seconds", v)} min={60} max={86400} desc="Wie lange Suchergebnisse gecached werden" />
+      <Toggle label="DuckDuckGo enabled" value={w.duckduckgo_enabled} onChange={v => set("web.duckduckgo_enabled", v)} desc="Free fallback" />
+      <SliderInput label="Min delay (seconds)" value={w.ddg_min_delay_seconds} onChange={v => set("web.ddg_min_delay_seconds", v)} min={0.5} max={10} step={0.5} desc="Rate limiting between DuckDuckGo searches" />
+      <NumberInput label="Rate limit wait (seconds)" value={w.ddg_ratelimit_wait_seconds} onChange={v => set("web.ddg_ratelimit_wait_seconds", v)} min={5} max={120} desc="Wait time on 429 error" />
+      <NumberInput label="Cache TTL (seconds)" value={w.ddg_cache_ttl_seconds} onChange={v => set("web.ddg_cache_ttl_seconds", v)} min={60} max={86400} desc="How long search results are cached" />
     </Card>
-    <Card title="Fetch-Limits">
-      <NumberInput label="Max. Fetch-Größe (Bytes)" value={w.max_fetch_bytes} onChange={v => set("web.max_fetch_bytes", v)} min={10000} max={10000000} desc="Maximale Antwortgröße beim URL-Fetch" />
-      <NumberInput label="Max. Text-Zeichen" value={w.max_text_chars} onChange={v => set("web.max_text_chars", v)} min={1000} max={200000} desc="Maximale Zeichenzahl des extrahierten Textes" />
-      <NumberInput label="Fetch-Timeout (Sekunden)" value={w.fetch_timeout_seconds} onChange={v => set("web.fetch_timeout_seconds", v)} min={5} max={120} />
-      <NumberInput label="Such-Timeout (Sekunden)" value={w.search_timeout_seconds} onChange={v => set("web.search_timeout_seconds", v)} min={5} max={60} />
-      <NumberInput label="Max. Suchergebnisse" value={w.max_search_results} onChange={v => set("web.max_search_results", v)} min={1} max={50} />
-      <NumberInput label="search_and_read Max. Zeichen/Seite" value={w.search_and_read_max_chars} onChange={v => set("web.search_and_read_max_chars", v)} min={1000} max={50000} />
+    <Card title="Fetch Limits">
+      <NumberInput label="Max fetch size (bytes)" value={w.max_fetch_bytes} onChange={v => set("web.max_fetch_bytes", v)} min={10000} max={10000000} desc="Maximum response size for URL fetch" />
+      <NumberInput label="Max text chars" value={w.max_text_chars} onChange={v => set("web.max_text_chars", v)} min={1000} max={200000} desc="Maximum character count of extracted text" />
+      <NumberInput label="Fetch timeout (seconds)" value={w.fetch_timeout_seconds} onChange={v => set("web.fetch_timeout_seconds", v)} min={5} max={120} />
+      <NumberInput label="Search timeout (seconds)" value={w.search_timeout_seconds} onChange={v => set("web.search_timeout_seconds", v)} min={5} max={60} />
+      <NumberInput label="Max search results" value={w.max_search_results} onChange={v => set("web.max_search_results", v)} min={1} max={50} />
+      <NumberInput label="search_and_read max chars/page" value={w.search_and_read_max_chars} onChange={v => set("web.search_and_read_max_chars", v)} min={1000} max={50000} />
     </Card>
     <Card title="HTTP Request Tool">
-      <NumberInput label="Max. Body-Größe (Bytes)" value={w.http_request_max_body_bytes} onChange={v => set("web.http_request_max_body_bytes", v)} min={1024} max={10485760} desc="Maximale Größe des Request-Body" />
-      <NumberInput label="Standard-Timeout (Sekunden)" value={w.http_request_timeout_seconds} onChange={v => set("web.http_request_timeout_seconds", v)} min={1} max={120} />
-      <SliderInput label="Rate-Limit (Sekunden)" value={w.http_request_rate_limit_seconds} onChange={v => set("web.http_request_rate_limit_seconds", v)} min={0} max={30} step={0.5} desc="Mindestabstand zwischen Requests. 0 = kein Limit." />
+      <NumberInput label="Max body size (bytes)" value={w.http_request_max_body_bytes} onChange={v => set("web.http_request_max_body_bytes", v)} min={1024} max={10485760} desc="Maximum request body size" />
+      <NumberInput label="Default timeout (seconds)" value={w.http_request_timeout_seconds} onChange={v => set("web.http_request_timeout_seconds", v)} min={1} max={120} />
+      <SliderInput label="Rate limit (seconds)" value={w.http_request_rate_limit_seconds} onChange={v => set("web.http_request_rate_limit_seconds", v)} min={0} max={30} step={0.5} desc="Minimum interval between requests. 0 = no limit." />
     </Card>
-    <Card title="Domain-Filter">
-      <DomainListInput label="Blocklist" value={w.domain_blocklist} onChange={v => set("web.domain_blocklist", v)} placeholder="example.com" desc="Diese Domains werden beim Fetch blockiert" />
-      <DomainListInput label="Allowlist" value={w.domain_allowlist} onChange={v => set("web.domain_allowlist", v)} placeholder="trusted.com" desc="Wenn nicht leer: NUR diese Domains sind erlaubt (Whitelist)" />
+    <Card title="Domain Filter">
+      <DomainListInput label="Blocklist" value={w.domain_blocklist} onChange={v => set("web.domain_blocklist", v)} placeholder="example.com" desc="These domains are blocked during fetch" />
+      <DomainListInput label="Allowlist" value={w.domain_allowlist} onChange={v => set("web.domain_allowlist", v)} placeholder="trusted.com" desc="If not empty: ONLY these domains are allowed (whitelist)" />
     </Card>
   </>);
 }
@@ -1068,21 +1279,21 @@ function McpPage({ cfg, set, mcpServers, setMcpServers, a2a, setA2a, setValidati
   return (<>
     <Section title="MCP & A2A" desc="Model Context Protocol Server + Agent-zu-Agent Kommunikation" />
     <Card title="MCP Server-Modus">
-      <SelectInput label="Modus" value={mcpServers.mode || "disabled"} onChange={v => setMcpServers({...mcpServers, mode: v})} options={["disabled","stdio","http","both"]} desc="Jarvis als MCP-Server exponieren" />
+      <SelectInput label="Mode" value={mcpServers.mode || "disabled"} onChange={v => setMcpServers({...mcpServers, mode: v})} options={["disabled","stdio","http","both"]} desc="Expose Jarvis as MCP server" />
       {mcpServers.mode !== "disabled" && <>
         <TextInput label="HTTP Host" value={mcpServers.http_host || "127.0.0.1"} onChange={v => setMcpServers({...mcpServers, http_host: v})} mono />
         <NumberInput label="HTTP Port" value={mcpServers.http_port || 3001} onChange={v => setMcpServers({...mcpServers, http_port: v})} min={1024} max={65535} />
         <TextInput label="Server-Name" value={mcpServers.server_name || "jarvis"} onChange={v => setMcpServers({...mcpServers, server_name: v})} />
-        <Toggle label="Auth erforderlich" value={mcpServers.require_auth} onChange={v => setMcpServers({...mcpServers, require_auth: v})} />
+        <Toggle label="Auth required" value={mcpServers.require_auth} onChange={v => setMcpServers({...mcpServers, require_auth: v})} />
         <TextInput label="Auth Token" value={mcpServers.auth_token || ""} onChange={v => setMcpServers({...mcpServers, auth_token: v})} type="password" />
-        <Toggle label="Tools exponieren" value={mcpServers.expose_tools !== false} onChange={v => setMcpServers({...mcpServers, expose_tools: v})} />
-        <Toggle label="Resources exponieren" value={mcpServers.expose_resources !== false} onChange={v => setMcpServers({...mcpServers, expose_resources: v})} />
-        <Toggle label="Prompts exponieren" value={mcpServers.expose_prompts !== false} onChange={v => setMcpServers({...mcpServers, expose_prompts: v})} />
-        <Toggle label="Sampling aktiviert" value={mcpServers.enable_sampling} onChange={v => setMcpServers({...mcpServers, enable_sampling: v})} />
+        <Toggle label="Expose tools" value={mcpServers.expose_tools !== false} onChange={v => setMcpServers({...mcpServers, expose_tools: v})} />
+        <Toggle label="Expose resources" value={mcpServers.expose_resources !== false} onChange={v => setMcpServers({...mcpServers, expose_resources: v})} />
+        <Toggle label="Expose prompts" value={mcpServers.expose_prompts !== false} onChange={v => setMcpServers({...mcpServers, expose_prompts: v})} />
+        <Toggle label="Sampling enabled" value={mcpServers.enable_sampling} onChange={v => setMcpServers({...mcpServers, enable_sampling: v})} />
       </>}
     </Card>
     <Card title="Externe MCP Server">
-      <div className="cc-desc" style={{marginBottom:16}}>Verbundene externe MCP-Server (Tools & Resources)</div>
+      <div className="cc-desc" style={{marginBottom:16}}>Connected external MCP servers (tools & resources)</div>
       {extServerNames.map(name => {
         const srv = extServers[name];
         return (
@@ -1091,10 +1302,10 @@ function McpPage({ cfg, set, mcpServers, setMcpServers, a2a, setA2a, setValidati
               <div style={{ flex: 1 }}>
                 <TextInput label="Server Name" value={name} onChange={v => updateExtServer(name, v, srv)} mono />
               </div>
-              <button className="cc-btn cc-btn-danger" onClick={() => removeExtServer(name)} style={{ marginTop: 22 }}>Löschen</button>
+              <button className="cc-btn cc-btn-danger" onClick={() => removeExtServer(name)} style={{ marginTop: 22 }}>Delete</button>
             </div>
-            <TextInput label="Command" value={srv.command || ""} onChange={v => updateExtServer(name, name, { ...srv, command: v })} mono placeholder="z.B. npx, uvx, python" />
-            <ListInput label="Arguments" value={srv.args || []} onChange={v => updateExtServer(name, name, { ...srv, args: v })} placeholder="z.B. -y, @modelcontextprotocol/server-sqlite, --db, test.db" />
+            <TextInput label="Command" value={srv.command || ""} onChange={v => updateExtServer(name, name, { ...srv, command: v })} mono placeholder="e.g. npx, uvx, python" />
+            <ListInput label="Arguments" value={srv.args || []} onChange={v => updateExtServer(name, name, { ...srv, args: v })} placeholder="e.g. -y, @modelcontextprotocol/server-sqlite, --db, test.db" />
             <JsonEditor 
               label="Environment Variables (JSON)" 
               value={srv.env || {}} 
@@ -1102,21 +1313,21 @@ function McpPage({ cfg, set, mcpServers, setMcpServers, a2a, setA2a, setValidati
               onValidationError={err => setValidationErrors(prev => ({ ...prev, [`mcp_env_${name}`]: err }))}
               rows={2} 
             />
-            <ListInput label="Always Allow (Tools)" value={srv.always_allow || []} onChange={v => updateExtServer(name, name, { ...srv, always_allow: v })} placeholder="z.B. read_query" />
-            <Toggle label="Deaktiviert" value={srv.disabled || false} onChange={v => updateExtServer(name, name, { ...srv, disabled: v })} />
+            <ListInput label="Always Allow (Tools)" value={srv.always_allow || []} onChange={v => updateExtServer(name, name, { ...srv, always_allow: v })} placeholder="e.g. read_query" />
+            <Toggle label="Disabled" value={srv.disabled || false} onChange={v => updateExtServer(name, name, { ...srv, disabled: v })} />
           </div>
         );
       })}
-      <button className="cc-btn" onClick={addExtServer}>+ Server hinzufügen</button>
+      <button className="cc-btn" onClick={addExtServer}>+ Add server</button>
     </Card>
     <Card title="A2A Protokoll">
-      <Toggle label="A2A aktiviert" value={a2a.enabled} onChange={v => setA2a({...a2a, enabled: v})} desc="Agent-zu-Agent Kommunikation (Linux Foundation A2A RC v1.0)" />
+      <Toggle label="A2A enabled" value={a2a.enabled} onChange={v => setA2a({...a2a, enabled: v})} desc="Agent-to-agent communication (Linux Foundation A2A RC v1.0)" />
       {a2a.enabled && <>
         <TextInput label="Host" value={a2a.host || "127.0.0.1"} onChange={v => setA2a({...a2a, host: v})} mono />
         <NumberInput label="Port" value={a2a.port || 3002} onChange={v => setA2a({...a2a, port: v})} min={1024} max={65535} />
         <TextInput label="Agent Name" value={a2a.agent_name || "Jarvis"} onChange={v => setA2a({...a2a, agent_name: v})} />
-        <TextInput label="Beschreibung" value={a2a.agent_description || ""} onChange={v => setA2a({...a2a, agent_description: v})} />
-        <Toggle label="Auth erforderlich" value={a2a.require_auth} onChange={v => setA2a({...a2a, require_auth: v})} />
+        <TextInput label="Description" value={a2a.agent_description || ""} onChange={v => setA2a({...a2a, agent_description: v})} />
+        <Toggle label="Auth required" value={a2a.require_auth} onChange={v => setA2a({...a2a, require_auth: v})} />
         <TextInput label="Auth Token" value={a2a.auth_token || ""} onChange={v => setA2a({...a2a, auth_token: v})} type="password" />
         <NumberInput label="Max Tasks" value={a2a.max_tasks || 100} onChange={v => setA2a({...a2a, max_tasks: v})} min={1} max={1000} />
         <NumberInput label="Task Timeout (Sek.)" value={a2a.task_timeout_seconds || 3600} onChange={v => setA2a({...a2a, task_timeout_seconds: v})} min={60} max={86400} />
@@ -1143,11 +1354,11 @@ function CronPage({ cfg, set, cronJobs, setCronJobs }) {
     setCronJobs(prev => prev.map((j, idx) => idx === i ? { ...j, [field]: v } : j));
   }, [setCronJobs]);
   return (<>
-    <Section title="Cron & Heartbeat" desc="Periodische Aufgaben, Heartbeat-Checkliste, Plugins" />
+    <Section title="Cron & Heartbeat" desc="Periodic tasks, heartbeat checklist, plugins" />
     <Card title="Heartbeat">
-      <Toggle label="Heartbeat aktiviert" value={cfg.heartbeat?.enabled} onChange={v => set("heartbeat.enabled", v)} desc="Periodische System-Checks" />
-      <NumberInput label="Intervall (Min.)" value={cfg.heartbeat?.interval_minutes} onChange={v => set("heartbeat.interval_minutes", v)} min={1} max={1440} />
-      <TextInput label="Checklisten-Datei" value={cfg.heartbeat?.checklist_file} onChange={v => set("heartbeat.checklist_file", v)} mono desc="Relativ zu jarvis_home" />
+      <Toggle label="Heartbeat enabled" value={cfg.heartbeat?.enabled} onChange={v => set("heartbeat.enabled", v)} desc="Periodic system checks" />
+      <NumberInput label="Interval (min)" value={cfg.heartbeat?.interval_minutes} onChange={v => set("heartbeat.interval_minutes", v)} min={1} max={1440} />
+      <TextInput label="Checklist file" value={cfg.heartbeat?.checklist_file} onChange={v => set("heartbeat.checklist_file", v)} mono desc="Relative to jarvis_home" />
       <SelectInput label="Channel" value={cfg.heartbeat?.channel} onChange={v => set("heartbeat.channel", v)} options={["cli","telegram","webui","slack","discord","whatsapp","mattermost","google_chat"]} />
       <TextInput label="Modell" value={cfg.heartbeat?.model} onChange={v => set("heartbeat.model", v)} mono />
     </Card>
@@ -1158,7 +1369,7 @@ function CronPage({ cfg, set, cronJobs, setCronJobs }) {
             <strong className="cc-label" style={{margin:0}}>{job.name}</strong>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <Toggle label="" value={job.enabled} onChange={v => updCron(i, "enabled", v)} />
-              <button className="cc-btn-icon" onClick={() => setCronJobs(prev => prev.filter((_,j) => j!==i))} type="button" title="Job löschen">{I.trash}</button>
+              <button className="cc-btn-icon" onClick={() => setCronJobs(prev => prev.filter((_,j) => j!==i))} type="button" title="Delete job">{I.trash}</button>
             </div>
           </div>
           <TextInput label="Name" value={job.name} onChange={v => updCron(i, "name", v)} mono />
@@ -1167,14 +1378,14 @@ function CronPage({ cfg, set, cronJobs, setCronJobs }) {
           <TextArea label="Prompt" value={job.prompt} onChange={v => updCron(i, "prompt", v)} rows={4} />
           <SelectInput label="Channel" value={job.channel} onChange={v => updCron(i, "channel", v)} options={["telegram","cli","webui","slack","discord","whatsapp","mattermost","google_chat"]} />
           <TextInput label="Modell" value={job.model} onChange={v => updCron(i, "model", v)} mono />
-          <TextInput label="Agent" value={job.agent || ""} onChange={v => updCron(i, "agent", v)} placeholder="(leer = normales Routing)" />
+          <TextInput label="Agent" value={job.agent || ""} onChange={v => updCron(i, "agent", v)} placeholder="(empty = default routing)" />
         </div>
       ))}
-      <button className="cc-btn" onClick={() => setCronJobs([...cronJobs, { name: `job_${cronJobs.length+1}`, schedule: "0 9 * * *", prompt: "", channel: "cli", model: "qwen3:8b", enabled: false, agent: "" }])} type="button">{I.plus} Neuen Job hinzufügen</button>
+      <button className="cc-btn" onClick={() => setCronJobs([...cronJobs, { name: `job_${cronJobs.length+1}`, schedule: "0 9 * * *", prompt: "", channel: "cli", model: "qwen3:8b", enabled: false, agent: "" }])} type="button">{I.plus} Add new job</button>
     </Card>
     <Card title="Plugins">
-      <TextInput label="Skills-Verzeichnis" value={cfg.plugins?.skills_dir} onChange={v => set("plugins.skills_dir", v)} mono desc="Relativ zu jarvis_home" />
-      <Toggle label="Auto-Update" value={cfg.plugins?.auto_update} onChange={v => set("plugins.auto_update", v)} desc="Automatische Plugin-Updates beim Start" />
+      <TextInput label="Skills directory" value={cfg.plugins?.skills_dir} onChange={v => set("plugins.skills_dir", v)} mono desc="Relative to jarvis_home" />
+      <Toggle label="Auto-update" value={cfg.plugins?.auto_update} onChange={v => set("plugins.auto_update", v)} desc="Automatic plugin updates on startup" />
     </Card>
   </>);
 }
@@ -1183,11 +1394,11 @@ function CronPage({ cfg, set, cronJobs, setCronJobs }) {
 function LoggingPage({ cfg, set }) {
   const l = cfg.logging || {};
   return (<>
-    <Section title="Logging" desc="Protokollierung und Debugging" />
-    <Card title="Allgemein">
-      <SelectInput label="Log-Level" value={l.level} onChange={v => set("logging.level", v)} options={["DEBUG","INFO","WARNING","ERROR","CRITICAL"]} />
-      <Toggle label="JSON-Logs" value={l.json_logs} onChange={v => set("logging.json_logs", v)} desc="Strukturierte JSON-Logs für externe Tools" />
-      <Toggle label="Console Output" value={l.console} onChange={v => set("logging.console", v)} desc="Logs in der Konsole ausgeben" />
+    <Section title="Logging" desc="Logging and debugging" />
+    <Card title="General">
+      <SelectInput label="Log level" value={l.level} onChange={v => set("logging.level", v)} options={["DEBUG","INFO","WARNING","ERROR","CRITICAL"]} />
+      <Toggle label="JSON logs" value={l.json_logs} onChange={v => set("logging.json_logs", v)} desc="Structured JSON logs for external tools" />
+      <Toggle label="Console output" value={l.console} onChange={v => set("logging.console", v)} desc="Output logs to console" />
     </Card>
   </>);
 }
@@ -1196,16 +1407,16 @@ function LoggingPage({ cfg, set }) {
 function DatabasePage({ cfg, set }) {
   const d = cfg.database || {};
   return (<>
-    <Section title="Datenbank" desc="Speicher-Backend für Memory, Logs und State" />
-    <Card title="Verbindung">
+    <Section title="Database" desc="Storage backend for memory, logs and state" />
+    <Card title="Connection">
       <SelectInput label="Backend" value={d.backend} onChange={v => set("database.backend", v)} options={[{value:"sqlite",label:"SQLite (Standard)"},{value:"postgresql",label:"PostgreSQL"}]} />
       {d.backend === "postgresql" && (
         <>
           <TextInput label="Host" value={d.pg_host} onChange={v => set("database.pg_host", v)} mono />
           <NumberInput label="Port" value={d.pg_port} onChange={v => set("database.pg_port", v)} min={1} max={65535} />
-          <TextInput label="Datenbank" value={d.pg_dbname} onChange={v => set("database.pg_dbname", v)} mono />
-          <TextInput label="Benutzer" value={d.pg_user} onChange={v => set("database.pg_user", v)} mono />
-          <TextInput label="Passwort" value={d.pg_password} onChange={v => set("database.pg_password", v)} type="password" />
+          <TextInput label="Database" value={d.pg_dbname} onChange={v => set("database.pg_dbname", v)} mono />
+          <TextInput label="User" value={d.pg_user} onChange={v => set("database.pg_user", v)} mono />
+          <TextInput label="Password" value={d.pg_password} onChange={v => set("database.pg_password", v)} type="password" />
         </>
       )}
     </Card>
@@ -1216,15 +1427,15 @@ function DatabasePage({ cfg, set }) {
       </Card>
     )}
     {d.backend !== "postgresql" && (
-      <Card title="Verschlüsselung" open={false}>
-        <Toggle label="SQLite-Verschlüsselung (SQLCipher)" value={d.encryption_enabled} onChange={v => set("database.encryption_enabled", v)} desc="Verschlüsselt alle SQLite-Datenbanken mit SQLCipher. Der Schlüssel wird sicher im OS-Keyring gespeichert." />
+      <Card title="Encryption" open={false}>
+        <Toggle label="SQLite encryption (SQLCipher)" value={d.encryption_enabled} onChange={v => set("database.encryption_enabled", v)} desc="Encrypts all SQLite databases with SQLCipher. The key is stored securely in the OS keyring." />
         {d.encryption_enabled && (
           <div className="cc-desc" style={{marginTop:8,lineHeight:1.5}}>
-            Der Verschlüsselungsschlüssel wird automatisch im System-Keyring verwaltet
+            The encryption key is managed automatically in the system keyring
             (Windows Credential Locker / macOS Keychain / Linux SecretService).
-            Beim ersten Aktivieren wird ein neuer Schlüssel generiert.
+            A new key is generated on first activation.
             <br/><br/>
-            <strong>Voraussetzung:</strong> <code style={{fontSize:12,background:"var(--bg3)",padding:"2px 6px",borderRadius:4}}>pip install cognithor[encryption]</code>
+            <strong>Prerequisite:</strong> <code style={{fontSize:12,background:"var(--bg3)",padding:"2px 6px",borderRadius:4}}>pip install cognithor[encryption]</code>
           </div>
         )}
       </Card>
@@ -1236,24 +1447,24 @@ function DatabasePage({ cfg, set }) {
 // Fix #9: Reset button per textarea
 function PromptsPage({ prompts, setPrompts, defaultPromptsRef }) {
   return (<>
-    <Section title="Prompts & Policies" desc="System-Prompts einsehen und anpassen, Gatekeeper-Policies, CORE.md, HEARTBEAT.md" />
-    <Card title="CORE.md — System-Persönlichkeit">
-      <TextArea label="Core Memory (Markdown)" value={prompts.coreMd} onChange={v => setPrompts({...prompts, coreMd: v})} rows={16} desc="Die Persönlichkeit, Regeln und Präferenzen von Jarvis" onReset={() => setPrompts({...prompts, coreMd: defaultPromptsRef.current.coreMd})} resetLabel="CORE.md zurücksetzen" />
+    <Section title="Prompts & Policies" desc="View and customize system prompts, gatekeeper policies, CORE.md, HEARTBEAT.md" />
+    <Card title="CORE.md — System Personality">
+      <TextArea label="Core Memory (Markdown)" value={prompts.coreMd} onChange={v => setPrompts({...prompts, coreMd: v})} rows={16} desc="Personality, rules and preferences of Jarvis" onReset={() => setPrompts({...prompts, coreMd: defaultPromptsRef.current.coreMd})} resetLabel="Reset CORE.md" />
     </Card>
     <Card title="Planner System-Prompt" open={false}>
-      <TextArea label="SYSTEM_PROMPT" value={prompts.plannerSystem} onChange={v => setPrompts({...prompts, plannerSystem: v})} rows={20} mono desc="Haupt-Prompt — Variablen: {owner_name}, {tools_section}, {context_section}, {current_datetime}" onReset={() => setPrompts({...prompts, plannerSystem: defaultPromptsRef.current.plannerSystem})} />
+      <TextArea label="SYSTEM_PROMPT" value={prompts.plannerSystem} onChange={v => setPrompts({...prompts, plannerSystem: v})} rows={20} mono desc="Main prompt — variables: {owner_name}, {tools_section}, {context_section}, {current_datetime}" onReset={() => setPrompts({...prompts, plannerSystem: defaultPromptsRef.current.plannerSystem})} />
     </Card>
     <Card title="Replan-Prompt" open={false}>
-      <TextArea label="REPLAN_PROMPT" value={prompts.replanPrompt} onChange={v => setPrompts({...prompts, replanPrompt: v})} rows={12} mono desc="Prompt nach der Tool-Ausführung — Variablen: {results_section}, {original_goal}" onReset={() => setPrompts({...prompts, replanPrompt: defaultPromptsRef.current.replanPrompt})} />
+      <TextArea label="REPLAN_PROMPT" value={prompts.replanPrompt} onChange={v => setPrompts({...prompts, replanPrompt: v})} rows={12} mono desc="Prompt after tool execution — variables: {results_section}, {original_goal}" onReset={() => setPrompts({...prompts, replanPrompt: defaultPromptsRef.current.replanPrompt})} />
     </Card>
     <Card title="Eskalations-Prompt" open={false}>
-      <TextArea label="ESCALATION_PROMPT" value={prompts.escalationPrompt} onChange={v => setPrompts({...prompts, escalationPrompt: v})} rows={6} mono desc="Wenn ein Tool vom Gatekeeper blockiert wird — Variablen: {tool}, {reason}" onReset={() => setPrompts({...prompts, escalationPrompt: defaultPromptsRef.current.escalationPrompt})} />
+      <TextArea label="ESCALATION_PROMPT" value={prompts.escalationPrompt} onChange={v => setPrompts({...prompts, escalationPrompt: v})} rows={6} mono desc="When a tool is blocked by the gatekeeper — variables: {tool}, {reason}" onReset={() => setPrompts({...prompts, escalationPrompt: defaultPromptsRef.current.escalationPrompt})} />
     </Card>
     <Card title="Gatekeeper-Policies (YAML)" open={false}>
-      <TextArea label="default.yaml" value={prompts.policyYaml} onChange={v => setPrompts({...prompts, policyYaml: v})} rows={20} mono desc="Regeln für Tool-Ausführung: ALLOW, INFORM, APPROVE, MASK, BLOCK" onReset={() => setPrompts({...prompts, policyYaml: defaultPromptsRef.current.policyYaml})} />
+      <TextArea label="default.yaml" value={prompts.policyYaml} onChange={v => setPrompts({...prompts, policyYaml: v})} rows={20} mono desc="Rules for tool execution: ALLOW, INFORM, APPROVE, MASK, BLOCK" onReset={() => setPrompts({...prompts, policyYaml: defaultPromptsRef.current.policyYaml})} />
     </Card>
-    <Card title="HEARTBEAT.md — Heartbeat-Checkliste" open={false}>
-      <TextArea label="Heartbeat Checkliste" value={prompts.heartbeatMd} onChange={v => setPrompts({...prompts, heartbeatMd: v})} rows={10} desc="Periodisch ausgeführte Aufgaben" onReset={() => setPrompts({...prompts, heartbeatMd: defaultPromptsRef.current.heartbeatMd})} />
+    <Card title="HEARTBEAT.md — Heartbeat Checklist" open={false}>
+      <TextArea label="Heartbeat checklist" value={prompts.heartbeatMd} onChange={v => setPrompts({...prompts, heartbeatMd: v})} rows={10} desc="Periodically executed tasks" onReset={() => setPrompts({...prompts, heartbeatMd: defaultPromptsRef.current.heartbeatMd})} />
     </Card>
   </>);
 }
@@ -1271,24 +1482,24 @@ function AgentsPage({ agents, setAgents }) {
     temperature: null, enabled: true,
   }]);
   return (<>
-    <Section title="Agenten" desc="Multi-Agent Profile verwalten — Routing, Modelle, Berechtigungen" />
+    <Section title="Agents" desc="Manage multi-agent profiles — routing, models, permissions" />
     {agents.map((a, i) => (
-      <Card key={i} title={a.display_name || a.name} badge={a.enabled ? "aktiv" : "inaktiv"}>
-        <TextInput label="Name (ID)" value={a.name} onChange={v => upd(i, "name", v)} mono error={!a.name ? "Pflichtfeld" : null} />
-        <TextInput label="Anzeigename" value={a.display_name} onChange={v => upd(i, "display_name", v)} />
-        <TextInput label="Beschreibung" value={a.description} onChange={v => upd(i, "description", v)} />
+      <Card key={i} title={a.display_name || a.name} badge={a.enabled ? "active" : "inactive"}>
+        <TextInput label="Name (ID)" value={a.name} onChange={v => upd(i, "name", v)} mono error={!a.name ? "Required" : null} />
+        <TextInput label="Display name" value={a.display_name} onChange={v => upd(i, "display_name", v)} />
+        <TextInput label="Description" value={a.description} onChange={v => upd(i, "description", v)} />
         <TextArea label="System-Prompt" value={a.system_prompt} onChange={v => upd(i, "system_prompt", v)} rows={6} />
-        <SelectInput label="Sprache" value={a.language} onChange={v => upd(i, "language", v)} options={["de","en","fr","es","it"]} />
-        <NumberInput label="Priorität" value={a.priority} onChange={v => upd(i, "priority", v)} min={0} max={100} />
-        <TextInput label="Bevorzugtes Modell" value={a.preferred_model} onChange={v => upd(i, "preferred_model", v)} mono />
+        <SelectInput label="Language" value={a.language} onChange={v => upd(i, "language", v)} options={["de","en","fr","es","it"]} />
+        <NumberInput label="Priority" value={a.priority} onChange={v => upd(i, "priority", v)} min={0} max={100} />
+        <TextInput label="Preferred model" value={a.preferred_model} onChange={v => upd(i, "preferred_model", v)} mono />
         <SliderInput label="Temperature" value={a.temperature} onChange={v => upd(i, "temperature", v)} min={0} max={2} step={0.1} />
         <ListInput label="Trigger Keywords" value={a.trigger_keywords} onChange={v => upd(i, "trigger_keywords", v)} />
-        <ListInput label="Blockierte Tools" value={a.blocked_tools} onChange={v => upd(i, "blocked_tools", v)} />
-        <Toggle label="Aktiviert" value={a.enabled} onChange={v => upd(i, "enabled", v)} />
-        {a.name !== "jarvis" && <button className="cc-btn cc-btn-danger" onClick={() => setAgents(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} Agent löschen</button>}
+        <ListInput label="Blocked tools" value={a.blocked_tools} onChange={v => upd(i, "blocked_tools", v)} />
+        <Toggle label="Enabled" value={a.enabled} onChange={v => upd(i, "enabled", v)} />
+        {a.name !== "jarvis" && <button className="cc-btn cc-btn-danger" onClick={() => setAgents(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} Delete agent</button>}
       </Card>
     ))}
-    <button className="cc-btn" onClick={add} type="button">{I.plus} Neuen Agenten anlegen</button>
+    <button className="cc-btn" onClick={add} type="button">{I.plus} Create new agent</button>
   </>);
 }
 
@@ -1303,80 +1514,58 @@ function BindingsPage({ bindings, setBindings, agents }) {
     description: "", channels: [], command_prefixes: [], message_patterns: [], enabled: true,
   }]);
   return (<>
-    <Section title="Bindings" desc="Routing-Regeln: Welche Nachricht geht an welchen Agenten?" />
+    <Section title="Bindings" desc="Routing rules: which message goes to which agent?" />
     {bindings.map((b, i) => (
       <Card key={i} title={b.name}>
-        <TextInput label="Name" value={b.name} onChange={v => upd(i, "name", v)} mono error={!b.name ? "Pflichtfeld" : null} />
-        <SelectInput label="Ziel-Agent" value={b.target_agent} onChange={v => upd(i, "target_agent", v)} options={agents.map(a => a.name)} />
-        <NumberInput label="Priorität" value={b.priority} onChange={v => upd(i, "priority", v)} min={0} max={1000} />
-        <TextInput label="Beschreibung" value={b.description} onChange={v => upd(i, "description", v)} />
+        <TextInput label="Name" value={b.name} onChange={v => upd(i, "name", v)} mono error={!b.name ? "Required" : null} />
+        <SelectInput label="Target agent" value={b.target_agent} onChange={v => upd(i, "target_agent", v)} options={agents.map(a => a.name)} />
+        <NumberInput label="Priority" value={b.priority} onChange={v => upd(i, "priority", v)} min={0} max={1000} />
+        <TextInput label="Description" value={b.description} onChange={v => upd(i, "description", v)} />
         <ListInput label="Channels" value={b.channels || []} onChange={v => upd(i, "channels", v)} placeholder="telegram, cli..." />
         <ListInput label="Command Prefixes" value={b.command_prefixes || []} onChange={v => upd(i, "command_prefixes", v)} placeholder="/briefing, /code..." />
         <ListInput label="Message Patterns (Regex)" value={b.message_patterns || []} onChange={v => upd(i, "message_patterns", v)} />
-        <Toggle label="Aktiviert" value={b.enabled} onChange={v => upd(i, "enabled", v)} />
-        <button className="cc-btn cc-btn-danger" onClick={() => setBindings(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} Binding löschen</button>
+        <Toggle label="Enabled" value={b.enabled} onChange={v => upd(i, "enabled", v)} />
+        <button className="cc-btn cc-btn-danger" onClick={() => setBindings(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} Delete binding</button>
       </Card>
     ))}
-    <button className="cc-btn" onClick={add} type="button">{I.plus} Neues Binding</button>
+    <button className="cc-btn" onClick={add} type="button">{I.plus} New binding</button>
   </>);
 }
 
 // ── System ──────────────────────────────────────────────────────────────
 // Fix #14: Preset details expandable + Fix #16: Import button
-function SystemPage({ cfg, onRestart, onExport, onImport, restartState, presets, onApplyPreset, onResetDefaults }) {
-  const [expandedPreset, setExpandedPreset] = useState(null);
+function SystemPage({ cfg, onRestart, onExport, onImport, restartState, onResetDefaults }) {
   const fileRef = useRef(null);
-  const PRESET_DETAILS = {
-    minimal: "CLI aktiv, kleine Modelle (qwen3:8b), kein Dashboard, kein Heartbeat, SQLite",
-    standard: "CLI + WebUI (Port 8080), Heartbeat alle 30min, Dashboard aktiv, Kosten-Tracking",
-    full: "Alle Channels (Telegram, Slack, Discord, WhatsApp), Heartbeat, Dashboard, Plugins, A2A, PostgreSQL",
-  };
   return (<>
-    <Section title="System" desc="Neustart, Export/Import, Presets" />
-    <Card title="⚡ Jarvis neu starten">
-      <p className="cc-desc">Fährt Jarvis sauber herunter (Sessions speichern, Channels stoppen, Memory flushen) und startet mit der aktuellen Konfiguration neu.</p>
+    <Section title="System" desc="Restart, export/import, factory reset" />
+    <Card title="Restart Cognithor">
+      <p className="cc-desc">Cleanly shuts down Cognithor (save sessions, stop channels, flush memory) and restarts with the current configuration.</p>
       <button
         className={`cc-btn cc-btn-restart ${restartState === "restarting" ? "pulsing" : ""}`}
         onClick={onRestart}
         disabled={restartState === "restarting"}
         type="button"
       >
-        {restartState === "restarting" ? "⏳ Neustart läuft..." : restartState === "done" ? "✅ Neu gestartet!" : <>{I.restart} Jarvis neu starten</>}
+        {restartState === "restarting" ? "Restarting..." : restartState === "done" ? "Restarted!" : <>{I.restart} Restart Cognithor</>}
       </button>
-    </Card>
-    <Card title="Konfigurations-Presets">
-      <div className="cc-presets">
-        {presets.map(p => (
-          <div key={p.name} className={`cc-preset-card ${expandedPreset === p.name ? "expanded" : ""}`} onClick={() => setExpandedPreset(expandedPreset === p.name ? null : p.name)}>
-            <strong>{p.name === "minimal" ? "🔹 Minimal" : p.name === "standard" ? "🔸 Standard" : "🔷 Vollausbau"}</strong>
-            <span className="cc-desc">{p.description}</span>
-            {expandedPreset === p.name && (
-              <div className="cc-preset-details">
-                <div className="cc-preset-info">{PRESET_DETAILS[p.name]}</div>
-                <button className="cc-btn cc-btn-sm-full" onClick={(e) => { e.stopPropagation(); onApplyPreset(p.name); }} type="button">Preset anwenden</button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
     </Card>
     <Card title="Export & Import">
       <div className="cc-export-row">
-        <button className="cc-btn" onClick={onExport} type="button">{I.save} Konfiguration exportieren</button>
-        <button className="cc-btn" onClick={() => fileRef.current?.click()} type="button">{I.upload} Konfiguration importieren</button>
+        <button className="cc-btn" onClick={onExport} type="button">{I.save} Export configuration</button>
+        <button className="cc-btn" onClick={() => fileRef.current?.click()} type="button">{I.upload} Import configuration</button>
         <input ref={fileRef} type="file" accept=".json" style={{display:"none"}} onChange={e => { if (e.target.files[0]) onImport(e.target.files[0]); e.target.value = ""; }} />
       </div>
     </Card>
-    <Card title="Werkseinstellungen">
-      <p className="cc-desc">Setzt alle Konfigurationseinstellungen auf die Standardwerte zurück. API-Keys und gespeicherte Daten (Memory, Skills, Workflows) bleiben erhalten.</p>
-      <button className="cc-btn cc-btn-danger" onClick={onResetDefaults} type="button">{I.reset} Alle Einstellungen zurücksetzen</button>
+    <Card title="Factory Reset">
+      <p className="cc-desc">Resets all configuration settings to defaults. API keys and stored data (memory, skills, workflows) are preserved.</p>
+      <button className="cc-btn cc-btn-danger" onClick={onResetDefaults} type="button">{I.reset} Reset all settings</button>
     </Card>
-    <Card title="System-Info">
+    <Card title="System Info">
       <div className="cc-info-grid">
         <div className="cc-info-item"><span className="cc-info-label">Version</span><span className="cc-info-val">{cfg.version}</span></div>
         <div className="cc-info-item"><span className="cc-info-label">Backend</span><span className="cc-info-val">{cfg.llm_backend_type}</span></div>
-        <div className="cc-info-item"><span className="cc-info-label">Besitzer</span><span className="cc-info-val">{cfg.owner_name}</span></div>
-        <div className="cc-info-item"><span className="cc-info-label">Modus</span><span className="cc-info-val">{cfg.operation_mode}</span></div>
+        <div className="cc-info-item"><span className="cc-info-label">Owner</span><span className="cc-info-val">{cfg.owner_name}</span></div>
+        <div className="cc-info-item"><span className="cc-info-label">Mode</span><span className="cc-info-val">{cfg.operation_mode}</span></div>
       </div>
     </Card>
   </>);
@@ -1420,13 +1609,8 @@ export default function App() {
   const [prompts, setPrompts] = useState(defaultPrompts());
   const [promptsLoaded, setPromptsLoaded] = useState(false);
   const defaultPromptsRef = useRef(defaultPrompts());
-  const [agents, setAgents] = useState([{ name: "jarvis", display_name: "Jarvis", description: "Haupt-Agent (Default)", system_prompt: "", language: "de", trigger_patterns: [], trigger_keywords: [], priority: 0, allowed_tools: null, blocked_tools: [], preferred_model: "", temperature: 0.7, enabled: true }]);
+  const [agents, setAgents] = useState([{ name: "jarvis", display_name: "Jarvis", description: "Main agent (default)", system_prompt: "", language: "de", trigger_patterns: [], trigger_keywords: [], priority: 0, allowed_tools: null, blocked_tools: [], preferred_model: "", temperature: 0.7, enabled: true }]);
   const [bindings, setBindings] = useState([]);
-  const [presets] = useState([
-    { name: "minimal", description: "CLI-only, kleine Modelle" },
-    { name: "standard", description: "CLI + WebUI, Heartbeat, Dashboard" },
-    { name: "full", description: "Alle Channels, Heartbeat, Dashboard, Plugins" },
-  ]);
 
   // Dirty state tracking — AFTER all useState declarations
   const [savedSnapshot, setSavedSnapshot] = useState("");
@@ -1516,21 +1700,21 @@ export default function App() {
         const res = await api("POST", "/system/stop");
         if (!res.error) {
           setAppStatus("stopped");
-          toast("Cognithor/Jarvis wurde beendet.", "info");
+          toast("Cognithor stopped.", "info");
         } else {
           setAppStatus("running");
-          toast(`Fehler beim Beenden: ${res.error}`, "error");
+          toast(`Error stopping: ${res.error}`, "error");
         }
       } else {
         setAppStatus("starting");
         const res = await api("POST", "/system/start");
         if (!res.error) {
           setAppStatus("running");
-          toast("Cognithor/Jarvis wurde gestartet.", "success");
+          toast("Cognithor started.", "success");
           await loadAllConfig();
         } else {
           setAppStatus("stopped");
-          toast(`Fehler beim Starten: ${res.error}`, "error");
+          toast(`Error starting: ${res.error}`, "error");
         }
       }
     } finally {
@@ -1550,7 +1734,7 @@ export default function App() {
       if (snap.mcpServers) setMcpServers(snap.mcpServers);
       if (snap.a2a) setA2a(snap.a2a);
       if (snap.prompts) setPrompts(snap.prompts);
-      toast("Änderungen verworfen", "info");
+      toast("Changes discarded", "info");
     } catch {}
   }, [savedSnapshot, toast]);
 
@@ -1590,13 +1774,13 @@ export default function App() {
     // Guard: don't save until config has been successfully loaded from backend.
     // This prevents default/empty values from overwriting real config on disk.
     if (!loaded || !configLoadedRef.current) {
-      toast("Konfiguration wurde noch nicht vom Backend geladen – bitte Jarvis starten und warten.", "warn");
+      toast("Configuration not yet loaded from backend — please start Cognithor and wait.", "warn");
       return;
     }
 
     const activeErrors = Object.values(validationErrors).filter(Boolean);
     if (activeErrors.length > 0 || document.querySelector('.cc-error')) {
-      toast(`Bitte beheben Sie zuerst alle rot markierten Validierungsfehler.`, "error");
+      toast("Please fix all red-highlighted validation errors first.", "error");
       return;
     }
 
@@ -1655,7 +1839,7 @@ export default function App() {
     await Promise.all([...sectionPromises, topLevel, ...agentPromises, ...bindingPromises, ...extraSaves]);
 
     if (errors.length > 0) {
-      toast(`${errors.length} Fehler beim Speichern: ${errors.slice(0, 3).join("; ")}`, "error");
+      toast(`${errors.length} error(s) saving: ${errors.slice(0, 3).join("; ")}`, "error");
       setSaveState("idle");
       // Reload config to ensure UI reflects the actual backend state after partial failure
       const data = await api("GET", "/config");
@@ -1667,9 +1851,9 @@ export default function App() {
       if (data && !data.error) setCfg(prev => ({ ...prev, ...data }));
       setSavedSnapshot(JSON.stringify({ cfg: data || cfg, agents, bindings, cronJobs, mcpServers, a2a, prompts }));
       if (warnings.length > 0) {
-        toast(`Gespeichert mit Hinweisen: ${warnings.join("; ")}`, "warn");
+        toast(`Saved with warnings: ${warnings.join("; ")}`, "warn");
       } else {
-        toast("Konfiguration gespeichert", "success");
+        toast("Configuration saved", "success");
       }
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2000);
@@ -1678,12 +1862,12 @@ export default function App() {
 
   // Restart
   const restart = useCallback(async () => {
-    if (!await styledConfirm({ title: "Neustart", message: "Jarvis wirklich neu starten? Alle laufenden Tasks werden beendet.", danger: true })) return;
+    if (!await styledConfirm({ title: "Restart", message: "Really restart Cognithor? All running tasks will be terminated.", danger: true })) return;
     setRestartState("restarting");
     await save();
     await api("POST", "/config/reload");
     try { const _t = await getCCToken(); await fetch(`${API}/shutdown`, { method: "POST", headers: _t ? { Authorization: `Bearer ${_t}` } : {} }); } catch {}
-    setTimeout(() => { setRestartState("done"); toast("Jarvis wurde neu gestartet", "success"); setTimeout(() => setRestartState("idle"), 3000); }, 3000);
+    setTimeout(() => { setRestartState("done"); toast("Cognithor restarted", "success"); setTimeout(() => setRestartState("idle"), 3000); }, 3000);
   }, [save, toast, styledConfirm]);
 
   // Fix #15: Export includes prompts
@@ -1694,7 +1878,7 @@ export default function App() {
     a.download = `cognithor-config-${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    toast("Konfiguration exportiert", "success");
+    toast("Configuration exported", "success");
   };
 
   // Fix #16: Import
@@ -1702,7 +1886,7 @@ export default function App() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      if (!await styledConfirm({ title: "Import", message: "Konfiguration aus Datei importieren? Aktuelle Einstellungen werden überschrieben." })) return;
+      if (!await styledConfirm({ title: "Import", message: "Import configuration from file? Current settings will be overwritten." })) return;
       if (data.config) setCfg(prev => ({ ...prev, ...data.config }));
       if (data.agents?.length) setAgents(data.agents);
       if (data.bindings) setBindings(data.bindings);
@@ -1710,30 +1894,30 @@ export default function App() {
       if (data.mcpServers) setMcpServers(data.mcpServers);
       if (data.a2a) setA2a(data.a2a);
       if (data.prompts) setPrompts(data.prompts);
-      toast("Konfiguration importiert — bitte speichern!", "success");
+      toast("Configuration imported — please save!", "success");
     } catch (e) {
-      toast(`Import fehlgeschlagen: ${e.message}`, "error");
+      toast(`Import failed: ${e.message}`, "error");
     }
   };
 
   // Reset all settings to defaults
   const resetToDefaults = useCallback(async () => {
-    if (!await styledConfirm({ title: "Werkseinstellungen", message: "ALLE Einstellungen auf Standardwerte zurücksetzen? API-Keys und gespeicherte Daten bleiben erhalten.", danger: true })) return;
-    if (!await styledConfirm({ title: "Wirklich zurücksetzen?", message: "Dies kann nicht rückgängig gemacht werden. Bist du sicher?", danger: true })) return;
+    if (!await styledConfirm({ title: "Factory Reset", message: "Reset ALL settings to defaults? API keys and stored data will be preserved.", danger: true })) return;
+    if (!await styledConfirm({ title: "Are you sure?", message: "This cannot be undone. Are you sure?", danger: true })) return;
     setCfg(defaults());
-    toast("Einstellungen auf Standardwerte zurückgesetzt — bitte speichern!", "info");
+    toast("Settings reset to defaults — please save!", "info");
   }, [toast, styledConfirm]);
 
   // Apply preset
   const onApplyPreset = async (name) => {
-    if (!await styledConfirm({ title: "Preset anwenden", message: `Preset "${name}" anwenden? Aktuelle Einstellungen werden überschrieben.` })) return;
+    if (!await styledConfirm({ title: "Apply Preset", message: `Apply preset "${name}"? Current settings will be overwritten.` })) return;
     const r = await api("POST", `/config/presets/${name}`);
     if (!r.error) {
       // Full reload to pick up all preset changes
       await loadAllConfig();
-      toast(`Preset „${name}" angewendet – Einstellungen aktualisiert`, "success");
+      toast(`Preset "${name}" applied — settings updated`, "success");
     } else {
-      toast(`Preset-Fehler: ${r.error}`, "error");
+      toast(`Preset error: ${r.error}`, "error");
     }
   };
 
@@ -1774,7 +1958,7 @@ export default function App() {
         const data = JSON.parse(draft);
         if (data.ts && Date.now() - data.ts < 86400000) { // Max 24h old
           // Don't auto-restore, but inform user
-          toast("Ungespeicherter Entwurf gefunden (wird nach Backend-Start wiederhergestellt)", "info");
+          toast("Unsaved draft found (will be restored after backend starts)", "info");
         }
       }
     } catch {}
@@ -1801,6 +1985,7 @@ export default function App() {
     switch (page) {
       case "chat": return <ChatPage />;
       case "general": return <GeneralPage cfg={cfg} set={set} />;
+      case "language": return <LanguagePage cfg={cfg} set={set} />;
       case "providers": return <ProvidersPage cfg={cfg} set={set} />;
       case "models": return <ModelsPage cfg={cfg} set={set} setValidationErrors={setValidationErrors} />;
       case "planner": return <PlannerPage cfg={cfg} set={set} setValidationErrors={setValidationErrors} />;
@@ -1818,7 +2003,7 @@ export default function App() {
       case "bindings": return <BindingsPage bindings={bindings} setBindings={setBindings} agents={agents} />;
       case "workflows": return <WorkflowGraphPage />;
       case "knowledge-graph": return <KnowledgeGraphPage />;
-      case "system": return <SystemPage cfg={cfg} onRestart={restart} onExport={onExport} onImport={onImport} restartState={restartState} presets={presets} onApplyPreset={onApplyPreset} onResetDefaults={resetToDefaults} />;
+      case "system": return <SystemPage cfg={cfg} onRestart={restart} onExport={onExport} onImport={onImport} restartState={restartState} onResetDefaults={resetToDefaults} />;
       default: return null;
     }
   };
@@ -1887,8 +2072,8 @@ export default function App() {
         .cc-chevron.open { transform: rotate(180deg); }
         .cc-card-body { padding: 0 16px 16px; }
         .cc-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
-        .cc-badge.aktiv { background: rgba(0,230,118,0.15); color: var(--success); }
-        .cc-badge.inaktiv { background: rgba(136,136,160,0.15); color: var(--text2); }
+        .cc-badge.active { background: rgba(0,230,118,0.15); color: var(--success); }
+        .cc-badge.inactive { background: rgba(136,136,160,0.15); color: var(--text2); }
         .cc-badge.green { background: rgba(0,230,118,0.15); color: var(--success); }
         .cc-badge.yellow { background: rgba(255,171,64,0.15); color: var(--warn); }
         .cc-badge.orange { background: rgba(255,111,0,0.15); color: #ff6f00; }
@@ -2175,6 +2360,25 @@ export default function App() {
         .cc-voice-speak { background: var(--accent); animation: pulse 1s infinite; }
         .cc-voice-label { color: var(--text2); }
         .cc-voice-transcript { color: var(--text); font-style: italic; margin-left: auto; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Language Settings page */
+        .cc-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+        .cc-btn:hover { background: var(--hover); }
+        .cc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .cc-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .cc-btn-primary:hover { filter: brightness(1.1); background: var(--accent); }
+        .cc-language-info { margin-top: 8px; color: var(--text2); }
+        .cc-language-info small { font-size: 12px; }
+        .cc-language-translation-intro { color: var(--text); font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
+        .cc-language-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .cc-language-preview-intro { color: var(--text2); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+        .cc-language-preview-block { margin-bottom: 16px; }
+        .cc-language-preview-block .cc-label { font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; font-size: 13px; }
+        .cc-language-preview-text { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text2); white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; line-height: 1.5; }
+        .cc-toast.error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+        .cc-toast.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+        [data-theme="dark"] .cc-toast.error { background: #451a1a; border-color: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .cc-toast.success { background: #14532d; border-color: #166534; color: #86efac; }
       `}</style>
 
       {/* Toast container */}
@@ -2193,24 +2397,13 @@ export default function App() {
       {/* Header */}
       <div className="cc-header" role="banner">
         <div className="cc-header-left">
-          <button className="cc-menu-btn" onClick={() => setMenuOpen(!menuOpen)} type="button" aria-label="Menü öffnen">☰</button>
+          <button className="cc-menu-btn" onClick={() => setMenuOpen(!menuOpen)} type="button" aria-label="Open menu">☰</button>
           <span className="cc-logo">⚡ Cognithor</span>
         </div>
         <div className="cc-header-actions">
           <GlobalSearch onNavigate={(pageId) => { setPage(pageId); setMenuOpen(false); }} />
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          <button
-            className="cc-theme-toggle"
-            title={`Language: ${(cfg.language || "de").toUpperCase()}`}
-            onClick={() => {
-              const next = cfg.language === "en" ? "de" : "en";
-              setCfg(prev => ({ ...prev, language: next }));
-            }}
-            style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}
-          >
-            {(cfg.language || "de").toUpperCase()}
-          </button>
-          {/* Prominenter Start/Stop Button */}
+          {/* Start/Stop Button */}
           <button 
             className={`cc-btn-sm ${appStatus === "running" ? "cc-btn-danger" : "cc-btn-success"}`} 
             style={{ 
@@ -2224,18 +2417,18 @@ export default function App() {
             }}
             onClick={toggleAppStatus}
             disabled={appStatus === "starting" || appStatus === "stopping"}
-            title={appStatus === "running" ? "Cognithor stoppen" : "Cognithor starten"}
+            title={appStatus === "running" ? "Stop Cognithor" : "Start Cognithor"}
           >
             {appStatus === "running" ? (
               <>{I.stop} <span style={{marginLeft: "6px", fontSize: "12px", fontWeight: "600"}}>Power Off</span></>
             ) : appStatus === "starting" || appStatus === "stopping" ? (
-              <span style={{fontSize: "12px", fontWeight: "600"}}>⏳ Bitte warten...</span>
+              <span style={{fontSize: "12px", fontWeight: "600"}}>Please wait...</span>
             ) : (
               <>{I.play} <span style={{marginLeft: "6px", fontSize: "12px", fontWeight: "600"}}>Power On</span></>
             )}
           </button>
           
-          {hasChanges && <div className="cc-dirty-dot" title="Ungespeicherte Änderungen" />}
+          {hasChanges && <div className="cc-dirty-dot" title="Unsaved changes" />}
           <span style={{ fontSize: 11, color: "var(--text2)" }}>Control Center v{cfg.version}</span>
         </div>
       </div>
@@ -2245,7 +2438,7 @@ export default function App() {
         <div className={`cc-overlay ${menuOpen ? "visible" : ""}`} onClick={() => setMenuOpen(false)} />
 
         {/* Sidebar with keyboard hints */}
-        <nav className={`cc-sidebar ${menuOpen ? "mobile-open" : ""}`} role="navigation" aria-label="Hauptnavigation">
+        <nav className={`cc-sidebar ${menuOpen ? "mobile-open" : ""}`} role="navigation" aria-label="Main navigation">
           {PAGES.map(p => (
             <button key={p.id} className={`cc-nav-item ${page === p.id ? "active" : ""}`} onClick={() => changePage(p.id)} aria-current={page === p.id ? "page" : undefined}>
               {p.icon} {p.label}
@@ -2262,7 +2455,7 @@ export default function App() {
             appStatus === "running" || appStatus === "starting" ? <Spinner /> : (
               <div className="cc-spinner-wrap">
                 <span className="cc-spinner-text" style={{textAlign:"center",lineHeight:"1.6"}}>
-                  Backend nicht gestartet.<br/>Klicken Sie oben auf <b>&quot;Power On&quot;</b>, um Cognithor zu starten.
+                  Backend not started.<br/>Click <b>&quot;Power On&quot;</b> above to start Cognithor.
                 </span>
               </div>
             )
@@ -2274,13 +2467,13 @@ export default function App() {
       {/* Fix #1 + #18: Save bar — only visible when there are changes */}
       {page !== "chat" && page !== "workflows" && page !== "knowledge-graph" && (
         <div className={`cc-save-bar ${hasChanges ? "cc-save-bar-visible" : ""}`}>
-          <span className="cc-save-hint">Ungespeicherte Änderungen</span>
+          <span className="cc-save-hint">Unsaved changes</span>
           <button
             className="cc-save-btn cc-save-btn-revert"
             onClick={revertChanges}
             type="button"
           >
-            {I.reset} Verwerfen
+            {I.reset} Discard
           </button>
           <button
             className={`cc-save-btn ${saveState === "saved" ? "saved" : "primary"}`}
@@ -2288,7 +2481,7 @@ export default function App() {
             disabled={saveState === "saving"}
             type="button"
           >
-            {saveState === "saving" ? "Speichern..." : saveState === "saved" ? <>{I.check} Gespeichert!</> : <>{I.save} Änderungen speichern</>}
+            {saveState === "saving" ? "Saving..." : saveState === "saved" ? <>{I.check} Saved!</> : <>{I.save} Save changes</>}
           </button>
           <span className="cc-save-hint" style={{opacity: 0.4}}>Ctrl+S</span>
         </div>

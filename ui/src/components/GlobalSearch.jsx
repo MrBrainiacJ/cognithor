@@ -7,64 +7,67 @@ import { I } from "../utils/icons";
  */
 const FIELD_INDEX = [
   // General
-  { page: "general", terms: ["besitzer", "owner", "name", "betriebsmodus", "operation", "mode", "version", "kosten", "cost", "budget", "dashboard", "port", "sprache", "language", "locale", "deutsch", "english", "i18n"] },
+  { page: "general", terms: ["owner", "name", "operation", "mode", "version", "cost", "budget"] },
+  // Language
+  { page: "language", terms: ["language", "locale", "i18n", "translation", "translate", "prompt translation", "ollama translate", "preset", "german", "english", "french", "spanish"] },
   // Providers
   { page: "providers", terms: ["provider", "backend", "ollama", "openai", "anthropic", "claude", "gemini", "groq", "deepseek", "mistral", "together", "openrouter", "xai", "grok", "cerebras", "github", "bedrock", "huggingface", "moonshot", "api key", "base url"] },
   // Models
-  { page: "models", terms: ["modell", "model", "planner", "executor", "coder", "embedding", "context window", "vram", "temperature", "top p", "speed", "vision", "skill override"] },
+  { page: "models", terms: ["model", "planner", "executor", "coder", "embedding", "context window", "vram", "temperature", "top p", "speed", "vision", "skill override"] },
   // PGE Trinity
-  { page: "planner", terms: ["pge", "trinity", "planner", "gatekeeper", "sandbox", "iteration", "eskalation", "escalation", "risk", "risiko", "policies", "timeout", "memory", "cpu", "netzwerk", "network"] },
+  { page: "planner", terms: ["pge", "trinity", "planner", "gatekeeper", "sandbox", "iteration", "escalation", "risk", "policies", "timeout", "memory", "cpu", "network"] },
   // Executor
-  { page: "executor", terms: ["executor", "timeout", "retry", "retries", "backoff", "parallel", "dag", "tool", "bildanalyse", "image", "audio", "transkription", "tts", "python", "llm timeout"] },
+  { page: "executor", terms: ["executor", "timeout", "retry", "retries", "backoff", "parallel", "dag", "tool", "image analysis", "audio", "transcription", "tts", "python", "llm timeout"] },
   // Memory
-  { page: "memory", terms: ["memory", "chunk", "overlap", "search", "top-k", "vector", "bm25", "graph", "gewichtung", "weight", "recency", "compaction", "episodic", "retention"] },
+  { page: "memory", terms: ["memory", "chunk", "overlap", "search", "top-k", "vector", "bm25", "graph", "weight", "recency", "compaction", "episodic", "retention"] },
   // Channels
-  { page: "channels", terms: ["channel", "kanal", "cli", "terminal", "webui", "telegram", "slack", "discord", "whatsapp", "signal", "matrix", "teams", "imessage", "google chat", "mattermost", "feishu", "lark", "irc", "twitch", "voice", "tts", "stt", "wake word", "talk mode", "elevenlabs", "piper"] },
+  { page: "channels", terms: ["channel", "cli", "terminal", "telegram", "slack", "discord", "whatsapp", "signal", "matrix", "teams", "imessage", "google chat", "mattermost", "feishu", "lark", "irc", "twitch", "voice", "tts", "stt", "wake word", "talk mode", "elevenlabs", "piper"] },
   // Security
-  { page: "security", terms: ["sicherheit", "security", "iteration", "pfad", "path", "blockiert", "blocked", "command", "befehl", "credential", "pattern", "regex"] },
+  { page: "security", terms: ["security", "iteration", "path", "blocked", "command", "credential", "pattern", "regex"] },
   // Web
-  { page: "web", terms: ["web", "suche", "search", "searxng", "brave", "duckduckgo", "ddg", "fetch", "http", "request"] },
+  { page: "web", terms: ["web", "search", "searxng", "brave", "duckduckgo", "ddg", "fetch", "http", "request"] },
   // MCP
   { page: "mcp", terms: ["mcp", "a2a", "agent", "protocol", "server", "stdio", "http", "auth", "token", "tool", "resource", "prompt", "sampling", "remote"] },
   // Cron
-  { page: "cron", terms: ["cron", "heartbeat", "job", "schedule", "zeitplan", "plugin", "skill", "auto update"] },
+  { page: "cron", terms: ["cron", "heartbeat", "job", "schedule", "plugin", "skill", "auto update"] },
   // Database
-  { page: "database", terms: ["datenbank", "database", "sqlite", "postgresql", "postgres", "host", "port", "pool", "verbindung", "connection"] },
+  { page: "database", terms: ["database", "sqlite", "postgresql", "postgres", "host", "port", "pool", "connection"] },
   // Logging
-  { page: "logging", terms: ["logging", "log", "debug", "info", "warning", "error", "json", "konsole", "console"] },
+  { page: "logging", terms: ["logging", "log", "debug", "info", "warning", "error", "json", "console"] },
   // Prompts
-  { page: "prompts", terms: ["prompt", "system prompt", "replan", "eskalation", "escalation", "policy", "yaml", "core.md", "heartbeat.md", "persönlichkeit", "personality"] },
+  { page: "prompts", terms: ["prompt", "system prompt", "replan", "escalation", "policy", "yaml", "core.md", "heartbeat.md", "personality"] },
   // Agents
-  { page: "agents", terms: ["agent", "multi-agent", "routing", "trigger", "keyword", "pattern", "priorität", "priority", "modell", "model", "sprache", "language"] },
+  { page: "agents", terms: ["agent", "multi-agent", "routing", "trigger", "keyword", "pattern", "priority", "model", "language"] },
   // Bindings
-  { page: "bindings", terms: ["binding", "routing", "regel", "rule", "command", "prefix", "pattern", "ziel", "target"] },
+  { page: "bindings", terms: ["binding", "routing", "rule", "command", "prefix", "pattern", "target"] },
   // Workflows
-  { page: "workflows", terms: ["workflow", "dag", "graph", "ablauf", "prozess", "process", "automation"] },
+  { page: "workflows", terms: ["workflow", "dag", "graph", "process", "automation"] },
   // Knowledge Graph
-  { page: "knowledge-graph", terms: ["wissensgraph", "knowledge", "graph", "entity", "relation", "entität", "beziehung", "ontologie"] },
+  { page: "knowledge-graph", terms: ["knowledge", "graph", "entity", "relation", "ontology"] },
   // System
-  { page: "system", terms: ["system", "neustart", "restart", "export", "import", "preset", "minimal", "standard", "vollausbau", "full", "info", "version"] },
+  { page: "system", terms: ["system", "restart", "export", "import", "info", "version", "factory reset"] },
 ];
 
 const PAGE_LABELS = {
-  general: "Allgemein",
-  providers: "LLM Provider",
-  models: "Modelle",
+  general: "General",
+  language: "Language Settings",
+  providers: "LLM Providers",
+  models: "Models",
   planner: "PGE Trinity",
   executor: "Executor",
   memory: "Memory",
   channels: "Channels",
-  security: "Sicherheit",
-  web: "Web-Tools",
+  security: "Security",
+  web: "Web Tools",
   mcp: "MCP & A2A",
   cron: "Cron & Heartbeat",
-  database: "Datenbank",
+  database: "Database",
   logging: "Logging",
   prompts: "Prompts & Policies",
-  agents: "Agenten",
+  agents: "Agents",
   bindings: "Bindings",
   workflows: "Workflows",
-  "knowledge-graph": "Wissensgraph",
+  "knowledge-graph": "Knowledge Graph",
   system: "System",
 };
 
@@ -125,11 +128,11 @@ export function GlobalSearch({ onNavigate }) {
       <button
         className="cc-global-search-trigger"
         onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
-        title="Suche (Ctrl+K)"
+        title="Search (Ctrl+K)"
         type="button"
       >
         {I.search}
-        <span className="cc-global-search-hint">Suche...</span>
+        <span className="cc-global-search-hint">Search...</span>
         <kbd className="cc-global-search-kbd">⌘K</kbd>
       </button>
     );
@@ -145,9 +148,9 @@ export function GlobalSearch({ onNavigate }) {
             className="cc-global-search-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Einstellung suchen..."
+            placeholder="Search settings..."
             autoFocus
-            aria-label="Globale Suche"
+            aria-label="Global search"
           />
           <kbd className="cc-global-search-esc">Esc</kbd>
         </div>
@@ -169,7 +172,7 @@ export function GlobalSearch({ onNavigate }) {
         )}
         {query && results.length === 0 && (
           <div className="cc-global-search-empty">
-            Keine Ergebnisse für "{query}"
+            No results for &ldquo;{query}&rdquo;
           </div>
         )}
       </div>

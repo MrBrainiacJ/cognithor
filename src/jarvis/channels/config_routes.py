@@ -557,9 +557,144 @@ def _register_config_routes(
     async def list_locales() -> dict[str, Any]:
         """Returns available i18n locales and the currently active one."""
         from jarvis.i18n import get_available_locales, get_locale
+        from jarvis.i18n.prompt_presets import available_preset_locales
 
         locales = get_available_locales()
-        return {"locales": locales, "active": get_locale()}
+        return {
+            "locales": locales,
+            "active": get_locale(),
+            "preset_locales": available_preset_locales(),
+        }
+
+    @app.post("/api/v1/translate-prompts", dependencies=deps)
+    async def translate_prompts(request: Request) -> dict[str, Any]:
+        """Translate system prompts to a target language.
+
+        Supports two methods:
+          - ``"preset"`` — Use curated prompt presets (instant, no LLM needed).
+          - ``"ollama"`` — Use local Ollama LLM to translate on-the-fly.
+
+        Request body::
+
+            {
+              "target_locale": "en",
+              "method": "preset" | "ollama",
+              "prompts": {                     // only for method=ollama
+                "plannerSystem": "...",
+                "replanPrompt": "...",
+                "escalationPrompt": "..."
+              }
+            }
+
+        Returns::
+
+            {
+              "translations": {
+                "plannerSystem": "...",
+                "replanPrompt": "...",
+                "escalationPrompt": "..."
+              },
+              "method": "preset" | "ollama"
+            }
+        """
+        try:
+            body = await request.json()
+        except Exception:
+            return {"error": "Invalid JSON body", "status": 400}
+
+        target_locale = body.get("target_locale", "").strip().lower()
+        method = body.get("method", "preset").strip().lower()
+
+        if not target_locale:
+            return {"error": "target_locale is required", "status": 400}
+        if method not in ("preset", "ollama"):
+            return {"error": "method must be 'preset' or 'ollama'", "status": 400}
+
+        # ── Method: preset ──────────────────────────────────────────
+        if method == "preset":
+            from jarvis.i18n.prompt_presets import get_preset
+
+            preset = get_preset(target_locale)
+            if preset is None:
+                from jarvis.i18n.prompt_presets import available_preset_locales
+
+                return {
+                    "error": f"No preset available for '{target_locale}'",
+                    "available": available_preset_locales(),
+                    "status": 404,
+                }
+            return {"translations": preset, "method": "preset"}
+
+        # ── Method: ollama ──────────────────────────────────────────
+        prompts = body.get("prompts", {})
+        if not prompts:
+            return {"error": "prompts dict is required for method=ollama", "status": 400}
+
+        cfg = config_manager.config
+        ollama_url = cfg.ollama.base_url.rstrip("/")
+        model = cfg.models.planner.name
+        timeout = cfg.ollama.timeout_seconds
+
+        import httpx
+
+        translations: dict[str, str] = {}
+        errors: list[str] = []
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            for key, text in prompts.items():
+                if key not in ("plannerSystem", "replanPrompt", "escalationPrompt"):
+                    continue
+                if not text or not text.strip():
+                    continue
+
+                system_msg = (
+                    f"You are a professional translator. Translate the following system "
+                    f"prompt to {target_locale}. Preserve ALL template variables exactly "
+                    f"as they are (e.g., {{tools_section}}, {{owner_name}}, "
+                    f"{{results_section}}, {{original_goal}}, {{tool}}, {{reason}}). "
+                    f"Preserve all markdown formatting, code blocks, and JSON structures. "
+                    f"Output ONLY the translated text, nothing else."
+                )
+
+                try:
+                    resp = await client.post(
+                        f"{ollama_url}/api/chat",
+                        json={
+                            "model": model,
+                            "messages": [
+                                {"role": "system", "content": system_msg},
+                                {"role": "user", "content": text},
+                            ],
+                            "stream": False,
+                        },
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    translated = data.get("message", {}).get("content", "").strip()
+
+                    # Validate that template variables survived translation
+                    import re
+
+                    original_vars = set(re.findall(r"\{[\w_]+\}", text))
+                    translated_vars = set(re.findall(r"\{[\w_]+\}", translated))
+                    missing = original_vars - translated_vars
+                    if missing:
+                        errors.append(f"{key}: template variables lost in translation: {missing}")
+                        # Still include the translation but flag it
+                        translations[key] = translated
+                    else:
+                        translations[key] = translated
+                except httpx.TimeoutException:
+                    errors.append(f"{key}: Ollama request timed out")
+                except httpx.HTTPStatusError as exc:
+                    errors.append(f"{key}: Ollama HTTP {exc.response.status_code}")
+                except Exception as exc:
+                    errors.append(f"{key}: {exc!s}")
+
+        result: dict[str, Any] = {"translations": translations, "method": "ollama"}
+        if errors:
+            result["warnings"] = errors
+        return result
 
     # -- Presets (BEFORE {section} routes to avoid path parameter conflict) --
 

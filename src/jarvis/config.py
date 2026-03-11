@@ -1518,10 +1518,11 @@ class JarvisConfig(BaseModel):
 
     # Meta — version is always read from the package's __version__
     version: str = __import__("jarvis").__version__
-    language: Literal["de", "en"] = Field(
+    language: str = Field(
         default="de",
         description="UI language for error messages, greetings, and status texts. "
-        "Set to 'en' for English. Also settable via JARVIS_LANGUAGE env var.",
+        "Supports any installed i18n language pack (e.g., 'en', 'de', 'fr'). "
+        "Also settable via JARVIS_LANGUAGE env var.",
     )
     owner_name: str = Field(
         default="User",
