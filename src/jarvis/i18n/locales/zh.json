@@ -1,0 +1,350 @@
+{
+  "_meta": {
+    "locale": "zh",
+    "name": "简体中文",
+    "version": "v0.34.4",
+    "authors": ["Jarvis Team"]
+  },
+
+  "error": {
+    "model_not_installed": "所需的语言模型尚未安装。请运行：ollama pull {model}",
+    "ollama_unreachable": "语言模型（Ollama）不可达。请确保 Ollama 正在运行：ollama serve",
+    "timeout": "操作已超时。复杂任务或网络较慢时可能会发生这种情况。请重试或简化请求。",
+    "connection_failed": "连接出现问题。请检查网络连接后重试。",
+    "permission_denied": "我没有执行此操作的权限。Gatekeeper 出于安全原因阻止了该请求。",
+    "not_found": "未找到请求的文件或资源。",
+    "rate_limited": "服务当前过载（已达到速率限制）。请稍候片刻后重试。",
+    "memory_error": "发生内存问题。任务可能过大。",
+    "generic": "发生错误（{exc_type}）。我将尝试其他方法。",
+    "gatekeeper_blocked": "我想执行「{friendly}」，但出于安全原因被阻止了。原因：{reason}",
+    "retry_timeout": "服务未在规定时间内响应。",
+    "retry_connection": "无法建立连接。",
+    "retry_overloaded": "服务当前过载。",
+    "retry_technical": "技术错误：{detail}",
+    "retry_exhausted": "我已尝试「{friendly}」{attempts} 次，但每次都失败了。{detail}",
+    "no_details": "无详细信息。",
+    "all_actions_blocked": "我无法执行任何计划步骤。Gatekeeper 阻止了所有操作。敏感操作可能需要审批。",
+    "processing_error": "处理过程中发生错误。",
+    "invalid_json": "无效的 JSON",
+    "invalid_token": "无效的令牌",
+    "python_version": "Cognithor 需要 Python >= 3.12",
+    "audio_transcription": "音频转录时发生错误。",
+    "tts_error": "TTS 发生错误",
+    "piper_failed": "Piper 失败：{detail}",
+    "fastapi_required": "API 通道需要 FastAPI：pip install fastapi uvicorn",
+    "whisper_unavailable": "faster-whisper 未安装。语音转录不可用。",
+    "whisper_required": "STT 需要 faster-whisper：pip install faster-whisper",
+    "ffmpeg_required": "ffmpeg 未安装。语音流需要：apt install ffmpeg",
+    "config_load_failed": "无法加载配置概览。",
+    "workflow_unavailable": "工作流引擎不可用",
+    "model_unavailable": "模型 '{name}'（{role}）不可用。安装：ollama pull {name}",
+    "exporter_unavailable": "导出器不可用",
+    "security_pipeline_unavailable": "安全管道不可用",
+    "ecosystem_unavailable": "生态系统策略不可用",
+    "gate_unavailable": "Gate 不可用",
+    "reputation_unavailable": "信誉引擎不可用",
+    "ollama_check": "请检查：\n• Ollama 是否在运行？→ ollama serve\n• 模型是否已安装？→ ollama pull {model}",
+    "model_causes": "可能的原因：\n• 模型所需的 VRAM/RAM 不足\n• 模型损坏 → ollama pull {model}",
+    "check_ollama": "请检查 Ollama 是否在运行且资源充足。",
+    "invalid_time_format": "无效的时间格式：'{s}'（期望 HH:MM 或 HH:MM:SS）",
+    "cryptography_required": "凭证加密需要 cryptography 包。pip install cryptography",
+    "dag_unavailable": "DAG WorkflowEngine 不可用",
+    "recursion_limit": "子代理递归已中止：深度 {depth} 超过上限",
+    "task_incomplete": "任务未完全完成",
+    "delegation_failed": "代理路由器不可用。委派给 {to_agent} 失败。",
+    "planner_not_init": "Planner 未初始化——无法委派",
+    "gatekeeper_not_init": "Gatekeeper 未初始化——无法委派"
+  },
+
+  "tool": {
+    "exec_command": "Shell 命令",
+    "write_file": "写入文件",
+    "read_file": "读取文件",
+    "edit_file": "编辑文件",
+    "list_directory": "列出目录",
+    "run_python": "Python 代码",
+    "web_search": "网页搜索",
+    "web_news_search": "新闻搜索",
+    "web_fetch": "获取网页",
+    "search_and_read": "网络调研",
+    "search_memory": "知识搜索",
+    "save_to_memory": "保存知识",
+    "document_export": "创建文档",
+    "analyze_image": "图像分析",
+    "transcribe_audio": "音频转录",
+    "extract_text": "文本提取",
+    "text_to_speech": "文字转语音",
+    "vault_search": "知识库搜索",
+    "vault_entry": "知识库条目",
+    "analyze_code": "代码分析",
+    "browser_navigate": "浏览器导航",
+    "browser_screenshot": "浏览器截图"
+  },
+
+  "tool_desc": {
+    "web_search": "使用 DuckDuckGo 进行网页搜索，支持多后端备用（SearXNG、Brave、Google CSE）。",
+    "web_fetch": "获取网页并使用 trafilatura 提取干净的文本内容。",
+    "search_and_read": "搜索网络并获取排名靠前的结果。适合深入调研。",
+    "web_news_search": "搜索近期新闻文章。",
+    "http_request": "执行 HTTP 请求（GET、POST、PUT、DELETE、PATCH）。",
+    "read_file": "读取文件。路径会根据沙箱策略进行检查。",
+    "write_file": "创建或覆盖文件（原子写入）。",
+    "exec_command": "在沙箱中执行 Shell 命令。",
+    "run_python": "在带有资源限制的沙箱中执行 Python 代码。",
+    "analyze_code": "结合 AST 质量分析与安全模式扫描。",
+    "analyze_image": "使用视觉模型分析图像。默认模型：快速且准确。",
+    "browser_navigate": "导航到 URL 并提取页面内容。适用于调研、价格比较、阅读新闻。",
+    "browser_fill": "在当前页面填写表单字段。",
+    "browser_js": "在当前页面执行 JavaScript。",
+    "browser_info": "返回当前页面的概览信息。",
+    "browser_screenshot": "返回当前页面截图的文字描述。",
+    "search_memory": "跨所有层级搜索 Jarvis 知识库（核心、语义、情景、程序性）。",
+    "save_to_memory": "将新信息保存到 Jarvis 知识库。",
+    "get_entity": "从知识图谱加载实体。",
+    "add_entity": "在知识图谱中创建新实体。",
+    "add_relation": "在知识图谱中创建两个实体之间的关系。",
+    "get_core_memory": "返回 CORE.md（身份、规则、偏好设置）。",
+    "get_episodes": "加载最近 N 天的日志条目。",
+    "search_procedures": "搜索程序（已验证的重复任务工作流）。",
+    "update_procedure": "报告程序执行的成功/失败，用于学习追踪。",
+    "memory_stats": "显示记忆系统统计信息。"
+  },
+
+  "channel": {
+    "approval_required": "需要审批",
+    "approval_rationale": "原因：{rationale}",
+    "help_title": "可用命令：",
+    "unknown_command": "未知命令：{command}。输入 /help 获取帮助。",
+    "stt_unavailable": "语音识别不可用。请安装 faster-whisper：pip install faster-whisper",
+    "error_fallback": "处理过程中发生错误。"
+  },
+
+  "status": {
+    "exec_command": "正在执行命令...",
+    "run_python": "正在运行 Python 代码...",
+    "tool_running": "正在运行 {tool}..."
+  },
+
+  "voice": {
+    "approval_prompt": "我可以运行 {tool} 吗？原因：{reason}。请说「是」或「否」。"
+  },
+
+  "gatekeeper": {
+    "invalid_path": "无效路径：{path}",
+    "path_outside_allowed": "路径超出允许的目录范围：{path}",
+    "dangerous_code": "检测到危险的 Python 代码：{description}"
+  },
+
+  "executor": {
+    "action_skipped": "操作已跳过：{status}——{reason}",
+    "deadlock": "操作已跳过：依赖未满足（死锁）",
+    "deps_not_met": "操作已跳过：依赖未满足",
+    "no_mcp_client": "没有可用的 MCP 客户端"
+  },
+
+  "planner": {
+    "no_tools": "没有可用的工具。",
+    "output_truncated": "[... 输出已截断]"
+  },
+
+  "prompt": {
+    "respond_default": "简洁且有信息量地回答。",
+    "respond_chinese": "用中文简洁且有信息量地回答。",
+    "natural_speech": "用自然的口语化语言回答，适合语音输出。",
+    "jarvis_identity": "您是 Jarvis。请礼貌地用中文解释。"
+  },
+
+  "personality": {
+    "greeting_night": "夜猫子您好！",
+    "greeting_morning": "早上好！",
+    "greeting_afternoon": "下午好！",
+    "greeting_evening": "晚上好！",
+    "empathy_directive": "对用户的处境表示理解和关心。",
+    "appreciation_directive": "以欣赏和建设性的方式表达回复。",
+    "humor_directive": "偶尔轻松的评论是可以的，但始终保持专业。",
+    "success_directive": "当任务成功完成时，给予积极的确认。",
+    "proactive_directive": "询问用户是否还需要其他帮助，或者更多细节是否会有所帮助。"
+  },
+
+  "sentiment": {
+    "response_frustrated": "请特别耐心、理解和乐于助人。",
+    "response_urgent": "简洁直接地回答。直奔主题。省略客套话。",
+    "response_confused": "请特别清晰、逐步地解释。使用简单的语言。"
+  },
+
+  "text": {
+    "truncated": "[... 已截断]",
+    "output_truncated": "[... 已截断：{current}/{total} 字符，来源：{url}]"
+  },
+
+  "web": {
+    "invalid_url": "无效的 URL：{url}",
+    "invalid_domain": "无有效域名：{url}",
+    "dns_blocked": "{hostname} 的 DNS 指向被阻止的地址：{ip}",
+    "search_failed": "搜索「{query}」失败：{error}",
+    "no_results": "没有找到结果：{query}",
+    "fetch_failed": "获取 {url} 失败：{error}",
+    "invalid_method": "无效的 HTTP 方法：{method}。允许：GET、POST、PUT、DELETE、PATCH、HEAD",
+    "body_too_large": "请求体过大：{size} 字节（最大：{max_size}）",
+    "timeout": "{url} 超时，等待 {seconds} 秒",
+    "request_failed": "请求 {url} 失败：{error}",
+    "search_results_for": "搜索结果：{query}",
+    "source_comparison_note": "应注意各来源之间的一致性和矛盾之处"
+  },
+
+  "media": {
+    "unsupported_image": "不支持的图像格式：{suffix}",
+    "unsupported_format": "不支持的格式：{suffix}。支持：PDF、DOCX、TXT、MD、HTML、CSV",
+    "text_truncated": "[... 已截断，共 {length} 字符]",
+    "pdf_reader_required": "没有可用的 PDF 阅读器。安装：pip install pymupdf 或 pip install pdfplumber",
+    "analysis_unavailable": "错误：文档分析不可用。",
+    "no_text_in_document": "错误：文档中未找到文本。可能是扫描版 PDF——请尝试 OCR。",
+    "export_unsupported_format": "不支持的格式：{fmt}。允许：pdf、docx",
+    "tts_unavailable": "没有可用的 TTS 后端。请安装 piper 或 espeak-ng。"
+  },
+
+  "fs": {
+    "invalid_path": "无效路径：{path}",
+    "access_denied": "访问被拒绝：{path} 超出允许的目录范围",
+    "not_regular_file": "不是常规文件：{path}",
+    "file_too_large": "文件过大（{size} 字节）。最大：1 MB。",
+    "edit_ambiguous": "请使用更长的 old_text 片段以确保唯一匹配。"
+  },
+
+  "shell": {
+    "path_blocked": "命令被阻止：路径 '{path}' 超出工作区范围。"
+  },
+
+  "memory": {
+    "invalid_tier": "错误：未知层级 '{tier}'。有效值：{valid}",
+    "no_results": "没有找到结果：'{query}'",
+    "access_denied": "访问被拒绝：路径 '{path}' 超出工作区范围",
+    "entity_not_found": "未找到实体：'{name}'",
+    "invalid_json": "错误：attributes 中的 JSON 无效：{attributes}",
+    "entity_created": "实体已创建：{name}（类型：{entity_type}，ID：{id}）",
+    "source_entity_not_found": "错误：未找到源实体 '{name}'。",
+    "target_entity_not_found": "错误：未找到目标实体 '{name}'。",
+    "no_episodes": "最近 {days} 天没有情景记录。",
+    "no_procedures": "未找到相关程序：'{query}'",
+    "empty_graph": "# 知识图谱\n\n暂无实体。\n",
+    "compaction_status": "是否需要压缩：是/否"
+  },
+
+  "ingest": {
+    "unsupported_format": "不支持的格式：{suffix}",
+    "no_extractor": "没有针对 {suffix} 的提取器",
+    "pymupdf_required": "PDF 提取需要 PyMuPDF：pip install pymupdf",
+    "docx_required": "DOCX 提取需要 python-docx：pip install python-docx",
+    "file_too_large": "文件过大：{size} MB"
+  },
+
+  "code": {
+    "access_denied": "访问被拒绝：'{path}' 超出工作区范围",
+    "only_python": "错误：仅支持 Python 文件（.py）。"
+  },
+
+  "browser": {
+    "text_truncated": "[... 已截断，共 {length} 字符]",
+    "field_filled": "字段 '{selector}' 已填写",
+    "vision_unavailable": "（视觉功能不可用）"
+  },
+
+  "security": {
+    "token_store_insecure": "令牌存储使用 Base64 后备方案（未加密！）。pip install cryptography",
+    "not_encrypted_warning": "未加密。pip install cryptography",
+    "param_length_rule": "阻止过长的参数（注入防护）",
+    "rate_limit_exceeded": "速率限制 '{name}' 已超出：{detail}",
+    "forbidden_value": "包含被禁止的值 '{value}'"
+  },
+
+  "vault": {
+    "invalid_token_format": "无效的令牌格式（Base64 错误）：{error}",
+    "token_too_short": "令牌太短，无法进行旧版解密"
+  },
+
+  "skill": {
+    "invalid_package_name": "无效的包名 '{name}'",
+    "invalid_version": "无效的版本 '{version}'：需要 SemVer 格式",
+    "tool_unavailable": "工具 '{tool}' 不可用",
+    "no_skill_for": "没有匹配的技能：{query}",
+    "syntax_check_passed": "语法检查通过（无沙箱可用）",
+    "no_manifest": "包中不包含 manifest.json",
+    "no_skill_py": "包中不包含 skill.py",
+    "invalid_manifest": "Manifest 无效：{detail}",
+    "code_analysis_dangerous": "代码分析：危险——{detail}",
+    "publisher_untrusted": "发布者 '{signer}' 不受信任",
+    "hash_mismatch": "内容哈希不匹配（可能被篡改？）",
+    "auto_created": "此技能为自动创建。需要手动填充内容。"
+  },
+
+  "config": {
+    "preset_office_name": "办公助手",
+    "preset_office_desc": "每日简报、邮件概览、日程检查"
+  },
+
+  "wizard": {
+    "invalid_selection": "'{title}' 的选择无效",
+    "confirmation": "确认",
+    "confirm_settings": "请检查设置并确认。"
+  },
+
+  "cli": {
+    "help_log_level": "覆盖日志级别",
+    "help_no_cli": "不启动 CLI 通道（Control Center 无头模式）",
+    "help_api_port": "Control Center API 端口",
+    "help_api_host": "Control Center API 主机"
+  },
+
+  "cron": {
+    "default_weather": "天气预报",
+    "default_weekly": "每周回顾：\n"
+  },
+
+  "collaboration": {
+    "researcher": "深入调研。提供事实、来源和背景信息。",
+    "analyst": "分析数据。识别模式、趋势和关联。",
+    "critic": "批判性审查。找出论证中的错误、漏洞和弱点。",
+    "validator": "根据需求验证结果。检查正确性。",
+    "executor": "执行任务。产出具体成果。",
+    "synthesizer": "综合所有观点。形成连贯的总结。",
+    "mediator": "在各方立场之间调解。寻求共识，解决冲突。",
+    "previous_contributions": "先前的贡献：\n"
+  },
+
+  "webchat": {
+    "attach_file": "附加文件",
+    "approval_required": "需要审批",
+    "mic_access_denied": "无法访问麦克风。请允许访问。"
+  },
+
+  "audit": {
+    "eval_dangerous": "eval() 允许执行任意代码",
+    "exec_dangerous": "exec() 允许执行任意代码",
+    "shell_injection": "使用 shell=True 可能导致 Shell 注入",
+    "direct_shell": "直接执行 Shell",
+    "external_http": "技能发起外部 HTTP 请求",
+    "dns_exfiltration": "DNS 查询可能被用于数据泄露",
+    "file_access_sandbox": "将文件访问限制在沙箱内",
+    "temp_secrets": "凭证被写入临时文件",
+    "base64_obfuscation": "Base64 编码可能隐藏恶意代码",
+    "user_approved": "用户已批准：{reason}",
+    "user_rejected": "用户已拒绝：{reason}"
+  },
+
+  "log": {
+    "approval_timeout": "审批超时：%s",
+    "cron_loaded": "已加载的定时任务：%d",
+    "cron_triggered": "定时任务已触发：'%s'",
+    "heartbeat_executed": "心跳已执行"
+  },
+
+  "integrity": {
+    "negation_contradiction": "否定矛盾（重叠：{count} 个词）",
+    "content_too_long": "内容异常过长"
+  },
+
+  "hygiene": {
+    "contradictory_values": "'{key}' 的值相互矛盾：{values}",
+    "hash_mismatch": "条目 '{entry_id}' 的哈希不匹配"
+  }
+}
