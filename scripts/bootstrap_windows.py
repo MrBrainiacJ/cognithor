@@ -156,9 +156,14 @@ def detect_gpu() -> GPUInfo:
     """GPU via nvidia-smi erkennen (Multi-GPU-safe: nimmt erste GPU)."""
     try:
         r = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name,memory.total,driver_version",
-             "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5,
+            [
+                "nvidia-smi",
+                "--query-gpu=name,memory.total,driver_version",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if r.returncode == 0 and r.stdout.strip():
             # Erste Zeile = erste GPU (bei Multi-GPU-Systemen)
@@ -175,9 +180,10 @@ def detect_gpu() -> GPUInfo:
             # CUDA Compute Capability
             try:
                 cc = subprocess.run(
-                    ["nvidia-smi", "--query-gpu=compute_cap",
-                     "--format=csv,noheader"],
-                    capture_output=True, text=True, timeout=5,
+                    ["nvidia-smi", "--query-gpu=compute_cap", "--format=csv,noheader"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
                 if cc.returncode == 0 and cc.stdout.strip():
                     gpu.cuda_compute = cc.stdout.strip().splitlines()[0].strip()
@@ -206,7 +212,7 @@ def detect_disk(path: str) -> float:
     """Freier Speicher in GB."""
     try:
         usage = shutil.disk_usage(path)
-        return round(usage.free / (1024 ** 3), 1)
+        return round(usage.free / (1024**3), 1)
     except Exception:
         return 0.0
 
@@ -309,9 +315,9 @@ def pull_model(name: str, ollama_path: str, timeout: int = 1800) -> bool:
 
 
 TIER_MODELS: dict[str, list[str]] = {
-    "minimal":    ["qwen3:8b", "qwen3-embedding:0.6b"],
-    "standard":   ["qwen3:8b", "qwen3:32b", "qwen3-embedding:0.6b"],
-    "power":      ["qwen3:8b", "qwen3:32b", "qwen3-coder:30b", "qwen3-embedding:0.6b"],
+    "minimal": ["qwen3:8b", "qwen3-embedding:0.6b"],
+    "standard": ["qwen3:8b", "qwen3:32b", "qwen3-embedding:0.6b"],
+    "power": ["qwen3:8b", "qwen3:32b", "qwen3-coder:30b", "qwen3-embedding:0.6b"],
     "enterprise": ["qwen3:8b", "qwen3:32b", "qwen3-coder:30b", "qwen3-embedding:0.6b"],
 }
 
@@ -349,8 +355,7 @@ def ensure_models(tier: str, result: BootResult, ollama_path: str) -> list[str]:
             pulled.append(model)
         else:
             result.add_warn(
-                f"Modell {model} konnte nicht geladen werden. "
-                f"Manuell: ollama pull {model}"
+                f"Modell {model} konnte nicht geladen werden. Manuell: ollama pull {model}"
             )
 
     return pulled
@@ -365,9 +370,7 @@ def check_port(port: int) -> str:
         sock.connect(("127.0.0.1", port))
         # Port in Benutzung — pruefen ob Cognithor
         try:
-            req = urllib.request.Request(
-                f"http://127.0.0.1:{port}/api/v1/health", method="GET"
-            )
+            req = urllib.request.Request(f"http://127.0.0.1:{port}/api/v1/health", method="GET")
             with urllib.request.urlopen(req, timeout=2) as resp:
                 if resp.status == 200:
                     return "cognithor"
@@ -425,7 +428,9 @@ def create_desktop_shortcut(bat_path: str) -> bool:
     try:
         r = subprocess.run(
             ["powershell", "-NoProfile", "-Command", ps_script],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         return r.returncode == 0
     except Exception:
@@ -490,21 +495,35 @@ def _detect_python_installer(repo_root: str) -> tuple[str, list[str]]:
         try:
             ver = subprocess.run(
                 [uv_path, "--version"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if ver.returncode == 0:
                 ok(f"uv erkannt ({ver.stdout.strip()}) -- wird bevorzugt")
                 return "uv", [
-                    uv_path, "pip", "install", "-e", ".[all]",
-                    "--quiet", "--python", sys.executable,
+                    uv_path,
+                    "pip",
+                    "install",
+                    "-e",
+                    ".[all]",
+                    "--quiet",
+                    "--python",
+                    sys.executable,
                 ]
         except Exception:
             pass
 
     # Fallback: pip
     return "pip", [
-        sys.executable, "-m", "pip", "install", "-e", ".[all]",
-        "--quiet", "--disable-pip-version-check",
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "-e",
+        ".[all]",
+        "--quiet",
+        "--disable-pip-version-check",
     ]
 
 
@@ -557,16 +576,27 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         winget_available = shutil.which("winget") is not None
         if winget_available:
             try:
-                answer = input("  Ollama nicht gefunden. Jetzt installieren? [J/n]: ").strip().lower()
+                answer = (
+                    input("  Ollama nicht gefunden. Jetzt installieren? [J/n]: ").strip().lower()
+                )
             except EOFError:
                 answer = "n"
             if answer in ("", "j", "y", "ja", "yes"):
                 info("Installiere Ollama via winget...")
                 try:
                     winget_proc = subprocess.run(
-                        ["winget", "install", "--id", "Ollama.Ollama", "-e",
-                         "--accept-source-agreements", "--accept-package-agreements"],
-                        capture_output=True, text=True, timeout=600,
+                        [
+                            "winget",
+                            "install",
+                            "--id",
+                            "Ollama.Ollama",
+                            "-e",
+                            "--accept-source-agreements",
+                            "--accept-package-agreements",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=600,
                     )
                     if winget_proc.returncode == 0:
                         ok("Ollama via winget installiert")
@@ -577,7 +607,9 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
                                 ok("Ollama gestartet")
                                 ollama_ready = True
                             else:
-                                result.add_warn("Ollama installiert, konnte aber nicht gestartet werden")
+                                result.add_warn(
+                                    "Ollama installiert, konnte aber nicht gestartet werden"
+                                )
                         else:
                             result.add_warn(
                                 "Ollama installiert, aber nicht im PATH. "
@@ -645,7 +677,10 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     try:
         check = subprocess.run(
             [sys.executable, "-c", "import jarvis; print(jarvis.__version__)"],
-            capture_output=True, text=True, timeout=15, cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            cwd=repo_root,
         )
         if check.returncode == 0 and check.stdout.strip():
             ok(f"jarvis bereits installiert (v{check.stdout.strip()})")
@@ -660,7 +695,10 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         info("Das kann beim ersten Mal einige Minuten dauern.")
         inst_proc = subprocess.run(
             installer_cmd,
-            capture_output=True, text=True, timeout=600, cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=600,
+            cwd=repo_root,
         )
         if inst_proc.returncode == 0:
             result.add_pass(f"Python-Abhaengigkeiten installiert (via {installer_backend})")
@@ -668,10 +706,54 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
             stderr = inst_proc.stderr.strip()[-300:] if inst_proc.stderr else ""
             result.add_fail(
                 f"{installer_backend} install fehlgeschlagen",
-                f"Manuell ausfuehren: cd \"{repo_root}\" && pip install -e \".[all]\"\n"
-                f"  Fehler: {stderr}"
+                f'Manuell ausfuehren: cd "{repo_root}" && pip install -e ".[all]"\n'
+                f"  Fehler: {stderr}",
             )
             return False
+
+    # Also install into ~/.jarvis/venv if it exists but lacks jarvis
+    # (Vite launcher prefers this venv — must have jarvis installed)
+    _home_venv_python = (
+        JARVIS_HOME
+        / "venv"
+        / ("Scripts" if sys.platform == "win32" else "bin")
+        / ("python.exe" if sys.platform == "win32" else "python")
+    )
+    if _home_venv_python.exists() and str(_home_venv_python) != sys.executable:
+        try:
+            _venv_check = subprocess.run(
+                [str(_home_venv_python), "-c", "import jarvis"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=repo_root,
+            )
+            if _venv_check.returncode != 0:
+                info(f"Installing jarvis into {JARVIS_HOME / 'venv'}...")
+                _venv_inst = subprocess.run(
+                    [
+                        str(_home_venv_python),
+                        "-m",
+                        "pip",
+                        "install",
+                        "-e",
+                        ".[all]",
+                        "--quiet",
+                        "--disable-pip-version-check",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    cwd=repo_root,
+                )
+                if _venv_inst.returncode == 0:
+                    ok(f"jarvis also installed in {JARVIS_HOME / 'venv'}")
+                else:
+                    warn(
+                        f"Could not install jarvis into {JARVIS_HOME / 'venv'}: {_venv_inst.stderr[:200]}"
+                    )
+        except Exception as e:
+            warn(f"Venv sync check failed: {e}")
 
     # ── 6. Web-UI (Node.js optional) ──────────────────────────────────
     header("6/14  Web-UI")
@@ -687,16 +769,16 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
             info("Installiere Node-Abhaengigkeiten (npm install)...")
             npm_proc = subprocess.run(
                 [npm_cmd, "install"],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True,
+                text=True,
+                timeout=300,
                 cwd=ui_dir,
             )
             if npm_proc.returncode == 0:
                 ok("Node-Abhaengigkeiten installiert")
             else:
                 stderr = npm_proc.stderr.strip()[-300:] if npm_proc.stderr else ""
-                result.add_warn(
-                    f"npm install fehlgeschlagen: {stderr}"
-                )
+                result.add_warn(f"npm install fehlgeschlagen: {stderr}")
         else:
             ok("node_modules vorhanden")
 
@@ -705,7 +787,9 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
             info("Erstelle UI-Build (npm run build)...")
             build_proc = subprocess.run(
                 [npm_cmd, "run", "build"],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True,
+                text=True,
+                timeout=300,
                 cwd=ui_dir,
             )
             if build_proc.returncode == 0:
@@ -727,7 +811,10 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     try:
         init_proc = subprocess.run(
             [sys.executable, "-m", "jarvis", "--init-only"],
-            capture_output=True, text=True, timeout=30, cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=repo_root,
         )
         if init_proc.returncode == 0:
             ok("Verzeichnisstruktur initialisiert")
@@ -735,8 +822,17 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
             raise RuntimeError("init-only failed")
     except Exception:
         # Fallback: manuell erstellen
-        for sub in ["memory", "memory/episodes", "memory/knowledge", "memory/procedures",
-                     "memory/sessions", "index", "logs", "cache", "cache/web_search"]:
+        for sub in [
+            "memory",
+            "memory/episodes",
+            "memory/knowledge",
+            "memory/procedures",
+            "memory/sessions",
+            "index",
+            "logs",
+            "cache",
+            "cache/web_search",
+        ]:
             (JARVIS_HOME / sub).mkdir(parents=True, exist_ok=True)
         ok("Verzeichnisstruktur manuell erstellt")
 
@@ -757,6 +853,7 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         _cfg_text = config_dest.read_text(encoding="utf-8")
         if "language:" not in _cfg_text:
             import locale as _locale_mod
+
             try:
                 _sys_locale = _locale_mod.getlocale()[0] or ""
                 _lang_code = _sys_locale[:2].lower() if len(_sys_locale) >= 2 else "de"
@@ -790,6 +887,7 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     if config_yaml.exists():
         try:
             import yaml  # noqa: E402
+
             with open(config_yaml, encoding="utf-8") as _cf:
                 _ycfg = yaml.safe_load(_cf) or {}
             _vc = (_ycfg.get("channels") or {}).get("voice_config") or {}
@@ -814,9 +912,11 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     header("10/14  Schnelltest")
     try:
         qt = subprocess.run(
-            [sys.executable, "-c",
-             "import jarvis; print(f'jarvis v{jarvis.__version__}')"],
-            capture_output=True, text=True, timeout=15, cwd=repo_root,
+            [sys.executable, "-c", "import jarvis; print(f'jarvis v{jarvis.__version__}')"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            cwd=repo_root,
         )
         if qt.returncode == 0:
             result.add_pass(f"Import OK: {qt.stdout.strip()}")
@@ -852,11 +952,13 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     header("13/14  LLM-Rauchtest")
     if ollama_ready:
         try:
-            _smoke_payload = json.dumps({
-                "model": "qwen3:8b",
-                "messages": [{"role": "user", "content": "Sage kurz Hallo."}],
-                "stream": False,
-            }).encode("utf-8")
+            _smoke_payload = json.dumps(
+                {
+                    "model": "qwen3:8b",
+                    "messages": [{"role": "user", "content": "Sage kurz Hallo."}],
+                    "stream": False,
+                }
+            ).encode("utf-8")
             _smoke_req = urllib.request.Request(
                 f"{OLLAMA_URL}/api/chat",
                 data=_smoke_payload,
@@ -907,8 +1009,18 @@ def quick_start(repo_root: str, *, skip_models: bool = False) -> bool:
         info("Ollama nicht gefunden -- versuche Installation via winget...")
         try:
             winget_proc = subprocess.run(
-                ["winget", "install", "--id", "Ollama.Ollama", "-e", "--accept-source-agreements", "--accept-package-agreements"],
-                capture_output=True, text=True, timeout=600,
+                [
+                    "winget",
+                    "install",
+                    "--id",
+                    "Ollama.Ollama",
+                    "-e",
+                    "--accept-source-agreements",
+                    "--accept-package-agreements",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=600,
             )
             if winget_proc.returncode == 0:
                 result.add_pass("Ollama via winget installiert")
@@ -958,33 +1070,60 @@ def quick_start(repo_root: str, *, skip_models: bool = False) -> bool:
     else:
         result.add_warn(f"Port {BACKEND_PORT} belegt durch andere Anwendung")
 
-    # ── 4. Import-Test ─────────────────────────────────────────────────
-    try:
-        check = subprocess.run(
-            [sys.executable, "-c", "import jarvis"],
-            capture_output=True, text=True, timeout=10, cwd=repo_root,
-        )
-        if check.returncode == 0:
-            result.add_pass("Import OK")
-        else:
+    # ── 4. Import-Test (system Python + home venv) ──────────────────────
+    _home_venv_py = (
+        JARVIS_HOME
+        / "venv"
+        / ("Scripts" if sys.platform == "win32" else "bin")
+        / ("python.exe" if sys.platform == "win32" else "python")
+    )
+    # Check both sys.executable AND the home venv (Vite prefers the venv)
+    _pythons_to_check = [sys.executable]
+    if _home_venv_py.exists() and str(_home_venv_py) != sys.executable:
+        _pythons_to_check.append(str(_home_venv_py))
+
+    for _py in _pythons_to_check:
+        try:
+            check = subprocess.run(
+                [_py, "-c", "import jarvis"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=repo_root,
+            )
+            if check.returncode == 0:
+                result.add_pass(f"Import OK ({Path(_py).parent.parent.name})")
+                continue
             # Auto-fix: Import fehlgeschlagen -- automatische Reparatur
-            info("Import fehlgeschlagen -- versuche automatische Reparatur...")
-            repair_backend, repair_cmd = _detect_python_installer(repo_root)
+            info(f"Import fehlgeschlagen in {_py} -- versuche Reparatur...")
+            repair_cmd = [
+                _py,
+                "-m",
+                "pip",
+                "install",
+                "-e",
+                ".[all]",
+                "--quiet",
+                "--disable-pip-version-check",
+            ]
             repair_proc = subprocess.run(
                 repair_cmd,
-                capture_output=True, text=True, timeout=600, cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=600,
+                cwd=repo_root,
             )
             if repair_proc.returncode == 0:
-                result.add_pass(f"Abhaengigkeiten repariert (via {repair_backend})")
+                result.add_pass(f"Abhaengigkeiten repariert ({Path(_py).parent.parent.name})")
             else:
                 stderr = repair_proc.stderr.strip()[-300:] if repair_proc.stderr else ""
                 result.add_fail(
-                    "jarvis Import fehlgeschlagen und Reparatur schlug fehl",
-                    f"Manuell: cd \"{repo_root}\" && pip install -e \".[all]\"\n"
-                    f"  Fehler: {stderr}"
+                    f"jarvis Import fehlgeschlagen in {_py}",
+                    f'Manuell: cd "{repo_root}" && "{_py}" -m pip install -e ".[all]"\n'
+                    f"  Fehler: {stderr}",
                 )
-    except Exception as e:
-        result.add_fail("Import-Test", str(e))
+        except Exception as e:
+            result.add_fail("Import-Test", str(e))
 
     # ── 5. Piper TTS Voice-Modell ───────────────────────────────────
     voices_dir = JARVIS_HOME / "voices"
@@ -993,6 +1132,7 @@ def quick_start(repo_root: str, *, skip_models: bool = False) -> bool:
     if config_yaml.exists():
         try:
             import yaml
+
             with open(config_yaml, encoding="utf-8") as _cf:
                 _ycfg = yaml.safe_load(_cf) or {}
             _vc = (_ycfg.get("channels") or {}).get("voice_config") or {}
@@ -1065,7 +1205,8 @@ def main() -> int:
     parser.add_argument("--repo-root", required=True, help="Pfad zum Repository-Root")
     parser.add_argument("--force", action="store_true", help="Erster Start erzwingen")
     parser.add_argument(
-        "--skip-models", action="store_true",
+        "--skip-models",
+        action="store_true",
         help="Ollama-Modell-Download ueberspringen (manuell mit 'ollama pull' nachholen)",
     )
     args = parser.parse_args()

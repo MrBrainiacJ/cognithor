@@ -104,22 +104,49 @@ function jarvisLauncher() {
 
   // Spawn the Jarvis backend as a child process
   // Fix: prefer venv Python (has jarvis installed) over system Python
+  // Fix: verify jarvis is importable before using a venv Python
+  function canImportJarvis(pythonPath) {
+    try {
+      execSync(`"${pythonPath}" -c "import jarvis"`, {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 10000,
+      })
+      return true
+    } catch { return false }
+  }
+
   function findPythonCmd() {
-    // 1. Check repo-local .venv (manual install per QUICKSTART.md)
     const isWin = process.platform === 'win32'
+    const candidates = []
+
+    // 1. Check repo-local .venv (manual install per QUICKSTART.md)
     const localVenv = isWin
       ? resolve(BACKEND_DIR, '.venv', 'Scripts', 'python.exe')
       : resolve(BACKEND_DIR, '.venv', 'bin', 'python')
-    if (existsSync(localVenv)) return localVenv
+    if (existsSync(localVenv)) candidates.push(localVenv)
 
-    // 2. Check ~/.jarvis/venv (install.sh)
+    // 2. Check ~/.jarvis/venv (install.sh / bootstrap)
     const homeVenv = isWin
       ? join(homedir(), '.jarvis', 'venv', 'Scripts', 'python.exe')
       : join(homedir(), '.jarvis', 'venv', 'bin', 'python')
-    if (existsSync(homeVenv)) return homeVenv
+    if (existsSync(homeVenv)) candidates.push(homeVenv)
 
-    // 3. Fall back to system Python
-    return isWin ? 'python' : 'python3'
+    // 3. System Python as fallback
+    candidates.push(isWin ? 'python' : 'python3')
+
+    // Pick the first Python that can actually import jarvis
+    for (const cmd of candidates) {
+      if (canImportJarvis(cmd)) {
+        console.log(`  Using Python: ${cmd} (jarvis importable)`)
+        return cmd
+      }
+    }
+
+    // None can import jarvis — return first existing one and let the error
+    // message guide the user
+    console.warn('  [WARN] No Python found with jarvis installed. Backend will likely fail.')
+    console.warn('  Fix: cd to repo root and run: pip install -e ".[all]"')
+    return candidates[0]
   }
 
   const pythonCmd = findPythonCmd()
@@ -141,9 +168,9 @@ function jarvisLauncher() {
       } else {
         console.error(
           `\n  [ERROR] Failed to start Jarvis backend: ${err.message}\n` +
-          `  Make sure Python 3.12+ is installed and available as "${pythonCmd}" in your PATH.\n` +
-          `  On Ubuntu/Debian: sudo apt install python3.12\n` +
-          `  On macOS: brew install python@3.12\n`
+          `  Make sure Python 3.12+ is installed and jarvis is installed in it.\n` +
+          `  Fix: cd "${BACKEND_DIR}" && pip install -e ".[all]"\n` +
+          `  Or run start_cognithor.bat to bootstrap automatically.\n`
         )
       }
     })
@@ -218,7 +245,7 @@ function jarvisLauncher() {
 
           // Already running under our control?
           if (backendProcess && await checkBackend()) {
-            res.end(JSON.stringify({ status: 'ok', message: 'Backend läuft bereits' }))
+            res.end(JSON.stringify({ status: 'ok', message: 'Backend already running' }))
             return
           }
 
@@ -236,10 +263,10 @@ function jarvisLauncher() {
           }
 
           if (ready) {
-            res.end(JSON.stringify({ status: 'ok', message: 'Jarvis gestartet' }))
+            res.end(JSON.stringify({ status: 'ok', message: 'Jarvis started' }))
           } else {
             res.statusCode = 504
-            res.end(JSON.stringify({ error: 'Backend Timeout — Check Terminal für Fehler' }))
+            res.end(JSON.stringify({ error: 'Backend timeout — check terminal for errors' }))
           }
           return
         }
@@ -258,7 +285,7 @@ function jarvisLauncher() {
             killPortProcess()
             await sleep(500)
           }
-          res.end(JSON.stringify({ status: 'ok', message: 'Jarvis gestoppt' }))
+          res.end(JSON.stringify({ status: 'ok', message: 'Jarvis stopped' }))
           return
         }
 
