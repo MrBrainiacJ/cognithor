@@ -407,16 +407,155 @@ class Gateway:
             log.debug("core_inventory_sync_failed", exc_info=True)
 
     def _sync_core_inventory(self) -> None:
-        """Aktualisiert den INVENTAR-Abschnitt in CORE.md mit aktuellen Tools/Skills."""
+        """Aktualisiert den INVENTAR-Abschnitt in CORE.md mit aktuellen Tools/Skills.
+
+        Verwendet ToolRegistryDB fuer datenbankgestuetzte, lokalisierte und
+        rollenbasierte Tool-Abschnitte. Faellt auf die alte statische Methode
+        zurueck, wenn die DB nicht verfuegbar ist.
+        """
         core_path = self._config.core_memory_file
         if not core_path or not core_path.exists():
             return
 
         content = core_path.read_text(encoding="utf-8")
+        language = getattr(self._config, "language", "de")
 
-        # Tool-Liste mit vollständigen Schemas zusammenstellen
+        # Versuche DB-gestuetzte Generierung
+        tool_count = 0
+        tool_section = ""
+        try:
+            from jarvis.mcp.tool_registry_db import (
+                _SECTION_HEADERS,
+                _ProcedureEntry,
+                ToolRegistryDB,
+                deduplicate_procedures,
+            )
+
+            db_path = self._config.jarvis_home / "tool_registry.db"
+            registry_db = ToolRegistryDB(db_path)
+
+            # Tools aus MCP-Client synchronisieren
+            if self._mcp_client:
+                registry_db.sync_from_mcp(self._mcp_client)
+
+            tool_count = registry_db.tool_count()
+            tool_section = registry_db.get_tool_prompt_section("all", language)
+            registry_db.close()
+        except Exception:
+            log.debug("tool_registry_db_failed_falling_back", exc_info=True)
+            # Fallback: alte statische Methode
+            tool_section = self._sync_core_inventory_legacy()
+            if tool_section is None:
+                return
+
+        # Skill-Liste zusammenstellen
+        skill_lines: list[str] = []
+        if hasattr(self, "_skill_registry") and self._skill_registry:
+            try:
+                for slug, skill in self._skill_registry._skills.items():
+                    status = "active" if skill.enabled else "inactive"
+                    skill_lines.append(f"- **{skill.name}** (`{slug}`) -- {status}")
+            except Exception:
+                log.debug("core_inventory_skills_failed", exc_info=True)
+        if not skill_lines:
+            skill_lines = ["- (no skills registered)"]
+
+        # Prozedur-Liste mit Deduplizierung
+        proc_lines: list[str] = []
+        if self._memory_manager:
+            try:
+                from jarvis.mcp.tool_registry_db import (
+                    _ProcedureEntry,
+                    deduplicate_procedures,
+                )
+                procedural = self._memory_manager.procedural
+                raw_procs = [
+                    _ProcedureEntry(
+                        name=meta.name,
+                        total_uses=meta.total_uses,
+                        trigger_keywords=list(meta.trigger_keywords),
+                    )
+                    for meta in procedural.list_procedures()
+                ]
+                proc_lines = deduplicate_procedures(
+                    raw_procs, language=language,
+                )
+            except Exception:
+                log.debug("core_inventory_procedures_dedup_failed", exc_info=True)
+                # Fallback: einfache Liste
+                try:
+                    procedural = self._memory_manager.procedural
+                    for meta in procedural.list_procedures():
+                        uses = f"{meta.total_uses}x" if meta.total_uses else "0x"
+                        kw = ", ".join(meta.trigger_keywords[:3]) if meta.trigger_keywords else ""
+                        suffix = f" [{kw}]" if kw else ""
+                        proc_lines.append(f"- `{meta.name}` ({uses} used){suffix}")
+                except Exception:
+                    log.debug("core_inventory_procedures_failed", exc_info=True)
+
+        if not proc_lines:
+            proc_lines = ["- (no procedures stored)"]
+
+        # Lokalisierte Header
+        try:
+            from jarvis.mcp.tool_registry_db import _SECTION_HEADERS
+            headers = _SECTION_HEADERS.get(language, _SECTION_HEADERS["en"])
+        except Exception:
+            headers = {
+                "inventory_title": "INVENTORY (auto-updated)",
+                "skills_title": "Installed Skills ({count})",
+                "procedures_title": "Learned Procedures ({count})",
+            }
+
+        inv_title = headers["inventory_title"]
+        skills_title = headers["skills_title"].format(count=len(skill_lines))
+        procs_title = headers["procedures_title"].format(count=len(proc_lines))
+
+        inventory = (
+            f"## {inv_title}\n\n"
+            + tool_section + "\n\n"
+            + f"### {skills_title}\n" + "\n".join(skill_lines) + "\n\n"
+            + f"### {procs_title}\n" + "\n".join(proc_lines)
+        )
+
+        # Bestehenden INVENTAR/INVENTORY-Abschnitt ersetzen oder am Ende anhaengen
+        marker_candidates = [
+            "## INVENTAR (auto-aktualisiert)",
+            "## INVENTAR (automatisch aktualisiert)",
+            "## INVENTORY (auto-updated)",
+            f"## {inv_title}",
+        ]
+        marker_start = None
+        for marker in marker_candidates:
+            if marker in content:
+                marker_start = marker
+                break
+
+        if marker_start:
+            pattern = re.escape(marker_start) + r".*?(?=\n## (?!INVENT|清单)|\Z)"
+            content = re.sub(pattern, inventory, content, flags=re.DOTALL)
+        else:
+            content = content.rstrip() + "\n\n---\n\n" + inventory + "\n"
+
+        core_path.write_text(content, encoding="utf-8")
+        log.info(
+            "core_inventory_synced",
+            tools=tool_count,
+            skills=len(skill_lines),
+            procedures=len(proc_lines),
+        )
+
+    def _sync_core_inventory_legacy(self) -> str | None:
+        """Alte statische Tool-Liste als Fallback (ohne DB).
+
+        Returns:
+            Formatierter Tool-Abschnitt oder None bei Fehler.
+        """
         tool_schemas = self._mcp_client.get_tool_schemas() if self._mcp_client else {}
-        tool_lines = []
+        if not tool_schemas:
+            return None
+
+        tool_lines: list[str] = []
         for name in sorted(tool_schemas):
             schema = tool_schemas[name]
             desc = schema.get("description", "")
@@ -429,67 +568,15 @@ class Gateway:
                     req = " *" if k in required else ""
                     parts.append(f"{k}: {typ}{req}")
                 param_str = ", ".join(parts)
-                tool_lines.append(f"- `{name}({param_str})` — {desc}")
+                tool_lines.append(f"- `{name}({param_str})` -- {desc}")
             else:
-                tool_lines.append(f"- `{name}()` — {desc}")
-
-        # Skill-Liste zusammenstellen
-        skill_lines = []
-        if hasattr(self, "_skill_registry") and self._skill_registry:
-            try:
-                for slug, skill in self._skill_registry._skills.items():
-                    status = "active" if skill.enabled else "inactive"
-                    skill_lines.append(f"- **{skill.name}** (`{slug}`) — {status}")
-            except Exception:
-                log.debug("core_inventory_skills_failed", exc_info=True)
-        if not skill_lines:
-            skill_lines = ["- (no skills registered)"]
-
-        # Prozedur-Liste
-        proc_lines = []
-        if self._memory_manager:
-            try:
-                procedural = self._memory_manager.procedural
-                for meta in procedural.list_procedures():
-                    uses = f"{meta.total_uses}x" if meta.total_uses else "0x"
-                    kw = ", ".join(meta.trigger_keywords[:3]) if meta.trigger_keywords else ""
-                    suffix = f" [{kw}]" if kw else ""
-                    proc_lines.append(f"- `{meta.name}` ({uses} used){suffix}")
-            except Exception:
-                log.debug("core_inventory_procedures_failed", exc_info=True)
-        if not proc_lines:
-            proc_lines = ["- (no procedures stored)"]
+                tool_lines.append(f"- `{name}()` -- {desc}")
 
         tool_count = len(tool_schemas)
-        inventory = (
-            "## INVENTORY (auto-updated)\n\n"
-            "Parameters marked with * are required.\n\n"
-            f"### Registered Tools ({tool_count})\n" + "\n".join(tool_lines) + "\n\n"
-            f"### Installed Skills ({len(skill_lines)})\n" + "\n".join(skill_lines) + "\n\n"
-            f"### Learned Procedures ({len(proc_lines)})\n" + "\n".join(proc_lines)
-        )
-
-        # Bestehenden INVENTAR/INVENTORY-Abschnitt ersetzen oder am Ende anhängen
-        import re
-
-        marker_old = "## INVENTAR (auto-aktualisiert)"
-        marker_new = "## INVENTORY (auto-updated)"
-        marker_start = (
-            marker_old if marker_old in content else marker_new if marker_new in content else None
-        )
-        if marker_start:
-            # Alles von marker_start bis zum nächsten ## oder Dateiende ersetzen
-            pattern = re.escape(marker_start) + r".*?(?=\n## (?!INVENT)|\Z)"
-            content = re.sub(pattern, inventory, content, flags=re.DOTALL)
-        else:
-            content = content.rstrip() + "\n\n---\n\n" + inventory + "\n"
-
-        core_path.write_text(content, encoding="utf-8")
-        log.info(
-            "core_inventory_synced",
-            tools=tool_count,
-            skills=len(skill_lines),
-            procedures=len(proc_lines),
+        return (
+            f"### Registered Tools ({tool_count})\n"
+            + "Parameters marked with * are required.\n\n"
+            + "\n".join(tool_lines)
         )
 
     def register_channel(self, channel: Channel) -> None:
@@ -930,6 +1017,23 @@ class Gateway:
 
         # Prometheus: Zähle eingehende Requests
         self._record_metric("requests_total", 1, channel=msg.channel)
+
+        # User-Feedback erkennen und speichern (vor PGE-Zyklus)
+        if getattr(self, "_session_analyzer", None):
+            try:
+                signal = self._session_analyzer._extract_feedback_signal(msg.text)
+                if signal is not None:
+                    fb_type, detail = signal
+                    sid = msg.session_id if hasattr(msg, "session_id") else ""
+                    self._session_analyzer.record_user_feedback(
+                        session_id=sid,
+                        message_id=getattr(msg, "message_id", ""),
+                        feedback_type=fb_type,
+                        detail=detail,
+                    )
+                    log.info("user_feedback_recorded", type=fb_type)
+            except Exception:
+                log.debug("user_feedback_detection_failed", exc_info=True)
 
         # Phase 1: Agent-Routing, Session, WM, Skills, Workspace
         (
@@ -1860,6 +1964,24 @@ class Gateway:
                     )
             except Exception:
                 log.debug("prompt_evolution_record_failed", exc_info=True)
+
+        # Session-Analyse: Failure-Clustering und Feedback-Loop
+        if getattr(self, "_session_analyzer", None):
+            try:
+                improvements = await self._session_analyzer.analyze_session(
+                    session_id=session.session_id,
+                    agent_result=agent_result,
+                    reflection=agent_result.reflection,
+                )
+                for imp in improvements:
+                    log.info(
+                        "session_improvement_proposed",
+                        action=imp.action_type,
+                        target=imp.target,
+                        priority=imp.priority,
+                    )
+            except Exception:
+                log.debug("session_analysis_failed", exc_info=True)
 
         # Self-Learning: Process actionable skill gaps (auto-generate new tools)
         if hasattr(self, "_skill_generator") and self._skill_generator:

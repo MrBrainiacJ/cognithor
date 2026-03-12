@@ -52,6 +52,7 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
         "replay_engine": None,
         "improvement_gate": None,
         "prompt_evolution": None,
+        "session_analyzer": None,
         "dag_workflow_engine": None,
     }
 
@@ -276,6 +277,16 @@ async def init_advanced(
             log.info("prompt_evolution_initialized", db=pe_db)
     except Exception:
         log.debug("prompt_evolution_init_skipped", exc_info=True)
+
+    # SessionAnalyzer (Feedback-Loop, Failure-Clustering)
+    try:
+        from jarvis.learning.session_analyzer import SessionAnalyzer
+
+        sa_dir = Path(getattr(config, "jarvis_home", Path.home() / ".jarvis")) / "memory"
+        result["session_analyzer"] = SessionAnalyzer(data_dir=sa_dir)
+        log.info("session_analyzer_initialized", data_dir=str(sa_dir))
+    except Exception:
+        log.debug("session_analyzer_init_skipped", exc_info=True)
 
     # ReplayEngine (needs Gatekeeper for policy re-evaluation)
     if gatekeeper is not None:
