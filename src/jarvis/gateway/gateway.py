@@ -471,7 +471,9 @@ class Gateway:
 
         marker_old = "## INVENTAR (auto-aktualisiert)"
         marker_new = "## INVENTORY (auto-updated)"
-        marker_start = marker_old if marker_old in content else marker_new if marker_new in content else None
+        marker_start = (
+            marker_old if marker_old in content else marker_new if marker_new in content else None
+        )
         if marker_start:
             # Alles von marker_start bis zum nächsten ## oder Dateiende ersetzen
             pattern = re.escape(marker_start) + r".*?(?=\n## (?!INVENT)|\Z)"
