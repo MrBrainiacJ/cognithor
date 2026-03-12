@@ -1,5 +1,5 @@
 /**
- * Inline SVG Icons für das Control Center.
+ * Inline SVG Icons for the Control Center.
  */
 export const I = {
   home: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>,

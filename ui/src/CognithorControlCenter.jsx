@@ -1352,7 +1352,7 @@ function McpPage({ cfg, set, mcpServers, setMcpServers, a2a, setA2a, setValidati
           onChange={v => setA2a({...a2a, remotes: v})} 
           onValidationError={err => setValidationErrors(prev => ({ ...prev, a2a_remotes: err }))}
           rows={3} 
-          desc='Liste von Remote-Agenten: [{"endpoint": "http://...", "auth_token": ""}]'
+          desc='List of remote agents: [{"endpoint": "http://...", "auth_token": ""}]'
         />
       </>}
     </Card>
@@ -1614,8 +1614,8 @@ export default function App() {
 
   // ALL useState declarations MUST come before useMemo that references them
   const [cronJobs, setCronJobs] = useState([
-    { name: "morning_briefing", schedule: "0 7 * * 1-5", prompt: "Erstelle mein Morning Briefing:\n1. Heutige Termine\n2. Ungelesene E-Mails (Zusammenfassung)\n3. Offene Aufgaben aus gestern\n4. Wetter für Nürnberg", channel: "telegram", model: "qwen3:8b", enabled: false, agent: "" },
-    { name: "weekly_review", schedule: "0 18 * * 5", prompt: "Wochenrückblick:\n- Was wurde diese Woche erledigt?\n- Welche neuen Prozeduren wurden gelernt?\n- Was ist noch offen?", channel: "telegram", model: "qwen3:32b", enabled: false, agent: "" },
+    { name: "morning_briefing", schedule: "0 7 * * 1-5", prompt: "Create my Morning Briefing:\n1. Today's appointments\n2. Unread emails (summary)\n3. Open tasks from yesterday\n4. Weather forecast", channel: "telegram", model: "qwen3:8b", enabled: false, agent: "" },
+    { name: "weekly_review", schedule: "0 18 * * 5", prompt: "Weekly review:\n- What was completed this week?\n- What new procedures were learned?\n- What is still open?", channel: "telegram", model: "qwen3:32b", enabled: false, agent: "" },
   ]);
   const [mcpServers, setMcpServers] = useState({ mode: "disabled", external_servers: {} });
   const [a2a, setA2a] = useState({ enabled: false, host: "127.0.0.1", port: 3002, agent_name: "Jarvis" });
