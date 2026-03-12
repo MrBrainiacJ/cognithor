@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cognithor &middot; Agent OS</title>
-  <meta name="description" content="Lokales Agent OS mit 16 LLM-Providern, 17 Channels, 51 MCP-Tools, 5-Tier Memory, React Control Center und Enterprise-Security. 10.178 Tests, 0 CodeQL Alerts. Laeuft komplett auf deinem Rechner.">
+  <meta name="description" content="Local-first Agent OS with 16 LLM providers, 17 channels, 53 MCP tools, 5-tier cognitive memory, React Control Center, and enterprise security. 10,208 tests, 0 lint errors, 0 CodeQL alerts.">
   <meta name="theme-color" content="#0d1117">
   <meta name="color-scheme" content="dark">
   <meta property="og:title" content="Cognithor &middot; Agent OS">
-  <meta property="og:description" content="Local-first autonomous agent operating system. 16 LLM providers, 17 channels, 51 MCP tools, React Control Center.">
+  <meta property="og:description" content="Local-first autonomous agent operating system. 16 LLM providers, 17 channels, 53 MCP tools, React Control Center.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://alex8791-cyber.github.io/cognithor/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Cognithor &middot; Agent OS">
-  <meta name="twitter:description" content="Local-first autonomous agent OS. 16 LLM providers, 17 channels, 51 MCP tools, 5-tier memory.">
+  <meta name="twitter:description" content="Local-first autonomous agent OS. 16 LLM providers, 17 channels, 53 MCP tools, 5-tier memory.">
   <style>
     :root {
       --bg: #0d1117;
@@ -217,8 +217,9 @@
   <div class="badges">
     <a href="https://github.com/Alex8791-cyber/cognithor/stargazers"><img src="https://img.shields.io/github/stars/Alex8791-cyber/cognithor?style=flat-square&color=yellow" alt="GitHub Stars"></a>
     <img src="https://img.shields.io/badge/python-%3E%3D3.12-blue?style=flat-square" alt="Python">
-    <img src="https://img.shields.io/badge/tests-10%2C165%20passing-brightgreen?style=flat-square" alt="Tests">
+    <img src="https://img.shields.io/badge/tests-10%2C208%20passing-brightgreen?style=flat-square" alt="Tests">
     <img src="https://img.shields.io/badge/coverage-89%25-brightgreen?style=flat-square" alt="Coverage">
+    <img src="https://img.shields.io/badge/lint-0%20errors-brightgreen?style=flat-square" alt="Lint">
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License">
     <img src="https://img.shields.io/github/v/release/Alex8791-cyber/cognithor?style=flat-square&color=blue" alt="Release">
   </div>
@@ -226,14 +227,14 @@
     <a class="primary" href="https://github.com/Alex8791-cyber/cognithor">View on GitHub</a>
     <a class="secondary" href="https://github.com/Alex8791-cyber/cognithor/releases/latest">Download Latest</a>
   </div>
-  <div class="version-badge">v0.30.0 &mdash; <strong>mTLS</strong>, Dokument-Lese-Tools, DB Retry, 51 MCP-Tools</div>
+  <div class="version-badge">v0.34.4 &mdash; <strong>A2A Delegation</strong>, Sandbox Enforcement, Proportional Iteration Caps, 0 Lint Errors</div>
 </section>
 
 <section class="stats">
   <div class="stat"><div class="num">16</div><div class="label">LLM Providers</div></div>
   <div class="stat"><div class="num">17</div><div class="label">Channels</div></div>
-  <div class="stat"><div class="num">51</div><div class="label">MCP Tools</div></div>
-  <div class="stat"><div class="num">10,178</div><div class="label">Tests</div></div>
+  <div class="stat"><div class="num">53</div><div class="label">MCP Tools</div></div>
+  <div class="stat"><div class="num">10,208</div><div class="label">Tests</div></div>
   <div class="stat"><div class="num">89%</div><div class="label">Coverage</div></div>
 </section>
 
@@ -267,8 +268,8 @@
     </div>
     <div class="card">
       <div class="icon">&#x1F50C;</div>
-      <h3>51 MCP Tools &amp; A2A</h3>
-      <p>10 tool modules: filesystem, shell, memory, web, browser, media, vault, synthesis, code, skills. Agent-to-Agent protocol (Linux Foundation RC v1.0) for inter-agent communication.</p>
+      <h3>53 MCP Tools &amp; A2A</h3>
+      <p>10 tool modules: filesystem, shell, memory, web, browser, media, vault, synthesis, code, skills. A2A protocol (Linux Foundation RC v1.0) with Planner delegation &mdash; agents can discover and delegate tasks to remote agents.</p>
     </div>
     <div class="card">
       <div class="icon">&#x2699;&#xFE0F;</div>
@@ -278,7 +279,7 @@
     <div class="card">
       <div class="icon">&#x1F50A;</div>
       <h3>Voice &amp; Chat</h3>
-      <p>Wake word ("Jarvis") with Levenshtein + phonetic matching, Konversationsmodus, Piper TTS (Thorsten Emotional), Whisper STT, integrated chat with WebSocket streaming.</p>
+      <p>Wake word ("Jarvis") with Levenshtein + phonetic matching, conversation mode, Piper TTS (Thorsten Emotional), Whisper STT, integrated chat with WebSocket streaming.</p>
     </div>
     <div class="card">
       <div class="icon">&#x1F4DA;</div>
@@ -328,7 +329,7 @@
 &#x2502;  Planner   &#x2502;  Gatekeeper  &#x2502;  Executor (DAG parallel)       &#x2502;
 &#x2502;  (LLM)     &#x2502;  (Policy)    &#x2502;  (Sandbox)                     &#x2502;
 &#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;
-&#x2502;              MCP Tool Layer (51 tools, 10 modules)          &#x2502;
+&#x2502;              MCP Tool Layer (53 tools, 10 modules)          &#x2502;
 &#x2502;  Filesystem &#x00B7; Shell &#x00B7; Memory &#x00B7; Web &#x00B7; Browser &#x00B7; Media       &#x2502;
 &#x2502;  Vault &#x00B7; Synthesis &#x00B7; Code &#x00B7; Skills Marketplace              &#x2502;
 &#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;
