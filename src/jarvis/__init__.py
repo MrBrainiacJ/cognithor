@@ -1,6 +1,6 @@
 """Jarvis · Agent OS -- Lokales autonomes Agent-Betriebssystem."""
 
-__version__ = "0.34.4"
+__version__ = "0.35.0"
 __author__ = "Alexander Söllner"
 
 # ── Centralized branding — single source of truth for banner + version ──
