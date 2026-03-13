@@ -257,7 +257,10 @@ class TestLocalizedDescriptions:
     def test_fallback_to_english(self, registry: ToolRegistryDB) -> None:
         """Bei fehlender Sprache wird auf Englisch zurueckgefallen."""
         registry.upsert_tool(
-            name="only_en", description_en="Only English", description_de="", description_zh="",
+            name="only_en",
+            description_en="Only English",
+            description_de="",
+            description_zh="",
         )
         tools = registry.get_tools_for_role("all", "de")
         tool = next(t for t in tools if t.name == "only_en")
@@ -275,33 +278,37 @@ class TestSyncFromMCP:
 
     def test_sync_basic(self, registry: ToolRegistryDB) -> None:
         """Grundlegende Synchronisation funktioniert."""
-        mock_client = _make_mock_mcp_client({
-            "read_file": {
-                "description": "Reads a file from disk.",
-                "inputSchema": {
-                    "properties": {"path": {"type": "string"}},
-                    "required": ["path"],
+        mock_client = _make_mock_mcp_client(
+            {
+                "read_file": {
+                    "description": "Reads a file from disk.",
+                    "inputSchema": {
+                        "properties": {"path": {"type": "string"}},
+                        "required": ["path"],
+                    },
                 },
-            },
-            "web_search": {
-                "description": "Search the web.",
-                "inputSchema": {
-                    "properties": {"query": {"type": "string"}},
-                    "required": ["query"],
+                "web_search": {
+                    "description": "Search the web.",
+                    "inputSchema": {
+                        "properties": {"query": {"type": "string"}},
+                        "required": ["query"],
+                    },
                 },
-            },
-        })
+            }
+        )
         count = registry.sync_from_mcp(mock_client)
         assert count == 2
         assert registry.tool_count() == 2
 
     def test_sync_assigns_categories(self, registry: ToolRegistryDB) -> None:
         """Sync weist korrekte Kategorien zu."""
-        mock_client = _make_mock_mcp_client({
-            "read_file": {"description": "Read", "inputSchema": {}},
-            "browser_navigate": {"description": "Nav", "inputSchema": {}},
-            "docker_ps": {"description": "PS", "inputSchema": {}},
-        })
+        mock_client = _make_mock_mcp_client(
+            {
+                "read_file": {"description": "Read", "inputSchema": {}},
+                "browser_navigate": {"description": "Nav", "inputSchema": {}},
+                "docker_ps": {"description": "PS", "inputSchema": {}},
+            }
+        )
         registry.sync_from_mcp(mock_client)
 
         assert registry.get_tool("read_file").category == "filesystem"
@@ -310,9 +317,11 @@ class TestSyncFromMCP:
 
     def test_sync_assigns_roles(self, registry: ToolRegistryDB) -> None:
         """Sync weist korrekte Rollen basierend auf TOOL_ROLE_DEFAULTS zu."""
-        mock_client = _make_mock_mcp_client({
-            "web_search": {"description": "Search", "inputSchema": {}},
-        })
+        mock_client = _make_mock_mcp_client(
+            {
+                "web_search": {"description": "Search", "inputSchema": {}},
+            }
+        )
         registry.sync_from_mcp(mock_client)
         tool = registry.get_tool("web_search")
         assert "planner" in tool.agent_roles
@@ -326,9 +335,11 @@ class TestSyncFromMCP:
             example_input="my_custom_input",
             example_output="my_custom_output",
         )
-        mock_client = _make_mock_mcp_client({
-            "custom_tool": {"description": "Custom", "inputSchema": {}},
-        })
+        mock_client = _make_mock_mcp_client(
+            {
+                "custom_tool": {"description": "Custom", "inputSchema": {}},
+            }
+        )
         registry.sync_from_mcp(mock_client)
         tool = registry.get_tool("custom_tool")
         assert tool.example_input == "my_custom_input"
@@ -336,9 +347,11 @@ class TestSyncFromMCP:
 
     def test_sync_adds_default_examples(self, registry: ToolRegistryDB) -> None:
         """Sync fuegt Default-Beispiele fuer bekannte Tools hinzu."""
-        mock_client = _make_mock_mcp_client({
-            "web_search": {"description": "Search", "inputSchema": {}},
-        })
+        mock_client = _make_mock_mcp_client(
+            {
+                "web_search": {"description": "Search", "inputSchema": {}},
+            }
+        )
         registry.sync_from_mcp(mock_client)
         tool = registry.get_tool("web_search")
         assert tool.example_input != ""
@@ -346,9 +359,11 @@ class TestSyncFromMCP:
 
     def test_sync_unknown_tool_gets_all_role(self, registry: ToolRegistryDB) -> None:
         """Unbekannte Tools bekommen Rolle 'all'."""
-        mock_client = _make_mock_mcp_client({
-            "totally_new_tool": {"description": "New", "inputSchema": {}},
-        })
+        mock_client = _make_mock_mcp_client(
+            {
+                "totally_new_tool": {"description": "New", "inputSchema": {}},
+            }
+        )
         registry.sync_from_mcp(mock_client)
         tool = registry.get_tool("totally_new_tool")
         assert "all" in tool.agent_roles
@@ -535,10 +550,7 @@ class TestProcedureDeduplication:
 
     def test_dedup_english_output(self) -> None:
         """Englische Ausgabe verwendet englische Labels."""
-        procs = [
-            _ProcedureEntry(f"hb-{i}", 1, ["heartbeat", "check"])
-            for i in range(5)
-        ]
+        procs = [_ProcedureEntry(f"hb-{i}", 1, ["heartbeat", "check"]) for i in range(5)]
         lines = deduplicate_procedures(procs, language="en")
         assert len(lines) == 1
         assert "variants" in lines[0]

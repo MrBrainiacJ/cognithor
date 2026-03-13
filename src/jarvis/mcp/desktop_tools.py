@@ -39,6 +39,7 @@ __all__ = [
 # Clipboard helpers
 # ---------------------------------------------------------------------------
 
+
 def _ps_get_clipboard_text() -> str:
     """Read text from clipboard via PowerShell."""
     result = subprocess.run(
@@ -87,6 +88,7 @@ def _ps_set_clipboard(text: str) -> None:
 # ---------------------------------------------------------------------------
 # Screenshot helpers
 # ---------------------------------------------------------------------------
+
 
 def _try_mss_screenshot(
     monitor_index: int = 0,
@@ -153,7 +155,7 @@ def _try_ps_screenshot(save_path: str) -> tuple[int, int] | None:
         "$g.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size); "
         f"$bmp.Save('{escaped}'); "
         "$g.Dispose(); $bmp.Dispose(); "
-        "Write-Output \"$($bounds.Width)x$($bounds.Height)\""
+        'Write-Output "$($bounds.Width)x$($bounds.Height)"'
     )
     try:
         result = subprocess.run(
@@ -198,6 +200,7 @@ def _downscale_if_needed(png_bytes: bytes, width: int, height: int) -> tuple[byt
 # DesktopTools class
 # ---------------------------------------------------------------------------
 
+
 class DesktopTools:
     """Clipboard and screenshot operations."""
 
@@ -232,9 +235,7 @@ class DesktopTools:
         ts = self._timestamp()
         img_path = self._screenshots_dir / f"clipboard_{ts}.png"
         try:
-            ok = await loop.run_in_executor(
-                None, _ps_get_clipboard_image, str(img_path)
-            )
+            ok = await loop.run_in_executor(None, _ps_get_clipboard_image, str(img_path))
             if ok and img_path.exists():
                 result: dict[str, Any] = {
                     "type": "image",
@@ -317,9 +318,7 @@ class DesktopTools:
         region_tuple = (x, y, width, height)
 
         # 1) mss
-        result_data = await loop.run_in_executor(
-            None, _try_mss_screenshot, 0, region_dict
-        )
+        result_data = await loop.run_in_executor(None, _try_mss_screenshot, 0, region_dict)
         if result_data is not None:
             png_bytes, w, h = result_data
             png_bytes, w, h = _downscale_if_needed(png_bytes, w, h)
@@ -327,9 +326,7 @@ class DesktopTools:
             return await self._screenshot_result(out_path, w, h, "mss")
 
         # 2) PIL.ImageGrab
-        result_data = await loop.run_in_executor(
-            None, _try_pil_screenshot, region_tuple
-        )
+        result_data = await loop.run_in_executor(None, _try_pil_screenshot, region_tuple)
         if result_data is not None:
             png_bytes, w, h = result_data
             png_bytes, w, h = _downscale_if_needed(png_bytes, w, h)
@@ -361,6 +358,7 @@ class DesktopTools:
 # ---------------------------------------------------------------------------
 # MCP registration
 # ---------------------------------------------------------------------------
+
 
 def register_desktop_tools(
     mcp_client: Any,
@@ -445,8 +443,7 @@ def register_desktop_tools(
         "screenshot_desktop",
         _screenshot_desktop,
         description=(
-            "Take a full desktop screenshot. "
-            "Note: Screenshots may contain sensitive information."
+            "Take a full desktop screenshot. Note: Screenshots may contain sensitive information."
         ),
         input_schema={
             "type": "object",
@@ -472,7 +469,11 @@ def register_desktop_tools(
         height = int(kwargs.get("height", 600))
         save_path = kwargs.get("save_path")
         result = await tools.screenshot_region(
-            x=x, y=y, width=width, height=height, save_path=save_path,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            save_path=save_path,
         )
         if "error" in result:
             return f"Error: {result['error']}"

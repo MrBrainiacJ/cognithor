@@ -93,8 +93,7 @@ class TestRegistration:
     ) -> None:
         register_search_tools(mock_mcp_client, search_config)
         registered_names = [
-            call.args[0]
-            for call in mock_mcp_client.register_builtin_handler.call_args_list
+            call.args[0] for call in mock_mcp_client.register_builtin_handler.call_args_list
         ]
         assert "search_files" in registered_names
         assert "find_in_files" in registered_names
@@ -191,7 +190,11 @@ class TestSearchFiles:
         self, search_tools: SearchTools, populated_workspace: Path
     ) -> None:
         result = await search_tools.search_files("**/*")
-        assert ".git" not in result or "config" not in result.split(".git")[0] if ".git" in result else True
+        assert (
+            ".git" not in result or "config" not in result.split(".git")[0]
+            if ".git" in result
+            else True
+        )
         # Better check: the .git/config file should not appear
         assert ".git" not in result.replace("git_", "").replace("git.", "")
 
@@ -230,16 +233,12 @@ class TestSearchFiles:
 
 
 class TestFindInFiles:
-    async def test_find_text(
-        self, search_tools: SearchTools, populated_workspace: Path
-    ) -> None:
+    async def test_find_text(self, search_tools: SearchTools, populated_workspace: Path) -> None:
         result = await search_tools.find_in_files("Hello World")
         assert "main.py" in result
         assert "Hello World" in result
 
-    async def test_find_regex(
-        self, search_tools: SearchTools, populated_workspace: Path
-    ) -> None:
+    async def test_find_regex(self, search_tools: SearchTools, populated_workspace: Path) -> None:
         result = await search_tools.find_in_files(r"def \w+\(", regex=True)
         assert "main.py" in result
 

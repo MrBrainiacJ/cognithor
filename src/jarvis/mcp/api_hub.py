@@ -50,6 +50,7 @@ _fernet_key_path: Path | None = None
 
 try:
     from cryptography.fernet import Fernet as _FernetClass
+
     _HAS_FERNET = True
 except ImportError:
     _FernetClass = None  # type: ignore[assignment, misc]
@@ -119,7 +120,9 @@ class _RateLimiter:
     """Simple Token-Bucket Rate-Limiter per Integration."""
 
     def __init__(
-        self, max_requests: int = _DEFAULT_RATE_LIMIT, window_seconds: float = 60.0,
+        self,
+        max_requests: int = _DEFAULT_RATE_LIMIT,
+        window_seconds: float = 60.0,
     ) -> None:
         self._max_requests = max_requests
         self._window = window_seconds
@@ -266,13 +269,11 @@ def _build_auth_headers(
     headers: dict[str, str] = {}
 
     if auth_type == "bearer":
-        auth_header = (
-            integration.get("auth_header")
-            or (template or {}).get("auth_header", "Authorization")
+        auth_header = integration.get("auth_header") or (template or {}).get(
+            "auth_header", "Authorization"
         )
-        auth_prefix = (
-            integration.get("auth_prefix")
-            or (template or {}).get("auth_prefix", "Bearer ")
+        auth_prefix = integration.get("auth_prefix") or (template or {}).get(
+            "auth_prefix", "Bearer "
         )
         headers[auth_header] = f"{auth_prefix}{credential}"
 
@@ -285,10 +286,7 @@ def _build_auth_headers(
         headers["Authorization"] = f"Basic {encoded}"
 
     elif auth_type == "api_key":
-        auth_header = (
-            integration.get("auth_header")
-            or (template or {}).get("auth_header", "")
-        )
+        auth_header = integration.get("auth_header") or (template or {}).get("auth_header", "")
         if auth_header:
             headers[auth_header] = credential
         # If auth_param is set, it's a query parameter -- handled separately
@@ -313,10 +311,7 @@ def _build_auth_params(
     if not credential:
         return {}
 
-    auth_param = (
-        integration.get("auth_param")
-        or (template or {}).get("auth_param", "")
-    )
+    auth_param = integration.get("auth_param") or (template or {}).get("auth_param", "")
     if auth_param:
         return {auth_param: credential}
     return {}
@@ -333,6 +328,7 @@ def _mask_credential(text: str) -> str:
     """Maskiert moegliche Credentials in Fehlermeldungen."""
     # Mask anything that looks like a token/key (long alphanumeric strings)
     import re
+
     return re.sub(
         r'(?:Bearer |Basic |token[=:]\s*|key[=:]\s*)["\']?([a-zA-Z0-9_-]{8,})',
         lambda m: m.group(0)[:10] + "***MASKED***",
@@ -481,7 +477,9 @@ class APIHub:
         if health_endpoint and credential:
             try:
                 health_ok, health_msg = await self._health_check(
-                    integration, template, health_endpoint,
+                    integration,
+                    template,
+                    health_endpoint,
                 )
             except Exception as exc:
                 health_msg = f"Health check failed: {_mask_credential(str(exc))}"
@@ -512,8 +510,7 @@ class APIHub:
 
         if not _HAS_FERNET:
             lines.append(
-                "\n  Warning: cryptography package not installed. "
-                "Config stored as plaintext."
+                "\n  Warning: cryptography package not installed. Config stored as plaintext."
             )
             lines.append("  Install: pip install cryptography")
 
@@ -553,8 +550,7 @@ class APIHub:
         method = method.upper()
         if method not in _ALLOWED_METHODS:
             return (
-                f"Error: Invalid method '{method}'. "
-                f"Allowed: {', '.join(sorted(_ALLOWED_METHODS))}."
+                f"Error: Invalid method '{method}'. Allowed: {', '.join(sorted(_ALLOWED_METHODS))}."
             )
 
         # Rate-Limiting
@@ -719,20 +715,29 @@ class APIHub:
         # Versuche httpx (bevorzugt)
         try:
             return await self._do_request_httpx(
-                method=method, url=url, headers=headers,
-                params=params, body=body, timeout=timeout,
+                method=method,
+                url=url,
+                headers=headers,
+                params=params,
+                body=body,
+                timeout=timeout,
             )
         except ImportError:
             pass
 
         # Fallback: urllib (synchron, in Executor)
         import asyncio
+
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
             None,
             lambda: self._do_request_urllib(
-                method=method, url=url, headers=headers or {},
-                params=params or {}, body=body, timeout=timeout,
+                method=method,
+                url=url,
+                headers=headers or {},
+                params=params or {},
+                body=body,
+                timeout=timeout,
             ),
         )
 

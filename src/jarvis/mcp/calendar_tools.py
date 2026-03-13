@@ -124,9 +124,7 @@ def _parse_ics_datetime(value: str) -> datetime:
         return datetime.strptime(value, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
 
     try:
-        return datetime.strptime(value, "%Y%m%dT%H%M%S").replace(
-            tzinfo=_get_local_timezone()
-        )
+        return datetime.strptime(value, "%Y%m%dT%H%M%S").replace(tzinfo=_get_local_timezone())
     except ValueError as err:
         raise CalendarError(f"Ungültiges Datumsformat: {value}") from err
 
@@ -147,8 +145,14 @@ class _VEvent:
     """Interner Repräsentant eines Kalender-Events."""
 
     __slots__ = (
-        "all_day", "description", "dtend", "dtstart",
-        "location", "rrule", "summary", "uid",
+        "all_day",
+        "description",
+        "dtend",
+        "dtstart",
+        "location",
+        "rrule",
+        "summary",
+        "uid",
     )
 
     def __init__(
@@ -395,9 +399,7 @@ def _parse_ics_with_library(content: str) -> list[_VEvent]:
         all_day = isinstance(dtstart_dt, date) and not isinstance(dtstart_dt, datetime)
 
         if all_day:
-            dtstart = datetime.combine(dtstart_dt, time.min).replace(
-                tzinfo=_get_local_timezone()
-            )
+            dtstart = datetime.combine(dtstart_dt, time.min).replace(tzinfo=_get_local_timezone())
         elif dtstart_dt.tzinfo is None:
             dtstart = dtstart_dt.replace(tzinfo=_get_local_timezone())
         else:
@@ -408,9 +410,7 @@ def _parse_ics_with_library(content: str) -> list[_VEvent]:
         if dtend_val is not None:
             dtend_dt = dtend_val.dt
             if isinstance(dtend_dt, date) and not isinstance(dtend_dt, datetime):
-                dtend = datetime.combine(dtend_dt, time.min).replace(
-                    tzinfo=_get_local_timezone()
-                )
+                dtend = datetime.combine(dtend_dt, time.min).replace(tzinfo=_get_local_timezone())
             elif dtend_dt.tzinfo is None:
                 dtend = dtend_dt.replace(tzinfo=_get_local_timezone())
             else:
@@ -478,9 +478,7 @@ class CalendarTools:
         """Erstellt die ICS-Datei falls nicht vorhanden."""
         if not self._ics_path.exists():
             self._ics_path.parent.mkdir(parents=True, exist_ok=True)
-            self._ics_path.write_text(
-                _ICS_HEADER + _ICS_FOOTER, encoding="utf-8"
-            )
+            self._ics_path.write_text(_ICS_HEADER + _ICS_FOOTER, encoding="utf-8")
             log.info("calendar_ics_created", path=str(self._ics_path))
 
     def _read_events(self) -> list[_VEvent]:
@@ -640,9 +638,7 @@ class CalendarTools:
                 if dtend.tzinfo is None:
                     dtend = dtend.replace(tzinfo=self._tz)
             except ValueError as err:
-                raise CalendarError(
-                    f"Ungültige Endzeit: {end} (erwartet: ISO-Format)"
-                ) from err
+                raise CalendarError(f"Ungültige Endzeit: {end} (erwartet: ISO-Format)") from err
         elif not all_day:
             dtend = dtstart + _DEFAULT_EVENT_DURATION
 
@@ -662,8 +658,7 @@ class CalendarTools:
         log.info("calendar_event_created", title=title, start=start)
 
         start_str = (
-            dtstart.strftime("%d.%m.%Y %H:%M") if not all_day
-            else dtstart.strftime("%d.%m.%Y")
+            dtstart.strftime("%d.%m.%Y %H:%M") if not all_day else dtstart.strftime("%d.%m.%Y")
         )
         result = f"Termin erstellt: {title}\nDatum: {start_str}"
         if dtend and not all_day:
@@ -706,8 +701,7 @@ class CalendarTools:
             wh_end = time.fromisoformat(work_hours_end)
         except ValueError as err:
             raise CalendarError(
-                f"Ungültige Arbeitszeit: {work_hours_start}-{work_hours_end} "
-                f"(erwartet: HH:MM)"
+                f"Ungültige Arbeitszeit: {work_hours_start}-{work_hours_end} (erwartet: HH:MM)"
             ) from err
 
         day_start = datetime.combine(target.date(), wh_start).replace(tzinfo=self._tz)
@@ -787,11 +781,7 @@ class CalendarTools:
                 lines.extend(["", f"Bestehende Termine ({len(events)}):"])
                 for event in events:
                     if event.dtstart:
-                        time_str = (
-                            "ganztägig"
-                            if event.all_day
-                            else event.dtstart.strftime("%H:%M")
-                        )
+                        time_str = "ganztägig" if event.all_day else event.dtstart.strftime("%H:%M")
                         end_str = (
                             ""
                             if event.all_day or not event.dtend
@@ -858,10 +848,7 @@ def register_calendar_tools(
     mcp_client.register_builtin_handler(
         "calendar_today",
         cal.calendar_today,
-        description=(
-            "Zeigt die heutigen Kalender-Termine an. "
-            "Optional ein anderes Datum angeben."
-        ),
+        description=("Zeigt die heutigen Kalender-Termine an. Optional ein anderes Datum angeben."),
         input_schema={
             "type": "object",
             "properties": {
@@ -877,10 +864,7 @@ def register_calendar_tools(
     mcp_client.register_builtin_handler(
         "calendar_upcoming",
         cal.calendar_upcoming,
-        description=(
-            "Zeigt kommende Kalender-Termine an, "
-            "sortiert nach Startzeit."
-        ),
+        description=("Zeigt kommende Kalender-Termine an, sortiert nach Startzeit."),
         input_schema={
             "type": "object",
             "properties": {
@@ -896,10 +880,7 @@ def register_calendar_tools(
     mcp_client.register_builtin_handler(
         "calendar_create_event",
         cal.calendar_create_event,
-        description=(
-            "Neuen Kalender-Termin erstellen. "
-            "Schreibt in die lokale ICS-Datei."
-        ),
+        description=("Neuen Kalender-Termin erstellen. Schreibt in die lokale ICS-Datei."),
         input_schema={
             "type": "object",
             "properties": {
@@ -940,8 +921,7 @@ def register_calendar_tools(
         "calendar_check_availability",
         cal.calendar_check_availability,
         description=(
-            "Freie Zeitfenster innerhalb der Arbeitszeit finden. "
-            "Berücksichtigt bestehende Termine."
+            "Freie Zeitfenster innerhalb der Arbeitszeit finden. Berücksichtigt bestehende Termine."
         ),
         input_schema={
             "type": "object",

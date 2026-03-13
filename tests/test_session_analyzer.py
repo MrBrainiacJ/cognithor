@@ -218,7 +218,7 @@ class TestFailureClustering:
                     _make_tool_result(
                         tool_name="web_search",
                         is_error=True,
-                        error_message=f"timeout on request at 2025-01-0{i+1}T00:00:00Z",
+                        error_message=f"timeout on request at 2025-01-0{i + 1}T00:00:00Z",
                     ),
                 ],
                 success=False,
@@ -478,7 +478,9 @@ class TestImprovementGeneration:
             error_category="tool_error",
             representative_error="shell_exec failed with code 1",
             frequency=4,
-            occurrences=[{"tool_name": "shell_exec", "session_id": "s1", "timestamp": "", "error_detail": ""}],
+            occurrences=[
+                {"tool_name": "shell_exec", "session_id": "s1", "timestamp": "", "error_detail": ""}
+            ],
         )
         actions = await analyzer.generate_improvements([cluster])
         assert len(actions) == 1
@@ -510,7 +512,9 @@ class TestImprovementGeneration:
         assert actions[0].action_type == "prompt_variant"
 
     @pytest.mark.asyncio
-    async def test_user_correction_generates_prompt_variant(self, analyzer: SessionAnalyzer) -> None:
+    async def test_user_correction_generates_prompt_variant(
+        self, analyzer: SessionAnalyzer
+    ) -> None:
         cluster = FailureCluster(
             pattern_id="mno345",
             error_category="user_correction",
@@ -554,7 +558,9 @@ class TestImprovementGeneration:
         assert actions[0].priority >= actions[1].priority
 
     @pytest.mark.asyncio
-    async def test_unknown_category_generates_generic_action(self, analyzer: SessionAnalyzer) -> None:
+    async def test_unknown_category_generates_generic_action(
+        self, analyzer: SessionAnalyzer
+    ) -> None:
         cluster = FailureCluster(
             pattern_id="unk1",
             error_category="unknown",

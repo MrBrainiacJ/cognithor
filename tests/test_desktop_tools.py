@@ -14,6 +14,7 @@ import pytest
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def workspace(tmp_path: Path) -> Path:
     ws = tmp_path / "workspace"
@@ -46,6 +47,7 @@ def mock_config(workspace: Path) -> MagicMock:
 # Registration
 # ---------------------------------------------------------------------------
 
+
 class TestRegistration:
     def test_register_desktop_tools(self, mock_mcp_client, mock_config):
         from jarvis.mcp.desktop_tools import register_desktop_tools
@@ -72,6 +74,7 @@ class TestRegistration:
 # Path generation
 # ---------------------------------------------------------------------------
 
+
 class TestPathGeneration:
     def test_timestamp_format(self, desktop_tools):
         ts = desktop_tools._timestamp()
@@ -83,6 +86,7 @@ class TestPathGeneration:
 # ---------------------------------------------------------------------------
 # Clipboard - get_clipboard
 # ---------------------------------------------------------------------------
+
 
 class TestGetClipboard:
     @pytest.mark.asyncio
@@ -162,6 +166,7 @@ class TestGetClipboard:
 # Clipboard - set_clipboard
 # ---------------------------------------------------------------------------
 
+
 class TestSetClipboard:
     @pytest.mark.asyncio
     async def test_set_clipboard(self, desktop_tools):
@@ -175,6 +180,7 @@ class TestSetClipboard:
 # ---------------------------------------------------------------------------
 # Screenshot - desktop
 # ---------------------------------------------------------------------------
+
 
 class TestScreenshotDesktop:
     @pytest.mark.asyncio
@@ -250,6 +256,7 @@ class TestScreenshotDesktop:
 # Screenshot - region
 # ---------------------------------------------------------------------------
 
+
 class TestScreenshotRegion:
     @pytest.mark.asyncio
     async def test_region_via_mss(self, desktop_tools):
@@ -292,6 +299,7 @@ class TestScreenshotRegion:
 # Downscaling
 # ---------------------------------------------------------------------------
 
+
 class TestDownscale:
     def test_no_downscale_needed(self):
         from jarvis.mcp.desktop_tools import _downscale_if_needed
@@ -315,6 +323,7 @@ class TestDownscale:
 # ---------------------------------------------------------------------------
 # Vision integration
 # ---------------------------------------------------------------------------
+
 
 class TestVisionIntegration:
     def test_set_vision(self, desktop_tools):

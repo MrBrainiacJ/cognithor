@@ -16,6 +16,7 @@ import pytest
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def db_path(tmp_path: Path) -> Path:
     return tmp_path / "reminders.db"
@@ -48,15 +49,14 @@ def mock_config(tmp_path: Path) -> MagicMock:
 # Database creation & schema
 # ---------------------------------------------------------------------------
 
+
 class TestDatabaseCreation:
     def test_db_created(self, db_path: Path, notification_tools):
         assert db_path.exists()
 
     def test_schema_has_reminders_table(self, db_path: Path, notification_tools):
         conn = sqlite3.connect(str(db_path))
-        cur = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='reminders'"
-        )
+        cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='reminders'")
         assert cur.fetchone() is not None
         conn.close()
 
@@ -71,6 +71,7 @@ class TestDatabaseCreation:
 # ---------------------------------------------------------------------------
 # set_reminder
 # ---------------------------------------------------------------------------
+
 
 class TestSetReminder:
     @pytest.mark.asyncio
@@ -147,6 +148,7 @@ class TestSetReminder:
 # list_reminders
 # ---------------------------------------------------------------------------
 
+
 class TestListReminders:
     @pytest.mark.asyncio
     async def test_empty_list(self, notification_tools):
@@ -164,9 +166,7 @@ class TestListReminders:
     async def test_list_include_past(self, notification_tools):
         await notification_tools.set_reminder(text="A", delay_minutes=60)
         # Manually mark as fired
-        notification_tools._conn.execute(
-            "UPDATE reminders SET status = 'fired' WHERE text = 'A'"
-        )
+        notification_tools._conn.execute("UPDATE reminders SET status = 'fired' WHERE text = 'A'")
         notification_tools._conn.commit()
 
         pending = await notification_tools.list_reminders(include_past=False)
@@ -180,6 +180,7 @@ class TestListReminders:
 # ---------------------------------------------------------------------------
 # cancel_reminder
 # ---------------------------------------------------------------------------
+
 
 class TestCancelReminder:
     @pytest.mark.asyncio
@@ -195,6 +196,7 @@ class TestCancelReminder:
 # ---------------------------------------------------------------------------
 # Repeat logic
 # ---------------------------------------------------------------------------
+
 
 class TestRepeatLogic:
     @pytest.mark.asyncio
@@ -243,6 +245,7 @@ class TestRepeatLogic:
 # restore_pending
 # ---------------------------------------------------------------------------
 
+
 class TestRestorePending:
     @pytest.mark.asyncio
     async def test_restore_overdue(self, notification_tools):
@@ -290,6 +293,7 @@ class TestRestorePending:
 # Registration
 # ---------------------------------------------------------------------------
 
+
 class TestRegistration:
     def test_register_notification_tools(self, mock_mcp_client, mock_config):
         from jarvis.mcp.notification_tools import register_notification_tools
@@ -323,6 +327,7 @@ class TestRegistration:
 # send_notification
 # ---------------------------------------------------------------------------
 
+
 class TestSendNotification:
     @pytest.mark.asyncio
     async def test_send_notification_plyer_fallback(self, notification_tools):
@@ -330,9 +335,7 @@ class TestSendNotification:
             "jarvis.mcp.notification_tools._try_plyer_notification",
             return_value=True,
         ):
-            result = await notification_tools.send_notification(
-                title="Test", message="Hello"
-            )
+            result = await notification_tools.send_notification(title="Test", message="Hello")
             assert "plyer" in result
 
     @pytest.mark.asyncio
@@ -342,15 +345,14 @@ class TestSendNotification:
             patch("jarvis.mcp.notification_tools._try_powershell_notification", return_value=False),
             patch("jarvis.mcp.notification_tools._try_winsound_fallback", return_value=False),
         ):
-            result = await notification_tools.send_notification(
-                title="Test", message="Hello"
-            )
+            result = await notification_tools.send_notification(title="Test", message="Hello")
             assert "logged" in result.lower() or "Notification" in result
 
 
 # ---------------------------------------------------------------------------
 # Shutdown
 # ---------------------------------------------------------------------------
+
 
 class TestShutdown:
     @pytest.mark.asyncio

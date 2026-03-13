@@ -470,6 +470,7 @@ class Gateway:
                     _ProcedureEntry,
                     deduplicate_procedures,
                 )
+
                 procedural = self._memory_manager.procedural
                 raw_procs = [
                     _ProcedureEntry(
@@ -480,7 +481,8 @@ class Gateway:
                     for meta in procedural.list_procedures()
                 ]
                 proc_lines = deduplicate_procedures(
-                    raw_procs, language=language,
+                    raw_procs,
+                    language=language,
                 )
             except Exception:
                 log.debug("core_inventory_procedures_dedup_failed", exc_info=True)
@@ -501,6 +503,7 @@ class Gateway:
         # Lokalisierte Header
         try:
             from jarvis.mcp.tool_registry_db import _SECTION_HEADERS
+
             headers = _SECTION_HEADERS.get(language, _SECTION_HEADERS["en"])
         except Exception:
             headers = {
@@ -515,9 +518,13 @@ class Gateway:
 
         inventory = (
             f"## {inv_title}\n\n"
-            + tool_section + "\n\n"
-            + f"### {skills_title}\n" + "\n".join(skill_lines) + "\n\n"
-            + f"### {procs_title}\n" + "\n".join(proc_lines)
+            + tool_section
+            + "\n\n"
+            + f"### {skills_title}\n"
+            + "\n".join(skill_lines)
+            + "\n\n"
+            + f"### {procs_title}\n"
+            + "\n".join(proc_lines)
         )
 
         # Bestehenden INVENTAR/INVENTORY-Abschnitt ersetzen oder am Ende anhaengen

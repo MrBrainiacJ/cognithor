@@ -439,17 +439,13 @@ class TestEmailSend:
         from jarvis.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="Betreff"):
-            await email_tools.email_send(
-                to="recipient@example.com", subject="", body="Hello"
-            )
+            await email_tools.email_send(to="recipient@example.com", subject="", body="Hello")
 
     async def test_send_missing_body(self, email_tools: Any) -> None:
         from jarvis.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="Nachrichtentext"):
-            await email_tools.email_send(
-                to="recipient@example.com", subject="Test", body=""
-            )
+            await email_tools.email_send(to="recipient@example.com", subject="Test", body="")
 
     async def test_send_invalid_address(self, email_tools: Any) -> None:
         from jarvis.mcp.email_tools import EmailError
@@ -490,9 +486,7 @@ class TestEmailSend:
             )
         assert "1" in result  # 1 attachment
 
-    async def test_send_starttls(
-        self, email_config: JarvisConfig, mock_env_password: Any
-    ) -> None:
+    async def test_send_starttls(self, email_config: JarvisConfig, mock_env_password: Any) -> None:
         """STARTTLS port (587) uses SMTP instead of SMTP_SSL."""
         from jarvis.mcp.email_tools import EmailTools
 
@@ -622,9 +616,7 @@ class TestRegistration:
         mcp = MagicMock()
         register_email_tools(mcp, email_config)
 
-        registered_names = [
-            call[0][0] for call in mcp.register_builtin_handler.call_args_list
-        ]
+        registered_names = [call[0][0] for call in mcp.register_builtin_handler.call_args_list]
         assert "email_read_inbox" in registered_names
         assert "email_search" in registered_names
         assert "email_send" in registered_names

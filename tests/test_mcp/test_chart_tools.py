@@ -253,9 +253,7 @@ class TestFileOutput:
         except ImportError:
             pytest.skip("matplotlib nicht verfuegbar")
 
-        result = await chart_tools.create_table_image(
-            data=sample_data, title="Test Table"
-        )
+        result = await chart_tools.create_table_image(data=sample_data, title="Test Table")
         assert "erstellt" in result.lower() or "Tabellen" in result
 
     @pytest.mark.asyncio()
@@ -300,9 +298,7 @@ class TestMaxDataPoints:
     async def test_too_many_points(self, chart_tools: ChartTools) -> None:
         huge_data = [{"x": i, "y": i * 2} for i in range(10_001)]
         with pytest.raises(ChartError, match="Zu viele Datenpunkte"):
-            await chart_tools.create_chart(
-                data=huge_data, chart_type="bar", x_key="x", y_key="y"
-            )
+            await chart_tools.create_chart(data=huge_data, chart_type="bar", x_key="x", y_key="y")
 
     @pytest.mark.asyncio()
     async def test_max_ok(self, chart_tools: ChartTools) -> None:
@@ -337,9 +333,7 @@ class TestChartFromCSV:
     @pytest.mark.asyncio()
     async def test_nonexistent_csv(self, chart_tools: ChartTools, tmp_path: Path) -> None:
         with pytest.raises(ChartError, match="nicht gefunden"):
-            await chart_tools.chart_from_csv(
-                file_path=str(tmp_path / "nonexistent.csv")
-            )
+            await chart_tools.chart_from_csv(file_path=str(tmp_path / "nonexistent.csv"))
 
     @pytest.mark.asyncio()
     async def test_non_csv_file(self, chart_tools: ChartTools, tmp_path: Path) -> None:

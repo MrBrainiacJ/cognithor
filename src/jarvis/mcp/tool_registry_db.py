@@ -58,46 +58,124 @@ class ToolInfo:
 
 TOOL_ROLE_DEFAULTS: dict[str, set[str]] = {
     "planner": {
-        "search_memory", "get_core_memory", "get_recent_episodes",
-        "search_procedures", "knowledge_synthesize", "knowledge_gaps",
-        "knowledge_contradictions", "knowledge_timeline", "vault_search",
-        "vault_read", "vault_list", "web_search", "search_and_read",
-        "web_news_search", "memory_stats", "list_skills",
+        "search_memory",
+        "get_core_memory",
+        "get_recent_episodes",
+        "search_procedures",
+        "knowledge_synthesize",
+        "knowledge_gaps",
+        "knowledge_contradictions",
+        "knowledge_timeline",
+        "vault_search",
+        "vault_read",
+        "vault_list",
+        "web_search",
+        "search_and_read",
+        "web_news_search",
+        "memory_stats",
+        "list_skills",
     },
     "executor": {
-        "read_file", "write_file", "edit_file", "list_directory",
-        "exec_command", "run_python", "analyze_code",
-        "web_fetch", "web_search", "search_and_read",
-        "save_to_memory", "add_entity", "add_relation", "get_entity",
-        "vault_save", "vault_update", "vault_link",
-        "document_export", "analyze_document",
-        "media_extract_text", "media_analyze_image", "media_tts",
-        "media_resize_image", "media_convert_audio", "media_transcribe_audio",
-        "read_pdf", "read_docx", "read_ppt",
-        "http_request", "create_skill", "record_procedure_usage",
-        "git_status", "git_diff", "git_log", "git_commit", "git_branch",
-        "search_files", "find_in_files", "find_and_replace",
-        "db_query", "db_schema", "db_execute", "db_connect",
-        "create_chart", "create_table_image", "chart_from_csv",
-        "email_read_inbox", "email_search", "email_send", "email_summarize",
-        "calendar_today", "calendar_upcoming", "calendar_create_event",
+        "read_file",
+        "write_file",
+        "edit_file",
+        "list_directory",
+        "exec_command",
+        "run_python",
+        "analyze_code",
+        "web_fetch",
+        "web_search",
+        "search_and_read",
+        "save_to_memory",
+        "add_entity",
+        "add_relation",
+        "get_entity",
+        "vault_save",
+        "vault_update",
+        "vault_link",
+        "document_export",
+        "analyze_document",
+        "media_extract_text",
+        "media_analyze_image",
+        "media_tts",
+        "media_resize_image",
+        "media_convert_audio",
+        "media_transcribe_audio",
+        "read_pdf",
+        "read_docx",
+        "read_ppt",
+        "http_request",
+        "create_skill",
+        "record_procedure_usage",
+        "git_status",
+        "git_diff",
+        "git_log",
+        "git_commit",
+        "git_branch",
+        "search_files",
+        "find_in_files",
+        "find_and_replace",
+        "db_query",
+        "db_schema",
+        "db_execute",
+        "db_connect",
+        "create_chart",
+        "create_table_image",
+        "chart_from_csv",
+        "email_read_inbox",
+        "email_search",
+        "email_send",
+        "email_summarize",
+        "calendar_today",
+        "calendar_upcoming",
+        "calendar_create_event",
         "calendar_check_availability",
-        "set_reminder", "list_reminders", "send_notification",
-        "get_clipboard", "set_clipboard", "screenshot_desktop", "screenshot_region",
-        "docker_ps", "docker_logs", "docker_inspect", "docker_run", "docker_stop",
-        "api_list", "api_connect", "api_call", "api_disconnect",
+        "set_reminder",
+        "list_reminders",
+        "send_notification",
+        "get_clipboard",
+        "set_clipboard",
+        "screenshot_desktop",
+        "screenshot_region",
+        "docker_ps",
+        "docker_logs",
+        "docker_inspect",
+        "docker_run",
+        "docker_stop",
+        "api_list",
+        "api_connect",
+        "api_call",
+        "api_disconnect",
     },
     "browser": {
-        "browser_navigate", "browser_click", "browser_fill", "browser_fill_form",
-        "browser_extract", "browser_analyze", "browser_screenshot",
-        "browser_execute_js", "browser_key", "browser_tab",
-        "browser_vision_analyze", "browser_vision_find", "browser_vision_screenshot",
+        "browser_navigate",
+        "browser_click",
+        "browser_fill",
+        "browser_fill_form",
+        "browser_extract",
+        "browser_analyze",
+        "browser_screenshot",
+        "browser_execute_js",
+        "browser_key",
+        "browser_tab",
+        "browser_vision_analyze",
+        "browser_vision_find",
+        "browser_vision_screenshot",
     },
     "researcher": {
-        "web_search", "web_news_search", "web_fetch", "search_and_read",
-        "search_memory", "vault_search", "vault_read",
-        "knowledge_synthesize", "knowledge_gaps", "knowledge_contradictions",
-        "knowledge_timeline", "get_entity", "search_procedures",
+        "web_search",
+        "web_news_search",
+        "web_fetch",
+        "search_and_read",
+        "search_memory",
+        "vault_search",
+        "vault_read",
+        "knowledge_synthesize",
+        "knowledge_gaps",
+        "knowledge_contradictions",
+        "knowledge_timeline",
+        "get_entity",
+        "search_procedures",
     },
 }
 
@@ -281,8 +359,7 @@ DEFAULT_EXAMPLES: dict[str, tuple[str, str]] = {
         ' "snippet": "OpenAI announced GPT-5 with..."}]}',
     ),
     "web_news_search": (
-        '{"query": "AI regulation EU",'
-        ' "num_results": 3, "timelimit": "7d"}',
+        '{"query": "AI regulation EU", "num_results": 3, "timelimit": "7d"}',
         '{"results": [{"title": "EU AI Act Takes Effect",'
         ' "url": "https://reuters.com/...",'
         ' "summary": "The European Union AI Act...",'
@@ -321,9 +398,7 @@ DEFAULT_EXAMPLES: dict[str, tuple[str, str]] = {
         '{"written": true, "bytes": 11, "path": "/tmp/output.txt"}',
     ),
     "edit_file": (
-        '{"path": "/tmp/app.py",'
-        ' "old_text": "DEBUG = True",'
-        ' "new_text": "DEBUG = False"}',
+        '{"path": "/tmp/app.py", "old_text": "DEBUG = True", "new_text": "DEBUG = False"}',
         '{"edited": true, "replacements": 1}',
     ),
     "list_directory": (
@@ -335,13 +410,11 @@ DEFAULT_EXAMPLES: dict[str, tuple[str, str]] = {
     # ---- Shell ----
     "exec_command": (
         '{"command": "echo hello && date", "timeout": 30}',
-        '{"stdout": "hello\\n2026-03-13\\n",'
-        ' "stderr": "", "exit_code": 0}',
+        '{"stdout": "hello\\n2026-03-13\\n", "stderr": "", "exit_code": 0}',
     ),
     "run_python": (
         '{"code": "import math\\nprint(math.pi)"}',
-        '{"stdout": "3.141592653589793\\n",'
-        ' "stderr": "", "exit_code": 0}',
+        '{"stdout": "3.141592653589793\\n", "stderr": "", "exit_code": 0}',
     ),
     # ---- Memory ----
     "search_memory": (
@@ -351,8 +424,7 @@ DEFAULT_EXAMPLES: dict[str, tuple[str, str]] = {
         ' "score": 0.92, "tags": ["meeting", "project"]}]}',
     ),
     "save_to_memory": (
-        '{"text": "Dentist appointment March 20 at 2pm",'
-        ' "tags": ["appointment", "health"]}',
+        '{"text": "Dentist appointment March 20 at 2pm", "tags": ["appointment", "health"]}',
         '{"saved": true, "id": "mem_abc123"}',
     ),
     "get_core_memory": (
@@ -368,11 +440,8 @@ DEFAULT_EXAMPLES: dict[str, tuple[str, str]] = {
     ),
     # ---- Vault ----
     "vault_save": (
-        '{"title": "Meeting Notes Q1",'
-        ' "content": "# Q1 Review\\n- Revenue up 15%..."}',
-        '{"id": "vault_xyz789",'
-        ' "title": "Meeting Notes Q1",'
-        ' "created": "2026-03-13T10:00:00Z"}',
+        '{"title": "Meeting Notes Q1", "content": "# Q1 Review\\n- Revenue up 15%..."}',
+        '{"id": "vault_xyz789", "title": "Meeting Notes Q1", "created": "2026-03-13T10:00:00Z"}',
     ),
     "vault_search": (
         '{"query": "rental contract"}',
@@ -416,14 +485,12 @@ DEFAULT_EXAMPLES: dict[str, tuple[str, str]] = {
         '{"format": "pdf",'
         ' "content": "# Report\\nContent here...",'
         ' "output_path": "/tmp/report.pdf"}',
-        '{"path": "/tmp/report.pdf",'
-        ' "format": "pdf", "pages": 3, "size": 45200}',
+        '{"path": "/tmp/report.pdf", "format": "pdf", "pages": 3, "size": 45200}',
     ),
     # ---- Browser ----
     "browser_navigate": (
         '{"url": "https://example.com/login"}',
-        '{"title": "Login - Example",'
-        ' "status": 200, "url": "https://example.com/login"}',
+        '{"title": "Login - Example", "status": 200, "url": "https://example.com/login"}',
     ),
     "browser_click": (
         '{"selector": "#submit-btn"}',
@@ -442,16 +509,14 @@ DEFAULT_EXAMPLES: dict[str, tuple[str, str]] = {
     ),
     "git_diff": (
         '{"file": "src/auth.py"}',
-        '{"diff": "- old_line\\n+ new_line",'
-        ' "additions": 5, "deletions": 2}',
+        '{"diff": "- old_line\\n+ new_line", "additions": 5, "deletions": 2}',
     ),
     # ---- Visualization ----
     "create_chart": (
         '{"type": "bar",'
         ' "data": {"Q1": 150, "Q2": 230, "Q3": 180, "Q4": 310},'
         ' "title": "Revenue by Quarter"}',
-        '{"path": "/tmp/chart_revenue.png",'
-        ' "format": "png", "size": 24500}',
+        '{"path": "/tmp/chart_revenue.png", "format": "png", "size": 24500}',
     ),
     # ---- Email ----
     "email_send": (
@@ -713,7 +778,8 @@ def deduplicate_procedures(
             all_kw.update(k.lower() for k in m.trigger_keywords)
         kw_str = ", ".join(sorted(all_kw)[:5])
         variant_text = headers["variants_suffix"].format(
-            count=len(members), uses=avg_uses,
+            count=len(members),
+            uses=avg_uses,
         )
         lines.append(f"- `{rep_name}` ({variant_text}) [{kw_str}]")
 
@@ -822,22 +888,35 @@ class ToolRegistryDB:
                    agent_roles=excluded.agent_roles,
                    updated_at=excluded.updated_at
             """,
-            (name, description_de, description_en, description_zh,
-             schema_str, example_input, example_output, category, roles_str, now),
+            (
+                name,
+                description_de,
+                description_en,
+                description_zh,
+                schema_str,
+                example_input,
+                example_output,
+                category,
+                roles_str,
+                now,
+            ),
         )
         self._conn.commit()
 
     def get_tool(self, name: str) -> ToolInfo | None:
         """Gibt ToolInfo fuer einen bestimmten Tool-Namen zurueck."""
         row = self._conn.execute(
-            "SELECT * FROM tools WHERE name = ?", (name,),
+            "SELECT * FROM tools WHERE name = ?",
+            (name,),
         ).fetchone()
         if row is None:
             return None
         return self._row_to_info(row, "en")
 
     def get_tools_for_role(
-        self, role: str, language: str = "de",
+        self,
+        role: str,
+        language: str = "de",
     ) -> list[ToolInfo]:
         """Gibt Tools zurueck, die einer bestimmten Agentenrolle zugeordnet sind.
 
@@ -857,7 +936,9 @@ class ToolRegistryDB:
         return results
 
     def get_tool_prompt_section(
-        self, role: str, language: str = "de",
+        self,
+        role: str,
+        language: str = "de",
     ) -> str:
         """Generiert einen formatierten Tool-Abschnitt fuer Agent-Prompts.
 
@@ -904,7 +985,10 @@ class ToolRegistryDB:
         return "\n".join(lines)
 
     def sync_from_mcp(
-        self, mcp_client: JarvisMCPClient, *, keep_examples: bool = True,
+        self,
+        mcp_client: JarvisMCPClient,
+        *,
+        keep_examples: bool = True,
     ) -> int:
         """Synchronisiert Tool-Metadaten aus dem MCP-Client.
 
@@ -930,11 +1014,16 @@ class ToolRegistryDB:
             if category == "other":
                 # Versuch anhand von Praefix
                 for prefix, cat in [
-                    ("browser_", "browser"), ("media_", "media"),
-                    ("vault_", "vault"), ("knowledge_", "knowledge"),
-                    ("git_", "git"), ("db_", "database"),
-                    ("docker_", "docker"), ("email_", "email"),
-                    ("calendar_", "calendar"), ("api_", "api"),
+                    ("browser_", "browser"),
+                    ("media_", "media"),
+                    ("vault_", "vault"),
+                    ("knowledge_", "knowledge"),
+                    ("git_", "git"),
+                    ("db_", "database"),
+                    ("docker_", "docker"),
+                    ("email_", "email"),
+                    ("calendar_", "calendar"),
+                    ("api_", "api"),
                 ]:
                     if name.startswith(prefix):
                         category = cat
@@ -976,7 +1065,10 @@ class ToolRegistryDB:
         return count
 
     def add_example(
-        self, tool_name: str, example_input: str, example_output: str,
+        self,
+        tool_name: str,
+        example_input: str,
+        example_output: str,
     ) -> bool:
         """Fuegt ein Beispiel fuer ein Tool hinzu oder aktualisiert es.
 
@@ -990,8 +1082,7 @@ class ToolRegistryDB:
         """
         cursor = self._conn.execute(
             "UPDATE tools SET example_input = ?, example_output = ?, updated_at = ? WHERE name = ?",
-            (example_input, example_output,
-             datetime.now(UTC).isoformat(), tool_name),
+            (example_input, example_output, datetime.now(UTC).isoformat(), tool_name),
         )
         self._conn.commit()
         return cursor.rowcount > 0

@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS reminders (
 # Desktop notification helpers
 # ---------------------------------------------------------------------------
 
+
 def _try_plyer_notification(title: str, message: str, sound: bool) -> bool:
     """Attempt to send notification via plyer (cross-platform)."""
     try:
@@ -83,8 +84,10 @@ def _try_powershell_notification(title: str, message: str) -> bool:
         subprocess.Popen(
             [
                 "powershell",
-                "-WindowStyle", "Hidden",
-                "-Command", cmd,
+                "-WindowStyle",
+                "Hidden",
+                "-Command",
+                cmd,
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -137,6 +140,7 @@ async def _send_desktop_notification(title: str, message: str, sound: bool) -> s
 # ---------------------------------------------------------------------------
 # NotificationTools class
 # ---------------------------------------------------------------------------
+
 
 class NotificationTools:
     """Manages reminders in SQLite and schedules asyncio tasks."""
@@ -229,9 +233,7 @@ class NotificationTools:
             for r in rows
         ]
 
-    async def send_notification(
-        self, title: str, message: str, sound: bool = True
-    ) -> str:
+    async def send_notification(self, title: str, message: str, sound: bool = True) -> str:
         """Send an immediate desktop notification."""
         return await _send_desktop_notification(title, message, sound)
 
@@ -240,9 +242,7 @@ class NotificationTools:
         task = self._tasks.pop(reminder_id, None)
         if task is not None and not task.done():
             task.cancel()
-        self._conn.execute(
-            "UPDATE reminders SET status = 'cancelled' WHERE id = ?", (reminder_id,)
-        )
+        self._conn.execute("UPDATE reminders SET status = 'cancelled' WHERE id = ?", (reminder_id,))
         self._conn.commit()
         return {"id": reminder_id, "status": "cancelled"}
 
@@ -355,6 +355,7 @@ class NotificationTools:
 # MCP registration
 # ---------------------------------------------------------------------------
 
+
 def register_notification_tools(
     mcp_client: Any,
     config: Any,
@@ -389,7 +390,7 @@ def register_notification_tools(
         if "error" in result:
             return f"Error: {result['error']}"
         return (
-            f"Reminder #{result['id']} set: \"{result['text']}\" "
+            f'Reminder #{result["id"]} set: "{result["text"]}" '
             f"due at {result['due_at']} (repeat: {result['repeat']})"
         )
 
@@ -439,7 +440,7 @@ def register_notification_tools(
         for r in reminders:
             fired = f" (fired: {r['fired_at']})" if r["fired_at"] else ""
             lines.append(
-                f"#{r['id']} [{r['status']}] \"{r['text']}\" "
+                f'#{r["id"]} [{r["status"]}] "{r["text"]}" '
                 f"due: {r['due_at']} repeat: {r['repeat']}{fired}"
             )
         return "\n".join(lines)
@@ -448,8 +449,7 @@ def register_notification_tools(
         "list_reminders",
         _list_reminders,
         description=(
-            "List active/pending reminders. "
-            "Set include_past=true to see fired/cancelled ones."
+            "List active/pending reminders. Set include_past=true to see fired/cancelled ones."
         ),
         input_schema={
             "type": "object",

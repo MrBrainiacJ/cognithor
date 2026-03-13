@@ -59,13 +59,7 @@ def calendar_tools(calendar_config: JarvisConfig):
 
 def _write_ics(path: Path, events_str: str) -> None:
     """Write a complete ICS file with given VEVENT blocks."""
-    content = (
-        "BEGIN:VCALENDAR\n"
-        "VERSION:2.0\n"
-        "PRODID:-//Test//Test//EN\n"
-        f"{events_str}"
-        "END:VCALENDAR\n"
-    )
+    content = f"BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Test//Test//EN\n{events_str}END:VCALENDAR\n"
     path.write_text(content, encoding="utf-8")
 
 
@@ -516,12 +510,8 @@ class TestCalendarCreateEvent:
 
     async def test_create_multiple_events(self, calendar_tools: Any) -> None:
         """Multiple events can be added to the same ICS file."""
-        await calendar_tools.calendar_create_event(
-            title="Event 1", start="2024-06-15T10:00:00"
-        )
-        await calendar_tools.calendar_create_event(
-            title="Event 2", start="2024-06-15T14:00:00"
-        )
+        await calendar_tools.calendar_create_event(title="Event 1", start="2024-06-15T10:00:00")
+        await calendar_tools.calendar_create_event(title="Event 2", start="2024-06-15T14:00:00")
 
         content = calendar_tools._ics_path.read_text(encoding="utf-8")
         assert content.count("BEGIN:VEVENT") == 2
@@ -800,9 +790,7 @@ class TestRegistration:
         mcp = MagicMock()
         register_calendar_tools(mcp, calendar_config)
 
-        registered_names = [
-            call[0][0] for call in mcp.register_builtin_handler.call_args_list
-        ]
+        registered_names = [call[0][0] for call in mcp.register_builtin_handler.call_args_list]
         assert "calendar_today" in registered_names
         assert "calendar_upcoming" in registered_names
         assert "calendar_create_event" in registered_names

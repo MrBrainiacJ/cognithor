@@ -275,6 +275,7 @@ class TestRateLimiter:
     def test_window_expiry(self) -> None:
         """Requests expire after window."""
         import time
+
         limiter = _RateLimiter(max_requests=2, window_seconds=0.1)
         limiter.allow()
         limiter.allow()
@@ -329,13 +330,16 @@ class TestApiList:
         assert "Available Templates" in result
 
     async def test_list_with_integration(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "github": {
-                "base_url": "https://api.github.com",
-                "auth_type": "bearer",
-                "credential_env": "GITHUB_TOKEN",
-            }
-        })
+        _save_integrations(
+            config,
+            {
+                "github": {
+                    "base_url": "https://api.github.com",
+                    "auth_type": "bearer",
+                    "credential_env": "GITHUB_TOKEN",
+                }
+            },
+        )
         result = await hub.api_list()
         assert "github" in result
         assert "api.github.com" in result
@@ -419,25 +423,31 @@ class TestApiCall:
         assert "not found" in result
 
     async def test_call_invalid_method(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "test": {
-                "base_url": "https://api.example.com",
-                "auth_type": "bearer",
-                "credential_env": "TEST_TOKEN",
-            }
-        })
+        _save_integrations(
+            config,
+            {
+                "test": {
+                    "base_url": "https://api.example.com",
+                    "auth_type": "bearer",
+                    "credential_env": "TEST_TOKEN",
+                }
+            },
+        )
         result = await hub.api_call(integration="test", method="INVALID")
         assert "Error" in result
         assert "Invalid method" in result
 
     async def test_call_no_credential(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "test": {
-                "base_url": "https://api.example.com",
-                "auth_type": "bearer",
-                "credential_env": "DEFINITELY_NOT_SET_VAR_XYZ",
-            }
-        })
+        _save_integrations(
+            config,
+            {
+                "test": {
+                    "base_url": "https://api.example.com",
+                    "auth_type": "bearer",
+                    "credential_env": "DEFINITELY_NOT_SET_VAR_XYZ",
+                }
+            },
+        )
         # Ensure env var is not set
         env = dict(os.environ)
         env.pop("DEFINITELY_NOT_SET_VAR_XYZ", None)
@@ -447,13 +457,16 @@ class TestApiCall:
             assert "Credential not available" in result
 
     async def test_call_success(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "test": {
-                "base_url": "https://api.example.com",
-                "auth_type": "bearer",
-                "credential_env": "TEST_TOKEN",
-            }
-        })
+        _save_integrations(
+            config,
+            {
+                "test": {
+                    "base_url": "https://api.example.com",
+                    "auth_type": "bearer",
+                    "credential_env": "TEST_TOKEN",
+                }
+            },
+        )
         with patch.dict(os.environ, {"TEST_TOKEN": "tok123"}):
             with patch.object(hub, "_do_request", return_value=(200, '{"ok": true}')):
                 result = await hub.api_call(integration="test", endpoint="/test")
@@ -461,13 +474,16 @@ class TestApiCall:
                 assert '"ok": true' in result
 
     async def test_call_rate_limited(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "test": {
-                "base_url": "https://api.example.com",
-                "auth_type": "bearer",
-                "credential_env": "TEST_TOKEN",
-            }
-        })
+        _save_integrations(
+            config,
+            {
+                "test": {
+                    "base_url": "https://api.example.com",
+                    "auth_type": "bearer",
+                    "credential_env": "TEST_TOKEN",
+                }
+            },
+        )
         # Exhaust rate limiter
         limiter = hub._get_rate_limiter("test")
         limiter._max_requests = 1
@@ -478,13 +494,16 @@ class TestApiCall:
             assert "Rate limit" in result
 
     async def test_call_with_body(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "test": {
-                "base_url": "https://api.example.com",
-                "auth_type": "bearer",
-                "credential_env": "TEST_TOKEN",
-            }
-        })
+        _save_integrations(
+            config,
+            {
+                "test": {
+                    "base_url": "https://api.example.com",
+                    "auth_type": "bearer",
+                    "credential_env": "TEST_TOKEN",
+                }
+            },
+        )
         with patch.dict(os.environ, {"TEST_TOKEN": "tok"}):
             with patch.object(hub, "_do_request", return_value=(201, '{"id": 1}')) as mock:
                 await hub.api_call(
@@ -498,14 +517,17 @@ class TestApiCall:
                 assert kwargs.get("body") == {"name": "test"}
 
     async def test_call_api_key_auth_params(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "openweathermap": {
-                "base_url": "https://api.openweathermap.org/data/2.5",
-                "auth_type": "api_key",
-                "credential_env": "OWM_KEY",
-                "auth_param": "appid",
-            }
-        })
+        _save_integrations(
+            config,
+            {
+                "openweathermap": {
+                    "base_url": "https://api.openweathermap.org/data/2.5",
+                    "auth_type": "api_key",
+                    "credential_env": "OWM_KEY",
+                    "auth_param": "appid",
+                }
+            },
+        )
         with patch.dict(os.environ, {"OWM_KEY": "mykey123"}):
             with patch.object(hub, "_do_request", return_value=(200, "{}")) as mock:
                 await hub.api_call(
@@ -520,9 +542,12 @@ class TestApiDisconnect:
     """Tests fuer api_disconnect."""
 
     async def test_disconnect_existing(self, hub: APIHub, config: JarvisConfig) -> None:
-        _save_integrations(config, {
-            "test": {"base_url": "https://example.com"},
-        })
+        _save_integrations(
+            config,
+            {
+                "test": {"base_url": "https://example.com"},
+            },
+        )
         result = await hub.api_disconnect(name="test")
         assert "removed successfully" in result.lower()
         loaded = _load_integrations(config)

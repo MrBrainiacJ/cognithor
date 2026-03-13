@@ -84,9 +84,7 @@ def _parse_data(data: Any) -> list[dict[str, Any]]:
             raise ChartError("Leere Datenliste.")
         if isinstance(data[0], dict):
             return data
-        raise ChartError(
-            "Daten muessen eine Liste von Dicts sein oder ein CSV-String."
-        )
+        raise ChartError("Daten muessen eine Liste von Dicts sein oder ein CSV-String.")
 
     if isinstance(data, str):
         # Try parsing as CSV
@@ -196,9 +194,7 @@ class ChartTools:
             except ValueError:
                 continue
 
-        raise ChartError(
-            f"Zugriff verweigert: {path_str} liegt ausserhalb erlaubter Verzeichnisse"
-        )
+        raise ChartError(f"Zugriff verweigert: {path_str} liegt ausserhalb erlaubter Verzeichnisse")
 
     def _output_path(self, title: str) -> Path:
         """Generate an output path for a chart image."""
@@ -244,24 +240,19 @@ class ChartTools:
         parsed = _parse_data(data)
 
         if len(parsed) > _MAX_DATA_POINTS:
-            raise ChartError(
-                f"Zu viele Datenpunkte: {len(parsed)} (max: {_MAX_DATA_POINTS})"
-            )
+            raise ChartError(f"Zu viele Datenpunkte: {len(parsed)} (max: {_MAX_DATA_POINTS})")
 
         valid_types = {"bar", "line", "pie", "scatter", "hbar"}
         if chart_type not in valid_types:
             raise ChartError(
-                f"Unbekannter Chart-Typ: {chart_type}. "
-                f"Erlaubt: {', '.join(sorted(valid_types))}"
+                f"Unbekannter Chart-Typ: {chart_type}. Erlaubt: {', '.join(sorted(valid_types))}"
             )
 
         # Auto-detect keys if not given
         if not x_key or not y_key:
             keys = list(parsed[0].keys())
             if len(keys) < 2 and chart_type != "pie":
-                raise ChartError(
-                    "Mindestens 2 Spalten benoetigt (x_key und y_key)."
-                )
+                raise ChartError("Mindestens 2 Spalten benoetigt (x_key und y_key).")
             if not x_key:
                 x_key = keys[0]
             if not y_key:
@@ -415,9 +406,7 @@ class ChartTools:
         parsed = _parse_data(data)
 
         if len(parsed) > _MAX_DATA_POINTS:
-            raise ChartError(
-                f"Zu viele Datenpunkte: {len(parsed)} (max: {_MAX_DATA_POINTS})"
-            )
+            raise ChartError(f"Zu viele Datenpunkte: {len(parsed)} (max: {_MAX_DATA_POINTS})")
 
         if not _matplotlib_available():
             # ASCII fallback: simple text table
@@ -501,8 +490,8 @@ class ChartTools:
 
                 # Highlight max values
                 if highlight_max and col_idx in max_indices and max_indices[col_idx] == row_idx - 1:
-                        cell.set_facecolor("#1a3a2a")
-                        cell.set_text_props(color="#3fb950", fontweight="bold")
+                    cell.set_facecolor("#1a3a2a")
+                    cell.set_text_props(color="#3fb950", fontweight="bold")
 
         if title:
             ax.set_title(title, color=_TEXT_COLOR, fontsize=14, fontweight="bold", pad=20)
@@ -520,10 +509,7 @@ class ChartTools:
 
         log.info("table_image_created", path=str(out_path), rows=n_rows, cols=n_cols)
 
-        return (
-            f"Tabellen-Bild erstellt: {out_path}\n"
-            f"Zeilen: {n_rows}, Spalten: {n_cols}"
-        )
+        return f"Tabellen-Bild erstellt: {out_path}\nZeilen: {n_rows}, Spalten: {n_cols}"
 
     # ------------------------------------------------------------------ #
     # chart_from_csv
@@ -572,9 +558,7 @@ class ChartTools:
             raise ChartError("CSV-Datei enthaelt keine Datenzeilen.")
 
         if len(rows) > _MAX_DATA_POINTS:
-            raise ChartError(
-                f"Zu viele Datenpunkte: {len(rows)} (max: {_MAX_DATA_POINTS})"
-            )
+            raise ChartError(f"Zu viele Datenpunkte: {len(rows)} (max: {_MAX_DATA_POINTS})")
 
         if not title:
             title = validated.stem.replace("_", " ").replace("-", " ").title()

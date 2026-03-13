@@ -211,9 +211,7 @@ class DatabaseTools:
             return table
         except sqlite3.OperationalError as exc:
             if "interrupted" in str(exc).lower():
-                raise DatabaseError(
-                    f"Query-Timeout nach {_QUERY_TIMEOUT_S}s"
-                ) from exc
+                raise DatabaseError(f"Query-Timeout nach {_QUERY_TIMEOUT_S}s") from exc
             raise DatabaseError(f"SQL-Fehler: {exc}") from exc
         finally:
             conn.close()
@@ -297,9 +295,7 @@ class DatabaseTools:
         # Block DROP statements at this level too (defence in depth)
         sql_upper = sql.strip().upper()
         if sql_upper.startswith("DROP "):
-            raise DatabaseError(
-                "DROP-Anweisungen sind blockiert. Bitte manuell ausfuehren."
-            )
+            raise DatabaseError("DROP-Anweisungen sind blockiert. Bitte manuell ausfuehren.")
 
         conn = self._sqlite_connect(db_path, read_only=False)
         try:
@@ -318,9 +314,7 @@ class DatabaseTools:
             return f"Erfolgreich. {rows_affected} Zeile(n) betroffen."
         except sqlite3.OperationalError as exc:
             if "interrupted" in str(exc).lower():
-                raise DatabaseError(
-                    f"Query-Timeout nach {_QUERY_TIMEOUT_S}s"
-                ) from exc
+                raise DatabaseError(f"Query-Timeout nach {_QUERY_TIMEOUT_S}s") from exc
             raise DatabaseError(f"SQL-Fehler: {exc}") from exc
         finally:
             conn.close()
@@ -473,9 +467,7 @@ class DatabaseTools:
                 ) from exc
 
         try:
-            conn = await asyncio.wait_for(
-                asyncpg.connect(connstr), timeout=_CONN_TIMEOUT
-            )
+            conn = await asyncio.wait_for(asyncpg.connect(connstr), timeout=_CONN_TIMEOUT)
         except TimeoutError as exc:
             raise DatabaseError(f"Verbindungs-Timeout nach {_CONN_TIMEOUT}s") from exc
         except Exception as exc:
@@ -549,9 +541,7 @@ class DatabaseTools:
                     raise DatabaseError(f"Tabelle nicht gefunden: {table}")
 
                 lines = [f"Schema fuer Tabelle: {table}", ""]
-                lines.append(
-                    f"{'Name':<30} {'Type':<20} {'Nullable':<10} {'Default':<30}"
-                )
+                lines.append(f"{'Name':<30} {'Type':<20} {'Nullable':<10} {'Default':<30}")
                 lines.append("-" * 90)
                 for name, dtype, nullable, default in rows:
                     dflt = str(default) if default else ""
@@ -583,9 +573,7 @@ class DatabaseTools:
 
         sql_upper = sql.strip().upper()
         if sql_upper.startswith("DROP "):
-            raise DatabaseError(
-                "DROP-Anweisungen sind blockiert. Bitte manuell ausfuehren."
-            )
+            raise DatabaseError("DROP-Anweisungen sind blockiert. Bitte manuell ausfuehren.")
 
         try:
             import asyncpg  # type: ignore[import-untyped]
@@ -593,18 +581,14 @@ class DatabaseTools:
             return self._pg_psycopg2_execute(connstr, sql, params)
 
         try:
-            conn = await asyncio.wait_for(
-                asyncpg.connect(connstr), timeout=_CONN_TIMEOUT
-            )
+            conn = await asyncio.wait_for(asyncpg.connect(connstr), timeout=_CONN_TIMEOUT)
         except TimeoutError as exc:
             raise DatabaseError(f"Verbindungs-Timeout nach {_CONN_TIMEOUT}s") from exc
         except Exception as exc:
             raise DatabaseError(f"Verbindungsfehler: {exc}") from exc
 
         try:
-            await conn.execute(
-                f"SET statement_timeout = {_QUERY_TIMEOUT_S * 1000}"
-            )
+            await conn.execute(f"SET statement_timeout = {_QUERY_TIMEOUT_S * 1000}")
             if params:
                 pg_sql = sql
                 for i in range(len(params)):
@@ -653,9 +637,7 @@ class DatabaseTools:
             return self._pg_psycopg2_connect_info(connstr)
 
         try:
-            conn = await asyncio.wait_for(
-                asyncpg.connect(connstr), timeout=_CONN_TIMEOUT
-            )
+            conn = await asyncio.wait_for(asyncpg.connect(connstr), timeout=_CONN_TIMEOUT)
         except TimeoutError as exc:
             raise DatabaseError(f"Verbindungs-Timeout nach {_CONN_TIMEOUT}s") from exc
         except Exception as exc:
@@ -664,8 +646,7 @@ class DatabaseTools:
         try:
             version = await conn.fetchval("SELECT version()")
             table_count = await conn.fetchval(
-                "SELECT COUNT(*) FROM information_schema.tables "
-                "WHERE table_schema = 'public'"
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
             )
             db_name = await conn.fetchval("SELECT current_database()")
             db_size = await conn.fetchval(
@@ -699,15 +680,12 @@ class DatabaseTools:
             cursor.execute("SELECT version()")
             version = cursor.fetchone()[0]
             cursor.execute(
-                "SELECT COUNT(*) FROM information_schema.tables "
-                "WHERE table_schema = 'public'"
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
             )
             table_count = cursor.fetchone()[0]
             cursor.execute("SELECT current_database()")
             db_name = cursor.fetchone()[0]
-            cursor.execute(
-                "SELECT pg_size_pretty(pg_database_size(current_database()))"
-            )
+            cursor.execute("SELECT pg_size_pretty(pg_database_size(current_database()))")
             db_size = cursor.fetchone()[0]
             lines = [
                 "Datenbankverbindung erfolgreich.",
@@ -755,9 +733,7 @@ class DatabaseTools:
         # SQLite
         db_path = self._validate_sqlite_path(database)
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, self._sqlite_query, db_path, sql, params, limit
-        )
+        return await loop.run_in_executor(None, self._sqlite_query, db_path, sql, params, limit)
 
     async def db_schema(
         self,
@@ -778,9 +754,7 @@ class DatabaseTools:
 
         db_path = self._validate_sqlite_path(database)
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, self._sqlite_schema, db_path, table
-        )
+        return await loop.run_in_executor(None, self._sqlite_schema, db_path, table)
 
     async def db_execute(
         self,
@@ -808,9 +782,7 @@ class DatabaseTools:
 
         db_path = self._validate_sqlite_path(database)
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, self._sqlite_execute, db_path, sql, params
-        )
+        return await loop.run_in_executor(None, self._sqlite_execute, db_path, sql, params)
 
     async def db_connect(
         self,
@@ -829,9 +801,7 @@ class DatabaseTools:
 
         db_path = self._validate_sqlite_path(database)
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, self._sqlite_connect_info, db_path
-        )
+        return await loop.run_in_executor(None, self._sqlite_connect_info, db_path)
 
 
 # --------------------------------------------------------------------------- #

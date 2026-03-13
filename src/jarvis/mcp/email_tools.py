@@ -649,9 +649,7 @@ class EmailTools:
         return "\n".join(lines)
 
 
-def _format_email_list(
-    emails: list[dict[str, Any]], folder: str, unread_only: bool
-) -> str:
+def _format_email_list(emails: list[dict[str, Any]], folder: str, unread_only: bool) -> str:
     """Formatiert eine E-Mail-Liste für die Ausgabe."""
     label = f"E-Mails in {folder}"
     if unread_only:
@@ -746,9 +744,7 @@ def register_email_tools(
     mcp_client.register_builtin_handler(
         "email_search",
         em.email_search,
-        description=(
-            "E-Mails durchsuchen nach Absender, Betreff, Inhalt oder Datum."
-        ),
+        description=("E-Mails durchsuchen nach Absender, Betreff, Inhalt oder Datum."),
         input_schema={
             "type": "object",
             "properties": {

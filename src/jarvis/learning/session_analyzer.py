@@ -76,10 +76,13 @@ _NORMALIZE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     # Timestamps (ISO-8601, Unix-Epoch)
     (re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}[.\d]*Z?"), "<TS>"),
     # UUIDs
-    (re.compile(
-        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
-        re.IGNORECASE,
-    ), "<UUID>"),
+    (
+        re.compile(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+            re.IGNORECASE,
+        ),
+        "<UUID>",
+    ),
     # Hex-IDs (session-ids etc.)
     (re.compile(r"\b[0-9a-f]{16,}\b", re.IGNORECASE), "<HEX>"),
     # Dateipfade (Windows + Unix)
@@ -94,10 +97,12 @@ _NORMALIZE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 _CATEGORY_PATTERNS: dict[str, re.Pattern[str]] = {
     "timeout": re.compile(r"timeout|timed?\s*out|deadline\s*exceeded", re.IGNORECASE),
     "tool_error": re.compile(
-        r"tool.*error|error.*tool|failed.*execute|execution.*failed", re.IGNORECASE,
+        r"tool.*error|error.*tool|failed.*execute|execution.*failed",
+        re.IGNORECASE,
     ),
     "hallucination": re.compile(
-        r"hallucin|fabricat|made.?up|nicht.*existier|does.*not.*exist", re.IGNORECASE,
+        r"hallucin|fabricat|made.?up|nicht.*existier|does.*not.*exist",
+        re.IGNORECASE,
     ),
     "wrong_answer": re.compile(r"wrong|falsch|incorrect|stimmt.*nicht", re.IGNORECASE),
 }
@@ -138,7 +143,11 @@ class ImprovementAction:
     """Konkrete Verbesserungsmassnahme, abgeleitet aus Fehlermustern."""
 
     action_type: Literal[
-        "new_procedure", "prompt_variant", "core_rule", "skill_fix", "procedure_dedup",
+        "new_procedure",
+        "prompt_variant",
+        "core_rule",
+        "skill_fix",
+        "procedure_dedup",
     ]
     description: str
     target: str
@@ -434,7 +443,11 @@ class SessionAnalyzer:
                     continue
                 category = self._classify_error(error_msg)
                 cluster = self._upsert_cluster(
-                    normalized, category, session_id, error_msg, tool_name,
+                    normalized,
+                    category,
+                    session_id,
+                    error_msg,
+                    tool_name,
                 )
                 if cluster.frequency >= CLUSTER_THRESHOLD:
                     triggered_clusters.append(cluster)
@@ -521,7 +534,11 @@ class SessionAnalyzer:
             normalized = self._normalize_error(error_msg)
             if normalized:
                 self._upsert_cluster(
-                    normalized, "user_correction", session_id, error_msg, "user_feedback",
+                    normalized,
+                    "user_correction",
+                    session_id,
+                    error_msg,
+                    "user_feedback",
                 )
 
         # Korrektur in session_metrics markieren
@@ -544,7 +561,8 @@ class SessionAnalyzer:
     # ------------------------------------------------------------------
 
     def detect_recurring_patterns(
-        self, lookback_days: int = DEFAULT_LOOKBACK_DAYS,
+        self,
+        lookback_days: int = DEFAULT_LOOKBACK_DAYS,
     ) -> list[FailureCluster]:
         """Erkennt wiederkehrende Fehlermuster im angegebenen Zeitraum.
 
@@ -608,7 +626,8 @@ class SessionAnalyzer:
     # ------------------------------------------------------------------
 
     async def generate_improvements(
-        self, clusters: list[FailureCluster],
+        self,
+        clusters: list[FailureCluster],
     ) -> list[ImprovementAction]:
         """Generiert Verbesserungsmassnahmen aus Fehlerclustern.
 

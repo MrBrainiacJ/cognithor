@@ -43,27 +43,46 @@ _CONTAINER_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
 _PORT_MAPPING_RE = re.compile(r"^\d{1,5}:\d{1,5}$")
 
 # System-Verzeichnisse, die NICHT als Bind-Mount erlaubt sind
-_BLOCKED_MOUNT_PATHS_UNIX = frozenset({
-    "/etc", "/var", "/usr", "/bin", "/sbin", "/lib", "/lib64",
-    "/boot", "/proc", "/sys", "/dev", "/root",
-})
-_BLOCKED_MOUNT_PATHS_WIN = frozenset({
-    "c:\\windows", "c:\\program files", "c:\\program files (x86)",
-    "c:\\programdata", "c:\\system volume information",
-})
+_BLOCKED_MOUNT_PATHS_UNIX = frozenset(
+    {
+        "/etc",
+        "/var",
+        "/usr",
+        "/bin",
+        "/sbin",
+        "/lib",
+        "/lib64",
+        "/boot",
+        "/proc",
+        "/sys",
+        "/dev",
+        "/root",
+    }
+)
+_BLOCKED_MOUNT_PATHS_WIN = frozenset(
+    {
+        "c:\\windows",
+        "c:\\program files",
+        "c:\\program files (x86)",
+        "c:\\programdata",
+        "c:\\system volume information",
+    }
+)
 
 # Gefaehrliche Docker-Flags
-_BLOCKED_FLAGS = frozenset({
-    "--privileged",
-    "--network=host",
-    "--network host",
-    "--pid=host",
-    "--pid host",
-    "--ipc=host",
-    "--ipc host",
-    "--cap-add=ALL",
-    "--cap-add ALL",
-})
+_BLOCKED_FLAGS = frozenset(
+    {
+        "--privileged",
+        "--network=host",
+        "--network host",
+        "--pid=host",
+        "--pid host",
+        "--ipc=host",
+        "--ipc host",
+        "--cap-add=ALL",
+        "--cap-add ALL",
+    }
+)
 
 
 class DockerError(Exception):
@@ -162,7 +181,8 @@ async def _run_docker(*args: str, timeout: int = _DEFAULT_TIMEOUT) -> tuple[int,
     """
     try:
         proc = await asyncio.create_subprocess_exec(
-            "docker", *args,
+            "docker",
+            *args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -355,9 +375,9 @@ class DockerTools:
             validated_name = _sanitize_container_name(name)
             if validated_name is None:
                 return (
-                "Error: Invalid container name. Use alphanumeric "
-                "characters, dashes, underscores, and dots only."
-            )
+                    "Error: Invalid container name. Use alphanumeric "
+                    "characters, dashes, underscores, and dots only."
+                )
             name = validated_name
 
         # Port-Mappings validieren
@@ -506,8 +526,7 @@ def register_docker_tools(
         "docker_logs",
         docker.docker_logs,
         description=(
-            "Get logs from a Docker container. "
-            "Supports tail lines and time-based filtering."
+            "Get logs from a Docker container. Supports tail lines and time-based filtering."
         ),
         input_schema={
             "type": "object",
@@ -608,8 +627,7 @@ def register_docker_tools(
         "docker_stop",
         docker.docker_stop,
         description=(
-            "Stop a running Docker container gracefully. "
-            "Sends SIGTERM, then SIGKILL after timeout."
+            "Stop a running Docker container gracefully. Sends SIGTERM, then SIGKILL after timeout."
         ),
         input_schema={
             "type": "object",

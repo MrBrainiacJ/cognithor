@@ -59,8 +59,7 @@ class TestRegistration:
     ) -> None:
         register_git_tools(mock_mcp_client, git_config)
         registered_names = [
-            call.args[0]
-            for call in mock_mcp_client.register_builtin_handler.call_args_list
+            call.args[0] for call in mock_mcp_client.register_builtin_handler.call_args_list
         ]
         assert "git_status" in registered_names
         assert "git_diff" in registered_names
@@ -107,7 +106,7 @@ class TestGitStatus:
                 git_tools,
                 "_run_git",
                 side_effect=[
-                    (0, "", ""),       # porcelain
+                    (0, "", ""),  # porcelain
                     (0, "On branch main\nnothing to commit", ""),  # human
                 ],
             ):
@@ -175,35 +174,27 @@ class TestGitLog:
     async def test_log_default(self, git_tools: GitTools) -> None:
         log_output = "abc1234 | Author | 2024-01-01 | Initial commit"
         with patch.object(git_tools, "_check_is_git_repo", return_value=None):
-            with patch.object(
-                git_tools, "_run_git", return_value=(0, log_output, "")
-            ):
+            with patch.object(git_tools, "_run_git", return_value=(0, log_output, "")):
                 result = await git_tools.git_log()
                 assert "Initial commit" in result
 
     async def test_log_oneline(self, git_tools: GitTools) -> None:
         with patch.object(git_tools, "_check_is_git_repo", return_value=None):
-            with patch.object(
-                git_tools, "_run_git", return_value=(0, "abc Short", "")
-            ) as mock_run:
+            with patch.object(git_tools, "_run_git", return_value=(0, "abc Short", "")) as mock_run:
                 await git_tools.git_log(oneline=True)
                 args = mock_run.call_args[0][0]
                 assert "--oneline" in args
 
     async def test_log_count_clamped(self, git_tools: GitTools) -> None:
         with patch.object(git_tools, "_check_is_git_repo", return_value=None):
-            with patch.object(
-                git_tools, "_run_git", return_value=(0, "commit", "")
-            ) as mock_run:
+            with patch.object(git_tools, "_run_git", return_value=(0, "commit", "")) as mock_run:
                 await git_tools.git_log(count=999)
                 args = mock_run.call_args[0][0]
                 assert "-100" in args
 
     async def test_log_with_author_filter(self, git_tools: GitTools) -> None:
         with patch.object(git_tools, "_check_is_git_repo", return_value=None):
-            with patch.object(
-                git_tools, "_run_git", return_value=(0, "log", "")
-            ) as mock_run:
+            with patch.object(git_tools, "_run_git", return_value=(0, "log", "")) as mock_run:
                 await git_tools.git_log(author="Alice")
                 args = mock_run.call_args[0][0]
                 assert "--author" in args
@@ -240,13 +231,11 @@ class TestGitCommit:
                 git_tools,
                 "_run_git",
                 side_effect=[
-                    (0, "", ""),                             # git add
+                    (0, "", ""),  # git add
                     (0, "[main abc123] fix bug\n 1 file changed", ""),  # git commit
                 ],
             ):
-                result = await git_tools.git_commit(
-                    message="fix bug", files=["test.py"]
-                )
+                result = await git_tools.git_commit(message="fix bug", files=["test.py"])
                 assert "fix bug" in result or "Commit erfolgreich" in result
 
     async def test_commit_file_outside_workspace(self, git_tools: GitTools) -> None:
@@ -271,9 +260,7 @@ class TestGitCommit:
                     (0, "amended", ""),
                 ],
             ) as mock_run:
-                await git_tools.git_commit(
-                    message="fix", files=["a.txt"], amend=True
-                )
+                await git_tools.git_commit(message="fix", files=["a.txt"], amend=True)
                 commit_args = mock_run.call_args_list[1][0][0]
                 assert "--amend" in commit_args
 
@@ -297,25 +284,19 @@ class TestGitBranch:
 
     async def test_branch_create(self, git_tools: GitTools) -> None:
         with patch.object(git_tools, "_check_is_git_repo", return_value=None):
-            with patch.object(
-                git_tools, "_run_git", return_value=(0, "", "")
-            ):
+            with patch.object(git_tools, "_run_git", return_value=(0, "", "")):
                 result = await git_tools.git_branch(action="create", name="feature-new")
                 assert "erstellt" in result
 
     async def test_branch_switch(self, git_tools: GitTools) -> None:
         with patch.object(git_tools, "_check_is_git_repo", return_value=None):
-            with patch.object(
-                git_tools, "_run_git", return_value=(0, "", "")
-            ):
+            with patch.object(git_tools, "_run_git", return_value=(0, "", "")):
                 result = await git_tools.git_branch(action="switch", name="main")
                 assert "gewechselt" in result
 
     async def test_branch_delete(self, git_tools: GitTools) -> None:
         with patch.object(git_tools, "_check_is_git_repo", return_value=None):
-            with patch.object(
-                git_tools, "_run_git", return_value=(0, "", "")
-            ):
+            with patch.object(git_tools, "_run_git", return_value=(0, "", "")):
                 result = await git_tools.git_branch(action="delete", name="old")
                 assert "geloescht" in result
 

@@ -203,7 +203,9 @@ class TestDockerPs:
     """Tests fuer docker_ps."""
 
     async def test_ps_basic(self, docker: DockerTools) -> None:
-        table_output = "CONTAINER ID\tNAMES\tIMAGE\tSTATUS\tPORTS\nabc123\tweb\tnginx\tUp 2 hours\t80/tcp"
+        table_output = (
+            "CONTAINER ID\tNAMES\tIMAGE\tSTATUS\tPORTS\nabc123\tweb\tnginx\tUp 2 hours\t80/tcp"
+        )
         with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, table_output, "")):
             result = await docker.docker_ps()
             assert "abc123" in result
@@ -238,7 +240,9 @@ class TestDockerLogs:
     """Tests fuer docker_logs."""
 
     async def test_logs_basic(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "log line 1\nlog line 2", "")):
+        with patch(
+            "jarvis.mcp.docker_tools._run_docker", return_value=(0, "log line 1\nlog line 2", "")
+        ):
             result = await docker.docker_logs(container="web")
             assert "log line 1" in result
 
@@ -366,7 +370,9 @@ class TestDockerRun:
         assert "blocked" in result.lower()
 
     async def test_run_docker_error(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(1, "", "No such image: foo")):
+        with patch(
+            "jarvis.mcp.docker_tools._run_docker", return_value=(1, "", "No such image: foo")
+        ):
             result = await docker.docker_run(image="foo")
             assert "Error" in result
 
@@ -397,7 +403,9 @@ class TestDockerStop:
             assert "300" in call_args  # Clamped to max
 
     async def test_stop_error(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(1, "", "No such container")):
+        with patch(
+            "jarvis.mcp.docker_tools._run_docker", return_value=(1, "", "No such container")
+        ):
             result = await docker.docker_stop(container="nonexistent")
             assert "Error" in result
 
@@ -410,7 +418,9 @@ class TestDockerStop:
 class TestRegistration:
     """Tests fuer register_docker_tools."""
 
-    def test_registration_when_docker_available(self, mock_mcp_client: MagicMock, config: JarvisConfig) -> None:
+    def test_registration_when_docker_available(
+        self, mock_mcp_client: MagicMock, config: JarvisConfig
+    ) -> None:
         with patch("jarvis.mcp.docker_tools._docker_available", return_value=True):
             result = register_docker_tools(mock_mcp_client, config)
             assert result is not None
@@ -428,7 +438,9 @@ class TestRegistration:
             assert "docker_stop" in registered_names
 
     def test_registration_skipped_when_docker_unavailable(
-        self, mock_mcp_client: MagicMock, config: JarvisConfig,
+        self,
+        mock_mcp_client: MagicMock,
+        config: JarvisConfig,
     ) -> None:
         with patch("jarvis.mcp.docker_tools._docker_available", return_value=False):
             result = register_docker_tools(mock_mcp_client, config)

@@ -295,10 +295,12 @@ class GitTools:
         if oneline:
             args.append("--oneline")
         else:
-            args.extend([
-                "--format=%h | %an | %ad | %s",
-                "--date=short",
-            ])
+            args.extend(
+                [
+                    "--format=%h | %an | %ad | %s",
+                    "--date=short",
+                ]
+            )
 
         if author:
             safe_author = author.strip()
@@ -361,8 +363,7 @@ class GitTools:
                     validated_files.append(str(resolved))
             except (ValueError, OSError):
                 return (
-                    f"Fehler: Datei '{file_path}' liegt ausserhalb des "
-                    f"Workspace ({workspace_root})"
+                    f"Fehler: Datei '{file_path}' liegt ausserhalb des Workspace ({workspace_root})"
                 )
 
         # Stage files
@@ -467,10 +468,7 @@ class GitTools:
             log.info("git_branch_deleted", branch=safe_name, cwd=str(cwd))
             return f"Branch '{safe_name}' geloescht."
 
-        return (
-            f"Unbekannte Aktion: '{action}'. "
-            f"Erlaubt: list, create, switch, delete."
-        )
+        return f"Unbekannte Aktion: '{action}'. Erlaubt: list, create, switch, delete."
 
 
 def register_git_tools(
@@ -531,9 +529,7 @@ def register_git_tools(
     mcp_client.register_builtin_handler(
         "git_log",
         tools.git_log,
-        description=(
-            "Zeigt die Git-Commit-History. Optionaler Autor-Filter und kompaktes Format."
-        ),
+        description=("Zeigt die Git-Commit-History. Optionaler Autor-Filter und kompaktes Format."),
         input_schema={
             "type": "object",
             "properties": {

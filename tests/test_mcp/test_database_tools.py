@@ -62,7 +62,9 @@ def sample_db(tmp_path: Path) -> Path:
     )
     conn.execute("INSERT INTO users (name, age, email) VALUES ('Alice', 30, 'alice@example.com')")
     conn.execute("INSERT INTO users (name, age, email) VALUES ('Bob', 25, 'bob@example.com')")
-    conn.execute("INSERT INTO users (name, age, email) VALUES ('Charlie', 35, 'charlie@example.com')")
+    conn.execute(
+        "INSERT INTO users (name, age, email) VALUES ('Charlie', 35, 'charlie@example.com')"
+    )
     conn.execute(
         "CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT, amount REAL)"
     )
@@ -277,9 +279,7 @@ class TestInjectionProtection:
         _check_injection("SELECT * FROM users WHERE name = 'test'", None)
 
     @pytest.mark.asyncio()
-    async def test_drop_blocked_in_execute(
-        self, db_tools: DatabaseTools, sample_db: Path
-    ) -> None:
+    async def test_drop_blocked_in_execute(self, db_tools: DatabaseTools, sample_db: Path) -> None:
         with pytest.raises(DatabaseError, match="DROP"):
             await db_tools.db_execute(str(sample_db), "DROP TABLE users")
 

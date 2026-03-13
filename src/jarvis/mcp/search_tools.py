@@ -324,21 +324,15 @@ class SearchTools:
                     # Kontext davor
                     start = max(0, line_num - context_lines)
                     for ctx_num in range(start, line_num):
-                        context_parts.append(
-                            f"  {ctx_num + 1:6d}  {lines[ctx_num]}"
-                        )
+                        context_parts.append(f"  {ctx_num + 1:6d}  {lines[ctx_num]}")
 
                     # Trefferzeile (markiert)
-                    context_parts.append(
-                        f"> {line_num + 1:6d}  {line}"
-                    )
+                    context_parts.append(f"> {line_num + 1:6d}  {line}")
 
                     # Kontext danach
                     end = min(len(lines), line_num + context_lines + 1)
                     for ctx_num in range(line_num + 1, end):
-                        context_parts.append(
-                            f"  {ctx_num + 1:6d}  {lines[ctx_num]}"
-                        )
+                        context_parts.append(f"  {ctx_num + 1:6d}  {lines[ctx_num]}")
 
                     file_matches.append("\n".join(context_parts))
 
@@ -452,9 +446,7 @@ class SearchTools:
                         preview_lines.append(f"    - {line.strip()}")
                         preview_lines.append(f"    + {new_line.strip()}")
 
-                changes.append(
-                    f"\n{rel_path} ({match_count} Ersetzung(en)):"
-                )
+                changes.append(f"\n{rel_path} ({match_count} Ersetzung(en)):")
                 changes.extend(preview_lines)
             else:
                 # Tatsaechliche Ersetzung
@@ -471,13 +463,9 @@ class SearchTools:
                         file_path.write_text(new_content, encoding="utf-8")
                         files_changed += 1
                         total_replacements += match_count
-                        changes.append(
-                            f"  {rel_path}: {match_count} Ersetzung(en)"
-                        )
+                        changes.append(f"  {rel_path}: {match_count} Ersetzung(en)")
                     except OSError as exc:
-                        changes.append(
-                            f"  {rel_path}: FEHLER beim Schreiben: {exc}"
-                        )
+                        changes.append(f"  {rel_path}: FEHLER beim Schreiben: {exc}")
 
         if not changes:
             return f"Keine Treffer fuer: '{query}'"
