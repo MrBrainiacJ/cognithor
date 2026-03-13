@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Jarvis · Agent OS – Installations-Script
+# Cognithor · Agent OS – Installation Script
 # ============================================================================
 #
-# Nutzung:
+# Usage:
 #   chmod +x install.sh
-#   ./install.sh              Vollinstallation (interaktiv)
-#   ./install.sh --minimal    Nur Core (kein Web, kein Telegram)
-#   ./install.sh --full       Alles inkl. Voice
-#   ./install.sh --use-uv     uv statt pip verwenden (10x schneller)
-#   ./install.sh --systemd    Nur Systemd-Services installieren
-#   ./install.sh --uninstall  Deinstallation
+#   ./install.sh              Full installation (interactive)
+#   ./install.sh --minimal    Core only (no Web, no Telegram)
+#   ./install.sh --full       Everything including Voice
+#   ./install.sh --use-uv     Use uv instead of pip (10x faster)
+#   ./install.sh --systemd    Install systemd services only
+#   ./install.sh --uninstall  Uninstall
 #
-# Voraussetzungen:
+# Prerequisites:
 #   - Python 3.12+
-#   - pip (oder uv mit --use-uv)
-#   - Ollama (installiert und gestartet)
+#   - pip (or uv with --use-uv)
+#   - Ollama (installed and running)
 #
 # ============================================================================
 set -euo pipefail
 
-# --- Farben ---
+# --- Colors ---
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -29,7 +29,7 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# --- Konfiguration ---
+# --- Configuration ---
 JARVIS_HOME="${JARVIS_HOME:-$HOME/.jarvis}"
 VENV_DIR="${JARVIS_HOME}/venv"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,7 +42,7 @@ PKG_INSTALLER=""  # "uv" or "pip", set in detect_installer
 INSTALL_FAILED=false
 
 # ============================================================================
-# Hilfsfunktionen
+# Helper functions
 # ============================================================================
 
 info()    { echo -e "${BLUE}[i]${NC}  $*"; }
@@ -62,27 +62,27 @@ check_command() {
 }
 
 version_ge() {
-    # Prueft ob Version $1 >= $2
+    # Check if version $1 >= $2
     printf '%s\n%s\n' "$2" "$1" | sort -V | head -n1 | grep -qF "$2"
 }
 
 # ============================================================================
-# Error Submission Helper (Fix #9)
+# Error Submission Helper
 # ============================================================================
 
 show_error_submission() {
     echo ""
-    echo -e "${RED}${BOLD}[X] Installation fehlgeschlagen.${NC}"
+    echo -e "${RED}${BOLD}[X] Installation failed.${NC}"
     echo ""
-    echo "  Bitte oeffne ein Issue auf GitHub:"
+    echo "  Please open an issue on GitHub:"
     echo "  https://github.com/Alex8791-cyber/cognithor/issues/new"
     echo ""
-    echo "  Fuege die obige Ausgabe als Log bei."
+    echo "  Include the output above as a log."
     echo ""
 }
 
 # ============================================================================
-# Banner (Fix #7: dynamic version from pyproject.toml)
+# Banner (dynamic version from pyproject.toml)
 # ============================================================================
 
 show_banner() {
@@ -107,7 +107,7 @@ BANNER
 }
 
 # ============================================================================
-# Installer-Erkennung (uv / pip)
+# Installer detection (uv / pip)
 # ============================================================================
 
 detect_installer() {
@@ -116,56 +116,56 @@ detect_installer() {
             local uv_ver
             uv_ver=$(uv --version 2>/dev/null | head -1)
             PKG_INSTALLER="uv"
-            success "uv gefunden ($uv_ver)"
+            success "uv found ($uv_ver)"
             return 0
         else
-            warn "uv nicht gefunden, installiere automatisch..."
+            warn "uv not found, installing automatically..."
             local _uv_install_script
             _uv_install_script=$(mktemp)
             if curl -LsSf --max-time 30 https://astral.sh/uv/install.sh -o "$_uv_install_script"; then
-                warn "Downloaded uv installer to $_uv_install_script — executing..."
+                warn "Downloaded uv installer to $_uv_install_script -- executing..."
                 sh "$_uv_install_script" 2>/dev/null
                 rm -f "$_uv_install_script"
-                # Pfad aktualisieren
+                # Update PATH
                 export PATH="$HOME/.local/bin:$PATH"
                 if check_command uv; then
                     local uv_ver
                     uv_ver=$(uv --version 2>/dev/null | head -1)
                     PKG_INSTALLER="uv"
-                    success "uv installiert ($uv_ver)"
+                    success "uv installed ($uv_ver)"
                     return 0
                 fi
             else
                 rm -f "$_uv_install_script"
             fi
-            warn "uv konnte nicht installiert werden -- Fallback auf pip"
+            warn "Could not install uv -- falling back to pip"
         fi
     fi
 
-    # Auto-Detect: uv bevorzugen wenn vorhanden
+    # Auto-Detect: prefer uv if available
     if check_command uv; then
         local uv_ver
         uv_ver=$(uv --version 2>/dev/null | head -1)
         PKG_INSTALLER="uv"
-        success "uv erkannt ($uv_ver) -- wird bevorzugt verwendet"
+        success "uv detected ($uv_ver) -- will be used"
         return 0
     fi
 
-    # Fallback: pip (Fix #2: abort with helpful message if missing)
+    # Fallback: pip
     if python3 -m pip --version &>/dev/null; then
         PKG_INSTALLER="pip"
-        success "pip wird verwendet"
+        success "pip available"
         return 0
     fi
 
     echo ""
-    error "pip nicht gefunden!"
+    error "pip not found!"
     echo ""
-    echo "  Installiere pip mit:"
+    echo "  Install pip with:"
     echo ""
     echo "    sudo apt install python3-pip"
     echo ""
-    echo "  Danach erneut ausfuehren:"
+    echo "  Then run again:"
     echo ""
     echo "    ./install.sh"
     echo ""
@@ -175,7 +175,7 @@ detect_installer() {
 }
 
 # ============================================================================
-# Helper: Distro-spezifischer Python-Installationshinweis
+# Helper: Distro-specific Python install hint
 # ============================================================================
 
 _python_install_hint() {
@@ -185,7 +185,7 @@ _python_install_hint() {
     fi
 
     echo ""
-    info "Python ${MIN_PYTHON}+ installieren:"
+    info "Install Python ${MIN_PYTHON}+:"
     echo ""
     case "$distro_id" in
         ubuntu)
@@ -194,8 +194,8 @@ _python_install_hint() {
             echo "    sudo apt install python3.12 python3.12-venv python3.12-dev"
             ;;
         debian)
-            echo "    # Option 1: Backports aktivieren"
-            echo "    # Option 2: pyenv verwenden:"
+            echo "    # Option 1: Enable backports"
+            echo "    # Option 2: Use pyenv:"
             echo "    curl https://pyenv.run | bash"
             echo "    pyenv install 3.12"
             ;;
@@ -216,11 +216,11 @@ _python_install_hint() {
 }
 
 # ============================================================================
-# Schritt 1: Systemvoraussetzungen pruefen
+# Step 1: Check system prerequisites
 # ============================================================================
 
 check_prerequisites() {
-    header "Systemvoraussetzungen pruefen"
+    header "Checking system prerequisites"
     local errors=0
 
     # Python
@@ -228,75 +228,75 @@ check_prerequisites() {
         local py_version
         py_version=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
         if version_ge "$py_version" "$MIN_PYTHON"; then
-            success "Python $py_version gefunden"
+            success "Python $py_version found"
         else
-            error "Python $py_version zu alt (mindestens $MIN_PYTHON benoetigt)"
+            error "Python $py_version too old (need at least $MIN_PYTHON)"
             _python_install_hint
             errors=$((errors + 1))
         fi
     else
-        error "Python3 nicht gefunden"
+        error "Python3 not found"
         _python_install_hint
         errors=$((errors + 1))
     fi
 
-    # pip (Fix #2: abort immediately with exact fix command)
+    # pip
     if [[ "$USE_UV" != true ]]; then
         if python3 -m pip --version &>/dev/null; then
-            success "pip verfuegbar"
+            success "pip available"
         else
-            error "pip nicht gefunden"
+            error "pip not found"
             echo ""
-            echo "  Behebe mit:"
+            echo "  Fix with:"
             echo "    sudo apt install python3-pip"
             echo ""
-            fatal "pip ist eine Pflicht-Abhaengigkeit. Bitte installieren und erneut starten."
+            fatal "pip is a required dependency. Please install and try again."
         fi
     fi
 
     # venv
     if python3 -m venv --help &>/dev/null; then
-        success "venv-Modul verfuegbar"
+        success "venv module available"
     else
-        error "venv nicht gefunden"
+        error "venv not found"
         echo ""
-        echo "  Behebe mit:"
+        echo "  Fix with:"
         echo "    sudo apt install python3.12-venv"
         echo ""
-        fatal "python3-venv ist eine Pflicht-Abhaengigkeit. Bitte installieren und erneut starten."
+        fatal "python3-venv is a required dependency. Please install and try again."
     fi
 
     # git (optional)
     if check_command git; then
-        success "git verfuegbar"
+        success "git available"
     else
-        warn "git nicht gefunden (optional, fuer Updates empfohlen)"
+        warn "git not found (optional, recommended for updates)"
     fi
 
     # Ollama
     if check_command ollama; then
         local ollama_version
-        ollama_version=$(ollama --version 2>/dev/null | head -1 || echo "unbekannt")
-        success "Ollama installiert ($ollama_version)"
+        ollama_version=$(ollama --version 2>/dev/null | head -1 || echo "unknown")
+        success "Ollama installed ($ollama_version)"
     else
-        warn "Ollama nicht gefunden -- LLM-Funktionen sind ohne Ollama eingeschraenkt"
-        read -rp "  Ollama jetzt installieren? [j/N] " _ollama_answer
-        if [[ "$_ollama_answer" =~ ^[jJyY]$ ]]; then
-            info "Installiere Ollama..."
+        warn "Ollama not found -- LLM features will be limited without Ollama"
+        read -rp "  Install Ollama now? [y/N] " _ollama_answer
+        if [[ "$_ollama_answer" =~ ^[yY]$ ]]; then
+            info "Installing Ollama..."
             local _ollama_install_script
             _ollama_install_script=$(mktemp)
             curl -fsSL --max-time 60 https://ollama.com/install.sh -o "$_ollama_install_script"
             if [ $? -eq 0 ] && sh "$_ollama_install_script"; then
                 rm -f "$_ollama_install_script"
-                success "Ollama installiert"
-                # Ollama-Server starten
+                success "Ollama installed"
+                # Start Ollama server
                 nohup ollama serve &>/dev/null &
-                info "Warte auf Ollama-Server..."
+                info "Waiting for Ollama server..."
                 local _ollama_delay=1
                 local _ollama_total=0
                 while [[ $_ollama_total -lt 15 ]]; do
                     if curl -sf --max-time 2 "${OLLAMA_URL}/api/version" &>/dev/null; then
-                        success "Ollama-Server gestartet"
+                        success "Ollama server started"
                         break
                     fi
                     sleep "$_ollama_delay"
@@ -306,41 +306,41 @@ check_prerequisites() {
                     [[ $_ollama_delay -gt 4 ]] && _ollama_delay=4
                 done
                 if [[ $_ollama_total -ge 15 ]]; then
-                    warn "Ollama-Server nicht erreichbar nach 15s -- manuell starten: ollama serve"
+                    warn "Ollama server not reachable after 15s -- start manually: ollama serve"
                 fi
             else
                 rm -f "$_ollama_install_script"
-                error "Ollama-Installation fehlgeschlagen"
-                info "Manuell installieren: curl -fsSL https://ollama.com/install.sh | sh"
+                error "Ollama installation failed"
+                info "Install manually: curl -fsSL https://ollama.com/install.sh | sh"
             fi
         else
-            info "Installiere spaeter: curl -fsSL https://ollama.com/install.sh | sh"
+            info "Install later: curl -fsSL https://ollama.com/install.sh | sh"
         fi
     fi
 
-    # Ollama-Server erreichbar?
+    # Ollama server reachable?
     if curl -sf --max-time 3 "${OLLAMA_URL}/api/version" &>/dev/null; then
-        success "Ollama-Server erreichbar (${OLLAMA_URL})"
+        success "Ollama server reachable (${OLLAMA_URL})"
     else
-        warn "Ollama-Server nicht erreichbar auf ${OLLAMA_URL}"
-        info "Starte mit: ollama serve"
+        warn "Ollama server not reachable at ${OLLAMA_URL}"
+        info "Start with: ollama serve"
     fi
 
     if [[ $errors -gt 0 ]]; then
-        fatal "$errors kritische Voraussetzung(en) fehlen"
+        fatal "$errors critical prerequisite(s) missing"
     fi
 }
 
 # ============================================================================
-# Schritt 2: Ollama-Modelle (Fix #4: optional, never blocking)
+# Step 2: Ollama models (optional, never blocking)
 # ============================================================================
 
 detect_hardware_tier() {
-    # Ermittelt Hardware-Tier basierend auf VRAM und RAM
+    # Detect hardware tier based on VRAM and RAM
     local vram_mb=0
     local ram_mb=0
     local gpu_count=0
-    local vram_str="keine GPU"
+    local vram_str="no GPU"
 
     # VRAM via nvidia-smi (supports multi-GPU: sums all GPUs)
     if check_command nvidia-smi; then
@@ -412,7 +412,7 @@ except: pass
     local cpu_cores
     cpu_cores=$(nproc 2>/dev/null || echo "4")
 
-    # Tier bestimmen
+    # Determine tier
     local tier="minimal"
     if [[ $ram_gb -ge 64 && $cpu_cores -ge 16 && $vram_mb -ge 49152 ]]; then
         tier="enterprise"
@@ -422,42 +422,42 @@ except: pass
         tier="standard"
     fi
 
-    # Anzeige
+    # Display
     echo ""
-    info "Dein System: ${vram_str}, ${ram_gb} GB RAM, ${cpu_cores} Kerne"
-    info "Hardware-Tier: ${BOLD}$(echo "$tier" | tr '[:lower:]' '[:upper:]')${NC}"
+    info "Your system: ${vram_str}, ${ram_gb} GB RAM, ${cpu_cores} cores"
+    info "Hardware tier: ${BOLD}$(echo "$tier" | tr '[:lower:]' '[:upper:]')${NC}"
 
     case "$tier" in
         minimal)
-            info "Modelle: qwen3:8b, nomic-embed-text"
-            info "Tipp: Fuer bessere Qualitaet mindestens 8 GB VRAM empfohlen"
+            info "Models: qwen3:8b, nomic-embed-text"
+            info "Tip: At least 8 GB VRAM recommended for better quality"
             ;;
         standard)
-            info "Modelle: qwen3:8b, qwen3:32b, nomic-embed-text"
-            info "Tipp: 'cognithor --lite' fuer nur 6 GB VRAM"
+            info "Models: qwen3:8b, qwen3:32b, nomic-embed-text"
+            info "Tip: 'cognithor --lite' for only 6 GB VRAM"
             ;;
         power|enterprise)
-            info "Modelle: qwen3:8b, qwen3:32b, qwen3-coder:30b, nomic-embed-text"
-            info "Tipp: 'cognithor --lite' fuer nur 6 GB VRAM"
+            info "Models: qwen3:8b, qwen3:32b, qwen3-coder:30b, nomic-embed-text"
+            info "Tip: 'cognithor --lite' for only 6 GB VRAM"
             ;;
     esac
     echo ""
 }
 
 ensure_ollama_models() {
-    header "Ollama-Modelle pruefen"
+    header "Checking Ollama models"
 
     detect_hardware_tier
 
     if ! curl -sf "${OLLAMA_URL}/api/version" &>/dev/null; then
-        warn "Ollama nicht erreichbar -- Modelle manuell herunterladen:"
+        warn "Ollama not reachable -- download models manually:"
         info "  ollama pull qwen3:8b"
         info "  ollama pull nomic-embed-text"
-        info "  ollama pull qwen3:32b     (optional, wenn >=24GB VRAM)"
+        info "  ollama pull qwen3:32b     (optional, if >=24GB VRAM)"
         return 0
     fi
 
-    # Installierte Modelle abfragen
+    # Query installed models
     local installed
     installed=$(curl -sf "${OLLAMA_URL}/api/tags" | python3 -c "
 import sys, json
@@ -466,7 +466,7 @@ for m in data.get('models', []):
     print(m['name'])
 " 2>/dev/null || echo "")
 
-    # Pflicht-Modelle (Fix #4: nur pruefen, nicht automatisch downloaden)
+    # Required models (check only, never auto-download)
     local required_models=("qwen3:8b" "nomic-embed-text")
     local optional_models=("qwen3:32b")
     local missing_required=()
@@ -474,9 +474,9 @@ for m in data.get('models', []):
     for model in "${required_models[@]}"; do
         local base_name="${model%%:*}"
         if echo "$installed" | grep -q "$base_name"; then
-            success "$model bereits installiert"
+            success "$model already installed"
         else
-            warn "$model FEHLT (Pflicht-Modell)"
+            warn "$model MISSING (required model)"
             missing_required+=("$model")
         fi
     done
@@ -484,59 +484,59 @@ for m in data.get('models', []):
     for model in "${optional_models[@]}"; do
         local base_name="${model%%:*}"
         if echo "$installed" | grep -q "$base_name"; then
-            success "$model bereits installiert"
+            success "$model already installed"
         else
-            info "$model nicht installiert (optional, fuer bessere Qualitaet)"
+            info "$model not installed (optional, for better quality)"
         fi
     done
 
-    # Zusammenfassung fehlender Modelle
+    # Summary of missing models
     if [[ ${#missing_required[@]} -gt 0 ]]; then
         echo ""
-        warn "Fehlende Pflicht-Modelle! Bitte manuell herunterladen:"
+        warn "Missing required models! Please download manually:"
         echo ""
         for model in "${missing_required[@]}"; do
             echo "    ollama pull $model"
         done
         echo ""
-        info "Die Installation wird fortgesetzt -- Modelle koennen spaeter geladen werden."
+        info "Installation will continue -- models can be downloaded later."
         echo ""
     fi
 }
 
 # ============================================================================
-# Schritt 3: Virtual Environment + Installation
+# Step 3: Virtual Environment + Installation
 # ============================================================================
 
 setup_venv() {
     header "Python Virtual Environment"
 
-    # Fix #3: If venv dir exists but activate is missing, it's corrupted
+    # If venv dir exists but activate is missing, it's corrupted
     if [[ -d "$VENV_DIR" ]]; then
         if [[ -f "$VENV_DIR/bin/activate" ]]; then
-            info "Bestehendes venv gefunden: $VENV_DIR"
+            info "Existing venv found: $VENV_DIR"
             # shellcheck disable=SC1091
             source "$VENV_DIR/bin/activate"
-            success "venv aktiviert"
+            success "venv activated"
             return 0
         else
-            warn "Korruptes venv erkannt (bin/activate fehlt) -- wird neu erstellt"
+            warn "Corrupted venv detected (bin/activate missing) -- recreating"
             rm -rf "$VENV_DIR"
         fi
     fi
 
     # Create fresh venv
     if [[ "$PKG_INSTALLER" == "uv" ]]; then
-        info "Erstelle venv mit uv in $VENV_DIR ..."
+        info "Creating venv with uv in $VENV_DIR ..."
         uv venv "$VENV_DIR" --python python3
     else
-        info "Erstelle venv in $VENV_DIR ..."
+        info "Creating venv in $VENV_DIR ..."
         python3 -m venv "$VENV_DIR"
     fi
 
     # Verify activate exists before sourcing
     if [[ ! -f "$VENV_DIR/bin/activate" ]]; then
-        fatal "venv-Erstellung fehlgeschlagen: $VENV_DIR/bin/activate nicht gefunden"
+        fatal "venv creation failed: $VENV_DIR/bin/activate not found"
     fi
 
     # shellcheck disable=SC1091
@@ -544,11 +544,11 @@ setup_venv() {
     if [[ "$PKG_INSTALLER" == "pip" ]]; then
         pip install --upgrade pip setuptools wheel --quiet
     fi
-    success "venv erstellt und aktiviert"
+    success "venv created and activated"
 }
 
 install_jarvis() {
-    header "Jarvis installieren"
+    header "Installing Cognithor"
 
     local install_extras="$1"
     local spec="${REPO_DIR}"
@@ -557,31 +557,30 @@ install_jarvis() {
     fi
 
     if [[ "$PKG_INSTALLER" == "uv" ]]; then
-        info "Installiere jarvis[$install_extras] mit uv aus $REPO_DIR ..."
+        info "Installing cognithor[$install_extras] with uv from $REPO_DIR ..."
         uv pip install -e "$spec" --quiet 2>&1 | tail -5
     else
-        # Fix #5: progress feedback for pip
         echo ""
-        info "Installiere jarvis[$install_extras] mit pip aus $REPO_DIR ..."
-        info "Installiere Pakete... (kann 2-5 Minuten dauern)"
+        info "Installing cognithor[$install_extras] with pip from $REPO_DIR ..."
+        info "Installing packages... (may take 2-5 minutes)"
         echo ""
         pip install -e "$spec" --progress-bar on 2>&1 | tail -20
     fi
 
-    # Verifiziere Installation
-    if python3 -c "import jarvis; print(f'Jarvis v{jarvis.__version__}')" 2>/dev/null; then
-        success "Jarvis erfolgreich installiert"
+    # Verify installation
+    if python3 -c "import jarvis; print(f'Cognithor v{jarvis.__version__}')" 2>/dev/null; then
+        success "Cognithor installed successfully"
     else
-        fatal "Installation fehlgeschlagen -- pip install hat Fehler verursacht"
+        fatal "Installation failed -- pip install encountered errors"
     fi
 
-    # Jarvis-CLI pruefen
+    # Check CLI
     if "$VENV_DIR/bin/jarvis" --version &>/dev/null; then
         local ver
         ver=$("$VENV_DIR/bin/jarvis" --version 2>&1)
-        success "CLI verfuegbar: $ver"
+        success "CLI available: $ver"
     else
-        warn "CLI 'jarvis' nicht im PATH -- nutze: $VENV_DIR/bin/jarvis"
+        warn "CLI 'jarvis' not in PATH -- use: $VENV_DIR/bin/jarvis"
     fi
 
     # Web-UI Build (Node.js optional)
@@ -589,27 +588,27 @@ install_jarvis() {
     local ui_dist="$ui_dir/dist/index.html"
     if check_command node && check_command npm; then
         if [[ ! -d "$ui_dir/node_modules" ]]; then
-            info "Installiere UI-Abhaengigkeiten (npm install)..."
+            info "Installing UI dependencies (npm install)..."
             (cd "$ui_dir" && npm install --silent 2>&1 | tail -5) || true
         fi
         if [[ ! -f "$ui_dist" ]]; then
-            info "Erstelle UI-Build (npm run build)..."
+            info "Building UI (npm run build)..."
             if (cd "$ui_dir" && npm run build --silent 2>&1 | tail -5); then
-                success "UI-Build erstellt (ui/dist/)"
+                success "UI build created (ui/dist/)"
             else
-                warn "npm run build fehlgeschlagen -- CLI-Modus verfuegbar"
+                warn "npm run build failed -- CLI mode available"
             fi
         else
-            success "UI-Build vorhanden (ui/dist/)"
+            success "UI build exists (ui/dist/)"
         fi
     elif [[ -f "$ui_dist" ]]; then
-        success "Pre-built UI vorhanden (Node.js nicht noetig)"
+        success "Pre-built UI available (Node.js not needed)"
     else
         echo ""
-        warn "Node.js nicht gefunden -- Web-UI kann nicht erstellt werden"
-        info "CLI-Modus ist vollstaendig verfuegbar (kein Node.js noetig)"
+        warn "Node.js not found -- Web-UI cannot be built"
+        info "CLI mode is fully available (no Node.js needed)"
         echo ""
-        info "Fuer Web-UI spaeter Node.js installieren:"
+        info "To add Web-UI later, install Node.js:"
         local _distro_id=""
         if [[ -f /etc/os-release ]]; then
             _distro_id=$(. /etc/os-release && echo "${ID:-}")
@@ -635,40 +634,40 @@ install_jarvis() {
 }
 
 # ============================================================================
-# Schritt 4: Verzeichnisstruktur + Config (Fix #6: verbose + timeout + perms)
+# Step 4: Directory structure + Config
 # ============================================================================
 
 create_directory_safe() {
     # Creates a single directory with error handling and verbose output
     local dir="$1"
     if [[ -d "$dir" ]]; then
-        info "  [vorhanden] $dir"
+        info "  [exists]  $dir"
         return 0
     fi
     local err_file
     err_file=$(mktemp "${TMPDIR:-/tmp}/jarvis_mkdir_XXXXXX" 2>/dev/null || echo "/tmp/jarvis_mkdir_err")
     if mkdir -p "$dir" 2>"$err_file"; then
-        success "  [erstellt]  $dir"
+        success "  [created] $dir"
         rm -f "$err_file" 2>/dev/null
     else
         local err
-        err=$(cat "$err_file" 2>/dev/null || echo "unbekannter Fehler")
+        err=$(cat "$err_file" 2>/dev/null || echo "unknown error")
         rm -f "$err_file" 2>/dev/null
-        error "Verzeichnis konnte nicht erstellt werden: $dir"
-        error "Fehler: $err"
+        error "Could not create directory: $dir"
+        error "Error: $err"
         echo ""
-        echo "  Behebe mit:"
+        echo "  Fix with:"
         echo "    sudo mkdir -p $dir"
         echo "    sudo chown \$(whoami) $dir"
         echo ""
-        fatal "Verzeichnis-Erstellung fehlgeschlagen. Berechtigungen pruefen."
+        fatal "Directory creation failed. Check permissions."
     fi
 }
 
 setup_directories() {
-    header "Verzeichnisstruktur erstellen"
+    header "Creating directory structure"
 
-    # Core directories that Jarvis needs
+    # Core directories that Cognithor needs
     local dirs=(
         "$JARVIS_HOME"
         "$JARVIS_HOME/memory"
@@ -687,48 +686,48 @@ setup_directories() {
         create_directory_safe "$dir"
     done
 
-    # Additionally run jarvis --init-only for any extra setup (with timeout)
-    info "Fuehre jarvis --init-only aus..."
+    # Run jarvis --init-only for any extra setup (with timeout)
+    info "Running jarvis --init-only..."
     if timeout 30 "$VENV_DIR/bin/jarvis" --init-only 2>/dev/null; then
-        success "jarvis --init-only erfolgreich"
+        success "jarvis --init-only completed"
     else
         local _exit_code=$?
         if [[ $_exit_code -eq 124 ]]; then
-            warn "jarvis --init-only Timeout nach 30s -- uebersprungen"
+            warn "jarvis --init-only timed out after 30s -- skipped"
         else
-            warn "jarvis --init-only fehlgeschlagen (Exit-Code: $_exit_code) -- uebersprungen"
+            warn "jarvis --init-only failed (exit code: $_exit_code) -- skipped"
         fi
     fi
-    success "Verzeichnisstruktur in $JARVIS_HOME vollstaendig"
+    success "Directory structure in $JARVIS_HOME complete"
 
-    # Config-Datei
+    # Config file
     local config_file="$JARVIS_HOME/config.yaml"
     if [[ -f "$config_file" ]]; then
-        info "config.yaml bereits vorhanden -- wird nicht ueberschrieben"
+        info "config.yaml already exists -- not overwriting"
     else
         if [[ -f "$REPO_DIR/config.yaml.example" ]]; then
             cp "$REPO_DIR/config.yaml.example" "$config_file"
-            success "config.yaml erstellt aus Vorlage"
+            success "config.yaml created from template"
         else
-            warn "config.yaml.example nicht gefunden -- uebersprungen"
+            warn "config.yaml.example not found -- skipped"
         fi
     fi
 
-    # Locale-basierte Spracherkennung
+    # Locale-based language detection
     if [[ -f "$config_file" ]] && ! grep -q "^language:" "$config_file" 2>/dev/null; then
         local _lang_code="${LANG%%_*}"
-        _lang_code="${_lang_code:-de}"
+        _lang_code="${_lang_code:-en}"
         local _detected_lang="en"
         if [[ "$_lang_code" == "de" ]]; then
             _detected_lang="de"
         fi
-        # Sprache an den Anfang der config.yaml schreiben
+        # Write language to the top of config.yaml
         local _tmp_cfg
         _tmp_cfg=$(mktemp "${TMPDIR:-/tmp}/jarvis_cfg_XXXXXX")
         echo "language: \"${_detected_lang}\"" > "$_tmp_cfg"
         cat "$config_file" >> "$_tmp_cfg"
         mv "$_tmp_cfg" "$config_file"
-        success "Sprache erkannt: ${_detected_lang} (Locale: ${_lang_code})"
+        success "Language detected: ${_detected_lang} (locale: ${_lang_code})"
     fi
 
     # .env (optional)
@@ -737,27 +736,27 @@ setup_directories() {
         if [[ -f "$REPO_DIR/.env.example" ]]; then
             cp "$REPO_DIR/.env.example" "$env_file"
             chmod 600 "$env_file"
-            success ".env erstellt (Berechtigungen: 600)"
+            success ".env created (permissions: 600)"
         fi
     fi
 }
 
 # ============================================================================
-# Schritt 5: Systemd-Services
+# Step 5: Systemd services
 # ============================================================================
 
 install_systemd() {
-    header "Systemd-Services"
+    header "Systemd Services"
 
     local service_dir="$HOME/.config/systemd/user"
     mkdir -p "$service_dir"
 
-    # Jarvis Core Service
+    # Cognithor Core Service
     local service_file="$service_dir/jarvis.service"
     cat > "$service_file" << UNIT
 [Unit]
-Description=Jarvis Agent OS
-Documentation=https://github.com/team-soellner/jarvis
+Description=Cognithor Agent OS
+Documentation=https://github.com/Alex8791-cyber/cognithor
 After=network-online.target ollama.service
 Wants=network-online.target
 
@@ -770,7 +769,7 @@ Restart=on-failure
 RestartSec=10
 WatchdogSec=300
 
-# Sicherheit
+# Security
 NoNewPrivileges=true
 ProtectHome=read-only
 ReadWritePaths=${JARVIS_HOME} /tmp/jarvis
@@ -783,14 +782,14 @@ SyslogIdentifier=jarvis
 [Install]
 WantedBy=default.target
 UNIT
-    success "jarvis.service erstellt"
+    success "jarvis.service created"
 
     # WebUI Service (optional)
     local webui_file="$service_dir/jarvis-webui.service"
     cat > "$webui_file" << UNIT
 [Unit]
-Description=Jarvis Web-UI (FastAPI)
-Documentation=https://github.com/team-soellner/jarvis
+Description=Cognithor Web-UI (FastAPI)
+Documentation=https://github.com/Alex8791-cyber/cognithor
 After=jarvis.service
 BindsTo=jarvis.service
 
@@ -802,7 +801,7 @@ EnvironmentFile=-${JARVIS_HOME}/.env
 Restart=on-failure
 RestartSec=5
 
-# Sicherheit
+# Security
 NoNewPrivileges=true
 ProtectHome=read-only
 ReadWritePaths=${JARVIS_HOME} /tmp/jarvis
@@ -815,26 +814,26 @@ SyslogIdentifier=jarvis-webui
 [Install]
 WantedBy=default.target
 UNIT
-    success "jarvis-webui.service erstellt"
+    success "jarvis-webui.service created"
 
     # Daemon Reload
     systemctl --user daemon-reload 2>/dev/null || true
     success "systemd daemon-reload"
 
-    info "Services verwalten:"
-    info "  systemctl --user start jarvis        # Starten"
-    info "  systemctl --user stop jarvis         # Stoppen"
+    info "Manage services:"
+    info "  systemctl --user start jarvis        # Start"
+    info "  systemctl --user stop jarvis         # Stop"
     info "  systemctl --user enable jarvis       # Autostart"
     info "  journalctl --user -u jarvis -f       # Logs"
-    info "  systemctl --user start jarvis-webui  # Web-UI starten"
+    info "  systemctl --user start jarvis-webui  # Start Web-UI"
 }
 
 # ============================================================================
-# Schritt 6: Logrotate
+# Step 6: Logrotate
 # ============================================================================
 
 setup_logrotate() {
-    header "Log-Rotation"
+    header "Log Rotation"
 
     local logrotate_dir="$JARVIS_HOME/logrotate.d"
     mkdir -p "$logrotate_dir"
@@ -864,16 +863,16 @@ ${JARVIS_HOME}/logs/*.jsonl {
     create 0640
 }
 CONF
-    success "logrotate-Konfiguration erstellt"
-    info "Fuer System-Logrotate: sudo ln -s $logrotate_dir/jarvis /etc/logrotate.d/jarvis"
+    success "logrotate configuration created"
+    info "For system logrotate: sudo ln -s $logrotate_dir/jarvis /etc/logrotate.d/jarvis"
 }
 
 # ============================================================================
-# Schritt 7: Smoke-Test
+# Step 7: Smoke test
 # ============================================================================
 
 run_smoke_test() {
-    header "Smoke-Test"
+    header "Smoke Test"
 
     if [[ -f "$REPO_DIR/scripts/smoke_test.py" ]]; then
         "$VENV_DIR/bin/python" "$REPO_DIR/scripts/smoke_test.py" \
@@ -881,15 +880,15 @@ run_smoke_test() {
             --ollama-url "$OLLAMA_URL" \
             --venv "$VENV_DIR"
     else
-        warn "smoke_test.py nicht gefunden -- uebersprungen"
+        warn "smoke_test.py not found -- skipped"
     fi
 
-    # LLM-Rauchtest: Kurze Anfrage an Ollama
+    # LLM smoke test: short request to Ollama
     if curl -sf --max-time 3 "${OLLAMA_URL}/api/version" &>/dev/null; then
-        info "LLM-Rauchtest..."
+        info "LLM smoke test..."
         local _llm_response
         _llm_response=$(curl -sf --max-time 30 "${OLLAMA_URL}/api/chat" \
-            -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"Sage kurz Hallo."}],"stream":false}' \
+            -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"Say hello briefly."}],"stream":false}' \
             2>/dev/null)
         if [[ -n "$_llm_response" ]]; then
             local _llm_answer
@@ -901,24 +900,24 @@ try:
 except: pass
 " 2>/dev/null)
             if [[ -n "$_llm_answer" ]]; then
-                success "LLM antwortet: $_llm_answer"
+                success "LLM responds: $_llm_answer"
             else
-                warn "LLM antwortete leer -- Modell evtl. noch nicht bereit"
+                warn "LLM responded empty -- model may not be ready yet"
             fi
         else
-            warn "LLM-Rauchtest: Keine Antwort (Timeout oder Modell nicht geladen)"
+            warn "LLM smoke test: No response (timeout or model not loaded)"
         fi
     else
-        info "LLM-Rauchtest uebersprungen (Ollama nicht erreichbar)"
+        info "LLM smoke test skipped (Ollama not reachable)"
     fi
 }
 
 # ============================================================================
-# Schritt 8: Shell-Integration
+# Step 8: Shell integration
 # ============================================================================
 
 setup_shell_integration() {
-    header "Shell-Integration"
+    header "Shell Integration"
 
     local shell_rc=""
     if [[ -f "$HOME/.bashrc" ]]; then
@@ -928,36 +927,36 @@ setup_shell_integration() {
     fi
 
     local alias_line="alias jarvis='${VENV_DIR}/bin/jarvis'"
-    local activate_line="# Jarvis Agent OS"
+    local activate_line="# Cognithor Agent OS"
 
     if [[ -n "$shell_rc" ]]; then
-        if grep -qF "Jarvis Agent OS" "$shell_rc" 2>/dev/null; then
-            info "Shell-Integration bereits vorhanden in $shell_rc"
+        if grep -qF "Cognithor Agent OS" "$shell_rc" 2>/dev/null || grep -qF "Jarvis Agent OS" "$shell_rc" 2>/dev/null; then
+            info "Shell integration already present in $shell_rc"
         else
             {
                 echo ""
                 echo "$activate_line"
                 echo "$alias_line"
             } >> "$shell_rc"
-            success "Alias 'jarvis' zu $shell_rc hinzugefuegt"
+            success "Alias 'jarvis' added to $shell_rc"
         fi
     else
-        info "Kein .bashrc/.zshrc gefunden -- fuege manuell hinzu:"
+        info "No .bashrc/.zshrc found -- add manually:"
         info "  $alias_line"
     fi
 }
 
 # ============================================================================
-# Schritt 8b: .desktop-Dateien (Linux Desktop-Integration)
+# Step 8b: .desktop files (Linux desktop integration)
 # ============================================================================
 
 create_desktop_entry() {
-    header "Desktop-Integration"
+    header "Desktop Integration"
 
     local apps_dir="$HOME/.local/share/applications"
     mkdir -p "$apps_dir"
 
-    # CLI-Launcher
+    # CLI Launcher
     cat > "$apps_dir/cognithor.desktop" << DESKTOP
 [Desktop Entry]
 Version=1.0
@@ -970,7 +969,7 @@ Terminal=true
 Categories=Utility;Development;
 StartupNotify=false
 DESKTOP
-    success "cognithor.desktop erstellt"
+    success "cognithor.desktop created"
 
     # Web-UI Launcher
     cat > "$apps_dir/cognithor-webui.desktop" << DESKTOP
@@ -978,97 +977,97 @@ DESKTOP
 Version=1.0
 Type=Application
 Name=Cognithor Web-UI
-Comment=Cognithor Agent OS - Web-Interface
+Comment=Cognithor Agent OS - Web Interface
 Exec=bash -c '${VENV_DIR}/bin/python -m jarvis --no-cli & sleep 3 && xdg-open http://localhost:8741; wait'
 Icon=applications-internet
 Terminal=false
 Categories=Utility;Development;
 StartupNotify=true
 DESKTOP
-    success "cognithor-webui.desktop erstellt"
+    success "cognithor-webui.desktop created"
 
-    # Desktop-Datenbank aktualisieren
+    # Update desktop database
     if check_command update-desktop-database; then
         update-desktop-database "$apps_dir" 2>/dev/null || true
-        success "Desktop-Datenbank aktualisiert"
+        success "Desktop database updated"
     fi
 }
 
 # ============================================================================
-# Deinstallation
+# Uninstall
 # ============================================================================
 
 uninstall() {
-    header "Jarvis deinstallieren"
+    header "Uninstall Cognithor"
 
-    warn "Dies entfernt die Jarvis-Installation (NICHT die Daten in ~/.jarvis)"
+    warn "This removes the Cognithor installation (NOT your data in ~/.jarvis)"
 
-    read -rp "Fortfahren? [y/N] " confirm
+    read -rp "Continue? [y/N] " confirm
     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-        info "Abgebrochen."
+        info "Cancelled."
         exit 0
     fi
 
-    # Services stoppen
+    # Stop services
     systemctl --user stop jarvis jarvis-webui 2>/dev/null || true
     systemctl --user disable jarvis jarvis-webui 2>/dev/null || true
 
-    # Service-Dateien entfernen
+    # Remove service files
     rm -f "$HOME/.config/systemd/user/jarvis.service"
     rm -f "$HOME/.config/systemd/user/jarvis-webui.service"
     systemctl --user daemon-reload 2>/dev/null || true
 
-    # venv entfernen
+    # Remove venv
     if [[ -d "$VENV_DIR" ]]; then
         rm -rf "$VENV_DIR"
-        success "Virtual Environment entfernt"
+        success "Virtual environment removed"
     fi
 
-    # Shell-Alias entfernen (portable: works on GNU sed and BSD/macOS sed)
+    # Remove shell alias (portable: works on GNU sed and BSD/macOS sed)
     for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
-        if [[ -f "$rc" ]] && grep -q "Jarvis Agent OS\|jarvis.*venv.*bin.*jarvis" "$rc" 2>/dev/null; then
-            grep -v "Jarvis Agent OS" "$rc" | grep -v "jarvis.*venv.*bin.*jarvis" > "${rc}.jarvis_tmp" \
+        if [[ -f "$rc" ]] && grep -q "Cognithor Agent OS\|Jarvis Agent OS\|jarvis.*venv.*bin.*jarvis" "$rc" 2>/dev/null; then
+            grep -v "Cognithor Agent OS" "$rc" | grep -v "Jarvis Agent OS" | grep -v "jarvis.*venv.*bin.*jarvis" > "${rc}.jarvis_tmp" \
                 && mv "${rc}.jarvis_tmp" "$rc" \
                 || rm -f "${rc}.jarvis_tmp"
         fi
     done
 
-    success "Jarvis deinstalliert"
-    info "Daten in $JARVIS_HOME wurden NICHT geloescht"
-    info "Zum vollstaendigen Entfernen: rm -rf $JARVIS_HOME"
+    success "Cognithor uninstalled"
+    info "Your data in $JARVIS_HOME was NOT deleted"
+    info "To fully remove: rm -rf $JARVIS_HOME"
 }
 
 # ============================================================================
-# Zusammenfassung
+# Summary
 # ============================================================================
 
 show_summary() {
-    header "Installation abgeschlossen"
+    header "Installation complete"
 
     echo -e "${GREEN}${BOLD}"
     cat << 'DONE'
-  [OK] Jarvis Agent OS erfolgreich installiert!
+  [OK] Cognithor Agent OS successfully installed!
 DONE
     echo -e "${NC}"
 
-    echo "  Starten:"
-    echo "    jarvis                              # CLI-Chat"
-    echo "    jarvis --config ~/meine-config.yaml # Eigene Config"
+    echo "  Getting started:"
+    echo "    jarvis                              # CLI chat"
+    echo "    jarvis --config ~/my-config.yaml    # Custom config"
     echo ""
     echo "  Systemd:"
-    echo "    systemctl --user start jarvis       # Als Service"
+    echo "    systemctl --user start jarvis       # Run as service"
     echo "    systemctl --user enable jarvis      # Autostart"
     echo ""
-    echo "  Verzeichnisse:"
+    echo "  Directories:"
     echo "    $JARVIS_HOME/                       # Home"
-    echo "    $JARVIS_HOME/config.yaml            # Konfiguration"
-    echo "    $JARVIS_HOME/memory/                # Alle Erinnerungen"
+    echo "    $JARVIS_HOME/config.yaml            # Configuration"
+    echo "    $JARVIS_HOME/memory/                # All memories"
     echo "    $JARVIS_HOME/logs/                  # Logs + Audit"
     echo ""
-    echo "  Naechste Schritte:"
-    echo "    1. config.yaml pruefen und anpassen"
-    echo "    2. jarvis starten und testen"
-    echo "    3. Optional: Telegram/WebUI aktivieren"
+    echo "  Next steps:"
+    echo "    1. Review and customize config.yaml"
+    echo "    2. Start jarvis and test"
+    echo "    3. Optional: Enable Telegram/WebUI"
     echo ""
 }
 
@@ -1079,7 +1078,7 @@ DONE
 main() {
     show_banner
 
-    # Parse Argumente
+    # Parse arguments
     local mode="interactive"
     for arg in "$@"; do
         case "$arg" in
@@ -1121,18 +1120,18 @@ main() {
             show_summary
             ;;
         --help|-h)
-            echo "Nutzung: $0 [--minimal|--full|--use-uv|--systemd|--uninstall|--help]"
+            echo "Usage: $0 [--minimal|--full|--use-uv|--systemd|--uninstall|--help]"
             echo ""
-            echo "  (ohne Argumente)  Interaktive Installation"
-            echo "  --minimal         Nur Core-Pakete"
-            echo "  --full            Alles inkl. Voice + Systemd"
-            echo "  --use-uv          uv statt pip verwenden (10x schneller)"
-            echo "  --systemd         Nur Systemd-Services installieren"
-            echo "  --uninstall       Deinstallation"
+            echo "  (no arguments)    Interactive installation"
+            echo "  --minimal         Core packages only"
+            echo "  --full            Everything including Voice + Systemd"
+            echo "  --use-uv          Use uv instead of pip (10x faster)"
+            echo "  --systemd         Install systemd services only"
+            echo "  --uninstall       Uninstall"
             exit 0
             ;;
         *)
-            # Interaktive Installation (Default)
+            # Interactive installation (default)
             check_prerequisites
             detect_installer
             ensure_ollama_models
