@@ -99,6 +99,90 @@ class TestRiskClassification:
         assert decision.risk_level == RiskLevel.ORANGE
         assert decision.needs_approval
 
+    @pytest.mark.parametrize(
+        "tool",
+        [
+            "web_search",
+            "web_fetch",
+            "web_news_search",
+            "search_and_read",
+            "analyze_code",
+            "git_status",
+            "git_diff",
+            "git_log",
+            "browse_screenshot",
+            "get_core_memory",
+            "get_recent_episodes",
+            "memory_stats",
+            "db_query",
+            "db_schema",
+            "create_chart",
+            "list_skills",
+            "list_remote_agents",
+            "docker_ps",
+            "docker_logs",
+            "api_list",
+            "calendar_today",
+            "calendar_upcoming",
+            "screenshot_desktop",
+        ],
+    )
+    def test_green_tools_comprehensive(
+        self, gatekeeper: Gatekeeper, session: SessionContext, tool: str
+    ) -> None:
+        """All GREEN tools must be classified as GREEN with no approval."""
+        action = PlannedAction(tool=tool, params={})
+        decision = gatekeeper.evaluate(action, session)
+        assert decision.risk_level == RiskLevel.GREEN, f"{tool} should be GREEN"
+
+    @pytest.mark.parametrize(
+        "tool",
+        [
+            "edit_file",
+            "save_to_memory",
+            "exec_command",
+            "run_python",
+            "git_commit",
+            "git_branch",
+            "document_export",
+            "media_tts",
+            "create_skill",
+            "delegate_to_remote_agent",
+            "db_connect",
+            "docker_stop",
+            "api_connect",
+            "api_call",
+        ],
+    )
+    def test_yellow_tools_comprehensive(
+        self, gatekeeper: Gatekeeper, session: SessionContext, tool: str
+    ) -> None:
+        """All YELLOW tools must be classified as YELLOW."""
+        action = PlannedAction(tool=tool, params={})
+        decision = gatekeeper.evaluate(action, session)
+        assert decision.risk_level == RiskLevel.YELLOW, f"{tool} should be YELLOW"
+
+    @pytest.mark.parametrize(
+        "tool",
+        [
+            "email_send",
+            "calendar_create_event",
+            "delete_file",
+            "fetch_url",
+            "http_request",
+            "db_execute",
+            "docker_run",
+        ],
+    )
+    def test_orange_tools_comprehensive(
+        self, gatekeeper: Gatekeeper, session: SessionContext, tool: str
+    ) -> None:
+        """All ORANGE tools must require approval."""
+        action = PlannedAction(tool=tool, params={})
+        decision = gatekeeper.evaluate(action, session)
+        assert decision.risk_level == RiskLevel.ORANGE, f"{tool} should be ORANGE"
+        assert decision.needs_approval, f"{tool} should need approval"
+
 
 # ============================================================================
 # Destruktive Shell-Befehle
@@ -118,6 +202,8 @@ class TestDestructiveCommands:
             ":(){ :|:& };:",
             "shutdown -h now",
             "reboot",
+            "format C:",
+            "del /f /q C:\\Windows\\System32",
         ],
     )
     def test_destructive_commands_blocked(
