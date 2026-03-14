@@ -10,14 +10,12 @@ Proves:
 from __future__ import annotations
 
 import errno
-import os
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-
 
 REPO = Path(__file__).resolve().parent.parent
 BOOTSTRAP = REPO / "scripts" / "bootstrap_windows.py"
@@ -137,6 +135,7 @@ class TestSafeMkdirPermission:
 
     def test_permission_error_mentions_path(self, tmp_path):
         import re as _re
+
         from jarvis.config import _safe_mkdir
 
         target = tmp_path / "test_dir"
@@ -187,9 +186,8 @@ class TestSafeMkdirDiskFull:
         target = tmp_path / "other"
         exc = OSError(errno.EACCES, "other os error")
 
-        with patch.object(Path, "mkdir", side_effect=exc):
-            with pytest.raises(OSError):
-                _safe_mkdir(target)
+        with patch.object(Path, "mkdir", side_effect=exc), pytest.raises(OSError):
+            _safe_mkdir(target)
 
 
 # =========================================================================
@@ -237,29 +235,33 @@ class TestEnsureDirectoryStructureErrors:
     """ensure_directory_structure must propagate the user-friendly errors."""
 
     def test_propagates_permission_error(self, tmp_path):
-        from jarvis.config import ensure_directory_structure, JarvisConfig
+        from jarvis.config import JarvisConfig, ensure_directory_structure
 
         cfg = JarvisConfig(jarvis_home=tmp_path / "jarvis")
 
         # Patch _safe_mkdir to simulate permission error on first call
-        with patch(
-            "jarvis.config._safe_mkdir",
-            side_effect=PermissionError("sudo chown fix"),
+        with (
+            patch(
+                "jarvis.config._safe_mkdir",
+                side_effect=PermissionError("sudo chown fix"),
+            ),
+            pytest.raises(PermissionError, match="sudo chown"),
         ):
-            with pytest.raises(PermissionError, match="sudo chown"):
-                ensure_directory_structure(cfg)
+            ensure_directory_structure(cfg)
 
     def test_propagates_disk_full_error(self, tmp_path):
-        from jarvis.config import ensure_directory_structure, JarvisConfig
+        from jarvis.config import JarvisConfig, ensure_directory_structure
 
         cfg = JarvisConfig(jarvis_home=tmp_path / "jarvis")
 
-        with patch(
-            "jarvis.config._safe_mkdir",
-            side_effect=OSError("Festplatte voll"),
+        with (
+            patch(
+                "jarvis.config._safe_mkdir",
+                side_effect=OSError("Festplatte voll"),
+            ),
+            pytest.raises(OSError, match="Festplatte voll"),
         ):
-            with pytest.raises(OSError, match="Festplatte voll"):
-                ensure_directory_structure(cfg)
+            ensure_directory_structure(cfg)
 
 
 # =========================================================================

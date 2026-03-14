@@ -8,9 +8,8 @@ Testet:
 
 from __future__ import annotations
 
-import asyncio
 import tempfile
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def config(tmp_path: "Path") -> JarvisConfig:
+def config(tmp_path: Path) -> JarvisConfig:
     cfg = JarvisConfig(
         jarvis_home=tmp_path / ".jarvis",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),

@@ -26,7 +26,6 @@ from jarvis.security.agent_vault import (
     _load_or_create_master_secret,
 )
 
-
 # ============================================================================
 # Master-Secret in Key-Derivation
 # ============================================================================

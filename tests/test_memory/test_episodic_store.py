@@ -1,9 +1,9 @@
 """Tests fuer EpisodicStore und EpisodicSummarizer."""
 
 import pytest
+
 from jarvis.memory.episodic_store import EpisodicStore
 from jarvis.memory.episodic_summarizer import EpisodicSummarizer
-from jarvis.models import EpisodicEntry
 
 
 class TestEpisodicStore:

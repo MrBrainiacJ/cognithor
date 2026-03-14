@@ -11,10 +11,9 @@ Prüft:
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -25,7 +24,6 @@ from jarvis.mcp.synthesis import (
     _truncate,
     register_synthesis_tools,
 )
-
 
 # ── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -227,7 +225,10 @@ class TestDependencyInjection:
 
     def test_set_llm_fn(self, synthesizer: KnowledgeSynthesizer) -> None:
         """LLM-Funktion und Modellname werden gesetzt."""
-        fn = lambda p, m="": "result"
+
+        def fn(p, m=""):
+            return "result"
+
         synthesizer._set_llm_fn(fn, "qwen3:32b")
         assert synthesizer._llm_fn is fn
         assert synthesizer._llm_model == "qwen3:32b"
@@ -625,6 +626,7 @@ class TestToolsWiring:
     def test_tools_py_captures_web_tools(self) -> None:
         """tools.py speichert register_web_tools Rückgabewert."""
         import inspect
+
         from jarvis.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)
@@ -633,6 +635,7 @@ class TestToolsWiring:
     def test_tools_py_captures_memory_tools(self) -> None:
         """tools.py speichert register_memory_tools Rückgabewert."""
         import inspect
+
         from jarvis.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)
@@ -641,6 +644,7 @@ class TestToolsWiring:
     def test_tools_py_registers_synthesis(self) -> None:
         """tools.py importiert und registriert synthesis tools."""
         import inspect
+
         from jarvis.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)
@@ -650,6 +654,7 @@ class TestToolsWiring:
     def test_tools_py_injects_dependencies(self) -> None:
         """tools.py injiziert alle 4 Abhängigkeiten in den Synthesizer."""
         import inspect
+
         from jarvis.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)

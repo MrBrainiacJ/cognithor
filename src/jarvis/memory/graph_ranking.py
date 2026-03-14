@@ -32,7 +32,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 
 from jarvis.models import Entity, MemorySearchResult
@@ -133,7 +133,7 @@ class GraphRanking:
         entities = self._index.search_entities()
         if not entities:
             self._ranks = {}
-            self._last_computed = datetime.now(timezone.utc)
+            self._last_computed = datetime.now(UTC)
             return {}
 
         entity_map = {e.id: e for e in entities}
@@ -216,7 +216,7 @@ class GraphRanking:
             )
 
         self._ranks = ranks
-        self._last_computed = datetime.now(timezone.utc)
+        self._last_computed = datetime.now(UTC)
 
         logger.info(
             "pagerank_computed: entities=%d, iterations<=%d",
@@ -452,7 +452,7 @@ class GraphRanking:
 
         new_conf = max(0.0, min(1.0, entity.confidence + delta))
         entity.confidence = new_conf
-        entity.updated_at = datetime.now(timezone.utc)
+        entity.updated_at = datetime.now(UTC)
         self._index.upsert_entity(entity)
 
         return new_conf
@@ -470,7 +470,7 @@ class GraphRanking:
         if entity is None:
             return False
 
-        entity.updated_at = datetime.now(timezone.utc)
+        entity.updated_at = datetime.now(UTC)
         self._index.upsert_entity(entity)
         return True
 

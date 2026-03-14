@@ -9,9 +9,6 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
-
-
 # ============================================================================
 # 1. Channels-Export: Slack/Discord im Package verfügbar
 # ============================================================================
@@ -70,8 +67,8 @@ class TestChannelsWiring:
 class TestSkillExchangeCirclesWiring:
     def test_exchange_has_circles_property(self, tmp_path: Path) -> None:
         """SkillExchange hat circles-Property → CircleManager."""
-        from jarvis.skills.p2p import SkillExchange
         from jarvis.skills.circles import CircleManager
+        from jarvis.skills.p2p import SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         assert hasattr(exchange, "circles")
@@ -145,11 +142,7 @@ class TestConfigAPIWiring:
         """config_api Module sind importierbar."""
         from jarvis.gateway.config_api import (
             AgentProfileDTO,
-            BindingRuleDTO,
             ConfigManager,
-            ConfigOverview,
-            HeartbeatUpdate,
-            SandboxUpdate,
         )
 
         assert ConfigManager is not None
@@ -195,6 +188,7 @@ class TestConfigRoutesWiring:
     def test_config_routes_references_config_api(self) -> None:
         """config_routes nutzt die neue config_api."""
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -207,8 +201,8 @@ class TestConfigRoutesWiring:
     def test_config_routes_imports_config_api(self) -> None:
         """config_routes kann config_api importieren."""
         # Simuliert was config_routes intern tut
+        from jarvis.gateway.config_api import BindingRuleDTO
         from jarvis.gateway.config_api import ConfigManager as CfgMgr
-        from jarvis.gateway.config_api import BindingRuleDTO, SandboxUpdate
 
         assert CfgMgr is not None
         assert BindingRuleDTO is not None
@@ -351,6 +345,7 @@ class TestMonitoringWiring:
 
     def test_config_routes_has_monitoring_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -368,12 +363,8 @@ class TestMonitoringWiring:
 class TestIsolationWiring:
     def test_isolation_classes_importable(self) -> None:
         from jarvis.core.isolation import (
-            AgentResourceQuota,
             MultiUserIsolation,
-            RateLimiter,
-            UserAgentScope,
             WorkspaceGuard,
-            WorkspacePolicy,
         )
 
         assert WorkspaceGuard is not None
@@ -412,6 +403,7 @@ class TestIsolationWiring:
 
     def test_config_routes_has_isolation_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -446,6 +438,7 @@ class TestMarketplaceWiring:
 
     def test_config_routes_has_marketplace_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -465,9 +458,6 @@ class TestInteractiveWiring:
     def test_interactive_importable(self) -> None:
         from jarvis.channels.interactive import (
             AdaptiveCard,
-            DiscordMessageBuilder,
-            FormField,
-            ProgressTracker,
             SlackMessageBuilder,
         )
 
@@ -476,8 +466,6 @@ class TestInteractiveWiring:
 
     def test_interactive_exported_from_channels(self) -> None:
         from jarvis.channels import (
-            AdaptiveCard,
-            DiscordMessageBuilder,
             SlackMessageBuilder,
         )
 
@@ -485,6 +473,7 @@ class TestInteractiveWiring:
 
     def test_slack_imports_interactive(self) -> None:
         import inspect
+
         from jarvis.channels import slack
 
         source = inspect.getsource(slack)
@@ -494,6 +483,7 @@ class TestInteractiveWiring:
 
     def test_discord_imports_interactive(self) -> None:
         import inspect
+
         from jarvis.channels import discord
 
         source = inspect.getsource(discord)
@@ -552,6 +542,7 @@ class TestAuthWiring:
 
     def test_config_routes_has_auth_endpoint(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -584,6 +575,7 @@ class TestAgentHeartbeatWiring:
 
     def test_config_routes_has_heartbeat_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -617,6 +609,7 @@ class TestUpdaterWiring:
 
     def test_config_routes_has_updater_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -644,7 +637,7 @@ class TestCommandsWiring:
         assert InteractionStore is not None
 
     def test_exported_from_channels(self) -> None:
-        from jarvis.channels import CommandRegistry, FallbackRenderer, InteractionStore
+        from jarvis.channels import CommandRegistry
 
         assert CommandRegistry is not None
 
@@ -659,6 +652,7 @@ class TestCommandsWiring:
 
     def test_config_routes_has_command_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -697,6 +691,7 @@ class TestWizardsRBACWiring:
 
     def test_config_routes_has_wizard_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -706,6 +701,7 @@ class TestWizardsRBACWiring:
 
     def test_config_routes_has_rbac_endpoints(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -752,6 +748,7 @@ class TestWizardsRBACWiring:
 class TestNewEndpointsWiring:
     def test_sse_endpoint_exists(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -760,6 +757,7 @@ class TestNewEndpointsWiring:
 
     def test_wizard_endpoints_exist(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -770,6 +768,7 @@ class TestNewEndpointsWiring:
 
     def test_rbac_endpoints_exist(self) -> None:
         import inspect
+
         from jarvis.channels import config_routes
 
         source = inspect.getsource(config_routes)
@@ -792,7 +791,7 @@ class TestNewEndpointsWiring:
         assert hub is not None
 
     def test_gateway_exports_wizards(self) -> None:
-        from jarvis.gateway import WizardRegistry, RBACManager
+        from jarvis.gateway import RBACManager, WizardRegistry
 
         assert WizardRegistry is not None
         assert RBACManager is not None

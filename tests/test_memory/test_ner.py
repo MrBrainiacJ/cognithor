@@ -6,19 +6,16 @@ deduplication, confidence scoring, and edge cases.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.memory.ner import (
     CONFIDENCE_SCORES,
     ConfidenceSource,
     EntityDeduplicator,
     EntityExtractor,
-    ExtractionResult,
     ExtractedEntity,
     ExtractedRelation,
+    ExtractionResult,
     RelationType,
 )
-
 
 # ============================================================================
 # RelationType enum

@@ -12,9 +12,12 @@ from __future__ import annotations
 
 import asyncio
 import struct
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 log = get_logger(__name__)
 
@@ -48,8 +51,9 @@ class WakeWordDetector:
     async def _load_vosk(self) -> None:
         """Lädt Vosk für Keyword-Spotting."""
         try:
-            from vosk import KaldiRecognizer, Model
             import json as _json  # noqa: F401
+
+            from vosk import KaldiRecognizer, Model
 
             model = Model(lang="de")
             self._model = KaldiRecognizer(model, self._sample_rate)

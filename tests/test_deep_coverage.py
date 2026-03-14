@@ -28,7 +28,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # ============================================================================
 # A2A HTTP Handler
 # ============================================================================
@@ -816,8 +815,9 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_start_loads_enabled_jobs(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
         import yaml
+
+        from jarvis.cron.engine import CronEngine
 
         jobs_data = {
             "jobs": {
@@ -938,8 +938,9 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_list_jobs(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
         import yaml
+
+        from jarvis.cron.engine import CronEngine
 
         jobs_data = {
             "jobs": {
@@ -956,8 +957,9 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_get_next_run_times(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
         import yaml
+
+        from jarvis.cron.engine import CronEngine
 
         jobs_data = {
             "jobs": {
@@ -973,8 +975,9 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_trigger_now(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
         import yaml
+
+        from jarvis.cron.engine import CronEngine
 
         handler = AsyncMock()
         jobs_data = {
@@ -1116,6 +1119,7 @@ class TestCronJobs:
 
     def test_load_existing_dict_format(self, tmp_path):
         import yaml
+
         from jarvis.cron.jobs import JobStore
 
         data = {
@@ -1137,6 +1141,7 @@ class TestCronJobs:
 
     def test_load_existing_list_format(self, tmp_path):
         import yaml
+
         from jarvis.cron.jobs import JobStore
 
         data = {
@@ -1168,6 +1173,7 @@ class TestCronJobs:
 
     def test_get_enabled(self, tmp_path):
         import yaml
+
         from jarvis.cron.jobs import JobStore
 
         data = {
@@ -1399,6 +1405,7 @@ class TestPostgreSQLBackend:
         """When psycopg is not installed, fallback conninfo is used."""
         with patch.dict(sys.modules, {"psycopg": None, "psycopg.conninfo": None}):
             from importlib import reload
+
             import jarvis.db.postgresql_backend as pg_mod
 
             reload(pg_mod)
@@ -1411,9 +1418,8 @@ class TestPostgreSQLBackend:
         from jarvis.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
-        with patch.dict(sys.modules, {"psycopg_pool": None}):
-            with pytest.raises(ImportError):
-                await backend._ensure_pool()
+        with patch.dict(sys.modules, {"psycopg_pool": None}), pytest.raises(ImportError):
+            await backend._ensure_pool()
 
     async def test_execute_with_mocked_pool(self):
         from jarvis.db.postgresql_backend import PostgreSQLBackend
@@ -1533,11 +1539,11 @@ class TestReplayEngine:
     def test_replay_run_with_plan_no_divergence(self):
         from jarvis.forensics.replay_engine import ReplayEngine
         from jarvis.models import (
-            RunRecord,
             ActionPlan,
-            PlannedAction,
             GateDecision,
             GateStatus,
+            PlannedAction,
+            RunRecord,
         )
 
         gk = self._make_gatekeeper()
@@ -1559,11 +1565,11 @@ class TestReplayEngine:
     def test_replay_run_with_divergence_new_block(self):
         from jarvis.forensics.replay_engine import ReplayEngine
         from jarvis.models import (
-            RunRecord,
             ActionPlan,
-            PlannedAction,
             GateDecision,
             GateStatus,
+            PlannedAction,
+            RunRecord,
         )
 
         gk = self._make_gatekeeper()
@@ -1590,11 +1596,11 @@ class TestReplayEngine:
     def test_replay_run_with_divergence_new_allow(self):
         from jarvis.forensics.replay_engine import ReplayEngine
         from jarvis.models import (
-            RunRecord,
             ActionPlan,
-            PlannedAction,
             GateDecision,
             GateStatus,
+            PlannedAction,
+            RunRecord,
         )
 
         gk = self._make_gatekeeper()
@@ -1750,7 +1756,7 @@ class TestAuditDeep:
 
 class TestAgentVaultDeep:
     def test_vault_rotator(self):
-        from jarvis.security.agent_vault import VaultRotator, RotationPolicy, SecretType
+        from jarvis.security.agent_vault import VaultRotator
 
         rotator = VaultRotator()
         assert len(rotator._policies) > 0
@@ -1764,7 +1770,7 @@ class TestAgentVaultDeep:
         assert len(rotator._policies) == 0
 
     def test_agent_secret_properties(self):
-        from jarvis.security.agent_vault import AgentSecret, SecretType, SecretStatus
+        from jarvis.security.agent_vault import AgentSecret, SecretType
 
         secret = AgentSecret(
             secret_id="SEC-1",
@@ -1778,7 +1784,7 @@ class TestAgentVaultDeep:
         assert d["secret_id"] == "SEC-1"
 
     def test_agent_secret_expired(self):
-        from jarvis.security.agent_vault import AgentSecret, SecretType, SecretStatus
+        from jarvis.security.agent_vault import AgentSecret, SecretType
 
         secret = AgentSecret(
             secret_id="SEC-1",
@@ -1808,7 +1814,7 @@ class TestAgentVaultDeep:
 
 class TestCICDGateDeep:
     def test_evaluate_with_stages(self):
-        from jarvis.security.cicd_gate import SecurityGate, GatePolicy, GateVerdict
+        from jarvis.security.cicd_gate import GatePolicy, GateVerdict, SecurityGate
 
         gate = SecurityGate(
             policy=GatePolicy(
@@ -1835,7 +1841,7 @@ class TestCICDGateDeep:
         assert any("Fuzzing" in r for r in result.reasons)
 
     def test_evaluate_medium_low_limits(self):
-        from jarvis.security.cicd_gate import SecurityGate, GatePolicy, GateVerdict
+        from jarvis.security.cicd_gate import GatePolicy, GateVerdict, SecurityGate
 
         gate = SecurityGate(
             policy=GatePolicy(
@@ -1883,7 +1889,7 @@ class TestCICDGateDeep:
 
 class TestSandboxIsolationDeep:
     def test_sandbox_to_dict(self):
-        from jarvis.security.sandbox_isolation import AgentSandbox, ResourceType, ResourceLimit
+        from jarvis.security.sandbox_isolation import AgentSandbox, ResourceLimit, ResourceType
 
         sb = AgentSandbox(
             sandbox_id="sb1",
@@ -1968,10 +1974,10 @@ class TestFrameworkDeep:
 
     def test_security_team_auto_assign_no_match(self):
         from jarvis.security.framework import (
-            SecurityTeam,
-            SecurityIncident,
             IncidentCategory,
             IncidentSeverity,
+            SecurityIncident,
+            SecurityTeam,
         )
 
         team = SecurityTeam()
@@ -1986,11 +1992,10 @@ class TestFrameworkDeep:
 
     def test_security_metrics_with_incidents(self):
         from jarvis.security.framework import (
-            SecurityMetrics,
-            IncidentTracker,
             IncidentCategory,
             IncidentSeverity,
-            IncidentStatus,
+            IncidentTracker,
+            SecurityMetrics,
         )
 
         tracker = IncidentTracker()
@@ -2034,9 +2039,9 @@ class TestFrameworkDeep:
 
     def test_incident_time_properties_no_dates(self):
         from jarvis.security.framework import (
-            SecurityIncident,
             IncidentCategory,
             IncidentSeverity,
+            SecurityIncident,
         )
 
         inc = SecurityIncident(
@@ -2050,9 +2055,9 @@ class TestFrameworkDeep:
 
     def test_incident_time_invalid_dates(self):
         from jarvis.security.framework import (
-            SecurityIncident,
             IncidentCategory,
             IncidentSeverity,
+            SecurityIncident,
         )
 
         inc = SecurityIncident(

@@ -1,7 +1,5 @@
 """Tests fuer CausalAnalyzer."""
 
-import pytest
-
 from jarvis.learning.causal import CausalAnalyzer
 
 

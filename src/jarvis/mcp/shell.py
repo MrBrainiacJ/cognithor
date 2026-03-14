@@ -14,6 +14,7 @@ Bibel-Referenz: §5.3 (jarvis-shell Server), §4.3 (Sandbox)
 
 from __future__ import annotations
 
+import contextlib
 import re
 import shlex
 from pathlib import Path
@@ -62,8 +63,8 @@ _FILE_COMMANDS = frozenset(
 )
 
 __all__ = [
-    "ShellTools",
     "ShellError",
+    "ShellTools",
     "register_shell_tools",
 ]
 
@@ -81,7 +82,7 @@ class ShellTools:
       Layer 3: Resource-Limits -- Timeout, Memory, Disk, Processes
     """
 
-    def __init__(self, config: "JarvisConfig") -> None:
+    def __init__(self, config: JarvisConfig) -> None:
         """Initialisiert ShellTools mit Sandbox.
 
         Erkennt automatisch das beste verfügbare Sandbox-Level.
@@ -124,10 +125,8 @@ class ShellTools:
             if _level is not None:
                 level_val = _level.value if hasattr(_level, "value") else str(_level)
                 if level_val in ("bwrap", "firejail", "bare", "process"):
-                    try:
+                    with contextlib.suppress(ValueError):
                         sandbox_config.preferred_level = SandboxLevel(level_val)
-                    except ValueError:
-                        pass
             # Env vars from UI config
             _env = getattr(_ui_sandbox, "env_vars", None)
             if _env and isinstance(_env, dict):
@@ -252,10 +251,8 @@ class ShellTools:
         # Per-Agent Overrides
         network_override = None
         if _sandbox_network:
-            try:
+            with contextlib.suppress(ValueError):
                 network_override = NetworkPolicy(_sandbox_network)
-            except ValueError:
-                pass  # Invalid network policy value, fall back to default (None)
 
         # Befehls-Logging: Kuerzen und sensitive Muster maskieren
         _log_cmd = command[: self._max_log_command_length]
@@ -302,7 +299,7 @@ class ShellTools:
 
 def register_shell_tools(
     mcp_client: Any,
-    config: "JarvisConfig",
+    config: JarvisConfig,
 ) -> ShellTools:
     """Registriert Shell-Tools beim MCP-Client.
 

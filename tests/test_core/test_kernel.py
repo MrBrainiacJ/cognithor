@@ -1,6 +1,7 @@
 """Tests fuer AgentKernel."""
 
 import pytest
+
 from jarvis.core.kernel import AgentKernel, InvalidTransitionError
 from jarvis.core.plan_graph import PlanGraph
 from jarvis.models import KernelState, PlanNode, ToolResult

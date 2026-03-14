@@ -14,15 +14,18 @@ Architektur-Bibel: §12
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any
+import contextlib
+from typing import TYPE_CHECKING, Any
 
 import yaml
 from pydantic import ValidationError
 
 from jarvis.config import JarvisConfig, load_config
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 log = get_logger(__name__)
 
@@ -364,10 +367,8 @@ class ConfigManager:
             os.replace(tmp_path, str(target))
         except Exception:
             # Clean up temp file on failure
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
             raise
 
         log.info("config_saved", path=str(target))

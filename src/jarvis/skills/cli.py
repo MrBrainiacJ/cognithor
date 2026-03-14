@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from typing import List
 
 from jarvis.config import load_config
 from jarvis.skills.manager import create_skill, list_skills
@@ -30,7 +29,7 @@ from jarvis.utils.logging import get_logger
 log = get_logger(__name__)
 
 
-def main(argv: List[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     if argv is None:
         argv = sys.argv[1:]
     parser = argparse.ArgumentParser(

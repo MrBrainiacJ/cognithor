@@ -5,10 +5,12 @@ Kein Netzwerk, kein externes LLM — alles lokal testbar.
 """
 
 import asyncio
-import json
-import pytest
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock
 
+import pytest
+
+from jarvis.a2a.client import A2AClient, RemoteAgent
+from jarvis.a2a.server import A2AServer, A2AServerConfig
 from jarvis.a2a.types import (
     A2A_CONTENT_TYPE,
     A2A_PROTOCOL_VERSION,
@@ -17,7 +19,6 @@ from jarvis.a2a.types import (
     A2AAgentCard,
     A2AErrorCode,
     A2AInterface,
-    A2AProvider,
     A2ASecurityScheme,
     A2ASkill,
     Artifact,
@@ -25,8 +26,6 @@ from jarvis.a2a.types import (
     FilePart,
     Message,
     MessageRole,
-    Part,
-    PartType,
     PushNotificationAuth,
     PushNotificationConfig,
     Task,
@@ -35,13 +34,9 @@ from jarvis.a2a.types import (
     TaskStatus,
     TaskStatusUpdateEvent,
     TextPart,
-    VALID_TRANSITIONS,
     is_valid_transition,
     part_from_dict,
 )
-from jarvis.a2a.server import A2AServer, A2AServerConfig
-from jarvis.a2a.client import A2AClient, RemoteAgent
-
 
 # ============================================================================
 # Types Tests
@@ -945,7 +940,7 @@ class TestA2AIntegration:
         result = await server.dispatch("tasks/get", {"id": task.id})
         assert result["status"]["state"] == "input-required"
 
-        task2 = await client.send_task_local(server, text="BU insurance", task_id=task.id)
+        await client.send_task_local(server, text="BU insurance", task_id=task.id)
         await asyncio.sleep(0.1)
 
         result = await server.dispatch("tasks/get", {"id": task.id})

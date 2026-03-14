@@ -450,7 +450,7 @@ class MemoryIndex:
             batch = hash_list[i : i + 900]
             placeholders = ",".join("?" * len(batch))
             rows = self.conn.execute(
-                f"SELECT content_hash, vector FROM embeddings "  # noqa: S608
+                f"SELECT content_hash, vector FROM embeddings "
                 f"WHERE content_hash IN ({placeholders})",
                 batch,
             ).fetchall()
@@ -625,7 +625,7 @@ class MemoryIndex:
                 batch = frontier_list[i : i + 450]
                 placeholders = ",".join("?" * len(batch))
                 rows = self.conn.execute(
-                    f"SELECT source_entity, target_entity FROM relations "  # noqa: S608
+                    f"SELECT source_entity, target_entity FROM relations "
                     f"WHERE source_entity IN ({placeholders}) "
                     f"OR target_entity IN ({placeholders})",
                     batch + batch,
@@ -649,7 +649,7 @@ class MemoryIndex:
             batch = result_list[i : i + 900]
             placeholders = ",".join("?" * len(batch))
             rows = self.conn.execute(
-                f"SELECT * FROM entities WHERE id IN ({placeholders})",  # noqa: S608
+                f"SELECT * FROM entities WHERE id IN ({placeholders})",
                 batch,
             ).fetchall()
             entities.extend(self._row_to_entity(r) for r in rows)

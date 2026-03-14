@@ -291,10 +291,12 @@ class ReplayEngine:
         for event in recording.events:
             if event.event_type in (EventType.LLM_REQUEST, EventType.TOOL_CALL):
                 pending_requests.append(event)
-            elif event.event_type in (EventType.LLM_RESPONSE, EventType.TOOL_RESULT):
-                if pending_requests:
-                    request = pending_requests.pop(0)
-                    response_map[request.event_id] = event
+            elif (
+                event.event_type in (EventType.LLM_RESPONSE, EventType.TOOL_RESULT)
+                and pending_requests
+            ):
+                request = pending_requests.pop(0)
+                response_map[request.event_id] = event
 
         return response_map
 

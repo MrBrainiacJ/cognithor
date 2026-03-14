@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from jarvis.mcp.browser import (
     BROWSER_TOOL_SCHEMAS,
+    MAX_TEXT_LENGTH,
     BrowserResult,
     BrowserTool,
-    MAX_TEXT_LENGTH,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestBrowserResult:
@@ -282,7 +284,6 @@ class TestBrowserToolInitialization:
         """Testet dass initialize() False zurückgibt wenn Playwright fehlt."""
         tool = BrowserTool()
         # Direkt den Import-Pfad mocken statt builtins.__import__
-        original_init = BrowserTool.initialize
 
         async def patched_init(self: BrowserTool) -> bool:
             # Simuliere ImportError

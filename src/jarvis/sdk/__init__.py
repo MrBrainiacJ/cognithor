@@ -27,12 +27,12 @@ from jarvis.sdk.definitions import AgentDefinition, HookDefinition, ToolDefiniti
 from jarvis.sdk.scaffold import scaffold_agent, scaffold_tool
 
 __all__ = [
-    "agent",
-    "hook",
-    "tool",
     "AgentDefinition",
     "HookDefinition",
     "ToolDefinition",
+    "agent",
+    "hook",
     "scaffold_agent",
     "scaffold_tool",
+    "tool",
 ]

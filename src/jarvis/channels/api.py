@@ -40,7 +40,9 @@ try:
     from pydantic import BaseModel, Field
 except ImportError:
     BaseModel = object  # type: ignore[assignment, misc]
-    Field = lambda **kw: None  # type: ignore[assignment]  # noqa: E731
+
+    def Field(**kw: object) -> None:  # type: ignore[assignment]
+        return None
 
 
 class MessageRequest(BaseModel):
@@ -259,7 +261,7 @@ class APIChannel(Channel):
             response_model=MessageResponse,
             dependencies=[Depends(verify_token)],
         )
-        async def send_message(req: MessageRequest, request: Request) -> MessageResponse:  # noqa: ARG001
+        async def send_message(req: MessageRequest, request: Request) -> MessageResponse:
             # Rate limiting -- per Client-IP
             client_ip = request.client.host if request.client else "unknown"
             rate_key = f"api_{client_ip}"

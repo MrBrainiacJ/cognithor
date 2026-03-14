@@ -14,7 +14,10 @@ Besonderheiten:
 from __future__ import annotations
 
 import logging
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 logger = logging.getLogger("jarvis.db.postgresql")
 
@@ -107,23 +110,21 @@ class PostgreSQLBackend:
 
     async def fetchone(self, query: str, params: Sequence[Any] = ()) -> dict[str, Any] | None:
         pool = await self._ensure_pool()
-        async with pool.connection() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute(query, params)
-                row = await cur.fetchone()
-                if row is None:
-                    return None
-                columns = [desc[0] for desc in cur.description or []]
-                return dict(zip(columns, row))
+        async with pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(query, params)
+            row = await cur.fetchone()
+            if row is None:
+                return None
+            columns = [desc[0] for desc in cur.description or []]
+            return dict(zip(columns, row, strict=False))
 
     async def fetchall(self, query: str, params: Sequence[Any] = ()) -> list[dict[str, Any]]:
         pool = await self._ensure_pool()
-        async with pool.connection() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute(query, params)
-                rows = await cur.fetchall()
-                columns = [desc[0] for desc in cur.description or []]
-                return [dict(zip(columns, row)) for row in rows]
+        async with pool.connection() as conn, conn.cursor() as cur:
+            await cur.execute(query, params)
+            rows = await cur.fetchall()
+            columns = [desc[0] for desc in cur.description or []]
+            return [dict(zip(columns, row, strict=False)) for row in rows]
 
     async def commit(self) -> None:
         pass  # Auto-commit in pool connections

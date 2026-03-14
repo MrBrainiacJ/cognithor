@@ -22,17 +22,20 @@ Fallback: Ohne App-Token arbeitet der Channel wie bisher (nur senden).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.channels.base import Channel, MessageHandler
-from jarvis.channels.interactive import (
-    AdaptiveCard,
-    ProgressTracker,
-    SlackMessageBuilder,
-)
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.token_store import get_token_store
+
+if TYPE_CHECKING:
+    from jarvis.channels.interactive import (
+        AdaptiveCard,
+        ProgressTracker,
+        SlackMessageBuilder,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -139,11 +142,11 @@ class SlackChannel(Channel):
         app = AsyncApp(token=self.token)
 
         @app.event("message")
-        async def _on_msg(event: dict[str, Any], say: Any) -> None:  # noqa: ARG001
+        async def _on_msg(event: dict[str, Any], say: Any) -> None:
             await self._on_message(event)
 
         @app.event("app_mention")
-        async def _on_mention(event: dict[str, Any], say: Any) -> None:  # noqa: ARG001
+        async def _on_mention(event: dict[str, Any], say: Any) -> None:
             await self._on_message(event)
 
         @app.action("jarvis_approve")
@@ -216,14 +219,12 @@ class SlackChannel(Channel):
                     friendly = classify_error_for_user(exc)
                 except Exception:
                     friendly = "Ein Fehler ist bei der Verarbeitung aufgetreten."
-                try:
+                with contextlib.suppress(Exception):
                     await self._client.chat_postMessage(
                         channel=channel_id,
                         text=friendly,
                         thread_ts=thread_ts,
                     )
-                except Exception:
-                    pass  # Cleanup — error notification failure is non-critical
 
     # ------------------------------------------------------------------
     # Approvals via Block Kit Buttons
@@ -448,7 +449,7 @@ class SlackChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=300.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Slack Approval Timeout: %s", action.tool)
             async with self._approval_lock:
                 self._approval_futures.pop(approval_id, None)

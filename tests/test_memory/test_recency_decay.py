@@ -14,7 +14,6 @@ import pytest
 
 from jarvis.memory.search import recency_decay
 
-
 # Fixed "today" so tests are deterministic regardless of when they run.
 FIXED_TODAY = date(2026, 3, 5)
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import tempfile
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -20,7 +19,6 @@ from jarvis.models import (
     ReplayResult,
     RiskLevel,
     RunRecord,
-    SessionContext,
     ToolResult,
 )
 

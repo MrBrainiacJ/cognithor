@@ -13,15 +13,9 @@ Targets:
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.memory.hygiene import (
-    ContradictionChecker,
-    CredentialLeakDetector,
     DuplicateDetector,
     HygieneReport,
-    InjectionScanner,
-    IntegrityVerifier,
     MemoryHygieneEngine,
     MemorySnapshot,
     MemoryThreat,
@@ -34,7 +28,6 @@ from jarvis.memory.hygiene import (
     ThreatSeverity,
     ThreatType,
 )
-
 
 # ============================================================================
 # MemoryVersionControl (hygiene version)

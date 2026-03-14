@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -27,6 +26,8 @@ from jarvis.core.message_queue import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     pass
 
 
@@ -332,7 +333,7 @@ class TestStatsAndDepth:
             await queue.fail(id_dead, "error")
 
         # 1 processing: enqueue then dequeue (stays processing)
-        id_proc = await queue.enqueue({"text": "processing"})
+        await queue.enqueue({"text": "processing"})
         await queue.dequeue()
 
         # 1 pending: enqueue (stays pending)

@@ -8,50 +8,46 @@ Kein externes LLM, kein Netzwerk — alles lokal testbar.
 import asyncio
 import json
 import tempfile
-import pytest
-from pathlib import Path
-from typing import Any
 
-from jarvis.graph.types import (
-    START,
-    END,
-    GRAPH_VERSION,
-    NodeType,
-    EdgeType,
-    ExecutionStatus,
-    NodeStatus,
-    GraphState,
-    Node,
-    Edge,
-    NodeResult,
-    Checkpoint,
-    ExecutionRecord,
-    GraphDefinition,
-)
-from jarvis.graph.state import StateManager
-from jarvis.graph.engine import GraphEngine
+import pytest
+
 from jarvis.graph.builder import (
     GraphBuilder,
-    linear_graph,
     branch_graph,
+    linear_graph,
     loop_graph,
 )
+from jarvis.graph.engine import GraphEngine
 from jarvis.graph.nodes import (
+    accumulate_node,
+    condition_node,
+    counter_node,
+    delay_node,
+    gate_node,
+    key_router,
     llm_node,
+    log_node,
+    merge_node,
+    set_value_node,
+    threshold_router,
     tool_node,
     transform_node,
-    condition_node,
-    threshold_router,
-    key_router,
-    delay_node,
-    log_node,
-    accumulate_node,
-    gate_node,
-    counter_node,
-    set_value_node,
-    merge_node,
 )
-
+from jarvis.graph.state import StateManager
+from jarvis.graph.types import (
+    END,
+    Checkpoint,
+    Edge,
+    EdgeType,
+    ExecutionRecord,
+    ExecutionStatus,
+    GraphDefinition,
+    GraphState,
+    Node,
+    NodeResult,
+    NodeStatus,
+    NodeType,
+)
 
 # ============================================================================
 # Helper Handlers

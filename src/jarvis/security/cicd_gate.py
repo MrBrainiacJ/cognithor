@@ -19,8 +19,10 @@ import itertools
 import time
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
-from typing import Any, Callable
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _gate_counter = itertools.count()
 

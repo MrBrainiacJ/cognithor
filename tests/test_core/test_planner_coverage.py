@@ -62,7 +62,11 @@ class TestPlannerEdgeCases:
     async def test_plan_json_in_code_block(self, config: JarvisConfig) -> None:
         """LLM returns JSON in a code block."""
         _tmpx = os.path.join(tempfile.gettempdir(), "x")
-        content = f'```json\n{{"goal":"test","steps":[{{"tool":"read_file","params":{{"path":"{_tmpx}"}},"rationale":"test"}}],"confidence":0.9}}\n```'
+        content = (
+            f'```json\n{{"goal":"test","steps":[{{"tool":"read_file",'
+            f'"params":{{"path":"{_tmpx}"}},"rationale":"test"}}],'
+            f'"confidence":0.9}}\n```'
+        )
         ollama = _mock_ollama(content)
         planner = Planner(config, ollama, _mock_router())
         wm = WorkingMemory(session_id="test")
@@ -351,7 +355,11 @@ class TestReplanExtended:
         """LLM returns JSON with new steps after replan."""
         from jarvis.models import ToolResult
 
-        content = '```json\n{"goal":"Zweiter Versuch","steps":[{"tool":"web_search","params":{"query":"test"},"rationale":"Nochmal suchen"}],"confidence":0.8}\n```'
+        content = (
+            '```json\n{"goal":"Zweiter Versuch","steps":'
+            '[{"tool":"web_search","params":{"query":"test"},'
+            '"rationale":"Nochmal suchen"}],"confidence":0.8}\n```'
+        )
         ollama = _mock_ollama(content)
         planner = Planner(config, ollama, _mock_router())
         wm = WorkingMemory(session_id="test")

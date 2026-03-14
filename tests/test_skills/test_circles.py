@@ -12,14 +12,10 @@ from jarvis.skills.circles import (
     CircleManager,
     CircleMember,
     CircleRole,
-    CuratedCollection,
-    CuratedSkill,
     InviteStatus,
     ReviewVerdict,
-    SkillReview,
     TrustedCircle,
 )
-
 
 # ============================================================================
 # Fixtures

@@ -31,14 +31,13 @@ sys.modules.setdefault("botbuilder.integration", MagicMock())
 sys.modules.setdefault("botbuilder.integration.aiohttp", MagicMock())
 
 from jarvis.channels.teams import (
-    TeamsChannel,
-    _split_message,
-    _create_typing_activity,
-    _build_approval_card,
     MAX_MESSAGE_LENGTH,
+    TeamsChannel,
+    _build_approval_card,
+    _create_typing_activity,
+    _split_message,
 )
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
-
 
 # ============================================================================
 # Fixtures
@@ -524,4 +523,4 @@ class TestTeamsHelpers:
         mock_aiohttp = MagicMock()
         mock_aiohttp.web = mock_web
         with patch.dict(sys.modules, {"aiohttp": mock_aiohttp, "aiohttp.web": mock_web}):
-            result = await teams_ch._handle_health(request)
+            await teams_ch._handle_health(request)

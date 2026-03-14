@@ -100,7 +100,7 @@ class CodeSmellDetector:
     def analyze_file(self, path: str | Path) -> list[CodeSmell]:
         """Analysiert eine einzelne Python-Datei."""
         path = Path(path)
-        if not path.exists() or not path.suffix == ".py":
+        if not path.exists() or path.suffix != ".py":
             return []
 
         try:
@@ -129,7 +129,7 @@ class CodeSmellDetector:
         func_tokens: list[tuple[str, int, set[str]]] = []
 
         for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 smells.extend(self._check_function(node, file_str))
                 tokens = _function_body_tokens(node)
                 if len(tokens) >= 5:  # Nur Funktionen mit genug Inhalt
@@ -237,7 +237,7 @@ class CodeSmellDetector:
         smells: list[CodeSmell] = []
 
         # God-Class: Zu viele Methoden
-        methods = [n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        methods = [n for n in node.body if isinstance(n, ast.FunctionDef | ast.AsyncFunctionDef)]
         if len(methods) > self._max_class_methods:
             smells.append(
                 CodeSmell(

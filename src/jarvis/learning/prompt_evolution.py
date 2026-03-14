@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import sqlite3
 import time as _time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from jarvis.utils.logging import get_logger
@@ -133,7 +133,7 @@ class PromptEvolutionEngine:
         if existing:
             return vid
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         # Check if this is the first version for the template
         has_active = self._conn.execute(
@@ -203,7 +203,7 @@ class PromptEvolutionEngine:
         reward: float,
     ) -> None:
         """Record the reward score for a session that used a specific prompt version."""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._conn.execute(
             "INSERT INTO prompt_sessions "
             "(session_id, prompt_version_id, "
@@ -248,7 +248,7 @@ class PromptEvolutionEngine:
         if running_count >= self._max_concurrent_tests:
             raise ValueError(f"Max concurrent tests ({self._max_concurrent_tests}) reached")
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         cursor = self._conn.execute(
             "INSERT INTO ab_tests (template_name, version_a_id, version_b_id, started_at) "
             "VALUES (?, ?, ?, ?)",
@@ -291,7 +291,7 @@ class PromptEvolutionEngine:
             else test["version_b_id"]
         )
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._conn.execute(
             "UPDATE ab_tests SET status = 'completed', ended_at = ?, winner_id = ? WHERE id = ?",
             (now, winner_id, test_id),
@@ -386,7 +386,7 @@ class PromptEvolutionEngine:
             new_vid = _version_id(template_name, new_text)
 
             # Register the new variant
-            now = datetime.now(timezone.utc).isoformat()
+            now = datetime.now(UTC).isoformat()
             self._conn.execute(
                 """
                 INSERT OR IGNORE INTO prompt_versions

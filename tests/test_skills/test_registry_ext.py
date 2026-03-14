@@ -16,9 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
-
-from jarvis.skills.registry import Skill, SkillMatch, SkillRegistry
+from jarvis.skills.registry import Skill, SkillRegistry
 
 
 def _create_skill_file(path: Path, frontmatter: str, body: str) -> None:
@@ -216,7 +214,8 @@ class TestMatchExtended:
         skills_dir.mkdir()
         _create_skill_file(
             skills_dir / "email_triage.md",
-            "name: Email Triage\ndescription: Scan and prioritize emails\ntrigger_keywords: [email]",
+            "name: Email Triage\ndescription: Scan and prioritize"
+            " emails\ntrigger_keywords: [email]",
             "# Email Triage",
         )
 

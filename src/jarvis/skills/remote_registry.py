@@ -9,17 +9,20 @@ Architecture: §12.4 (Plugin Marketplace Remote Registry)
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import shutil
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 
@@ -355,15 +358,14 @@ class RemoteRegistry:
             )
 
         # Verify checksum if content provided
-        if content and manifest.checksum:
-            if not manifest.verify_checksum(content.encode("utf-8")):
-                return InstallResult(
-                    plugin=name,
-                    version=manifest.version,
-                    status=InstallStatus.FAILED,
-                    message="Checksum verification failed",
-                    duration_ms=(time.monotonic() - start) * 1000,
-                )
+        if content and manifest.checksum and not manifest.verify_checksum(content.encode("utf-8")):
+            return InstallResult(
+                plugin=name,
+                version=manifest.version,
+                status=InstallStatus.FAILED,
+                message="Checksum verification failed",
+                duration_ms=(time.monotonic() - start) * 1000,
+            )
 
         # Write to skills directory
         try:
@@ -398,7 +400,7 @@ class RemoteRegistry:
             # Track previous version
             previous_versions = []
             if existing:
-                previous_versions = existing.previous_versions + [existing.version]
+                previous_versions = [*existing.previous_versions, existing.version]
                 # Backup old version
                 backup_dir = self._cache_dir / name / existing.version
                 backup_dir.mkdir(parents=True, exist_ok=True)
@@ -407,7 +409,7 @@ class RemoteRegistry:
             self._installed[name] = InstalledPlugin(
                 name=name,
                 version=manifest.version,
-                installed_at=datetime.now(timezone.utc).isoformat(),
+                installed_at=datetime.now(UTC).isoformat(),
                 source="remote",
                 manifest=manifest,
                 previous_versions=previous_versions,
@@ -471,7 +473,7 @@ class RemoteRegistry:
         prev_version = installed.previous_versions[-1]
         installed.version = prev_version
         installed.previous_versions = installed.previous_versions[:-1]
-        installed.installed_at = datetime.now(timezone.utc).isoformat()
+        installed.installed_at = datetime.now(UTC).isoformat()
         self._save_install_history()
 
         log.info("plugin_rollback", name=name, version=prev_version)
@@ -599,8 +601,6 @@ class RemoteRegistry:
                 fh.write(content)
             _os.replace(tmp_path, str(self._install_history_file))
         except BaseException:
-            try:
+            with contextlib.suppress(OSError):
                 _os.unlink(tmp_path)
-            except OSError:
-                pass
             raise

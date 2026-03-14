@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.mcp.shell import ShellTools, ShellError, register_shell_tools
+from jarvis.mcp.shell import ShellTools, register_shell_tools
 
 
 @pytest.fixture
@@ -178,7 +178,7 @@ class TestExecCommandExtended:
 
     @pytest.mark.asyncio
     async def test_sandbox_overrides(self, config: MagicMock) -> None:
-        """Per-Agent Sandbox-Overrides (_sandbox_network, _sandbox_max_memory_mb) werden weitergegeben."""
+        """Per-Agent Sandbox-Overrides werden weitergegeben."""
         shell = ShellTools(config)
         mock_result = MagicMock()
         mock_result.output = "ok"

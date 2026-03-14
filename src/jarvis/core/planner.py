@@ -16,6 +16,7 @@ Bible reference: §3.1 (Planner), §3.4 (Cycle)
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import re
 import time
@@ -989,10 +990,8 @@ class Planner:
         # Personality block (optional)
         personality_section = ""
         if self._personality_engine is not None:
-            try:
+            with contextlib.suppress(Exception):
                 personality_section = self._personality_engine.build_personality_block()
-            except Exception:
-                pass
 
         # Prompt-Evolution A/B-Test (wenn aktiv)
         if self._prompt_evolution is not None:
@@ -1152,8 +1151,7 @@ class Planner:
         # presence of braces or json markers signals a parse failure,
         # not a genuine direct answer.
         _has_json_markers = (
-            first_brace is not None
-            and first_brace >= 0
+            (first_brace is not None and first_brace >= 0)
             or json_match is not None
             or '"steps"' in text
             or '"goal"' in text

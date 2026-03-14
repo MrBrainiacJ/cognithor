@@ -606,7 +606,7 @@ function Spinner() {
   return (
     <div className="cc-spinner-wrap">
       <div className="cc-spinner" />
-      <span className="cc-spinner-text">Loading configuration...</span>
+      <span className="cc-spinner-text">{t("common.loading_config")}</span>
     </div>
   );
 }
@@ -649,17 +649,17 @@ function PromptEvolutionCard() {
   const enabled = stats?.enabled ?? false;
 
   return (
-    <Card title="Prompt Evolution (A/B)" open={enabled}>
-      <Toggle label="Prompt evolution enabled" value={enabled} onChange={handleToggle} />
+    <Card title={t("evo.title")} open={enabled}>
+      <Toggle label={t("evo.enabled")} value={enabled} onChange={handleToggle} />
       {enabled && stats && (<>
-        <ReadOnly label="Active version" value={stats.active_version_id || "–"} />
-        <ReadOnly label="Versions" value={String(stats.version_count ?? 0)} />
-        <ReadOnly label="Total sessions" value={String(stats.total_sessions ?? 0)} />
-        <ReadOnly label="Running tests" value={String(stats.running_tests ?? 0)} />
-        <ReadOnly label="Completed tests" value={String(stats.completed_tests ?? 0)} />
+        <ReadOnly label={t("evo.active_version")} value={stats.active_version_id || "–"} />
+        <ReadOnly label={t("evo.versions")} value={String(stats.version_count ?? 0)} />
+        <ReadOnly label={t("evo.total_sessions")} value={String(stats.total_sessions ?? 0)} />
+        <ReadOnly label={t("evo.running_tests")} value={String(stats.running_tests ?? 0)} />
+        <ReadOnly label={t("evo.completed_tests")} value={String(stats.completed_tests ?? 0)} />
         <div style={{ marginTop: 8 }}>
           <button className="cc-btn" onClick={handleEvolve} disabled={evolving} style={{ whiteSpace: "nowrap" }}>
-            {evolving ? "Evolving..." : "Evolve now"}
+            {evolving ? t("evo.evolving") : t("evo.evolve_now")}
           </button>
           {evolveResult && (
             <span style={{ marginLeft: 8, fontSize: 13 }}>
@@ -667,7 +667,7 @@ function PromptEvolutionCard() {
                 ? `Error: ${evolveResult.error}`
                 : evolveResult.evolved
                   ? `New version: ${evolveResult.version_id}`
-                  : "No evolution (not enough data yet)"}
+                  : t("evo.no_data")}
             </span>
           )}
         </div>
@@ -895,16 +895,16 @@ function LanguagePage({ cfg, set }) {
 // ── General ────────────────────────────────────────────────────────────
 function GeneralPage({ cfg, set }) {
   return (<>
-    <Section title="General" desc="Identity, operation mode and cost tracking" />
-    <Card title="Identity">
-      <TextInput label="Owner name" value={cfg.owner_name} onChange={v => set("owner_name", v)} desc="Used in prompts and CORE.md" error={!cfg.owner_name ? "Required" : null} />
-      <SelectInput label="Operation mode" value={cfg.operation_mode} onChange={v => set("operation_mode", v)} options={[{value:"auto",label:"Auto-Detect"},{value:"offline",label:"Offline (local only)"},{value:"online",label:"Online (Cloud APIs)"},{value:"hybrid",label:"Hybrid"}]} desc="Auto detects the mode based on available API keys" />
-      <ReadOnly label="Version" value={cfg.version} desc="System version (read-only)" />
+    <Section title={t("gen.title")} desc={t("gen.desc")} />
+    <Card title={t("gen.identity")}>
+      <TextInput label={t("gen.owner")} value={cfg.owner_name} onChange={v => set("owner_name", v)} desc={t("gen.owner_desc")} error={!cfg.owner_name ? t("gen.owner_required") : null} />
+      <SelectInput label={t("gen.mode")} value={cfg.operation_mode} onChange={v => set("operation_mode", v)} options={[{value:"auto",label:"Auto-Detect"},{value:"offline",label:"Offline (local only)"},{value:"online",label:"Online (Cloud APIs)"},{value:"hybrid",label:"Hybrid"}]} desc={t("gen.mode_desc")} />
+      <ReadOnly label={t("gen.version")} value={cfg.version} desc={t("gen.version_desc")} />
     </Card>
-    <Card title="Cost Tracking">
-      <Toggle label="Cost tracking enabled" value={cfg.cost_tracking_enabled} onChange={v => set("cost_tracking_enabled", v)} />
-      <NumberInput label="Daily limit (USD)" value={cfg.daily_budget_usd} onChange={v => set("daily_budget_usd", v)} min={0} step={0.5} desc="0 = no limit" />
-      <NumberInput label="Monthly limit (USD)" value={cfg.monthly_budget_usd} onChange={v => set("monthly_budget_usd", v)} min={0} step={1} desc="0 = no limit" />
+    <Card title={t("gen.cost")}>
+      <Toggle label={t("gen.cost_enabled")} value={cfg.cost_tracking_enabled} onChange={v => set("cost_tracking_enabled", v)} />
+      <NumberInput label={t("gen.daily_limit")} value={cfg.daily_budget_usd} onChange={v => set("daily_budget_usd", v)} min={0} step={0.5} desc={t("gen.no_limit")} />
+      <NumberInput label={t("gen.monthly_limit")} value={cfg.monthly_budget_usd} onChange={v => set("monthly_budget_usd", v)} min={0} step={1} desc={t("gen.no_limit")} />
     </Card>
     <PromptEvolutionCard />
   </>);
@@ -949,32 +949,32 @@ function ProvidersPage({ cfg, set }) {
     !filter || p.name.toLowerCase().includes(filter.toLowerCase()) || p.id.includes(filter.toLowerCase())
   );
   return (<>
-    <Section title="LLM Providers" desc="15 backends — API keys, endpoints, backend selection" />
-    <Card title="Active Backend">
-      <SelectInput label="LLM Backend" value={cfg.llm_backend_type} onChange={v => set("llm_backend_type", v)} options={PROVIDERS.map(p => ({ value: p.id, label: p.name }))} desc="All models use this backend" />
+    <Section title={t("prov.title")} desc={t("prov.desc")} />
+    <Card title={t("prov.active")}>
+      <SelectInput label={t("prov.backend")} value={cfg.llm_backend_type} onChange={v => set("llm_backend_type", v)} options={PROVIDERS.map(p => ({ value: p.id, label: p.name }))} desc={t("prov.backend_desc")} />
     </Card>
     <form autoComplete="off" onSubmit={e => e.preventDefault()} className="cc-search-bar">
       <span className="cc-search-icon">{I.search}</span>
-      <input ref={filterRef} className="cc-search-input" placeholder="Filter providers..." value={filter} onChange={e => setFilter(e.target.value)} autoComplete="new-password" role="presentation" name={"q_" + Date.now()} />
+      <input ref={filterRef} className="cc-search-input" placeholder={t("prov.filter")} value={filter} onChange={e => setFilter(e.target.value)} autoComplete="new-password" role="presentation" name={"q_" + Date.now()} />
       {filter && <button type="button" className="cc-search-clear" onClick={() => setFilter("")}>{I.x}</button>}
     </form>
     {filtered.map(p => {
       if (p.id === "ollama") return (
         <Card key="ollama" title="Ollama (Local)" open={cfg.llm_backend_type === "ollama"}>
-          <TextInput label="Base URL" value={cfg.ollama?.base_url} onChange={v => set("ollama.base_url", v)} mono />
-          <NumberInput label="Timeout (Sek.)" value={cfg.ollama?.timeout_seconds} onChange={v => set("ollama.timeout_seconds", v)} min={10} max={600} />
-          <TextInput label="Keep-Alive" value={cfg.ollama?.keep_alive} onChange={v => set("ollama.keep_alive", v)} desc="How long models stay in VRAM (e.g. 30m)" />
+          <TextInput label={t("prov.base_url")} value={cfg.ollama?.base_url} onChange={v => set("ollama.base_url", v)} mono />
+          <NumberInput label={t("prov.timeout")} value={cfg.ollama?.timeout_seconds} onChange={v => set("ollama.timeout_seconds", v)} min={10} max={600} />
+          <TextInput label={t("prov.keep_alive")} value={cfg.ollama?.keep_alive} onChange={v => set("ollama.keep_alive", v)} desc={t("prov.keep_alive_desc")} />
         </Card>
       );
       return (
         <Card key={p.id} title={p.name} open={cfg.llm_backend_type === p.id}>
-          <TextInput label="API Key" value={cfg[p.keyField]} onChange={v => set(p.keyField, v)} type="password" placeholder={`${p.id}-api-key...`} />
-          {p.extra?.includes("openai_base_url") && <TextInput label="Base URL" value={cfg.openai_base_url} onChange={v => set("openai_base_url", v)} mono desc="Also for Together, Groq, vLLM, LM Studio" />}
-          {p.extra?.includes("anthropic_max_tokens") && <NumberInput label="Max Output Tokens" value={cfg.anthropic_max_tokens} onChange={v => set("anthropic_max_tokens", v)} min={256} max={32768} />}
+          <TextInput label={t("prov.api_key")} value={cfg[p.keyField]} onChange={v => set(p.keyField, v)} type="password" placeholder={`${p.id}-api-key...`} />
+          {p.extra?.includes("openai_base_url") && <TextInput label={t("prov.base_url")} value={cfg.openai_base_url} onChange={v => set("openai_base_url", v)} mono desc={t("prov.openai_url_desc")} />}
+          {p.extra?.includes("anthropic_max_tokens") && <NumberInput label={t("prov.max_tokens")} value={cfg.anthropic_max_tokens} onChange={v => set("anthropic_max_tokens", v)} min={256} max={32768} />}
         </Card>
       );
     })}
-    {filtered.length === 0 && <div className="cc-empty">No provider found for &ldquo;{filter}&rdquo;</div>}
+    {filtered.length === 0 && <div className="cc-empty">{t("prov.no_match")} &ldquo;{filter}&rdquo;</div>}
   </>);
 }
 
@@ -997,24 +997,24 @@ const BACKEND_OPTIONS = [
 
 function ModelsPage({ cfg, set, setValidationErrors }) {
   return (<>
-    <Section title="Models" desc="Model assignment per role, vision models, skill overrides. Each role can use its own API provider." />
+    <Section title={t("models.title")} desc={t("models.desc")} />
     {ROLES.map(r => (
       <Card key={r} title={`${r.charAt(0).toUpperCase() + r.slice(1)} Model`}>
-        <TextInput label="Model name" value={cfg.models?.[r]?.name} onChange={v => set(`models.${r}.name`, v)} mono />
-        <SelectInput label="Backend / Provider" value={cfg.models?.[r]?.backend || ""} onChange={v => set(`models.${r}.backend`, v)} options={BACKEND_OPTIONS} desc="Custom provider for this role (empty = global backend)" />
-        <NumberInput label="Context Window" value={cfg.models?.[r]?.context_window} onChange={v => set(`models.${r}.context_window`, v)} min={1024} max={2000000} step={1024} />
-        <NumberInput label="VRAM (GB)" value={cfg.models?.[r]?.vram_gb} onChange={v => set(`models.${r}.vram_gb`, v)} min={0} max={80} step={0.5} />
-        <SliderInput label="Temperature" value={cfg.models?.[r]?.temperature} onChange={v => set(`models.${r}.temperature`, v)} min={0} max={2} step={0.05} desc="Creativity (0=deterministic, 2=wild)" />
-        <SliderInput label="Top P" value={cfg.models?.[r]?.top_p} onChange={v => set(`models.${r}.top_p`, v)} min={0} max={1} step={0.05} desc="Nucleus Sampling" />
-        <ListInput label="Strengths" value={cfg.models?.[r]?.strengths} onChange={v => set(`models.${r}.strengths`, v)} placeholder="e.g. reasoning" />
+        <TextInput label={t("models.name")} value={cfg.models?.[r]?.name} onChange={v => set(`models.${r}.name`, v)} mono />
+        <SelectInput label={t("models.backend")} value={cfg.models?.[r]?.backend || ""} onChange={v => set(`models.${r}.backend`, v)} options={BACKEND_OPTIONS} desc={t("models.backend_desc")} />
+        <NumberInput label={t("models.context")} value={cfg.models?.[r]?.context_window} onChange={v => set(`models.${r}.context_window`, v)} min={1024} max={2000000} step={1024} />
+        <NumberInput label={t("models.vram")} value={cfg.models?.[r]?.vram_gb} onChange={v => set(`models.${r}.vram_gb`, v)} min={0} max={80} step={0.5} />
+        <SliderInput label={t("models.temp")} value={cfg.models?.[r]?.temperature} onChange={v => set(`models.${r}.temperature`, v)} min={0} max={2} step={0.05} desc={t("models.temp_desc")} />
+        <SliderInput label={t("models.top_p")} value={cfg.models?.[r]?.top_p} onChange={v => set(`models.${r}.top_p`, v)} min={0} max={1} step={0.05} desc={t("models.top_p_desc")} />
+        <ListInput label={t("models.strengths")} value={cfg.models?.[r]?.strengths} onChange={v => set(`models.${r}.strengths`, v)} placeholder="e.g. reasoning" />
       </Card>
     ))}
-    <Card title="Vision Models">
-      <TextInput label="Standard Vision" value={cfg.vision_model} onChange={v => set("vision_model", v)} mono desc="Fast vision model" />
-      <TextInput label="Detail Vision" value={cfg.vision_model_detail} onChange={v => set("vision_model_detail", v)} mono desc="Highest quality" />
+    <Card title={t("models.vision")}>
+      <TextInput label={t("models.vision_standard")} value={cfg.vision_model} onChange={v => set("vision_model", v)} mono desc={t("models.vision_standard_desc")} />
+      <TextInput label={t("models.vision_detail")} value={cfg.vision_model_detail} onChange={v => set("vision_model_detail", v)} mono desc={t("models.vision_detail_desc")} />
     </Card>
-    <Card title="Skill Overrides" open={false}>
-      <div className="cc-desc" style={{marginBottom:8}}>Per-skill model assignment (JSON key-value)</div>
+    <Card title={t("models.skill_overrides")} open={false}>
+      <div className="cc-desc" style={{marginBottom:8}}>{t("models.skill_overrides_desc")}</div>
       <JsonEditor 
         label="skill_models (JSON)" 
         value={cfg.model_overrides?.skill_models || {}} 
@@ -1029,27 +1029,27 @@ function ModelsPage({ cfg, set, setValidationErrors }) {
 // ── PGE Trinity ────────────────────────────────────────────────────────
 function PlannerPage({ cfg, set, setValidationErrors }) {
   return (<>
-    <Section title="PGE Trinity" desc="Planner, Gatekeeper, Executor — core engine" />
-    <Card title="Planner (Thinker)">
-      <NumberInput label="Max iterations" value={cfg.planner?.max_iterations} onChange={v => set("planner.max_iterations", v)} min={1} max={50} desc="Max agent loop cycles per request" />
-      <NumberInput label="Escalation after" value={cfg.planner?.escalation_after} onChange={v => set("planner.escalation_after", v)} min={1} max={10} desc="Inform user after X steps" />
-      <SliderInput label="Temperature" value={cfg.planner?.temperature} onChange={v => set("planner.temperature", v)} min={0} max={2} step={0.05} desc="Creativity (0=deterministic, 2=wild)" />
-      <NumberInput label="Response Token Budget" value={cfg.planner?.response_token_budget} onChange={v => set("planner.response_token_budget", v)} min={500} max={8000} />
+    <Section title={t("pge.title")} desc={t("pge.desc")} />
+    <Card title={t("pge.planner")}>
+      <NumberInput label={t("pge.max_iter")} value={cfg.planner?.max_iterations} onChange={v => set("planner.max_iterations", v)} min={1} max={50} desc={t("pge.max_iter_desc")} />
+      <NumberInput label={t("pge.escalation")} value={cfg.planner?.escalation_after} onChange={v => set("planner.escalation_after", v)} min={1} max={10} desc={t("pge.escalation_desc")} />
+      <SliderInput label={t("pge.temp")} value={cfg.planner?.temperature} onChange={v => set("planner.temperature", v)} min={0} max={2} step={0.05} desc={t("pge.temp_desc")} />
+      <NumberInput label={t("pge.token_budget")} value={cfg.planner?.response_token_budget} onChange={v => set("planner.response_token_budget", v)} min={500} max={8000} />
     </Card>
-    <Card title="Gatekeeper (Guardian)">
-      <TextInput label="Policies directory" value={cfg.gatekeeper?.policies_dir} onChange={v => set("gatekeeper.policies_dir", v)} mono desc="Relative to jarvis_home" />
-      <SelectInput label="Default risk level" value={cfg.gatekeeper?.default_risk_level} onChange={v => set("gatekeeper.default_risk_level", v)} options={[{value:"green",label:"🟢 Green"},{value:"yellow",label:"🟡 Yellow"},{value:"orange",label:"🟠 Orange"},{value:"red",label:"🔴 Red"}]} />
-      <NumberInput label="Max blocked retries" value={cfg.gatekeeper?.max_blocked_retries} onChange={v => set("gatekeeper.max_blocked_retries", v)} min={1} max={10} />
+    <Card title={t("pge.gatekeeper")}>
+      <TextInput label={t("pge.policies_dir")} value={cfg.gatekeeper?.policies_dir} onChange={v => set("gatekeeper.policies_dir", v)} mono desc={t("pge.policies_desc")} />
+      <SelectInput label={t("pge.risk_level")} value={cfg.gatekeeper?.default_risk_level} onChange={v => set("gatekeeper.default_risk_level", v)} options={[{value:"green",label:"🟢 Green"},{value:"yellow",label:"🟡 Yellow"},{value:"orange",label:"🟠 Orange"},{value:"red",label:"🔴 Red"}]} />
+      <NumberInput label={t("pge.max_retries")} value={cfg.gatekeeper?.max_blocked_retries} onChange={v => set("gatekeeper.max_blocked_retries", v)} min={1} max={10} />
     </Card>
-    <Card title="Sandbox (Executor)">
-      <SelectInput label="Sandbox level" value={cfg.sandbox?.level} onChange={v => set("sandbox.level", v)} options={["process","namespace","container","jobobject"]} desc="Code execution isolation level" />
-      <NumberInput label="Timeout (sec)" value={cfg.sandbox?.timeout_seconds} onChange={v => set("sandbox.timeout_seconds", v)} min={1} max={600} />
-      <NumberInput label="Max memory (MB)" value={cfg.sandbox?.max_memory_mb} onChange={v => set("sandbox.max_memory_mb", v)} min={64} max={8192} />
-      <NumberInput label="Max CPU (sec)" value={cfg.sandbox?.max_cpu_seconds} onChange={v => set("sandbox.max_cpu_seconds", v)} min={1} max={300} />
-      <Toggle label="Network access" value={cfg.sandbox?.network_access} onChange={v => set("sandbox.network_access", v)} />
-      <ListInput label="Allowed paths" value={cfg.sandbox?.allowed_paths} onChange={v => set("sandbox.allowed_paths", v)} placeholder="/path/..." />
+    <Card title={t("pge.sandbox")}>
+      <SelectInput label={t("pge.sandbox_level")} value={cfg.sandbox?.level} onChange={v => set("sandbox.level", v)} options={["process","namespace","container","jobobject"]} desc={t("pge.sandbox_level_desc")} />
+      <NumberInput label={t("pge.sandbox_timeout")} value={cfg.sandbox?.timeout_seconds} onChange={v => set("sandbox.timeout_seconds", v)} min={1} max={600} />
+      <NumberInput label={t("pge.sandbox_memory")} value={cfg.sandbox?.max_memory_mb} onChange={v => set("sandbox.max_memory_mb", v)} min={64} max={8192} />
+      <NumberInput label={t("pge.sandbox_cpu")} value={cfg.sandbox?.max_cpu_seconds} onChange={v => set("sandbox.max_cpu_seconds", v)} min={1} max={300} />
+      <Toggle label={t("pge.network")} value={cfg.sandbox?.network_access} onChange={v => set("sandbox.network_access", v)} />
+      <ListInput label={t("pge.allowed_paths")} value={cfg.sandbox?.allowed_paths} onChange={v => set("sandbox.allowed_paths", v)} placeholder="/path/..." />
       <JsonEditor
-        label="Environment variables (JSON)" 
+        label={t("pge.env_vars")} 
         value={cfg.sandbox?.env_vars || {}} 
         onChange={v => set("sandbox.env_vars", v)} 
         onValidationError={err => setValidationErrors(prev => ({ ...prev, sandbox_env_vars: err }))}
@@ -1066,28 +1066,28 @@ function MemoryPage({ cfg, set }) {
   const sum = (m.weight_vector||0)+(m.weight_bm25||0)+(m.weight_graph||0);
   const sumColor = Math.abs(sum - 1.0) < 0.01 ? "var(--success)" : sum > 1.01 ? "var(--danger)" : "var(--warn)";
   return (<>
-    <Section title="Memory System" desc="5-tier memory: indexing, hybrid search, recency, compaction" />
-    <Card title="Indexing">
-      <NumberInput label="Chunk Size (Tokens)" value={m.chunk_size_tokens} onChange={v => set("memory.chunk_size_tokens", v)} min={100} max={2000} />
-      <NumberInput label="Chunk Overlap" value={m.chunk_overlap_tokens} onChange={v => set("memory.chunk_overlap_tokens", v)} min={0} max={500} />
-      <NumberInput label="Search Top-K" value={m.search_top_k} onChange={v => set("memory.search_top_k", v)} min={1} max={20} />
+    <Section title={t("mem.title")} desc={t("mem.desc")} />
+    <Card title={t("mem.indexing")}>
+      <NumberInput label={t("mem.chunk_size")} value={m.chunk_size_tokens} onChange={v => set("memory.chunk_size_tokens", v)} min={100} max={2000} />
+      <NumberInput label={t("mem.chunk_overlap")} value={m.chunk_overlap_tokens} onChange={v => set("memory.chunk_overlap_tokens", v)} min={0} max={500} />
+      <NumberInput label={t("mem.top_k")} value={m.search_top_k} onChange={v => set("memory.search_top_k", v)} min={1} max={20} />
     </Card>
-    <Card title="Hybrid Search Weighting">
+    <Card title={t("mem.search")}>
       <div className="cc-weight-sum" style={{ borderColor: sumColor }}>
-        <span>Sum:</span>
+        <span>{t("mem.sum")}</span>
         <span className="cc-weight-sum-val" style={{ color: sumColor }}>{sum.toFixed(2)}</span>
-        <span className="cc-weight-sum-hint">{Math.abs(sum - 1.0) < 0.01 ? "✓ Perfect" : sum > 1.01 ? "⚠ Will be normalized" : "⚠ Below 1.0"}</span>
+        <span className="cc-weight-sum-hint">{Math.abs(sum - 1.0) < 0.01 ? "✓ " + t("mem.perfect") : sum > 1.01 ? "⚠ " + t("mem.normalized") : "⚠ " + t("mem.below")}</span>
       </div>
-      <SliderInput label="Vector (Embedding)" value={m.weight_vector} onChange={v => set("memory.weight_vector", v)} />
-      <SliderInput label="BM25 (Keyword)" value={m.weight_bm25} onChange={v => set("memory.weight_bm25", v)} />
-      <SliderInput label="Graph (Knowledge)" value={m.weight_graph} onChange={v => set("memory.weight_graph", v)} />
-      <Toggle label="Dynamic weighting" value={m.dynamic_weighting} onChange={v => set("memory.dynamic_weighting", v)} desc="Automatically adjust weights based on query type" />
+      <SliderInput label={t("mem.vector")} value={m.weight_vector} onChange={v => set("memory.weight_vector", v)} />
+      <SliderInput label={t("mem.bm25")} value={m.weight_bm25} onChange={v => set("memory.weight_bm25", v)} />
+      <SliderInput label={t("mem.graph")} value={m.weight_graph} onChange={v => set("memory.weight_graph", v)} />
+      <Toggle label={t("mem.dynamic")} value={m.dynamic_weighting} onChange={v => set("memory.dynamic_weighting", v)} desc={t("mem.dynamic_desc")} />
     </Card>
-    <Card title="Recency & Compaction">
-      <NumberInput label="Recency half-life (days)" value={m.recency_half_life_days} onChange={v => set("memory.recency_half_life_days", v)} min={1} max={365} />
-      <SliderInput label="Compaction threshold" value={m.compaction_threshold} onChange={v => set("memory.compaction_threshold", v)} min={0.5} max={0.95} />
-      <NumberInput label="Keep last N" value={m.compaction_keep_last_n} onChange={v => set("memory.compaction_keep_last_n", v)} min={2} max={20} />
-      <NumberInput label="Episodic retention (days)" value={m.episodic_retention_days} onChange={v => set("memory.episodic_retention_days", v)} min={1} max={3650} desc="How many days of daily logs to keep" />
+    <Card title={t("mem.recency")}>
+      <NumberInput label={t("mem.half_life")} value={m.recency_half_life_days} onChange={v => set("memory.recency_half_life_days", v)} min={1} max={365} />
+      <SliderInput label={t("mem.compact_thresh")} value={m.compaction_threshold} onChange={v => set("memory.compaction_threshold", v)} min={0.5} max={0.95} />
+      <NumberInput label={t("mem.keep_last")} value={m.compaction_keep_last_n} onChange={v => set("memory.compaction_keep_last_n", v)} min={2} max={20} />
+      <NumberInput label={t("mem.retention")} value={m.episodic_retention_days} onChange={v => set("memory.episodic_retention_days", v)} min={1} max={3650} desc={t("mem.retention_desc")} />
     </Card>
   </>);
 }
@@ -1137,7 +1137,7 @@ const CHANNEL_DEFS = [
 function ChannelsPage({ cfg, set }) {
   const ch = cfg.channels || {};
   return (<>
-    <Section title="Channels" desc="17 communication channels — enable and configure" />
+    <Section title={t("ch.title")} desc={t("ch.desc")} />
     {CHANNEL_DEFS.map(cd => (
       <Card key={cd.id} title={cd.label} open={!!ch[`${cd.id}_enabled`]} forceOpen={!!ch[`${cd.id}_enabled`]}>
         <Toggle label={`Enable ${cd.label}`} value={ch[`${cd.id}_enabled`]} onChange={v => set(`channels.${cd.id}_enabled`, v)} />
@@ -1150,23 +1150,23 @@ function ChannelsPage({ cfg, set }) {
         })}
       </Card>
     ))}
-    <Card title="Voice Configuration" open={!!ch.voice_enabled} forceOpen={!!ch.voice_enabled}>
-      <Toggle label="Voice enabled" value={ch.voice_enabled} onChange={v => set("channels.voice_enabled", v)} desc="Enable voice control in chat" />
-      <SelectInput label="TTS Backend" value={ch.voice_config?.tts_backend} onChange={v => set("channels.voice_config.tts_backend", v)} options={["piper","espeak","elevenlabs"]} desc="Text-to-speech engine" />
+    <Card title={t("ch.voice_config")} open={!!ch.voice_enabled} forceOpen={!!ch.voice_enabled}>
+      <Toggle label={t("ch.voice_enabled")} value={ch.voice_enabled} onChange={v => set("channels.voice_enabled", v)} desc={t("ch.voice_enabled_desc")} />
+      <SelectInput label={t("ch.tts_backend")} value={ch.voice_config?.tts_backend} onChange={v => set("channels.voice_config.tts_backend", v)} options={["piper","espeak","elevenlabs"]} desc={t("ch.tts_backend_desc")} />
       {(ch.voice_config?.tts_backend || "piper") === "piper" && <>
-        <SelectInput label="Piper voice" value={ch.voice_config?.piper_voice || "de_DE-pavoque-low"} onChange={v => set("channels.voice_config.piper_voice", v)} options={["de_DE-pavoque-low","de_DE-karlsson-low","de_DE-thorsten-high","de_DE-thorsten-medium","de_DE-thorsten_emotional-medium","de_DE-kerstin-low","de_DE-ramona-low","de_DE-eva_k-x_low"]} desc="Downloaded automatically on first use" />
-        <SliderInput label="Speech rate" value={ch.voice_config?.piper_length_scale ?? 1.0} onChange={v => set("channels.voice_config.piper_length_scale", v)} min={0.5} max={2.0} step={0.1} desc="1.0 = normal, lower = faster" />
+        <SelectInput label={t("ch.piper_voice")} value={ch.voice_config?.piper_voice || "de_DE-pavoque-low"} onChange={v => set("channels.voice_config.piper_voice", v)} options={["de_DE-pavoque-low","de_DE-karlsson-low","de_DE-thorsten-high","de_DE-thorsten-medium","de_DE-thorsten_emotional-medium","de_DE-kerstin-low","de_DE-ramona-low","de_DE-eva_k-x_low"]} desc={t("ch.piper_voice_desc")} />
+        <SliderInput label={t("ch.speech_rate")} value={ch.voice_config?.piper_length_scale ?? 1.0} onChange={v => set("channels.voice_config.piper_length_scale", v)} min={0.5} max={2.0} step={0.1} desc={t("ch.speech_rate_desc")} />
       </>}
       {(ch.voice_config?.tts_backend) === "elevenlabs" && <>
-        <TextInput label="ElevenLabs API Key" value={ch.voice_config?.elevenlabs_api_key} onChange={v => set("channels.voice_config.elevenlabs_api_key", v)} type="password" />
-        <TextInput label="ElevenLabs Voice ID" value={ch.voice_config?.elevenlabs_voice_id} onChange={v => set("channels.voice_config.elevenlabs_voice_id", v)} mono />
-        <TextInput label="ElevenLabs Model" value={ch.voice_config?.elevenlabs_model} onChange={v => set("channels.voice_config.elevenlabs_model", v)} mono />
+        <TextInput label={t("ch.elevenlabs_key")} value={ch.voice_config?.elevenlabs_api_key} onChange={v => set("channels.voice_config.elevenlabs_api_key", v)} type="password" />
+        <TextInput label={t("ch.elevenlabs_voice")} value={ch.voice_config?.elevenlabs_voice_id} onChange={v => set("channels.voice_config.elevenlabs_voice_id", v)} mono />
+        <TextInput label={t("ch.elevenlabs_model")} value={ch.voice_config?.elevenlabs_model} onChange={v => set("channels.voice_config.elevenlabs_model", v)} mono />
       </>}
-      <Toggle label="Wake word enabled" value={ch.voice_config?.wake_word_enabled} onChange={v => set("channels.voice_config.wake_word_enabled", v)} desc="Trigger voice command by wake word" />
-      <TextInput label="Wake word" value={ch.voice_config?.wake_word || "jarvis"} onChange={v => set("channels.voice_config.wake_word", v)} desc="Default: jarvis" />
-      <SelectInput label="Wake word backend" value={ch.voice_config?.wake_word_backend} onChange={v => set("channels.voice_config.wake_word_backend", v)} options={["browser","vosk","porcupine"]} desc="browser = Web Speech API (no setup needed)" />
-      <Toggle label="Talk mode" value={ch.voice_config?.talk_mode_enabled} onChange={v => set("channels.voice_config.talk_mode_enabled", v)} desc="Continuous listening in chat" />
-      <Toggle label="Auto-listen" value={ch.voice_config?.talk_mode_auto_listen} onChange={v => set("channels.voice_config.talk_mode_auto_listen", v)} desc="Automatically listen again after response" />
+      <Toggle label={t("ch.wake_word_enabled")} value={ch.voice_config?.wake_word_enabled} onChange={v => set("channels.voice_config.wake_word_enabled", v)} desc={t("ch.wake_word_enabled_desc")} />
+      <TextInput label={t("ch.wake_word")} value={ch.voice_config?.wake_word || "jarvis"} onChange={v => set("channels.voice_config.wake_word", v)} desc={t("ch.wake_word_desc")} />
+      <SelectInput label={t("ch.wake_word_backend")} value={ch.voice_config?.wake_word_backend} onChange={v => set("channels.voice_config.wake_word_backend", v)} options={["browser","vosk","porcupine"]} desc={t("ch.wake_word_backend_desc")} />
+      <Toggle label={t("ch.talk_mode")} value={ch.voice_config?.talk_mode_enabled} onChange={v => set("channels.voice_config.talk_mode_enabled", v)} desc={t("ch.talk_mode_desc")} />
+      <Toggle label={t("ch.auto_listen")} value={ch.voice_config?.talk_mode_auto_listen} onChange={v => set("channels.voice_config.talk_mode_auto_listen", v)} desc={t("ch.auto_listen_desc")} />
     </Card>
   </>);
 }
@@ -1175,19 +1175,19 @@ function ChannelsPage({ cfg, set }) {
 function SecurityPage({ cfg, set }) {
   const s = cfg.security || {};
   return (<>
-    <Section title="Security" desc="Iteration limits, paths, blocked commands, credential patterns" />
-    <Card title="Gatekeeper Limits">
-      <NumberInput label="Max iterations" value={s.max_iterations} onChange={v => set("security.max_iterations", v)} min={1} max={50} desc="Infinite loop protection" />
-      <NumberInput label="Max sub-agent depth" value={s.max_sub_agent_depth} onChange={v => set("security.max_sub_agent_depth", v)} min={1} max={10} desc="Maximum recursion depth for sub-agent delegations" />
+    <Section title={t("sec.title")} desc={t("sec.desc")} />
+    <Card title={t("sec.limits")}>
+      <NumberInput label={t("sec.max_iter")} value={s.max_iterations} onChange={v => set("security.max_iterations", v)} min={1} max={50} desc={t("sec.max_iter_desc")} />
+      <NumberInput label={t("sec.max_depth")} value={s.max_sub_agent_depth} onChange={v => set("security.max_sub_agent_depth", v)} min={1} max={10} desc={t("sec.max_depth_desc")} />
     </Card>
-    <Card title="Gatekeeper Filesystem">
-      <ListInput label="Allowed paths" value={s.allowed_paths} onChange={v => set("security.allowed_paths", v)} placeholder="~/.jarvis/" />
+    <Card title={t("sec.filesystem")}>
+      <ListInput label={t("sec.allowed_paths")} value={s.allowed_paths} onChange={v => set("security.allowed_paths", v)} placeholder="~/.jarvis/" />
     </Card>
-    <Card title="Gatekeeper Blocked Commands (Regex)">
-      <ListInput label="Patterns" value={s.blocked_commands} onChange={v => set("security.blocked_commands", v)} placeholder="rm\\s+-rf\\s+/" />
+    <Card title={t("sec.blocked")}>
+      <ListInput label={t("sec.blocked_patterns")} value={s.blocked_commands} onChange={v => set("security.blocked_commands", v)} placeholder="rm\\s+-rf\\s+/" />
     </Card>
-    <Card title="Gatekeeper Credential Detection (Regex)">
-      <ListInput label="Patterns" value={s.credential_patterns} onChange={v => set("security.credential_patterns", v)} placeholder="sk-[a-zA-Z0-9]{20,}" />
+    <Card title={t("sec.credentials")}>
+      <ListInput label={t("sec.cred_patterns")} value={s.credential_patterns} onChange={v => set("security.credential_patterns", v)} placeholder="sk-[a-zA-Z0-9]{20,}" />
     </Card>
   </>);
 }
@@ -1196,23 +1196,23 @@ function SecurityPage({ cfg, set }) {
 function ExecutorPage({ cfg, set }) {
   const e = cfg.executor || {};
   return (<>
-    <Section title="Executor" desc="Tool execution: timeouts, retries, parallelism" />
-    <Card title="General">
-      <NumberInput label="LLM timeout (seconds)" value={cfg.ollama?.timeout_seconds} onChange={v => set("ollama.timeout_seconds", v)} min={10} max={600} desc="Timeout for LLM requests (Planner/Executor). Applies to all backends (Ollama, OpenAI, etc.)" />
-      <NumberInput label="Default timeout (seconds)" value={e.default_timeout_seconds} onChange={v => set("executor.default_timeout_seconds", v)} min={5} max={600} desc="Timeout for individual tool calls" />
-      <NumberInput label="Max output (chars)" value={e.max_output_chars} onChange={v => set("executor.max_output_chars", v)} min={1000} max={100000} desc="Tool output is truncated after this length" />
-      <NumberInput label="Max retries" value={e.max_retries} onChange={v => set("executor.max_retries", v)} min={0} max={10} desc="Retry attempts for transient errors" />
-      <SliderInput label="Backoff base (seconds)" value={e.backoff_base_delay_seconds} onChange={v => set("executor.backoff_base_delay_seconds", v)} min={0.1} max={30} step={0.1} desc="Base delay for exponential backoff" />
+    <Section title={t("exec.title")} desc={t("exec.desc")} />
+    <Card title={t("exec.general")}>
+      <NumberInput label={t("exec.llm_timeout")} value={cfg.ollama?.timeout_seconds} onChange={v => set("ollama.timeout_seconds", v)} min={10} max={600} desc={t("exec.llm_timeout_desc")} />
+      <NumberInput label={t("exec.default_timeout")} value={e.default_timeout_seconds} onChange={v => set("executor.default_timeout_seconds", v)} min={5} max={600} desc={t("exec.default_timeout_desc")} />
+      <NumberInput label={t("exec.max_output")} value={e.max_output_chars} onChange={v => set("executor.max_output_chars", v)} min={1000} max={100000} desc={t("exec.max_output_desc")} />
+      <NumberInput label={t("exec.max_retries")} value={e.max_retries} onChange={v => set("executor.max_retries", v)} min={0} max={10} desc={t("exec.max_retries_desc")} />
+      <SliderInput label={t("exec.backoff")} value={e.backoff_base_delay_seconds} onChange={v => set("executor.backoff_base_delay_seconds", v)} min={0.1} max={30} step={0.1} desc={t("exec.backoff_desc")} />
     </Card>
-    <Card title="DAG Parallelism">
-      <NumberInput label="Max parallel tools" value={e.max_parallel_tools} onChange={v => set("executor.max_parallel_tools", v)} min={1} max={16} desc="Maximum number of simultaneously executed tools (DAG-based)" />
+    <Card title={t("exec.dag")}>
+      <NumberInput label={t("exec.max_parallel")} value={e.max_parallel_tools} onChange={v => set("executor.max_parallel_tools", v)} min={1} max={16} desc={t("exec.max_parallel_desc")} />
     </Card>
-    <Card title="Tool-specific Timeouts">
-      <NumberInput label="Image analysis (seconds)" value={e.media_analyze_image_timeout} onChange={v => set("executor.media_analyze_image_timeout", v)} min={30} max={600} desc="Vision models need more time (20+ GB VRAM)" />
-      <NumberInput label="Audio transcription (seconds)" value={e.media_transcribe_audio_timeout} onChange={v => set("executor.media_transcribe_audio_timeout", v)} min={30} max={600} />
-      <NumberInput label="Text extraction (seconds)" value={e.media_extract_text_timeout} onChange={v => set("executor.media_extract_text_timeout", v)} min={30} max={600} />
-      <NumberInput label="Text-to-speech (seconds)" value={e.media_tts_timeout} onChange={v => set("executor.media_tts_timeout", v)} min={30} max={600} />
-      <NumberInput label="Python execution (seconds)" value={e.run_python_timeout} onChange={v => set("executor.run_python_timeout", v)} min={30} max={600} />
+    <Card title={t("exec.tool_timeouts")}>
+      <NumberInput label={t("exec.image_timeout")} value={e.media_analyze_image_timeout} onChange={v => set("executor.media_analyze_image_timeout", v)} min={30} max={600} desc={t("exec.image_timeout_desc")} />
+      <NumberInput label={t("exec.audio_timeout")} value={e.media_transcribe_audio_timeout} onChange={v => set("executor.media_transcribe_audio_timeout", v)} min={30} max={600} />
+      <NumberInput label={t("exec.text_timeout")} value={e.media_extract_text_timeout} onChange={v => set("executor.media_extract_text_timeout", v)} min={30} max={600} />
+      <NumberInput label={t("exec.tts_timeout")} value={e.media_tts_timeout} onChange={v => set("executor.media_tts_timeout", v)} min={30} max={600} />
+      <NumberInput label={t("exec.python_timeout")} value={e.run_python_timeout} onChange={v => set("executor.run_python_timeout", v)} min={30} max={600} />
     </Card>
   </>);
 }
@@ -1221,42 +1221,42 @@ function ExecutorPage({ cfg, set }) {
 function WebPage({ cfg, set }) {
   const w = cfg.web || {};
   return (<>
-    <Section title="Web Tools" desc="Search backends, limits, rate limiting, HTTP requests" />
-    <Card title="SearXNG (Self-hosted)">
-      <TextInput label="SearXNG URL" value={w.searxng_url} onChange={v => set("web.searxng_url", v)} mono placeholder="http://localhost:8888" desc="Highest priority" />
+    <Section title={t("web.title")} desc={t("web.desc")} />
+    <Card title={t("web.searxng")}>
+      <TextInput label={t("web.searxng_url")} value={w.searxng_url} onChange={v => set("web.searxng_url", v)} mono placeholder="http://localhost:8888" desc={t("web.searxng_desc")} />
     </Card>
-    <Card title="Brave Search">
-      <TextInput label="API Key" value={w.brave_api_key} onChange={v => set("web.brave_api_key", v)} type="password" desc="2000 requests/month free" />
+    <Card title={t("web.brave")}>
+      <TextInput label={t("web.brave_key")} value={w.brave_api_key} onChange={v => set("web.brave_api_key", v)} type="password" desc={t("web.brave_desc")} />
     </Card>
-    <Card title="Google Custom Search Engine">
-      <TextInput label="API Key" value={w.google_cse_api_key} onChange={v => set("web.google_cse_api_key", v)} type="password" desc="100 requests/day free" />
-      <TextInput label="Search Engine ID (cx)" value={w.google_cse_cx} onChange={v => set("web.google_cse_cx", v)} mono placeholder="a1b2c3d4e5f6g7h8i" />
+    <Card title={t("web.google")}>
+      <TextInput label={t("web.google_key")} value={w.google_cse_api_key} onChange={v => set("web.google_cse_api_key", v)} type="password" desc={t("web.google_desc")} />
+      <TextInput label={t("web.google_cx")} value={w.google_cse_cx} onChange={v => set("web.google_cse_cx", v)} mono placeholder="a1b2c3d4e5f6g7h8i" />
     </Card>
-    <Card title="Jina AI Reader">
-      <TextInput label="API Key" value={w.jina_api_key} onChange={v => set("web.jina_api_key", v)} type="password" desc="Optional — free tier works without key" />
+    <Card title={t("web.jina")}>
+      <TextInput label={t("web.jina_key")} value={w.jina_api_key} onChange={v => set("web.jina_api_key", v)} type="password" desc={t("web.jina_desc")} />
     </Card>
-    <Card title="DuckDuckGo">
-      <Toggle label="DuckDuckGo enabled" value={w.duckduckgo_enabled} onChange={v => set("web.duckduckgo_enabled", v)} desc="Free fallback" />
-      <SliderInput label="Min delay (seconds)" value={w.ddg_min_delay_seconds} onChange={v => set("web.ddg_min_delay_seconds", v)} min={0.5} max={10} step={0.5} desc="Rate limiting between DuckDuckGo searches" />
-      <NumberInput label="Rate limit wait (seconds)" value={w.ddg_ratelimit_wait_seconds} onChange={v => set("web.ddg_ratelimit_wait_seconds", v)} min={5} max={120} desc="Wait time on 429 error" />
-      <NumberInput label="Cache TTL (seconds)" value={w.ddg_cache_ttl_seconds} onChange={v => set("web.ddg_cache_ttl_seconds", v)} min={60} max={86400} desc="How long search results are cached" />
+    <Card title={t("web.ddg")}>
+      <Toggle label={t("web.ddg_enabled")} value={w.duckduckgo_enabled} onChange={v => set("web.duckduckgo_enabled", v)} desc={t("web.ddg_enabled_desc")} />
+      <SliderInput label={t("web.ddg_delay")} value={w.ddg_min_delay_seconds} onChange={v => set("web.ddg_min_delay_seconds", v)} min={0.5} max={10} step={0.5} desc={t("web.ddg_delay_desc")} />
+      <NumberInput label={t("web.ddg_wait")} value={w.ddg_ratelimit_wait_seconds} onChange={v => set("web.ddg_ratelimit_wait_seconds", v)} min={5} max={120} desc={t("web.ddg_wait_desc")} />
+      <NumberInput label={t("web.ddg_cache")} value={w.ddg_cache_ttl_seconds} onChange={v => set("web.ddg_cache_ttl_seconds", v)} min={60} max={86400} desc={t("web.ddg_cache_desc")} />
     </Card>
-    <Card title="Fetch Limits">
-      <NumberInput label="Max fetch size (bytes)" value={w.max_fetch_bytes} onChange={v => set("web.max_fetch_bytes", v)} min={10000} max={10000000} desc="Maximum response size for URL fetch" />
-      <NumberInput label="Max text chars" value={w.max_text_chars} onChange={v => set("web.max_text_chars", v)} min={1000} max={200000} desc="Maximum character count of extracted text" />
-      <NumberInput label="Fetch timeout (seconds)" value={w.fetch_timeout_seconds} onChange={v => set("web.fetch_timeout_seconds", v)} min={5} max={120} />
-      <NumberInput label="Search timeout (seconds)" value={w.search_timeout_seconds} onChange={v => set("web.search_timeout_seconds", v)} min={5} max={60} />
-      <NumberInput label="Max search results" value={w.max_search_results} onChange={v => set("web.max_search_results", v)} min={1} max={50} />
-      <NumberInput label="search_and_read max chars/page" value={w.search_and_read_max_chars} onChange={v => set("web.search_and_read_max_chars", v)} min={1000} max={50000} />
+    <Card title={t("web.fetch_limits")}>
+      <NumberInput label={t("web.max_fetch")} value={w.max_fetch_bytes} onChange={v => set("web.max_fetch_bytes", v)} min={10000} max={10000000} desc={t("web.max_fetch_desc")} />
+      <NumberInput label={t("web.max_text")} value={w.max_text_chars} onChange={v => set("web.max_text_chars", v)} min={1000} max={200000} desc={t("web.max_text_desc")} />
+      <NumberInput label={t("web.fetch_timeout")} value={w.fetch_timeout_seconds} onChange={v => set("web.fetch_timeout_seconds", v)} min={5} max={120} />
+      <NumberInput label={t("web.search_timeout")} value={w.search_timeout_seconds} onChange={v => set("web.search_timeout_seconds", v)} min={5} max={60} />
+      <NumberInput label={t("web.max_results")} value={w.max_search_results} onChange={v => set("web.max_search_results", v)} min={1} max={50} />
+      <NumberInput label={t("web.sar_chars")} value={w.search_and_read_max_chars} onChange={v => set("web.search_and_read_max_chars", v)} min={1000} max={50000} />
     </Card>
-    <Card title="HTTP Request Tool">
-      <NumberInput label="Max body size (bytes)" value={w.http_request_max_body_bytes} onChange={v => set("web.http_request_max_body_bytes", v)} min={1024} max={10485760} desc="Maximum request body size" />
-      <NumberInput label="Default timeout (seconds)" value={w.http_request_timeout_seconds} onChange={v => set("web.http_request_timeout_seconds", v)} min={1} max={120} />
-      <SliderInput label="Rate limit (seconds)" value={w.http_request_rate_limit_seconds} onChange={v => set("web.http_request_rate_limit_seconds", v)} min={0} max={30} step={0.5} desc="Minimum interval between requests. 0 = no limit." />
+    <Card title={t("web.http")}>
+      <NumberInput label={t("web.http_body")} value={w.http_request_max_body_bytes} onChange={v => set("web.http_request_max_body_bytes", v)} min={1024} max={10485760} desc={t("web.http_body_desc")} />
+      <NumberInput label={t("web.http_timeout")} value={w.http_request_timeout_seconds} onChange={v => set("web.http_request_timeout_seconds", v)} min={1} max={120} />
+      <SliderInput label={t("web.http_rate")} value={w.http_request_rate_limit_seconds} onChange={v => set("web.http_request_rate_limit_seconds", v)} min={0} max={30} step={0.5} desc={t("web.http_rate_desc")} />
     </Card>
-    <Card title="Domain Filter">
-      <DomainListInput label="Blocklist" value={w.domain_blocklist} onChange={v => set("web.domain_blocklist", v)} placeholder="example.com" desc="These domains are blocked during fetch" />
-      <DomainListInput label="Allowlist" value={w.domain_allowlist} onChange={v => set("web.domain_allowlist", v)} placeholder="trusted.com" desc="If not empty: ONLY these domains are allowed (whitelist)" />
+    <Card title={t("web.domain_filter")}>
+      <DomainListInput label={t("web.blocklist")} value={w.domain_blocklist} onChange={v => set("web.domain_blocklist", v)} placeholder="example.com" desc={t("web.blocklist_desc")} />
+      <DomainListInput label={t("web.allowlist")} value={w.domain_allowlist} onChange={v => set("web.domain_allowlist", v)} placeholder="trusted.com" desc={t("web.allowlist_desc")} />
     </Card>
   </>);
 }
@@ -1293,68 +1293,68 @@ function McpPage({ cfg, set, mcpServers, setMcpServers, a2a, setA2a, setValidati
   };
 
   return (<>
-    <Section title="Integrations" desc="Model Context Protocol (MCP) Server + Agent-to-Agent Communication (A2A)" />
-    <Card title="MCP Server Mode">
-      <SelectInput label="Mode" value={mcpServers.mode || "disabled"} onChange={v => setMcpServers({...mcpServers, mode: v})} options={["disabled","stdio","http","both"]} desc="Expose Jarvis as MCP server" />
+    <Section title={t("mcp.title")} desc={t("mcp.desc")} />
+    <Card title={t("mcp.server_mode")}>
+      <SelectInput label={t("mcp.mode")} value={mcpServers.mode || "disabled"} onChange={v => setMcpServers({...mcpServers, mode: v})} options={["disabled","stdio","http","both"]} desc={t("mcp.mode_desc")} />
       {mcpServers.mode !== "disabled" && <>
-        <TextInput label="HTTP Host" value={mcpServers.http_host || "127.0.0.1"} onChange={v => setMcpServers({...mcpServers, http_host: v})} mono />
-        <NumberInput label="HTTP Port" value={mcpServers.http_port || 3001} onChange={v => setMcpServers({...mcpServers, http_port: v})} min={1024} max={65535} />
-        <TextInput label="Server-Name" value={mcpServers.server_name || "jarvis"} onChange={v => setMcpServers({...mcpServers, server_name: v})} />
-        <Toggle label="Auth required" value={mcpServers.require_auth} onChange={v => setMcpServers({...mcpServers, require_auth: v})} />
-        <TextInput label="Auth Token" value={mcpServers.auth_token || ""} onChange={v => setMcpServers({...mcpServers, auth_token: v})} type="password" />
-        <Toggle label="Expose tools" value={mcpServers.expose_tools !== false} onChange={v => setMcpServers({...mcpServers, expose_tools: v})} />
-        <Toggle label="Expose resources" value={mcpServers.expose_resources !== false} onChange={v => setMcpServers({...mcpServers, expose_resources: v})} />
-        <Toggle label="Expose prompts" value={mcpServers.expose_prompts !== false} onChange={v => setMcpServers({...mcpServers, expose_prompts: v})} />
-        <Toggle label="Sampling enabled" value={mcpServers.enable_sampling} onChange={v => setMcpServers({...mcpServers, enable_sampling: v})} />
+        <TextInput label={t("mcp.http_host")} value={mcpServers.http_host || "127.0.0.1"} onChange={v => setMcpServers({...mcpServers, http_host: v})} mono />
+        <NumberInput label={t("mcp.http_port")} value={mcpServers.http_port || 3001} onChange={v => setMcpServers({...mcpServers, http_port: v})} min={1024} max={65535} />
+        <TextInput label={t("mcp.server_name")} value={mcpServers.server_name || "jarvis"} onChange={v => setMcpServers({...mcpServers, server_name: v})} />
+        <Toggle label={t("mcp.auth_required")} value={mcpServers.require_auth} onChange={v => setMcpServers({...mcpServers, require_auth: v})} />
+        <TextInput label={t("mcp.auth_token")} value={mcpServers.auth_token || ""} onChange={v => setMcpServers({...mcpServers, auth_token: v})} type="password" />
+        <Toggle label={t("mcp.expose_tools")} value={mcpServers.expose_tools !== false} onChange={v => setMcpServers({...mcpServers, expose_tools: v})} />
+        <Toggle label={t("mcp.expose_resources")} value={mcpServers.expose_resources !== false} onChange={v => setMcpServers({...mcpServers, expose_resources: v})} />
+        <Toggle label={t("mcp.expose_prompts")} value={mcpServers.expose_prompts !== false} onChange={v => setMcpServers({...mcpServers, expose_prompts: v})} />
+        <Toggle label={t("mcp.sampling")} value={mcpServers.enable_sampling} onChange={v => setMcpServers({...mcpServers, enable_sampling: v})} />
       </>}
     </Card>
-    <Card title="External MCP Servers">
-      <div className="cc-desc" style={{marginBottom:16}}>Connected external MCP servers (tools & resources)</div>
+    <Card title={t("mcp.external")}>
+      <div className="cc-desc" style={{marginBottom:16}}>{t("mcp.external_desc")}</div>
       {extServerNames.map(name => {
         const srv = extServers[name];
         return (
           <div key={name} style={{ border: "1px solid var(--border)", padding: 12, borderRadius: 6, marginBottom: 12 }}>
             <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
               <div style={{ flex: 1 }}>
-                <TextInput label="Server Name" value={name} onChange={v => updateExtServer(name, v, srv)} mono />
+                <TextInput label={t("mcp.srv_name")} value={name} onChange={v => updateExtServer(name, v, srv)} mono />
               </div>
-              <button className="cc-btn cc-btn-danger" onClick={() => removeExtServer(name)} style={{ marginTop: 22 }}>Delete</button>
+              <button className="cc-btn cc-btn-danger" onClick={() => removeExtServer(name)} style={{ marginTop: 22 }}>{t("mcp.delete")}</button>
             </div>
-            <TextInput label="Command" value={srv.command || ""} onChange={v => updateExtServer(name, name, { ...srv, command: v })} mono placeholder="e.g. npx, uvx, python" />
-            <ListInput label="Arguments" value={srv.args || []} onChange={v => updateExtServer(name, name, { ...srv, args: v })} placeholder="e.g. -y, @modelcontextprotocol/server-sqlite, --db, test.db" />
-            <JsonEditor 
-              label="Environment Variables (JSON)" 
-              value={srv.env || {}} 
-              onChange={v => updateExtServer(name, name, { ...srv, env: v })} 
+            <TextInput label={t("mcp.command")} value={srv.command || ""} onChange={v => updateExtServer(name, name, { ...srv, command: v })} mono placeholder="e.g. npx, uvx, python" />
+            <ListInput label={t("mcp.arguments")} value={srv.args || []} onChange={v => updateExtServer(name, name, { ...srv, args: v })} placeholder="e.g. -y, @modelcontextprotocol/server-sqlite, --db, test.db" />
+            <JsonEditor
+              label={t("mcp.env_vars")}
+              value={srv.env || {}}
+              onChange={v => updateExtServer(name, name, { ...srv, env: v })}
               onValidationError={err => setValidationErrors(prev => ({ ...prev, [`mcp_env_${name}`]: err }))}
-              rows={2} 
+              rows={2}
             />
-            <ListInput label="Always Allow (Tools)" value={srv.always_allow || []} onChange={v => updateExtServer(name, name, { ...srv, always_allow: v })} placeholder="e.g. read_query" />
-            <Toggle label="Disabled" value={srv.disabled || false} onChange={v => updateExtServer(name, name, { ...srv, disabled: v })} />
+            <ListInput label={t("mcp.always_allow")} value={srv.always_allow || []} onChange={v => updateExtServer(name, name, { ...srv, always_allow: v })} placeholder="e.g. read_query" />
+            <Toggle label={t("mcp.disabled")} value={srv.disabled || false} onChange={v => updateExtServer(name, name, { ...srv, disabled: v })} />
           </div>
         );
       })}
-      <button className="cc-btn" onClick={addExtServer}>+ Add server</button>
+      <button className="cc-btn" onClick={addExtServer}>{t("mcp.add_server")}</button>
     </Card>
-    <Card title="A2A Protocol">
-      <Toggle label="A2A enabled" value={a2a.enabled} onChange={v => setA2a({...a2a, enabled: v})} desc="Agent-to-agent communication (Linux Foundation A2A RC v1.0)" />
+    <Card title={t("mcp.a2a")}>
+      <Toggle label={t("mcp.a2a_enabled")} value={a2a.enabled} onChange={v => setA2a({...a2a, enabled: v})} desc={t("mcp.a2a_desc")} />
       {a2a.enabled && <>
-        <TextInput label="Host" value={a2a.host || "127.0.0.1"} onChange={v => setA2a({...a2a, host: v})} mono />
-        <NumberInput label="Port" value={a2a.port || 3002} onChange={v => setA2a({...a2a, port: v})} min={1024} max={65535} />
-        <TextInput label="Agent Name" value={a2a.agent_name || "Jarvis"} onChange={v => setA2a({...a2a, agent_name: v})} />
-        <TextInput label="Description" value={a2a.agent_description || ""} onChange={v => setA2a({...a2a, agent_description: v})} />
-        <Toggle label="Auth required" value={a2a.require_auth} onChange={v => setA2a({...a2a, require_auth: v})} />
-        <TextInput label="Auth Token" value={a2a.auth_token || ""} onChange={v => setA2a({...a2a, auth_token: v})} type="password" />
-        <NumberInput label="Max Tasks" value={a2a.max_tasks || 100} onChange={v => setA2a({...a2a, max_tasks: v})} min={1} max={1000} />
-        <NumberInput label="Task Timeout (Sek.)" value={a2a.task_timeout_seconds || 3600} onChange={v => setA2a({...a2a, task_timeout_seconds: v})} min={60} max={86400} />
-        <Toggle label="Streaming" value={a2a.enable_streaming} onChange={v => setA2a({...a2a, enable_streaming: v})} />
-        <Toggle label="Push Notifications" value={a2a.enable_push} onChange={v => setA2a({...a2a, enable_push: v})} />
-        <JsonEditor 
-          label="Remotes (JSON Array)" 
-          value={a2a.remotes || []} 
-          onChange={v => setA2a({...a2a, remotes: v})} 
+        <TextInput label={t("mcp.a2a_host")} value={a2a.host || "127.0.0.1"} onChange={v => setA2a({...a2a, host: v})} mono />
+        <NumberInput label={t("mcp.a2a_port")} value={a2a.port || 3002} onChange={v => setA2a({...a2a, port: v})} min={1024} max={65535} />
+        <TextInput label={t("mcp.a2a_name")} value={a2a.agent_name || "Jarvis"} onChange={v => setA2a({...a2a, agent_name: v})} />
+        <TextInput label={t("mcp.a2a_description")} value={a2a.agent_description || ""} onChange={v => setA2a({...a2a, agent_description: v})} />
+        <Toggle label={t("mcp.auth_required")} value={a2a.require_auth} onChange={v => setA2a({...a2a, require_auth: v})} />
+        <TextInput label={t("mcp.auth_token")} value={a2a.auth_token || ""} onChange={v => setA2a({...a2a, auth_token: v})} type="password" />
+        <NumberInput label={t("mcp.a2a_max_tasks")} value={a2a.max_tasks || 100} onChange={v => setA2a({...a2a, max_tasks: v})} min={1} max={1000} />
+        <NumberInput label={t("mcp.a2a_task_timeout")} value={a2a.task_timeout_seconds || 3600} onChange={v => setA2a({...a2a, task_timeout_seconds: v})} min={60} max={86400} />
+        <Toggle label={t("mcp.a2a_streaming")} value={a2a.enable_streaming} onChange={v => setA2a({...a2a, enable_streaming: v})} />
+        <Toggle label={t("mcp.a2a_push")} value={a2a.enable_push} onChange={v => setA2a({...a2a, enable_push: v})} />
+        <JsonEditor
+          label={t("mcp.a2a_remotes")}
+          value={a2a.remotes || []}
+          onChange={v => setA2a({...a2a, remotes: v})}
           onValidationError={err => setValidationErrors(prev => ({ ...prev, a2a_remotes: err }))}
-          rows={3} 
+          rows={3}
           desc='List of remote agents: [{"endpoint": "http://...", "auth_token": ""}]'
         />
       </>}
@@ -1370,38 +1370,38 @@ function CronPage({ cfg, set, cronJobs, setCronJobs }) {
     setCronJobs(prev => prev.map((j, idx) => idx === i ? { ...j, [field]: v } : j));
   }, [setCronJobs]);
   return (<>
-    <Section title="Cron & Heartbeat" desc="Periodic tasks, heartbeat checklist, plugins" />
-    <Card title="Heartbeat">
-      <Toggle label="Heartbeat enabled" value={cfg.heartbeat?.enabled} onChange={v => set("heartbeat.enabled", v)} desc="Periodic system checks" />
-      <NumberInput label="Interval (min)" value={cfg.heartbeat?.interval_minutes} onChange={v => set("heartbeat.interval_minutes", v)} min={1} max={1440} />
-      <TextInput label="Checklist file" value={cfg.heartbeat?.checklist_file} onChange={v => set("heartbeat.checklist_file", v)} mono desc="Relative to jarvis_home" />
-      <SelectInput label="Channel" value={cfg.heartbeat?.channel} onChange={v => set("heartbeat.channel", v)} options={["cli","telegram","webui","slack","discord","whatsapp","mattermost","google_chat"]} />
-      <TextInput label="Model" value={cfg.heartbeat?.model} onChange={v => set("heartbeat.model", v)} mono />
+    <Section title={t("cron.title")} desc={t("cron.desc")} />
+    <Card title={t("cron.heartbeat")}>
+      <Toggle label={t("cron.hb_enabled")} value={cfg.heartbeat?.enabled} onChange={v => set("heartbeat.enabled", v)} desc={t("cron.hb_enabled_desc")} />
+      <NumberInput label={t("cron.hb_interval")} value={cfg.heartbeat?.interval_minutes} onChange={v => set("heartbeat.interval_minutes", v)} min={1} max={1440} />
+      <TextInput label={t("cron.hb_file")} value={cfg.heartbeat?.checklist_file} onChange={v => set("heartbeat.checklist_file", v)} mono desc={t("cron.hb_file_desc")} />
+      <SelectInput label={t("cron.hb_channel")} value={cfg.heartbeat?.channel} onChange={v => set("heartbeat.channel", v)} options={["cli","telegram","webui","slack","discord","whatsapp","mattermost","google_chat"]} />
+      <TextInput label={t("cron.hb_model")} value={cfg.heartbeat?.model} onChange={v => set("heartbeat.model", v)} mono />
     </Card>
-    <Card title="Cron-Jobs">
+    <Card title={t("cron.jobs")}>
       {cronJobs.map((job, i) => (
         <div key={i} className="cc-cron-job">
           <div className="cc-field-row" style={{marginBottom:8}}>
             <strong className="cc-label" style={{margin:0}}>{job.name}</strong>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <Toggle label="" value={job.enabled} onChange={v => updCron(i, "enabled", v)} />
-              <button className="cc-btn-icon" onClick={() => setCronJobs(prev => prev.filter((_,j) => j!==i))} type="button" title="Delete job">{I.trash}</button>
+              <button className="cc-btn-icon" onClick={() => setCronJobs(prev => prev.filter((_,j) => j!==i))} type="button" title={t("cron.delete_job")}>{I.trash}</button>
             </div>
           </div>
-          <TextInput label="Name" value={job.name} onChange={v => updCron(i, "name", v)} mono />
-          <TextInput label="Schedule (Cron)" value={job.schedule} onChange={v => updCron(i, "schedule", v)} mono placeholder="0 7 * * 1-5" />
+          <TextInput label={t("cron.name")} value={job.name} onChange={v => updCron(i, "name", v)} mono />
+          <TextInput label={t("cron.schedule")} value={job.schedule} onChange={v => updCron(i, "schedule", v)} mono placeholder="0 7 * * 1-5" />
           {job.schedule && <div className="cc-cron-preview">⏰ {cronToHuman(job.schedule)}</div>}
-          <TextArea label="Prompt" value={job.prompt} onChange={v => updCron(i, "prompt", v)} rows={4} />
-          <SelectInput label="Channel" value={job.channel} onChange={v => updCron(i, "channel", v)} options={["telegram","cli","webui","slack","discord","whatsapp","mattermost","google_chat"]} />
-          <TextInput label="Model" value={job.model} onChange={v => updCron(i, "model", v)} mono />
-          <TextInput label="Agent" value={job.agent || ""} onChange={v => updCron(i, "agent", v)} placeholder="(empty = default routing)" />
+          <TextArea label={t("cron.prompt")} value={job.prompt} onChange={v => updCron(i, "prompt", v)} rows={4} />
+          <SelectInput label={t("cron.channel")} value={job.channel} onChange={v => updCron(i, "channel", v)} options={["telegram","cli","webui","slack","discord","whatsapp","mattermost","google_chat"]} />
+          <TextInput label={t("cron.model")} value={job.model} onChange={v => updCron(i, "model", v)} mono />
+          <TextInput label={t("cron.agent")} value={job.agent || ""} onChange={v => updCron(i, "agent", v)} placeholder={t("cron.agent_placeholder")} />
         </div>
       ))}
-      <button className="cc-btn" onClick={() => setCronJobs([...cronJobs, { name: `job_${cronJobs.length+1}`, schedule: "0 9 * * *", prompt: "", channel: "cli", model: "qwen3:8b", enabled: false, agent: "" }])} type="button">{I.plus} Add new job</button>
+      <button className="cc-btn" onClick={() => setCronJobs([...cronJobs, { name: `job_${cronJobs.length+1}`, schedule: "0 9 * * *", prompt: "", channel: "cli", model: "qwen3:8b", enabled: false, agent: "" }])} type="button">{I.plus} {t("cron.add_job")}</button>
     </Card>
-    <Card title="Plugins">
-      <TextInput label="Skills directory" value={cfg.plugins?.skills_dir} onChange={v => set("plugins.skills_dir", v)} mono desc="Relative to jarvis_home" />
-      <Toggle label="Auto-update" value={cfg.plugins?.auto_update} onChange={v => set("plugins.auto_update", v)} desc="Automatic plugin updates on startup" />
+    <Card title={t("cron.plugins")}>
+      <TextInput label={t("cron.skills_dir")} value={cfg.plugins?.skills_dir} onChange={v => set("plugins.skills_dir", v)} mono desc={t("cron.skills_desc")} />
+      <Toggle label={t("cron.auto_update")} value={cfg.plugins?.auto_update} onChange={v => set("plugins.auto_update", v)} desc={t("cron.auto_update_desc")} />
     </Card>
   </>);
 }
@@ -1410,11 +1410,11 @@ function CronPage({ cfg, set, cronJobs, setCronJobs }) {
 function LoggingPage({ cfg, set }) {
   const l = cfg.logging || {};
   return (<>
-    <Section title="Logging" desc="Logging and debugging" />
-    <Card title="General">
-      <SelectInput label="Log level" value={l.level} onChange={v => set("logging.level", v)} options={["DEBUG","INFO","WARNING","ERROR","CRITICAL"]} />
-      <Toggle label="JSON logs" value={l.json_logs} onChange={v => set("logging.json_logs", v)} desc="Structured JSON logs for external tools" />
-      <Toggle label="Console output" value={l.console} onChange={v => set("logging.console", v)} desc="Output logs to console" />
+    <Section title={t("log.title")} desc={t("log.desc")} />
+    <Card title={t("log.general")}>
+      <SelectInput label={t("log.level")} value={l.level} onChange={v => set("logging.level", v)} options={["DEBUG","INFO","WARNING","ERROR","CRITICAL"]} />
+      <Toggle label={t("log.json")} value={l.json_logs} onChange={v => set("logging.json_logs", v)} desc={t("log.json_desc")} />
+      <Toggle label={t("log.console")} value={l.console} onChange={v => set("logging.console", v)} desc={t("log.console_desc")} />
     </Card>
   </>);
 }
@@ -1423,35 +1423,33 @@ function LoggingPage({ cfg, set }) {
 function DatabasePage({ cfg, set }) {
   const d = cfg.database || {};
   return (<>
-    <Section title="Database" desc="Storage backend for memory, logs and state" />
-    <Card title="Connection">
-      <SelectInput label="Backend" value={d.backend} onChange={v => set("database.backend", v)} options={[{value:"sqlite",label:"SQLite (Standard)"},{value:"postgresql",label:"PostgreSQL"}]} />
+    <Section title={t("db.title")} desc={t("db.desc")} />
+    <Card title={t("db.connection")}>
+      <SelectInput label={t("db.backend")} value={d.backend} onChange={v => set("database.backend", v)} options={[{value:"sqlite",label:"SQLite (Standard)"},{value:"postgresql",label:"PostgreSQL"}]} />
       {d.backend === "postgresql" && (
         <>
-          <TextInput label="Host" value={d.pg_host} onChange={v => set("database.pg_host", v)} mono />
-          <NumberInput label="Port" value={d.pg_port} onChange={v => set("database.pg_port", v)} min={1} max={65535} />
-          <TextInput label="Database" value={d.pg_dbname} onChange={v => set("database.pg_dbname", v)} mono />
-          <TextInput label="User" value={d.pg_user} onChange={v => set("database.pg_user", v)} mono />
-          <TextInput label="Password" value={d.pg_password} onChange={v => set("database.pg_password", v)} type="password" />
+          <TextInput label={t("db.host")} value={d.pg_host} onChange={v => set("database.pg_host", v)} mono />
+          <NumberInput label={t("db.port")} value={d.pg_port} onChange={v => set("database.pg_port", v)} min={1} max={65535} />
+          <TextInput label={t("db.database")} value={d.pg_dbname} onChange={v => set("database.pg_dbname", v)} mono />
+          <TextInput label={t("db.user")} value={d.pg_user} onChange={v => set("database.pg_user", v)} mono />
+          <TextInput label={t("db.password")} value={d.pg_password} onChange={v => set("database.pg_password", v)} type="password" />
         </>
       )}
     </Card>
     {d.backend === "postgresql" && (
-      <Card title="Connection Pool">
-        <NumberInput label="Pool Min" value={d.pg_pool_min} onChange={v => set("database.pg_pool_min", v)} min={1} max={50} />
-        <NumberInput label="Pool Max" value={d.pg_pool_max} onChange={v => set("database.pg_pool_max", v)} min={1} max={100} />
+      <Card title={t("db.pool")}>
+        <NumberInput label={t("db.pool_min")} value={d.pg_pool_min} onChange={v => set("database.pg_pool_min", v)} min={1} max={50} />
+        <NumberInput label={t("db.pool_max")} value={d.pg_pool_max} onChange={v => set("database.pg_pool_max", v)} min={1} max={100} />
       </Card>
     )}
     {d.backend !== "postgresql" && (
-      <Card title="Encryption" open={false}>
-        <Toggle label="SQLite encryption (SQLCipher)" value={d.encryption_enabled} onChange={v => set("database.encryption_enabled", v)} desc="Encrypts all SQLite databases with SQLCipher. The key is stored securely in the OS keyring." />
+      <Card title={t("db.encryption")} open={false}>
+        <Toggle label={t("db.encryption_enabled")} value={d.encryption_enabled} onChange={v => set("database.encryption_enabled", v)} desc={t("db.encryption_desc")} />
         {d.encryption_enabled && (
           <div className="cc-desc" style={{marginTop:8,lineHeight:1.5}}>
-            The encryption key is managed automatically in the system keyring
-            (Windows Credential Locker / macOS Keychain / Linux SecretService).
-            A new key is generated on first activation.
+            {t("db.encryption_info")}
             <br/><br/>
-            <strong>Prerequisite:</strong> <code style={{fontSize:12,background:"var(--bg3)",padding:"2px 6px",borderRadius:4}}>pip install cognithor[encryption]</code>
+            <strong>{t("db.encryption_prereq")}</strong> <code style={{fontSize:12,background:"var(--bg3)",padding:"2px 6px",borderRadius:4}}>pip install cognithor[encryption]</code>
           </div>
         )}
       </Card>
@@ -1463,24 +1461,24 @@ function DatabasePage({ cfg, set }) {
 // Fix #9: Reset button per textarea
 function PromptsPage({ prompts, setPrompts, defaultPromptsRef }) {
   return (<>
-    <Section title="Prompts & Policies" desc="View and customize system prompts, gatekeeper policies, CORE.md, HEARTBEAT.md" />
-    <Card title="CORE.md — System Personality">
-      <TextArea label="Core Memory (Markdown)" value={prompts.coreMd} onChange={v => setPrompts({...prompts, coreMd: v})} rows={16} desc="Personality, rules and preferences of Jarvis" onReset={() => setPrompts({...prompts, coreMd: defaultPromptsRef.current.coreMd})} resetLabel="Reset CORE.md" />
+    <Section title={t("prompts.title")} desc={t("prompts.subtitle")} />
+    <Card title={t("prompts.core_title")}>
+      <TextArea label={t("prompts.core_desc")} value={prompts.coreMd} onChange={v => setPrompts({...prompts, coreMd: v})} rows={16} desc={t("prompts.core_hint")} onReset={() => setPrompts({...prompts, coreMd: defaultPromptsRef.current.coreMd})} resetLabel={t("prompts.reset")} />
     </Card>
-    <Card title="Planner System-Prompt" open={false}>
+    <Card title={t("prompts.planner")} open={false}>
       <TextArea label="SYSTEM_PROMPT" value={prompts.plannerSystem} onChange={v => setPrompts({...prompts, plannerSystem: v})} rows={20} mono desc="Main prompt — variables: {owner_name}, {tools_section}, {context_section}, {current_datetime}" onReset={() => setPrompts({...prompts, plannerSystem: defaultPromptsRef.current.plannerSystem})} />
     </Card>
-    <Card title="Replan-Prompt" open={false}>
+    <Card title={t("prompts.replan")} open={false}>
       <TextArea label="REPLAN_PROMPT" value={prompts.replanPrompt} onChange={v => setPrompts({...prompts, replanPrompt: v})} rows={12} mono desc="Prompt after tool execution — variables: {results_section}, {original_goal}" onReset={() => setPrompts({...prompts, replanPrompt: defaultPromptsRef.current.replanPrompt})} />
     </Card>
-    <Card title="Eskalations-Prompt" open={false}>
+    <Card title={t("prompts.escalation")} open={false}>
       <TextArea label="ESCALATION_PROMPT" value={prompts.escalationPrompt} onChange={v => setPrompts({...prompts, escalationPrompt: v})} rows={6} mono desc="When a tool is blocked by the gatekeeper — variables: {tool}, {reason}" onReset={() => setPrompts({...prompts, escalationPrompt: defaultPromptsRef.current.escalationPrompt})} />
     </Card>
-    <Card title="Gatekeeper-Policies (YAML)" open={false}>
+    <Card title={t("prompts.gatekeeper")} open={false}>
       <TextArea label="default.yaml" value={prompts.policyYaml} onChange={v => setPrompts({...prompts, policyYaml: v})} rows={20} mono desc="Rules for tool execution: ALLOW, INFORM, APPROVE, MASK, BLOCK" onReset={() => setPrompts({...prompts, policyYaml: defaultPromptsRef.current.policyYaml})} />
     </Card>
-    <Card title="HEARTBEAT.md — Heartbeat Checklist" open={false}>
-      <TextArea label="Heartbeat checklist" value={prompts.heartbeatMd} onChange={v => setPrompts({...prompts, heartbeatMd: v})} rows={10} desc="Periodically executed tasks" onReset={() => setPrompts({...prompts, heartbeatMd: defaultPromptsRef.current.heartbeatMd})} />
+    <Card title={t("prompts.heartbeat")} open={false}>
+      <TextArea label={t("prompts.heartbeat")} value={prompts.heartbeatMd} onChange={v => setPrompts({...prompts, heartbeatMd: v})} rows={10} desc="Periodically executed tasks" onReset={() => setPrompts({...prompts, heartbeatMd: defaultPromptsRef.current.heartbeatMd})} />
     </Card>
   </>);
 }
@@ -1498,24 +1496,24 @@ function AgentsPage({ agents, setAgents }) {
     temperature: null, enabled: true,
   }]);
   return (<>
-    <Section title="Agents" desc="Manage multi-agent profiles — routing, models, permissions" />
+    <Section title={t("agents.title")} desc={t("agents.desc")} />
     {agents.map((a, i) => (
       <Card key={i} title={a.display_name || a.name} badge={a.enabled ? "active" : "inactive"}>
-        <TextInput label="Name (ID)" value={a.name} onChange={v => upd(i, "name", v)} mono error={!a.name ? "Required" : null} />
-        <TextInput label="Display name" value={a.display_name} onChange={v => upd(i, "display_name", v)} />
-        <TextInput label="Description" value={a.description} onChange={v => upd(i, "description", v)} />
-        <TextArea label="System-Prompt" value={a.system_prompt} onChange={v => upd(i, "system_prompt", v)} rows={6} />
-        <SelectInput label="Language" value={a.language} onChange={v => upd(i, "language", v)} options={["de","en","fr","es","it"]} />
-        <NumberInput label="Priority" value={a.priority} onChange={v => upd(i, "priority", v)} min={0} max={100} />
-        <TextInput label="Preferred model" value={a.preferred_model} onChange={v => upd(i, "preferred_model", v)} mono />
-        <SliderInput label="Temperature" value={a.temperature} onChange={v => upd(i, "temperature", v)} min={0} max={2} step={0.1} />
-        <ListInput label="Trigger Keywords" value={a.trigger_keywords} onChange={v => upd(i, "trigger_keywords", v)} />
-        <ListInput label="Blocked tools" value={a.blocked_tools} onChange={v => upd(i, "blocked_tools", v)} />
-        <Toggle label="Enabled" value={a.enabled} onChange={v => upd(i, "enabled", v)} />
-        {a.name !== "jarvis" && <button className="cc-btn cc-btn-danger" onClick={() => setAgents(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} Delete agent</button>}
+        <TextInput label={t("agents.name_id")} value={a.name} onChange={v => upd(i, "name", v)} mono error={!a.name ? t("agents.required") : null} />
+        <TextInput label={t("agents.display_name")} value={a.display_name} onChange={v => upd(i, "display_name", v)} />
+        <TextInput label={t("agents.description")} value={a.description} onChange={v => upd(i, "description", v)} />
+        <TextArea label={t("agents.system_prompt")} value={a.system_prompt} onChange={v => upd(i, "system_prompt", v)} rows={6} />
+        <SelectInput label={t("agents.language")} value={a.language} onChange={v => upd(i, "language", v)} options={["de","en","fr","es","it"]} />
+        <NumberInput label={t("agents.priority")} value={a.priority} onChange={v => upd(i, "priority", v)} min={0} max={100} />
+        <TextInput label={t("agents.preferred_model")} value={a.preferred_model} onChange={v => upd(i, "preferred_model", v)} mono />
+        <SliderInput label={t("agents.temperature")} value={a.temperature} onChange={v => upd(i, "temperature", v)} min={0} max={2} step={0.1} />
+        <ListInput label={t("agents.trigger_keywords")} value={a.trigger_keywords} onChange={v => upd(i, "trigger_keywords", v)} />
+        <ListInput label={t("agents.blocked_tools")} value={a.blocked_tools} onChange={v => upd(i, "blocked_tools", v)} />
+        <Toggle label={t("agents.enabled")} value={a.enabled} onChange={v => upd(i, "enabled", v)} />
+        {a.name !== "jarvis" && <button className="cc-btn cc-btn-danger" onClick={() => setAgents(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} {t("agents.delete")}</button>}
       </Card>
     ))}
-    <button className="cc-btn" onClick={add} type="button">{I.plus} Create new agent</button>
+    <button className="cc-btn" onClick={add} type="button">{I.plus} {t("agents.create")}</button>
   </>);
 }
 
@@ -1530,21 +1528,21 @@ function BindingsPage({ bindings, setBindings, agents }) {
     description: "", channels: [], command_prefixes: [], message_patterns: [], enabled: true,
   }]);
   return (<>
-    <Section title="Bindings" desc="Routing rules: which message goes to which agent?" />
+    <Section title={t("bind.title")} desc={t("bind.desc")} />
     {bindings.map((b, i) => (
       <Card key={i} title={b.name}>
-        <TextInput label="Name" value={b.name} onChange={v => upd(i, "name", v)} mono error={!b.name ? "Required" : null} />
-        <SelectInput label="Target agent" value={b.target_agent} onChange={v => upd(i, "target_agent", v)} options={agents.map(a => a.name)} />
-        <NumberInput label="Priority" value={b.priority} onChange={v => upd(i, "priority", v)} min={0} max={1000} />
-        <TextInput label="Description" value={b.description} onChange={v => upd(i, "description", v)} />
-        <ListInput label="Channels" value={b.channels || []} onChange={v => upd(i, "channels", v)} placeholder="telegram, cli..." />
-        <ListInput label="Command Prefixes" value={b.command_prefixes || []} onChange={v => upd(i, "command_prefixes", v)} placeholder="/briefing, /code..." />
-        <ListInput label="Message Patterns (Regex)" value={b.message_patterns || []} onChange={v => upd(i, "message_patterns", v)} />
-        <Toggle label="Enabled" value={b.enabled} onChange={v => upd(i, "enabled", v)} />
-        <button className="cc-btn cc-btn-danger" onClick={() => setBindings(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} Delete binding</button>
+        <TextInput label={t("bind.name")} value={b.name} onChange={v => upd(i, "name", v)} mono error={!b.name ? t("bind.required") : null} />
+        <SelectInput label={t("bind.target")} value={b.target_agent} onChange={v => upd(i, "target_agent", v)} options={agents.map(a => a.name)} />
+        <NumberInput label={t("bind.priority")} value={b.priority} onChange={v => upd(i, "priority", v)} min={0} max={1000} />
+        <TextInput label={t("bind.description")} value={b.description} onChange={v => upd(i, "description", v)} />
+        <ListInput label={t("bind.channels")} value={b.channels || []} onChange={v => upd(i, "channels", v)} placeholder="telegram, cli..." />
+        <ListInput label={t("bind.prefixes")} value={b.command_prefixes || []} onChange={v => upd(i, "command_prefixes", v)} placeholder="/briefing, /code..." />
+        <ListInput label={t("bind.patterns")} value={b.message_patterns || []} onChange={v => upd(i, "message_patterns", v)} />
+        <Toggle label={t("bind.enabled")} value={b.enabled} onChange={v => upd(i, "enabled", v)} />
+        <button className="cc-btn cc-btn-danger" onClick={() => setBindings(prev => prev.filter((_,j) => j!==i))} type="button">{I.trash} {t("bind.delete")}</button>
       </Card>
     ))}
-    <button className="cc-btn" onClick={add} type="button">{I.plus} New binding</button>
+    <button className="cc-btn" onClick={add} type="button">{I.plus} {t("bind.create")}</button>
   </>);
 }
 
@@ -1553,35 +1551,35 @@ function BindingsPage({ bindings, setBindings, agents }) {
 function SystemPage({ cfg, onRestart, onExport, onImport, restartState, onResetDefaults }) {
   const fileRef = useRef(null);
   return (<>
-    <Section title="System" desc="Restart, export/import, factory reset" />
-    <Card title="Restart Cognithor">
-      <p className="cc-desc">Cleanly shuts down Cognithor (save sessions, stop channels, flush memory) and restarts with the current configuration.</p>
+    <Section title={t("sys.title")} desc={t("sys.desc")} />
+    <Card title={t("sys.restart")}>
+      <p className="cc-desc">{t("sys.restart_desc")}</p>
       <button
         className={`cc-btn cc-btn-restart ${restartState === "restarting" ? "pulsing" : ""}`}
         onClick={onRestart}
         disabled={restartState === "restarting"}
         type="button"
       >
-        {restartState === "restarting" ? "Restarting..." : restartState === "done" ? "Restarted!" : <>{I.restart} Restart Cognithor</>}
+        {restartState === "restarting" ? t("sys.restarting") : restartState === "done" ? t("sys.restarted") : <>{I.restart} {t("sys.restart_btn")}</>}
       </button>
     </Card>
-    <Card title="Export & Import">
+    <Card title={t("sys.export_import")}>
       <div className="cc-export-row">
-        <button className="cc-btn" onClick={onExport} type="button">{I.save} Export configuration</button>
-        <button className="cc-btn" onClick={() => fileRef.current?.click()} type="button">{I.upload} Import configuration</button>
+        <button className="cc-btn" onClick={onExport} type="button">{I.save} {t("sys.export")}</button>
+        <button className="cc-btn" onClick={() => fileRef.current?.click()} type="button">{I.upload} {t("sys.import")}</button>
         <input ref={fileRef} type="file" accept=".json" style={{display:"none"}} onChange={e => { if (e.target.files[0]) onImport(e.target.files[0]); e.target.value = ""; }} />
       </div>
     </Card>
-    <Card title="Factory Reset">
-      <p className="cc-desc">Resets all configuration settings to defaults. API keys and stored data (memory, skills, workflows) are preserved.</p>
-      <button className="cc-btn cc-btn-danger" onClick={onResetDefaults} type="button">{I.reset} Reset all settings</button>
+    <Card title={t("sys.factory_reset")}>
+      <p className="cc-desc">{t("sys.factory_desc")}</p>
+      <button className="cc-btn cc-btn-danger" onClick={onResetDefaults} type="button">{I.reset} {t("sys.factory_btn")}</button>
     </Card>
-    <Card title="System Info">
+    <Card title={t("sys.info")}>
       <div className="cc-info-grid">
-        <div className="cc-info-item"><span className="cc-info-label">Version</span><span className="cc-info-val">{cfg.version}</span></div>
-        <div className="cc-info-item"><span className="cc-info-label">Backend</span><span className="cc-info-val">{cfg.llm_backend_type}</span></div>
-        <div className="cc-info-item"><span className="cc-info-label">Owner</span><span className="cc-info-val">{cfg.owner_name}</span></div>
-        <div className="cc-info-item"><span className="cc-info-label">Mode</span><span className="cc-info-val">{cfg.operation_mode}</span></div>
+        <div className="cc-info-item"><span className="cc-info-label">{t("sys.info_version")}</span><span className="cc-info-val">{cfg.version}</span></div>
+        <div className="cc-info-item"><span className="cc-info-label">{t("sys.info_backend")}</span><span className="cc-info-val">{cfg.llm_backend_type}</span></div>
+        <div className="cc-info-item"><span className="cc-info-label">{t("sys.info_owner")}</span><span className="cc-info-val">{cfg.owner_name}</span></div>
+        <div className="cc-info-item"><span className="cc-info-label">{t("sys.info_mode")}</span><span className="cc-info-val">{cfg.operation_mode}</span></div>
       </div>
     </Card>
   </>);

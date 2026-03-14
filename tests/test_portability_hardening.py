@@ -7,13 +7,11 @@ Proves each fix works cross-platform without requiring external services
 from __future__ import annotations
 
 import io
-import sys
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 
 # ============================================================================
 # Fix 1: [all] extra — voice/postgresql removed, webrtcvad removed
@@ -293,7 +291,7 @@ class TestFix4LlmUnreachableWarning:
             if _backend == "ollama":
                 _ollama_url = config.ollama.base_url
                 print(f"  Ollama antwortet nicht unter {_ollama_url}", file=captured)
-                print(f"    ollama serve", file=captured)
+                print("    ollama serve", file=captured)
                 print(f"    ollama pull {config.models.planner.name}", file=captured)
 
         output = captured.getvalue()

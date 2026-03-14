@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 from jarvis.channels.feishu import FeishuChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from jarvis.models import OutgoingMessage
 
 
 class TestFeishuChannel:

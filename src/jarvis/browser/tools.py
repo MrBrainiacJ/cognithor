@@ -19,13 +19,15 @@ der LLM für Folge-Aktionen nutzen kann.
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.browser.agent import BrowserAgent
-from jarvis.browser.types import (
-    BrowserConfig,
-)
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.browser.types import (
+        BrowserConfig,
+    )
 
 log = get_logger(__name__)
 

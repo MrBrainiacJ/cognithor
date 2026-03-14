@@ -29,32 +29,32 @@ def apply_phase(target: object, result: PhaseResult) -> None:
 # Re-exports from all phase modules
 # ---------------------------------------------------------------------------
 
-from jarvis.gateway.phases.core import declare_core_attrs, init_core  # noqa: E402
-from jarvis.gateway.phases.security import declare_security_attrs, init_security  # noqa: E402
-from jarvis.gateway.phases.tools import declare_tools_attrs, init_tools  # noqa: E402
-from jarvis.gateway.phases.memory import declare_memory_attrs, init_memory  # noqa: E402
-from jarvis.gateway.phases.pge import declare_pge_attrs, init_pge  # noqa: E402
-from jarvis.gateway.phases.agents import declare_agents_attrs, init_agents  # noqa: E402
-from jarvis.gateway.phases.compliance import declare_compliance_attrs, init_compliance  # noqa: E402
-from jarvis.gateway.phases.advanced import declare_advanced_attrs, init_advanced  # noqa: E402
+from jarvis.gateway.phases.advanced import declare_advanced_attrs, init_advanced
+from jarvis.gateway.phases.agents import declare_agents_attrs, init_agents
+from jarvis.gateway.phases.compliance import declare_compliance_attrs, init_compliance
+from jarvis.gateway.phases.core import declare_core_attrs, init_core
+from jarvis.gateway.phases.memory import declare_memory_attrs, init_memory
+from jarvis.gateway.phases.pge import declare_pge_attrs, init_pge
+from jarvis.gateway.phases.security import declare_security_attrs, init_security
+from jarvis.gateway.phases.tools import declare_tools_attrs, init_tools
 
 __all__ = [
     "PhaseResult",
     "apply_phase",
-    "declare_core_attrs",
-    "init_core",
-    "declare_security_attrs",
-    "init_security",
-    "declare_tools_attrs",
-    "init_tools",
-    "declare_memory_attrs",
-    "init_memory",
-    "declare_pge_attrs",
-    "init_pge",
-    "declare_agents_attrs",
-    "init_agents",
-    "declare_compliance_attrs",
-    "init_compliance",
     "declare_advanced_attrs",
+    "declare_agents_attrs",
+    "declare_compliance_attrs",
+    "declare_core_attrs",
+    "declare_memory_attrs",
+    "declare_pge_attrs",
+    "declare_security_attrs",
+    "declare_tools_attrs",
     "init_advanced",
+    "init_agents",
+    "init_compliance",
+    "init_core",
+    "init_memory",
+    "init_pge",
+    "init_security",
+    "init_tools",
 ]

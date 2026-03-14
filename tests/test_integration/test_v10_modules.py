@@ -8,20 +8,15 @@ Prüft:
 
 from __future__ import annotations
 
-import pytest
-from typing import Any
-
 # ============================================================================
 # 1. AI Agent Security Framework
 # ============================================================================
-
 from jarvis.security.framework import (
     IncidentCategory,
     IncidentSeverity,
     IncidentStatus,
     IncidentTracker,
     PostureScorer,
-    SecurityIncident,
     SecurityMetrics,
     SecurityTeam,
     TeamMember,
@@ -235,7 +230,6 @@ from jarvis.core.interop import (
     FederationStatus,
     InteropMessage,
     InteropProtocol,
-    MessagePriority,
     MessageRouter,
     MessageType,
 )
@@ -446,7 +440,6 @@ from jarvis.audit.ethics import (
     EthicsPolicy,
     EthicsViolationType,
     FairnessAuditor,
-    FairnessMetric,
 )
 
 

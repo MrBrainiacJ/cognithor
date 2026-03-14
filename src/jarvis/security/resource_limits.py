@@ -506,11 +506,12 @@ class NetworkGuard:
             log.info("network_blocked", tool=tool_name, host=host)
             return False
 
-        if profile.network == NetworkPermission.RESTRICTED:
-            if not host or not self._host_matches(host, profile.allowed_hosts):
-                self._blocked_log.append(entry)
-                log.info("network_restricted_blocked", tool=tool_name, host=host)
-                return False
+        if profile.network == NetworkPermission.RESTRICTED and (
+            not host or not self._host_matches(host, profile.allowed_hosts)
+        ):
+            self._blocked_log.append(entry)
+            log.info("network_restricted_blocked", tool=tool_name, host=host)
+            return False
 
         self._allowed_log.append(entry)
         return True

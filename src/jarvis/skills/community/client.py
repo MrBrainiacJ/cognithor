@@ -171,12 +171,11 @@ class CommunityRegistryClient:
                 continue
             if category and entry.category != category:
                 continue
-            if query_lower:
-                if (
-                    query_lower not in entry.name.lower()
-                    and query_lower not in entry.description.lower()
-                ):
-                    continue
+            if query_lower and (
+                query_lower not in entry.name.lower()
+                and query_lower not in entry.description.lower()
+            ):
+                continue
             results.append(entry)
 
         return results[:limit]
@@ -396,12 +395,12 @@ class CommunityRegistryClient:
 
         if aiohttp_available:
             try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        url, timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT_S)
-                    ) as resp:
-                        resp.raise_for_status()
-                        return await resp.text()
+                async with (
+                    aiohttp.ClientSession() as session,
+                    session.get(url, timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT_S)) as resp,
+                ):
+                    resp.raise_for_status()
+                    return await resp.text()
             except Exception as aio_exc:
                 log.debug(
                     "aiohttp_fetch_failed_falling_back_to_urllib", url=url, error=str(aio_exc)

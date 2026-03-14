@@ -145,7 +145,7 @@ class TestPersistence:
         # With XOR fallback, wrong key gives garbage, not None
         # But with Fernet it would return None
         # We just verify it doesn't crash
-        assert isinstance(result, (str, type(None)))
+        assert isinstance(result, str | type(None))
 
 
 class TestFilePermissions:

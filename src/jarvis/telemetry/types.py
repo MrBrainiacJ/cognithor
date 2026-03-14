@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 from typing import Any
 
-
 # ── ID Generation ────────────────────────────────────────────────
 
 
@@ -477,6 +476,6 @@ def _otlp_value(v: Any) -> dict[str, Any]:
         return {"intValue": str(v)}
     if isinstance(v, float):
         return {"doubleValue": v}
-    if isinstance(v, (list, tuple)):
+    if isinstance(v, list | tuple):
         return {"arrayValue": {"values": [_otlp_value(x) for x in v]}}
     return {"stringValue": str(v)}

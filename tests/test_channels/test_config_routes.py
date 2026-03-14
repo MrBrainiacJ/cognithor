@@ -7,11 +7,8 @@ So brauchen wir keinen echten FastAPI/Starlette-Server.
 
 from __future__ import annotations
 
-import asyncio
-import time
-from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from typing import TYPE_CHECKING, Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import yaml
@@ -19,6 +16,8 @@ import yaml
 from jarvis.config import JarvisConfig
 from jarvis.config_manager import ConfigManager
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fake-App: Erfasst registrierte Route-Handler
@@ -380,7 +379,7 @@ class TestSystemRoutes:
         # Either HTMLResponse (if dashboard.html exists) or error dict
         from starlette.responses import HTMLResponse
 
-        assert isinstance(result, (dict, HTMLResponse))
+        assert isinstance(result, dict | HTMLResponse)
 
 
 # ============================================================================

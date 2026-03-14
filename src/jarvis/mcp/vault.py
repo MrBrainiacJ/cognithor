@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -52,7 +52,7 @@ def _slugify(text: str) -> str:
 
 def _now_iso() -> str:
     """Aktuelle UTC-Zeit als ISO-String."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
 
 
 def _parse_tags(tags: str | list[str]) -> list[str]:
@@ -651,7 +651,7 @@ class VaultTools:
         if isinstance(value, str):
             try:
                 parsed = yaml.safe_load(value)
-                if isinstance(parsed, (list, dict)):
+                if isinstance(parsed, list | dict):
                     value = parsed
             except yaml.YAMLError:
                 pass

@@ -11,12 +11,9 @@ from __future__ import annotations
 import sqlite3
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock
 
-import pytest
-
-from jarvis.core.user_preferences import UserPreferenceStore, UserPreference
-
+from jarvis.core.user_preferences import UserPreferenceStore
 
 # ── UserPreferenceStore: Persistente Connection ──────────────────────────
 
@@ -142,6 +139,7 @@ class TestMCPServerSyncHandlerExecutor:
     def test_code_uses_run_in_executor(self) -> None:
         """Der MCP-Server-Code enthält run_in_executor für sync-Handler."""
         import inspect
+
         from jarvis.mcp.server import JarvisMCPServer
 
         source = inspect.getsource(JarvisMCPServer.handle_tools_call)

@@ -9,8 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -34,12 +33,15 @@ _mock_nio.InviteMemberEvent = MagicMock()
 sys.modules.setdefault("nio", _mock_nio)
 
 from jarvis.channels.matrix import (
+    MAX_MESSAGE_LENGTH,
     MatrixChannel,
     _split_message,
     _text_to_html,
-    MAX_MESSAGE_LENGTH,
 )
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 # ============================================================================

@@ -10,7 +10,6 @@ Testet:
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -94,7 +93,7 @@ class TestRunnerMessage:
             try:
                 await asyncio.wait_for(slow_handle(msg), timeout=config.timeout_seconds)
                 return AgentResult(response="ok", success=True)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return AgentResult(
                     response="",
                     success=False,

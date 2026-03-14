@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.telemetry.instrumentation import trace, measure, TelemetryHub
-from jarvis.telemetry.types import SpanKind
-
+from jarvis.telemetry.instrumentation import TelemetryHub, measure, trace
 
 # ============================================================================
 # trace decorator

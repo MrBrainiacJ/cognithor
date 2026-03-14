@@ -10,12 +10,15 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _log = get_logger(__name__)
 
@@ -164,7 +167,7 @@ class DataProcessingLog:
         rec = DataProcessingRecord(
             record_id=f"dpr-{self._counter:06d}",
             user_id=user_id,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             category=category,
             purpose=purpose,
             legal_basis=legal_basis,
@@ -205,7 +208,7 @@ class DataProcessingLog:
 
         return {
             "user_id": user_id,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "total_records": len(user_records),
             "categories": categories,
             "tools_used": tools,
@@ -313,7 +316,7 @@ class ModelUsageLog:
 
         rec = ModelUsageRecord(
             record_id=f"mur-{self._counter:06d}",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             user_id=user_id,
             model_name=model_name,
             provider=provider,
@@ -480,7 +483,7 @@ class RetentionEnforcer:
         now: datetime | None = None,
     ) -> list[tuple[DataProcessingRecord, RetentionAction]]:
         """Find records that have exceeded their retention period."""
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         expired: list[tuple[DataProcessingRecord, RetentionAction]] = []
 
         for rec in records:
@@ -497,7 +500,7 @@ class RetentionEnforcer:
             try:
                 created = datetime.fromisoformat(rec.timestamp)
                 if created.tzinfo is None:
-                    created = created.replace(tzinfo=timezone.utc)
+                    created = created.replace(tzinfo=UTC)
             except (ValueError, TypeError):
                 continue
 
@@ -617,7 +620,7 @@ class ErasureManager:
         req = ErasureRequest(
             request_id=f"era-{self._counter:06d}",
             user_id=user_id,
-            requested_at=datetime.now(timezone.utc).isoformat(),
+            requested_at=datetime.now(UTC).isoformat(),
             status=ErasureStatus.IN_PROGRESS,
         )
 
@@ -642,7 +645,7 @@ class ErasureManager:
 
         if req.status != ErasureStatus.PARTIALLY_COMPLETED:
             req.status = ErasureStatus.COMPLETED
-        req.completed_at = datetime.now(timezone.utc).isoformat()
+        req.completed_at = datetime.now(UTC).isoformat()
 
         self._requests.append(req)
         _log.info(
@@ -768,7 +771,7 @@ class AuditExporter:
         pii_count = sum(1 for r in usage_records if r.contains_pii)
 
         report: dict[str, Any] = {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "user_id": user_id or "all",
             "summary": {
                 "total_processing_records": len(proc_records),

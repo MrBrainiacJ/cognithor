@@ -12,13 +12,16 @@ Testet alle neuen Module:
 
 from __future__ import annotations
 
-import asyncio
 import json
-import time
-from unittest.mock import MagicMock, AsyncMock
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock
 
 import pytest
 
+if TYPE_CHECKING:
+    from jarvis.mcp.prompts import JarvisPromptProvider
+    from jarvis.mcp.resources import JarvisResourceProvider
+    from jarvis.mcp.server import JarvisMCPServer
 
 # ============================================================================
 # MCP Server Tests
@@ -114,7 +117,8 @@ class TestMCPPromptDef:
 
 class TestMCPServerConfig:
     def test_default_disabled(self) -> None:
-        from jarvis.mcp.server import MCPServerConfig as Cfg, MCPServerMode
+        from jarvis.mcp.server import MCPServerConfig as Cfg
+        from jarvis.mcp.server import MCPServerMode
 
         cfg = Cfg()
         assert cfg.mode == MCPServerMode.DISABLED
@@ -122,7 +126,8 @@ class TestMCPServerConfig:
         assert cfg.require_auth is False
 
     def test_http_mode(self) -> None:
-        from jarvis.mcp.server import MCPServerConfig as Cfg, MCPServerMode
+        from jarvis.mcp.server import MCPServerConfig as Cfg
+        from jarvis.mcp.server import MCPServerMode
 
         cfg = Cfg(mode=MCPServerMode.HTTP, http_port=8080)
         assert cfg.mode == MCPServerMode.HTTP
@@ -132,7 +137,7 @@ class TestMCPServerConfig:
 class TestJarvisMCPServer:
     """Tests für den MCP-Server-Kern."""
 
-    def _make_server(self) -> JarvisMCPServer:  # noqa: F821
+    def _make_server(self) -> JarvisMCPServer:
         from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         cfg = MCPServerConfig(mode=MCPServerMode.HTTP)
@@ -450,7 +455,7 @@ class TestJarvisMCPServer:
         assert "error" not in result
 
     def test_stats(self) -> None:
-        from jarvis.mcp.server import MCPToolDef, MCPResource, MCPPrompt
+        from jarvis.mcp.server import MCPPrompt, MCPResource, MCPToolDef
 
         server = self._make_server()
         server.register_tool(
@@ -500,14 +505,14 @@ class TestJarvisMCPServer:
 
 
 class TestJarvisResourceProvider:
-    def _make_provider(self) -> JarvisResourceProvider:  # noqa: F821
+    def _make_provider(self) -> JarvisResourceProvider:
         from jarvis.mcp.resources import JarvisResourceProvider
 
         return JarvisResourceProvider(config=None, memory=None)
 
     def test_register_all(self) -> None:
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
         from jarvis.mcp.resources import JarvisResourceProvider
+        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         provider = JarvisResourceProvider()
@@ -559,14 +564,14 @@ class TestJarvisResourceProvider:
 
 
 class TestJarvisPromptProvider:
-    def _make_provider(self) -> JarvisPromptProvider:  # noqa: F821
+    def _make_provider(self) -> JarvisPromptProvider:
         from jarvis.mcp.prompts import JarvisPromptProvider
 
         return JarvisPromptProvider()
 
     def test_register_all(self) -> None:
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
         from jarvis.mcp.prompts import JarvisPromptProvider
+        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         provider = JarvisPromptProvider()
@@ -922,7 +927,7 @@ class TestMCPIntegration:
     @pytest.mark.asyncio
     async def test_full_resource_flow(self) -> None:
         """Simuliert Resource-Discovery und -Read."""
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode, MCPResource
+        from jarvis.mcp.server import JarvisMCPServer, MCPResource, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         server.register_resource(
@@ -945,8 +950,8 @@ class TestMCPIntegration:
     @pytest.mark.asyncio
     async def test_full_prompt_flow(self) -> None:
         """Simuliert Prompt-Discovery und -Get."""
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
         from jarvis.mcp.prompts import JarvisPromptProvider
+        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         provider = JarvisPromptProvider()

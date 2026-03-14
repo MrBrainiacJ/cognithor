@@ -22,12 +22,10 @@ Deckt ab:
 
 from __future__ import annotations
 
-import asyncio
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -38,12 +36,10 @@ from jarvis.models import (
     GateDecision,
     GateStatus,
     IncomingMessage,
-    OutgoingMessage,
     PlannedAction,
     RiskLevel,
     SessionContext,
     ToolResult,
-    WorkingMemory,
 )
 
 

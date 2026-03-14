@@ -30,10 +30,11 @@ from __future__ import annotations
 import logging
 import time
 from collections import deque
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 logger = logging.getLogger("jarvis.proactive.heartbeat")
 
@@ -102,7 +103,7 @@ class EventConfig:
         """Prüft ob aktuell Ruhezeit ist."""
         if self.quiet_hours_start < 0 or self.quiet_hours_end < 0:
             return False
-        hour = datetime.now(timezone.utc).hour
+        hour = datetime.now(UTC).hour
         if self.quiet_hours_start <= self.quiet_hours_end:
             return self.quiet_hours_start <= hour < self.quiet_hours_end
         # Über Mitternacht (z.B. 22-06)
@@ -122,7 +123,7 @@ class ProactiveTask:
     event_type: EventType
     status: TaskStatus = TaskStatus.PENDING
     created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
     started_at: str = ""
     completed_at: str = ""
@@ -169,7 +170,7 @@ class EventTrigger:
     payload: dict[str, Any] = field(default_factory=dict)
     source: str = ""  # Welche EventSource
     triggered_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
 
 
@@ -275,16 +276,17 @@ class TaskQueue:
         for i, task in enumerate(self._queue):
             if task.status != TaskStatus.PENDING:
                 continue
-            if best is None or task.priority > best.priority:
-                best = task
-                _best_idx = i
-            elif task.priority == best.priority and task.created_at < best.created_at:
+            if (
+                best is None
+                or task.priority > best.priority
+                or (task.priority == best.priority and task.created_at < best.created_at)
+            ):
                 best = task
                 _best_idx = i
 
         if best is not None:
             best.status = TaskStatus.RUNNING
-            best.started_at = datetime.now(timezone.utc).isoformat()
+            best.started_at = datetime.now(UTC).isoformat()
 
         return best
 
@@ -304,7 +306,7 @@ class TaskQueue:
         for task in self._queue:
             if task.task_id == task_id:
                 task.status = TaskStatus.COMPLETED if success else TaskStatus.FAILED
-                task.completed_at = datetime.now(timezone.utc).isoformat()
+                task.completed_at = datetime.now(UTC).isoformat()
                 task.result = result
                 task.error = error
                 return True
@@ -315,7 +317,7 @@ class TaskQueue:
         for task in self._queue:
             if task.task_id == task_id:
                 task.status = TaskStatus.SKIPPED
-                task.completed_at = datetime.now(timezone.utc).isoformat()
+                task.completed_at = datetime.now(UTC).isoformat()
                 task.result = reason or "Vom Gatekeeper blockiert"
                 return True
         return False

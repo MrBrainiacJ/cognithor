@@ -6,18 +6,13 @@ consolidation results, and edge cases.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.memory.consolidation import (
     ConsolidationPipeline,
     ConsolidationResult,
     ContentDeduplicator,
-    DuplicateGroup,
     MemoryBudgetManager,
     TierBudget,
 )
-from jarvis.memory.scoring import ImportanceScorer
-
 
 # ============================================================================
 # ContentDeduplicator
@@ -76,11 +71,15 @@ class TestContentDeduplicator:
         entries = [
             {
                 "id": "a",
-                "content": "Berlin ist die Hauptstadt von Deutschland und hat viele Sehenswuerdigkeiten.",
+                "content": (
+                    "Berlin ist die Hauptstadt von Deutschland und hat viele Sehenswuerdigkeiten."
+                ),
             },
             {
                 "id": "b",
-                "content": "Berlin ist die Hauptstadt Deutschlands und hat viele Sehenswuerdigkeiten.",
+                "content": (
+                    "Berlin ist die Hauptstadt Deutschlands und hat viele Sehenswuerdigkeiten."
+                ),
             },
         ]
         dedup = ContentDeduplicator(similarity_threshold=0.80)

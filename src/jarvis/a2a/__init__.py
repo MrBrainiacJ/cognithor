@@ -15,11 +15,19 @@ OPTIONAL: Nur aktiv wenn in config aktiviert. Kein Import-Fehler wenn deaktivier
 
 from __future__ import annotations
 
+# Adapter -- always available
+from jarvis.a2a.adapter import A2AAdapter
+from jarvis.a2a.client import A2AClient, RemoteAgent
+
+# Server + Client -- always available
+from jarvis.a2a.server import A2AServer, A2AServerConfig
+
 # Types -- always available (no external deps)
 from jarvis.a2a.types import (
     A2A_CONTENT_TYPE,
     A2A_PROTOCOL_VERSION,
     A2A_VERSION_HEADER,
+    VALID_TRANSITIONS,
     A2AAgentCapabilities,
     A2AAgentCard,
     A2AErrorCode,
@@ -42,29 +50,29 @@ from jarvis.a2a.types import (
     TaskStatus,
     TaskStatusUpdateEvent,
     TextPart,
-    VALID_TRANSITIONS,
     is_valid_transition,
     part_from_dict,
 )
-
-# Server + Client -- always available
-from jarvis.a2a.server import A2AServer, A2AServerConfig
-from jarvis.a2a.client import A2AClient, RemoteAgent
-
-# Adapter -- always available
-from jarvis.a2a.adapter import A2AAdapter
 
 __all__ = [
     # Types
     "A2A_CONTENT_TYPE",
     "A2A_PROTOCOL_VERSION",
     "A2A_VERSION_HEADER",
+    "VALID_TRANSITIONS",
+    # Adapter
+    "A2AAdapter",
     "A2AAgentCapabilities",
     "A2AAgentCard",
+    # Client
+    "A2AClient",
     "A2AErrorCode",
     "A2AInterface",
     "A2AProvider",
     "A2ASecurityScheme",
+    # Server
+    "A2AServer",
+    "A2AServerConfig",
     "A2ASkill",
     "Artifact",
     "DataPart",
@@ -75,21 +83,13 @@ __all__ = [
     "PartType",
     "PushNotificationAuth",
     "PushNotificationConfig",
+    "RemoteAgent",
     "Task",
     "TaskArtifactUpdateEvent",
     "TaskState",
     "TaskStatus",
     "TaskStatusUpdateEvent",
     "TextPart",
-    "VALID_TRANSITIONS",
     "is_valid_transition",
     "part_from_dict",
-    # Server
-    "A2AServer",
-    "A2AServerConfig",
-    # Client
-    "A2AClient",
-    "RemoteAgent",
-    # Adapter
-    "A2AAdapter",
 ]

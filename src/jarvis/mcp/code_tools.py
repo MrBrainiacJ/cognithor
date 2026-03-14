@@ -11,6 +11,7 @@ Bibel-Referenz: §5.3 (MCP-Tools), §4.3 (Sandbox)
 
 from __future__ import annotations
 
+import contextlib
 import sys
 import uuid
 from pathlib import Path
@@ -37,8 +38,8 @@ _DEFAULT_TIMEOUT = 60
 MAX_CODE_SIZE = _DEFAULT_MAX_CODE_SIZE
 
 __all__ = [
-    "CodeTools",
     "MAX_CODE_SIZE",
+    "CodeTools",
     "register_code_tools",
 ]
 
@@ -52,7 +53,7 @@ class CodeTools:
       - Workspace-Confinement: Alle temp-Dateien im Workspace
     """
 
-    def __init__(self, config: "JarvisConfig") -> None:
+    def __init__(self, config: JarvisConfig) -> None:
         self._config = config
 
         # Limits aus Config lesen (mit sicheren Defaults)
@@ -81,10 +82,8 @@ class CodeTools:
             if _level is not None:
                 level_val = _level.value if hasattr(_level, "value") else str(_level)
                 if level_val in ("bwrap", "firejail", "bare", "process"):
-                    try:
+                    with contextlib.suppress(ValueError):
                         sandbox_config.preferred_level = SandboxLevel(level_val)
-                    except ValueError:
-                        pass
 
         # Legacy: direct config attributes (backward compat)
         sandbox_level = getattr(config, "sandbox_level", None)
@@ -229,7 +228,7 @@ class CodeTools:
                     )
                 if not path.exists():
                     return f"Fehler: Datei '{file_path}' nicht gefunden."
-                if not path.suffix == ".py":
+                if path.suffix != ".py":
                     return "Fehler: Nur Python-Dateien (.py) werden unterstützt."
                 source = path.read_text(encoding="utf-8")
                 source_name = str(path)
@@ -330,7 +329,7 @@ class CodeTools:
 
 def register_code_tools(
     mcp_client: Any,
-    config: "JarvisConfig",
+    config: JarvisConfig,
 ) -> CodeTools:
     """Registriert Code-Tools beim MCP-Client.
 

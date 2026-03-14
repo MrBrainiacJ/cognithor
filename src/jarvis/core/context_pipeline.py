@@ -18,9 +18,8 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from jarvis.config import ContextPipelineConfig
-
 if TYPE_CHECKING:
+    from jarvis.config import ContextPipelineConfig
     from jarvis.models import MemorySearchResult, WorkingMemory
 
 logger = logging.getLogger("jarvis.core.context_pipeline")

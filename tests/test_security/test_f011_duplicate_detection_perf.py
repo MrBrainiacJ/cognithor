@@ -15,7 +15,7 @@ import time
 
 import pytest
 
-from jarvis.memory.integrity import DuplicateDetector, DuplicateGroup, MemoryEntry
+from jarvis.memory.integrity import DuplicateDetector, MemoryEntry
 
 
 class TestMaxEntriesLimit:
@@ -98,7 +98,10 @@ class TestPreFilter:
             MemoryEntry(entry_id="short", content="hello world"),
             MemoryEntry(
                 entry_id="long",
-                content="this is a very long entry with many many words that are all different and unique",
+                content=(
+                    "this is a very long entry with many many"
+                    " words that are all different and unique"
+                ),
             ),
         ]
         groups = detector.detect(entries)

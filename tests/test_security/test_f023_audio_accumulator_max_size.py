@@ -22,7 +22,6 @@ import pytest
 
 from jarvis.channels.voice_bridge import AudioAccumulator, VoiceWebSocketBridge
 
-
 # ============================================================================
 # AudioAccumulator Size-Limit Tests
 # ============================================================================

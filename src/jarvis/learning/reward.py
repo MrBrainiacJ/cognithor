@@ -60,10 +60,7 @@ class RewardCalculator:
         success = max(0.0, min(1.0, success_score))
 
         # Error ratio: 0 = alle erfolgreich, 1 = alle fehlgeschlagen
-        if total_tools > 0:
-            error_ratio = failed_tools / total_tools
-        else:
-            error_ratio = 0.0
+        error_ratio = failed_tools / total_tools if total_tools > 0 else 0.0
         error_component = 1.0 - error_ratio
 
         # Efficiency: unique_tools / total_calls

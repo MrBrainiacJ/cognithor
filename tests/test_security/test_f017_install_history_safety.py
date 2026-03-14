@@ -13,12 +13,12 @@ from __future__ import annotations
 
 import inspect
 import json
-import os
-from pathlib import Path
-
-import pytest
+from typing import TYPE_CHECKING
 
 from jarvis.skills.remote_registry import InstalledPlugin, RemoteRegistry
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_registry(tmp_path: Path) -> RemoteRegistry:

@@ -29,16 +29,19 @@ Alternativ: Kompakt-Syntax:
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.graph.types import (
+    END,
     Edge,
     EdgeType,
-    END,
     GraphDefinition,
     Node,
     NodeType,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class GraphBuilder:

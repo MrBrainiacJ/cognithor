@@ -6,23 +6,19 @@ critic review, pipeline, parallel), consensus, and edge cases.
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.core.collaboration import (
+    ROLE_DEFAULTS,
     AgentRole,
-    BoardEntry,
     CollaborationEngine,
     CollaborationPattern,
     CollaborationResult,
-    ROLE_DEFAULTS,
     RoleSpec,
     TaskBoard,
 )
-
 
 # ============================================================================
 # Helpers
@@ -86,7 +82,7 @@ class TestRoleSpec:
 
     def test_frozen(self) -> None:
         spec = _role(AgentRole.ANALYST)
-        with pytest.raises(Exception):
+        with pytest.raises((AttributeError, TypeError, Exception), match="frozen|cannot"):
             spec.max_iterations = 99  # type: ignore[misc]
 
 
@@ -262,7 +258,9 @@ class TestVoting:
         runner = _make_runner(
             {
                 "researcher": "Short answer.",
-                "analyst": "A much longer and more detailed analysis of the topic with many insights.",
+                "analyst": (
+                    "A much longer and more detailed analysis of the topic with many insights."
+                ),
             }
         )
         engine = CollaborationEngine(agent_runner=runner)

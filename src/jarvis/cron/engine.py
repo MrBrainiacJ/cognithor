@@ -129,7 +129,7 @@ class CronEngine:
         # Pfad zur Checkliste auflösen
         self._heartbeat_file: Path | None = None
         if heartbeat_config is not None and getattr(heartbeat_config, "checklist_file", None):
-            checklist = Path(getattr(heartbeat_config, "checklist_file"))
+            checklist = Path(heartbeat_config.checklist_file)
             if not checklist.is_absolute():
                 # relativer Pfad → an jarvis_home anhängen
                 if base_dir is not None:
@@ -179,7 +179,7 @@ class CronEngine:
         # APScheduler dependency is missing.
         try:
             from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
-        except Exception:  # noqa: BLE001
+        except Exception:
             # Define a dummy scheduler that provides the minimal API used
             # throughout the CronEngine.  Each scheduled job stores a
             # next_run_time attribute for introspection but does not

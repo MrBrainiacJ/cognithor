@@ -371,7 +371,6 @@ class TestAuditTrail:
 
     def test_atexit_handler_registered(self, gatekeeper: Gatekeeper) -> None:
         """atexit handler must be registered to flush buffer on process exit."""
-        import atexit
 
         # The atexit handler is a closure over a weakref — verify it's callable
         # by checking that _flush_audit_buffer exists and the handler was registered.

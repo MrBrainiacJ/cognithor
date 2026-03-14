@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -111,10 +110,13 @@ class TestTwitchChannel:
 
     @pytest.mark.asyncio
     async def test_tags_parsing(self) -> None:
-        ch = TwitchChannel(nick="jarvisbot", channel="test")
+        TwitchChannel(nick="jarvisbot", channel="test")
         tags: dict[str, str] = {}
 
-        line = "@display-name=TestUser;mod=1;subscriber=1 :user!user@user.tmi.twitch.tv PRIVMSG #test :!jarvis help"
+        line = (
+            "@display-name=TestUser;mod=1;subscriber=1"
+            " :user!user@user.tmi.twitch.tv PRIVMSG #test :!jarvis help"
+        )
         # Parse tags
         tag_str, rest = line.split(" ", 1)
         for tag in tag_str[1:].split(";"):

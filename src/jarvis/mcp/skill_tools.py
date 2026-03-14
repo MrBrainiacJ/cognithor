@@ -13,6 +13,7 @@ Bibel-Referenz: §6.2 (Skill-System)
 
 from __future__ import annotations
 
+import contextlib
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -324,10 +325,8 @@ def register_skill_tools(
                 return f"Installation fehlgeschlagen:\n{errors}"
 
             # Registry neu laden
-            try:
+            with contextlib.suppress(Exception):
                 skill_registry.load_from_directories(skills_dirs)
-            except Exception:
-                pass
 
             tools_info = ", ".join(result.tools_required) if result.tools_required else "keine"
             warnings = ""

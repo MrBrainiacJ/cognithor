@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -57,7 +56,11 @@ class TestTwitchHandleLine:
         ch._writer.drain = AsyncMock()
         ch._last_msg_time = 0
 
-        line = "@display-name=Alice;mod=0;subscriber=0 :alice!alice@alice.tmi.twitch.tv PRIVMSG #testchannel :!jarvis what is up"
+        line = (
+            "@display-name=Alice;mod=0;subscriber=0"
+            " :alice!alice@alice.tmi.twitch.tv PRIVMSG #testchannel"
+            " :!jarvis what is up"
+        )
         await ch._handle_line(line)
         ch._handler.assert_called_once()
         incoming = ch._handler.call_args[0][0]
@@ -183,7 +186,7 @@ class TestTwitchSendRaw:
         ch._writer.drain = AsyncMock()
         await ch._send_raw("PASS oauth:test")
         ch._writer.write.assert_called_once()
-        assert b"PASS oauth:test\r\n" == ch._writer.write.call_args[0][0]
+        assert ch._writer.write.call_args[0][0] == b"PASS oauth:test\r\n"
 
 
 class TestTwitchStart:

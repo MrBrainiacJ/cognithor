@@ -148,7 +148,7 @@ class RunRecorder:
         operation_mode: str = "",
     ) -> str:
         """Begin recording a new run.  Returns the generated run ID."""
-        from jarvis.models import _new_id  # noqa: WPS433
+        from jarvis.models import _new_id
 
         run_id = _new_id()
         ts = _utc_iso()
@@ -243,7 +243,7 @@ class RunRecorder:
             return None
 
         col_names = [desc[0] for desc in cur.description]
-        run_data = dict(zip(col_names, row))
+        run_data = dict(zip(col_names, row, strict=False))
 
         # Reconstruct lists from steps
         plans: list[ActionPlan] = []

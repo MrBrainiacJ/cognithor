@@ -7,14 +7,13 @@ error handling.
 
 from __future__ import annotations
 
-import asyncio
-import json
-import time
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 import pytest
 import yaml
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -465,7 +464,7 @@ class TestAgents:
 
         # Verify
         r2 = client.get("/api/v1/agents")
-        found = [a for a in r2.json()["agents"] if a["name"] == "update_me"][0]
+        found = next(a for a in r2.json()["agents"] if a["name"] == "update_me")
         assert found["display_name"] == "Updated"
         assert found["priority"] == 99
 

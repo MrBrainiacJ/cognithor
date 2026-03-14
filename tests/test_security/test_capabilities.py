@@ -3,16 +3,15 @@
 import os
 import tempfile
 
-import pytest
+from jarvis.models import ToolCapability, ToolCapabilitySpec
 from jarvis.security.capabilities import (
+    PERMISSIVE,
+    RESTRICTIVE,
+    STANDARD,
     CapabilityMatrix,
     PolicyEvaluator,
     SandboxProfile,
-    RESTRICTIVE,
-    STANDARD,
-    PERMISSIVE,
 )
-from jarvis.models import ToolCapability, ToolCapabilitySpec, PolicyDecision
 
 
 class TestSandboxProfile:

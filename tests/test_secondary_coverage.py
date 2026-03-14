@@ -20,10 +20,9 @@ Covers:
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
-
 
 # ============================================================================
 # Security: Rate Limiter
@@ -251,7 +250,7 @@ class TestSandboxMocked:
 
         from jarvis.models import SandboxLevel
 
-        result = await sandbox.execute("echo hello", level=SandboxLevel.CONTAINER)
+        await sandbox.execute("echo hello", level=SandboxLevel.CONTAINER)
         # Should have been downgraded
         sandbox._exec_process.assert_awaited()
 
@@ -303,8 +302,6 @@ class TestDBFactory:
         assert backend is not None
 
     def test_factory_postgresql(self):
-        from jarvis.db.factory import create_backend
-
         db_config = MagicMock()
         db_config.backend = "postgresql"
         db_config.pg_host = "localhost"
@@ -321,7 +318,6 @@ class TestDBFactory:
         with patch("jarvis.db.factory.PostgreSQLBackend", create=True) as mock_pg:
             mock_pg.return_value = MagicMock()
             # Need to patch the import inside the function
-            import importlib
             import jarvis.db.factory as factory_mod
 
             original_func = factory_mod.create_backend
@@ -663,10 +659,9 @@ class TestAudit:
 class TestSecurityFramework:
     def test_incident_tracker_create_and_get(self):
         from jarvis.security.framework import (
-            IncidentTracker,
             IncidentCategory,
             IncidentSeverity,
-            IncidentStatus,
+            IncidentTracker,
         )
 
         tracker = IncidentTracker()
@@ -682,10 +677,10 @@ class TestSecurityFramework:
 
     def test_incident_lifecycle(self):
         from jarvis.security.framework import (
-            IncidentTracker,
             IncidentCategory,
             IncidentSeverity,
             IncidentStatus,
+            IncidentTracker,
         )
 
         tracker = IncidentTracker()
@@ -701,9 +696,9 @@ class TestSecurityFramework:
 
     def test_incident_assign(self):
         from jarvis.security.framework import (
-            IncidentTracker,
             IncidentCategory,
             IncidentSeverity,
+            IncidentTracker,
         )
 
         tracker = IncidentTracker()
@@ -714,15 +709,15 @@ class TestSecurityFramework:
 
     def test_open_incidents_and_by_severity(self):
         from jarvis.security.framework import (
-            IncidentTracker,
             IncidentCategory,
             IncidentSeverity,
             IncidentStatus,
+            IncidentTracker,
         )
 
         tracker = IncidentTracker()
         i1 = tracker.create("A", IncidentCategory.CREDENTIAL_LEAK, IncidentSeverity.HIGH)
-        i2 = tracker.create("B", IncidentCategory.CREDENTIAL_LEAK, IncidentSeverity.LOW)
+        tracker.create("B", IncidentCategory.CREDENTIAL_LEAK, IncidentSeverity.LOW)
         assert len(tracker.open_incidents()) == 2
         tracker.transition(i1.incident_id, IncidentStatus.RESOLVED)
         assert len(tracker.open_incidents()) == 1
@@ -731,9 +726,9 @@ class TestSecurityFramework:
 
     def test_tracker_stats(self):
         from jarvis.security.framework import (
-            IncidentTracker,
             IncidentCategory,
             IncidentSeverity,
+            IncidentTracker,
         )
 
         tracker = IncidentTracker()
@@ -744,10 +739,8 @@ class TestSecurityFramework:
 
     def test_security_metrics(self):
         from jarvis.security.framework import (
-            SecurityMetrics,
             IncidentTracker,
-            IncidentCategory,
-            IncidentSeverity,
+            SecurityMetrics,
         )
 
         tracker = IncidentTracker()
@@ -786,12 +779,12 @@ class TestSecurityFramework:
 
     def test_security_team_auto_assign(self):
         from jarvis.security.framework import (
+            IncidentCategory,
+            IncidentSeverity,
+            IncidentTracker,
             SecurityTeam,
             TeamMember,
             TeamRole,
-            IncidentTracker,
-            IncidentCategory,
-            IncidentSeverity,
         )
 
         team = SecurityTeam()
@@ -807,10 +800,9 @@ class TestSecurityFramework:
 
     def test_security_incident_time_properties(self):
         from jarvis.security.framework import (
-            SecurityIncident,
             IncidentCategory,
             IncidentSeverity,
-            IncidentStatus,
+            SecurityIncident,
         )
 
         inc = SecurityIncident(
@@ -835,14 +827,14 @@ class TestSecurityFramework:
 
 class TestCICDGate:
     def test_security_gate_pass(self):
-        from jarvis.security.cicd_gate import SecurityGate, GateVerdict
+        from jarvis.security.cicd_gate import GateVerdict, SecurityGate
 
         gate = SecurityGate()
         result = gate.evaluate({})
         assert result.verdict == GateVerdict.PASS
 
     def test_security_gate_fail_critical(self):
-        from jarvis.security.cicd_gate import SecurityGate, GateVerdict
+        from jarvis.security.cicd_gate import GateVerdict, SecurityGate
 
         gate = SecurityGate()
         pipeline = {
@@ -861,7 +853,7 @@ class TestCICDGate:
         assert len(result.reasons) > 0
 
     def test_security_gate_override(self):
-        from jarvis.security.cicd_gate import SecurityGate, GateVerdict
+        from jarvis.security.cicd_gate import GateVerdict, SecurityGate
 
         gate = SecurityGate()
         result = gate.evaluate(
@@ -970,7 +962,7 @@ class TestAgentVault:
 
         vault = AgentVault("agent1")
         s1 = vault.store("k1", "v1")
-        s2 = vault.store("k2", "v2")
+        vault.store("k2", "v2")
         vault.revoke(s1.secret_id)
         # H-19: revoke() entfernt Secrets aus dem Tresor
         assert len(vault.active_secrets()) == 1
@@ -1108,7 +1100,7 @@ class TestSandboxIsolation:
         assert sb.check_endpoint_access("https://evil.com") is False
 
     def test_sandbox_resource_consumption(self):
-        from jarvis.security.sandbox_isolation import AgentSandbox, ResourceType, ResourceLimit
+        from jarvis.security.sandbox_isolation import AgentSandbox, ResourceLimit, ResourceType
 
         sb = AgentSandbox(
             sandbox_id="sb1",
@@ -1120,7 +1112,7 @@ class TestSandboxIsolation:
         assert sb.consume_resource(ResourceType.MEMORY, 10.0) is True  # no limit
 
     def test_resource_limit_properties(self):
-        from jarvis.security.sandbox_isolation import ResourceType, ResourceLimit
+        from jarvis.security.sandbox_isolation import ResourceLimit, ResourceType
 
         rl = ResourceLimit(ResourceType.CPU, 100.0, current_value=75.0)
         assert rl.utilization == 75.0
@@ -1144,7 +1136,7 @@ class TestSandboxIsolation:
         assert len(all_ns) == 1
 
     def test_isolation_enforcer_provision(self):
-        from jarvis.security.sandbox_isolation import IsolationEnforcer, TenantManager
+        from jarvis.security.sandbox_isolation import IsolationEnforcer
 
         enforcer = IsolationEnforcer()
         enforcer.tenants.create("default", "Default Tenant")
@@ -1182,7 +1174,7 @@ class TestSandboxIsolation:
         assert am.admin_count == 0
 
     def test_delegated_admin_super(self):
-        from jarvis.security.sandbox_isolation import DelegatedAdmin, AdminRole
+        from jarvis.security.sandbox_isolation import AdminRole, DelegatedAdmin
 
         admin = DelegatedAdmin("a1", "admin@x.com", "t1", AdminRole.SUPER_ADMIN)
         assert admin.can("anything") is True

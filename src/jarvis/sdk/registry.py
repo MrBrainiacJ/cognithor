@@ -7,9 +7,10 @@ lookup/discovery APIs.
 from __future__ import annotations
 
 import threading
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jarvis.sdk.definitions import AgentDefinition, HookDefinition, HookEvent, ToolDefinition
+if TYPE_CHECKING:
+    from jarvis.sdk.definitions import AgentDefinition, HookDefinition, HookEvent, ToolDefinition
 
 
 class SDKRegistry:

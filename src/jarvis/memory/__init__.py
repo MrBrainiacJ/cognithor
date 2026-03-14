@@ -16,21 +16,21 @@ from jarvis.memory.chunker import chunk_file, chunk_text
 from jarvis.memory.core_memory import CoreMemory
 from jarvis.memory.embeddings import EmbeddingClient, cosine_similarity
 from jarvis.memory.episodic import EpisodicMemory
+from jarvis.memory.hygiene import MemoryHygieneEngine
 from jarvis.memory.indexer import MemoryIndex
+from jarvis.memory.integrity import (
+    ContradictionDetector,
+    DecisionExplainer,
+    DuplicateDetector,
+    IntegrityChecker,
+    MemoryVersionControl,
+    PlausibilityChecker,
+)
 from jarvis.memory.manager import MemoryManager
 from jarvis.memory.procedural import ProceduralMemory
 from jarvis.memory.search import HybridSearch, recency_decay
 from jarvis.memory.semantic import SemanticMemory
 from jarvis.memory.watcher import MemoryWatcher
-from jarvis.memory.hygiene import MemoryHygieneEngine
-from jarvis.memory.integrity import (
-    ContradictionDetector,  # noqa: F401
-    DecisionExplainer,  # noqa: F401
-    DuplicateDetector,  # noqa: F401
-    IntegrityChecker,  # noqa: F401
-    MemoryVersionControl,  # noqa: F401
-    PlausibilityChecker,  # noqa: F401
-)
 from jarvis.memory.working import WorkingMemoryManager
 
 __all__ = [

@@ -13,15 +13,14 @@ Prueft dass:
 from __future__ import annotations
 
 import inspect
-import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-
-import pytest
+from typing import TYPE_CHECKING
 
 from jarvis.memory.episodic_store import EpisodicStore
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Write-Lock existiert
@@ -42,9 +41,8 @@ class TestWriteLockExists:
     def test_write_lock_is_reentrant(self) -> None:
         """RLock erlaubt mehrfaches Acquiren im selben Thread."""
         store = EpisodicStore()
-        with store._write_lock:
-            with store._write_lock:
-                pass  # Kein Deadlock
+        with store._write_lock, store._write_lock:
+            pass  # Kein Deadlock
 
 
 # ============================================================================
@@ -121,7 +119,7 @@ class TestConcurrentWrites:
 
         with ThreadPoolExecutor(max_workers=4) as pool:
             futures = [pool.submit(write_episode, i) for i in range(50)]
-            ids = [f.result() for f in as_completed(futures)]
+            [f.result() for f in as_completed(futures)]
 
         assert len(errors) == 0, f"Errors: {errors}"
         assert store.get_episode_count() == 50
@@ -145,7 +143,7 @@ class TestConcurrentWrites:
 
         with ThreadPoolExecutor(max_workers=4) as pool:
             futures = [pool.submit(write_summary, i) for i in range(30)]
-            ids = [f.result() for f in as_completed(futures)]
+            [f.result() for f in as_completed(futures)]
 
         assert len(errors) == 0, f"Errors: {errors}"
         summaries = store.get_summaries()

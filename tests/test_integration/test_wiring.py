@@ -6,7 +6,6 @@ sondern auch tatsächlich im Executor/AgentRouter/CronEngine verdrahtet sind.
 
 from __future__ import annotations
 
-import asyncio
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -18,7 +17,7 @@ from jarvis.audit import AuditCategory, AuditLogger
 from jarvis.core.agent_router import AgentProfile, AgentRouter
 from jarvis.core.executor import Executor
 from jarvis.cron.engine import CronEngine
-from jarvis.models import GateDecision, GateStatus, PlannedAction, ToolResult
+from jarvis.models import GateDecision, GateStatus, PlannedAction
 from jarvis.proactive import (
     ApprovalMode,
     EventType,
@@ -26,8 +25,7 @@ from jarvis.proactive import (
     ProactiveTask,
     TaskStatus,
 )
-from jarvis.security.monitor import RuntimeMonitor, Verdict
-
+from jarvis.security.monitor import RuntimeMonitor
 
 # ============================================================================
 # Fixtures
@@ -93,7 +91,7 @@ class TestExecutorRuntimeMonitorIntegration:
 
         # Blockiert
         assert result.is_error
-        assert "SecurityBlock" == result.error_type
+        assert result.error_type == "SecurityBlock"
         assert "Sicherheitscheck" in result.content
 
         # MCP-Client wurde NIE aufgerufen (Blockierung VOR Ausführung)
@@ -221,7 +219,7 @@ class TestExecutorGatekeeperAudit:
 
         assert len(results) == 1
         assert results[0].is_error
-        assert "GatekeeperBlock" == results[0].error_type
+        assert results[0].error_type == "GatekeeperBlock"
 
         # Audit: Gatekeeper-Block wurde protokolliert
         gate_events = audit_logger.query(category=AuditCategory.GATEKEEPER)

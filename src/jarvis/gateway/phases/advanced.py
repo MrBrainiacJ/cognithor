@@ -12,10 +12,12 @@ Attributes handled:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jarvis.gateway.phases import PhaseResult
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.gateway.phases import PhaseResult
 
 log = get_logger(__name__)
 
@@ -92,7 +94,7 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
 
     # Phase 16: Workflow-Engine & Template-Library
     try:
-        from jarvis.core.workflows import WorkflowEngine, TemplateLibrary
+        from jarvis.core.workflows import TemplateLibrary, WorkflowEngine
 
         result["workflow_engine"] = WorkflowEngine()
         result["template_library"] = TemplateLibrary()
@@ -117,7 +119,7 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
 
     # Phase 18: Model-Extension-Registry & i18n
     try:
-        from jarvis.core.extensions import ModelExtensionRegistry, I18nManager
+        from jarvis.core.extensions import I18nManager, ModelExtensionRegistry
 
         result["model_registry"] = ModelExtensionRegistry()
         result["i18n"] = I18nManager(default_locale="de")
@@ -127,10 +129,10 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
     # Phase 20: Marketplace-Governance
     try:
         from jarvis.skills.governance import (
-            ReputationEngine,
-            SkillRecallManager,
             AbuseReporter,
             GovernancePolicy,
+            ReputationEngine,
+            SkillRecallManager,
         )
 
         rep = ReputationEngine()

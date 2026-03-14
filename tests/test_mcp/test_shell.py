@@ -13,7 +13,6 @@ Testet:
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -21,9 +20,12 @@ import pytest
 from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
 from jarvis.mcp.shell import ShellTools, register_shell_tools
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 def _path_in_result(expected_path: Path, result: str) -> bool:
-    """Check if a path is contained in command output, handling MSYS/Git-Bash path differences on Windows."""
+    """Check if a path is in command output, handling MSYS/Git-Bash paths on Windows."""
     expected = str(expected_path)
     if expected in result:
         return True
@@ -41,7 +43,7 @@ def _path_in_result(expected_path: Path, result: str) -> bool:
         result_parts = stripped.rstrip("/").split("/")
         expected_parts = expected_posix.rstrip("/").split("/")
         common = 0
-        for rp, ep in zip(reversed(result_parts), reversed(expected_parts)):
+        for rp, ep in zip(reversed(result_parts), reversed(expected_parts), strict=False):
             if rp == ep:
                 common += 1
             else:

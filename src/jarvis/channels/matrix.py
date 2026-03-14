@@ -29,6 +29,7 @@ Abhaengigkeiten:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import uuid
 from pathlib import Path
@@ -242,10 +243,8 @@ class MatrixChannel(Channel):
 
         if self._sync_task and not self._sync_task.done():
             self._sync_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._sync_task
-            except asyncio.CancelledError:
-                pass
             self._sync_task = None
 
         # Pending approvals abbrechen
@@ -506,7 +505,7 @@ class MatrixChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=APPROVAL_TIMEOUT)
-        except (asyncio.TimeoutError, TimeoutError):
+        except TimeoutError:
             logger.warning("Matrix: Approval-Timeout fuer Session %s", session_id[:8])
             await self._send_to_room(room_id, "Genehmigung abgelaufen (Timeout).")
             return False

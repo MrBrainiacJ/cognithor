@@ -15,13 +15,12 @@ Targets:
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.skills.generator import (
-    DEFAULT_ALLOWED_PACKAGES,
     GapDetector,
     GeneratedSkill,
     GenerationStatus,
@@ -30,6 +29,8 @@ from jarvis.skills.generator import (
     SkillGenerator,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # SkillGap

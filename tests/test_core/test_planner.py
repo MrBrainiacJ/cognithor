@@ -141,7 +141,11 @@ class TestPlanExtraction:
         mock_ollama.chat.return_value = {
             "message": {
                 "role": "assistant",
-                "content": '{"goal": "test", "steps": [{"tool": "list_directory", "params": {"path": "/"}}], "confidence": 0.7}',  # noqa: E501
+                "content": (
+                    '{"goal": "test", "steps": [{"tool":'
+                    ' "list_directory", "params": {"path": "/"}}],'
+                    ' "confidence": 0.7}'
+                ),
             },
         }
         plan = await planner.plan(
@@ -234,7 +238,9 @@ class TestEscalation:
         mock_ollama.chat.return_value = {
             "message": {
                 "role": "assistant",
-                "content": "Ich konnte die Datei nicht löschen, weil der Gatekeeper dies blockiert hat.",  # noqa: E501
+                "content": (
+                    "Ich konnte die Datei nicht löschen, weil der Gatekeeper dies blockiert hat."
+                ),
             },
         }
         msg = await planner.generate_escalation(

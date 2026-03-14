@@ -384,14 +384,15 @@ class WindowsJobObjectSandbox:
             SandboxResult mit Ausführungsergebnis.
         """
         import ctypes
+
         from jarvis.utils.win32_job import (
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
             JOB_OBJECT_LIMIT_ACTIVE_PROCESS,
             JOB_OBJECT_LIMIT_JOB_TIME,
             JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
             JOB_OBJECT_LIMIT_PROCESS_MEMORY,
-            JobObjectExtendedLimitInformation,
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
             PROCESS_ALL_ACCESS,
+            JobObjectExtendedLimitInformation,
         )
 
         kernel32 = ctypes.windll.kernel32

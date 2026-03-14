@@ -5,13 +5,9 @@ Testet alle 5 Hauptpunkte + 4 'Noch bedenken'-Punkte.
 
 from __future__ import annotations
 
-import pytest
-from typing import Any
-
 # ============================================================================
 # 1. CI/CD Security Gate & Continuous Red-Team
 # ============================================================================
-
 from jarvis.security.cicd_gate import (
     ContinuousRedTeam,
     GatePolicy,
@@ -187,7 +183,6 @@ class TestScanScheduler:
 from jarvis.security.sandbox_isolation import (
     AdminManager,
     AdminRole,
-    AgentSandbox,
     IsolationEnforcer,
     NamespaceIsolation,
     PerAgentSecretVault,

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextlib
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -392,10 +393,8 @@ class VoiceWebSocketBridge:
         finally:
             # Temp-Dateien aufräumen
             for p in (input_path, wav_path):
-                try:
+                with contextlib.suppress(OSError):
                     Path(p).unlink(missing_ok=True)
-                except OSError:
-                    pass
 
     def cancel_session(self, session_id: str) -> None:
         """Bricht eine laufende Audio-Session ab."""

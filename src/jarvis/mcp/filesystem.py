@@ -42,8 +42,8 @@ EXCLUDED_DIRECTORIES = frozenset(
 _DEFAULT_MAX_TREE_ENTRIES = 200
 
 __all__ = [
-    "FileSystemTools",
     "FileSystemError",
+    "FileSystemTools",
     "register_fs_tools",
 ]
 

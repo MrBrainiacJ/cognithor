@@ -63,7 +63,7 @@ class TestModels:
         assert req.session_id == "sess-123"
 
     def test_message_request_empty_text_rejected(self) -> None:
-        with pytest.raises(Exception):  # ValidationError
+        with pytest.raises(Exception, match="text"):  # ValidationError
             MessageRequest(text="")
 
     def test_message_response(self) -> None:

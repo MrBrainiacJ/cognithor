@@ -14,8 +14,7 @@ from __future__ import annotations
 
 import re
 
-import pytest
-
+from jarvis.telemetry.metrics import MetricsProvider
 from jarvis.telemetry.prometheus import (
     PrometheusExporter,
     _escape_label_value,
@@ -23,8 +22,6 @@ from jarvis.telemetry.prometheus import (
     _format_value,
     _sanitize_metric_name,
 )
-from jarvis.telemetry.metrics import MetricsProvider
-
 
 # ── Helpers ───────────────────────────────────────────────────────
 
@@ -57,7 +54,7 @@ def _get_type_line(text: str, metric_name: str) -> str | None:
 
 def _get_help_line(text: str, metric_name: str) -> str | None:
     """Extract the HELP line for a metric."""
-    for line in text.strip().split(("\n")):
+    for line in text.strip().split("\n"):
         if line.startswith(f"# HELP {metric_name} "):
             return line
     return None
@@ -427,9 +424,7 @@ class TestFullOutput:
         exporter = PrometheusExporter(metrics_provider=provider)
         output = exporter.export()
 
-        metric_line_re = re.compile(
-            r"^[a-zA-Z_:][a-zA-Z0-9_:]*(\{[^}]*\})?\s+[\d.eE+\-]+|[+\-]?Inf|NaN$"
-        )
+        re.compile(r"^[a-zA-Z_:][a-zA-Z0-9_:]*(\{[^}]*\})?\s+[\d.eE+\-]+|[+\-]?Inf|NaN$")
         for line in output.strip().split("\n"):
             if line.startswith("#") or not line.strip():
                 continue

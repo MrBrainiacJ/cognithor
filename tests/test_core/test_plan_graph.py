@@ -1,8 +1,9 @@
 """Tests fuer PlanGraph."""
 
 import pytest
-from jarvis.core.plan_graph import PlanGraph, CycleError
-from jarvis.models import ActionPlan, PlanNode, PlannedAction, RiskLevel
+
+from jarvis.core.plan_graph import CycleError, PlanGraph
+from jarvis.models import ActionPlan, PlannedAction, PlanNode
 
 
 class TestPlanGraph:

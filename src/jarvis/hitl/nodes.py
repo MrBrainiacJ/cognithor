@@ -32,7 +32,7 @@ Usage mit GraphBuilder:
 
 from __future__ import annotations
 
-from typing import Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.hitl.types import (
     ApprovalStatus,
@@ -40,9 +40,13 @@ from jarvis.hitl.types import (
     HITLNodeKind,
     ReviewPriority,
 )
-from jarvis.hitl.manager import ApprovalManager
-from jarvis.graph.types import GraphState
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from jarvis.graph.types import GraphState
+    from jarvis.hitl.manager import ApprovalManager
 
 log = get_logger(__name__)
 

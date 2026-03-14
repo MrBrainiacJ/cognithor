@@ -6,14 +6,16 @@ ext_map lookup, various audio types.
 
 from __future__ import annotations
 
-import asyncio
 import base64
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from jarvis.channels.voice_ws_bridge import VoiceMessageHandler, VoiceWebSocketBridge
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture

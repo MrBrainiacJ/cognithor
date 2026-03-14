@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
+from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import urlparse
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -20,7 +19,6 @@ from jarvis.core.llm_backend import (
     OpenAIBackend,
     create_backend,
 )
-
 
 # ============================================================================
 # OllamaBackend

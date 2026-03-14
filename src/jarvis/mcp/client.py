@@ -12,6 +12,7 @@ Bibel-Referenz: §5.2 (Jarvis als MCP-Client), §5.4 (Server-Konfiguration)
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -245,10 +246,8 @@ class JarvisMCPClient:
             try:
                 # Properly close session context manager
                 if server.session is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         await server.session.__aexit__(None, None, None)
-                    except Exception:
-                        pass  # Cleanup — session close failure is non-critical
                     server.session = None
                 # Close stdio streams context manager
                 if server.read_stream is not None:

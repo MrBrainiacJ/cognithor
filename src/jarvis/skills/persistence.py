@@ -9,6 +9,7 @@ Architektur-Bibel: SS14 (Skills & Ecosystem)
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sqlite3
 import uuid
@@ -209,10 +210,7 @@ class MarketplaceStore:
         now = _now()
         package_id = listing.get("package_id", str(uuid.uuid4()))
         tags = listing.get("tags", [])
-        if isinstance(tags, list):
-            tags_json = json.dumps(tags, ensure_ascii=False)
-        else:
-            tags_json = str(tags)
+        tags_json = json.dumps(tags, ensure_ascii=False) if isinstance(tags, list) else str(tags)
 
         self.conn.execute(
             """
@@ -648,7 +646,7 @@ class MarketplaceStore:
                     log.warning("community_migration_warning", error=str(exc))
         else:
             # Sicherstellen dass publishers + recalls_remote existieren
-            try:
+            with contextlib.suppress(sqlite3.OperationalError):
                 c.executescript(
                     _MIGRATION_COMMUNITY.split("ALTER TABLE")[0]
                     + """
@@ -677,8 +675,6 @@ class MarketplaceStore:
                         ON recalls_remote(skill_name);
                     """
                 )
-            except sqlite3.OperationalError:
-                pass
 
     # ------------------------------------------------------------------
     # Publishers

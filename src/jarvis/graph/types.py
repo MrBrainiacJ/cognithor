@@ -15,14 +15,15 @@ Kern-Konzepte:
 from __future__ import annotations
 
 import copy
+import itertools
 import json
 import time
-import itertools
 import uuid
-from datetime import datetime, timezone
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable, Awaitable
+from typing import Any
 
 _checkpoint_counter = itertools.count()
 
@@ -116,7 +117,7 @@ class GraphState:
         try:
             return self._data[name]
         except KeyError:
-            raise AttributeError(f"GraphState has no attribute '{name}'")
+            raise AttributeError(f"GraphState has no attribute '{name}'") from None
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name.startswith("_"):
@@ -129,6 +130,9 @@ class GraphState:
 
     def __setitem__(self, key: str, value: Any) -> None:
         self._data[key] = value
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __contains__(self, key: str) -> bool:
         return key in self._data
@@ -286,7 +290,7 @@ class Checkpoint:
         if not self.checkpoint_id:
             self.checkpoint_id = uuid.uuid4().hex[:12]
         if not self.created_at:
-            self.created_at = datetime.now(timezone.utc).isoformat()
+            self.created_at = datetime.now(UTC).isoformat()
         self._seq = next(_checkpoint_counter)
 
     def to_dict(self) -> dict[str, Any]:
@@ -485,7 +489,7 @@ class GraphDefinition:
                     dfs(successor)
                 elif successor in rec_stack:
                     idx = path.index(successor)
-                    cycles.append(path[idx:] + [successor])
+                    cycles.append([*path[idx:], successor])
 
             path.pop()
             rec_stack.discard(node)

@@ -81,7 +81,7 @@ def capabilities_to_skills(capabilities: list[AgentCapability]) -> list[A2ASkill
                 id=cap_type,
                 name=mapping.get("name", cap_type),
                 description=cap.description or mapping.get("description", ""),
-                tags=[cap_type] + cap.languages,
+                tags=[cap_type, *cap.languages],
             )
         )
     return skills

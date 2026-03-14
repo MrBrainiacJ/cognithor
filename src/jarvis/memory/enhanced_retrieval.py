@@ -26,10 +26,13 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
-from typing import Any, Callable
+from datetime import UTC, date, datetime
+from typing import TYPE_CHECKING, Any
 
 from jarvis.models import MemorySearchResult, MemoryTier
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger("jarvis.memory.enhanced_retrieval")
 
@@ -252,7 +255,6 @@ _GERMAN_COMMON_NOUNS: frozenset[str] = frozenset(
         "Stern",
         "Strasse",
         "Stuhl",
-        "Stunde",
         "Tisch",
         "Tuer",
         "Turm",
@@ -307,7 +309,6 @@ _GERMAN_COMMON_NOUNS: frozenset[str] = frozenset(
         "Kredit",
         "Kunde",
         "Laufzeit",
-        "Leistung",
         "Police",
         "Praemie",
         "Provision",
@@ -632,7 +633,7 @@ class QueryDecomposer:
             if lines:
                 return DecomposedQuery(
                     original=query,
-                    sub_queries=[query] + lines[:3],  # Original immer dabei
+                    sub_queries=[query, *lines[:3]],  # Original immer dabei
                     query_type="llm_decomposed",
                 )
         except Exception as exc:
@@ -776,9 +777,11 @@ class CorrectiveRAG:
             overlap_ratio = overlap / max(len(query_words), 1)
 
             # Kombinations-Heuristik
-            if result.score >= 0.3 or overlap_ratio >= 0.3:
-                relevant.append(result)
-            elif result.score >= 0.15 and overlap_ratio >= 0.15:
+            if (
+                result.score >= 0.3
+                or overlap_ratio >= 0.3
+                or (result.score >= 0.15 and overlap_ratio >= 0.15)
+            ):
                 relevant.append(result)
             else:
                 irrelevant.append(result)
@@ -850,10 +853,8 @@ class CorrectiveRAG:
             "a",
             "is",
             "are",
-            "was",
             "and",
             "or",
-            "in",
             "on",
             "at",
             "with",
@@ -985,7 +986,7 @@ class CompressedEpisode:
     entities_mentioned: list[str] = field(default_factory=list)
     original_entry_count: int = 0
     compressed_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
 
     @property

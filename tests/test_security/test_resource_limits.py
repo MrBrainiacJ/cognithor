@@ -7,9 +7,6 @@ ToolResourceMetrics, ToolSandboxManager, and built-in profiles.
 from __future__ import annotations
 
 import time
-from typing import Any
-
-import pytest
 
 from jarvis.security.resource_limits import (
     BUILTIN_PROFILES,
@@ -28,7 +25,6 @@ from jarvis.security.resource_limits import (
     WatchdogAction,
     WatchdogEvent,
 )
-
 
 # ============================================================================
 # ToolSandboxProfile

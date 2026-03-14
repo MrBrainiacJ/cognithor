@@ -6,14 +6,16 @@ _handle_audio_stop empty transcription, _transcribe (ffmpeg, whisper exec).
 
 from __future__ import annotations
 
-import asyncio
 import base64
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from jarvis.channels.voice_bridge import AudioAccumulator, VoiceWebSocketBridge
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestInitialize:
@@ -115,7 +117,7 @@ class TestHandleAudioStopEmptyTranscription:
         types = [c["type"] for c in calls]
         assert "voice_status" in types
         assert "transcription" in types
-        transcription = [c for c in calls if c["type"] == "transcription"][0]
+        transcription = next(c for c in calls if c["type"] == "transcription")
         assert transcription["text"] == ""
         assert transcription["final"] is True
 

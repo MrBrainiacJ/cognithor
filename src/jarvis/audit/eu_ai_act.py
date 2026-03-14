@@ -20,11 +20,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # ============================================================================
 # Risk Classification (Art. 6, Annex III)
 # ============================================================================
-
 from jarvis.audit.compliance import RiskLevel
 
 
@@ -115,9 +113,7 @@ class RiskClassifier:
         self._counter += 1
 
         # Risikolevel bestimmen
-        if category in (SystemCategory.BIOMETRIC, SystemCategory.LAW_ENFORCEMENT):
-            risk = RiskLevel.HIGH
-        elif category in (
+        if category in (SystemCategory.BIOMETRIC, SystemCategory.LAW_ENFORCEMENT) or category in (
             SystemCategory.CRITICAL_INFRASTRUCTURE,
             SystemCategory.EMPLOYMENT,
             SystemCategory.ESSENTIAL_SERVICES,

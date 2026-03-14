@@ -9,12 +9,14 @@ Architektur-Bibel: SS14 (Skills & Ecosystem)
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 

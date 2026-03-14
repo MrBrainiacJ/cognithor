@@ -7,9 +7,6 @@ FailoverManager, Job, and routing strategies.
 from __future__ import annotations
 
 import time
-from typing import Any
-
-import pytest
 
 from jarvis.core.worker import (
     FailoverManager,
@@ -22,7 +19,6 @@ from jarvis.core.worker import (
     WorkerPool,
     WorkerState,
 )
-
 
 # ============================================================================
 # Job

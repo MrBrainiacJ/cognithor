@@ -11,7 +11,7 @@ Targets:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import pytest
@@ -19,15 +19,12 @@ import pytest
 from jarvis.proactive import (
     ApprovalMode,
     EventConfig,
-    EventSource,
-    EventTrigger,
     EventType,
     HeartbeatScheduler,
     ProactiveTask,
     TaskQueue,
     TaskStatus,
 )
-
 
 # ============================================================================
 # EventConfig edge cases
@@ -44,7 +41,7 @@ class TestEventConfigQuietHours:
         )
         # Mock hour=23 -> should be in quiet hours
         with patch("jarvis.proactive.datetime") as mock_dt:
-            mock_now = datetime(2026, 1, 1, 23, 0, tzinfo=timezone.utc)
+            mock_now = datetime(2026, 1, 1, 23, 0, tzinfo=UTC)
             mock_dt.now.return_value = mock_now
             mock_dt.fromisoformat = datetime.fromisoformat
             assert config.is_in_quiet_hours is True
@@ -56,7 +53,7 @@ class TestEventConfigQuietHours:
             quiet_hours_end=6,
         )
         with patch("jarvis.proactive.datetime") as mock_dt:
-            mock_now = datetime(2026, 1, 1, 3, 0, tzinfo=timezone.utc)
+            mock_now = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
             mock_dt.now.return_value = mock_now
             mock_dt.fromisoformat = datetime.fromisoformat
             assert config.is_in_quiet_hours is True
@@ -68,7 +65,7 @@ class TestEventConfigQuietHours:
             quiet_hours_end=6,
         )
         with patch("jarvis.proactive.datetime") as mock_dt:
-            mock_now = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+            mock_now = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
             mock_dt.now.return_value = mock_now
             mock_dt.fromisoformat = datetime.fromisoformat
             assert config.is_in_quiet_hours is False
@@ -93,7 +90,7 @@ class TestProactiveTaskEdgeCases:
         task = ProactiveTask(
             task_id="t1",
             event_type=EventType.EMAIL_TRIAGE,
-            started_at=datetime.now(timezone.utc).isoformat(),
+            started_at=datetime.now(UTC).isoformat(),
             completed_at="",
         )
         assert task.duration_seconds == 0.0
@@ -134,7 +131,7 @@ class TestTaskQueueEdgeCases:
         q = TaskQueue()
         t = ProactiveTask(task_id="t1", event_type=EventType.EMAIL_TRIAGE)
         t.status = TaskStatus.COMPLETED
-        t.completed_at = datetime.now(timezone.utc).isoformat()
+        t.completed_at = datetime.now(UTC).isoformat()
         q.enqueue(t)
         # keep=100, only 1 completed -> nothing to remove
         removed = q.cleanup_completed(keep=100)

@@ -15,7 +15,6 @@ import hashlib
 import inspect
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 

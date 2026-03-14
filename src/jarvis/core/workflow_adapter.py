@@ -14,12 +14,16 @@ Usage::
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from jarvis.core.workflow_schema import (
     NodeType,
     WorkflowDefinition,
     WorkflowNode,
 )
-from jarvis.models import ActionPlan
+
+if TYPE_CHECKING:
+    from jarvis.models import ActionPlan
 
 
 def action_plan_to_workflow(

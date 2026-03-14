@@ -13,8 +13,7 @@ from __future__ import annotations
 
 import inspect
 import json
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -22,6 +21,8 @@ import pytest
 from jarvis.config import JarvisConfig
 from jarvis.config_manager import ConfigManager
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # FakeApp (gleicher Pattern wie test_workflow_graph_routes.py)

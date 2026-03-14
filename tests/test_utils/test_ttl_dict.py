@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import patch
 
 import pytest
 
 from jarvis.utils.ttl_dict import TTLDict
-
 
 # ============================================================================
 # Basic Operations

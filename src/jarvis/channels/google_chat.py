@@ -356,7 +356,7 @@ class GoogleChatChannel(Channel):
         # Card wird über Webhook-Antwort gesendet, hier nur Future warten
         try:
             return await asyncio.wait_for(future, timeout=300.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Google Chat Approval Timeout: %s", action.tool)
             async with self._approval_lock:
                 self._approval_futures.pop(approval_id, None)

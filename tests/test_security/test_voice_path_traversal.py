@@ -22,7 +22,6 @@ from jarvis.security.sanitizer import (
     validate_voice_name,
 )
 
-
 # ============================================================================
 # validate_voice_name — Valid Names (Positive Cases)
 # ============================================================================
@@ -309,7 +308,7 @@ class TestVoiceWSBridgePathTraversal:
         # May fail at TTS level (no piper), but should not fail at validation
         # We just verify it doesn't immediately return None due to voice validation
         # (it will return None due to missing piper, but for a different reason)
-        result = await handler.synthesize_response("Hallo", voice="de_DE-thorsten-high")
+        await handler.synthesize_response("Hallo", voice="de_DE-thorsten-high")
         # Result is None because piper isn't installed in test env — that's OK
         # The important thing is no ValueError was raised
 

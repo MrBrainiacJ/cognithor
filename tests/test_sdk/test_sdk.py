@@ -6,10 +6,7 @@ scaffolding, definitions, and integration patterns.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
-
-import pytest
+from typing import TYPE_CHECKING
 
 from jarvis.sdk.decorators import _infer_schema, get_registry
 from jarvis.sdk.definitions import (
@@ -21,6 +18,8 @@ from jarvis.sdk.definitions import (
 from jarvis.sdk.registry import SDKRegistry
 from jarvis.sdk.scaffold import scaffold_agent, scaffold_tool
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # ToolDefinition

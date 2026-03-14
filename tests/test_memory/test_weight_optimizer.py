@@ -1,7 +1,5 @@
 """Tests fuer SearchWeightOptimizer."""
 
-import pytest
-
 from jarvis.memory.weight_optimizer import SearchWeightOptimizer
 
 
@@ -90,8 +88,8 @@ class TestSearchWeightOptimizer:
 
     def test_persistence(self):
         """Weights survive re-initialization with same DB."""
-        import tempfile
         import os
+        import tempfile
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name

@@ -242,7 +242,7 @@ class TestAgentContext:
     tatsächlich an Tool-Params weiterleitet — kein Platzhalter."""
 
     def test_set_and_clear(self, executor: Executor) -> None:
-        from jarvis.core.executor import _agent_workspace_var, _agent_sandbox_var
+        from jarvis.core.executor import _agent_sandbox_var, _agent_workspace_var
 
         executor.set_agent_context(
             workspace_dir=str(Path(tempfile.gettempdir()) / "agent" / "coder"),

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ssl
-from pathlib import Path
 
 import pytest
 from cryptography import x509

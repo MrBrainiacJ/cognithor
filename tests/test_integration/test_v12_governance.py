@@ -6,18 +6,14 @@
 from __future__ import annotations
 
 import pytest
-from typing import Any
 
 # ============================================================================
 # 1. Agent Vault & Session Isolation
 # ============================================================================
-
 from jarvis.security.agent_vault import (
     AgentVault,
     AgentVaultManager,
     IsolatedSessionStore,
-    RotationPolicy,
-    SecretStatus,
     SecretType,
     SessionFirewall,
     VaultRotator,
@@ -219,15 +215,12 @@ class TestAgentVaultManager:
 from jarvis.security.red_team import (
     AttackCategory,
     AttackPlaybook,
-    AttackSeverity,
-    AttackVector,
     CICDGenerator,
     CICDPlatform,
     JailbreakSimulator,
     PromptInjectionTester,
     RedTeamFramework,
     RedTeamRunner,
-    TestResult,
 )
 
 
@@ -643,7 +636,7 @@ class TestSourceIntegrityChecker:
 # 5. Skill-Level Risk Classification
 # ============================================================================
 
-from jarvis.audit.eu_ai_act import RiskClassifier, RiskLevel, SystemCategory
+from jarvis.audit.eu_ai_act import RiskClassifier, RiskLevel
 
 
 class TestSkillClassification:

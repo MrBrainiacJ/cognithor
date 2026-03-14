@@ -19,12 +19,13 @@ Usage::
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import re
 import time
 from collections import deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -40,6 +41,8 @@ from jarvis.core.workflow_schema import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     pass
 
 log = structlog.get_logger(__name__)
@@ -171,7 +174,7 @@ class WorkflowEngine:
                 self._execute_loop(workflow, run, session),
                 timeout=workflow.global_timeout_seconds,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log.warning(
                 "workflow_timeout",
                 workflow_id=workflow.id,
@@ -227,7 +230,7 @@ class WorkflowEngine:
                 self._execute_loop(workflow, run, session),
                 timeout=workflow.global_timeout_seconds,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             for nr in run.node_results.values():
                 if nr.status in (NodeStatus.PENDING, NodeStatus.WAITING, NodeStatus.RUNNING):
                     nr.status = NodeStatus.SKIPPED
@@ -319,7 +322,7 @@ class WorkflowEngine:
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # 4. Process results
-            for node, result in zip(ready, results):
+            for node, result in zip(ready, results, strict=False):
                 if isinstance(result, BaseException):
                     run.node_results[node.id].status = NodeStatus.FAILURE
                     run.node_results[node.id].error = str(result)
@@ -355,13 +358,11 @@ class WorkflowEngine:
         session: Any,
     ) -> NodeResult:
         if self._status_callback:
-            try:
+            with contextlib.suppress(Exception):
                 await asyncio.wait_for(
                     self._status_callback(node.id, f"Executing: {node.name or node.id}"),
                     timeout=2.0,
                 )
-            except Exception:  # noqa: BLE001 — fire-and-forget
-                pass
 
         log.info("node_started", node_id=node.id, type=node.type, name=node.name)
 
@@ -392,7 +393,7 @@ class WorkflowEngine:
                 last_result = result
                 last_error = result.error
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 last_result = None
                 last_error = f"Timeout nach {node.timeout_seconds}s"
                 log.warning(
@@ -402,7 +403,7 @@ class WorkflowEngine:
                     attempt=attempt + 1,
                 )
 
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_result = None
                 last_error = str(exc)
                 log.warning(
@@ -476,7 +477,7 @@ class WorkflowEngine:
 
         # Gatekeeper pre-check
         if self._gatekeeper and session:
-            from jarvis.models import ActionPlan, PlannedAction  # noqa: PLC0415
+            from jarvis.models import ActionPlan, PlannedAction
 
             action = PlannedAction(tool=node.tool_name or "", params=resolved_params)
             plan = ActionPlan(goal=f"Workflow: {node.name or node.id}", steps=[action])
@@ -726,7 +727,7 @@ class WorkflowEngine:
                 if color.get(neighbor) == GRAY:
                     # Back edge found — extract cycle from stack
                     idx = stack.index(neighbor)
-                    return stack[idx:] + [neighbor]
+                    return [*stack[idx:], neighbor]
                 if color.get(neighbor) == WHITE:
                     found = dfs(neighbor, stack)
                     if found:
@@ -767,7 +768,7 @@ class WorkflowEngine:
             path = self._checkpoint_dir / f"{run.id}.json"
             data = run.model_dump_json(indent=2)
             await asyncio.to_thread(path.write_text, data, "utf-8")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.warning("checkpoint_save_failed", run_id=run.id, error=str(exc))
 
     def _load_checkpoint(self, path: Path) -> WorkflowRun:
@@ -781,7 +782,7 @@ class WorkflowEngine:
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _strip_quotes(s: str) -> str:

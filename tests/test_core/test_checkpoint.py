@@ -1,6 +1,5 @@
 """Tests fuer CheckpointManager."""
 
-import pytest
 from jarvis.core.checkpoint import CheckpointManager
 from jarvis.models import KernelState, ToolResult
 

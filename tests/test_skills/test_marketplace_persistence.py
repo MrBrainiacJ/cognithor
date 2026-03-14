@@ -17,14 +17,12 @@ Testet:
 from __future__ import annotations
 
 import sqlite3
-import time
 from pathlib import Path
 
 import pytest
 
 from jarvis.skills.persistence import MarketplaceStore
 from jarvis.skills.seed_data import seed_marketplace
-
 
 # ======================================================================
 # Fixtures

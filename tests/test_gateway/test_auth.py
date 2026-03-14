@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.gateway.auth import (
-    AgentSession,
     AuthGateway,
-    AuthMethod,
-    GatewayToken,
 )
 
 

@@ -682,6 +682,7 @@ class TestLiveReload:
     def test_executor_reload_config(self, tmp_path) -> None:
         """Executor.reload_config() aktualisiert runtime-Werte."""
         from unittest.mock import AsyncMock
+
         from jarvis.core.executor import Executor
 
         config = JarvisConfig(jarvis_home=tmp_path)

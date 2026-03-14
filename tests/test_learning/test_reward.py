@@ -1,7 +1,5 @@
 """Tests fuer RewardCalculator."""
 
-import pytest
-
 from jarvis.learning.reward import RewardCalculator
 
 
@@ -129,7 +127,6 @@ class TestRewardCalculator:
             success_score=1.0,
             duration_seconds=30.0,
         )
-        expected_speed = 0.5
         # success(1.0)*0.4 + error(1.0)*0.2 + efficiency(1.0)*0.2 + speed(0.5)*0.2
         expected = 0.4 + 0.2 + 0.2 + 0.1
         assert abs(reward - expected) < 0.01

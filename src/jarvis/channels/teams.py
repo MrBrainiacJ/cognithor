@@ -28,6 +28,7 @@ Abhaengigkeiten:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import uuid
 from typing import TYPE_CHECKING, Any
@@ -37,6 +38,8 @@ from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.token_store import get_token_store
 
 if TYPE_CHECKING:
+    from botbuilder.core import TurnContext
+
     from jarvis.gateway.session_store import SessionStore
 
 logger = logging.getLogger(__name__)
@@ -126,7 +129,10 @@ class TeamsChannel(Channel):
                 BotFrameworkAdapterSettings,
                 TurnContext,  # noqa: F401
             )
-            from botbuilder.schema import Activity, ActivityTypes  # type: ignore[import-untyped]  # noqa: F401
+            from botbuilder.schema import (  # type: ignore[import-untyped]
+                Activity,  # noqa: F401
+                ActivityTypes,  # noqa: F401
+            )
         except ImportError:
             logger.error(
                 "botbuilder-core nicht installiert. "
@@ -141,10 +147,8 @@ class TeamsChannel(Channel):
         # Error-Handler
         async def on_error(context: Any, error: Exception) -> None:
             logger.error("Teams Bot-Fehler: %s", error)
-            try:
+            with contextlib.suppress(Exception):
                 await context.send_activity("Ein interner Fehler ist aufgetreten.")
-            except Exception:
-                pass  # Cleanup — error notification failure is non-critical
 
         self._adapter.on_turn_error = on_error
 
@@ -203,7 +207,6 @@ class TeamsChannel(Channel):
     async def _handle_messages(self, request: Any) -> Any:
         """POST /api/messages -- Eingehende Bot Framework Activities."""
         from aiohttp import web
-        from botbuilder.core import TurnContext  # type: ignore[import-untyped]
         from botbuilder.schema import Activity  # type: ignore[import-untyped]
 
         if not self._adapter:
@@ -331,10 +334,8 @@ class TeamsChannel(Channel):
 
         if self._handler:
             # Typing-Indicator senden
-            try:
+            with contextlib.suppress(Exception):
                 await turn_context.send_activity(_create_typing_activity())
-            except Exception:
-                pass  # Cleanup — typing indicator failure is non-critical
 
             try:
                 response = await self._handler(incoming)
@@ -509,7 +510,7 @@ class TeamsChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=APPROVAL_TIMEOUT)
-        except (asyncio.TimeoutError, TimeoutError):
+        except TimeoutError:
             logger.warning("Teams: Approval-Timeout fuer Session %s", session_id[:8])
             return False
         finally:

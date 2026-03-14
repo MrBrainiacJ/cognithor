@@ -6,8 +6,6 @@ und ExplainabilityEngine.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.explainability import (
     DecisionTrail,
     ExplainabilityEngine,
@@ -15,11 +13,9 @@ from jarvis.core.explainability import (
     SourceReference,
     SourceType,
     StepType,
-    TrailStep,
     TrustLevel,
     TrustScoreCalculator,
 )
-
 
 # ============================================================================
 # DecisionTrail

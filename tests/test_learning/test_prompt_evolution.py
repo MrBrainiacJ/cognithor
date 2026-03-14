@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import time as _time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.learning.prompt_evolution import (
     PromptEvolutionEngine,
-    PromptVersionStore,
     _version_id,
 )
 
@@ -65,7 +64,7 @@ class TestPromptVersionStore:
 
     def test_first_registered_version_is_active(self, engine):
         vid1 = engine.register_prompt("test_prompt", "Version 1")
-        vid2 = engine.register_prompt("test_prompt", "Version 2")
+        engine.register_prompt("test_prompt", "Version 2")
 
         active_id, text = engine.get_active_version("test_prompt")
         assert active_id == vid1

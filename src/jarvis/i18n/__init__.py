@@ -34,13 +34,13 @@ from pathlib import Path
 from typing import Any
 
 __all__ = [
-    "t",
-    "set_locale",
-    "get_locale",
-    "get_available_locales",
-    "reload_locale",
-    "verify_pack_integrity",
     "LOCALES_DIR",
+    "get_available_locales",
+    "get_locale",
+    "reload_locale",
+    "set_locale",
+    "t",
+    "verify_pack_integrity",
 ]
 
 logger = logging.getLogger(__name__)

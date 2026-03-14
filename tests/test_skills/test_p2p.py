@@ -11,17 +11,11 @@ Testet:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.skills.package import (
-    PackageSigner,
-    SkillManifest,
-    SkillPackage,
-    TrustLevel,
-)
 from jarvis.skills.p2p import (
     IndexEntry,
     PeerNode,
@@ -30,10 +24,15 @@ from jarvis.skills.p2p import (
     ReputationTracker,
     SkillExchange,
     SkillIndex,
-    Subscription,
     SubscriptionFeed,
 )
+from jarvis.skills.package import (
+    SkillManifest,
+    TrustLevel,
+)
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # PeerNode
@@ -57,7 +56,7 @@ class TestPeerNode:
 
     def test_stale_detection(self) -> None:
         peer = PeerNode(peer_id="old")
-        peer.last_seen = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+        peer.last_seen = (datetime.now(UTC) - timedelta(hours=2)).isoformat()
         assert peer.is_stale
 
 
@@ -109,7 +108,7 @@ class TestPeerRegistry:
 
     def test_cleanup_stale(self, registry: PeerRegistry) -> None:
         old_peer = PeerNode(peer_id="old")
-        old_peer.last_seen = (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
+        old_peer.last_seen = (datetime.now(UTC) - timedelta(hours=5)).isoformat()
         registry._peers["old"] = old_peer
 
         registry.register(PeerNode(peer_id="fresh"))
@@ -122,7 +121,7 @@ class TestPeerRegistry:
         for i in range(5):
             p = PeerNode(peer_id=f"p{i}")
             if i < 2:
-                p.last_seen = (datetime.now(timezone.utc) - timedelta(hours=3)).isoformat()
+                p.last_seen = (datetime.now(UTC) - timedelta(hours=3)).isoformat()
             registry.register(p)
 
         assert registry.peer_count <= 5

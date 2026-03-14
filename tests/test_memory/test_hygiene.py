@@ -6,21 +6,16 @@ ContradictionChecker, IntegrityVerifier und MemoryHygieneEngine.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.memory.hygiene import (
     ContradictionChecker,
     CredentialLeakDetector,
     FactAssertion,
-    HygieneReport,
     InjectionScanner,
     IntegrityVerifier,
     MemoryHygieneEngine,
-    MemoryThreat,
     ThreatSeverity,
     ThreatType,
 )
-
 
 # ============================================================================
 # InjectionScanner

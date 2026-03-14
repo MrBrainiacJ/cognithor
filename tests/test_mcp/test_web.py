@@ -6,12 +6,12 @@ und Such-Backend-Integration (gemocked).
 
 from __future__ import annotations
 
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import urlparse
 
 import httpx
 import pytest
-import re
-from urllib.parse import urlparse
 
 from jarvis.mcp.web import (
     WebError,

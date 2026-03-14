@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -19,7 +18,6 @@ from jarvis.utils.installer import (
     detect_uv,
     run_install,
 )
-
 
 # ── InstallerBackend ──────────────────────────────────────────────────────
 

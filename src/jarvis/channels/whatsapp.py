@@ -86,6 +86,7 @@ class WhatsAppChannel(Channel):
         self._sessions: dict[str, str] = {}
         # Pending approvals: session_id -> asyncio.Future
         self._pending_approvals: dict[str, asyncio.Future[bool]] = {}
+        self._pending_tasks: set[asyncio.Task[Any]] = set()
 
         # Optional voice transcription
         self._whisper = None
@@ -314,7 +315,9 @@ class WhatsAppChannel(Channel):
             return web.Response(status=400)
 
         # Meta sendet immer 200 zurueck, sonst Retry-Storm
-        asyncio.create_task(self._process_webhook_payload(body))
+        task = asyncio.create_task(self._process_webhook_payload(body))
+        self._pending_tasks.add(task)
+        task.add_done_callback(self._pending_tasks.discard)
         return web.Response(status=200, text="OK")
 
     def _verify_signature(self, payload: bytes, signature_header: str) -> bool:

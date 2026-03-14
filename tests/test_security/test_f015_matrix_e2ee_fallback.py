@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import inspect
 import sys
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -39,7 +38,12 @@ sys.modules.setdefault("nio", _mock_nio)
 # Mock faster_whisper to avoid torch import crash
 sys.modules.setdefault("faster_whisper", MagicMock())
 
+from typing import TYPE_CHECKING
+
 from jarvis.channels.matrix import MatrixChannel
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_ch(tmp_path: Path, **kwargs) -> MatrixChannel:

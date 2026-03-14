@@ -6,10 +6,7 @@ HeartbeatMonitor, MonitoringHub, SSE-Streaming.
 
 from __future__ import annotations
 
-import asyncio
 from datetime import UTC, datetime, timedelta
-
-import pytest
 
 from jarvis.gateway.monitoring import (
     AuditEntry,
@@ -19,11 +16,9 @@ from jarvis.gateway.monitoring import (
     HeartbeatMonitor,
     HeartbeatRun,
     MetricCollector,
-    MetricPoint,
     MonitoringHub,
     SystemEvent,
 )
-
 
 # ============================================================================
 # EventBus

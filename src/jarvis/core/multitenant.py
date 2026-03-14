@@ -21,7 +21,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-
 # ============================================================================
 # Multi-Tenant
 # ============================================================================
@@ -515,10 +514,7 @@ class EmergencyController:
         self._events.append(event)
 
         # Aktion durchführen
-        if action == EmergencyAction.KILL_SWITCH:
-            self._lockdown_active = True
-            # KILL_SWITCH: lockdown blocks ALL operations via is_lockdown check
-        elif action == EmergencyAction.LOCKDOWN:
+        if action == EmergencyAction.KILL_SWITCH or action == EmergencyAction.LOCKDOWN:
             self._lockdown_active = True
         elif action == EmergencyAction.QUARANTINE_AGENT:
             self._quarantined_agents.add(target)

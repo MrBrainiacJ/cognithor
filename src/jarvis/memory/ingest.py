@@ -30,7 +30,7 @@ import hashlib
 import shutil
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -193,7 +193,7 @@ class TextExtractor:
             result = await self._media_pipeline.extract_text(str(file_path))
             if result.success:
                 return result.text
-            raise IOError(f"PDF-Extraktion fehlgeschlagen: {result.error}")
+            raise OSError(f"PDF-Extraktion fehlgeschlagen: {result.error}")
 
         # Fallback: PyMuPDF direkt
         try:
@@ -203,8 +203,8 @@ class TextExtractor:
             texts = [page.get_text() for page in doc]
             doc.close()
             return "\n\n".join(texts)
-        except ImportError:
-            raise IOError("PDF-Extraktion benötigt PyMuPDF: pip install pymupdf")
+        except ImportError as exc:
+            raise OSError("PDF-Extraktion benötigt PyMuPDF: pip install pymupdf") from exc
 
     async def _extract_docx(self, file_path: Path) -> str:
         """Extrahiert Text aus DOCX via MediaPipeline."""
@@ -212,7 +212,7 @@ class TextExtractor:
             result = await self._media_pipeline.extract_text(str(file_path))
             if result.success:
                 return result.text
-            raise IOError(f"DOCX-Extraktion fehlgeschlagen: {result.error}")
+            raise OSError(f"DOCX-Extraktion fehlgeschlagen: {result.error}")
 
         # Fallback: python-docx direkt
         try:
@@ -220,8 +220,8 @@ class TextExtractor:
 
             doc = docx.Document(str(file_path))
             return "\n\n".join(p.text for p in doc.paragraphs if p.text.strip())
-        except ImportError:
-            raise IOError("DOCX-Extraktion benötigt python-docx: pip install python-docx")
+        except ImportError as exc:
+            raise OSError("DOCX-Extraktion benötigt python-docx: pip install python-docx") from exc
 
 
 # ============================================================================
@@ -410,7 +410,7 @@ class IngestPipeline:
 
     def _move_to_processed(self, file_path: Path, content_hash: str) -> None:
         """Verschiebt eine verarbeitete Datei nach processed/."""
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         dest = self._config.processed_dir / f"{content_hash}_{timestamp}_{file_path.name}"
         try:
             shutil.move(str(file_path), str(dest))

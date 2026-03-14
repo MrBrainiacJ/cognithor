@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import json
 import sys
-import time
 from types import ModuleType
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,17 +12,12 @@ from jarvis.a2a.client import A2AClient, RemoteAgent
 from jarvis.a2a.http_handler import A2AHTTPHandler
 from jarvis.a2a.types import (
     A2A_CONTENT_TYPE,
-    A2A_PROTOCOL_VERSION,
     A2A_VERSION_HEADER,
     A2AAgentCapabilities,
     A2AAgentCard,
     A2ASkill,
-    Artifact,
     Message,
     MessageRole,
-    Task,
-    TaskState,
-    TaskStatus,
     TextPart,
 )
 

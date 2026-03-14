@@ -15,10 +15,7 @@ from __future__ import annotations
 import inspect
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from jarvis.core.startup_check import StartupChecker, StartupReport, OPTIONAL_GROUPS
-
+from jarvis.core.startup_check import StartupChecker, StartupReport
 
 # ============================================================================
 # Default-Verhalten: kein Auto-Install

@@ -1,6 +1,5 @@
 """Tests fuer ArchitectureAnalyzer."""
 
-import pytest
 import tempfile
 from pathlib import Path
 

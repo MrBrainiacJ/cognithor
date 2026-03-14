@@ -6,10 +6,7 @@ und RemediationTracker.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.audit.compliance import (
-    ComplianceCheck,
     ComplianceFramework,
     ComplianceReport,
     ComplianceStatus,
@@ -19,9 +16,7 @@ from jarvis.audit.compliance import (
     RemediationStatus,
     RemediationTracker,
     ReportExporter,
-    RiskLevel,
 )
-
 
 # ============================================================================
 # DecisionLog

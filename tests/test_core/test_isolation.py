@@ -8,17 +8,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from jarvis.core.isolation import (
     AgentResourceQuota,
     MultiUserIsolation,
     RateLimiter,
     UserAgentScope,
     WorkspaceGuard,
-    WorkspacePolicy,
 )
-
 
 # ============================================================================
 # WorkspaceGuard

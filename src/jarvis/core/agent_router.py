@@ -576,7 +576,7 @@ class AgentRouter:
         cls,
         config_path: str | Path,
         audit_logger: AuditLogger | None = None,
-    ) -> "AgentRouter":
+    ) -> AgentRouter:
         """Lädt Agenten- und Binding-Konfiguration aus YAML-Datei(en).
 
         Erwartetes Format (agents.yaml):
@@ -629,10 +629,7 @@ class AgentRouter:
             return False
         if not target.enabled:
             return False
-        if to_agent not in source.can_delegate_to:
-            return False
-
-        return True
+        return to_agent in source.can_delegate_to
 
     def create_delegation(
         self,

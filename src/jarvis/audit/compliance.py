@@ -25,7 +25,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # ============================================================================
 # Enums
 # ============================================================================
@@ -388,7 +387,7 @@ class ComplianceFramework:
     def non_compliant_checks(self) -> list[ComplianceCheck]:
         return [c for c in self._checks if c.status == ComplianceStatus.NON_COMPLIANT]
 
-    def generate_report(self) -> "ComplianceReport":
+    def generate_report(self) -> ComplianceReport:
         """Erstellt einen vollständigen Compliance-Bericht."""
         return ComplianceReport(
             report_id=hashlib.sha256(str(time.time()).encode()).hexdigest()[:16],

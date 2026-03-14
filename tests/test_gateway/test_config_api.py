@@ -20,7 +20,6 @@ from jarvis.gateway.config_api import (
     SandboxUpdate,
 )
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -148,12 +147,12 @@ class TestHeartbeatConfig:
 
     def test_heartbeat_validation_min_interval(self) -> None:
         """interval_minutes < 1 wird abgelehnt."""
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(Exception, match="interval"):  # Pydantic ValidationError
             HeartbeatUpdate(interval_minutes=0)
 
     def test_heartbeat_validation_max_interval(self) -> None:
         """interval_minutes > 1440 wird abgelehnt."""
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="interval"):
             HeartbeatUpdate(interval_minutes=1441)
 
 
@@ -386,11 +385,11 @@ class TestSandboxConfig:
         assert sb["network"] == "allow"  # Unverändert
 
     def test_sandbox_validation_min_memory(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="memory|max_memory"):
             SandboxUpdate(max_memory_mb=32)  # < 64
 
     def test_sandbox_validation_max_memory(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="memory|max_memory"):
             SandboxUpdate(max_memory_mb=16384)  # > 8192
 
 

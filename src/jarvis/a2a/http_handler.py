@@ -12,11 +12,14 @@ Import-sicher: FastAPI ist Optional-Dependency.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.a2a.types import A2A_CONTENT_TYPE, A2A_PROTOCOL_VERSION, A2A_VERSION_HEADER
 from jarvis.security.rate_limiter import RateLimiter
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from starlette.requests import Request
 
 log = get_logger(__name__)
 
@@ -85,7 +88,6 @@ class A2AHTTPHandler:
             app: FastAPI-Instanz (oder APIRouter)
         """
         try:
-            from starlette.requests import Request
             from starlette.responses import JSONResponse, StreamingResponse
         except ImportError:
             log.warning("a2a_http_starlette_not_available")
@@ -308,7 +310,7 @@ class A2AHTTPHandler:
                     f"Content-Type: {A2A_CONTENT_TYPE}\r\n"
                     f"Content-Length: {len(body_bytes)}\r\n"
                     f"\r\n"
-                ).encode("utf-8")
+                ).encode()
                 writer.write(header + body_bytes)
                 await writer.drain()
             except Exception:

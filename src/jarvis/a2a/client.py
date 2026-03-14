@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 from jarvis.a2a.types import (
     A2A_CONTENT_TYPE,
@@ -24,6 +24,9 @@ from jarvis.a2a.types import (
     TextPart,
 )
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 log = get_logger(__name__)
 
@@ -256,20 +259,22 @@ class A2AClient:
         try:
             import httpx
 
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                async with client.stream(
+            async with (
+                httpx.AsyncClient(timeout=120.0) as client,
+                client.stream(
                     "POST",
                     f"{endpoint}/a2a/stream",
                     json=body,
                     headers=headers,
-                ) as response:
-                    async for line in response.aiter_lines():
-                        if line.startswith("data: "):
-                            try:
-                                data = json.loads(line[6:])
-                                yield data
-                            except json.JSONDecodeError:
-                                pass
+                ) as response,
+            ):
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        try:
+                            data = json.loads(line[6:])
+                            yield data
+                        except json.JSONDecodeError:
+                            pass
         except ImportError:
             log.warning("a2a_httpx_not_installed")
         except Exception as exc:

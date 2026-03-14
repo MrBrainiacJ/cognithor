@@ -6,20 +6,21 @@ search, checksum verification, and edge cases.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 import pytest
 
 from jarvis.skills.remote_registry import (
     DependencyResolver,
+    InstalledPlugin,
     InstallResult,
     InstallStatus,
-    InstalledPlugin,
     PluginManifest,
     RemoteRegistry,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # PluginManifest

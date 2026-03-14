@@ -10,28 +10,24 @@
 
 from __future__ import annotations
 
-import pytest
-
-from jarvis.core.workflows import (
-    WorkflowTemplate,
-    WorkflowStep,
-    WorkflowEngine,
-    WorkflowStatus,
-    TemplateLibrary,
-    EcosystemPolicy,
-    SecurityTier,
-    ComplianceBadge,
-    WorkflowInstance,
-)
 from jarvis.core.extensions import (
-    ModelExtensionRegistry,
-    ModelDefinition,
-    ModelCapability,
-    ModelProvider,
     I18nManager,
+    ModelCapability,
+    ModelDefinition,
+    ModelExtensionRegistry,
+    ModelProvider,
     TranslationBundle,
 )
-
+from jarvis.core.workflows import (
+    EcosystemPolicy,
+    SecurityTier,
+    TemplateLibrary,
+    WorkflowEngine,
+    WorkflowInstance,
+    WorkflowStatus,
+    WorkflowStep,
+    WorkflowTemplate,
+)
 
 # ============================================================================
 # Workflow-Templates
@@ -139,7 +135,7 @@ class TestWorkflowEngine:
 
     def test_advance_to_completion(self) -> None:
         engine, inst = self._start_onboarding()
-        for i in range(5):
+        for _i in range(5):
             engine.advance(inst.instance_id)
         updated = engine.get(inst.instance_id)
         assert updated.status == WorkflowStatus.COMPLETED

@@ -15,10 +15,11 @@ from __future__ import annotations
 import asyncio
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 from jarvis.utils.logging import get_logger
 
@@ -116,6 +117,7 @@ class EventBus:
         self._async_handlers: dict[EventType | None, list[Any]] = {}
         self._history: deque[SystemEvent] = deque(maxlen=max_history)
         self._sse_queues: list[asyncio.Queue[SystemEvent]] = []
+        self._pending_tasks: set[asyncio.Task[Any]] = set()
 
     def subscribe(
         self,
@@ -156,12 +158,16 @@ class EventBus:
         # Async-Handler
         for handler in self._async_handlers.get(event.event_type, []):
             try:
-                asyncio.ensure_future(handler(event))
+                task = asyncio.ensure_future(handler(event))
+                self._pending_tasks.add(task)
+                task.add_done_callback(self._pending_tasks.discard)
             except Exception as exc:
                 log.warning("async_event_handler_error", error=str(exc))
         for handler in self._async_handlers.get(None, []):
             try:
-                asyncio.ensure_future(handler(event))
+                task = asyncio.ensure_future(handler(event))
+                self._pending_tasks.add(task)
+                task.add_done_callback(self._pending_tasks.discard)
             except Exception as exc:
                 log.warning("async_event_handler_error", error=str(exc))
 

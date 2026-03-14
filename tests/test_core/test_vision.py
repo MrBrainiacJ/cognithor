@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.vision import (
     ImageContent,
     ImageMediaType,
@@ -12,7 +10,6 @@ from jarvis.core.vision import (
     format_for_backend,
     is_multimodal_message,
 )
-
 
 # ============================================================================
 # ImageContent

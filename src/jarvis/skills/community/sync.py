@@ -12,6 +12,7 @@ Bible reference: §6.2 (Skills), §14 (Marketplace)
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import time
 from dataclasses import dataclass, field
@@ -179,10 +180,8 @@ class RegistrySync:
         self._running = False
         if self._task is not None:
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
             self._task = None
         log.info("registry_sync_stopped")
 
@@ -274,12 +273,12 @@ class RegistrySync:
 
         if aiohttp_available:
             try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        url, timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT_S)
-                    ) as resp:
-                        resp.raise_for_status()
-                        return await resp.text()
+                async with (
+                    aiohttp.ClientSession() as session,
+                    session.get(url, timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT_S)) as resp,
+                ):
+                    resp.raise_for_status()
+                    return await resp.text()
             except Exception as aio_exc:
                 log.debug(
                     "aiohttp_fetch_failed_falling_back_to_urllib", url=url, error=str(aio_exc)

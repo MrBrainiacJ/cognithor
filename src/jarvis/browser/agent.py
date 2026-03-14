@@ -42,7 +42,7 @@ log = get_logger(__name__)
 # Playwright-Verfügbarkeit prüfen
 _HAS_PLAYWRIGHT = False
 try:
-    from playwright.async_api import async_playwright, Browser, BrowserContext, Page  # noqa: F401
+    from playwright.async_api import Browser, BrowserContext, Page, async_playwright  # noqa: F401
 
     _HAS_PLAYWRIGHT = True
 except ImportError:
@@ -569,7 +569,7 @@ class BrowserAgent:
             if not result.success:
                 # Retry
                 retried = False
-                for attempt in range(workflow.max_retries):
+                for _attempt in range(workflow.max_retries):
                     await asyncio.sleep(1)
                     retry_result = await self._execute_action(step)
                     if retry_result.success:

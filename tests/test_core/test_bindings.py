@@ -16,7 +16,7 @@ Testet alle Aspekte:
 from __future__ import annotations
 
 from datetime import datetime, time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -34,6 +34,8 @@ from jarvis.core.bindings import (
     user_binding,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fixtures
@@ -997,9 +999,9 @@ class TestAgentRouterIntegration:
         assert stats["bindings"]["total_bindings"] == 1
 
     def test_from_yaml_loads_bindings(self, tmp_path: Path) -> None:
-        from jarvis.core.agent_router import AgentProfile, AgentRouter
-
         import yaml
+
+        from jarvis.core.agent_router import AgentRouter
 
         # agents.yaml
         agents_path = tmp_path / "agents.yaml"

@@ -5,19 +5,17 @@ from __future__ import annotations
 import asyncio
 import json
 import tempfile
-import time
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.graph.engine import GraphEngine, MAX_ITERATIONS, MAX_NODES_PER_EXECUTION
+from jarvis.graph.engine import GraphEngine
 from jarvis.graph.state import StateManager
 from jarvis.graph.types import (
+    END,
     Checkpoint,
     Edge,
     EdgeType,
-    END,
     ExecutionRecord,
     ExecutionStatus,
     GraphDefinition,
@@ -26,9 +24,7 @@ from jarvis.graph.types import (
     NodeResult,
     NodeStatus,
     NodeType,
-    START,
 )
-
 
 # ============================================================================
 # Helpers
@@ -942,7 +938,7 @@ class TestStateManager:
     def test_get_latest_checkpoint(self):
         sm = StateManager(storage_dir=str(Path(tempfile.gettempdir()) / "test_graph_sm"))
         sm.create_checkpoint("exec1", "g", "n1", GraphState())
-        cp2 = sm.create_checkpoint("exec1", "g", "n2", GraphState())
+        sm.create_checkpoint("exec1", "g", "n2", GraphState())
         latest = sm.get_latest_checkpoint("exec1")
         assert latest is not None
 

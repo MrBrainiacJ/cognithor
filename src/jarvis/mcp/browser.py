@@ -49,11 +49,11 @@ DEFAULT_TIMEOUT_MS = _DEFAULT_TIMEOUT_MS
 DEFAULT_VIEWPORT = _DEFAULT_VIEWPORT
 
 __all__ = [
-    "BrowserTool",
+    "BROWSER_TOOL_SCHEMAS",
     "BrowserResult",
+    "BrowserTool",
     "BrowserToolError",
     "register_browser_tools",
-    "BROWSER_TOOL_SCHEMAS",
 ]
 
 

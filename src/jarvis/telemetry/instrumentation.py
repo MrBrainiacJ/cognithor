@@ -20,12 +20,15 @@ from __future__ import annotations
 import asyncio
 import functools
 import time
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from jarvis.telemetry.tracer import TracerProvider, SpanContextManager
 from jarvis.telemetry.metrics import MetricsProvider
+from jarvis.telemetry.tracer import SpanContextManager, TracerProvider
 from jarvis.telemetry.types import SpanKind
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 log = get_logger(__name__)
 

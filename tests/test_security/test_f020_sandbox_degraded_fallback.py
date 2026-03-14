@@ -13,13 +13,12 @@ from __future__ import annotations
 
 import inspect
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from jarvis.models import SandboxConfig, SandboxLevel
 from jarvis.security.sandbox import Sandbox, SandboxResult
-
 
 # ============================================================================
 # SandboxResult Tests
@@ -103,15 +102,17 @@ class TestDegradedFallback:
             sandbox_level=SandboxLevel.PROCESS,
         )
 
-        with patch.object(
-            sandbox, "_exec_process_bare", new_callable=AsyncMock, return_value=bare_result
+        with (
+            patch.object(
+                sandbox, "_exec_process_bare", new_callable=AsyncMock, return_value=bare_result
+            ),
+            patch("ctypes.windll.kernel32.CreateJobObjectW", return_value=0),
         ):
-            with patch("ctypes.windll.kernel32.CreateJobObjectW", return_value=0):
-                with patch("ctypes.get_last_error", return_value=5):
-                    result = await sandbox._exec_process_with_jobobject(
-                        "echo test",
-                        timeout=10,
-                    )
+            with patch("ctypes.get_last_error", return_value=5):
+                result = await sandbox._exec_process_with_jobobject(
+                    "echo test",
+                    timeout=10,
+                )
 
         assert result.isolation_degraded is True
         assert result.exit_code == 0

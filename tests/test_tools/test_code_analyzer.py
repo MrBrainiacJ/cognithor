@@ -1,13 +1,10 @@
 """Tests fuer CodeSmellDetector."""
 
-import pytest
 import tempfile
 from pathlib import Path
 
 from jarvis.tools.code_analyzer import (
     CodeSmellDetector,
-    _count_lines,
-    _max_nesting,
     _jaccard_similarity,
 )
 

@@ -11,21 +11,16 @@ Targets:
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
-from unittest.mock import patch, MagicMock
-
-import pytest
+from typing import TYPE_CHECKING, Any
 
 from jarvis.config import JarvisConfig
 from jarvis.config_manager import (
     ConfigManager,
     _is_secret_field,
-    _SECRET_FIELDS,
-    _SECRET_PATTERNS,
-    _SECRET_PATTERN_EXCLUSIONS,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # _is_secret_field
@@ -169,7 +164,7 @@ class TestStripMaskedSecrets:
         # Build deeply nested, should not crash
         data: dict[str, Any] = {}
         current = data
-        for i in range(8):
+        for _i in range(8):
             current["sub"] = {"api_key": "***"}
             current = current["sub"]
         ConfigManager._strip_masked_secrets(data)

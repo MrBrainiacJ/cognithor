@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.multitenant import (
     EmergencyAction,
     EmergencyController,
     EmergencyEvent,
     MultiTenantGovernor,
-    PLAN_LIMITS,
     Tenant,
     TenantManager,
     TenantPlan,
@@ -20,7 +17,6 @@ from jarvis.core.multitenant import (
     TrustPolicy,
     TrustRelation,
 )
-
 
 # ============================================================================
 # TenantUser

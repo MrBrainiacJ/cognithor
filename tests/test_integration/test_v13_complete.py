@@ -5,14 +5,10 @@ Vervollständigung der v12-Lücken + neues Endnutzer-Portal.
 
 from __future__ import annotations
 
-import pytest
-
 # ============================================================================
 # 1. Impact Assessment & Partizipative Governance
 # ============================================================================
-
 from jarvis.audit.impact_assessment import (
-    BoardDecision,
     DimensionScore,
     EthicsBoard,
     ImpactAssessor,
@@ -203,7 +199,7 @@ class TestMitigationTracker:
     def test_completion_rate(self) -> None:
         tracker = MitigationTracker()
         m1 = tracker.add("IA-0001", ImpactDimension.PRIVACY, "A")
-        m2 = tracker.add("IA-0001", ImpactDimension.SAFETY, "B")
+        tracker.add("IA-0001", ImpactDimension.SAFETY, "B")
         tracker.update_status(m1.mitigation_id, MitigationStatus.VERIFIED, 0.9)
         assert tracker.completion_rate() == 50.0
 

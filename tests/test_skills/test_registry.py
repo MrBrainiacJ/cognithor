@@ -8,8 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.skills.registry import Skill, SkillMatch, SkillRegistry
-
+from jarvis.skills.registry import Skill, SkillRegistry
 
 # ============================================================================
 # Fixtures
@@ -264,6 +263,6 @@ class TestInjection:
         skill = registry.get("morgen-briefing")
         wm.injected_procedures = [skill.body]
 
-        result = registry.inject_into_working_memory("Briefing bitte", wm)
+        registry.inject_into_working_memory("Briefing bitte", wm)
         # Sollte nicht nochmal injizieren
         assert len(wm.injected_procedures) == 1

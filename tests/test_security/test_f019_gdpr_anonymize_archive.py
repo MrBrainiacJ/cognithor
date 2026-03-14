@@ -13,9 +13,7 @@ Prueft dass:
 from __future__ import annotations
 
 import inspect
-from datetime import datetime, timedelta, timezone
-
-import pytest
+from datetime import UTC, datetime, timedelta
 
 from jarvis.security.gdpr import (
     DataCategory,
@@ -55,7 +53,7 @@ class TestAnonymizeAction:
     """Prueft dass ANONYMIZE PII-Felder tatsaechlich entfernt."""
 
     def test_anonymize_clears_user_id(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -74,7 +72,7 @@ class TestAnonymizeAction:
         assert log.records[0].user_id == "ANONYMIZED"
 
     def test_anonymize_clears_data_summary(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -91,7 +89,7 @@ class TestAnonymizeAction:
         assert log.records[0].data_summary == ""
 
     def test_anonymize_clears_data_hash(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -108,7 +106,7 @@ class TestAnonymizeAction:
         assert log.records[0].data_hash == ""
 
     def test_anonymize_clears_purpose(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -125,7 +123,7 @@ class TestAnonymizeAction:
         assert log.records[0].purpose == "ANONYMIZED"
 
     def test_anonymize_clears_third_party(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -145,7 +143,7 @@ class TestAnonymizeAction:
 
     def test_anonymize_preserves_record_id(self) -> None:
         """record_id bleibt erhalten (fuer Audit-Trail)."""
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -163,7 +161,7 @@ class TestAnonymizeAction:
 
     def test_anonymize_preserves_category(self) -> None:
         """Kategorie bleibt fuer Statistik erhalten."""
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -181,7 +179,7 @@ class TestAnonymizeAction:
 
     def test_anonymize_does_not_remove_record(self) -> None:
         """Anonymisierter Record bleibt in _records (nicht geloescht)."""
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -200,7 +198,7 @@ class TestAnonymizeAction:
 
     def test_anonymize_only_expired_records(self) -> None:
         """Nicht-abgelaufene Records bleiben unberuehrt."""
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="conv",
@@ -222,7 +220,7 @@ class TestAnonymizeAction:
 
         enforcer.enforce(log, now=now)
 
-        r2 = [r for r in log.records if r.record_id == "r2"][0]
+        r2 = next(r for r in log.records if r.record_id == "r2")
         assert r2.user_id == "keep-me"
         assert r2.data_summary == "keep this"
 
@@ -231,7 +229,7 @@ class TestArchiveAction:
     """Prueft dass ARCHIVE Records korrekt verschiebt."""
 
     def test_archive_removes_from_records(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="mem",
@@ -248,7 +246,7 @@ class TestArchiveAction:
         assert len(log.records) == 0
 
     def test_archive_adds_to_archived(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="mem",
@@ -267,7 +265,7 @@ class TestArchiveAction:
 
     def test_archive_preserves_all_data(self) -> None:
         """Archivierter Record behaelt alle Felder."""
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="mem",
@@ -296,7 +294,7 @@ class TestArchiveAction:
 
     def test_archive_only_expired(self) -> None:
         """Nicht-abgelaufene Records bleiben in _records."""
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="mem",
@@ -321,7 +319,7 @@ class TestArchiveAction:
         assert len(log.archived) == 1
 
     def test_archive_multiple_records(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="mem",
@@ -354,7 +352,7 @@ class TestCombinedActions:
     """Prueft dass DELETE + ANONYMIZE + ARCHIVE zusammen funktionieren."""
 
     def test_all_three_actions(self) -> None:
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="q",
@@ -397,7 +395,7 @@ class TestCombinedActions:
 
     def test_delete_regression(self) -> None:
         """DELETE funktioniert weiterhin wie bisher."""
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         enforcer = _make_enforcer(
             RetentionPolicy(
                 name="q",

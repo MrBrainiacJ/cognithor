@@ -373,18 +373,16 @@ class WebUIChannel(Channel):
                         client_token = (
                             auth_msg.get("token", "") if auth_msg.get("type") == "auth" else ""
                         )
-                    except (asyncio.TimeoutError, Exception):
+                    except (TimeoutError, Exception):
                         client_token = ""
                     if not _hmac.compare_digest(client_token, self._api_token):
-                        try:
+                        with contextlib.suppress(Exception):
                             await websocket.send_json(
                                 {
                                     "type": "error",
                                     "error": "Unauthorized",
                                 }
                             )
-                        except Exception:
-                            pass  # Cleanup — WS error send failure before close is non-critical
                         await websocket.close(code=4001, reason="Unauthorized")
                         return
                 self._connections[session_id] = websocket
@@ -741,10 +739,8 @@ class WebUIChannel(Channel):
             for p in [tmp_path, wav_path]:
                 if p is None:
                     continue
-                try:
+                with contextlib.suppress(Exception):
                     Path(p).unlink(missing_ok=True)
-                except Exception:
-                    pass  # Cleanup — temp file deletion failure is non-critical
 
     async def _process_file_upload(
         self,

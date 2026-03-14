@@ -6,23 +6,18 @@ und SecurityScanner auf korrekte Erkennung und Reporting.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.security.redteam import (
     AttackCategory,
     AttackPayload,
     MemoryPoisonSimulator,
     PenetrationSuite,
-    PoisonPayload,
     PromptFuzzer,
     ScanPolicy,
-    ScanResult,
     SecurityScanner,
     Severity,
     TestResult,
     VulnerabilityReport,
 )
-
 
 # ============================================================================
 # AttackPayload

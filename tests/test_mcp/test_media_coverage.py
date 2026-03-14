@@ -7,8 +7,7 @@ _set_llm_fn, _set_vault, _validate_input_path.
 
 from __future__ import annotations
 
-import asyncio
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,6 +20,8 @@ from jarvis.mcp.media import (
     register_media_tools,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fixtures
@@ -371,7 +372,7 @@ class TestGeneratePdfDocx:
     def test_generate_pdf_success(self, pipeline: MediaPipeline, workspace: Path) -> None:
         out = workspace / "out.pdf"
         mock_pdf = MagicMock()
-        mock_fpdf_cls = MagicMock(return_value=mock_pdf)
+        MagicMock(return_value=mock_pdf)
         with patch("jarvis.mcp.media.MediaPipeline._generate_pdf") as mock_gen:
             mock_gen.return_value = None
             pipeline._generate_pdf = mock_gen

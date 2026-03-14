@@ -6,7 +6,6 @@ Fallback auf Polling und korrektes Cleanup beim Stoppen.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -35,7 +34,6 @@ if "aiohttp" not in sys.modules:
     sys.modules["aiohttp.web"] = _mock_aiohttp_web
 
 from jarvis.channels.telegram import TelegramChannel
-
 
 # ============================================================================
 # Initialization with webhook parameters
@@ -100,7 +98,10 @@ class TestWebhookStart:
         mock_app.add_handler = MagicMock()
 
         with patch("telegram.ext.Application") as MockAppCls:
-            MockAppCls.builder.return_value.token.return_value.concurrent_updates.return_value.build.return_value = mock_app
+            mock_builder = MockAppCls.builder.return_value
+            mock_builder.token.return_value.concurrent_updates.return_value.build.return_value = (
+                mock_app
+            )
 
             # Patch aiohttp so we don't actually bind a port
             with patch.object(
@@ -135,7 +136,7 @@ class TestWebhookStart:
         mock_site.start = AsyncMock()
 
         with (
-            patch("aiohttp.web.Application") as MockWebApp,
+            patch("aiohttp.web.Application"),
             patch("aiohttp.web.AppRunner", return_value=mock_runner),
             patch("aiohttp.web.TCPSite", return_value=mock_site),
         ):
@@ -168,7 +169,10 @@ class TestWebhookStart:
         mock_app.add_handler = MagicMock()
 
         with patch("telegram.ext.Application") as MockAppCls:
-            MockAppCls.builder.return_value.token.return_value.concurrent_updates.return_value.build.return_value = mock_app
+            mock_builder = MockAppCls.builder.return_value
+            mock_builder.token.return_value.concurrent_updates.return_value.build.return_value = (
+                mock_app
+            )
 
             await ch.start(handler=AsyncMock())
 
@@ -191,7 +195,10 @@ class TestWebhookStart:
         mock_app.add_handler = MagicMock()
 
         with patch("telegram.ext.Application") as MockAppCls:
-            MockAppCls.builder.return_value.token.return_value.concurrent_updates.return_value.build.return_value = mock_app
+            mock_builder = MockAppCls.builder.return_value
+            mock_builder.token.return_value.concurrent_updates.return_value.build.return_value = (
+                mock_app
+            )
 
             await ch.start(handler=AsyncMock())
 

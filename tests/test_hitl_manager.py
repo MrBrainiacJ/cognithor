@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
-import time
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -20,10 +18,7 @@ from jarvis.hitl.types import (
     HITLNodeKind,
     NotificationChannel,
     NotificationType,
-    ReviewPriority,
-    ReviewTask,
 )
-
 
 # ============================================================================
 # HITLNotifier

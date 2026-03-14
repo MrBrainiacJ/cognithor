@@ -297,7 +297,7 @@ class CollaborationEngine:
                 return_exceptions=True,
             )
 
-            for p, resp in zip(participants, responses):
+            for p, resp in zip(participants, responses, strict=False):
                 if isinstance(resp, Exception):
                     result.errors.append(f"{p.agent_name}: {resp}")
                     continue
@@ -350,7 +350,7 @@ class CollaborationEngine:
             return_exceptions=True,
         )
 
-        for p, resp in zip(participants, responses):
+        for p, resp in zip(participants, responses, strict=False):
             if isinstance(resp, Exception):
                 result.errors.append(f"{p.agent_name}: {resp}")
                 continue
@@ -414,7 +414,7 @@ class CollaborationEngine:
         current_output = await self._invoke_agent(producer.agent_name, task)
         await board.post(producer.agent_name, producer.role, current_output)
 
-        for revision in range(max_revisions):
+        for _revision in range(max_revisions):
             # Critic reviews
             review_task = (
                 f"{ROLE_DEFAULTS.get(AgentRole.CRITIC, '')}\n\n"
@@ -514,7 +514,7 @@ class CollaborationEngine:
             return_exceptions=True,
         )
 
-        for p, resp in zip(participants, responses):
+        for p, resp in zip(participants, responses, strict=False):
             if isinstance(resp, Exception):
                 result.errors.append(f"{p.agent_name}: {resp}")
                 continue

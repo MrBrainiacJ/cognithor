@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -23,9 +23,7 @@ from jarvis.audit import (
     AuditEntry,
     AuditLogger,
     AuditSeverity,
-    AuditSummary,
 )
-
 
 # ============================================================================
 # Logging-Methoden
@@ -270,7 +268,7 @@ class TestAuditExport:
 class TestAuditCompliance:
     def test_delete_pii_entries(self) -> None:
         logger = AuditLogger()
-        entry1 = logger.log_tool_call("tool_a")
+        logger.log_tool_call("tool_a")
         entry2 = logger.log_tool_call("tool_b")
         entry2.contains_pii = True
 
@@ -284,7 +282,7 @@ class TestAuditCompliance:
         # Alten Eintrag simulieren
         old_entry = AuditEntry(
             entry_id="old_1",
-            timestamp=(datetime.now(timezone.utc) - timedelta(days=60)).isoformat(),
+            timestamp=(datetime.now(UTC) - timedelta(days=60)).isoformat(),
             category=AuditCategory.TOOL_CALL,
             action="old_action",
         )

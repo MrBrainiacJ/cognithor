@@ -77,8 +77,8 @@ BLOCKED_DOMAINS = frozenset(
 
 
 __all__ = [
-    "WebTools",
     "WebError",
+    "WebTools",
     "register_web_tools",
 ]
 
@@ -219,7 +219,7 @@ class WebTools:
             cleanup_interval=60,
         )
 
-    def reload_config(self, config: "JarvisConfig") -> None:
+    def reload_config(self, config: JarvisConfig) -> None:
         """Aktualisiert WebTools-Parameter aus neuer Config (Live-Reload).
 
         Wird vom Gateway aufgerufen wenn der User Einstellungen im UI ändert.

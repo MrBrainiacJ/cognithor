@@ -43,7 +43,7 @@ class UnifiedLLMClient:
         self,
         ollama_client: OllamaClient | None,
         backend: Any | None = None,
-        config: "JarvisConfig | None" = None,
+        config: JarvisConfig | None = None,
     ) -> None:
         """Erstellt den unified Client.
 
@@ -65,7 +65,7 @@ class UnifiedLLMClient:
                 self._backend_type = self._backend_type.value
 
     @classmethod
-    def create(cls, config: "JarvisConfig") -> "UnifiedLLMClient":
+    def create(cls, config: JarvisConfig) -> UnifiedLLMClient:
         """Factory: Erstellt den passenden Client basierend auf der Config.
 
         Args:

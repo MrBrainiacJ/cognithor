@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.channels.mattermost import MattermostChannel
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from jarvis.models import OutgoingMessage, PlannedAction
 
 
 class TestMattermostChannel:

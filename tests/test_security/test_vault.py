@@ -12,13 +12,10 @@ import pytest
 
 from jarvis.security.vault import (
     EncryptedVault,
-    VaultManager,
     IsolatedSessionStore,
     SessionIsolationGuard,
-    AgentSession,
-    VaultEntry,
+    VaultManager,
 )
-
 
 # ============================================================================
 # EncryptedVault
@@ -94,7 +91,7 @@ class TestEncryptedVault:
         replacement = "Y" if original[5] != "Y" else "Z"
         tampered = original[:5] + replacement + original[6:]
         entry.encrypted_value = tampered
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017 — InvalidToken has empty message
             vault.retrieve("svc", "key")
 
     def test_stats(self) -> None:

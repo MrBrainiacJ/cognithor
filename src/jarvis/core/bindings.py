@@ -33,10 +33,12 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, time
 from enum import Enum
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 
@@ -328,14 +330,12 @@ class MessageBinding:
             True wenn alle gesetzten Bedingungen matchen.
         """
         # 1. Channel-Filter
-        if self.channels is not None:
-            if ctx.channel not in self.channels:
-                return False
+        if self.channels is not None and ctx.channel not in self.channels:
+            return False
 
         # 2. User-Filter
-        if self.user_ids is not None:
-            if ctx.user_id not in self.user_ids:
-                return False
+        if self.user_ids is not None and ctx.user_id not in self.user_ids:
+            return False
 
         # 3. Command-Prefix-Filter
         if self.command_prefixes is not None:
@@ -362,9 +362,10 @@ class MessageBinding:
                     return False
 
         # 6. Zeitfenster (mindestens ein Fenster muss passen)
-        if self.time_windows is not None:
-            if not any(tw.matches(ctx.timestamp) for tw in self.time_windows):
-                return False
+        if self.time_windows is not None and not any(
+            tw.matches(ctx.timestamp) for tw in self.time_windows
+        ):
+            return False
 
         # Alle Bedingungen erfüllt
         return True

@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from jarvis.models import RefactoringReport
-from jarvis.tools.code_analyzer import CodeSmellDetector
 from jarvis.tools.architecture_analyzer import ArchitectureAnalyzer
+from jarvis.tools.code_analyzer import CodeSmellDetector
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)

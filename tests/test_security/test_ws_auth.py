@@ -8,17 +8,15 @@ Validates:
 
 from __future__ import annotations
 
-import asyncio
+import contextlib
 import json
 import os
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocket, WebSocketDisconnect
-
 
 # ---------------------------------------------------------------------------
 # Helpers -- build a minimal FastAPI app that mirrors the production
@@ -46,10 +44,8 @@ def _make_app() -> tuple[FastAPI, dict[str, WebSocket]]:
         # ── Session collision: close existing connection ──────────
         existing = ws_connections.get(session_id)
         if existing is not None:
-            try:
+            with contextlib.suppress(Exception):
                 await existing.close(code=4002, reason="Session replaced")
-            except Exception:
-                pass
 
         ws_connections[session_id] = websocket
         try:
@@ -97,7 +93,7 @@ class TestWSAuth:
             app, _ = _make_app()
             client = TestClient(app)
             # No ?token= query param -- must be rejected
-            with pytest.raises(Exception) as exc_info:
+            with pytest.raises(Exception):  # noqa: B017 — Starlette exception may have empty message
                 with client.websocket_connect("/ws/test-session") as ws:
                     ws.send_text(json.dumps({"type": "ping"}))
             # Starlette raises an error when server closes before accept
@@ -109,7 +105,7 @@ class TestWSAuth:
         with patch.dict(os.environ, {"JARVIS_API_TOKEN": "secret-123"}, clear=False):
             app, _ = _make_app()
             client = TestClient(app)
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017 — Starlette exception may have empty message
                 with client.websocket_connect("/ws/test-session?token=wrong-token") as ws:
                     ws.send_text(json.dumps({"type": "ping"}))
 
@@ -165,7 +161,7 @@ class TestWSAuthEdgeCases:
         with patch.dict(os.environ, {"JARVIS_API_TOKEN": "secret-123"}, clear=False):
             app, _ = _make_app()
             client = TestClient(app)
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017 — Starlette exception may have empty message
                 with client.websocket_connect("/ws/test-session?token=") as ws:
                     ws.send_text(json.dumps({"type": "ping"}))
 

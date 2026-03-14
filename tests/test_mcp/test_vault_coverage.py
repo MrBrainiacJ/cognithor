@@ -9,7 +9,6 @@ _read_index Fehler, register_vault_tools.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -19,10 +18,8 @@ from jarvis.mcp.vault import (
     VaultTools,
     _now_iso,
     _parse_tags,
-    _slugify,
     register_vault_tools,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -508,7 +505,7 @@ class TestEnsureStructure:
         config.vault = MagicMock()
         config.vault.path = str(tmp_path / "new_vault")
         config.vault.default_folders = {"knowledge": "wissen", "projects": "projekte"}
-        vault = VaultTools(config=config)
+        VaultTools(config=config)
         assert (tmp_path / "new_vault" / "wissen").exists()
         assert (tmp_path / "new_vault" / "projekte").exists()
         assert (tmp_path / "new_vault" / "_index.json").exists()

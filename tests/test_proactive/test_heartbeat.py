@@ -10,8 +10,7 @@ Testet:
 
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -26,7 +25,6 @@ from jarvis.proactive import (
     TaskQueue,
     TaskStatus,
 )
-
 
 # ============================================================================
 # EventConfig
@@ -75,7 +73,7 @@ class TestProactiveTask:
             assert task.is_terminal
 
     def test_duration(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         task = ProactiveTask(
             task_id="t1",
             event_type=EventType.CALENDAR_PREP,
@@ -242,7 +240,7 @@ class TestTaskQueue:
         for i in range(10):
             t = ProactiveTask(task_id=f"t{i}", event_type=EventType.EMAIL_TRIAGE)
             t.status = TaskStatus.COMPLETED
-            t.completed_at = datetime.now(timezone.utc).isoformat()
+            t.completed_at = datetime.now(UTC).isoformat()
             q.enqueue(t)
 
         removed = q.cleanup_completed(keep=3)
@@ -376,7 +374,7 @@ class TestHeartbeatScheduler:
         scheduler.register_handler(EventType.EMAIL_TRIAGE, failing_handler)
 
         # Erster Tick: Fehler, aber Retry möglich
-        processed = await scheduler.tick()
+        await scheduler.tick()
         assert call_count >= 1
 
     def test_trigger_now(self, scheduler: HeartbeatScheduler) -> None:

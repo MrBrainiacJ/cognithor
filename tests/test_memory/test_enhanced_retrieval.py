@@ -11,7 +11,7 @@ Testet:
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -20,16 +20,13 @@ import pytest
 from jarvis.memory.enhanced_retrieval import (
     CompressedEpisode,
     CorrectiveRAG,
-    DecomposedQuery,
     EnhancedSearchPipeline,
     EpisodicCompressor,
     FrequencyTracker,
     QueryDecomposer,
-    RelevanceVerdict,
     reciprocal_rank_fusion,
 )
 from jarvis.models import Chunk, MemorySearchResult, MemoryTier
-
 
 # ============================================================================
 # Helpers
@@ -601,7 +598,7 @@ class TestEnhancedSearchPipeline:
             enable_correction=True,
             enable_decomposition=False,
         )
-        results = await pipeline.search("BU Tarif Info")
+        await pipeline.search("BU Tarif Info")
         # Mindestens 2 Suchaufrufe (original + retry)
         assert call_count >= 2
 

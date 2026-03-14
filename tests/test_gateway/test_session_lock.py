@@ -8,17 +8,17 @@ Validiert dass _session_lock korrekt verwendet wird:
 
 from __future__ import annotations
 
-import asyncio
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock
 
 import pytest
 
 from jarvis.gateway.gateway import Gateway
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -118,7 +118,7 @@ class TestCleanupStaleSessionsLock:
 
     def test_cleanup_removes_stale(self, gateway: Gateway) -> None:
         """Alte Sessions werden entfernt."""
-        session = gateway._get_or_create_session("cli", "stale_user")
+        gateway._get_or_create_session("cli", "stale_user")
         key = "cli:stale_user:jarvis"
 
         # Timestamp auf "1 Stunde ago" setzen (älter als TTL)
@@ -131,7 +131,7 @@ class TestCleanupStaleSessionsLock:
 
     def test_cleanup_preserves_active(self, gateway: Gateway) -> None:
         """Aktive Sessions bleiben erhalten."""
-        session = gateway._get_or_create_session("cli", "active_user")
+        gateway._get_or_create_session("cli", "active_user")
         key = "cli:active_user:jarvis"
 
         gateway._cleanup_stale_sessions()

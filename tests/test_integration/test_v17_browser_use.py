@@ -6,13 +6,15 @@ Playwright wird gemockt — alle Tests laufen ohne echten Browser.
 
 import asyncio
 import json
-import os
 import tempfile
-import pytest
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
+from jarvis.browser.page_analyzer import PageAnalyzer
+from jarvis.browser.session_manager import SessionManager, SessionSnapshot
 from jarvis.browser.types import (
     ActionResult,
     ActionType,
@@ -21,15 +23,11 @@ from jarvis.browser.types import (
     BrowserWorkflow,
     ElementInfo,
     ElementType,
-    ExtractionMode,
     FormField,
     FormInfo,
     PageState,
     WorkflowStatus,
 )
-from jarvis.browser.page_analyzer import PageAnalyzer
-from jarvis.browser.session_manager import SessionManager, SessionSnapshot
-
 
 # ============================================================================
 # Types Tests

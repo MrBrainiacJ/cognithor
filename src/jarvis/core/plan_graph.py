@@ -69,7 +69,7 @@ class PlanGraph:
     def get_ready_nodes(self, completed_ids: set[str]) -> list[str]:
         """Gibt Knoten zurueck deren Dependencies erfuellt sind."""
         ready: list[str] = []
-        for nid, node in self._nodes.items():
+        for nid, _node in self._nodes.items():
             if nid in completed_ids:
                 continue
             deps = self._reverse_edges.get(nid, set())

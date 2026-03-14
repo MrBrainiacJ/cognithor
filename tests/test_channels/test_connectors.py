@@ -9,18 +9,15 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.channels.connectors import (
-    TeamsConnector,
-    JiraConnector,
-    ServiceNowConnector,
     ConnectorRegistry,
+    ConnectorScope,
+    ConnectorStatus,
+    JiraConnector,
     ScopeGuard,
     ScopePolicy,
-    ConnectorScope,
-    ConnectorConfig,
-    ConnectorStatus,
+    ServiceNowConnector,
+    TeamsConnector,
 )
 
 

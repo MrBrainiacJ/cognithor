@@ -5,12 +5,14 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
-from datetime import datetime, UTC
-from pathlib import Path
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from jarvis.models import EpisodicEntry
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 
@@ -288,7 +290,7 @@ class EpisodicStore:
     def __del__(self) -> None:
         self.close()
 
-    def __enter__(self) -> "EpisodicStore":
+    def __enter__(self) -> EpisodicStore:
         return self
 
     def __exit__(self, *exc: object) -> None:

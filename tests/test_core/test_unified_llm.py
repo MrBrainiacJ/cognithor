@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from jarvis.core.model_router import OllamaClient, OllamaError
 from jarvis.core.unified_llm import UnifiedLLMClient
-
 
 # ============================================================================
 # Fixtures
@@ -393,6 +391,6 @@ class TestPlannerCompatibility:
                 model="gpt-4o",
                 messages=[{"role": "user", "content": "Test"}],
             )
-            assert False, "Sollte OllamaError werfen"
+            raise AssertionError("Sollte OllamaError werfen")
         except OllamaError as exc:
             assert "Rate limit exceeded" in str(exc)

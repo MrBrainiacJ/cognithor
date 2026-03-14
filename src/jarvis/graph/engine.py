@@ -25,12 +25,12 @@ from __future__ import annotations
 import asyncio
 import copy
 import time
-from typing import Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 from jarvis.graph.state import StateManager
 from jarvis.graph.types import (
-    EdgeType,
     END,
+    EdgeType,
     ExecutionRecord,
     ExecutionStatus,
     GraphDefinition,
@@ -41,6 +41,9 @@ from jarvis.graph.types import (
     NodeType,
 )
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 log = get_logger(__name__)
 
@@ -545,7 +548,7 @@ class GraphEngine:
                         retry_attempts=attempt,
                     )
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 last_error = f"Timeout after {node.timeout_seconds}s"
             except Exception as exc:
                 last_error = str(exc)
@@ -578,9 +581,11 @@ class GraphEngine:
         # Router-Decision
         if result.router_decision:
             for edge in outgoing:
-                if edge.edge_type == EdgeType.CONDITIONAL:
-                    if edge.condition == result.router_decision:
-                        return edge.target
+                if (
+                    edge.edge_type == EdgeType.CONDITIONAL
+                    and edge.condition == result.router_decision
+                ):
+                    return edge.target
             # Fallback: Default-Edge (ohne Condition)
             for edge in outgoing:
                 if edge.edge_type == EdgeType.DIRECT:

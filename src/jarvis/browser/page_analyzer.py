@@ -13,6 +13,7 @@ Funktioniert mit jedem Playwright-Page-Objekt.
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 from jarvis.browser.types import (
@@ -212,12 +213,10 @@ class PageAnalyzer:
                     state.text_content = ""
 
             # HTML-Länge
-            try:
+            with contextlib.suppress(Exception):
                 state.html_length = await page.evaluate(
                     "() => document.documentElement.outerHTML.length"
                 )
-            except Exception:
-                pass  # Cleanup — HTML length measurement failure is non-critical
 
             # Interaktive Elemente
             state.links = await self._extract_links(page)

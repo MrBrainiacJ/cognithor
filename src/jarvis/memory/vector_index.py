@@ -61,7 +61,7 @@ class VectorIndex(Protocol):
         ...
 
 
-def _l2_normalize_np(vec: "np.ndarray") -> "np.ndarray":
+def _l2_normalize_np(vec: np.ndarray) -> np.ndarray:
     """L2-Normalisierung eines Vektors (numpy)."""
     norm = np.linalg.norm(vec)  # type: ignore[union-attr]
     if norm > 0:
@@ -81,7 +81,7 @@ def _l2_normalize_py(vec: list[float]) -> list[float]:
 
 def _dot_py(a: list[float], b: list[float]) -> float:
     """Dot Product — Pure Python Fallback."""
-    return sum(x * y for x, y in zip(a, b))
+    return sum(x * y for x, y in zip(a, b, strict=False))
 
 
 class BruteForceIndex:
@@ -216,14 +216,14 @@ class FAISSIndex:
 
     def _search_inner(
         self,
-        query: "np.ndarray",
+        query: np.ndarray,
         fetch_k: int,
         top_k: int,
     ) -> list[tuple[str, float]]:
         distances, indices = self._index.search(query.reshape(1, -1), fetch_k)
 
         results: list[tuple[str, float]] = []
-        for dist, idx in zip(distances[0], indices[0]):
+        for dist, idx in zip(distances[0], indices[0], strict=False):
             if idx < 0:
                 continue
             if idx in self._deleted:

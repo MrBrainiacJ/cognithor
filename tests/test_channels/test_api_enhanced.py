@@ -105,7 +105,7 @@ class TestAPIApproval:
         async def resolve_future():
             await asyncio.sleep(0.01)
             # Find the pending future and resolve it
-            for req_id, future in ch._pending_approvals.items():
+            for _req_id, future in ch._pending_approvals.items():
                 if not future.done():
                     future.set_result(True)
                     break
@@ -121,7 +121,7 @@ class TestAPIApproval:
 
         async def deny_future():
             await asyncio.sleep(0.01)
-            for req_id, future in ch._pending_approvals.items():
+            for _req_id, future in ch._pending_approvals.items():
                 if not future.done():
                     future.set_result(False)
                     break

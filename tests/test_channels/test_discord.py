@@ -8,13 +8,12 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.channels.discord import DiscordChannel
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
-
 
 # ============================================================================
 # Fixtures

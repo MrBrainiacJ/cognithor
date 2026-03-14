@@ -14,10 +14,10 @@ Architektur-Bibel: §12 (Konfiguration), §9.3 (Web UI)
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import time
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -26,8 +26,12 @@ try:
 except ImportError:
     Request = Any  # type: ignore[assignment,misc]
 
-from jarvis.config_manager import ConfigManager
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from jarvis.config_manager import ConfigManager
 
 log = get_logger(__name__)
 
@@ -283,7 +287,8 @@ def _register_system_routes(
     async def create_binding(data: dict[str, Any]) -> dict[str, Any]:
         """Erstellt oder aktualisiert eine Binding-Regel."""
         try:
-            from jarvis.gateway.config_api import BindingRuleDTO, ConfigManager as CfgMgr
+            from jarvis.gateway.config_api import BindingRuleDTO
+            from jarvis.gateway.config_api import ConfigManager as CfgMgr
 
             cfg_mgr = CfgMgr(config_manager.config)
             dto = BindingRuleDTO(**data)
@@ -363,7 +368,8 @@ def _register_system_routes(
     async def update_sandbox(values: dict[str, Any]) -> dict[str, Any]:
         """Aktualisiert Sandbox-Einstellungen."""
         try:
-            from jarvis.gateway.config_api import ConfigManager as CfgMgr, SandboxUpdate
+            from jarvis.gateway.config_api import ConfigManager as CfgMgr
+            from jarvis.gateway.config_api import SandboxUpdate
 
             cfg_mgr = CfgMgr(config_manager.config)
             update = SandboxUpdate(**values)
@@ -1441,10 +1447,8 @@ def _register_skill_routes(
         if router is None:
             return {"models": [], "source": "none"}
         # Refresh the model list
-        try:
+        with contextlib.suppress(Exception):
             await router.initialize()
-        except Exception:
-            pass  # Cleanup — model list refresh failure is non-critical
         models = sorted(router._available_models) if router._available_models else []
         # Also return currently configured models for reference
         cfg = getattr(gateway, "_config", None)
@@ -1661,6 +1665,7 @@ def _register_prometheus_routes(
     async def prometheus_metrics() -> Any:
         """Prometheus-Metriken im Text Exposition Format."""
         from starlette.responses import Response
+
         from jarvis.telemetry.prometheus import PrometheusExporter
 
         # Collect sources: MetricsProvider from TelemetryHub, MetricCollector from MonitoringHub
@@ -1711,7 +1716,7 @@ def _register_security_routes(
     async def redteam_scan(request: Request) -> dict[str, Any]:
         """Red-Team-Scan gegen Prompt-Injection etc."""
         try:
-            from jarvis.security.redteam import SecurityScanner, ScanPolicy
+            from jarvis.security.redteam import ScanPolicy, SecurityScanner
 
             scanner = getattr(gateway, "_security_scanner", None) or SecurityScanner()
             body = await request.json()
@@ -2320,10 +2325,8 @@ def _register_prompt_evolution_routes(
         enabled = engine is not None
         stats: dict[str, Any] = {"enabled": enabled}
         if engine:
-            try:
+            with contextlib.suppress(Exception):
                 stats.update(engine.get_stats("system_prompt"))
-            except Exception:
-                pass  # Cleanup — stats retrieval failure is non-critical
         return stats
 
     @app.post("/api/v1/prompt-evolution/evolve", dependencies=deps)
@@ -2562,7 +2565,7 @@ def _register_ui_routes(
         """Initiates graceful shutdown if gateway is available."""
         try:
             if gateway is not None and hasattr(gateway, "shutdown"):
-                asyncio.create_task(gateway.shutdown())
+                asyncio.create_task(gateway.shutdown())  # noqa: RUF006
                 return {"status": "ok", "message": "Shutdown eingeleitet"}
             return {"status": "ok", "message": "Kein Gateway — nur Config-Server aktiv"}
         except Exception as exc:

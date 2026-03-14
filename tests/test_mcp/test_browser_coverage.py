@@ -10,9 +10,7 @@ import pytest
 
 from jarvis.mcp.browser import (
     BROWSER_TOOL_SCHEMAS,
-    BrowserResult,
     BrowserTool,
-    BrowserToolError,
     register_browser_tools,
 )
 

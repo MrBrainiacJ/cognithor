@@ -8,7 +8,7 @@ Testet die Verdrahtung aller neuen Komponenten:
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -18,14 +18,10 @@ from jarvis.core.executor import Executor
 from jarvis.memory.enhanced_retrieval import EnhancedSearchPipeline, FrequencyTracker
 from jarvis.memory.graph_ranking import GraphRanking
 from jarvis.memory.multimodal import MultimodalMemory
-from jarvis.models import (
-    GateDecision,
-    GateStatus,
-    PlannedAction,
-    ToolResult,
-)
 from jarvis.skills.generator import GapDetector, SkillGapType
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # MemoryManager Integration

@@ -8,9 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import hmac as hmac_mod
-import json
 import sys
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -22,7 +21,7 @@ _had_httpx = "httpx" in sys.modules
 _orig_httpx = sys.modules.get("httpx")
 sys.modules["httpx"] = _httpx_mock
 
-from jarvis.channels.whatsapp import WhatsAppChannel, MAX_TEXT_LENGTH  # noqa: E402
+from jarvis.channels.whatsapp import MAX_TEXT_LENGTH, WhatsAppChannel
 
 # Restore original state so we don't leak the mock
 if _had_httpx:
@@ -96,7 +95,7 @@ class TestWebhookVerification:
 
             with patch.object(web, "Response") as MockResponse:
                 MockResponse.return_value = MagicMock()
-                result = await wa._handle_verification(request)
+                await wa._handle_verification(request)
                 MockResponse.assert_called_once()
                 call_kwargs = MockResponse.call_args
                 # Check the challenge is returned in the text parameter
@@ -117,7 +116,7 @@ class TestWebhookVerification:
 
             with patch.object(web, "Response") as MockResponse:
                 MockResponse.return_value = MagicMock()
-                result = await wa._handle_verification(request)
+                await wa._handle_verification(request)
                 call_kwargs = MockResponse.call_args
                 assert "403" in str(call_kwargs) or call_kwargs[1].get("status") == 403
 

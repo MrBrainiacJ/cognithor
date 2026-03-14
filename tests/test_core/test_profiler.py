@@ -1,8 +1,7 @@
 """Tests fuer TaskProfiler."""
 
-import pytest
 from jarvis.core.profiler import TaskProfiler
-from jarvis.models import ToolProfile, TaskProfile, CapabilityProfile
+from jarvis.models import CapabilityProfile
 
 
 class TestTaskProfiler:
@@ -65,7 +64,7 @@ class TestTaskProfiler:
 
     def test_success_rate_threshold(self):
         for i in range(5):
-            self.profiler.start_task(f"s{i}", f"task", "general")
+            self.profiler.start_task(f"s{i}", "task", "general")
             self.profiler.finish_task(f"s{i}", success_score=0.8)  # >= 0.6 = success
 
         profile = self.profiler.get_task_profile("general")

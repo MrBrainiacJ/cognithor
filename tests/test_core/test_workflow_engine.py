@@ -8,9 +8,8 @@ checkpoint/resume, and full integration workflows.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -27,6 +26,8 @@ from jarvis.core.workflow_schema import (
     WorkflowValidationError,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Test helpers
@@ -932,7 +933,7 @@ class TestCheckpointResume:
 
     async def test_checkpoint_created(self, engine: WorkflowEngine, tmp_path: Path) -> None:
         wf = _wf("cp", [_tool("a")])
-        run = await engine.execute(wf)
+        await engine.execute(wf)
         cp_files = list((tmp_path / "checkpoints").glob("*.json"))
         assert len(cp_files) >= 1
 
@@ -1137,4 +1138,4 @@ class TestWorkflowIntegration:
         assert run.context == {"user": "alex", "priority": "high"}
 
 
-import asyncio  # noqa: E402 — needed for TestGlobalTimeout
+import asyncio

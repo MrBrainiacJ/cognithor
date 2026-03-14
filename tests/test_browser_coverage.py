@@ -5,11 +5,9 @@ All Playwright interactions are mocked (no real browser needed).
 
 from __future__ import annotations
 
-import asyncio
-import base64
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -27,7 +25,6 @@ from jarvis.browser.types import (
     PageState,
     WorkflowStatus,
 )
-
 
 # ============================================================================
 # Helpers
@@ -759,7 +756,6 @@ class TestBrowserAgentVision:
         agent._analyzer = MagicMock()
         agent._analyzer.find_element = AsyncMock(return_value=None)
         # Patch find_and_click to return ActionResult with data={}
-        original = agent.find_and_click
 
         async def patched_find_and_click(desc):
             return ActionResult(action_id="", success=False, error="Not found", data={})

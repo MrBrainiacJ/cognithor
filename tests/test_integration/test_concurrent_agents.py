@@ -14,11 +14,10 @@ Bibel-Referenz: §8 (Agent-Separation), §14 (Security)
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
-import pytest
-
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Workspace-Guard bei konkurrierenden Zugriffen

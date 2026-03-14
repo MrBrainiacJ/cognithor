@@ -11,10 +11,10 @@ Prüft die Isolation unter Last:
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-import pytest
-
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # 1. MultiUserIsolation: Scoped Sessions
@@ -323,7 +323,7 @@ class TestConcurrentInteractionState:
 
         store = InteractionStore()
         for i in range(10):
-            for j in range(5):
+            for _j in range(5):
                 store.create(InteractionType.BUTTON_CLICK, f"user_{i}", agent_id=f"agent_{i}")
 
         assert store.pending_count() == 50

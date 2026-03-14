@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from jarvis.models import PolicyChange
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.models import PolicyChange
 
 logger = get_logger(__name__)
 
@@ -35,7 +37,7 @@ class PolicyPatcher:
 
             # If the policy file does not exist yet, start from an empty dict
             if policy_file.exists():
-                with open(policy_file, "r", encoding="utf-8") as fh:
+                with open(policy_file, encoding="utf-8") as fh:
                     policy_data: dict[str, Any] = yaml.safe_load(fh) or {}
             else:
                 policy_data = {}
@@ -136,7 +138,7 @@ class PolicyPatcher:
         If the file does not exist yet an empty backup is created so that
         rollback can restore the 'no file' state.
         """
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         stem = policy_file.stem
         suffix = policy_file.suffix  # e.g. ".yaml"
         backup_name = f"{stem}_{timestamp}{suffix}{self.BACKUP_SUFFIX}"

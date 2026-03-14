@@ -18,7 +18,6 @@ from jarvis.memory.embeddings import (
     create_embedding_provider,
 )
 
-
 # ============================================================================
 # EmbeddingResult / EmbeddingStats
 # ============================================================================

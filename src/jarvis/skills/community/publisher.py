@@ -91,17 +91,16 @@ class PublisherIdentity:
         base_level = TrustLevel.from_score(self.reputation_score)
 
         # Downgrade wenn Bedingungen nicht erfuellt
-        if base_level == TrustLevel.VERIFIED:
-            if self.skills_published < 3 or self.recalls > 0 or self.account_age_days < 90:
-                base_level = TrustLevel.HIGH
+        if base_level == TrustLevel.VERIFIED and (
+            self.skills_published < 3 or self.recalls > 0 or self.account_age_days < 90
+        ):
+            base_level = TrustLevel.HIGH
 
-        if base_level == TrustLevel.HIGH:
-            if self.public_repos < 10 or not self.email_verified:
-                base_level = TrustLevel.MODERATE
+        if base_level == TrustLevel.HIGH and (self.public_repos < 10 or not self.email_verified):
+            base_level = TrustLevel.MODERATE
 
-        if base_level == TrustLevel.LOW:
-            if self.account_age_days < 30:
-                base_level = TrustLevel.UNTRUSTED
+        if base_level == TrustLevel.LOW and self.account_age_days < 30:
+            base_level = TrustLevel.UNTRUSTED
 
         self.trust_level = base_level
 
@@ -265,12 +264,12 @@ class PublisherVerifier:
 
         if aiohttp_available:
             try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        url, timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT_S)
-                    ) as resp:
-                        resp.raise_for_status()
-                        return await resp.text()
+                async with (
+                    aiohttp.ClientSession() as session,
+                    session.get(url, timeout=aiohttp.ClientTimeout(total=_HTTP_TIMEOUT_S)) as resp,
+                ):
+                    resp.raise_for_status()
+                    return await resp.text()
             except Exception as aio_exc:
                 log.debug(
                     "aiohttp_fetch_failed_falling_back_to_urllib", url=url, error=str(aio_exc)

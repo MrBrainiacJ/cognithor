@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.mcp.bridge import (
-    DESTRUCTIVE_TOOLS,
-    IDEMPOTENT_TOOLS,
     MCPBridge,
-    READ_ONLY_TOOLS,
     _build_annotations,
 )
 from jarvis.mcp.server import MCPServerMode, ToolAnnotationKey
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # _build_annotations
@@ -136,7 +135,7 @@ class TestHandleMcpRequest:
         mock_server = AsyncMock()
         mock_server.handle_http_request = AsyncMock(return_value={"jsonrpc": "2.0", "result": "ok"})
         bridge._server = mock_server
-        result = await bridge.handle_mcp_request(
+        await bridge.handle_mcp_request(
             {"jsonrpc": "2.0", "method": "ping"},
             auth_header="Bearer test-token",
         )

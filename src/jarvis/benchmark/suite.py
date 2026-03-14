@@ -19,10 +19,13 @@ import json
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
-from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 log = get_logger(__name__)
 

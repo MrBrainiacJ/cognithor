@@ -11,12 +11,15 @@ Validiert:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import pytest
 
 from jarvis.memory.indexer import MemoryIndex
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -26,10 +29,11 @@ def index(tmp_path: Path) -> MemoryIndex:
 
 
 def _add_entity(idx: MemoryIndex, eid: str) -> None:
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(UTC).timestamp()
     idx.conn.execute(
-        "INSERT OR IGNORE INTO entities (id, type, name, source_file, created_at, updated_at, confidence) "
-        "VALUES (?, 'person', ?, 'test', ?, ?, 1.0)",
+        "INSERT OR IGNORE INTO entities"
+        " (id, type, name, source_file, created_at, updated_at, confidence)"
+        " VALUES (?, 'person', ?, 'test', ?, ?, 1.0)",
         (eid, eid, now, now),
     )
     idx.conn.commit()
@@ -39,9 +43,11 @@ def _add_relation(idx: MemoryIndex, source: str, target: str) -> None:
     import uuid
 
     idx.conn.execute(
-        "INSERT INTO relations (id, source_entity, relation_type, target_entity, source_file, created_at, confidence) "
-        "VALUES (?, ?, 'knows', ?, 'test', ?, 1.0)",
-        (uuid.uuid4().hex, source, target, datetime.now(timezone.utc).timestamp()),
+        "INSERT INTO relations"
+        " (id, source_entity, relation_type, target_entity,"
+        " source_file, created_at, confidence)"
+        " VALUES (?, ?, 'knows', ?, 'test', ?, 1.0)",
+        (uuid.uuid4().hex, source, target, datetime.now(UTC).timestamp()),
     )
     idx.conn.commit()
 

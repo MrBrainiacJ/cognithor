@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.skills.updater import (
-    SecurityRecall,
     SkillUpdater,
     UpdateCheck,
     UpdatePolicy,
@@ -154,7 +151,7 @@ class TestSkillUpdater:
     def test_recall_package(self) -> None:
         updater = SkillUpdater()
         updater.register_installed("bad_skill", "1.0.0")
-        recall = updater.recall_package("bad_skill", "Malware detected")
+        updater.recall_package("bad_skill", "Malware detected")
         assert updater.is_recalled("bad_skill")
         assert len(updater.active_recalls()) == 1
 

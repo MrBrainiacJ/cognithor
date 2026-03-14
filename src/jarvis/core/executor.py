@@ -13,10 +13,12 @@ Bible reference: §3.3 (Executor)
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import contextvars
 import time
 from typing import TYPE_CHECKING, Any
 
+from jarvis.core.plan_graph import PlanGraph
 from jarvis.models import (
     ActionPlan,
     GateDecision,
@@ -24,7 +26,6 @@ from jarvis.models import (
     PlannedAction,
     ToolResult,
 )
-from jarvis.core.plan_graph import PlanGraph
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -188,10 +189,8 @@ class Executor:
     def clear_agent_context(self) -> None:
         """Löscht den Agent-Kontext nach der Ausführung."""
         for token in self._ctx_tokens:
-            try:
+            with contextlib.suppress(ValueError):
                 token.var.reset(token)
-            except ValueError:
-                pass  # Token already reset or from different context, safe to ignore
         self._ctx_tokens = []
 
     async def execute(
@@ -368,10 +367,12 @@ class Executor:
             timeout = self._default_timeout
 
         # --- Agent-Kontext in Tool-Params injizieren ---
-        if _agent_workspace_var.get() and tool_name in self.WORKSPACE_TOOLS:
-            # Nur setzen wenn nicht explizit vom Planner vorgegeben
-            if "working_dir" not in params:
-                params["working_dir"] = _agent_workspace_var.get()
+        if (
+            _agent_workspace_var.get()
+            and tool_name in self.WORKSPACE_TOOLS
+            and "working_dir" not in params
+        ):
+            params["working_dir"] = _agent_workspace_var.get()
 
         if _agent_sandbox_var.get() and tool_name == "exec_command":
             # Sandbox-Overrides als interne Params durchreichen

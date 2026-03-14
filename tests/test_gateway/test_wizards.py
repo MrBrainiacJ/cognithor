@@ -6,8 +6,6 @@ RBAC (UserRole, Permission, RBACManager), WizardRegistry.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.gateway.wizards import (
     AgentWizard,
     BaseWizard,
@@ -18,12 +16,9 @@ from jarvis.gateway.wizards import (
     RBACManager,
     UserRole,
     WizardRegistry,
-    WizardResult,
     WizardStep,
     WizardStepType,
-    WizardTemplate,
 )
-
 
 # ============================================================================
 # WizardStep

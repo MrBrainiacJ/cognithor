@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 
 from jarvis.skills.manager import (
-    list_skills,
     _slugify,
     create_skill,
-    search_remote_skills,
     install_remote_skill,
+    list_skills,
+    search_remote_skills,
 )
-
 
 # ============================================================================
 # _slugify
@@ -159,7 +157,7 @@ class TestSearchRemoteSkills:
         # Monkey-patch the module to look at our directory
         import jarvis.skills.manager as mgr
 
-        original_file = Path(mgr.__file__).resolve()
+        Path(mgr.__file__).resolve()
         # Since the path resolution depends on parents, we test differently:
         # Just test that the function handles no matching directories gracefully
         result = search_remote_skills("recherche", limit=10)

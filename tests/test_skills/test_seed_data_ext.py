@@ -11,16 +11,17 @@ Targets:
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
-
-import pytest
 
 from jarvis.skills.seed_data import (
     _CATEGORY_MAP,
     _parse_procedure_to_listing,
     seed_marketplace,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestParseToListing:

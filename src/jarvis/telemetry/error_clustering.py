@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from jarvis.utils.logging import get_logger
@@ -52,7 +52,7 @@ def _levenshtein_ratio(s1: str, s2: str) -> float:
 class _ErrorEntry:
     """Interner Error-Eintrag."""
 
-    __slots__ = ("error_type", "message", "context", "timestamp")
+    __slots__ = ("context", "error_type", "message", "timestamp")
 
     def __init__(self, error_type: str, message: str, context: str, timestamp: datetime) -> None:
         self.error_type = error_type

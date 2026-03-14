@@ -3,11 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import sys
-import time
-from types import ModuleType
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -16,19 +12,14 @@ from jarvis.a2a.types import (
     A2A_PROTOCOL_VERSION,
     A2AAgentCard,
     A2AErrorCode,
-    A2ASkill,
-    Artifact,
     Message,
     MessageRole,
-    PushNotificationAuth,
-    PushNotificationConfig,
     Task,
     TaskState,
     TaskStatus,
     TaskStatusUpdateEvent,
     TextPart,
 )
-
 
 # ============================================================================
 # A2AServer -- dispatch Tests
@@ -770,7 +761,6 @@ class TestA2AServerLifecycle:
 class TestA2AAdapter:
     def _make_config(self, a2a_enabled=True, tmp_path=None):
         """Create a mock JarvisConfig."""
-        import tempfile
 
         config = MagicMock()
         mcp_path = MagicMock()
@@ -788,8 +778,9 @@ class TestA2AAdapter:
         assert adapter.enabled is False
 
     def test_setup_enabled_from_yaml(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True, "port": 3099}}))
@@ -803,8 +794,9 @@ class TestA2AAdapter:
         assert adapter.client is not None
 
     def test_setup_with_interop(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -824,8 +816,9 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_start_stop(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -841,8 +834,9 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_handle_incoming_task_no_text(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -857,8 +851,9 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_handle_incoming_task_echo(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -877,8 +872,9 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_handle_incoming_task_with_handler(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -899,8 +895,9 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_handle_incoming_task_handler_exception(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -977,8 +974,9 @@ class TestA2AAdapter:
         assert "error" in result
 
     def test_stats(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
         import yaml
+
+        from jarvis.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))

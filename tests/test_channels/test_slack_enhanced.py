@@ -380,11 +380,11 @@ class TestSlackStart:
         mock_sdk.AsyncWebClient.return_value = mock_client
 
         handler = AsyncMock()
-        with patch.dict("sys.modules", {"slack_sdk.web.async_client": mock_sdk}):
-            with patch(
-                "jarvis.channels.slack.AsyncWebClient", mock_sdk.AsyncWebClient, create=True
-            ):
-                await ch_no_app.start(handler)
+        with (
+            patch.dict("sys.modules", {"slack_sdk.web.async_client": mock_sdk}),
+            patch("jarvis.channels.slack.AsyncWebClient", mock_sdk.AsyncWebClient, create=True),
+        ):
+            await ch_no_app.start(handler)
 
         assert ch_no_app._running is True
         assert ch_no_app._bidirectional is False
@@ -434,7 +434,7 @@ class TestSlackApprovalTimeout:
         async def resolve_future():
             await asyncio.sleep(0.05)
             async with ch._approval_lock:
-                for aid, future in ch._approval_futures.items():
+                for _aid, future in ch._approval_futures.items():
                     if not future.done():
                         future.set_result(True)
                         break

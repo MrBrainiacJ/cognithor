@@ -8,7 +8,6 @@ _is_private_host edge-cases, register_web_tools mit config.
 
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -21,13 +20,9 @@ from jarvis.mcp.web import (
     WebTools,
     _extract_text_from_html,
     _format_news_results,
-    _format_search_results,
     _is_private_host,
-    _simple_html_to_text,
-    _truncate_text,
     register_web_tools,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -185,14 +180,16 @@ class TestValidateUrlDns:
 
         web._dns_cache.set("tricky.com", ["127.0.0.1"])
         # After cache invalidation, it re-resolves via DNS -> also returns blocked
-        with patch(
-            "socket.getaddrinfo",
-            return_value=[
-                (socket.AF_INET, socket.SOCK_STREAM, 0, "", ("127.0.0.1", 0)),
-            ],
+        with (
+            patch(
+                "socket.getaddrinfo",
+                return_value=[
+                    (socket.AF_INET, socket.SOCK_STREAM, 0, "", ("127.0.0.1", 0)),
+                ],
+            ),
+            pytest.raises(WebError, match="blockierte Adresse"),
         ):
-            with pytest.raises(WebError, match="blockierte Adresse"):
-                await web._validate_url("https://tricky.com/page")
+            await web._validate_url("https://tricky.com/page")
 
     async def test_dns_resolution_failure(self, web: WebTools) -> None:
         import socket
@@ -204,14 +201,16 @@ class TestValidateUrlDns:
     async def test_dns_resolves_to_private_ip(self, web: WebTools) -> None:
         import socket
 
-        with patch(
-            "socket.getaddrinfo",
-            return_value=[
-                (socket.AF_INET, socket.SOCK_STREAM, 0, "", ("10.0.0.1", 0)),
-            ],
+        with (
+            patch(
+                "socket.getaddrinfo",
+                return_value=[
+                    (socket.AF_INET, socket.SOCK_STREAM, 0, "", ("10.0.0.1", 0)),
+                ],
+            ),
+            pytest.raises(WebError, match="blockierte Adresse"),
         ):
-            with pytest.raises(WebError, match="blockierte Adresse"):
-                await web._validate_url("https://sneaky.com/page")
+            await web._validate_url("https://sneaky.com/page")
 
 
 # ============================================================================
@@ -417,7 +416,7 @@ class TestSearchDuckDuckGoAsync:
             return_value=[
                 {"title": "T", "url": "https://t.com", "content": "S"},
             ],
-        ) as mock:
+        ):
             result = await web._search_duckduckgo("test", 5, "en", "w")
             assert "T" in result
 
@@ -884,7 +883,10 @@ class TestSearchAndReadCrossCheck:
         fetch_response.status_code = 200
         fetch_response.raise_for_status = MagicMock()
         fetch_response.headers = {"content-type": "text/html"}
-        fetch_response.content = b"<p>Page content here is reasonably long enough to not trigger jina fallback with more text added here.</p>"
+        fetch_response.content = (
+            b"<p>Page content here is reasonably long enough to"
+            b" not trigger jina fallback with more text added here.</p>"
+        )
 
         async def mock_get(url, **kwargs):
             if "searx" in str(url):

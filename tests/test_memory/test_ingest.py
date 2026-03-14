@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +14,6 @@ from jarvis.memory.ingest import (
     IngestResult,
     TextExtractor,
 )
-
 
 # ============================================================================
 # Fixtures

@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-import asyncio
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.mcp.client import (
     JarvisMCPClient,
-    MCPClientError,
     ServerConnection,
     ToolCallResult,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -50,7 +51,9 @@ class TestRegisterBuiltinHandler:
         assert "test_tool" in client.get_tool_list()
 
     def test_get_handler(self, client: JarvisMCPClient) -> None:
-        handler = lambda: "ok"
+        def handler():
+            return "ok"
+
         client.register_builtin_handler("test_tool", handler)
         assert client.get_handler("test_tool") is handler
         assert client.get_handler("nonexistent") is None
@@ -106,7 +109,7 @@ class TestCallTool:
 
     @pytest.mark.asyncio
     async def test_call_mcp_server_success(self, client: JarvisMCPClient) -> None:
-        from jarvis.models import MCPToolInfo, MCPServerConfig
+        from jarvis.models import MCPToolInfo
 
         client._tool_registry["remote_tool"] = MCPToolInfo(
             name="remote_tool",
@@ -187,7 +190,9 @@ class TestLoadServerConfigs:
         cfg_dir.mkdir(parents=True, exist_ok=True)
         cfg_file = cfg_dir / "config.yaml"
         cfg_file.write_text(
-            "servers:\n  test_server:\n    command: python\n    args: [-m, test]\n    enabled: true\n    transport: stdio\n",
+            "servers:\n  test_server:\n    command: python\n"
+            "    args: [-m, test]\n    enabled: true\n"
+            "    transport: stdio\n",
             encoding="utf-8",
         )
         client._config.mcp_config_file = cfg_file

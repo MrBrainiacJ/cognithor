@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,12 +10,11 @@ import pytest
 from jarvis.mcp.media import (
     MAX_AUDIO_FILE_SIZE,
     MAX_EXTRACT_FILE_SIZE,
-    MEDIA_TOOL_SCHEMAS,
     MAX_EXTRACT_LENGTH,
+    MEDIA_TOOL_SCHEMAS,
     MediaPipeline,
     MediaResult,
 )
-
 
 # ============================================================================
 # Fixtures

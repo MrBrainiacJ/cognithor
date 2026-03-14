@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import json
-import pytest
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from jarvis.browser.tools import register_browser_use_tools
-from jarvis.browser.types import BrowserConfig
+import pytest
 
+from jarvis.browser.tools import register_browser_use_tools
 
 # ============================================================================
 # Tool-Registrierung
@@ -28,7 +27,7 @@ class TestVisionToolRegistration:
         mcp_mock.register_builtin_handler = mock_register
 
         mock_vision = MagicMock()
-        agent = register_browser_use_tools(mcp_mock, vision_analyzer=mock_vision)
+        register_browser_use_tools(mcp_mock, vision_analyzer=mock_vision)
 
         assert "browser_vision_analyze" in registered_tools
         assert "browser_vision_find" in registered_tools
@@ -44,7 +43,7 @@ class TestVisionToolRegistration:
 
         mcp_mock.register_builtin_handler = mock_register
 
-        agent = register_browser_use_tools(mcp_mock)
+        register_browser_use_tools(mcp_mock)
 
         # Tools sind trotzdem registriert (graceful degradation)
         assert "browser_vision_analyze" in registered_tools

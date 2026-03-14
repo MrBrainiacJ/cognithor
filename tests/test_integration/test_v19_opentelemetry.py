@@ -8,47 +8,45 @@ import asyncio
 import json
 import tempfile
 import time
-import pytest
 from pathlib import Path
-from typing import Any
 
-from jarvis.telemetry.types import (
-    SpanKind,
-    StatusCode,
-    MetricKind,
-    SpanContext,
-    SpanEvent,
-    SpanLink,
-    Span,
-    Trace,
-    MetricDataPoint,
-    HistogramDataPoint,
-    MetricDefinition,
-    generate_trace_id,
-    generate_span_id,
-    _otlp_value,
-)
-from jarvis.telemetry.tracer import (
-    TracerProvider,
-    SpanContextManager,
-    AlwaysOnSampler,
-    AlwaysOffSampler,
-    ProbabilisticSampler,
-    RateBasedSampler,
-    InMemoryProcessor,
-    ConsoleProcessor,
-    BatchProcessor,
-    SpanExporter,
-    OTLPJsonExporter,
-    _NoOpSpan,
-)
-from jarvis.telemetry.metrics import MetricsProvider
+import pytest
+
 from jarvis.telemetry.instrumentation import (
     TelemetryHub,
-    trace,
     measure,
+    trace,
 )
-
+from jarvis.telemetry.metrics import MetricsProvider
+from jarvis.telemetry.tracer import (
+    AlwaysOffSampler,
+    AlwaysOnSampler,
+    BatchProcessor,
+    ConsoleProcessor,
+    InMemoryProcessor,
+    OTLPJsonExporter,
+    ProbabilisticSampler,
+    RateBasedSampler,
+    SpanExporter,
+    TracerProvider,
+    _NoOpSpan,
+)
+from jarvis.telemetry.types import (
+    HistogramDataPoint,
+    MetricDataPoint,
+    MetricDefinition,
+    MetricKind,
+    Span,
+    SpanContext,
+    SpanEvent,
+    SpanKind,
+    SpanLink,
+    StatusCode,
+    Trace,
+    _otlp_value,
+    generate_span_id,
+    generate_trace_id,
+)
 
 # ============================================================================
 # ID Generation Tests
@@ -474,19 +472,17 @@ class TestTracerProvider:
 
     def test_auto_parent(self):
         tracer = TracerProvider()
-        with tracer.start_span("parent") as parent:
-            with tracer.start_span("child") as child:
-                assert child.parent_span_id == parent.span_id
-                assert child.trace_id == parent.trace_id
+        with tracer.start_span("parent") as parent, tracer.start_span("child") as child:
+            assert child.parent_span_id == parent.span_id
+            assert child.trace_id == parent.trace_id
 
     def test_nested_three_levels(self):
         tracer = TracerProvider()
-        with tracer.start_span("root") as root:
-            with tracer.start_span("mid") as mid:
-                with tracer.start_span("leaf") as leaf:
-                    assert leaf.parent_span_id == mid.span_id
-                    assert mid.parent_span_id == root.span_id
-                    assert leaf.trace_id == root.trace_id
+        with tracer.start_span("root") as root, tracer.start_span("mid") as mid:
+            with tracer.start_span("leaf") as leaf:
+                assert leaf.parent_span_id == mid.span_id
+                assert mid.parent_span_id == root.span_id
+                assert leaf.trace_id == root.trace_id
 
     def test_explicit_parent(self):
         tracer = TracerProvider()
@@ -503,9 +499,8 @@ class TestTracerProvider:
 
     def test_auto_error_status(self):
         tracer = TracerProvider()
-        with pytest.raises(ValueError):
-            with tracer.start_span("op") as span:
-                raise ValueError("boom")
+        with pytest.raises(ValueError), tracer.start_span("op") as span:
+            raise ValueError("boom")
         assert span.status_code == StatusCode.ERROR
         assert "boom" in span.status_message
 
@@ -624,7 +619,7 @@ class TestMetricsProvider:
 
     def test_history(self):
         m = MetricsProvider()
-        for i in range(10):
+        for _i in range(10):
             m.counter("clicks", 1)
         history = m.get_history("clicks", last_n=5)
         assert len(history) == 5
@@ -751,7 +746,7 @@ class TestTelemetryHub:
 
     def test_trace_llm_call(self):
         hub = TelemetryHub()
-        with hub.trace_llm_call("claude", prompt_length=100) as span:
+        with hub.trace_llm_call("claude", prompt_length=100):
             pass
         assert hub.metrics.get_counter("llm_calls_total", model="claude") == 1
 
@@ -762,13 +757,13 @@ class TestTelemetryHub:
 
     def test_trace_graph_execution(self):
         hub = TelemetryHub()
-        with hub.trace_graph_execution("pipeline") as span:
+        with hub.trace_graph_execution("pipeline"):
             pass
         assert hub.metrics.get_counter("graph_executions_total", graph="pipeline") >= 1
 
     def test_trace_a2a_message(self):
         hub = TelemetryHub()
-        with hub.trace_a2a_message("agent-2", "outbound") as span:
+        with hub.trace_a2a_message("agent-2", "outbound"):
             pass
         assert (
             hub.metrics.get_counter("a2a_messages_total", agent="agent-2", direction="outbound")
@@ -777,7 +772,7 @@ class TestTelemetryHub:
 
     def test_trace_browser_action(self):
         hub = TelemetryHub()
-        with hub.trace_browser_action("navigate", "https://example.com") as span:
+        with hub.trace_browser_action("navigate", "https://example.com"):
             pass
         assert hub.metrics.get_counter("browser_actions_total", action="navigate") == 1
 
@@ -901,7 +896,7 @@ class TestTelemetryIntegration:
         proc = BatchProcessor(exporter=exporter, max_batch_size=100)
         tracer = TracerProvider(processors=[proc])
 
-        with tracer.start_span("root") as root:
+        with tracer.start_span("root"):
             with tracer.start_span("child1"):
                 pass
             with tracer.start_span("child2"):

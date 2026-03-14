@@ -35,7 +35,7 @@ _OLLAMA_MODEL_OPTIONS = [
 def _get_backend_info() -> tuple[str, dict[str, dict[str, Any]]]:
     """Liefert (backend_type, provider_defaults) aus Config."""
     try:
-        from jarvis.config import JarvisConfig, _PROVIDER_MODEL_DEFAULTS
+        from jarvis.config import _PROVIDER_MODEL_DEFAULTS, JarvisConfig
 
         config = JarvisConfig()
         backend = config.llm_backend_type
@@ -133,9 +133,8 @@ class WizardStep:
             if str(value) not in valid_values:
                 return False, f"Ungültige Auswahl für '{self.title}'"
 
-        if self.field_type == WizardStepType.BOOLEAN:
-            if not isinstance(value, bool):
-                return False, f"'{self.title}' muss true/false sein"
+        if self.field_type == WizardStepType.BOOLEAN and not isinstance(value, bool):
+            return False, f"'{self.title}' muss true/false sein"
 
         return True, ""
 
@@ -384,7 +383,7 @@ class HeartbeatWizard(BaseWizard):
         interval = values.get("interval_minutes", 30)
 
         warnings = list(errors)
-        if isinstance(interval, (int, float)) and interval < 5:
+        if isinstance(interval, int | float) and interval < 5:
             warnings.append("Kurze Intervalle (<5 Min.) können Performance beeinträchtigen.")
 
         config_patch = {

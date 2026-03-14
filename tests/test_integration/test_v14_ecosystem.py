@@ -6,17 +6,14 @@ v14-Module für Ecosystem, Onboarding und Skalierbarkeit.
 from __future__ import annotations
 
 import pytest
-from typing import Any
 
 # ============================================================================
 # 1. Skill CLI
 # ============================================================================
-
 from jarvis.tools.skill_cli import (
     LintSeverity,
     PublishStatus,
     RewardSystem,
-    ScaffoldResult,
     SkillCLI,
     SkillLinter,
     SkillPublisher,
@@ -57,12 +54,14 @@ class TestSkillLinter:
     def test_valid_skill(self) -> None:
         linter = SkillLinter()
         files = {
-            "SKILL.md": "# My Skill\n\n## Beschreibung\nEin toller Skill der viel kann und gut ist.",
+            "SKILL.md": (
+                "# My Skill\n\n## Beschreibung\nEin toller Skill der viel kann und gut ist."
+            ),
             "skill.py": "from jarvis.skills.base import BaseSkill\nclass MySkill(BaseSkill): pass",
             "manifest.json": '{"name": "my", "version": "0.1.0", "permissions": []}',
             "test_skill.py": "def test_it(): pass",
         }
-        issues = linter.lint(files)
+        linter.lint(files)
         assert linter.is_valid(files)
 
     def test_missing_file(self) -> None:
@@ -167,7 +166,9 @@ class TestSkillCLI:
         cli = SkillCLI()
         files = {
             "SKILL.md": "# Test\n## Beschreibung\nEin vollwertiger Test-Skill für alles",
-            "skill.py": "from jarvis.skills.base import BaseSkill\nclass TestSkill(BaseSkill): pass",
+            "skill.py": (
+                "from jarvis.skills.base import BaseSkill\nclass TestSkill(BaseSkill): pass"
+            ),
             "manifest.json": '{"name": "test", "version": "0.1.0", "permissions": []}',
             "test_skill.py": "def test_one(): pass",
         }
@@ -181,15 +182,12 @@ class TestSkillCLI:
 # ============================================================================
 
 from jarvis.core.installer import (
+    PRESETS,
     ChannelConfigurator,
     ChannelType,
     HardwareDetector,
-    HardwareProfile,
     ModelRecommender,
-    PresetConfig,
     PresetLevel,
-    PRESETS,
-    SetupStep,
     SetupWizard,
 )
 
@@ -327,7 +325,6 @@ from jarvis.core.performance import (
     PerformanceManager,
     QueryDecomposer,
     ResourceOptimizer,
-    VectorBackend,
     VectorStore,
 )
 

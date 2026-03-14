@@ -11,7 +11,6 @@ import pytest
 
 from jarvis.channels.tts_elevenlabs import ElevenLabsConfig, ElevenLabsTTS
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -231,8 +230,8 @@ class TestElevenLabsConfig:
 
     def test_voice_config_default_voice_id(self) -> None:
         """Verify that VoiceConfig (config.py + voice.py) has correct default voice_id."""
-        from jarvis.config import VoiceConfig as ConfigVoiceConfig
         from jarvis.channels.voice import VoiceConfig as ChannelVoiceConfig
+        from jarvis.config import VoiceConfig as ConfigVoiceConfig
 
         cfg_voice = ConfigVoiceConfig()
         assert cfg_voice.elevenlabs_voice_id == "hJAaR77ekN23CNyp0byH"

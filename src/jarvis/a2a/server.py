@@ -19,9 +19,11 @@ OPTIONAL: Nur aktiv wenn A2A-Server-Modus konfiguriert ist.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hmac
 import time
-from typing import Any, AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from typing import Any
 
 from jarvis.a2a.types import (
     A2A_CONTENT_TYPE,
@@ -157,13 +159,14 @@ class A2AServer:
     ) -> dict[str, Any]:
         """HTTP-Request-Handler mit Version-Negotiation."""
         # Auth
-        if self._config.require_auth:
-            if not auth_token or not hmac.compare_digest(auth_token, self._config.auth_token):
-                return {
-                    "jsonrpc": "2.0",
-                    "id": body.get("id"),
-                    "error": {"code": A2AErrorCode.UNAUTHORIZED, "message": "Unauthorized"},
-                }
+        if self._config.require_auth and (
+            not auth_token or not hmac.compare_digest(auth_token, self._config.auth_token)
+        ):
+            return {
+                "jsonrpc": "2.0",
+                "id": body.get("id"),
+                "error": {"code": A2AErrorCode.UNAUTHORIZED, "message": "Unauthorized"},
+            }
 
         # Version negotiation
         if client_version and client_version != A2A_PROTOCOL_VERSION:
@@ -194,10 +197,11 @@ class A2AServer:
         auth_token: str | None = None,
     ) -> AsyncIterator[str]:
         """Handles message/stream -- returns SSE events."""
-        if self._config.require_auth:
-            if not auth_token or not hmac.compare_digest(auth_token, self._config.auth_token):
-                yield f'event: error\ndata: {{"code": {A2AErrorCode.UNAUTHORIZED}}}\n\n'
-                return
+        if self._config.require_auth and (
+            not auth_token or not hmac.compare_digest(auth_token, self._config.auth_token)
+        ):
+            yield f'event: error\ndata: {{"code": {A2AErrorCode.UNAUTHORIZED}}}\n\n'
+            return
 
         params = body.get("params", {})
         message_data = params.get("message", {})
@@ -460,7 +464,7 @@ class A2AServer:
 
     # ── Task Execution ───────────────────────────────────────────
 
-    def _make_task_done_callback(self, a2a_task: Task):  # noqa: ANN201
+    def _make_task_done_callback(self, a2a_task: Task):
         """Creates a done-callback that transitions the A2A task on failure."""
 
         def _callback(asyncio_task: asyncio.Task[None]) -> None:
@@ -516,7 +520,7 @@ class A2AServer:
             # Push notification
             await self._send_push_notification(task)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             task.transition(
                 TaskState.FAILED,
                 Message(
@@ -600,10 +604,8 @@ class A2AServer:
         self._running = False
         if hasattr(self, "_cleanup_task") and not self._cleanup_task.done():
             self._cleanup_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._cleanup_task
-            except asyncio.CancelledError:
-                pass
         self.cleanup_completed(max_age_seconds=0)
         log.info("a2a_server_stopped")
 

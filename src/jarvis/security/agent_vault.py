@@ -15,6 +15,7 @@ Architektur-Bibel: §14.5 (Secrets-Management), §17.3 (Multi-Tenant-Isolation)
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import os
 import secrets
@@ -25,9 +26,8 @@ from enum import Enum
 from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
-
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 # ============================================================================
 # Agent Secret
@@ -229,16 +229,14 @@ class AgentVault:
             # Fallback: attempt to detect legacy XOR-encrypted hex data.
             # This path is only reached for data encrypted before the Fernet
             # migration and will be removed in a future release.
-            try:
+            with contextlib.suppress(ValueError):
                 bytes.fromhex(encrypted)
                 # Legacy XOR cannot be decrypted without the old key material,
                 # so we surface the failure clearly.
-            except ValueError:
-                pass
             raise ValueError(
                 "Decryption failed: token is neither valid Fernet nor "
                 "recoverable legacy data. Re-encrypt the secret."
-            )
+            ) from None
 
     def _log(self, action: str, target: str) -> None:
         self._access_log.append(
@@ -559,10 +557,8 @@ def _load_or_create_master_secret(path: str | None = None) -> bytes:
     key_file.parent.mkdir(parents=True, exist_ok=True)
     key_file.write_bytes(master)
     # Restrict permissions: owner-only read/write.
-    try:
+    with contextlib.suppress(OSError):
         key_file.chmod(0o600)
-    except OSError:
-        pass
     # On Windows, restrict ACL to current user only.
     if sys.platform == "win32":
         try:

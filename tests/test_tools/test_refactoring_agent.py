@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.models import CodeSmell, ArchitectureFinding, RefactoringReport
+from jarvis.models import ArchitectureFinding, CodeSmell, RefactoringReport
 from jarvis.tools.refactoring_agent import RefactoringAgent
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fixtures

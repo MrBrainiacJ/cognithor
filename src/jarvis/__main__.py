@@ -88,12 +88,6 @@ def parse_args() -> argparse.Namespace:
 
 def _check_python_version() -> None:
     """Sicherstellen, dass Python >= 3.12 läuft."""
-    if sys.version_info < (3, 12):
-        sys.exit(
-            f"Cognithor benötigt Python >= 3.12, "
-            f"aktuell: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}\n"
-            f"Bitte installiere eine neuere Python-Version: https://www.python.org/downloads/"
-        )
 
 
 def main() -> None:
@@ -105,10 +99,8 @@ def main() -> None:
     if sys.platform == "win32":
         for stream in (sys.stdout, sys.stderr):
             if hasattr(stream, "reconfigure"):
-                try:
+                with contextlib.suppress(Exception):
                     stream.reconfigure(encoding="utf-8", errors="replace")
-                except Exception:
-                    pass
 
     args = parse_args()
 
@@ -228,6 +220,7 @@ def main() -> None:
 
         gateway = Gateway(config)
         api_server = None
+        _bg_tasks: set[asyncio.Task[Any]] = set()
 
         try:
             # Alle Subsysteme initialisieren
@@ -272,9 +265,10 @@ def main() -> None:
 
             # Control Center API-Server starten (immer, Port 8741)
             try:
+                import uvicorn
                 from fastapi import FastAPI
                 from fastapi.middleware.cors import CORSMiddleware
-                import uvicorn
+
                 from jarvis.channels.config_routes import create_config_routes
                 from jarvis.config_manager import ConfigManager
 
@@ -315,6 +309,7 @@ def main() -> None:
                 # ── Rate Limiting Middleware ──────────────────────────────
                 import time as _time
                 from collections import defaultdict as _defaultdict
+
                 from starlette.middleware.base import BaseHTTPMiddleware
                 from starlette.responses import JSONResponse as _JSONResponse
 
@@ -377,15 +372,16 @@ def main() -> None:
 
                 # ── Token verification dependency ─────────────────────
                 import hmac as _hmac_verify
+
                 from fastapi import Depends as _Depends
                 from fastapi import HTTPException as _HTTPException
-                from fastapi.security import HTTPBearer as _HTTPBearer
                 from fastapi.security import HTTPAuthorizationCredentials as _HTTPAuthCreds
+                from fastapi.security import HTTPBearer as _HTTPBearer
 
                 _bearer_scheme = _HTTPBearer(auto_error=False)
 
                 async def _verify_cc_token(
-                    creds: _HTTPAuthCreds | None = _Depends(_bearer_scheme),
+                    creds: _HTTPAuthCreds | None = _Depends(_bearer_scheme),  # noqa: B008
                 ) -> None:
                     if creds is None or not _hmac_verify.compare_digest(
                         creds.credentials, _internal_api_token
@@ -472,7 +468,7 @@ def main() -> None:
                             client_token = (
                                 auth_msg.get("token", "") if auth_msg.get("type") == "auth" else ""
                             )
-                        except (asyncio.TimeoutError, Exception):
+                        except (TimeoutError, Exception):
                             client_token = ""
                         if not _hmac.compare_digest(client_token, required_token):
                             await websocket.send_json(
@@ -493,10 +489,8 @@ def main() -> None:
                     existing = _ws_connections.get(session_id)
                     if existing is not None:
                         log.info("cc_ws_closing_stale", session_id=session_id)
-                        try:
+                        with contextlib.suppress(Exception):
                             await existing.close(code=4002, reason="Session replaced")
-                        except Exception:
-                            pass  # already closed / broken
 
                     _ws_connections[session_id] = websocket
                     log.info("cc_ws_connected", session_id=session_id)
@@ -918,9 +912,10 @@ def main() -> None:
                     """Lädt ein Piper-Voicemodell von HuggingFace herunter."""
                     import hashlib
                     import urllib.request
+
                     from jarvis.security.sanitizer import (
-                        validate_voice_name,
                         validate_model_path_containment,
+                        validate_voice_name,
                     )
 
                     # CWE-22: Validate voice name before download
@@ -995,7 +990,9 @@ def main() -> None:
 
                 uvi_config = uvicorn.Config(**uvi_kwargs)
                 api_server = uvicorn.Server(uvi_config)
-                asyncio.create_task(api_server.serve())
+                _t = asyncio.create_task(api_server.serve())
+                _bg_tasks.add(_t)
+                _t.add_done_callback(_bg_tasks.discard)
                 log.info(
                     "control_center_api_started",
                     host=api_host,
@@ -1207,7 +1204,9 @@ def main() -> None:
                             log_level="warning",
                         )
                         dash_server = uvicorn.Server(dash_config)
-                        asyncio.create_task(dash_server.serve())
+                        _t = asyncio.create_task(dash_server.serve())
+                        _bg_tasks.add(_t)
+                        _t.add_done_callback(_bg_tasks.discard)
                         log.info(
                             "dashboard_redirect_started",
                             port=dashboard_port,

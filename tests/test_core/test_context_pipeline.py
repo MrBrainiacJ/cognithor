@@ -15,7 +15,6 @@ Testet:
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -23,7 +22,6 @@ import pytest
 from jarvis.config import ContextPipelineConfig
 from jarvis.core.context_pipeline import ContextPipeline, ContextResult
 from jarvis.models import Chunk, MemorySearchResult, WorkingMemory
-
 
 # ── Fixtures ──────────────────────────────────────────────────────
 

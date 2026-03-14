@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import sqlite3
 import json
+import sqlite3
 import time
-from datetime import datetime, UTC
-from pathlib import Path
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
-from jarvis.models import ToolProfile, TaskProfile, CapabilityProfile
+from jarvis.models import CapabilityProfile, TaskProfile, ToolProfile
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 

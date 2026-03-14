@@ -23,7 +23,7 @@ Architektur:
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
@@ -54,7 +54,7 @@ class KnowledgeSynthesizer:
       - WebTools: async web_search(), search_and_read()
     """
 
-    def __init__(self, config: "JarvisConfig | None" = None) -> None:
+    def __init__(self, config: JarvisConfig | None = None) -> None:
         self._llm_fn: Any = None
         self._llm_model: str = ""
         self._memory_tools: Any = None
@@ -210,7 +210,7 @@ class KnowledgeSynthesizer:
         }
 
         for key in ("memory", "entities", "episodes", "vault", "web"):
-            if key in sources and sources[key]:
+            if sources.get(key):
                 parts.append(f"### {labels.get(key, key.upper())}\n{sources[key]}")
 
         combined = "\n\n---\n\n".join(parts)
@@ -284,7 +284,7 @@ class KnowledgeSynthesizer:
             return f"Fehler bei der Wissenssynthese: {exc}"
 
         # 5. Metadaten anhängen
-        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
         footer = (
             f"\n\n---\n*Synthese erstellt: {now}*\n*Quellen: {source_summary}*\n*Tiefe: {depth}*"
         )
@@ -765,16 +765,13 @@ def _extract_keywords(text: str) -> list[str]:
             "einer",
             "the",
             "a",
-            "an",
             "is",
             "are",
-            "was",
             "were",
             "be",
             "been",
             "to",
             "of",
-            "in",
             "for",
             "on",
             "with",

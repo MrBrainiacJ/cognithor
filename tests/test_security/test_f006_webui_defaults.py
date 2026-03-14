@@ -13,8 +13,6 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
-import pytest
-
 
 class TestCreateAppDefaults:
     """Prueft die Factory-Funktion create_app()."""
@@ -37,6 +35,7 @@ class TestCreateAppDefaults:
     def test_default_host_not_0000(self) -> None:
         """0.0.0.0 darf nicht der Default sein."""
         import inspect
+
         from jarvis.channels.webui import create_app
 
         source = inspect.getsource(create_app)
@@ -51,6 +50,7 @@ class TestCreateAppDefaults:
     def test_default_cors_not_wildcard(self) -> None:
         """Default CORS-Origin darf nicht '*' sein."""
         import inspect
+
         from jarvis.channels.webui import create_app
 
         source = inspect.getsource(create_app)

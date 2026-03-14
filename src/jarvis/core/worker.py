@@ -15,9 +15,12 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 log = get_logger(__name__)
 
@@ -464,9 +467,10 @@ class JobDistributor:
             if not w.is_available:
                 continue
             # Check capabilities if job requires specific ones
-            if job.required_capabilities:
-                if not all(w.has_capability(c) for c in job.required_capabilities):
-                    continue
+            if job.required_capabilities and not all(
+                w.has_capability(c) for c in job.required_capabilities
+            ):
+                continue
             candidates.append(w)
         return candidates
 

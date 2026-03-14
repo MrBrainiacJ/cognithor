@@ -7,6 +7,7 @@ import tempfile
 
 import pytest
 
+from jarvis.forensics.run_recorder import RunRecorder
 from jarvis.models import (
     ActionPlan,
     GateDecision,
@@ -17,7 +18,6 @@ from jarvis.models import (
     SessionSummary,
     ToolResult,
 )
-from jarvis.forensics.run_recorder import RunRecorder
 
 
 @pytest.fixture()

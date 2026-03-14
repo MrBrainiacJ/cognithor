@@ -20,14 +20,16 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 
@@ -42,10 +44,10 @@ PRIORITY_WEIGHT = 0.05
 DEFAULT_MIN_SCORE = 0.15
 
 __all__ = [
-    "SkillRegistry",
+    "CommunitySkillManifest",
     "Skill",
     "SkillMatch",
-    "CommunitySkillManifest",
+    "SkillRegistry",
 ]
 
 
@@ -429,9 +431,12 @@ class SkillRegistry:
                 continue
 
             # Tool-Verfügbarkeit prüfen
-            if available_tools is not None and skill.tools_required:
-                if not all(t in available_tools for t in skill.tools_required):
-                    continue
+            if (
+                available_tools is not None
+                and skill.tools_required
+                and not all(t in available_tools for t in skill.tools_required)
+            ):
+                continue
 
             score = 0.0
             matched_kws: list[str] = []
@@ -569,7 +574,7 @@ class SkillRegistry:
                     skill.avg_score * (skill.total_uses - 1) + score
                 ) / skill.total_uses
 
-            skill.last_used = datetime.now(timezone.utc).isoformat()
+            skill.last_used = datetime.now(UTC).isoformat()
 
     @property
     def count(self) -> int:

@@ -35,12 +35,11 @@ Example workflow (YAML)::
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -48,7 +47,7 @@ from pydantic import BaseModel, Field
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _new_id() -> str:
@@ -152,7 +151,7 @@ class WorkflowDefinition(BaseModel, frozen=True):
     @classmethod
     def from_yaml(cls, yaml_str: str) -> WorkflowDefinition:
         """Parse a workflow from a YAML string."""
-        import yaml  # noqa: PLC0415 (lazy import — yaml may not always be needed)
+        import yaml
 
         data = yaml.safe_load(yaml_str)
         return cls.model_validate(data)

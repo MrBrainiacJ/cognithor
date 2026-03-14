@@ -309,7 +309,7 @@ class FeishuChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=300.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Feishu Approval Timeout: %s", action.tool)
             async with self._approval_lock:
                 self._approval_futures.pop(approval_id, None)

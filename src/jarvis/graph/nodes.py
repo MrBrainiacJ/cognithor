@@ -19,10 +19,14 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any
 
-from jarvis.graph.types import GraphState
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from jarvis.graph.types import GraphState
 
 log = get_logger(__name__)
 
@@ -51,7 +55,7 @@ def llm_node(
     async def handler(state: GraphState) -> GraphState:
         # Template rendern
         prompt = prompt_template
-        for key in state.keys():
+        for key in state:
             placeholder = "{" + key + "}"
             if placeholder in prompt:
                 prompt = prompt.replace(placeholder, str(state[key]))

@@ -5,23 +5,20 @@ from __future__ import annotations
 import json
 import subprocess
 import tempfile
-import types
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from jarvis.core.startup_check import (
+    OPTIONAL_GROUPS,
     StartupChecker,
     StartupReport,
-    OPTIONAL_GROUPS,
-    _import_name,
     _can_import,
-    _pip_install,
     _http_get_json,
+    _import_name,
+    _pip_install,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -298,7 +295,7 @@ class TestCheckPythonPackages:
 
         mock_import.side_effect = side_effect
 
-        with patch("jarvis.core.startup_check._pip_install", return_value=(True, "")) as mock_pip:
+        with patch("jarvis.core.startup_check._pip_install", return_value=(True, "")):
             report = checker.check_python_packages()
             # Some groups had missing packages, some didn't
             assert len(report.checks_passed) > 0

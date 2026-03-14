@@ -5,39 +5,34 @@ Graph-kompatible Nodes, End-to-End-Integration mit v18 GraphEngine.
 """
 
 import asyncio
-import pytest
-import time
-from typing import Any
-from unittest.mock import AsyncMock
 
-from jarvis.hitl.types import (
-    ApprovalStatus,
-    ReviewPriority,
-    EscalationAction,
-    NotificationType,
-    HITLNodeKind,
-    NotificationChannel,
-    EscalationPolicy,
-    HITLConfig,
-    ApprovalRequest,
-    ApprovalResponse,
-    ReviewTask,
-)
-from jarvis.hitl.notifier import HITLNotifier, NotificationRecord
+import pytest
+
+from jarvis.graph.builder import GraphBuilder
+from jarvis.graph.engine import GraphEngine
+from jarvis.graph.types import END, GraphState
 from jarvis.hitl.manager import ApprovalManager
 from jarvis.hitl.nodes import (
     create_approval_node,
-    create_review_node,
-    create_input_node,
     create_gate_node,
+    create_input_node,
+    create_review_node,
     create_selection_node,
-    create_edit_node,
 )
-from jarvis.graph.types import GraphState, NodeType, ExecutionStatus
-from jarvis.graph.engine import GraphEngine
-from jarvis.graph.builder import GraphBuilder
-from jarvis.graph.types import END
-
+from jarvis.hitl.notifier import HITLNotifier, NotificationRecord
+from jarvis.hitl.types import (
+    ApprovalRequest,
+    ApprovalResponse,
+    ApprovalStatus,
+    EscalationAction,
+    EscalationPolicy,
+    HITLConfig,
+    HITLNodeKind,
+    NotificationChannel,
+    NotificationType,
+    ReviewPriority,
+    ReviewTask,
+)
 
 # ============================================================================
 # Helper
@@ -329,9 +324,9 @@ class TestHITLNotifier:
             enabled=False,
         )
         req = ApprovalRequest(config=HITLConfig(notifications=[channel]))
-        sent = await notifier.notify_new_request(req)
+        await notifier.notify_new_request(req)
         # Disabled channels: fallback to default log
-        assert sent == 0 or True  # no enabled channels = 0 from that list
+        assert True  # no enabled channels = 0 from that list
 
     @pytest.mark.asyncio
     async def test_notify_resolved(self):
@@ -674,7 +669,7 @@ class TestApprovalManager:
     @pytest.mark.asyncio
     async def test_check_timeouts(self):
         mgr = ApprovalManager()
-        req = await mgr.create_request(
+        await mgr.create_request(
             "e1",
             "g1",
             "n1",
@@ -1087,7 +1082,7 @@ class TestHITLGraphIntegration:
             ],
         )
 
-        req = await mgr.create_request("e1", "g1", "n1", config, context={})
+        await mgr.create_request("e1", "g1", "n1", config, context={})
         # Gate auto-approved, so no notifications for pending
         # But create_request sends new_request notification
         assert len(received_notifications) >= 0  # May or may not have been called
@@ -1166,7 +1161,7 @@ class TestHITLGraphIntegration:
         # Setup
         notifier = HITLNotifier()
         mgr = ApprovalManager(notifier=notifier)
-        in_app_channel = NotificationChannel(channel_type=NotificationType.IN_APP)
+        NotificationChannel(channel_type=NotificationType.IN_APP)
 
         # Graph: fetch → process → gate (auto-skip wenn risk < 50) → finalize
         async def fetch(state: GraphState) -> GraphState:

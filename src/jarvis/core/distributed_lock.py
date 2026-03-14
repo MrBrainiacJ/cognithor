@@ -12,6 +12,7 @@ Architecture Bible: §4.10
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import sys
@@ -148,7 +149,7 @@ class LocalLockBackend(DistributedLock):
         try:
             await asyncio.wait_for(lock.acquire(), timeout=timeout if timeout > 0 else None)
             return True
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False
 
     async def release(self, name: str) -> None:
@@ -202,7 +203,7 @@ class FileLockBackend(DistributedLock):
     def _try_lock(self, path: Path, name: str) -> bool:
         """Attempt to acquire the file lock (runs in thread executor)."""
         # Open (or create) the lock file
-        fh = open(path, "w")  # noqa: SIM115
+        fh = open(path, "w")
         try:
             if sys.platform == "win32":
                 import msvcrt
@@ -217,7 +218,7 @@ class FileLockBackend(DistributedLock):
             fh.flush()
             self._handles[name] = fh
             return True
-        except (OSError, IOError):
+        except OSError:
             fh.close()
             return False
 
@@ -247,15 +248,11 @@ class FileLockBackend(DistributedLock):
 
                 fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
         finally:
-            try:
+            with contextlib.suppress(OSError):
                 fh.close()
-            except OSError:
-                pass  # Best-effort close, file may already be closed
             # Best-effort cleanup of lockfile
-            try:
+            with contextlib.suppress(OSError):
                 self._lock_path(name).unlink(missing_ok=True)
-            except OSError:
-                pass  # Best-effort lockfile removal, another process may hold it
 
 
 # ============================================================================

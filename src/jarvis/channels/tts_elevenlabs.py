@@ -16,9 +16,12 @@ Bibel-Referenz: §9.3 (Voice Channel), §12.2 (Optionale Dependencies)
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import AsyncIterator
+from typing import TYPE_CHECKING
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 log = get_logger(__name__)
 

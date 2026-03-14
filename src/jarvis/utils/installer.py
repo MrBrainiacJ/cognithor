@@ -12,7 +12,10 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class InstallerBackend(StrEnum):

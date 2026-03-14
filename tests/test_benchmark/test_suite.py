@@ -6,10 +6,7 @@ BenchmarkReport, RegressionDetector, and built-in tasks.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
-
-import pytest
+from typing import TYPE_CHECKING, Any
 
 from jarvis.benchmark.suite import (
     BUILTIN_TASKS,
@@ -25,6 +22,8 @@ from jarvis.benchmark.suite import (
     TaskDifficulty,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # BenchmarkTask

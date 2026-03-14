@@ -5,15 +5,14 @@ Beweist vollständige Isolation von Sessions und Credentials pro Agent.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from pathlib import Path
-
-import pytest
+from typing import TYPE_CHECKING
 
 from jarvis.gateway.session_store import SessionStore
 from jarvis.models import Message, MessageRole, SessionContext
 from jarvis.security.credentials import CredentialStore
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # 1. Session-Isolation pro Agent

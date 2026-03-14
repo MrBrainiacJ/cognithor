@@ -17,8 +17,6 @@ from __future__ import annotations
 
 import hashlib
 
-import pytest
-
 from jarvis.security.sandbox_isolation import PerAgentSecretVault
 
 

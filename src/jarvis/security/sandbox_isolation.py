@@ -23,9 +23,8 @@ from enum import Enum
 from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
-
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 # ============================================================================
 # Agent Sandbox
@@ -95,9 +94,7 @@ class AgentSandbox:
     def check_tool_access(self, tool_name: str) -> bool:
         if tool_name in self.denied_tools:
             return False
-        if self.allowed_tools and tool_name not in self.allowed_tools:
-            return False
-        return True
+        return not (self.allowed_tools and tool_name not in self.allowed_tools)
 
     def check_endpoint_access(self, endpoint: str) -> bool:
         if not self.allowed_endpoints:

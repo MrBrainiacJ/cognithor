@@ -19,6 +19,7 @@ Bibel-Referenz: §9.3 (Voice Channel Extension)
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from typing import TYPE_CHECKING
 
 from jarvis.utils.logging import get_logger
@@ -64,10 +65,8 @@ class TalkMode:
         self._wake.stop()
         if self._task and not self._task.done():
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
         self._task = None
         log.info("talk_mode_stopped")
 

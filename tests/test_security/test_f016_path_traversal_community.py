@@ -13,13 +13,16 @@ from __future__ import annotations
 
 import inspect
 import os
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from jarvis.skills.community.client import CommunityRegistryClient, RegistryEntry
 from jarvis.skills.community.validator import ValidationResult
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_client(tmp_path: Path) -> CommunityRegistryClient:

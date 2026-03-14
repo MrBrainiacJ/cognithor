@@ -9,7 +9,7 @@ Architektur-Bibel: SS14 (Skills & Ecosystem)
 
 import sqlite3
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from jarvis.utils.logging import get_logger
 
@@ -183,7 +183,7 @@ def _build_router() -> Any:
     @router.post("/{package_id}/install")
     async def install_skill(
         package_id: str,
-        body: Optional[InstallRequest] = None,
+        body: InstallRequest | None = None,
     ) -> dict:
         """Installiert einen Skill (zeichnet Installation auf)."""
         store = _get_store()
@@ -254,11 +254,11 @@ def _build_router() -> Any:
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        except sqlite3.IntegrityError:
+        except sqlite3.IntegrityError as exc:
             raise HTTPException(
                 status_code=409,
                 detail="Du hast diesen Skill bereits bewertet",
-            )
+            ) from exc
 
         return {
             "status": "created",
@@ -541,8 +541,8 @@ def _build_community_router() -> Any:
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        except sqlite3.IntegrityError:
-            raise HTTPException(status_code=409, detail="Bereits bewertet")
+        except sqlite3.IntegrityError as exc:
+            raise HTTPException(status_code=409, detail="Bereits bewertet") from exc
 
         return {"status": "created", "review_id": review_id}
 

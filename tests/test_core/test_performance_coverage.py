@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.performance import (
     Backend,
     BalancingStrategy,
@@ -13,13 +11,8 @@ from jarvis.core.performance import (
     PerformanceManager,
     QueryDecomposer,
     ResourceOptimizer,
-    SearchResult,
-    SubQuery,
-    VectorBackend,
-    VectorEntry,
     VectorStore,
 )
-
 
 # ============================================================================
 # VectorStore

@@ -10,33 +10,28 @@ Prüft:
 
 from __future__ import annotations
 
-import pytest
 from typing import Any
 from unittest.mock import MagicMock
 
-from jarvis.security.redteam import (
-    SecurityScanner,
-    ScanPolicy,
-    PromptFuzzer,
-    PenetrationSuite,
-)
 from jarvis.audit.compliance import (
     ComplianceFramework,
-    ComplianceStatus,
     DecisionLog,
     DecisionRecord,
-    RemediationTracker,
     RemediationItem,
+    RemediationTracker,
     ReportExporter,
 )
-from jarvis.memory.hygiene import MemoryHygieneEngine
 from jarvis.core.explainability import (
     ExplainabilityEngine,
     SourceReference,
     SourceType,
     StepType,
 )
-
+from jarvis.memory.hygiene import MemoryHygieneEngine
+from jarvis.security.redteam import (
+    ScanPolicy,
+    SecurityScanner,
+)
 
 # ============================================================================
 # Gateway-Singleton Tests

@@ -24,6 +24,7 @@ import asyncio
 import time
 from typing import Any
 
+from jarvis.hitl.notifier import HITLNotifier
 from jarvis.hitl.types import (
     ApprovalRequest,
     ApprovalResponse,
@@ -34,7 +35,6 @@ from jarvis.hitl.types import (
     ReviewPriority,
     ReviewTask,
 )
-from jarvis.hitl.notifier import HITLNotifier
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -196,7 +196,7 @@ class ApprovalManager:
         try:
             await asyncio.wait_for(event.wait(), timeout=float(timeout))
             return self._tasks.get(request_id)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             await self._handle_timeout(request_id)
             return self._tasks.get(request_id)
 

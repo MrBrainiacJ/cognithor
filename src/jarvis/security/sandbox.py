@@ -17,6 +17,7 @@ Bibel-Referenz: §3.3 (Sandbox), §11.1 (Sicherheitsarchitektur)
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import shlex
 import shutil
@@ -223,14 +224,10 @@ class Sandbox:
         def _set_limits() -> None:
             """preexec_fn fallback for macOS where prlimit is unavailable.
             Only calls setrlimit which is async-signal-safe."""
-            try:
+            with contextlib.suppress(ValueError, OSError):
                 _resource.setrlimit(_resource.RLIMIT_AS, (mem_bytes, mem_bytes))
-            except (ValueError, OSError):
-                pass
-            try:
+            with contextlib.suppress(ValueError, OSError):
                 _resource.setrlimit(_resource.RLIMIT_CPU, (cpu_seconds, cpu_seconds))
-            except (ValueError, OSError):
-                pass
 
         extra_kwargs: dict = {"process_group": 0}
         if not _has_prlimit:
@@ -297,13 +294,14 @@ class Sandbox:
         Wird intern von _exec_process auf Windows verwendet, um ulimit zu ersetzen.
         """
         import ctypes
+
         from jarvis.utils.win32_job import (
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
             JOB_OBJECT_LIMIT_JOB_TIME,
             JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
             JOB_OBJECT_LIMIT_PROCESS_MEMORY,
-            JobObjectExtendedLimitInformation,
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
             PROCESS_ALL_ACCESS,
+            JobObjectExtendedLimitInformation,
         )
 
         kernel32 = ctypes.windll.kernel32
@@ -690,14 +688,15 @@ class Sandbox:
         Stärker als PROCESS-Level, aber schwächer als NAMESPACE/CONTAINER.
         """
         import ctypes
+
         from jarvis.utils.win32_job import (
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
             JOB_OBJECT_LIMIT_ACTIVE_PROCESS,
             JOB_OBJECT_LIMIT_JOB_TIME,
             JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
             JOB_OBJECT_LIMIT_PROCESS_MEMORY,
-            JobObjectExtendedLimitInformation,
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
             PROCESS_ALL_ACCESS,
+            JobObjectExtendedLimitInformation,
         )
 
         kernel32 = ctypes.windll.kernel32

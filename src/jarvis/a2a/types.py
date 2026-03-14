@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # ── Constants ────────────────────────────────────────────────────
 
 A2A_PROTOCOL_VERSION = "1.0"

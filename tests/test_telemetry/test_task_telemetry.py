@@ -1,6 +1,5 @@
 """Tests fuer TaskTelemetryCollector."""
 
-import pytest
 from jarvis.telemetry.task_telemetry import TaskTelemetryCollector
 
 

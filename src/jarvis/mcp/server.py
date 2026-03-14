@@ -27,9 +27,12 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 log = get_logger(__name__)
 
@@ -38,15 +41,15 @@ PROTOCOL_VERSION = "2025-11-25"
 
 __all__ = [
     "JarvisMCPServer",
+    "MCPLogEntry",
+    "MCPPrompt",
+    "MCPPromptArgument",
+    "MCPResource",
+    "MCPResourceTemplate",
     "MCPServerConfig",
     "MCPServerMode",
     "MCPToolDef",
-    "MCPResource",
-    "MCPResourceTemplate",
-    "MCPPrompt",
-    "MCPPromptArgument",
     "ProgressNotification",
-    "MCPLogEntry",
     "ToolAnnotationKey",
 ]
 
@@ -377,7 +380,7 @@ class JarvisMCPServer:
 
             return {"content": content, "isError": False}
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log.error("mcp_server_tool_timeout", tool=name, timeout=self.HANDLER_TIMEOUT)
             return {
                 "content": [
@@ -444,7 +447,7 @@ class JarvisMCPServer:
                     }
                 ]
             }
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log.error("mcp_server_resource_timeout", uri=uri, timeout=self.HANDLER_TIMEOUT)
             return {
                 "contents": [
@@ -530,7 +533,7 @@ class JarvisMCPServer:
                 "description": prompt.description,
                 "messages": messages if isinstance(messages, list) else [messages],
             }
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log.error("mcp_server_prompt_timeout", prompt=name, timeout=self.HANDLER_TIMEOUT)
             return {"description": "Prompt-Timeout", "messages": []}
         except Exception as exc:
@@ -717,7 +720,7 @@ class JarvisMCPServer:
                     )
                     if not line:
                         break
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue
                 except json.JSONDecodeError as exc:
                     log.warning("mcp_server_invalid_json", error=str(exc))
@@ -748,7 +751,7 @@ class JarvisMCPServer:
                     sys.stdout.write(json.dumps(response) + "\n")
                     sys.stdout.flush()
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except json.JSONDecodeError as exc:
                 log.warning("mcp_server_invalid_json", error=str(exc))
@@ -840,7 +843,7 @@ class JarvisMCPServer:
             if len(pattern_parts) != len(uri_parts):
                 continue
             match = True
-            for pp, up in zip(pattern_parts, uri_parts):
+            for pp, up in zip(pattern_parts, uri_parts, strict=False):
                 if pp.startswith("{") and pp.endswith("}"):
                     continue  # Wildcard
                 if pp != up:

@@ -20,6 +20,7 @@ Abhängigkeiten:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 
 from jarvis.channels.base import Channel, MessageHandler
@@ -122,7 +123,7 @@ class IRCChannel(Channel):
         if self._writer is None:
             return
         try:
-            self._writer.write(f"{line}\r\n".encode("utf-8"))
+            self._writer.write(f"{line}\r\n".encode())
             await self._writer.drain()
         except Exception as exc:
             logger.error("IRC Senden fehlgeschlagen: %s", exc)
@@ -275,10 +276,8 @@ class IRCChannel(Channel):
         """Trennt die IRC-Verbindung."""
         self._running = False
         if self._writer:
-            try:
+            with contextlib.suppress(Exception):
                 await self._send_raw("QUIT :Jarvis shutting down")
-            except Exception:
-                pass  # Cleanup — QUIT send failure during shutdown is non-critical
             self._writer.close()
             self._writer = None
         self._reader = None
@@ -320,7 +319,7 @@ class IRCChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=120.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.info("IRC: Approval-Timeout fuer Session %s", session_id[:8])
             return False
         finally:

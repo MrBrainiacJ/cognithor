@@ -14,8 +14,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import pytest
-
 from jarvis.i18n import set_locale
 from jarvis.utils.error_messages import (
     _friendly_tool_name,

@@ -173,9 +173,8 @@ class AgentRegistry:
                 match = False
                 if capability and cap.name == capability:
                     match = True
-                if required_tools:
-                    if all(t in cap.tools_required for t in required_tools):
-                        match = True
+                if required_tools and all(t in cap.tools_required for t in required_tools):
+                    match = True
 
                 if match and cap.priority > best_priority:
                     best_priority = cap.priority
@@ -227,7 +226,7 @@ def validate_output(
             errors.append(f"Field '{field_name}': expected str, got {type(value).__name__}")
         elif expected == "int" and not isinstance(value, int):
             errors.append(f"Field '{field_name}': expected int, got {type(value).__name__}")
-        elif expected == "float" and not isinstance(value, (int, float)):
+        elif expected == "float" and not isinstance(value, int | float):
             errors.append(f"Field '{field_name}': expected float, got {type(value).__name__}")
         elif expected == "bool" and not isinstance(value, bool):
             errors.append(f"Field '{field_name}': expected bool, got {type(value).__name__}")
@@ -335,7 +334,7 @@ class DelegationEngine:
             result.raw_response = raw_response
             result.output = self._parse_output(raw_response)
             result.status = DelegationStatus.SUCCESS
-        except asyncio.TimeoutError:
+        except TimeoutError:
             result.status = DelegationStatus.TIMEOUT
             result.validation_errors = [f"Delegation timed out after {contract.timeout_seconds}s"]
             self._record(result, start_time)

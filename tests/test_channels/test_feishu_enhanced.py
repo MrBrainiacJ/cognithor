@@ -41,7 +41,7 @@ class TestFeishuVerifyEvent:
         key = "key"
         # Compute what the source code will compute: sha256(timestamp+nonce+key+str(body))
         body_str = str(body)
-        expected = hashlib.sha256(f"tn{key}{body_str}".encode()).hexdigest()
+        hashlib.sha256(f"tn{key}{body_str}".encode()).hexdigest()
         # Now set the signature to the expected value -- but that changes str(body)!
         # So we use a mock to control the hash output.
         mock_hash = MagicMock()

@@ -52,10 +52,10 @@ DEFAULT_IMAGE_PROMPT = "Beschreibe dieses Bild detailliert auf Deutsch."
 DEFAULT_PIPER_VOICE = "de_DE-thorsten-high"
 
 __all__ = [
+    "MEDIA_TOOL_SCHEMAS",
     "MediaPipeline",
     "MediaResult",
     "register_media_tools",
-    "MEDIA_TOOL_SCHEMAS",
 ]
 
 

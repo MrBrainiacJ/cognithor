@@ -267,9 +267,9 @@ class ModelRecommender:
 
         candidates = []
         for model in self.MODELS:
-            if vram > 0 and model.vram_required_gb <= vram:
-                candidates.append(model)
-            elif vram == 0 and model.vram_required_gb == 0 and model.ram_required_gb <= ram:
+            if (vram > 0 and model.vram_required_gb <= vram) or (
+                vram == 0 and model.vram_required_gb == 0 and model.ram_required_gb <= ram
+            ):
                 candidates.append(model)
 
         # Sortiere nach Qualität (absteigend), dann Speed

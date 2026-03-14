@@ -30,8 +30,10 @@ import hashlib
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ============================================================================
 # Enums
@@ -630,7 +632,7 @@ class PromptFuzzer:
 
         for payload_def in self._payloads:
             # Original-Payload testen
-            all_variants = [payload_def.payload] + self.mutate_payload(payload_def.payload)
+            all_variants = [payload_def.payload, *self.mutate_payload(payload_def.payload)]
 
             for variant in all_variants:
                 report.total_tests += 1
@@ -1108,7 +1110,7 @@ class PenetrationSuite:
             self._reports.append(poison_report)
 
         # 3. Custom Tests
-        for name, test_fn in self._custom_tests:
+        for _name, test_fn in self._custom_tests:
             try:
                 report = test_fn()
                 self._reports.append(report)

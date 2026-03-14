@@ -10,10 +10,8 @@ from jarvis.core.distributed_lock import (
     LocalLockBackend,
     LockBackend,
     RedisLockBackend,
-    _LockContext,
     create_lock,
 )
-
 
 # ============================================================================
 # LockBackend Enum

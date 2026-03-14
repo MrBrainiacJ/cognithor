@@ -5,15 +5,10 @@
 
 from __future__ import annotations
 
-import pytest
-from typing import Any
-
 # ============================================================================
 # 1. Security Hardening
 # ============================================================================
-
 from jarvis.security.hardening import (
-    AgentContainer,
     ContainerIsolation,
     CredentialScanner,
     GateDecision,
@@ -158,6 +153,7 @@ class TestCredentialScanner:
 class TestWebhookNotifier:
     def test_notify(self) -> None:
         from unittest.mock import MagicMock, patch
+
         import httpx as real_httpx
 
         notifier = WebhookNotifier()
@@ -379,14 +375,12 @@ from jarvis.core.multitenant import (
     EmergencyAction,
     EmergencyController,
     MultiTenantGovernor,
-    Tenant,
     TenantManager,
     TenantPlan,
     TenantStatus,
     TenantUser,
     TrustLevel,
     TrustNegotiator,
-    TrustPolicy,
 )
 
 

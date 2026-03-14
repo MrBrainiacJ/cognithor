@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-import pytest
+from typing import TYPE_CHECKING
+
 import yaml
-from pathlib import Path
 
 from jarvis.governance.policy_patcher import PolicyPatcher
 from jarvis.models import PolicyChange
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestMergeChange:

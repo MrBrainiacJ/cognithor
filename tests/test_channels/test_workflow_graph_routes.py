@@ -7,9 +7,8 @@ the _register_workflow_graph_routes handlers directly.
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from typing import TYPE_CHECKING, Any
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,12 +17,10 @@ from jarvis.config_manager import ConfigManager
 from jarvis.core.workflows import (
     TemplateLibrary,
     WorkflowEngine,
-    WorkflowInstance,
-    WorkflowStatus,
-    WorkflowTemplate,
-    WorkflowStep,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # FakeApp

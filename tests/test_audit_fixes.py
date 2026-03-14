@@ -14,10 +14,8 @@ Verifiziert jede einzelne Korrektur aus dem Codebase-Audit:
 from __future__ import annotations
 
 import asyncio
-import json
 import re
 from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -44,15 +42,15 @@ class TestC13_MaxTokensBounds:
         assert config.anthropic_max_tokens == 8192
 
     def test_zero_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="max_tokens|anthropic"):
             JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=0)
 
     def test_negative_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="max_tokens|anthropic"):
             JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=-1)
 
     def test_too_large_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="max_tokens|anthropic"):
             JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=2_000_000)
 
     def test_boundary_min(self, tmp_path: Path) -> None:
@@ -85,11 +83,11 @@ class TestC14_RedisUrlPattern:
         assert config.redis_url == "rediss://secure:6380/0"
 
     def test_http_url_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="redis"):
             JarvisConfig(jarvis_home=tmp_path, redis_url="http://wrong:6379")
 
     def test_empty_string_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="redis"):
             JarvisConfig(jarvis_home=tmp_path, redis_url="")
 
 

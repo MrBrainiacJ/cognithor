@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from jarvis.memory.scoring import ImportanceScorer
@@ -95,7 +95,7 @@ class ContentDeduplicator:
             h = self.content_hash(entry.get("content", ""))
             hash_buckets.setdefault(h, []).append(entry)
 
-        for h, bucket in hash_buckets.items():
+        for _h, bucket in hash_buckets.items():
             if len(bucket) > 1:
                 canonical = max(bucket, key=lambda e: e.get("confidence", 0.5))
                 dups = [e["id"] for e in bucket if e["id"] != canonical["id"]]
@@ -316,7 +316,7 @@ class ConsolidationPipeline:
         """
         start = time.monotonic()
         result = ConsolidationResult(
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             entries_scanned=len(entries),
         )
 

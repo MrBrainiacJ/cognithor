@@ -261,9 +261,8 @@ class CredentialStore:
     def has(self, service: str, key: str, agent_id: str = "") -> bool:
         """Prüft ob ein Credential existiert."""
         self._ensure_loaded()
-        if agent_id:
-            if f"{agent_id}/{service}:{key}" in self._entries:
-                return True
+        if agent_id and f"{agent_id}/{service}:{key}" in self._entries:
+            return True
         return f"{service}:{key}" in self._entries
 
     def inject_credentials(self, params: dict[str, Any], mapping: dict[str, str]) -> dict[str, Any]:

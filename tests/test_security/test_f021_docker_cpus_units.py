@@ -14,9 +14,8 @@ import inspect
 
 import pytest
 
-from jarvis.models import SandboxConfig, SandboxLevel
+from jarvis.models import SandboxConfig
 from jarvis.security.sandbox import Sandbox
-
 
 # ============================================================================
 # SandboxConfig Tests
@@ -43,7 +42,7 @@ class TestSandboxConfigCpuCores:
         assert config.max_cpu_cores == 0.1
 
     def test_below_min_rejected(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="cpu|cores"):
             SandboxConfig(max_cpu_cores=0.05)
 
     def test_max_value(self) -> None:
@@ -51,7 +50,7 @@ class TestSandboxConfigCpuCores:
         assert config.max_cpu_cores == 64.0
 
     def test_above_max_rejected(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="cpu|cores"):
             SandboxConfig(max_cpu_cores=65.0)
 
 
@@ -67,7 +66,7 @@ class TestDockerCpuArgs:
         """Extrahiert die Docker-Args aus _exec_docker Source."""
         # Wir testen indirekt via Source-Inspection:
         # Die docker_args werden aus self._config.max_cpu_cores gebaut
-        sandbox = Sandbox(config)
+        Sandbox(config)
         source = inspect.getsource(Sandbox._exec_docker)
         return source
 

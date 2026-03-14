@@ -8,15 +8,17 @@ Alle externen APIs (signal-cli-rest-api, aiohttp, whisper) werden gemockt.
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
-from typing import Any
+import contextlib
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.signal import SignalChannel, _split_message, MAX_MESSAGE_LENGTH
+from jarvis.channels.signal import MAX_MESSAGE_LENGTH, SignalChannel, _split_message
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fixtures
@@ -572,10 +574,8 @@ class TestSignalHelpers:
         await asyncio.sleep(0.15)
         signal_ch._running = False
         task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await task
-        except asyncio.CancelledError:
-            pass
 
     @pytest.mark.asyncio
     async def test_webhook_health(self, signal_webhook: SignalChannel) -> None:
@@ -586,4 +586,4 @@ class TestSignalHelpers:
         mock_aiohttp = MagicMock()
         mock_aiohttp.web = mock_web
         with patch.dict("sys.modules", {"aiohttp": mock_aiohttp, "aiohttp.web": mock_web}):
-            result = await signal_webhook._handle_health(request)
+            await signal_webhook._handle_health(request)

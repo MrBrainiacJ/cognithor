@@ -12,12 +12,9 @@ from __future__ import annotations
 
 import base64
 import inspect
-import json
 import os
-import sys
 
 import pytest
-
 
 # ============================================================================
 # Unit-Tests fuer die Size-Estimation-Logik
@@ -168,7 +165,7 @@ class TestSourceLevelChecks:
         # Pruefe dass nach dem Error-Send ein continue kommt
         lines = self._source.split("\n")
         found_error = False
-        for i, line in enumerate(lines):
+        for _i, line in enumerate(lines):
             if "Audiodatei zu gross" in line:
                 found_error = True
             if found_error and "continue" in line:

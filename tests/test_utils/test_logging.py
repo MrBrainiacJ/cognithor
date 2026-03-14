@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-
-import pytest
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 from jarvis.utils.logging import (
-    get_logger,
-    setup_logging,
+    _StructlogCompatLogger,
     bind_context,
     clear_context,
-    _StructlogCompatLogger,
+    get_logger,
+    setup_logging,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # _StructlogCompatLogger
@@ -124,7 +124,7 @@ class TestGetLogger:
         mock_structlog = MagicMock()
         mock_structlog.get_logger.return_value = MagicMock()
         with patch("jarvis.utils.logging.structlog", mock_structlog):
-            log = get_logger("structlog_test")
+            get_logger("structlog_test")
             mock_structlog.get_logger.assert_called_once_with("structlog_test")
 
 

@@ -19,6 +19,7 @@ Abhängigkeiten:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 
 from jarvis.channels.base import Channel, MessageHandler
@@ -110,7 +111,7 @@ class TwitchChannel(Channel):
         if self._writer is None:
             return
         try:
-            self._writer.write(f"{line}\r\n".encode("utf-8"))
+            self._writer.write(f"{line}\r\n".encode())
             await self._writer.drain()
         except Exception as exc:
             logger.error("Twitch Senden fehlgeschlagen: %s", exc)
@@ -263,10 +264,8 @@ class TwitchChannel(Channel):
         """Trennt die Twitch-Verbindung."""
         self._running = False
         if self._writer:
-            try:
+            with contextlib.suppress(Exception):
                 await self._send_raw(f"PART #{self._channel}")
-            except Exception:
-                pass  # Cleanup — PART send failure during shutdown is non-critical
             self._writer.close()
             self._writer = None
         self._reader = None
@@ -304,7 +303,7 @@ class TwitchChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=120.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.info("Twitch: Approval-Timeout fuer Session %s", session_id[:8])
             return False
         finally:

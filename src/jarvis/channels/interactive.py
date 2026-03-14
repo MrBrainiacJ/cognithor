@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from datetime import UTC
 from enum import Enum
 from typing import Any
 
@@ -393,9 +394,9 @@ class DiscordMessageBuilder:
         if not self._current_embed:
             self.embed()
         assert self._current_embed is not None
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        self._current_embed["timestamp"] = datetime.now(timezone.utc).isoformat()
+        self._current_embed["timestamp"] = datetime.now(UTC).isoformat()
         return self
 
     # --- Components ---

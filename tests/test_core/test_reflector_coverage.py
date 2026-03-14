@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import contextlib
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.reflector import Reflector, _sanitize_memory_text, _safe_float
+from jarvis.core.reflector import Reflector, _safe_float, _sanitize_memory_text
 from jarvis.models import (
     ActionPlan,
     AgentResult,
@@ -145,7 +146,11 @@ class TestExtractKeywords:
 class TestReflect:
     @pytest.mark.asyncio
     async def test_reflect_returns_result(self, config: JarvisConfig) -> None:
-        llm_response = '{"evaluation":"Good session","success_score":0.8,"extracted_facts":[],"session_summary":{"goal":"test","outcome":"success","tools_used":["web_search"]}}'
+        llm_response = (
+            '{"evaluation":"Good session","success_score":0.8,'
+            '"extracted_facts":[],"session_summary":{"goal":"test",'
+            '"outcome":"success","tools_used":["web_search"]}}'
+        )
         reflector = Reflector(config, _mock_ollama(llm_response), _mock_router())
 
         session = SessionContext()
@@ -461,10 +466,8 @@ class TestApplyExtended:
 
         # apply() sollte die Exception entweder auffangen oder weiterreichen,
         # aber nicht unkontrolliert crashen. Wir testen dass es sich definiert verhaelt.
-        try:
+        with contextlib.suppress(RuntimeError):
             await reflector.apply(result, mock_mm)
-        except RuntimeError:
-            pass  # Erwartetes Verhalten wenn Exception nicht intern gefangen wird
 
 
 # ============================================================================

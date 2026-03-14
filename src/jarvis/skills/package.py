@@ -31,17 +31,20 @@ Bibel-Referenz: §6.5 (Skill Distribution)
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import logging
 import re
 import tarfile
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from io import BytesIO
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger("jarvis.skills.package")
 
@@ -54,18 +57,18 @@ MAX_DESCRIPTION_LENGTH = 200
 MAX_PACKAGE_MEMBER_SIZE = 2_097_152  # 2 MB
 
 __all__ = [
-    "SkillManifest",
-    "SkillPackage",
-    "PackageSigner",
-    "PackageSignature",
-    "PackageBuilder",
-    "PackageInstaller",
-    "CodeAnalyzer",
     "AnalysisReport",
     "AnalysisVerdict",
-    "TrustLevel",
-    "SandboxPermission",
+    "CodeAnalyzer",
     "InstallResult",
+    "PackageBuilder",
+    "PackageInstaller",
+    "PackageSignature",
+    "PackageSigner",
+    "SandboxPermission",
+    "SkillManifest",
+    "SkillPackage",
+    "TrustLevel",
 ]
 
 
@@ -142,7 +145,7 @@ class SkillManifest:
     # Integrität
     content_hash: str = ""  # SHA-256 über Code + Tests
     created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
 
     @property
@@ -155,10 +158,8 @@ class SkillManifest:
         """Parsed permissions zu Enum-Werten."""
         result = []
         for p in self.permissions:
-            try:
+            with contextlib.suppress(ValueError):
                 result.append(SandboxPermission(p))
-            except ValueError:
-                pass
         return result
 
     def to_dict(self) -> dict[str, Any]:
@@ -238,7 +239,7 @@ class PackageSignature:
     signature: str  # Hex-encodierte Signatur
     algorithm: str = "hmac-sha256"  # oder "ed25519"
     timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
 
 
@@ -907,15 +908,16 @@ class PackageInstaller:
                     message="Paket ist nicht signiert (require_signature=True)",
                 )
 
-            if package.signature and package.signature.signer_id not in self._trusted_signers:
-                if self._trusted_signers:  # Nur prüfen wenn Trusted-Liste nicht leer
-                    return InstallResult(
-                        success=False,
-                        package_id=pkg_id,
-                        message=(
-                            f"Herausgeber '{package.signature.signer_id}' nicht vertrauenswürdig"
-                        ),
-                    )
+            if (
+                package.signature
+                and package.signature.signer_id not in self._trusted_signers
+                and self._trusted_signers  # Nur prüfen wenn Trusted-Liste nicht leer
+            ):
+                return InstallResult(
+                    success=False,
+                    package_id=pkg_id,
+                    message=(f"Herausgeber '{package.signature.signer_id}' nicht vertrauenswürdig"),
+                )
 
         # 2. Signatur-Integrität
         if package.is_signed and self._signer:

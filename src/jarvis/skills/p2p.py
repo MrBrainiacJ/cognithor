@@ -44,11 +44,12 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from jarvis.skills.circles import CircleManager
+from jarvis.skills.marketplace import SkillMarketplace
 from jarvis.skills.package import (
     CodeAnalyzer,
     InstallResult,
@@ -59,9 +60,10 @@ from jarvis.skills.package import (
     SkillPackage,
     TrustLevel,
 )
-from jarvis.skills.circles import CircleManager
-from jarvis.skills.marketplace import SkillMarketplace
 from jarvis.skills.updater import SkillUpdater
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger("jarvis.skills.p2p")
 
@@ -86,7 +88,7 @@ class PeerNode:
 
     # Status
     last_seen: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
     is_online: bool = True
     skills_published: int = 0
@@ -96,14 +98,14 @@ class PeerNode:
         """Peer gilt als stale wenn >1h nicht gesehen."""
         try:
             last = datetime.fromisoformat(self.last_seen)
-            age = (datetime.now(timezone.utc) - last).total_seconds()
+            age = (datetime.now(UTC) - last).total_seconds()
             return age > 3600
         except (ValueError, TypeError):
             return True
 
     def touch(self) -> None:
         """Aktualisiert last_seen."""
-        self.last_seen = datetime.now(timezone.utc).isoformat()
+        self.last_seen = datetime.now(UTC).isoformat()
         self.is_online = True
 
 
@@ -182,7 +184,7 @@ class PeerRegistry:
             Anzahl entfernter Peers.
         """
         to_remove = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for pid, peer in self._peers.items():
             try:
@@ -221,7 +223,7 @@ class IndexEntry:
     manifest: SkillManifest
     publisher_id: str  # PeerNode.peer_id
     published_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
     download_count: int = 0
     signature_valid: bool = False
@@ -546,7 +548,7 @@ class Subscription:
     keyword: str = ""  # Abonniertes Keyword
     author_id: str = ""  # Abonnierter Herausgeber
     created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
 
 

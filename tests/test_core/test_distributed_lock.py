@@ -6,7 +6,6 @@ Testet: LocalLockBackend, FileLockBackend, RedisLockBackend, create_lock factory
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -22,6 +21,8 @@ from jarvis.core.distributed_lock import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     pass
 
 

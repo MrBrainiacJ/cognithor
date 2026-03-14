@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import time
 
 import pytest
 
@@ -12,7 +11,6 @@ from jarvis.utils.circuit_breaker import (
     CircuitBreakerOpen,
     CircuitState,
 )
-
 
 # ============================================================================
 # Hilfsfunktionen

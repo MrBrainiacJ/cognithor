@@ -434,7 +434,7 @@ class TestGoogleChatApprovalFlow:
         async def resolve_future():
             await asyncio.sleep(0.05)
             async with ch._approval_lock:
-                for aid, future in ch._approval_futures.items():
+                for _aid, future in ch._approval_futures.items():
                     if not future.done():
                         future.set_result(True)
                         break

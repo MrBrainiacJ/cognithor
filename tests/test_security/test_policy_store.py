@@ -6,16 +6,15 @@ simulation, diffing, and edge cases.
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
-import pytest
 import yaml
 
 from jarvis.security.policy_store import PolicyStore, PolicyVersion
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Helpers

@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-import logging
 import ssl
 import subprocess
-import tempfile
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from jarvis.security.token_store import create_ssl_context
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _generate_self_signed_cert(cert_path: Path, key_path: Path) -> bool:

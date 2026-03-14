@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -84,7 +84,7 @@ class GovernanceAgent:
         if existing:
             return existing[0]
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         cursor = self._conn.execute(
             """
             INSERT INTO proposals (timestamp, category, title, description,
@@ -323,7 +323,7 @@ class GovernanceAgent:
             return proposals
 
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+            cutoff = datetime.now(UTC) - timedelta(days=7)
             unused_tools = getattr(
                 self.task_telemetry,
                 "get_unused_tools",
@@ -415,7 +415,7 @@ class GovernanceAgent:
             category=row["category"],
             title=row["title"],
             change=suggested_change,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
     def reject_proposal(self, proposal_id: int, reason: str) -> None:

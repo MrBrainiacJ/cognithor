@@ -9,13 +9,12 @@ from __future__ import annotations
 import asyncio
 import os
 import tempfile
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from jarvis.channels.slack import SlackChannel
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
-
 
 # ============================================================================
 # Fixtures
@@ -264,7 +263,7 @@ class TestSlackApproval:
         async def resolve_approval() -> None:
             await asyncio.sleep(0.05)
             # Finde den approval_id aus den Futures
-            for aid, fut in list(slack._approval_futures.items()):
+            for _aid, fut in list(slack._approval_futures.items()):
                 if not fut.done():
                     fut.set_result(True)
 
@@ -289,7 +288,7 @@ class TestSlackApproval:
 
         async def reject() -> None:
             await asyncio.sleep(0.05)
-            for aid, fut in list(slack._approval_futures.items()):
+            for _aid, fut in list(slack._approval_futures.items()):
                 if not fut.done():
                     fut.set_result(False)
 

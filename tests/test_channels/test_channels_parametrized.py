@@ -14,7 +14,6 @@ Channels tested:
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -23,21 +22,18 @@ import pytest
 # ---------------------------------------------------------------------------
 # Channel imports -- wrapped in try/except for optional dependencies
 # ---------------------------------------------------------------------------
-
 from jarvis.channels.cli import CliChannel
-from jarvis.channels.telegram import TelegramChannel
 from jarvis.channels.discord import DiscordChannel
-from jarvis.channels.slack import SlackChannel
-from jarvis.channels.whatsapp import WhatsAppChannel
-from jarvis.channels.signal import SignalChannel
-from jarvis.channels.matrix import MatrixChannel
 from jarvis.channels.irc import IRCChannel
+from jarvis.channels.matrix import MatrixChannel
 from jarvis.channels.mattermost import MattermostChannel
+from jarvis.channels.signal import SignalChannel
+from jarvis.channels.slack import SlackChannel
 from jarvis.channels.teams import TeamsChannel
+from jarvis.channels.telegram import TelegramChannel
 from jarvis.channels.webui import WebUIChannel
-
+from jarvis.channels.whatsapp import WhatsAppChannel
 from jarvis.models import OutgoingMessage
-
 
 # ---------------------------------------------------------------------------
 # Factory helpers -- each returns an instantiated channel with mocked deps

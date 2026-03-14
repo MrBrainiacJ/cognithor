@@ -40,6 +40,7 @@ from jarvis.models import MemorySearchResult, MemoryTier
 
 if TYPE_CHECKING:
     from pathlib import Path
+
     from jarvis.memory.episodic_store import EpisodicStore
     from jarvis.memory.weight_optimizer import SearchWeightOptimizer
 

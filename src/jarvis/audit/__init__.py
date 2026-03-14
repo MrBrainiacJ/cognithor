@@ -29,10 +29,12 @@ import json
 import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger("jarvis.audit")
 
@@ -81,7 +83,7 @@ class AuditEntry:
 
     entry_id: str
     timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
     category: AuditCategory = AuditCategory.SYSTEM
     severity: AuditSeverity = AuditSeverity.INFO
@@ -464,7 +466,7 @@ class AuditLogger:
         Returns:
             AuditSummary mit Statistiken.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         since = now - timedelta(hours=hours)
 
         entries = self.query(since=since, limit=50000)
@@ -529,7 +531,7 @@ class AuditLogger:
         Returns:
             Anzahl exportierter Einträge.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         since = now - timedelta(hours=hours)
         entries = self.query(since=since, limit=50000)
 
@@ -546,7 +548,7 @@ class AuditLogger:
 
     def export_csv(self, path: Path, *, hours: int = 24) -> int:
         """Exportiert als CSV für Compliance-Berichte."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         since = now - timedelta(hours=hours)
         entries = self.query(since=since, limit=50000)
 
@@ -573,7 +575,7 @@ class AuditLogger:
         Returns:
             Anzahl entfernter Einträge.
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=self._retention_days)
+        cutoff = datetime.now(UTC) - timedelta(days=self._retention_days)
         before = len(self._entries)
 
         self._entries = deque(
@@ -654,7 +656,7 @@ class AuditLogger:
         try:
             return datetime.fromisoformat(ts)
         except (ValueError, TypeError):
-            return datetime.min.replace(tzinfo=timezone.utc)
+            return datetime.min.replace(tzinfo=UTC)
 
     # ── Stats ────────────────────────────────────────────────────
 
@@ -674,13 +676,20 @@ class AuditLogger:
 # Compliance-Framework Re-Exports
 # ============================================================================
 
-from jarvis.audit.compliance import (  # noqa: E402
+from jarvis.audit.ai_act_export import (
+    ComplianceExporter,
+    TransparencyChecker,
+)
+from jarvis.audit.ai_act_export import (
+    RiskClassifier as ExportRiskClassifier,
+)
+from jarvis.audit.compliance import (
     ComplianceFramework,
     DecisionLog,
     RemediationTracker,
     ReportExporter,
 )
-from jarvis.audit.ethics import (  # noqa: E402
+from jarvis.audit.ethics import (
     BiasDetector,
     BudgetManager,
     CostTracker,
@@ -688,26 +697,21 @@ from jarvis.audit.ethics import (  # noqa: E402
     EthicsPolicy,
     FairnessAuditor,
 )
-from jarvis.audit.ai_act_export import (  # noqa: E402
-    ComplianceExporter,  # noqa: F401
-    RiskClassifier as ExportRiskClassifier,
-    TransparencyChecker,  # noqa: F401
-)
-from jarvis.audit.eu_ai_act import (  # noqa: E402
-    ComplianceDocManager,  # noqa: F401
-    EUAIActGovernor,  # noqa: F401
-    RiskClassifier,  # noqa: F401
-    TrainingCatalog,  # noqa: F401
-    TransparencyRegister,  # noqa: F401
+from jarvis.audit.eu_ai_act import (
+    ComplianceDocManager,
+    EUAIActGovernor,
+    RiskClassifier,
+    TrainingCatalog,
+    TransparencyRegister,
 )
 
 # Alias damit beide RiskClassifier erreichbar sind
 AIActExportRiskClassifier = ExportRiskClassifier
-from jarvis.audit.impact_assessment import (  # noqa: E402
-    EthicsBoard,  # noqa: F401
-    ImpactAssessor,  # noqa: F401
-    MitigationTracker,  # noqa: F401
-    StakeholderRegistry,  # noqa: F401
+from jarvis.audit.impact_assessment import (
+    EthicsBoard,
+    ImpactAssessor,
+    MitigationTracker,
+    StakeholderRegistry,
 )
 
 __all__ = [

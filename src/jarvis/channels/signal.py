@@ -28,6 +28,7 @@ Abhaengigkeiten:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import io
 import json
 import logging
@@ -87,6 +88,7 @@ class SignalChannel(Channel):
 
         # Polling-Task
         self._poll_task: asyncio.Task[None] | None = None
+        self._pending_tasks: set[asyncio.Task[Any]] = set()
 
         # Session-Mapping: phone_number -> session_id
         self._sessions: dict[str, str] = {}
@@ -160,10 +162,8 @@ class SignalChannel(Channel):
         # Polling stoppen
         if self._poll_task and not self._poll_task.done():
             self._poll_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._poll_task
-            except asyncio.CancelledError:
-                pass
             self._poll_task = None
 
         # Webhook stoppen
@@ -310,8 +310,9 @@ class SignalChannel(Channel):
 
     async def _handle_webhook(self, request: Any) -> Any:
         """POST /signal/webhook -- Eingehende Signal-Nachrichten."""
-        import hmac as _hmac
         import hashlib as _hashlib
+        import hmac as _hmac
+
         from aiohttp import web
 
         if self._webhook_secret:
@@ -335,7 +336,9 @@ class SignalChannel(Channel):
             except Exception:
                 return web.Response(status=400, text="Invalid JSON")
 
-        asyncio.create_task(self._process_webhook_payload(body))
+        task = asyncio.create_task(self._process_webhook_payload(body))
+        self._pending_tasks.add(task)
+        task.add_done_callback(self._pending_tasks.discard)
         return web.Response(status=200, text="OK")
 
     # -- Inbound: Polling --------------------------------------------------------
@@ -515,7 +518,7 @@ class SignalChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=APPROVAL_TIMEOUT)
-        except (asyncio.TimeoutError, TimeoutError):
+        except TimeoutError:
             logger.warning("Signal: Approval-Timeout fuer Session %s", session_id[:8])
             await self._send_text(phone, "Genehmigung abgelaufen (Timeout).")
             return False

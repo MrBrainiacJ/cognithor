@@ -322,6 +322,7 @@ class TelegramChannel(Channel):
     async def _handle_webhook(self, request: Any) -> Any:
         """Verarbeitet eingehende Telegram-Updates via Webhook."""
         import hmac as _hmac
+
         from aiohttp import web
         from telegram import Update
 
@@ -490,7 +491,7 @@ class TelegramChannel(Channel):
             await asyncio.wait_for(event.wait(), timeout=APPROVAL_TIMEOUT)
             async with self._approval_lock:
                 return self._approval_results.get(approval_id, False)
-        except (asyncio.TimeoutError, TimeoutError):
+        except TimeoutError:
             logger.warning("Approval-Timeout für %s", approval_id)
             return False
         finally:

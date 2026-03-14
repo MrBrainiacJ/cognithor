@@ -6,16 +6,18 @@ DummyApp-Fallback, Config-Manager-Integration.
 
 from __future__ import annotations
 
-import asyncio
 import base64
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from jarvis.channels.webui import WebUIChannel, WSMessageType
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture

@@ -298,37 +298,27 @@ class TestRunPythonAdditionalPatterns:
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_importlib_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_importlib_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("importlib.import_module('os')")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_pickle_load_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_pickle_load_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("pickle.load(open('data.pkl', 'rb'))")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_pickle_loads_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_pickle_loads_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("pickle.loads(payload)")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_ctypes_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_ctypes_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("ctypes.cdll.LoadLibrary('libc.so.6')")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_socket_socket_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_socket_socket_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
@@ -340,16 +330,12 @@ class TestRunPythonAdditionalPatterns:
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_path_unlink_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_path_unlink_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("Path('/etc/passwd').unlink()")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_path_write_text_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_path_write_text_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("Path('/tmp/x').write_text('pwned')")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
@@ -361,9 +347,7 @@ class TestRunPythonAdditionalPatterns:
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK
 
-    def test_path_rmdir_blocked(
-        self, gatekeeper: Gatekeeper, session: SessionContext
-    ) -> None:
+    def test_path_rmdir_blocked(self, gatekeeper: Gatekeeper, session: SessionContext) -> None:
         action = _run_python_action("Path('/tmp/dir').rmdir()")
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK

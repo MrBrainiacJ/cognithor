@@ -13,12 +13,15 @@ Validiert die PyYAML-basierte Frontmatter-Verarbeitung:
 
 from __future__ import annotations
 
-import pytest
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
+
+import pytest
 
 from jarvis.mcp.vault import VaultTools, _slugify
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -91,7 +94,10 @@ class TestParseFrontmatter:
         assert data == {}
 
     def test_complex_yaml(self, vault: VaultTools) -> None:
-        content = '---\ntitle: "Test: Complex"\ntags: [python, yaml]\ndate: 2026-03-01\ncount: 42\n---\nBody'
+        content = (
+            '---\ntitle: "Test: Complex"\ntags: [python, yaml]\n'
+            "date: 2026-03-01\ncount: 42\n---\nBody"
+        )
         data, start, end = vault._parse_frontmatter(content)
         assert data["title"] == "Test: Complex"
         assert data["tags"] == ["python", "yaml"]
@@ -331,7 +337,7 @@ class TestVaultSave:
     @pytest.mark.asyncio
     async def test_save_with_folder(self, vault: VaultTools) -> None:
         # "projects" ist ein Standard-Folder → wird zu "projekte" aufgelöst
-        result = await vault.vault_save(
+        await vault.vault_save(
             title="Projekt Note",
             content="Projekt content.",
             tags="projekt",
@@ -363,7 +369,7 @@ class TestVaultUpdate:
     @pytest.mark.asyncio
     async def test_update_append(self, vault: VaultTools) -> None:
         await vault.vault_save(title="Update Me", content="Original.")
-        result = await vault.vault_update(
+        await vault.vault_update(
             identifier="Update Me",
             append_content="Appended content.",
         )
@@ -393,7 +399,7 @@ class TestVaultLink:
     async def test_link_notes(self, vault: VaultTools) -> None:
         await vault.vault_save(title="Note A", content="Content A.")
         await vault.vault_save(title="Note B", content="Content B.")
-        result = await vault.vault_link(source_note="Note A", target_note="Note B")
+        await vault.vault_link(source_note="Note A", target_note="Note B")
         # Verify backlink in Note A
         files = list(vault._vault_path.rglob("*note-a*.md"))
         assert len(files) >= 1

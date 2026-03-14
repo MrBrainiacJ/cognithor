@@ -9,8 +9,7 @@ Testet:
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -21,13 +20,10 @@ from jarvis.models import (
     ActionPlan,
     AgentResult,
     PlannedAction,
-    ReflectionResult,
     SessionContext,
-    SessionSummary,
     ToolResult,
     WorkingMemory,
 )
-
 
 # ── Planner Tests ──────────────────────────────────────────
 
@@ -181,7 +177,7 @@ class TestReflectorRewardCalculator:
         wm = WorkingMemory(session_id=session.session_id)
         agent_result = self._make_agent_result()
 
-        result = await reflector.reflect(session, wm, agent_result)
+        await reflector.reflect(session, wm, agent_result)
 
         # Causal analyzer should have been called with the reward score,
         # which differs from the raw success_score (0.8) due to composite calculation
@@ -229,7 +225,11 @@ class TestReflectorRewardCalculator:
         reflector._ollama.chat = AsyncMock(
             return_value={
                 "message": {
-                    "content": '{"success_score": 0.7, "evaluation": "OK", "session_summary": {"goal": "Test", "outcome": "Done", "tools_used": ["read_file"]}}'
+                    "content": (
+                        '{"success_score": 0.7, "evaluation": "OK",'
+                        ' "session_summary": {"goal": "Test",'
+                        ' "outcome": "Done", "tools_used": ["read_file"]}}'
+                    )
                 },
             }
         )

@@ -19,8 +19,6 @@ import inspect
 import sys
 from unittest.mock import MagicMock
 
-import pytest
-
 # faster_whisper kann fehlen
 sys.modules.setdefault("faster_whisper", MagicMock())
 

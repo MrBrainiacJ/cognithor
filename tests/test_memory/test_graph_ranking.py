@@ -12,21 +12,20 @@ Testet:
 
 from __future__ import annotations
 
-import sqlite3
-from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
-from unittest.mock import MagicMock
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 import pytest
 
 from jarvis.memory.graph_ranking import (
     EntityRank,
     GraphRanking,
-    PruneResult,
 )
 from jarvis.memory.indexer import MemoryIndex
-from jarvis.models import Chunk, Entity, MemorySearchResult, MemoryTier, Relation
+from jarvis.models import Chunk, Entity, MemorySearchResult, Relation
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fixtures
@@ -52,7 +51,7 @@ def populated_graph(index: MemoryIndex) -> MemoryIndex:
     WWK und Alexander sind Hub-Entitäten.
     Jarvis hat nur 1 Verbindung.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     e_wwk = Entity(id="e_wwk", type="company", name="WWK", confidence=0.9, updated_at=now)
     e_alex = Entity(id="e_alex", type="person", name="Alexander", confidence=1.0, updated_at=now)
@@ -123,7 +122,7 @@ class TestPageRank:
         assert ranks == {}
 
     def test_single_entity(self, index: MemoryIndex) -> None:
-        e = Entity(id="solo", type="test", name="Solo", updated_at=datetime.now(timezone.utc))
+        e = Entity(id="solo", type="test", name="Solo", updated_at=datetime.now(UTC))
         index.upsert_entity(e)
 
         gr = GraphRanking(index)
@@ -362,7 +361,7 @@ class TestPruning:
             type="test",
             name="Old Thing",
             confidence=0.1,  # Niedrig
-            updated_at=datetime.now(timezone.utc) - timedelta(days=365),  # Sehr alt
+            updated_at=datetime.now(UTC) - timedelta(days=365),  # Sehr alt
         )
         populated_graph.upsert_entity(old_entity)
 
@@ -388,7 +387,7 @@ class TestPruning:
             type="test",
             name="Dry",
             confidence=0.1,
-            updated_at=datetime.now(timezone.utc) - timedelta(days=365),
+            updated_at=datetime.now(UTC) - timedelta(days=365),
         )
         populated_graph.upsert_entity(old_entity)
 
@@ -489,7 +488,7 @@ class TestGraphAnalysis:
             id="isolated",
             type="test",
             name="Lonely",
-            updated_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(UTC),
         )
         index.upsert_entity(e)
 

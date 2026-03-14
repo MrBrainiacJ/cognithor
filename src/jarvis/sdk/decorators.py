@@ -19,11 +19,13 @@ Usage::
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.sdk.definitions import AgentDefinition, HookDefinition, HookEvent, ToolDefinition
 from jarvis.sdk.registry import SDKRegistry
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Global registry

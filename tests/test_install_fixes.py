@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 import re
 import shutil
-import stat
 import subprocess
 import sys
 import textwrap
@@ -341,7 +340,8 @@ class TestFix6VerboseMkdir:
                     return 0
                 fi
                 local err_file
-                err_file=$(mktemp "${{TMPDIR:-/tmp}}/jarvis_mkdir_XXXXXX" 2>/dev/null || echo "/tmp/jarvis_mkdir_err")
+                err_file=$(mktemp "${{TMPDIR:-/tmp}}/jarvis_mkdir_XXXXXX" \
+2>/dev/null || echo "/tmp/jarvis_mkdir_err")
                 if mkdir -p "$dir" 2>"$err_file"; then
                     success "  [erstellt]  $dir"
                     rm -f "$err_file" 2>/dev/null

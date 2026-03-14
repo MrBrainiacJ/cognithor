@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.channels.commands import (
     CommandRegistry,
     CommandScope,
@@ -13,7 +11,6 @@ from jarvis.channels.commands import (
     InteractionType,
     SlashCommand,
 )
-
 
 # ============================================================================
 # SlashCommand

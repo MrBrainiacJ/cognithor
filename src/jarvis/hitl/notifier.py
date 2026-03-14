@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import time
 from collections import deque
-from typing import Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any
 
 from jarvis.hitl.types import (
     ApprovalRequest,
@@ -23,6 +23,9 @@ from jarvis.hitl.types import (
     NotificationType,
 )
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 log = get_logger(__name__)
 

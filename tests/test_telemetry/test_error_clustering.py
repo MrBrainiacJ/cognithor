@@ -1,6 +1,5 @@
 """Tests fuer ErrorClusterer."""
 
-import pytest
 from jarvis.telemetry.error_clustering import ErrorClusterer, _levenshtein_ratio
 
 

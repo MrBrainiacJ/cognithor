@@ -6,10 +6,12 @@ Attributes handled:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jarvis.gateway.phases import PhaseResult
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.gateway.phases import PhaseResult
 
 log = get_logger(__name__)
 
@@ -36,7 +38,7 @@ def declare_memory_attrs(config: Any) -> PhaseResult:
 
     # Phase 26: Memory-Integrity
     try:
-        from jarvis.memory.integrity import IntegrityChecker, DecisionExplainer
+        from jarvis.memory.integrity import DecisionExplainer, IntegrityChecker
 
         result["integrity_checker"] = IntegrityChecker()
         result["decision_explainer"] = DecisionExplainer()

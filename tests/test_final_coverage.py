@@ -14,10 +14,8 @@ Covers additional lines in:
 from __future__ import annotations
 
 import json
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
-
 
 # ============================================================================
 # A2A Types -- Part types, Messages, Artifacts, AgentCard, streaming events
@@ -76,27 +74,27 @@ class TestA2ATypes:
         assert "metadata" not in d
 
     def test_part_from_dict_text(self):
-        from jarvis.a2a.types import part_from_dict, TextPart
+        from jarvis.a2a.types import TextPart, part_from_dict
 
         p = part_from_dict({"type": "text", "text": "hi"})
         assert isinstance(p, TextPart)
         assert p.text == "hi"
 
     def test_part_from_dict_file(self):
-        from jarvis.a2a.types import part_from_dict, FilePart
+        from jarvis.a2a.types import FilePart, part_from_dict
 
         p = part_from_dict({"type": "file", "file": {"name": "x.txt", "uri": "http://x"}})
         assert isinstance(p, FilePart)
         assert p.name == "x.txt"
 
     def test_part_from_dict_data(self):
-        from jarvis.a2a.types import part_from_dict, DataPart
+        from jarvis.a2a.types import DataPart, part_from_dict
 
         p = part_from_dict({"type": "data", "data": {"k": "v"}})
         assert isinstance(p, DataPart)
 
     def test_part_from_dict_unknown(self):
-        from jarvis.a2a.types import part_from_dict, TextPart
+        from jarvis.a2a.types import TextPart, part_from_dict
 
         p = part_from_dict({"type": "unknown", "foo": "bar"})
         assert isinstance(p, TextPart)
@@ -133,7 +131,7 @@ class TestA2ATypes:
         assert msg2.text == "Hello"
 
     def test_message_text_property(self):
-        from jarvis.a2a.types import Message, MessageRole, TextPart, DataPart
+        from jarvis.a2a.types import DataPart, Message, MessageRole, TextPart
 
         msg = Message(role=MessageRole.AGENT, parts=[DataPart(data={"x": 1})])
         assert msg.text == ""
@@ -158,13 +156,12 @@ class TestA2ATypes:
 
     def test_task_to_dict_full(self):
         from jarvis.a2a.types import (
-            Task,
-            TaskState,
-            TaskStatus,
+            Artifact,
             Message,
             MessageRole,
+            Task,
+            TaskState,
             TextPart,
-            Artifact,
         )
 
         task = Task.create(message=Message(role=MessageRole.USER, parts=[TextPart(text="hi")]))
@@ -178,7 +175,7 @@ class TestA2ATypes:
         assert "history" in d
 
     def test_task_status_update_event_sse(self):
-        from jarvis.a2a.types import TaskStatusUpdateEvent, TaskStatus, TaskState
+        from jarvis.a2a.types import TaskState, TaskStatus, TaskStatusUpdateEvent
 
         evt = TaskStatusUpdateEvent(
             task_id="t1",
@@ -191,7 +188,7 @@ class TestA2ATypes:
         assert "t1" in sse
 
     def test_task_artifact_update_event_sse(self):
-        from jarvis.a2a.types import TaskArtifactUpdateEvent, Artifact, TextPart
+        from jarvis.a2a.types import Artifact, TaskArtifactUpdateEvent, TextPart
 
         evt = TaskArtifactUpdateEvent(
             task_id="t1",
@@ -203,7 +200,7 @@ class TestA2ATypes:
         assert "event: artifact" in sse
 
     def test_push_notification_config(self):
-        from jarvis.a2a.types import PushNotificationConfig, PushNotificationAuth
+        from jarvis.a2a.types import PushNotificationAuth, PushNotificationConfig
 
         auth = PushNotificationAuth(type="bearer", credentials="tok")
         config = PushNotificationConfig(
@@ -219,12 +216,12 @@ class TestA2ATypes:
 
     def test_agent_card_to_dict_full(self):
         from jarvis.a2a.types import (
-            A2AAgentCard,
-            A2AProvider,
             A2AAgentCapabilities,
-            A2ASkill,
+            A2AAgentCard,
             A2AInterface,
+            A2AProvider,
             A2ASecurityScheme,
+            A2ASkill,
         )
 
         card = A2AAgentCard(
@@ -764,8 +761,8 @@ class TestBrowserToolsVision:
 
 class TestAuditRecord:
     def test_record_with_audit_entry(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
         from jarvis.models import AuditEntry, GateStatus, RiskLevel
+        from jarvis.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         entry = AuditEntry(
@@ -783,8 +780,8 @@ class TestAuditRecord:
         assert trail.entry_count == 1
 
     def test_record_with_masking(self, tmp_path):
+        from jarvis.models import AuditEntry, GateStatus
         from jarvis.security.audit import AuditTrail
-        from jarvis.models import AuditEntry, GateStatus, RiskLevel
 
         trail = AuditTrail(log_dir=tmp_path)
         entry = AuditEntry(
@@ -798,8 +795,8 @@ class TestAuditRecord:
         assert h != ""
 
     def test_record_no_mask(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
         from jarvis.models import AuditEntry, GateStatus
+        from jarvis.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         entry = AuditEntry(
@@ -813,8 +810,8 @@ class TestAuditRecord:
         assert h != ""
 
     def test_query_with_session_filter(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
         from jarvis.models import AuditEntry, GateStatus
+        from jarvis.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         trail.record(
@@ -838,8 +835,8 @@ class TestAuditRecord:
         assert results[0]["session_id"] == "s1"
 
     def test_query_with_tool_filter(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
         from jarvis.models import AuditEntry, GateStatus
+        from jarvis.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         trail.record(
@@ -871,13 +868,14 @@ class TestAuditRecord:
         assert len(results) == 3
 
     def test_query_with_since_filter(self, tmp_path):
+        from datetime import datetime
+
         from jarvis.security.audit import AuditTrail
-        from datetime import datetime, timezone
 
         trail = AuditTrail(log_dir=tmp_path)
         trail.record_event("s1", "old_event")
         # All events will be after 2020
-        since = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        since = datetime(2020, 1, 1, tzinfo=UTC)
         results = trail.query(since=since)
         assert len(results) >= 1
 
@@ -915,7 +913,7 @@ class TestAgentVaultSessions:
 
         store = IsolatedSessionStore()
         s1 = store.create_session("agent1")
-        s2 = store.create_session("agent1")
+        store.create_session("agent1")
         assert len(store.active_sessions("agent1")) == 2
         store.close_session("agent1", s1.session_id)
         assert len(store.active_sessions("agent1")) == 1
@@ -929,7 +927,7 @@ class TestAgentVaultSessions:
 
         store = IsolatedSessionStore()
         s1 = store.create_session("agent1")
-        s2 = store.create_session("agent1")
+        store.create_session("agent1")
         assert store.total_sessions == 2
         assert store.store_count == 1
         store.destroy_session("agent1", s1.session_id)
@@ -975,7 +973,7 @@ class TestAgentVaultSessions:
         assert st["unique_attackers"] == 1
 
     def test_vault_rotator_add_policy(self):
-        from jarvis.security.agent_vault import VaultRotator, RotationPolicy, SecretType
+        from jarvis.security.agent_vault import RotationPolicy, SecretType, VaultRotator
 
         rotator = VaultRotator(load_defaults=False)
         assert rotator.policy_count == 0
@@ -989,7 +987,7 @@ class TestAgentVaultSessions:
         assert found.policy_id == "custom"
 
     def test_vault_rotator_defaults(self):
-        from jarvis.security.agent_vault import VaultRotator, SecretType
+        from jarvis.security.agent_vault import VaultRotator
 
         rotator = VaultRotator(load_defaults=True)
         assert rotator.policy_count == 4
@@ -1000,10 +998,10 @@ class TestAgentVaultSessions:
 
     def test_vault_rotator_check_and_auto_rotate(self):
         from jarvis.security.agent_vault import (
-            VaultRotator,
+            AgentVault,
             RotationPolicy,
             SecretType,
-            AgentVault,
+            VaultRotator,
         )
 
         rotator = VaultRotator(load_defaults=False)
@@ -1100,7 +1098,7 @@ class TestCICDGateMore:
         assert d["latency_ms"] == 12.3
 
     def test_webhook_notifier(self):
-        from jarvis.security.cicd_gate import WebhookNotifier, WebhookConfig
+        from jarvis.security.cicd_gate import WebhookConfig, WebhookNotifier
 
         notifier = WebhookNotifier()
         wh1 = WebhookConfig("wh1", "https://hooks.example.com/1", events=["gate_fail"])

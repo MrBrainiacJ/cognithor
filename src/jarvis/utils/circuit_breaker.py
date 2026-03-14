@@ -15,7 +15,10 @@ import asyncio
 import logging
 import time
 from enum import StrEnum
-from typing import Awaitable, TypeVar
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 __all__ = ["CircuitBreaker", "CircuitBreakerOpen", "CircuitState"]
 

@@ -22,7 +22,6 @@ from jarvis.models import (
     GateStatus,
     OperationMode,
     PlannedAction,
-    RiskLevel,
     SessionContext,
     ToolCapability,
     ToolCapabilitySpec,

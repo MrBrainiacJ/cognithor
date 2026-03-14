@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
-import pytest
-
 from jarvis.mcp.browser import BROWSER_TOOL_SCHEMAS, register_browser_tools
 from jarvis.mcp.media import MEDIA_TOOL_SCHEMAS, register_media_tools
 from jarvis.mcp.web import register_web_tools

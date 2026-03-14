@@ -5,8 +5,24 @@ Bibel-Referenz: §9 (Gateway & Channels)
 """
 
 from jarvis.channels.base import Channel, MessageHandler
-from jarvis.channels.slack import SlackChannel
+
+# v22: Canvas
+from jarvis.channels.canvas import CanvasManager
+from jarvis.channels.commands import (
+    CommandRegistry,
+    InteractionStore,
+)
+from jarvis.channels.connectors import (
+    ConnectorRegistry,
+    JiraConnector,
+    ServiceNowConnector,
+    TeamsConnector,
+)
 from jarvis.channels.discord import DiscordChannel
+from jarvis.channels.feishu import FeishuChannel
+
+# v22: Neue Channels (lazy imports um optionale Dependencies zu vermeiden)
+from jarvis.channels.google_chat import GoogleChatChannel
 from jarvis.channels.interactive import (
     AdaptiveCard,
     DiscordMessageBuilder,
@@ -19,54 +35,37 @@ from jarvis.channels.interactive import (
     SlackMessageBuilder,
     SlashCommandRegistry,
 )
-from jarvis.channels.commands import (  # noqa: F401
-    CommandRegistry,
-    FallbackRenderer as FallbackRendererV2,
-    InteractionStore,
-)
-from jarvis.channels.connectors import (  # noqa: E402
-    ConnectorRegistry,
-    JiraConnector,
-    ServiceNowConnector,
-    TeamsConnector,
-)
-
-# v22: Neue Channels (lazy imports um optionale Dependencies zu vermeiden)
-from jarvis.channels.google_chat import GoogleChatChannel  # noqa: E402
-from jarvis.channels.mattermost import MattermostChannel  # noqa: E402
-from jarvis.channels.feishu import FeishuChannel  # noqa: E402
-from jarvis.channels.irc import IRCChannel  # noqa: E402
-from jarvis.channels.twitch import TwitchChannel  # noqa: E402
-
-# v22: Canvas
-from jarvis.channels.canvas import CanvasManager  # noqa: E402
+from jarvis.channels.irc import IRCChannel
+from jarvis.channels.mattermost import MattermostChannel
+from jarvis.channels.slack import SlackChannel
+from jarvis.channels.twitch import TwitchChannel
 
 __all__ = [
-    "Channel",
-    "MessageHandler",
-    "SlackChannel",
-    "DiscordChannel",
-    "SlackMessageBuilder",
-    "DiscordMessageBuilder",
-    "ProgressTracker",
     "AdaptiveCard",
-    "FormField",
-    "SlashCommandRegistry",
-    "ModalHandler",
-    "SignatureVerifier",
-    "InteractionStateStore",
-    "FallbackRenderer",
+    "CanvasManager",
+    "Channel",
     "CommandRegistry",
-    "InteractionStore",
     "ConnectorRegistry",
-    "JiraConnector",
-    "ServiceNowConnector",
-    "TeamsConnector",
+    "DiscordChannel",
+    "DiscordMessageBuilder",
+    "FallbackRenderer",
+    "FeishuChannel",
+    "FormField",
     # v22: Neue Channels
     "GoogleChatChannel",
-    "MattermostChannel",
-    "FeishuChannel",
     "IRCChannel",
+    "InteractionStateStore",
+    "InteractionStore",
+    "JiraConnector",
+    "MattermostChannel",
+    "MessageHandler",
+    "ModalHandler",
+    "ProgressTracker",
+    "ServiceNowConnector",
+    "SignatureVerifier",
+    "SlackChannel",
+    "SlackMessageBuilder",
+    "SlashCommandRegistry",
+    "TeamsConnector",
     "TwitchChannel",
-    "CanvasManager",
 ]

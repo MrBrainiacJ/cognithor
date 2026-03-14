@@ -28,7 +28,7 @@ import shutil
 import sys
 import textwrap
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -61,12 +61,12 @@ DEFAULT_ALLOWED_PACKAGES = frozenset(
 DEFAULT_GAP_THRESHOLD = 2
 
 __all__ = [
-    "SkillGenerator",
     "GapDetector",
-    "SkillGap",
-    "SkillGapType",
     "GeneratedSkill",
     "GenerationStatus",
+    "SkillGap",
+    "SkillGapType",
+    "SkillGenerator",
 ]
 
 
@@ -114,10 +114,10 @@ class SkillGap:
     tool_name: str = ""  # Fehlender Tool-Name (bei UNKNOWN_TOOL)
     frequency: int = 1  # Wie oft aufgetreten
     first_seen: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
     last_seen: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
 
     @property
@@ -167,7 +167,7 @@ class GeneratedSkill:
 
     # Zeitstempel
     created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
     registered_at: str = ""
 
@@ -371,7 +371,7 @@ class GapDetector:
         if gap_id in self._gaps:
             gap = self._gaps[gap_id]
             gap.frequency += 1
-            gap.last_seen = datetime.now(timezone.utc).isoformat()
+            gap.last_seen = datetime.now(UTC).isoformat()
             if context and context != gap.context:
                 gap.context = context[: self.MAX_CONTEXT_LENGTH]
             log.debug("gap_updated", id=gap_id, frequency=gap.frequency)
@@ -634,7 +634,7 @@ class SkillGenerator:
         test_file.write_text(skill.test_code, encoding="utf-8")
 
         skill.status = GenerationStatus.REGISTERED
-        skill.registered_at = datetime.now(timezone.utc).isoformat()
+        skill.registered_at = datetime.now(UTC).isoformat()
 
         # Optional in SkillRegistry laden
         if skill_registry is not None and hasattr(skill_registry, "load_from_directories"):

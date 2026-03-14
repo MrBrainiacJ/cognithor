@@ -6,10 +6,7 @@ ReplayEngine, ReplayDiff, ReplayResult, export/import.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
-
-import pytest
+from typing import TYPE_CHECKING
 
 from jarvis.telemetry.recorder import (
     EventType,
@@ -26,6 +23,8 @@ from jarvis.telemetry.replay import (
     _diff_dicts,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # ExecutionEvent
@@ -484,7 +483,7 @@ class TestReplayEngine:
             },
         )
         # Find the overridden event
-        overridden = [e for e in result.events if e.sequence == 2][0]
+        overridden = next(e for e in result.events if e.sequence == 2)
         assert overridden.data["response_preview"] == "Short ID override"
 
 

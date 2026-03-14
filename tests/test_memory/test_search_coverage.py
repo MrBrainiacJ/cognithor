@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.memory.search import HybridSearch, recency_decay
-
 
 # ============================================================================
 # recency_decay

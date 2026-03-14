@@ -23,8 +23,7 @@ Architecture: §11.5 (Policy-as-Code)
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 import yaml
@@ -36,6 +35,8 @@ from jarvis.models import (
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from jarvis.core.gatekeeper import Gatekeeper
 
 log = get_logger(__name__)
@@ -156,7 +157,7 @@ class PolicyStore:
         # Record in history
         pv = PolicyVersion(
             version=version,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             author=author,
             description=description,
             rule_count=len(all_rules),
@@ -335,7 +336,7 @@ class PolicyStore:
                 "policy_name": decision.policy_name,
             },
             "simulation": True,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
     def simulate_batch(

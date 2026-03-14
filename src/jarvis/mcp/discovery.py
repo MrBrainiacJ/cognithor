@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from datetime import UTC
 from typing import Any
 
 from jarvis.utils.logging import get_logger
@@ -226,9 +227,9 @@ class DiscoveryManager:
         # Skills aus Tool-Namen ableiten
         skills = self._derive_skills(tool_names)
 
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         self._card = AgentCard(
             name="Jarvis",

@@ -21,7 +21,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-
 # ============================================================================
 # User Consent (DSGVO Art. 7)
 # ============================================================================
@@ -64,9 +63,9 @@ class UserConsent:
     def is_valid(self) -> bool:
         if self.status != ConsentStatus.GRANTED:
             return False
-        if self.expires_at and self.expires_at < time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()):
-            return False
-        return True
+        return not (
+            self.expires_at and self.expires_at < time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -234,10 +233,7 @@ class ConsentManager:
         return False
 
     def has_consent(self, user_id: str, purpose: ConsentPurpose) -> bool:
-        for c in self.user_consents(user_id):
-            if c.purpose == purpose and c.is_valid:
-                return True
-        return False
+        return any(c.purpose == purpose and c.is_valid for c in self.user_consents(user_id))
 
     def can_advise(self, user_id: str) -> bool:
         """Prüft ob alle Pflicht-Einwilligungen für Beratung vorliegen."""

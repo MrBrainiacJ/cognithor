@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import math
 import struct
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

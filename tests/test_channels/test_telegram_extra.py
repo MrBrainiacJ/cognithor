@@ -6,7 +6,6 @@ request_approval timeout, session mapping persistence.
 
 from __future__ import annotations
 
-import asyncio
 import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -160,7 +159,7 @@ class TestApprovalWorkflow:
 
         async def _fake_wait_for(coro, *, timeout):
             # Simulate immediate approval
-            approval_id = list(ch._approval_events.keys())[0]
+            approval_id = next(iter(ch._approval_events.keys()))
             ch._approval_results[approval_id] = True
             ch._approval_events[approval_id].set()
             await coro

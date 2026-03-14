@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # ============================================================================
 # Code Patterns
 # ============================================================================
@@ -391,7 +390,7 @@ class PermissionAnalyzer:
             "total_permissions": len(permissions),
             "high_risk_permissions": [p.value for p in critical],
             "medium_risk_permissions": [p.value for p in medium],
-            "all_permissions": [p.value for p in permissions.keys()],
+            "all_permissions": [p.value for p in permissions],
         }
 
 

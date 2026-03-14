@@ -25,7 +25,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # ============================================================================
 # Enums & Data Classes
 # ============================================================================
@@ -203,10 +202,7 @@ class InjectionScanner:
 
     def is_clean(self, content: str) -> bool:
         """Schnellprüfung: True wenn keine Injection erkannt."""
-        for pattern, _, _ in self._compiled:
-            if pattern.search(content):
-                return False
-        return True
+        return all(not pattern.search(content) for pattern, _, _ in self._compiled)
 
 
 # ============================================================================
@@ -266,10 +262,7 @@ class CredentialLeakDetector:
         return threats
 
     def has_credentials(self, content: str) -> bool:
-        for pattern, _, _ in self._compiled:
-            if pattern.search(content):
-                return True
-        return False
+        return any(pattern.search(content) for pattern, _, _ in self._compiled)
 
 
 # ============================================================================

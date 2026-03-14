@@ -20,7 +20,7 @@ from typing import Any
 
 import yaml
 
-from jarvis.security.sanitizer import InputSanitizer, InjectionPattern
+from jarvis.security.sanitizer import InjectionPattern, InputSanitizer
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)

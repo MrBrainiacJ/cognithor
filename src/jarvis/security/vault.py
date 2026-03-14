@@ -27,8 +27,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 _vault_log = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ class _SimpleEncryptor:
             stream += block
             counter += 1
         stream = stream[: len(cipher)]
-        plaintext = bytes(a ^ b for a, b in zip(cipher, stream))
+        plaintext = bytes(a ^ b for a, b in zip(cipher, stream, strict=False))
         return plaintext.decode("utf-8")
 
 

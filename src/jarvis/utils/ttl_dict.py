@@ -11,7 +11,10 @@ from __future__ import annotations
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Generic, Iterator, TypeVar
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 __all__ = ["TTLDict"]
 
@@ -20,7 +23,7 @@ VT = TypeVar("VT")
 
 
 @dataclass(slots=True)
-class _Entry(Generic[VT]):
+class _Entry[VT]:
     """Interner Eintrag mit Ablauf-Zeitstempel."""
 
     value: VT
@@ -28,7 +31,7 @@ class _Entry(Generic[VT]):
     last_access: float = field(default_factory=time.monotonic)
 
 
-class TTLDict(Generic[KT, VT]):
+class TTLDict[KT, VT]:
     """Dict mit TTL-Ablauf und LRU-Eviction.
 
     Args:

@@ -12,8 +12,6 @@ Targets:
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.memory.integrity import (
     ContradictionDetector,
     DecisionExplainer,
@@ -28,7 +26,6 @@ from jarvis.memory.integrity import (
     PlausibilityChecker,
     PlausibilityResult,
 )
-
 
 # ============================================================================
 # MemoryEntry

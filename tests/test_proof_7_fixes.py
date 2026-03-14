@@ -16,10 +16,7 @@ Fix #7: Google CSE / Jina API Keys werden als Secret maskiert
 from __future__ import annotations
 
 import asyncio
-import os
-import sys
 from dataclasses import dataclass
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -30,11 +27,9 @@ from jarvis.models import (
     GateDecision,
     GateStatus,
     IncomingMessage,
-    OutgoingMessage,
     PlannedAction,
     RiskLevel,
 )
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -182,7 +177,7 @@ class TestProofFix3_WebToolRegistration:
                 self.tools[name] = {"handler": handler, "desc": description, "schema": input_schema}
 
         client = MockClient()
-        web = register_web_tools(client)
+        register_web_tools(client)
 
         expected = {"web_search", "web_fetch", "search_and_read", "web_news_search", "http_request"}
         registered = set(client.tools.keys())

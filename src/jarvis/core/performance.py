@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # ============================================================================
 # Vector Store (Abstraktionsschicht)
 # ============================================================================
@@ -112,7 +111,7 @@ class VectorStore:
         """Berechnet Cosine-Similarity zweier Vektoren."""
         if len(a) != len(b) or not a:
             return 0.0
-        dot = sum(x * y for x, y in zip(a, b))
+        dot = sum(x * y for x, y in zip(a, b, strict=False))
         mag_a = math.sqrt(sum(x * x for x in a))
         mag_b = math.sqrt(sum(x * x for x in b))
         if mag_a == 0 or mag_b == 0:

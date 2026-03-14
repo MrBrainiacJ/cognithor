@@ -11,7 +11,10 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def list_skills(skills_dir: Path) -> list[str]:
@@ -41,7 +44,7 @@ def _slugify(name: str) -> str:
 
 
 def create_skill(
-    skills_dir: Path, name: str, trigger_keywords: Optional[Iterable[str]] = None
+    skills_dir: Path, name: str, trigger_keywords: Iterable[str] | None = None
 ) -> Path:
     """Erstellt eine neue Skill-Datei mit einer minimalen Vorlage.
 
@@ -152,13 +155,12 @@ def search_remote_skills(query: str, limit: int = 10) -> list[str]:
 
             # Prüfe, ob Query im Dateinamen, Frontmatter-Name, Triggern oder Inhalt vorkommt
             match_found = False
-            if query_lower in name.lower():
-                match_found = True
-            elif fm_name and query_lower in fm_name.lower():
-                match_found = True
-            elif any(query_lower in kw.lower() for kw in fm_triggers):
-                match_found = True
-            elif query_lower in content.lower():
+            if (
+                query_lower in name.lower()
+                or (fm_name and query_lower in fm_name.lower())
+                or any(query_lower in kw.lower() for kw in fm_triggers)
+                or query_lower in content.lower()
+            ):
                 match_found = True
 
             if match_found and name not in seen:
@@ -210,7 +212,7 @@ def install_remote_skill(skills_dir: Path, name: str, repo_url: str | None = Non
     ]
 
     # Suche nach einer passenden Quelldatei
-    source_file: Optional[Path] = None
+    source_file: Path | None = None
     for directory in source_dirs:
         if not directory.exists():
             continue

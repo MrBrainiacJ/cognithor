@@ -272,7 +272,7 @@ class TestEdgeCases:
         """Unbekannter AgentType sollte Worker-Permissions bekommen."""
         # Simuliere unbekannten Typ — da AgentType ein Enum ist,
         # testen wir via internen Zugriff auf _permissions
-        worker_perms = engine.get_permissions(AgentType.WORKER)
+        engine.get_permissions(AgentType.WORKER)
         # Entferne PLANNER um Fallback zu testen
         engine_custom = PolicyEngine()
         # Planner ist bekannt → gültig

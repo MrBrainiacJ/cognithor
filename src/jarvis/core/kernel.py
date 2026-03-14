@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from jarvis.core.checkpoint import CheckpointManager
-from jarvis.core.plan_graph import PlanGraph
 from jarvis.models import (
     Checkpoint,
     KernelState,
@@ -14,6 +13,8 @@ from jarvis.models import (
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from jarvis.core.plan_graph import PlanGraph
+
     pass
 
 log = get_logger(__name__)

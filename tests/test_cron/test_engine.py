@@ -578,7 +578,6 @@ class TestCronGracefulShutdown:
 
         # Scheduler should exist while running
         assert engine._scheduler is not None
-        scheduler_ref = engine._scheduler
 
         await engine.stop()
 

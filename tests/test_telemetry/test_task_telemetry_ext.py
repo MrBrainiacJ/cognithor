@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, UTC, timedelta
-
-import pytest
+from datetime import UTC, datetime, timedelta
 
 from jarvis.telemetry.task_telemetry import TaskTelemetryCollector
 

@@ -7,13 +7,9 @@ regardless of OS, Python hash seed, line endings, or path separators.
 from __future__ import annotations
 
 import hashlib
-import os
 import sqlite3
 import time
-from pathlib import Path, PurePosixPath, PureWindowsPath
-from unittest.mock import AsyncMock
-
-import pytest
+from pathlib import Path
 
 from jarvis.config import ImprovementGovernanceConfig, PromptEvolutionConfig
 from jarvis.governance.improvement_gate import (
@@ -25,7 +21,6 @@ from jarvis.learning.prompt_evolution import (
     PromptEvolutionEngine,
     _version_id,
 )
-
 
 # =========================================================================
 # 1. CRLF vs LF: SHA-256 hashing must be consistent
@@ -63,7 +58,7 @@ class TestVersionIdNewlineConsistency:
         text = "Aerger mit Umlauten: ae oe ue ss"
         vid = _version_id("test", text)
         # Verify manually
-        expected = hashlib.sha256(f"test:{text}".encode("utf-8")).hexdigest()[:16]
+        expected = hashlib.sha256(f"test:{text}".encode()).hexdigest()[:16]
         assert vid == expected
 
     def test_encode_defaults_to_utf8(self):
@@ -330,7 +325,7 @@ class TestTemplatePlaceholderRoundTrip:
             "Time: {current_datetime}\n"
             "{personality_section}"
         )
-        vid = engine.register_prompt("system_prompt", original)
+        engine.register_prompt("system_prompt", original)
         retrieved_id, retrieved_text = engine.get_active_version("system_prompt")
 
         assert retrieved_text == original

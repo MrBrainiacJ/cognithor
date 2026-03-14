@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from jarvis.core.installer import (
+    PRESETS,
     ChannelConfig,
     ChannelConfigurator,
     ChannelType,
@@ -15,14 +14,12 @@ from jarvis.core.installer import (
     HardwareProfile,
     ModelRecommendation,
     ModelRecommender,
-    PRESETS,
     PresetConfig,
     PresetLevel,
     SetupState,
     SetupStep,
     SetupWizard,
 )
-
 
 # ============================================================================
 # GPUInfo

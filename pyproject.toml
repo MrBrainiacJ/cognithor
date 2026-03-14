@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cognithor"
-version = "0.35.1"
+version = "0.35.2"
 description = "Cognithor · Agent OS — Local-first autonomous agent operating system"
 readme = "README.md"
 license = "Apache-2.0"
@@ -184,7 +184,27 @@ ignore = [
     "RUF001",  # Ambiguous EN DASH in strings (korrekt im Deutschen)
     "RUF002",  # Ambiguous EN DASH in docstrings
     "RUF003",  # Ambiguous EN DASH in comments
+    "RUF012",  # Mutable class defaults — dataclass pattern, harmless
+    "N806",    # Non-lowercase variable in function — Windows API constants
+    "N801",    # Invalid class name — test naming conventions
+    "N802",    # Invalid function name — intentional conventions
+    "N805",    # Invalid first argument name — intentional
+    "N811",    # Constant imported as non-constant — intentional
+    "N814",    # Camelcase imported as constant — intentional
+    "N818",    # Error suffix on exception name — intentional
+    "E402",    # Module import not at top — conditional imports by design
+    "E741",    # Ambiguous variable name — l, O, I in math code
+    "SIM117",  # Multiple with statements — style preference only
+    "SIM103",  # Needless bool — style preference
+    "SIM108",  # If-else-block instead of if-exp — readability preference
+    "SIM112",  # Uncapitalized env vars — intentional
+    "SIM115",  # Open file with context handler — controlled usage
+    "B027",    # Empty method without abstract decorator — intentional pattern
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Re-exports in __init__.py are intentional
+"tests/test_install_fixes.py" = ["E501"]  # Embedded shell/JS scripts in strings
 
 [tool.mypy]
 python_version = "3.12"

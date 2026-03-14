@@ -13,14 +13,8 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from jarvis.tools.code_analyzer import (
     CodeSmellDetector,
-    _count_lines,
-    _function_body_tokens,
-    _jaccard_similarity,
-    _max_nesting,
 )
 
 

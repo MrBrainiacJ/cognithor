@@ -8,10 +8,12 @@ Attributes handled:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jarvis.gateway.phases import PhaseResult
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.gateway.phases import PhaseResult
 
 log = get_logger(__name__)
 

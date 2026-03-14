@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from jarvis.governance.governor import GovernanceAgent
-from jarvis.models import PolicyChange, PolicyProposal
+from jarvis.models import PolicyChange
 
 
 def _mock_telemetry(tool_stats=None, unused_tools=None):

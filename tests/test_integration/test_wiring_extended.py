@@ -9,21 +9,20 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.audit import AuditCategory, AuditLogger, AuditSeverity
+from jarvis.audit import AuditCategory, AuditLogger
 from jarvis.models import (
-    GateDecision,
     GateStatus,
     PlannedAction,
-    RiskLevel,
     SessionContext,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fixtures
@@ -163,7 +162,7 @@ class TestPlannerAuditIntegration:
         mock_wm.injected_context = None
         mock_wm.injected_procedures = []
 
-        plan = await planner.plan("Hallo", mock_wm, {})
+        await planner.plan("Hallo", mock_wm, {})
 
         tool_events = audit_logger.query(category=AuditCategory.TOOL_CALL)
         llm_events = [e for e in tool_events if "llm_plan" in (e.tool_name or "")]
@@ -230,7 +229,8 @@ class TestReflectorAuditIntegration:
         mock_wm = MagicMock()
         mock_wm.chat_history = []
 
-        from jarvis.models import ActionPlan, PlannedAction as _PA
+        from jarvis.models import ActionPlan
+        from jarvis.models import PlannedAction as _PA
 
         agent_result = AgentResult(
             response="test",
@@ -249,7 +249,7 @@ class TestReflectorAuditIntegration:
             ],
         )
 
-        result = await reflector.reflect(session, mock_wm, agent_result)
+        await reflector.reflect(session, mock_wm, agent_result)
 
         tool_events = audit_logger.query(category=AuditCategory.TOOL_CALL)
         llm_errors = [

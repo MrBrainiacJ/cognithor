@@ -25,17 +25,17 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from jarvis.channels.base import Channel, MessageHandler, StatusType
-from jarvis.channels.interactive import (
-    AdaptiveCard,
-    DiscordMessageBuilder,
-    ProgressTracker,
-)
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.token_store import get_token_store
 from jarvis.utils.circuit_breaker import CircuitBreaker, CircuitBreakerOpen
 from jarvis.utils.ttl_dict import TTLDict
 
 if TYPE_CHECKING:
+    from jarvis.channels.interactive import (
+        AdaptiveCard,
+        DiscordMessageBuilder,
+        ProgressTracker,
+    )
     from jarvis.gateway.session_store import SessionStore
 
 logger = logging.getLogger(__name__)
@@ -156,7 +156,7 @@ class DiscordChannel(Channel):
             await self._on_reaction(reaction, user)
 
         loop = asyncio.get_running_loop()
-        loop.create_task(client.start(self.token))
+        self._client_task = loop.create_task(client.start(self.token))
 
     async def _on_message(self, message: Any) -> None:
         """Verarbeitet eingehende Discord-Nachrichten."""
@@ -266,7 +266,7 @@ class DiscordChannel(Channel):
         self._bidirectional = False
         # Cancel all pending approval futures to prevent memory leaks
         async with self._approval_lock:
-            for msg_id, (future, _) in list(self._approval_messages.items()):
+            for _msg_id, (future, _) in list(self._approval_messages.items()):
                 if not future.done():
                     future.cancel()
             self._approval_messages.clear()
@@ -417,7 +417,7 @@ class DiscordChannel(Channel):
 
             try:
                 return await asyncio.wait_for(future, timeout=300.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("Discord Approval Timeout: %s", action.tool)
                 return False
             finally:

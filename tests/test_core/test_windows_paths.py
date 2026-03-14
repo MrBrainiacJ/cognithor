@@ -10,14 +10,12 @@ Stellt sicher, dass:
 
 from __future__ import annotations
 
-import os
 import sys
 import tempfile
-from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
+from pathlib import Path, PurePath, PureWindowsPath
 from unittest.mock import MagicMock
 
 import pytest
-
 
 # ============================================================================
 # 1. Kein hardcodiertes /tmp/jarvis in Produktion
@@ -325,7 +323,8 @@ class TestPathValidation:
         from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.models import PlannedAction
 
-        # policies_dir muss ein existierendes Verzeichnis sein (oder Dateien fehlen -> leere Policies)
+        # policies_dir muss ein existierendes Verzeichnis sein
+        # (oder Dateien fehlen -> leere Policies)
         policies_dir = tmp_path / "policies"
         policies_dir.mkdir()
 
@@ -396,7 +395,6 @@ class TestNoHardcodedUnixPaths:
         Ausnahmen: Kommentare, Docstrings, Test-Fixtures.
         Prueft nur Default-Werte in Field() und = Zuweisungen.
         """
-        import re
 
         violations = []
         for pyfile in self._get_source_files():
@@ -413,10 +411,10 @@ class TestNoHardcodedUnixPaths:
                 # Skip audit/test Beispiel-Strings
                 if "audit" in str(pyfile.parent.name) and "example" in stripped.lower():
                     continue
-                if '"/tmp/jarvis' in stripped or "'/tmp/jarvis" in stripped:
-                    # Pruefe ob es ein Default-Wert / literal ist (nicht in Kommentar)
-                    if "default" in stripped.lower() or "lambda" in stripped or "=" in stripped:
-                        violations.append(f"{pyfile.name}:{i}: {stripped}")
+                if ('"/tmp/jarvis' in stripped or "'/tmp/jarvis" in stripped) and (
+                    "default" in stripped.lower() or "lambda" in stripped or "=" in stripped
+                ):
+                    violations.append(f"{pyfile.name}:{i}: {stripped}")
 
         assert not violations, (
             "Hardcodiertes '/tmp/jarvis' in Default-Werten gefunden:\n" + "\n".join(violations)
@@ -456,8 +454,8 @@ class TestSandboxPlatformConfig:
 
     def test_core_sandbox_build_env_platform_aware(self):
         """security/sandbox.py _build_env setzt plattform-korrekte Werte."""
-        from jarvis.security.sandbox import Sandbox
         from jarvis.models import SandboxConfig as ModelSandboxConfig
+        from jarvis.security.sandbox import Sandbox
 
         sb = Sandbox(ModelSandboxConfig())
         env = sb._build_env()

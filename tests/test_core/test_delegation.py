@@ -7,8 +7,7 @@ delegation execution, delegation chains, and edge cases.
 from __future__ import annotations
 
 import asyncio
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -16,12 +15,10 @@ from jarvis.core.delegation import (
     AgentCapability,
     AgentRegistry,
     DelegationEngine,
-    DelegationResult,
     DelegationStatus,
     TaskContract,
     validate_output,
 )
-
 
 # ============================================================================
 # Helpers
@@ -87,7 +84,7 @@ class TestTaskContract:
 
     def test_contract_is_frozen(self) -> None:
         c = TaskContract()
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="frozen|cannot"):
             c.timeout_seconds = 999  # type: ignore[misc]
 
 
@@ -109,7 +106,7 @@ class TestAgentCapability:
 
     def test_capability_is_frozen(self) -> None:
         cap = _cap("test")
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="frozen|cannot"):
             cap.priority = 99  # type: ignore[misc]
 
 

@@ -16,11 +16,9 @@ from jarvis.security.monitor import (
     RateLimit,
     RateLimiter,
     RuntimeMonitor,
-    SecurityEvent,
     Severity,
     Verdict,
 )
-
 
 # ============================================================================
 # PolicyRule

@@ -99,8 +99,9 @@ def generate_server_cert(
         ca_cert: CA Certificate.
         certs_dir: Verzeichnis fuer server.pem und server-key.pem.
     """
-    from cryptography.x509 import DNSName, IPAddress
     import ipaddress
+
+    from cryptography.x509 import DNSName, IPAddress
 
     key = _generate_key()
     subject = x509.Name(

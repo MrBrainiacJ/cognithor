@@ -5,8 +5,8 @@ Einfacher Token-Bucket-Algorithmus fuer API-Endpoints.
 
 from __future__ import annotations
 
-import time
 import asyncio
+import time
 from dataclasses import dataclass, field
 
 

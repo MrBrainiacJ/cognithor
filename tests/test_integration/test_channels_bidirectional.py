@@ -13,12 +13,11 @@ from __future__ import annotations
 import asyncio
 import os
 import tempfile
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
-
 
 # ============================================================================
 # 1. Slack-Channel Tests

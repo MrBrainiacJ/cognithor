@@ -10,8 +10,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from jarvis.config import JarvisConfig
-from jarvis.core.executor import Executor, ExecutionError
-from jarvis.models import GateDecision, GateStatus, PlannedAction, RiskLevel, ToolResult
+from jarvis.core.executor import ExecutionError, Executor
+from jarvis.models import GateDecision, GateStatus, PlannedAction, RiskLevel
 
 
 @dataclass
@@ -172,9 +172,7 @@ class TestMCPErrorResult:
 class TestTimeoutBehavior:
     @pytest.mark.asyncio
     async def test_timeout_action(self, executor: Executor, mock_mcp: AsyncMock) -> None:
-        import asyncio
-
-        mock_mcp.call_tool = AsyncMock(side_effect=asyncio.TimeoutError("Tool timed out"))
+        mock_mcp.call_tool = AsyncMock(side_effect=TimeoutError("Tool timed out"))
         action = PlannedAction(tool="slow_tool", params={})
         results = await executor.execute([action], [_allow(action)])
         assert results[0].is_error
@@ -326,14 +324,13 @@ class TestRetryBehavior:
         mock_mcp: AsyncMock,
     ) -> None:
         """asyncio.TimeoutError is retryable -- should retry and succeed."""
-        import asyncio as _asyncio
 
         executor._max_retries = 3
         executor._base_delay = 0.001
 
         mock_mcp.call_tool = AsyncMock(
             side_effect=[
-                _asyncio.TimeoutError("slow"),
+                TimeoutError("slow"),
                 MockToolResult(content="recovered"),
             ],
         )

@@ -10,7 +10,7 @@ Testet:
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -23,6 +23,8 @@ from jarvis.skills.generator import (
     SkillGenerator,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # Fixtures
@@ -301,7 +303,7 @@ class TestVersioning:
         skill_v1 = await generator.generate(gap)
         await generator.test(skill_v1)
         generator.register(skill_v1)
-        v1_content = (skills_dir / f"{skill_v1.module_name}.py").read_text()
+        (skills_dir / f"{skill_v1.module_name}.py").read_text()
 
         # v2 generieren und registrieren
         skill_v2 = await generator.generate(gap)

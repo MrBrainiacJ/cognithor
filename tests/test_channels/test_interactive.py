@@ -6,8 +6,6 @@ FormField, ProgressTracker, AdaptiveCard.
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.channels.interactive import (
     AdaptiveCard,
     ButtonStyle,
@@ -26,7 +24,6 @@ from jarvis.channels.interactive import (
     SlashCommand,
     SlashCommandRegistry,
 )
-
 
 # ============================================================================
 # SlackMessageBuilder

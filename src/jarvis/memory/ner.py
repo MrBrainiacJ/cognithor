@@ -16,7 +16,6 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Relationship Types
 # ---------------------------------------------------------------------------
@@ -326,14 +325,17 @@ class EntityExtractor:
         for m in _MULTI_WORD_RE.finditer(text):
             name = m.group(1)
             words = name.split()
-            if all(w not in _COMMON_NOUNS for w in words) and len(words) <= 4:
-                if name not in entities:
-                    entities[name] = ExtractedEntity(
-                        name=name,
-                        entity_type=self._classify_entity(name, text),
-                        confidence=base_confidence,
-                        source=source,
-                    )
+            if (
+                all(w not in _COMMON_NOUNS for w in words)
+                and len(words) <= 4
+                and name not in entities
+            ):
+                entities[name] = ExtractedEntity(
+                    name=name,
+                    entity_type=self._classify_entity(name, text),
+                    confidence=base_confidence,
+                    source=source,
+                )
 
         # 4. Single-word capitalized entities
         for m in _ENTITY_RE.finditer(text):
@@ -485,7 +487,7 @@ class EntityDeduplicator:
                 existing = canonical[resolved_name]
                 if entity.confidence > existing.confidence:
                     # Keep higher confidence, merge aliases
-                    aliases = list(set(existing.aliases + [existing.name, entity.name]))
+                    aliases = list(set([*existing.aliases, existing.name, entity.name]))
                     canonical[resolved_name] = ExtractedEntity(
                         name=resolved_name,
                         entity_type=entity.entity_type or existing.entity_type,
@@ -495,7 +497,7 @@ class EntityDeduplicator:
                         attributes={**existing.attributes, **entity.attributes},
                     )
                 else:
-                    existing.aliases = list(set(existing.aliases + [entity.name]))
+                    existing.aliases = list(set([*existing.aliases, entity.name]))
             else:
                 canonical[resolved_name] = entity
 
@@ -511,9 +513,12 @@ class EntityDeduplicator:
             return True
 
         # Prefix (one is abbreviation of other)
-        if len(a) >= 3 and len(b) >= 3:
-            if a_lower.startswith(b_lower) or b_lower.startswith(a_lower):
-                return True
+        if (
+            len(a) >= 3
+            and len(b) >= 3
+            and (a_lower.startswith(b_lower) or b_lower.startswith(a_lower))
+        ):
+            return True
 
         return False
 

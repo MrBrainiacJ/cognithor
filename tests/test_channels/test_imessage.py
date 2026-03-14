@@ -8,21 +8,19 @@ Alle externen APIs (AppleScript, SQLite, httpx) werden gemockt.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import sys
-from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from jarvis.channels.imessage import (
-    IMessageChannel,
-    _split_message,
-    _escape_applescript,
     MAX_MESSAGE_LENGTH,
+    IMessageChannel,
+    _escape_applescript,
+    _split_message,
 )
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
-
 
 # ============================================================================
 # Fixtures
@@ -125,11 +123,8 @@ class TestIMessageLifecycle:
         with patch("jarvis.channels.imessage.httpx", create=True) as mock_httpx:
             mock_httpx.AsyncClient.return_value = mock_client
             # Patch httpx import inside start()
-            import jarvis.channels.imessage as imsg_mod
 
-            original_import = (
-                __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
-            )
+            (__builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__)
 
             # Mock import httpx
             with patch.dict(
@@ -142,10 +137,8 @@ class TestIMessageLifecycle:
         bb_ch._running = False
         if bb_ch._poll_task:
             bb_ch._poll_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await bb_ch._poll_task
-            except (asyncio.CancelledError, Exception):
-                pass
 
     @pytest.mark.asyncio
     async def test_stop_cancels_poll_task(self, bb_ch: IMessageChannel) -> None:
@@ -198,10 +191,8 @@ class TestIMessagePolling:
         await asyncio.sleep(0.05)
         bb_ch._running = False
         task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await task
-        except asyncio.CancelledError:
-            pass
 
     @pytest.mark.asyncio
     async def test_poll_native_delegates(self, native_ch: IMessageChannel) -> None:

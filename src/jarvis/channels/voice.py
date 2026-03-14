@@ -410,7 +410,7 @@ class VADDetector:
                 import hashlib
 
                 state_bytes = str(sorted(self._model.state_dict().keys())).encode()
-                for key, param in sorted(self._model.state_dict().items()):
+                for _key, param in sorted(self._model.state_dict().items()):
                     state_bytes += param.cpu().numpy().tobytes()
                 actual_hash = hashlib.sha256(state_bytes).hexdigest()
                 if actual_hash != self.SILERO_MODEL_HASH:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from jarvis.models import ToolCapability, ToolCapabilitySpec, PolicyDecision
+from jarvis.models import PolicyDecision, ToolCapability, ToolCapabilitySpec
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -31,9 +31,7 @@ class SandboxProfile:
         """Prueft ob eine Capability erlaubt ist."""
         if cap in self.denied_capabilities:
             return False
-        if self.allowed_capabilities and cap not in self.allowed_capabilities:
-            return False
-        return True
+        return not (self.allowed_capabilities and cap not in self.allowed_capabilities)
 
 
 # Default Sandbox Profiles
@@ -191,11 +189,7 @@ class CapabilityMatrix:
             # Unknown tools are not allowed in restrictive profiles
             return profile.name == "permissive"
 
-        for cap in spec.capabilities:
-            if not profile.is_capability_allowed(cap):
-                return False
-
-        return True
+        return all(profile.is_capability_allowed(cap) for cap in spec.capabilities)
 
     def get_violations(self, tool_name: str, profile: SandboxProfile) -> list[str]:
         """Gibt Liste verletzter Capabilities zurueck."""

@@ -17,7 +17,7 @@ _warnings.warn(
 )
 
 # Re-export everything from the canonical module
-from jarvis.security.red_team import (  # noqa: E402, F401
+from jarvis.security.red_team import (
     AttackCategory,
     AttackPayload,
     AttackPlaybook,

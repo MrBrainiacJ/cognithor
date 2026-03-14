@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
 from jarvis.browser.vision import (
-    VisionAnalyzer,
     VisionAnalysisResult,
+    VisionAnalyzer,
     VisionConfig,
 )
-
 
 # ============================================================================
 # VisionConfig
@@ -299,7 +299,7 @@ class TestVisionPageContent:
         assert result.success is True
         # Prüfe dass HTML im Prompt gelandet ist
         call_args = llm.chat.call_args
-        messages = call_args.kwargs.get("messages", [])
+        call_args.kwargs.get("messages", [])
         # Die build_vision_message + format_for_backend verpacken den Prompt,
         # aber der HTML-Content sollte im Prompt stecken
         assert llm.chat.await_count == 1
@@ -310,7 +310,6 @@ class TestVisionPageContent:
         v, llm = self._make_enabled("OK")
 
         # Patch _send_vision_request um den finalen Prompt zu inspizieren
-        original_send = v._send_vision_request
         captured_prompts: list[str] = []
 
         async def capturing_send(screenshot_b64, prompt, page_content=""):

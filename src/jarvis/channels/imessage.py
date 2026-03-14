@@ -30,6 +30,7 @@ Abhaengigkeiten:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import sqlite3
 import subprocess
@@ -175,10 +176,8 @@ class IMessageChannel(Channel):
 
         if self._poll_task and not self._poll_task.done():
             self._poll_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._poll_task
-            except asyncio.CancelledError:
-                pass  # Expected: we just cancelled this task
             self._poll_task = None
 
         # Pending approvals abbrechen
@@ -535,7 +534,7 @@ class IMessageChannel(Channel):
 
         try:
             return await asyncio.wait_for(future, timeout=APPROVAL_TIMEOUT)
-        except (asyncio.TimeoutError, TimeoutError):
+        except TimeoutError:
             logger.warning("iMessage: Approval-Timeout fuer Session %s", session_id[:8])
             send_fn = self._send_native if self._mode == "native" else self._send_bb
             await send_fn(handle, "Genehmigung abgelaufen (Timeout).")

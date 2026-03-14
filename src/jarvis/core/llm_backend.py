@@ -13,13 +13,15 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from jarvis.config import JarvisConfig
 
 log = get_logger(__name__)
@@ -353,9 +355,7 @@ class OpenAIBackend(LLMBackend):
                 return True
         # GPT-5+ Modelle: gpt-5, gpt-5-mini, gpt-5.1, gpt-5.2, gpt-5.2-pro, etc.
         # Alle GPT-5+ Varianten unterstützen kein benutzerdefiniertes temperature
-        if model_lower.startswith("gpt-5"):
-            return True
-        return False
+        return bool(model_lower.startswith("gpt-5"))
 
     async def _ensure_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:

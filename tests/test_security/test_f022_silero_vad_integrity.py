@@ -13,13 +13,13 @@ Prueft dass:
 from __future__ import annotations
 
 import inspect
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 # torch ist moeglicherweise nicht installiert — nur Source-Level-Checks
 # und Mocked-Tests
 import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Mock torch falls nicht installiert
 _mock_torch = MagicMock()

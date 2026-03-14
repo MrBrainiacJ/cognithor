@@ -9,11 +9,14 @@ Validiert:
 from __future__ import annotations
 
 import struct
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from jarvis.memory.indexer import MemoryIndex
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -28,6 +31,13 @@ def _make_vector(dim: int = 4, seed: float = 1.0) -> bytes:
     return struct.pack(f"{dim}f", *[seed * (i + 1) for i in range(dim)])
 
 
+_INSERT_EMBEDDING = (
+    "INSERT INTO embeddings"
+    " (content_hash, vector, model_name, dimensions, created_at)"
+    " VALUES (?, ?, 'test', 4, 0.0)"
+)
+
+
 class TestGetEmbeddingsByHashes:
     """Testet die optimierte Hash-basierte Embedding-Abfrage."""
 
@@ -40,7 +50,7 @@ class TestGetEmbeddingsByHashes:
         # 3 Embeddings speichern
         for i in range(3):
             index.conn.execute(
-                "INSERT INTO embeddings (content_hash, vector, model_name, dimensions, created_at) VALUES (?, ?, 'test', 4, 0.0)",
+                _INSERT_EMBEDDING,
                 (f"hash_{i}", _make_vector(seed=float(i))),
             )
         index.conn.commit()
@@ -55,7 +65,7 @@ class TestGetEmbeddingsByHashes:
     def test_missing_hashes_not_in_result(self, index: MemoryIndex) -> None:
         """Nicht existierende Hashes werden ignoriert."""
         index.conn.execute(
-            "INSERT INTO embeddings (content_hash, vector, model_name, dimensions, created_at) VALUES (?, ?, 'test', 4, 0.0)",
+            _INSERT_EMBEDDING,
             ("existing", _make_vector()),
         )
         index.conn.commit()
@@ -69,7 +79,7 @@ class TestGetEmbeddingsByHashes:
         # 1000 Embeddings einfügen
         for i in range(1000):
             index.conn.execute(
-                "INSERT INTO embeddings (content_hash, vector, model_name, dimensions, created_at) VALUES (?, ?, 'test', 4, 0.0)",
+                _INSERT_EMBEDDING,
                 (f"h_{i}", _make_vector(seed=float(i))),
             )
         index.conn.commit()
@@ -83,7 +93,7 @@ class TestGetEmbeddingsByHashes:
         """Zurückgegebene Vektoren stimmen mit gespeicherten überein."""
         vec = _make_vector(dim=4, seed=3.14)
         index.conn.execute(
-            "INSERT INTO embeddings (content_hash, vector, model_name, dimensions, created_at) VALUES (?, ?, 'test', 4, 0.0)",
+            _INSERT_EMBEDDING,
             ("pi_hash", vec),
         )
         index.conn.commit()
@@ -91,7 +101,7 @@ class TestGetEmbeddingsByHashes:
         result = index.get_embeddings_by_hashes({"pi_hash"})
         stored = result["pi_hash"]
         expected = list(struct.unpack("4f", vec))
-        for a, b in zip(stored, expected):
+        for a, b in zip(stored, expected, strict=False):
             assert abs(a - b) < 1e-5
 
 
@@ -105,7 +115,7 @@ class TestGetEmbeddingHashes:
     def test_returns_all_hashes(self, index: MemoryIndex) -> None:
         for i in range(5):
             index.conn.execute(
-                "INSERT INTO embeddings (content_hash, vector, model_name, dimensions, created_at) VALUES (?, ?, 'test', 4, 0.0)",
+                _INSERT_EMBEDDING,
                 (f"hash_{i}", _make_vector()),
             )
         index.conn.commit()

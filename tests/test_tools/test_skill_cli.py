@@ -2,31 +2,28 @@
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from jarvis.tools.skill_cli import (
-    TemplateType,
-    SkillTemplate,
-    SkillScaffolder,
-    ScaffoldResult,
-    SkillLinter,
-    LintSeverity,
+    BUILT_IN_TEMPLATES,
+    ContributorReward,
     LintIssue,
+    LintSeverity,
+    PublishRequest,
+    PublishStatus,
+    RewardSystem,
+    ScaffoldResult,
+    SkillCLI,
+    SkillLinter,
+    SkillPublisher,
+    SkillScaffolder,
+    SkillTemplate,
     SkillTester,
     SkillTestResult,
-    SkillPublisher,
-    PublishStatus,
-    PublishRequest,
-    RewardSystem,
-    ContributorReward,
-    SkillCLI,
-    BUILT_IN_TEMPLATES,
+    TemplateType,
 )
-
 
 # ============================================================================
 # SkillScaffolder — additional coverage
@@ -136,8 +133,8 @@ class TestSkillLinterExtended:
         linter = SkillLinter()
         issues = linter.lint(
             {
-                "SKILL.md": "# My Skill\n\nSome content that is long enough to pass the length check "
-                * 3,
+                "SKILL.md": "# My Skill\n\nSome content that is long"
+                " enough to pass the length check " * 3,
                 "skill.py": "class Foo(BaseSkill): pass",
                 "manifest.json": '{"name": "x", "version": "1", "permissions": []}',
             }

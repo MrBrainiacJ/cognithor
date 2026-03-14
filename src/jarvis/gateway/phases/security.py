@@ -10,10 +10,12 @@ Attributes handled:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jarvis.gateway.phases import PhaseResult
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.gateway.phases import PhaseResult
 
 log = get_logger(__name__)
 
@@ -57,9 +59,9 @@ def declare_security_attrs(config: Any) -> PhaseResult:
     # Phase 14: Encrypted Vault & Session-Isolation
     try:
         from jarvis.security.vault import (
-            VaultManager,
             IsolatedSessionStore,
             SessionIsolationGuard,
+            VaultManager,
         )
 
         vault = VaultManager()
@@ -82,9 +84,9 @@ def declare_security_attrs(config: Any) -> PhaseResult:
     try:
         from jarvis.security.framework import (
             IncidentTracker,
+            PostureScorer,
             SecurityMetrics,
             SecurityTeam,
-            PostureScorer,
         )
 
         tracker = IncidentTracker()
@@ -98,9 +100,9 @@ def declare_security_attrs(config: Any) -> PhaseResult:
     # Phase 24: CI/CD Security Gate + Continuous Red-Team
     try:
         from jarvis.security.cicd_gate import (
-            SecurityGate,
             ContinuousRedTeam,
             ScanScheduler,
+            SecurityGate,
             WebhookNotifier,
         )
 

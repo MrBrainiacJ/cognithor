@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
-import pytest
-
 from jarvis.security.gdpr import (
+    DEFAULT_RETENTION_POLICIES,
     AuditExporter,
     DataCategory,
     DataProcessingLog,
@@ -24,9 +23,10 @@ from jarvis.security.gdpr import (
     RetentionAction,
     RetentionEnforcer,
     RetentionPolicy,
-    DEFAULT_RETENTION_POLICIES,
 )
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ── Enums ─────────────────────────────────────────────────────────────────
 
@@ -308,7 +308,7 @@ class TestRetentionEnforcer:
                 RetentionPolicy(name="q", category=DataCategory.QUERY, retention_days=30),
             ]
         )
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         old_time = (now - timedelta(days=60)).isoformat()
         new_time = (now - timedelta(days=10)).isoformat()
 
@@ -326,7 +326,7 @@ class TestRetentionEnforcer:
                 RetentionPolicy(name="cred", category=DataCategory.CREDENTIAL, retention_days=0),
             ]
         )
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         records = [
             DataProcessingRecord(
                 record_id="r1",
@@ -349,7 +349,7 @@ class TestRetentionEnforcer:
             ]
         )
         log = DataProcessingLog()
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         old_time = (now - timedelta(days=60)).isoformat()
 
         # Manually insert a record with old timestamp
@@ -387,7 +387,7 @@ class TestRetentionEnforcer:
             ]
         )
         log = DataProcessingLog()
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         old_time = (now - timedelta(days=60)).isoformat()
 
         log._records.append(
@@ -407,7 +407,7 @@ class TestRetentionEnforcer:
         records = [
             DataProcessingRecord(
                 record_id="r1",
-                timestamp=datetime(2020, 1, 1, tzinfo=timezone.utc).isoformat(),
+                timestamp=datetime(2020, 1, 1, tzinfo=UTC).isoformat(),
                 category=DataCategory.QUERY,
             ),
         ]
@@ -543,7 +543,7 @@ class TestGDPRComplianceManager:
                 ),
             ]
         )
-        now = datetime(2026, 3, 5, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 5, tzinfo=UTC)
         old_time = (now - timedelta(days=10)).isoformat()
         mgr.processing_log._records.append(
             DataProcessingRecord(
