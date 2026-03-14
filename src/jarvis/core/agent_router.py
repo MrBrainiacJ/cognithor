@@ -53,11 +53,15 @@ class AgentProfile:
       - Eigene Sandbox-Konfiguration (Netzwerk, Memory-Limits)
       - Eigene Tool-Rechte (Whitelist/Blacklist)
       - Delegations-Fähigkeit (kann andere Agenten beauftragen)
+      - Rolle (orchestrator, worker, monitor)
     """
 
     name: str
     display_name: str = ""
     description: str = ""
+
+    # Role (v0.36.0): orchestrator | worker | monitor
+    role: str = "worker"  # Default "worker" for backward compat
 
     # Persona
     system_prompt: str = ""
