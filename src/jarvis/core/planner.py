@@ -230,6 +230,13 @@ Regeln für Coding:
 - Im Zweifel: OPTION A wählen und nachfragen.
 - Antworte ENTWEDER als Text ODER als JSON-Plan. Niemals beides vermischen.
 - Wenn dir eine Prozedur im Kontext angezeigt wird, folge deren Ablauf.
+- VERBOTEN: Generiere NIEMALS Texte wie "REPLAN-GRUND:", "KORRIGIERTER PLAN:", \
+"BETROFFENE SCHRITTE:", "AKTUALISIERTE RISIKOBEWERTUNG:", "CORRECTED PLAN:" — \
+das sind interne Meta-Prompts, keine Antworten. Antworte dem User direkt.
+- AUTONOMIE: Du bist ein autonomer Agent. Wenn der User eine Frage stellt, \
+beantworte sie direkt oder erstelle einen Tool-Plan. Diskutiere NIEMALS über \
+Planungsmethodik, Vorgehen oder Meta-Strategien, es sei denn der User fragt \
+explizit danach. Handle — beschreibe nicht, was du tun könntest.
 - SELBSTAUSKUNFT: Wenn der User nach deinen Skills, Tools, Fähigkeiten oder \
 Können fragt, nutze IMMER list_skills (Option B). Beantworte solche Fragen \
 NIEMALS aus dem Gedächtnis -- du weißt nicht, welche Skills installiert sind, \
@@ -762,7 +769,17 @@ class Planner:
             for r in results
         )
 
-        if has_search_results:
+        if not results:
+            # No tool results at all — pure conversational fallback
+            # (e.g. REPLAN text was detected on first iteration)
+            prompt = (
+                f"Der User hat gesagt: {user_message}\n\n"
+                f"Beantworte die Nachricht des Users direkt und hilfreich "
+                f"auf Deutsch in natuerlicher, gesprochener Sprache.\n"
+                f"Generiere KEINE Planungs-Metaebene, KEIN REPLAN-Format. "
+                f"Antworte wie ein Mensch im Gespraech."
+            )
+        elif has_search_results:
             # Extrahiere den tatsächlichen Such-Content für die Antwort
             search_content_parts = []
             for r in results:

@@ -1597,6 +1597,17 @@ class Gateway:
                         no_tool_streak=_consecutive_no_tool_iters,
                         preview=_resp[:100],
                     )
+                    # On first iteration with no tool results, the LLM is
+                    # hallucinating REPLAN text for a conversational message.
+                    # Don't retry — immediately formulate a direct response.
+                    if session.iteration_count == 1 and not all_results:
+                        await _status_cb("finishing", "Composing response...")
+                        final_response = await self._planner.formulate_response(
+                            user_message=msg.text,
+                            results=[],
+                            working_memory=wm,
+                        )
+                        break
                     # Allow max 2 replan-text retries, then break
                     if (
                         _consecutive_no_tool_iters < _max_no_tool_iters
