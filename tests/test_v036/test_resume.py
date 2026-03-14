@@ -57,10 +57,14 @@ class TestCheckpointStore:
     def test_get_latest(self, tmp_path):
         store = CheckpointStore(tmp_path / "checkpoints")
 
-        cp1 = PersistentCheckpoint(session_id="s1", state={"step": 1})
+        cp1 = PersistentCheckpoint(
+            session_id="s1", state={"step": 1}, timestamp_utc="2026-01-01T00:00:00"
+        )
         store.save(cp1)
 
-        cp2 = PersistentCheckpoint(session_id="s1", state={"step": 2})
+        cp2 = PersistentCheckpoint(
+            session_id="s1", state={"step": 2}, timestamp_utc="2026-01-01T00:00:01"
+        )
         store.save(cp2)
 
         latest = store.get_latest("s1")

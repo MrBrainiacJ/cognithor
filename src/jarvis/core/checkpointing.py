@@ -88,13 +88,19 @@ class CheckpointStore:
         session_dir = self._dir / session_id
         if not session_dir.exists():
             return None
-        files = sorted(session_dir.glob("*.json"), key=lambda p: p.stat().st_mtime)
-        if not files:
+        checkpoints: list[PersistentCheckpoint] = []
+        for f in session_dir.glob("*.json"):
+            try:
+                checkpoints.append(
+                    PersistentCheckpoint.from_json(f.read_text(encoding="utf-8"))
+                )
+            except Exception:
+                continue
+        if not checkpoints:
             return None
-        try:
-            return PersistentCheckpoint.from_json(files[-1].read_text(encoding="utf-8"))
-        except Exception:
-            return None
+        # Sort by timestamp_utc (ISO format, string-sortable)
+        checkpoints.sort(key=lambda c: c.timestamp_utc)
+        return checkpoints[-1]
 
     def list_checkpoints(self, session_id: str) -> list[str]:
         """List checkpoint IDs for a session."""
