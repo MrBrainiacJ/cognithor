@@ -514,7 +514,9 @@ class Gateway:
 
         # Tool descriptions are injected directly into the Planner prompt
         # via {tools_section} — no need to duplicate them in CORE.md
-        tool_ref = f"*{tool_count} Tools registriert (werden direkt in den Planner-Prompt injiziert)*"
+        tool_ref = (
+            f"*{tool_count} Tools registriert (werden direkt in den Planner-Prompt injiziert)*"
+        )
 
         inventory = (
             f"## {inv_title}\n\n"

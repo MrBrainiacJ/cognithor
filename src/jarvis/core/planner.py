@@ -385,12 +385,16 @@ class Planner:
             "SYSTEM_PROMPT.md", SYSTEM_PROMPT, preset_key="plannerSystem"
         )
         self._replan_prompt_template = self._load_prompt_from_file(
-            "REPLAN_PROMPT.md", REPLAN_PROMPT, fallback_txt="REPLAN_PROMPT.txt",
-            preset_key="replanPrompt"
+            "REPLAN_PROMPT.md",
+            REPLAN_PROMPT,
+            fallback_txt="REPLAN_PROMPT.txt",
+            preset_key="replanPrompt",
         )
         self._escalation_prompt_template = self._load_prompt_from_file(
-            "ESCALATION_PROMPT.md", ESCALATION_PROMPT, fallback_txt="ESCALATION_PROMPT.txt",
-            preset_key="escalationPrompt"
+            "ESCALATION_PROMPT.md",
+            ESCALATION_PROMPT,
+            fallback_txt="ESCALATION_PROMPT.txt",
+            preset_key="escalationPrompt",
         )
 
     def _load_prompt_from_file(
@@ -434,12 +438,16 @@ class Planner:
             "SYSTEM_PROMPT.md", SYSTEM_PROMPT, preset_key="plannerSystem"
         )
         self._replan_prompt_template = self._load_prompt_from_file(
-            "REPLAN_PROMPT.md", REPLAN_PROMPT, fallback_txt="REPLAN_PROMPT.txt",
-            preset_key="replanPrompt"
+            "REPLAN_PROMPT.md",
+            REPLAN_PROMPT,
+            fallback_txt="REPLAN_PROMPT.txt",
+            preset_key="replanPrompt",
         )
         self._escalation_prompt_template = self._load_prompt_from_file(
-            "ESCALATION_PROMPT.md", ESCALATION_PROMPT, fallback_txt="ESCALATION_PROMPT.txt",
-            preset_key="escalationPrompt"
+            "ESCALATION_PROMPT.md",
+            ESCALATION_PROMPT,
+            fallback_txt="ESCALATION_PROMPT.txt",
+            preset_key="escalationPrompt",
         )
         log.info("planner_prompts_reloaded")
 

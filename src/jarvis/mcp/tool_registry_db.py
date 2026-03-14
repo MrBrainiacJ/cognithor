@@ -1118,9 +1118,7 @@ class ToolRegistryDB:
 
     def is_locked(self, tool_name: str) -> bool:
         """Prueft ob ein Tool gegen Prompt-Evolution gesperrt ist."""
-        row = self._conn.execute(
-            "SELECT locked FROM tools WHERE name = ?", (tool_name,)
-        ).fetchone()
+        row = self._conn.execute("SELECT locked FROM tools WHERE name = ?", (tool_name,)).fetchone()
         if row is None:
             return True  # Unknown tools are locked by default
         return bool(row[0])
