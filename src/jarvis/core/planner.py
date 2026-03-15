@@ -370,6 +370,13 @@ class Planner:
         self._cached_tools_section: str | None = None
         self._cached_tools_hash: int = 0
 
+        # Context-window for Ollama num_ctx (default from model config)
+        try:
+            cw = self._config.models.planner.context_window
+            self._context_window: int = cw if isinstance(cw, int) else 32768
+        except Exception:
+            self._context_window = 32768
+
         # Circuit Breaker für LLM-Calls (#42 Optimierung)
         from jarvis.utils.circuit_breaker import CircuitBreaker
 
@@ -511,9 +518,7 @@ class Planner:
                     messages=messages,
                     temperature=model_config.get("temperature", 0.7),
                     top_p=model_config.get("top_p", 0.9),
-                    options={
-                        "num_predict": getattr(self._config.planner, "response_token_budget", 3000)
-                    },
+                    options=self._build_llm_options(),
                 )
             )
         except CircuitBreakerOpen as exc:
@@ -613,9 +618,7 @@ class Planner:
                     messages=retry_messages,
                     temperature=max(0.3, model_config.get("temperature", 0.7) - 0.3),
                     top_p=model_config.get("top_p", 0.9),
-                    options={
-                        "num_predict": getattr(self._config.planner, "response_token_budget", 3000)
-                    },
+                    options=self._build_llm_options(),
                 )
                 retry_text = retry_response.get("message", {}).get("content", "")
                 self._record_cost(retry_response, model, session_id=working_memory.session_id)
@@ -673,9 +676,7 @@ class Planner:
                     messages=messages,
                     temperature=model_config.get("temperature", 0.7),
                     top_p=model_config.get("top_p", 0.9),
-                    options={
-                        "num_predict": getattr(self._config.planner, "response_token_budget", 3000)
-                    },
+                    options=self._build_llm_options(),
                 )
                 break
             except OllamaError as exc:
@@ -723,9 +724,7 @@ class Planner:
                     messages=retry_messages,
                     temperature=max(0.3, model_config.get("temperature", 0.7) - 0.3),
                     top_p=model_config.get("top_p", 0.9),
-                    options={
-                        "num_predict": getattr(self._config.planner, "response_token_budget", 3000)
-                    },
+                    options=self._build_llm_options(),
                 )
                 retry_text = retry_response.get("message", {}).get("content", "")
                 self._record_cost(retry_response, model, session_id=working_memory.session_id)
@@ -760,9 +759,7 @@ class Planner:
             response = await self._ollama.chat(
                 model=model,
                 messages=messages,
-                options={
-                    "num_predict": getattr(self._config.planner, "response_token_budget", 3000)
-                },
+                options=self._build_llm_options(),
             )
             self._record_cost(response, model, session_id=working_memory.session_id)
             content: str = response.get("message", {}).get("content", "")
@@ -899,7 +896,9 @@ class Planner:
 
         for _fmt_attempt in range(2):
             try:
-                response = await self._ollama.chat(model=model, messages=messages)
+                response = await self._ollama.chat(
+                    model=model, messages=messages, options=self._build_llm_options()
+                )
                 self._record_cost(response, model, session_id=working_memory.session_id)
                 content: str = response.get("message", {}).get("content", "")
                 return content
@@ -931,6 +930,13 @@ class Planner:
     # Private Methoden
     # =========================================================================
 
+    def _build_llm_options(self) -> dict[str, Any]:
+        """Build Ollama ``options`` dict including ``num_ctx`` and ``num_predict``."""
+        return {
+            "num_ctx": self._context_window,
+            "num_predict": getattr(self._config.planner, "response_token_budget", 3000),
+        }
+
     def _build_system_prompt(
         self,
         working_memory: WorkingMemory,
@@ -938,50 +944,70 @@ class Planner:
     ) -> str:
         """Baut den System-Prompt mit Kontext und Tools."""
         # Tools-Section (gecacht, #40 Optimierung)
+        # Compact mode for small context windows (≤16K tokens)
+        compact = self._context_window <= 16384
         if tool_schemas:
-            schemas_hash = hash(frozenset(tool_schemas.keys()))
-            if schemas_hash != self._cached_tools_hash or self._cached_tools_section is None:
-                # Prefer ToolRegistryDB for localized descriptions with examples
-                db_section = None
-                try:
-                    from jarvis.mcp.tool_registry_db import ToolRegistryDB
-
-                    db_path = self._config.jarvis_home / "tool_registry.db"
-                    if db_path.exists():
-                        registry_db = ToolRegistryDB(db_path)
-                        language = getattr(self._config, "language", "de")
-                        db_section = registry_db.get_tool_prompt_section("planner", language)
-                        registry_db.close()
-                except Exception:
-                    pass
-
-                if db_section:
-                    self._cached_tools_section = db_section
-                else:
-                    # Fallback: hand-rolled schema parsing
+            cache_key = (hash(frozenset(tool_schemas.keys())), compact)
+            if cache_key != self._cached_tools_hash or self._cached_tools_section is None:
+                if compact:
+                    # Compact: only tool names + short descriptions, no params/examples
                     tools_lines = []
                     for name, schema in tool_schemas.items():
-                        desc = schema.get("description", "No description")
-                        props = schema.get("inputSchema", {}).get("properties", {})
-                        required = set(schema.get("inputSchema", {}).get("required", []))
-                        parts = []
-                        for k, v in props.items():
-                            typ = v.get("type", "?")
-                            req = " [required]" if k in required else ""
-                            parts.append(f"{k}: {typ}{req}")
-                        param_list = ", ".join(parts)
-                        tools_lines.append(f"- **{name}**({param_list}): {desc}")
+                        desc = schema.get("description", "")
+                        # Truncate description to ~60 chars
+                        short = desc[:60].rstrip() + ("..." if len(desc) > 60 else "")
+                        tools_lines.append(f"- `{name}`: {short}")
                     self._cached_tools_section = "\n".join(tools_lines)
-                self._cached_tools_hash = schemas_hash
+                else:
+                    # Full mode: prefer ToolRegistryDB for localized descriptions with examples
+                    db_section = None
+                    try:
+                        from jarvis.mcp.tool_registry_db import ToolRegistryDB
+
+                        db_path = self._config.jarvis_home / "tool_registry.db"
+                        if db_path.exists():
+                            registry_db = ToolRegistryDB(db_path)
+                            language = getattr(self._config, "language", "de")
+                            db_section = registry_db.get_tool_prompt_section("planner", language)
+                            registry_db.close()
+                    except Exception:
+                        pass
+
+                    if db_section:
+                        self._cached_tools_section = db_section
+                    else:
+                        # Fallback: hand-rolled schema parsing
+                        tools_lines = []
+                        for name, schema in tool_schemas.items():
+                            desc = schema.get("description", "No description")
+                            props = schema.get("inputSchema", {}).get("properties", {})
+                            required = set(schema.get("inputSchema", {}).get("required", []))
+                            parts = []
+                            for k, v in props.items():
+                                typ = v.get("type", "?")
+                                req = " [required]" if k in required else ""
+                                parts.append(f"{k}: {typ}{req}")
+                            param_list = ", ".join(parts)
+                            tools_lines.append(f"- **{name}**({param_list}): {desc}")
+                        self._cached_tools_section = "\n".join(tools_lines)
+                self._cached_tools_hash = cache_key
             tools_section = self._cached_tools_section
         else:
             tools_section = "No tools available."
 
         # Context-Section (Memory) — Relevanz-Ranking nach Score (#41 Optimierung)
+        # Budget scales with context window (compact mode for small models)
         context_parts: list[str] = []
+        core_budget = 2000 if compact else 0  # 0 = unlimited
+        mem_budget = 600 if compact else 1200  # ~150 / ~300 Tokens
+        proc_budget = 1500 if compact else 3000
+        proc_skill_budget = 300 if compact else 600
 
         if working_memory.core_memory_text:
-            context_parts.append(f"### Kern-Wissen\n{working_memory.core_memory_text}")
+            core_text = working_memory.core_memory_text
+            if core_budget and len(core_text) > core_budget:
+                core_text = core_text[:core_budget] + "\n[...]"
+            context_parts.append(f"### Kern-Wissen\n{core_text}")
 
         if working_memory.injected_memories:
             # Nach Score sortieren (höchster zuerst) mit Token-Budget
@@ -991,11 +1017,10 @@ class Planner:
                 reverse=True,
             )
             mem_texts = []
-            budget_chars = 1200  # ~300 Tokens Budget für Memories
             used = 0
             for mem in sorted_mems:
                 line = f"- [{mem.chunk.memory_tier.value}] {mem.chunk.text[:200]}"
-                if used + len(line) > budget_chars:
+                if used + len(line) > mem_budget:
                     break
                 mem_texts.append(line)
                 used += len(line)
@@ -1007,11 +1032,11 @@ class Planner:
                     # Presearch: Web-Ergebnisse mit passender Überschrift und mehr Platz
                     context_parts.append(
                         f"### AKTUELLE FAKTEN AUS DEM INTERNET (vertraue diesen Daten!)\n"
-                        f"{proc[:3000]}"
+                        f"{proc[:proc_budget]}"
                     )
                 else:
                     context_parts.append(
-                        f"### Relevante Prozedur (folge diesem Ablauf!)\n{proc[:600]}"
+                        f"### Relevante Prozedur (folge diesem Ablauf!)\n{proc[:proc_skill_budget]}"
                     )
 
         # Causal-Learning-Vorschlaege (wenn verfuegbar)
