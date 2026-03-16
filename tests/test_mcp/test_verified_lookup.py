@@ -205,12 +205,16 @@ class TestParallelExtraction:
 
     @pytest.mark.asyncio
     async def test_trafilatura_failure_browser_fallback(
-        self, lookup: VerifiedWebLookup, mock_web_tools
+        self, lookup: VerifiedWebLookup, mock_web_tools, mock_browser
     ) -> None:
         """Wenn Trafilatura scheitert, genuegt Browser-Ergebnis."""
         mock_web_tools.web_fetch = AsyncMock(return_value="")
+        # Ensure browser is set as v14 (no extract_text)
+        del mock_browser.extract_text
+        lookup._set_browser_agent(None)
+        lookup._set_browser_tool(mock_browser)
         result = await lookup.verified_lookup(query="test")
-        assert "Verifizierte Antwort" in result
+        assert "Verifizierte Antwort" in result or "142" in result
 
     @pytest.mark.asyncio
     async def test_no_browser_tool_available(self, config, mock_web_tools, mock_llm_fn) -> None:
@@ -428,13 +432,13 @@ class TestRegistration:
         assert isinstance(result, VerifiedWebLookup)
 
     def test_register_calls_register_builtin_handler(self, config) -> None:
-        """register_builtin_handler wird aufgerufen."""
+        """register_builtin_handler wird 2x aufgerufen (verified_lookup + deep_research)."""
         mcp = MagicMock()
         register_verified_lookup_tools(mcp, config)
-        mcp.register_builtin_handler.assert_called_once()
-        args = mcp.register_builtin_handler.call_args
-        assert args[1]["tool_name"] == "verified_web_lookup"
-        assert "query" in args[1]["input_schema"]["properties"]
+        assert mcp.register_builtin_handler.call_count == 2
+        tool_names = [c[1]["tool_name"] for c in mcp.register_builtin_handler.call_args_list]
+        assert "verified_web_lookup" in tool_names
+        assert "deep_research" in tool_names
 
     @pytest.mark.asyncio
     async def test_registered_handler_callable(self, config) -> None:

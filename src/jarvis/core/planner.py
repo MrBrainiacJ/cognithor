@@ -172,6 +172,7 @@ Direkte Textantwort (Option A): „Eine API ist eine Programmierschnittstelle...
 | Allgemeine Erklärung, Smalltalk, Meinung | A | -- |
 | Aktuelle Ereignisse, Politik, Nachrichten, Fakten | B | search_and_read / web_news_search |
 | Konkrete Zahlen/Daten die verifiziert werden muessen | B | verified_web_lookup |
+| Komplexe Recherche, mehrere Aspekte, "recherchiere ausfuehrlich" | B | deep_research |
 | „Datei", „lesen", „erstellen", „schreiben" | B | read_file / write_file |
 | „Verzeichnis", „Ordner", „auflisten" | B | list_directory |
 | „Befehl", „ausführen", „Shell", „Code" | B | exec_command |

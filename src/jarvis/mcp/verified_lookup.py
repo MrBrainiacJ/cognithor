@@ -115,10 +115,30 @@ Return JSON:
 class VerifiedWebLookup:
     """Mehrstufiges Fakten-Pruefverfahren mit parallelen Agenten."""
 
+    # URL patterns that need a full JS browser (SPAs, dynamic content)
+    _BROWSER_REQUIRED_DOMAINS: frozenset[str] = frozenset(
+        {
+            "github.com",
+            "twitter.com",
+            "x.com",
+            "reddit.com",
+            "linkedin.com",
+            "instagram.com",
+            "facebook.com",
+            "youtube.com",
+            "medium.com",
+            "notion.so",
+            "figma.com",
+            "docs.google.com",
+            "app.slack.com",
+        }
+    )
+
     def __init__(self, config: JarvisConfig | None = None) -> None:
         self._config = config
         self._web_tools: WebTools | None = None
         self._browser_tool: BrowserTool | None = None
+        self._browser_agent: Any = None  # browser-use v17 BrowserAgent
         self._llm_fn: Any = None
         self._llm_model: str = ""
 
@@ -129,6 +149,10 @@ class VerifiedWebLookup:
 
     def _set_browser_tool(self, browser_tool: BrowserTool) -> None:
         self._browser_tool = browser_tool
+
+    def _set_browser_agent(self, browser_agent: Any) -> None:
+        """Setzt den browser-use v17 BrowserAgent (bevorzugt ueber v14)."""
+        self._browser_agent = browser_agent
 
     def _set_llm_fn(self, llm_fn: Any, model_name: str = "") -> None:
         self._llm_fn = llm_fn
@@ -201,6 +225,31 @@ class VerifiedWebLookup:
         # ── Ergebnis formatieren ─────────────────────────────────────────
         return self._format_result(verification, query)
 
+    # ── URL Classification ──────────────────────────────────────────────
+
+    def _needs_browser(self, url: str) -> bool:
+        """Prüft ob eine URL einen JS-Browser braucht (SPA, dynamische Inhalte)."""
+        try:
+            from urllib.parse import urlparse
+
+            hostname = urlparse(url).hostname or ""
+            # Exakte Domain-Matches
+            for domain in self._BROWSER_REQUIRED_DOMAINS:
+                if hostname == domain or hostname.endswith(f".{domain}"):
+                    return True
+            # Heuristik: Fragment-URLs, App-Pfade
+            if "#" in url and "/app" in url:
+                return True
+        except Exception:
+            pass
+        return False
+
+    def _best_browser(self) -> Any | None:
+        """Gibt den besten verfuegbaren Browser zurueck (v17 > v14 > None)."""
+        if self._browser_agent is not None:
+            return self._browser_agent
+        return self._browser_tool
+
     # ── Stage 2: Parallele Extraktion ────────────────────────────────────
 
     async def _parallel_extract(
@@ -208,7 +257,7 @@ class VerifiedWebLookup:
         urls: list[str],
         num_sources: int,
     ) -> list[SourceResult]:
-        """Extrahiert Text aus URLs mit Trafilatura und Browser parallel."""
+        """Extrahiert Text aus URLs mit Smart-Routing: Trafilatura oder Browser."""
         results: list[SourceResult] = []
 
         async def _extract_trafilatura(url: str) -> SourceResult:
@@ -236,7 +285,8 @@ class VerifiedWebLookup:
                 )
 
         async def _extract_browser(url: str) -> SourceResult:
-            if self._browser_tool is None:
+            browser = self._best_browser()
+            if browser is None:
                 return SourceResult(
                     url=url,
                     text="",
@@ -245,17 +295,41 @@ class VerifiedWebLookup:
                 )
             start = time.monotonic()
             try:
-                browser_result = await asyncio.wait_for(
-                    self._browser_tool.navigate(url, extract_text=True),
-                    timeout=_DEFAULT_BROWSER_TIMEOUT_S,
-                )
-                ms = (time.monotonic() - start) * 1000
-                text = browser_result.text or ""
-                success = browser_result.success and len(text.strip()) > 50
+                # browser-use v17: navigate() returns PageState with text_content
+                if hasattr(browser, "extract_text"):
+                    # v17 BrowserAgent — richer extraction
+                    page_state = await asyncio.wait_for(
+                        browser.navigate(url),
+                        timeout=_DEFAULT_BROWSER_TIMEOUT_S,
+                    )
+                    text = getattr(page_state, "text_content", "") or ""
+                    # Also try table extraction for structured data
+                    if len(text.strip()) < 100:
+                        try:
+                            text = await asyncio.wait_for(
+                                browser.extract_text("body"),
+                                timeout=5,
+                            )
+                        except Exception:
+                            pass
+                    ms = (time.monotonic() - start) * 1000
+                    method = "browser-v17"
+                    success = bool(text and len(text.strip()) > 50)
+                else:
+                    # v14 BrowserTool fallback
+                    browser_result = await asyncio.wait_for(
+                        browser.navigate(url, extract_text=True),
+                        timeout=_DEFAULT_BROWSER_TIMEOUT_S,
+                    )
+                    text = browser_result.text or ""
+                    ms = (time.monotonic() - start) * 1000
+                    method = "browser-v14"
+                    success = getattr(browser_result, "success", False) and len(text.strip()) > 50
+
                 return SourceResult(
                     url=url,
                     text=text[:_DEFAULT_MAX_TEXT_PER_SOURCE],
-                    method="browser",
+                    method=method,
                     success=success,
                     duration_ms=ms,
                 )
@@ -280,12 +354,18 @@ class VerifiedWebLookup:
                     duration_ms=ms,
                 )
 
-        # Trafilatura fuer ALLE URLs + Browser fuer die erste URL parallel
+        # ── Smart Routing: URL-Klassifizierung → beste Methode ──────────
+        # Trafilatura fuer alle URLs (schnell), Browser fuer JS-heavy URLs
         tasks: list[asyncio.Task] = []
+        browser_urls: list[str] = []
         for url in urls:
             tasks.append(asyncio.ensure_future(_extract_trafilatura(url)))
-        # Browser-Agent nur fuer Top-URLs (teurer, aber robuster)
-        browser_urls = urls[: min(2, len(urls))]
+            # URLs die einen Browser brauchen (GitHub, Twitter, SPAs etc.)
+            if self._needs_browser(url):
+                browser_urls.append(url)
+        # Fallback: wenn keine URL als browser-pflichtig erkannt → Top-2
+        if not browser_urls and self._best_browser() is not None:
+            browser_urls = urls[: min(2, len(urls))]
         for url in browser_urls:
             tasks.append(asyncio.ensure_future(_extract_browser(url)))
 
@@ -471,6 +551,120 @@ class VerifiedWebLookup:
                 return facts[0].claim, 0.4, []
             return t("verified_lookup.consensus_failed"), 0.2, []
 
+    # ── Deep Research ──────────────────────────────────────────────────
+
+    async def deep_research(
+        self,
+        topic: str,
+        num_sources: int = 5,
+        language: str = "de",
+    ) -> str:
+        """Tiefgehende Recherche mit Follow-Up-Suchen und strukturiertem Report.
+
+        Erweitert verified_lookup um:
+        - Mehr Quellen (5-8 statt 2-3)
+        - Follow-Up-Suche basierend auf ersten Ergebnissen
+        - Strukturierter Report mit Abschnitten
+
+        Args:
+            topic: Recherchetehma.
+            num_sources: Anzahl der Quellen (3-8).
+            language: Sprache fuer Report.
+
+        Returns:
+            Strukturierter Recherche-Report.
+        """
+        start = time.monotonic()
+        num_sources = max(3, min(num_sources, 8))
+
+        if self._web_tools is None:
+            return t("verified_lookup.no_webtools")
+
+        # Phase 1: Initiale Recherche
+        initial_result = await self.verified_lookup(
+            query=topic, num_sources=min(num_sources, 4), language=language
+        )
+
+        # Phase 2: Follow-Up-Suchen basierend auf extrahierten Fakten
+        follow_up_results: list[str] = []
+        if self._llm_fn is not None:
+            follow_up_query = await self._generate_follow_up(topic, initial_result, language)
+            if follow_up_query and follow_up_query != topic:
+                log.info("deep_research_follow_up", query=follow_up_query[:80])
+                follow_up_text = await self.verified_lookup(
+                    query=follow_up_query,
+                    num_sources=min(num_sources - 2, 3),
+                    language=language,
+                )
+                follow_up_results.append(follow_up_text)
+
+        # Phase 3: Strukturierten Report generieren
+        duration_ms = (time.monotonic() - start) * 1000
+        if self._llm_fn is not None:
+            report = await self._synthesize_report(
+                topic, initial_result, follow_up_results, language
+            )
+            return f"{report}\n\n*Deep Research: {duration_ms:.0f}ms*"
+
+        # Fallback ohne LLM
+        parts = [f"## Research: {topic}\n", initial_result]
+        if follow_up_results:
+            parts.append("\n---\n### Follow-Up\n")
+            parts.extend(follow_up_results)
+        parts.append(f"\n*Deep Research: {duration_ms:.0f}ms*")
+        return "\n".join(parts)
+
+    async def _generate_follow_up(self, topic: str, initial_result: str, language: str) -> str:
+        """Generiert eine Follow-Up-Suchanfrage basierend auf initialen Ergebnissen."""
+        if self._llm_fn is None:
+            return ""
+        prompt = (
+            f"Based on this research about '{topic}':\n\n"
+            f"{initial_result[:2000]}\n\n"
+            f"Generate ONE follow-up search query that would fill the biggest "
+            f"knowledge gap. Return ONLY the search query, nothing else."
+        )
+        try:
+            raw = await self._llm_fn(prompt, self._llm_model)
+            raw = re.sub(r"<think>.*?</think>\s*", "", raw, flags=re.DOTALL)
+            return raw.strip().strip('"').strip("'")[:200]
+        except Exception:
+            return ""
+
+    async def _synthesize_report(
+        self,
+        topic: str,
+        initial: str,
+        follow_ups: list[str],
+        language: str,
+    ) -> str:
+        """Synthetisiert einen strukturierten Report aus allen Recherche-Ergebnissen."""
+        if self._llm_fn is None:
+            return initial
+        context = initial[:3000]
+        if follow_ups:
+            context += "\n\n--- Follow-Up ---\n" + "\n".join(f[:1500] for f in follow_ups)
+        prompt = (
+            f"Synthesize a structured research report about '{topic}' "
+            f"in {language} based on these verified findings:\n\n"
+            f"{context}\n\n"
+            f"Format:\n"
+            f"## [Topic]\n"
+            f"### Key Findings\n"
+            f"[2-3 main findings as flowing text, not bullet points]\n"
+            f"### Details\n"
+            f"[Supporting details, data, context]\n"
+            f"### Sources\n"
+            f"[List source URLs if mentioned]\n\n"
+            f"Write in natural, spoken {language}. Be factual and concise."
+        )
+        try:
+            report = await self._llm_fn(prompt, self._llm_model)
+            report = re.sub(r"<think>.*?</think>\s*", "", report, flags=re.DOTALL)
+            return report.strip()
+        except Exception:
+            return initial
+
     # ── Formatierung ─────────────────────────────────────────────────────
 
     @staticmethod
@@ -565,5 +759,44 @@ def register_verified_lookup_tools(
         },
     )
 
-    log.info("verified_lookup_tool_registered")
+    async def _handle_deep_research(**kwargs: Any) -> str:
+        return await lookup.deep_research(
+            topic=kwargs.get("topic", kwargs.get("query", "")),
+            num_sources=kwargs.get("num_sources", 5),
+            language=kwargs.get("language", "de"),
+        )
+
+    mcp_client.register_builtin_handler(
+        tool_name="deep_research",
+        handler=_handle_deep_research,
+        description=(
+            "Tiefgehende Multi-Source-Recherche mit Follow-Up-Suchen "
+            "und strukturiertem Report. Nutzt Smart-Routing: "
+            "Trafilatura fuer statische Seiten, Browser-Agent fuer "
+            "SPAs (GitHub, Twitter etc.). Fuer komplexe Recherche-"
+            "Aufgaben mit mehreren Aspekten."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "topic": {
+                    "type": "string",
+                    "description": "Das Recherchethema.",
+                },
+                "num_sources": {
+                    "type": "integer",
+                    "description": "Anzahl der Quellen (3-8).",
+                    "default": 5,
+                },
+                "language": {
+                    "type": "string",
+                    "description": "Sprache fuer den Report (de, en, zh).",
+                    "default": "de",
+                },
+            },
+            "required": ["topic"],
+        },
+    )
+
+    log.info("verified_lookup_tools_registered", tools=2)
     return lookup

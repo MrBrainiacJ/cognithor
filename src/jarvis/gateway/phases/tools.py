@@ -458,7 +458,12 @@ async def init_tools(
         # browser_agent ist das v17-BrowserUse-Objekt; fuer verified_lookup
         # brauchen wir das v14-BrowserTool (navigate + extract_text)
         if browser_agent is not None and hasattr(browser_agent, "navigate"):
-            verified_lookup._set_browser_tool(browser_agent)
+            # Prefer v17 BrowserAgent for richer extraction (tables, forms, JS)
+            if hasattr(browser_agent, "extract_text"):
+                verified_lookup._set_browser_agent(browser_agent)
+                log.debug("verified_lookup_browser_v17_injected")
+            else:
+                verified_lookup._set_browser_tool(browser_agent)
         else:
             try:
                 from jarvis.mcp.browser import BrowserTool
