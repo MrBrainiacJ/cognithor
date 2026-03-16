@@ -77,7 +77,24 @@ export function useJarvisChat() {
         setStreamText("");
         streamAccRef.current = "";
         addMessage("assistant", data.text || data.content || "");
-        // Pipeline bleibt sichtbar (collapsed) bis zur naechsten Nachricht
+        // Mark pipeline as complete — stays visible (collapsed) until next msg
+        setPipelineState((prev) => {
+          if (!prev) return prev;
+          const iters = [...prev.iterations];
+          const cur = iters[iters.length - 1];
+          if (cur) {
+            const updated = { ...cur, phases: { ...cur.phases } };
+            for (const p of ["plan", "gate", "execute", "replan"]) {
+              if (updated.phases[p].status === "running") {
+                updated.phases[p] = { ...updated.phases[p], status: "done", durationMs: Date.now() - (updated.phases[p].startMs || Date.now()) };
+              } else if (updated.phases[p].status === "pending") {
+                updated.phases[p] = { status: "skipped" };
+              }
+            }
+            iters[iters.length - 1] = updated;
+          }
+          return { ...prev, active: false, iterations: iters };
+        });
         break;
 
       case "stream_token":
@@ -93,6 +110,24 @@ export function useJarvisChat() {
         }
         setStreamText("");
         streamAccRef.current = "";
+        // Mark pipeline as complete (same as assistant_message)
+        setPipelineState((prev) => {
+          if (!prev) return prev;
+          const iters = [...prev.iterations];
+          const cur = iters[iters.length - 1];
+          if (cur) {
+            const updated = { ...cur, phases: { ...cur.phases } };
+            for (const p of ["plan", "gate", "execute", "replan"]) {
+              if (updated.phases[p].status === "running") {
+                updated.phases[p] = { ...updated.phases[p], status: "done", durationMs: Date.now() - (updated.phases[p].startMs || Date.now()) };
+              } else if (updated.phases[p].status === "pending") {
+                updated.phases[p] = { status: "skipped" };
+              }
+            }
+            iters[iters.length - 1] = updated;
+          }
+          return { ...prev, active: false, iterations: iters };
+        });
         break;
 
       case "tool_start":
@@ -242,6 +277,63 @@ export function useJarvisChat() {
 
       case "status_update":
         setStatusText(data.text || data.status || "");
+        // Derive pipeline state from status_update events (fallback when
+        // pipeline_event is not available — works with existing backend)
+        setPipelineState((prev) => {
+          const now = Date.now();
+          const st = data.status || "";
+          const txt = data.text || "";
+
+          // Create initial state on first status_update
+          if (!prev) {
+            prev = {
+              active: true,
+              iterations: [{
+                number: 1,
+                phases: {
+                  plan: { status: "pending" },
+                  gate: { status: "pending" },
+                  execute: { status: "pending" },
+                  replan: { status: "pending" },
+                },
+                tools: [],
+              }],
+            };
+          }
+          if (!prev.active) return prev;
+
+          const iters = [...prev.iterations];
+          const cur = { ...iters[iters.length - 1], phases: { ...iters[iters.length - 1].phases } };
+          iters[iters.length - 1] = cur;
+
+          if (st === "thinking") {
+            // Plan phase
+            if (cur.phases.plan.status === "pending") {
+              cur.phases.plan = { status: "running", startMs: now };
+            }
+          } else if (st === "executing") {
+            // Mark plan as done, gate as done, execute as running
+            if (cur.phases.plan.status === "running") {
+              cur.phases.plan = { status: "done", startMs: cur.phases.plan.startMs, durationMs: now - (cur.phases.plan.startMs || now) };
+            }
+            if (cur.phases.gate.status === "pending") {
+              cur.phases.gate = { status: "done", durationMs: 0 };
+            }
+            if (cur.phases.execute.status === "pending") {
+              cur.phases.execute = { status: "running", startMs: now, toolText: txt };
+            }
+          } else if (st === "finishing") {
+            // Mark execute as done, replan as running
+            if (cur.phases.execute.status === "running") {
+              cur.phases.execute = { status: "done", startMs: cur.phases.execute.startMs, durationMs: now - (cur.phases.execute.startMs || now) };
+            }
+            if (cur.phases.replan.status === "pending") {
+              cur.phases.replan = { status: "running", startMs: now };
+            }
+          }
+
+          return { ...prev, iterations: iters };
+        });
         break;
 
       case "error":
