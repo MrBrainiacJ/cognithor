@@ -1234,11 +1234,29 @@ class Gateway:
             ):
                 self._gatekeeper._tool_enforcer.reset_call_count(active_skill.skill.slug)
 
+        # Pipeline callback fuer Presearch + PGE-Loop
+        _pipeline_cb = self._make_pipeline_callback(msg.channel, session.session_id)
+
         try:
             if presearch_results:
                 # Direktantwort aus Suchergebnissen generieren (PGE-Bypass)
+                # Pipeline-Events auch im Presearch-Pfad senden
+                await _pipeline_cb("iteration", "start", iteration=1)
+                await _pipeline_cb("plan", "start", iteration=1)
+                await _pipeline_cb(
+                    "plan",
+                    "done",
+                    iteration=1,
+                    has_actions=False,
+                    steps=0,
+                    presearch=True,
+                )
+                await _pipeline_cb("execute", "start", iteration=1, tools=["presearch"])
                 final_response = await self._answer_from_presearch(msg.text, presearch_results)
                 if not final_response:
+                    await _pipeline_cb(
+                        "execute", "done", iteration=1, success=0, failed=1, total_ms=0
+                    )
                     # Fallback: normaler PGE-Loop wenn Antwort-Generierung fehlschlug
                     if active_skill is not None and hasattr(self._gatekeeper, "set_active_skill"):
                         self._gatekeeper.set_active_skill(
@@ -1254,6 +1272,10 @@ class Gateway:
                         run_id,
                     )
                 else:
+                    await _pipeline_cb(
+                        "execute", "done", iteration=1, success=1, failed=0, total_ms=0
+                    )
+                    await _pipeline_cb("complete", "done", iterations=1, tools_used=1)
                     log.info("presearch_bypass_used", response_chars=len(final_response))
             else:
                 # Phase 3: PGE-Loop (regulaerer Ablauf)
