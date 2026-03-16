@@ -108,6 +108,10 @@ class AgentProfile:
     # Mapping: param_name → "service:key" für automatische Injection
     # Beispiel: {"api_key": "openai:api_key"}
 
+    # --- Identity Layer (Immortal Mind Protocol) ---
+    identity_enabled: bool = True  # Does this agent have a personality?
+    identity_id: str | None = None  # Custom identity ID (None = auto from agent name)
+
     # Status
     enabled: bool = True
 

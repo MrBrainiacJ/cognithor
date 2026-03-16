@@ -774,6 +774,13 @@ def main() -> None:
                                 },
                             )
 
+                    async def send_identity_state(self, session_id: str, state: dict) -> None:
+                        ws = _ws_connections.get(session_id)
+                        if ws:
+                            await _ws_safe_send(
+                                ws, {"type": "identity_state", "session_id": session_id, **state}
+                            )
+
                 gateway.register_channel(_WebUIBridge())
                 log.info("webui_channel_bridge_registered")
 
@@ -1051,6 +1058,53 @@ def main() -> None:
                     log.info("piper_voice_downloaded", voice=voice, sha256=file_hash)
 
                 log.info("cc_tts_endpoint_registered")
+
+                # ── Identity Control API ────────────────────────────────
+                @api_app.get("/api/v1/identity/state")
+                async def _identity_state():
+                    if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
+                        return {"available": False}
+                    try:
+                        state = gateway._identity_layer.get_state_summary()
+                        return state
+                    except Exception as e:
+                        return {"error": str(e)[:200]}
+
+                @api_app.post("/api/v1/identity/freeze")
+                async def _identity_freeze():
+                    if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
+                        return {"error": "Identity layer not available"}
+                    gateway._identity_layer.freeze()
+                    return {"status": "frozen"}
+
+                @api_app.post("/api/v1/identity/unfreeze")
+                async def _identity_unfreeze():
+                    if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
+                        return {"error": "Identity layer not available"}
+                    gateway._identity_layer.unfreeze()
+                    return {"status": "unfrozen"}
+
+                @api_app.post("/api/v1/identity/reset")
+                async def _identity_reset():
+                    if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
+                        return {"error": "Identity layer not available"}
+                    result = gateway._identity_layer.soft_reset()
+                    return {"status": "reset", "details": result}
+
+                @api_app.post("/api/v1/identity/dream")
+                async def _identity_dream():
+                    if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
+                        return {"error": "Identity layer not available"}
+                    try:
+                        engine = gateway._identity_layer._engine
+                        if engine is None:
+                            return {"error": "Engine not initialized"}
+                        stats = engine.dream.run(engine)
+                        return {"status": "dream_completed", "stats": str(stats)}
+                    except Exception as e:
+                        return {"error": str(e)[:200]}
+
+                log.info("cc_identity_endpoints_registered")
 
                 # Mount pre-built React UI at / (catch-all, MUSS als letztes)
                 _ui_dist = Path(__file__).resolve().parent.parent.parent / "ui" / "dist"

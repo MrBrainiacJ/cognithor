@@ -24,7 +24,10 @@ class TestIdentityLayerBasics:
 
         assert len(GENESIS_ANCHOR_CONTENTS) == 7
         assert "AI" in GENESIS_ANCHOR_CONTENTS[0]
-        assert "truth" in GENESIS_ANCHOR_CONTENTS[1].lower() or "distort" in GENESIS_ANCHOR_CONTENTS[1].lower()
+        assert (
+            "truth" in GENESIS_ANCHOR_CONTENTS[1].lower()
+            or "distort" in GENESIS_ANCHOR_CONTENTS[1].lower()
+        )
 
     def test_empty_enrichment(self) -> None:
         """Empty enrichment returns correct structure."""

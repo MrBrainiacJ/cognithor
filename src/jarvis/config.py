@@ -337,6 +337,40 @@ class PersonalityConfig(BaseModel):
     """Soll Jarvis Tageszeit-abhängige Grüße verwenden?"""
 
 
+class IdentityConfig(BaseModel):
+    """Immortal Mind Protocol — Kognitive Identitaetsschicht."""
+
+    enabled: bool = True
+    """Identity Layer aktivieren/deaktivieren."""
+
+    identity_id: str = "jarvis"
+    """Standard-Identitaets-ID."""
+
+    checkpoint_every_n: int = Field(default=5, ge=1, le=50)
+    """Konsolidierung alle N Interaktionen."""
+
+    checkpoint_interval_minutes: int = Field(default=10, ge=1, le=120)
+    """Konsolidierung alle N Minuten."""
+
+    narrative_reflect_every_n: int = Field(default=50, ge=10, le=500)
+    """Narrative Selbstreflexion alle N Interaktionen."""
+
+    max_active_memories: int = Field(default=10000, ge=100, le=100000)
+    """Maximale Anzahl aktiver Erinnerungen."""
+
+    reality_check_enabled: bool = True
+    """Halluzinationsschutz aktiviert."""
+
+    blockchain_enabled: bool = False
+    """Blockchain-Ankerung (opt-in)."""
+
+    blockchain_chain: str = "base_sepolia"
+    """Blockchain-Netzwerk."""
+
+    arweave_enabled: bool = False
+    """Arweave permanente Speicherung (opt-in)."""
+
+
 class ExecutorConfig(BaseModel):
     """Executor Konfiguration."""
 
@@ -1678,6 +1712,7 @@ class JarvisConfig(BaseModel):
     executor: ExecutorConfig = Field(default_factory=ExecutorConfig)
     vault: VaultConfig = Field(default_factory=VaultConfig)
     personality: PersonalityConfig = Field(default_factory=PersonalityConfig)
+    identity: IdentityConfig = Field(default_factory=IdentityConfig)
     context_pipeline: ContextPipelineConfig = Field(default_factory=ContextPipelineConfig)
     sandbox: SandboxConfig = Field(default_factory=SandboxConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)

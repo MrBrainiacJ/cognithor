@@ -189,6 +189,7 @@ async def init_pge(
         log.debug("user_pref_store_init_skipped")
 
     # Identity Layer (Immortal Mind Protocol) — optional
+    # Per-agent identity: use config.agents.default_identity or fallback to "jarvis"
     identity_layer = None
     try:
         identity_config = getattr(config, "identity", None)
@@ -196,7 +197,8 @@ async def init_pge(
             from jarvis.identity import IdentityLayer
             from jarvis.core.unified_llm import UnifiedLLMClient
 
-            _id_data_dir = config.jarvis_home / "identity" / "jarvis"
+            _id_name = getattr(getattr(config, "agents", None), "default_identity", "jarvis")
+            _id_data_dir = config.jarvis_home / "identity" / _id_name
             _id_llm = None
             _id_model = ""
             if llm is not None:
@@ -205,14 +207,22 @@ async def init_pge(
                 _id_model = getattr(_id_model, "name", "") if _id_model else ""
 
             identity_layer = IdentityLayer(
-                identity_id="jarvis",
+                identity_id=_id_name,
                 data_dir=str(_id_data_dir),
                 llm_fn=_id_llm,
                 llm_model=_id_model,
             )
-            log.info("identity_layer_initialized")
+            log.info("identity_layer_initialized", identity_id=_id_name)
     except Exception:
         log.debug("identity_layer_init_skipped", exc_info=True)
+
+    # Memory Bridge: inject IdentityLayer into MemoryManager for bidirectional sync
+    if identity_layer is not None and memory_manager is not None:
+        if hasattr(memory_manager, "set_identity_layer"):
+            try:
+                memory_manager.set_identity_layer(identity_layer)
+            except Exception:
+                log.debug("identity_layer_memory_bridge_failed", exc_info=True)
 
     # Executor (with retry/backoff + security + profiling + telemetry + gap detection)
     try:

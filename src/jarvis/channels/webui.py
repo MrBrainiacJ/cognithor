@@ -66,6 +66,7 @@ class WSMessageType:
     AGENT_LOG = "agent_log"
     ERROR = "error"
     PONG = "pong"
+    IDENTITY_STATE = "identity_state"
 
 
 # ============================================================================

@@ -5,6 +5,7 @@ import { ConfirmModal } from "./components/ConfirmModal";
 import ChatPage from "./pages/ChatPage";
 import WorkflowGraphPage from "./pages/WorkflowGraphPage";
 import KnowledgeGraphPage from "./pages/KnowledgeGraphPage";
+import IdentityPage from "./pages/IdentityPage";
 import { t, tLocale, setLocale as setI18nLocale, onLocaleChange } from "./utils/i18n";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -137,6 +138,7 @@ const I = {
   workflow: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="5" cy="6" r="3"/><circle cx="19" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><path d="M7.5 7.5L10.5 16M16.5 7.5L13.5 16"/></svg>,
   graph: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 6h6M6 9v6M18 9v6M9 18h6M8.5 8.5l7 7"/></svg>,
   language: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 8l4 12M3 8h8M7 8l1-4M13 2l5.5 14M16.5 16H21M14.5 11h5"/><path d="M11.5 22L16 11l4.5 11"/></svg>,
+  identity: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>,
 };
 
 // ── Navigation ─────────────────────────────────────────────────────────
@@ -162,6 +164,7 @@ const PAGE_DEFS = [
   { id: "bindings", i18n: "nav.bindings", icon: I.link, key: null },
   { id: "workflows", i18n: "nav.workflows", icon: I.workflow, key: null },
   { id: "knowledge-graph", i18n: "nav.knowledge_graph", icon: I.graph, key: null },
+  { id: "identity", i18n: "nav.identity", icon: I.identity, key: null },
   { id: "system", i18n: "nav.system", icon: I.gear, key: null },
 ];
 
@@ -2071,6 +2074,7 @@ export default function App() {
       case "bindings": return <BindingsPage bindings={bindings} setBindings={setBindings} agents={agents} />;
       case "workflows": return <WorkflowGraphPage />;
       case "knowledge-graph": return <KnowledgeGraphPage />;
+      case "identity": return <IdentityPage />;
       case "system": return <SystemPage cfg={cfg} onRestart={restart} onExport={onExport} onImport={onImport} restartState={restartState} onResetDefaults={resetToDefaults} />;
       default: return null;
     }
@@ -2480,6 +2484,12 @@ export default function App() {
         .cc-observe-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--text2); cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .cc-observe-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
         .cc-observe-btn.active { background: rgba(0,212,255,0.1); color: var(--accent); border-color: var(--accent); }
+
+        .cc-id-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+        .cc-id-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .cc-id-value { font-size: 14px; color: var(--text); font-weight: 600; }
+        .cc-id-bar { height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+        .cc-id-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
 
         @media (max-width: 900px) { .cc-observe-panel { display: none; } }
         @media (min-width: 901px) and (max-width: 1200px) { .cc-observe-panel { width: 320px; } }

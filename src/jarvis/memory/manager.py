@@ -153,6 +153,9 @@ class MemoryManager:
 
         self._initialized = False
 
+        # Identity Layer (Immortal Mind Protocol) — injected via set_identity_layer()
+        self._identity_layer: Any = None
+
     # ── Properties ───────────────────────────────────────────────
 
     @property
@@ -443,7 +446,13 @@ class MemoryManager:
         if not chunks:
             return 0
 
-        return self._index.upsert_chunks(chunks)
+        count = self._index.upsert_chunks(chunks)
+
+        # Identity Layer: sync to cognitive memory
+        _tier_name = tier.value if tier else "episodic"
+        self._sync_to_identity(text, memory_type=_tier_name, importance=0.5)
+
+        return count
 
     async def index_with_embeddings(
         self,
@@ -619,6 +628,9 @@ class MemoryManager:
             )
             logger.info("Session beendet, Zusammenfassung gespeichert")
 
+            # Identity Layer: sync session summary to cognitive memory
+            self._sync_to_identity(summary, memory_type="episodic", importance=0.6)
+
     # ── Stats ────────────────────────────────────────────────────
 
     def set_media_pipeline(self, pipeline: Any) -> None:
@@ -628,6 +640,44 @@ class MemoryManager:
         """
         self._multimodal._pipeline = pipeline
         logger.info("Media-Pipeline für Multimodal Memory gesetzt")
+
+    def set_identity_layer(self, identity_layer: Any) -> None:
+        """Inject the Immortal Mind IdentityLayer for bidirectional memory sync.
+
+        Called after IdentityLayer is created in PGE phase init.
+        """
+        self._identity_layer = identity_layer
+        logger.info("Identity Layer für Memory Bridge gesetzt")
+
+    def _sync_to_identity(
+        self,
+        content: str,
+        memory_type: str = "episodic",
+        importance: float = 0.5,
+    ) -> None:
+        """Sync a memory entry to the Immortal Mind IdentityLayer.
+
+        This is a best-effort fire-and-forget sync; failures are silently
+        logged at debug level so they never disrupt core memory operations.
+        """
+        if self._identity_layer is None:
+            return
+        try:
+            _tier_to_im = {
+                "episodic": "episodic",
+                "semantic": "semantic",
+                "emotional": "emotional",
+                "core": "semantic",
+                "procedural": "semantic",
+            }
+            _im_type = _tier_to_im.get(memory_type, "episodic")
+            self._identity_layer.store_from_cognithor(
+                content=content[:1000],
+                memory_type=_im_type,
+                importance=importance,
+            )
+        except Exception:
+            logger.debug("identity_sync_failed", exc_info=True)
 
     def stats(self) -> dict[str, Any]:
         """Gesamtstatistiken des Memory-Systems."""
