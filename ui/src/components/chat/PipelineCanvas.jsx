@@ -83,7 +83,7 @@ function PhaseChip({ phase, status, durationMs, startMs }) {
   );
 }
 
-export default function PipelineCanvas({ pipeline }) {
+export default function PipelineCanvas({ pipeline, onCancel }) {
   const [collapsed, setCollapsed] = useState(false);
 
   if (!pipeline || !pipeline.iterations || pipeline.iterations.length === 0) {
@@ -114,6 +114,16 @@ export default function PipelineCanvas({ pipeline }) {
         <span className="cc-pipeline-title">
           {isActive ? "\u25CF" : "\u2713"} Pipeline {totalStr && `\u00B7 ${totalStr}`}
         </span>
+        {isActive && onCancel && (
+          <button
+            className="cc-pipe-cancel"
+            onClick={(e) => { e.stopPropagation(); onCancel(); }}
+            type="button"
+            title="Stop"
+          >
+            {"\u25A0"} Stop
+          </button>
+        )}
         <span className="cc-pipeline-chevron">{collapsed ? "\u25B6" : "\u25BC"}</span>
       </div>
       {!collapsed && (

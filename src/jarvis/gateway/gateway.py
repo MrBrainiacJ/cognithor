@@ -149,6 +149,7 @@ class Gateway:
         self._last_session_cleanup: float = time.monotonic()
         self._session_lock = threading.Lock()
         self._running = False
+        self._cancelled_sessions: set[str] = set()
         self._context_pipeline = None
         self._message_queue: DurableMessageQueue | None = None
         self._background_tasks: set[asyncio.Task[Any]] = set()
@@ -621,6 +622,19 @@ class Gateway:
             + "Parameters marked with * are required.\n\n"
             + "\n".join(tool_lines)
         )
+
+    def cancel_session(self, session_id: str) -> bool:
+        """Bricht die aktive Verarbeitung einer Session ab.
+
+        Der PGE-Loop prueft dieses Flag und bricht beim naechsten
+        Iterationsschritt sauber ab.
+
+        Returns:
+            True wenn die Session gefunden und als cancelled markiert wurde.
+        """
+        self._cancelled_sessions.add(session_id)
+        log.info("session_cancelled", session=session_id[:8])
+        return True
 
     def register_channel(self, channel: Channel) -> None:
         """Registriert einen Kommunikationskanal."""
@@ -1172,6 +1186,10 @@ class Gateway:
         if coding_model and self._model_router:
             self._model_router.set_coding_override(coding_model)
 
+        # Coding-Tasks: mehr Iterationen fuer iteratives Fixen (GUI headless etc.)
+        if is_coding and session.max_iterations < 20:
+            session.max_iterations = 20
+
         # ── Sentiment Detection (Modul 3) ──
         try:
             from jarvis.core.sentiment import (
@@ -1618,6 +1636,13 @@ class Gateway:
         _pipeline_cb = self._make_pipeline_callback(msg.channel, msg.session_id)
 
         while not session.iterations_exhausted and self._running:
+            # Cancel-Check: User hat /stop oder cancel gesendet
+            if msg.session_id in self._cancelled_sessions:
+                self._cancelled_sessions.discard(msg.session_id)
+                log.info("pge_cancelled_by_user", session=session.session_id[:8])
+                final_response = "Verarbeitung abgebrochen. Was kann ich stattdessen fuer dich tun?"
+                break
+
             session.iteration_count += 1
             await _pipeline_cb("iteration", "start", iteration=session.iteration_count)
 

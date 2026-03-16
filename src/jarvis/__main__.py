@@ -513,6 +513,20 @@ def main() -> None:
                                     break
                                 continue
 
+                            if msg_type == "cancel":
+                                gateway.cancel_session(session_id)
+                                if not await _ws_safe_send(
+                                    websocket,
+                                    {
+                                        "type": "status_update",
+                                        "status": "finishing",
+                                        "text": "Abgebrochen...",
+                                        "session_id": session_id,
+                                    },
+                                ):
+                                    break
+                                continue
+
                             if msg_type in ("user_message", "message"):
                                 text = (msg.get("text") or "").strip()
                                 metadata = msg.get("metadata", {})

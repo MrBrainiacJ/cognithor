@@ -508,6 +508,16 @@ export function useJarvisChat() {
     return () => disconnect();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const cancelProcessing = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: "cancel",
+        session_id: sessionIdRef.current,
+      }));
+    }
+    setPipelineState((prev) => prev ? { ...prev, active: false } : prev);
+  }, []);
+
   const sendMessage = useCallback((text) => {
     if (!text.trim()) return;
     setAgentLog([]);
@@ -623,6 +633,7 @@ export function useJarvisChat() {
     sendFile,
     sendVoice,
     respondApproval,
+    cancelProcessing,
     clearMessages,
   };
 }

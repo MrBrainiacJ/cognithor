@@ -36,6 +36,7 @@ export default function ChatPage() {
     sendFile,
     sendVoice,
     respondApproval,
+    cancelProcessing,
     clearMessages,
   } = useJarvisChat();
 
@@ -184,6 +185,7 @@ export default function ChatPage() {
         {pipelineState && (
           <PipelineCanvas
             pipeline={pipelineState}
+            onCancel={cancelProcessing}
           />
         )}
 

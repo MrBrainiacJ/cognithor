@@ -2411,6 +2411,8 @@ export default function App() {
         .cc-pipe-label { font-size: 11px; }
         .cc-pipe-time { font-size: 10px; opacity: 0.8; margin-left: 2px; }
         .cc-pipe-pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pipeline-pulse 1s ease-in-out infinite; margin-left: 2px; }
+        .cc-pipe-cancel { background: rgba(255,82,82,0.15); color: #ff5252; border: 1px solid #ff5252; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; cursor: pointer; margin-left: auto; margin-right: 8px; transition: all 0.2s; }
+        .cc-pipe-cancel:hover { background: rgba(255,82,82,0.3); }
         @keyframes pipeline-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
         /* Observe Panel */
