@@ -29,6 +29,7 @@ def declare_pge_attrs(config: Any) -> PhaseResult:
         "causal_analyzer": None,
         "personality_engine": None,
         "user_pref_store": None,
+        "identity_layer": None,
     }
 
 
@@ -187,6 +188,32 @@ async def init_pge(
     except Exception:
         log.debug("user_pref_store_init_skipped")
 
+    # Identity Layer (Immortal Mind Protocol) — optional
+    identity_layer = None
+    try:
+        identity_config = getattr(config, "identity", None)
+        if identity_config is None or getattr(identity_config, "enabled", True):
+            from jarvis.identity import IdentityLayer
+            from jarvis.core.unified_llm import UnifiedLLMClient
+
+            _id_data_dir = config.jarvis_home / "identity" / "jarvis"
+            _id_llm = None
+            _id_model = ""
+            if llm is not None:
+                _id_llm = llm
+                _id_model = getattr(getattr(config, "models", None), "planner", None)
+                _id_model = getattr(_id_model, "name", "") if _id_model else ""
+
+            identity_layer = IdentityLayer(
+                identity_id="jarvis",
+                data_dir=str(_id_data_dir),
+                llm_fn=_id_llm,
+                llm_model=_id_model,
+            )
+            log.info("identity_layer_initialized")
+    except Exception:
+        log.debug("identity_layer_init_skipped", exc_info=True)
+
     # Executor (with retry/backoff + security + profiling + telemetry + gap detection)
     try:
         result["executor"] = Executor(
@@ -245,5 +272,6 @@ async def init_pge(
     result["skill_generator"] = skill_generator
     result["personality_engine"] = personality_engine
     result["user_pref_store"] = user_pref_store
+    result["identity_layer"] = identity_layer
 
     return result

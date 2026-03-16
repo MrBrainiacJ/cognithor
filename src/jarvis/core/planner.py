@@ -1096,6 +1096,20 @@ class Planner:
             with contextlib.suppress(Exception):
                 personality_section = self._personality_engine.build_personality_block()
 
+        # Cognitive identity injection
+        identity_section = ""
+        if hasattr(self, "_identity_layer") and self._identity_layer is not None:
+            try:
+                _id_ctx = self._identity_layer.enrich_context(
+                    user_message="",  # Already enriched in gateway, just get state
+                )
+                identity_section = _id_ctx.get("cognitive_context", "")
+            except Exception:
+                pass
+
+        if identity_section:
+            context_section += f"\n\n### Kognitive Identitaet\n{identity_section}"
+
         # Prompt-Evolution A/B-Test (wenn aktiv)
         if self._prompt_evolution is not None:
             try:

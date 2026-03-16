@@ -1635,6 +1635,9 @@ class Gateway:
         # Pipeline callback for live PGE visualization (WebUI only)
         _pipeline_cb = self._make_pipeline_callback(msg.channel, msg.session_id)
 
+        # Identity Layer reference (set during Phase init)
+        _identity = getattr(self, "_identity_layer", None)
+
         while not session.iterations_exhausted and self._running:
             # Cancel-Check: User hat /stop oder cancel gesendet
             if msg.session_id in self._cancelled_sessions:
@@ -1660,6 +1663,22 @@ class Gateway:
             # Status: Thinking
             await _status_cb("thinking", "Thinking...")
             await _pipeline_cb("plan", "start", iteration=session.iteration_count)
+
+            # Identity: enrich context before planning (first iteration only)
+            if session.iteration_count == 1 and _identity is not None:
+                try:
+                    _id_ctx = _identity.enrich_context(msg.text)
+                    _cognitive_text = _id_ctx.get("cognitive_context", "")
+                    if _cognitive_text:
+                        wm.add_message(
+                            Message(
+                                role=MessageRole.SYSTEM,
+                                content=f"[Cognitive Identity]\n{_cognitive_text}",
+                                channel=msg.channel,
+                            )
+                        )
+                except Exception:
+                    log.debug("identity_enrich_failed", exc_info=True)
 
             # Planner
             if session.iteration_count == 1:
@@ -1943,6 +1962,16 @@ class Gateway:
                 total_ms=int(sum(r.duration_ms or 0 for r in results)),
             )
 
+            # Identity: process execution results
+            if _identity is not None:
+                try:
+                    _tool_summary = "; ".join(
+                        f"{r.tool_name}: {'OK' if r.success else 'FAIL'}" for r in results
+                    )
+                    _identity.process_interaction("assistant", f"[Tools] {_tool_summary}")
+                except Exception:
+                    log.debug("identity_process_failed", exc_info=True)
+
             for result in results:
                 all_audit.append(
                     AuditEntry(
@@ -2081,6 +2110,15 @@ class Gateway:
             iterations=session.iteration_count,
             tools_used=len(all_results),
         )
+
+        # Identity: save state after PGE loop
+        if _identity is not None:
+            try:
+                _identity.process_interaction("assistant", final_response[:500])
+                _identity.save()
+            except Exception:
+                log.debug("identity_save_failed", exc_info=True)
+
         return final_response, all_results, all_plans, all_audit
 
     async def _run_post_processing(

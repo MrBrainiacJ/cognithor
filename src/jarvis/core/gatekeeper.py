@@ -453,6 +453,11 @@ class Gatekeeper:
             "calendar_today",
             "calendar_upcoming",
             "calendar_check_availability",
+            # Identity (read-only)
+            "identity_recall",
+            "identity_state",
+            "identity_reflect",
+            "identity_dream",
             # Vault (read-only)
             "vault_list",
             "vault_search",
@@ -518,6 +523,20 @@ class Gatekeeper:
         }
         if tool in orange_tools:
             return RiskLevel.ORANGE
+
+        # Genesis Anchor check (Identity Layer)
+        if hasattr(self, "_identity_layer") and self._identity_layer is not None:
+            try:
+                violated, reason = self._identity_layer.check_ethical_violation(
+                    {
+                        "goal": action.rationale,
+                        "steps": [{"tool": action.tool, "rationale": action.rationale}],
+                    }
+                )
+                if violated:
+                    return RiskLevel.RED
+            except Exception:
+                pass
 
         # Unbekannte Tools → ORANGE (Fail-Safe: lieber nachfragen)
         return RiskLevel.ORANGE

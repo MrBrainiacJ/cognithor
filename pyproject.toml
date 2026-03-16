@@ -135,6 +135,12 @@ encryption = [
     "pysqlcipher3==1.2.0",
     "keyring>=25.0",
 ]
+identity = [
+    "chromadb>=1.5.0",
+    "sentence-transformers>=5.0.0",
+    "web3>=7.0.0",
+    "cryptography>=44.0.0",
+]
 all = [
     "cognithor[memory,vector,mcp,telegram,web,search,cron,documents]",
 ]
