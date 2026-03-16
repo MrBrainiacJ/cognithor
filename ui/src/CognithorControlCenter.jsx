@@ -2400,10 +2400,18 @@ export default function App() {
 
         /* Pipeline Canvas */
         .cc-pipeline { border-top: 1px solid var(--border); background: rgba(0,212,255,0.03); flex-shrink: 0; overflow: hidden; }
-        .cc-pipeline-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 16px; cursor: pointer; user-select: none; }
-        .cc-pipeline-title { font-size: 12px; font-weight: 600; color: var(--text2); letter-spacing: 0.5px; text-transform: uppercase; }
+        .cc-pipeline-header { display: flex; justify-content: space-between; align-items: center; padding: 5px 16px; cursor: pointer; user-select: none; }
+        .cc-pipeline-title { font-size: 11px; font-weight: 600; color: var(--text2); letter-spacing: 0.5px; text-transform: uppercase; }
         .cc-pipeline-chevron { font-size: 10px; color: var(--text2); }
-        .cc-pipeline-svg { display: block; margin: 0 auto; padding-bottom: 8px; }
+        .cc-pipe-phases { display: flex; align-items: center; justify-content: center; padding: 6px 12px 10px; gap: 0; flex-wrap: wrap; }
+        .cc-pipe-phase-wrap { display: inline-flex; align-items: center; gap: 0; }
+        .cc-pipe-arrow { color: var(--text2); font-size: 11px; margin: 0 4px; opacity: 0.5; }
+        .cc-pipe-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; border: 1px solid; font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif; white-space: nowrap; transition: all 0.3s ease; }
+        .cc-pipe-icon { font-size: 11px; }
+        .cc-pipe-label { font-size: 11px; }
+        .cc-pipe-time { font-size: 10px; opacity: 0.8; margin-left: 2px; }
+        .cc-pipe-pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pipeline-pulse 1s ease-in-out infinite; margin-left: 2px; }
+        @keyframes pipeline-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
         /* Approval Banner */
         .cc-approval { padding: 10px 16px; background: rgba(255,171,64,0.08); border-top: 1px solid rgba(255,171,64,0.2); flex-shrink: 0; }
