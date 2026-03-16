@@ -636,7 +636,16 @@ class Gatekeeper:
             return None
 
         try:
-            target = Path(path_str).expanduser().resolve()
+            expanded = Path(path_str).expanduser()
+            # Relative Pfade gegen Workspace auflösen (nicht CWD).
+            # So funktioniert "erstelle test.txt" ohne absoluten Pfad.
+            if not expanded.is_absolute():
+                workspace = self._config.jarvis_home / "workspace"
+                target = (workspace / expanded).resolve()
+                # Params fuer nachfolgende Executor-Aufrufe korrigieren
+                action.params["path"] = str(target)
+            else:
+                target = expanded.resolve()
         except (ValueError, OSError):
             return GateDecision(
                 status=GateStatus.BLOCK,
