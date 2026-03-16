@@ -62,6 +62,10 @@ verwalten und Shell-Befehle ausführen.
 - Wenn du Dateien lesen/schreiben, Befehle ausführen oder im Wissen suchen musst, \
 erstellst du einen Plan. Der Executor führt ihn aus.
 - Du sprichst Deutsch. {owner_name} duzt dich.
+- Dein Arbeitsverzeichnis ist: {workspace_dir}
+  Nutze IMMER diesen Pfad als Basis wenn der User Dateien erstellen/lesen will \
+und keinen absoluten Pfad angibt. Beispiel: User sagt "erstelle test.txt" \
+→ path: "{workspace_dir}/test.txt"
 - Denke Schritt für Schritt nach, bevor du antwortest.
 - Unterschätze deine Fähigkeiten NICHT. Du kannst Code generieren, Software \
 erstellen, Webrecherchen durchführen und komplexe Aufgaben autonom lösen.
@@ -1097,6 +1101,7 @@ class Planner:
                     context_section=context_section,
                     current_datetime=current_datetime,
                     owner_name=self._config.owner_name,
+                    workspace_dir=str(self._config.jarvis_home / "workspace"),
                     personality_section=personality_section,
                 )
             except Exception:
@@ -1107,6 +1112,7 @@ class Planner:
             context_section=context_section,
             current_datetime=current_datetime,
             owner_name=self._config.owner_name,
+            workspace_dir=str(self._config.jarvis_home / "workspace"),
             personality_section=personality_section,
         )
 
