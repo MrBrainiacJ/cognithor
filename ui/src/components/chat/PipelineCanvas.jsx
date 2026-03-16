@@ -122,7 +122,7 @@ export default function PipelineCanvas({ pipeline }) {
             const phaseData = phases[p.key] || { status: "pending" };
             return (
               <span key={p.key} className="cc-pipe-phase-wrap">
-                {i > 0 && <span className="cc-pipe-arrow">\u2192</span>}
+                {i > 0 && <span className="cc-pipe-arrow">{"\u2192"}</span>}
                 <PhaseChip
                   phase={p}
                   status={phaseData.status}
