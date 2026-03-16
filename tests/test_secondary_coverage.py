@@ -52,7 +52,8 @@ class TestRateLimiter:
     async def test_rate_limiter_check(self):
         from jarvis.security.rate_limiter import RateLimiter
 
-        rl = RateLimiter(rate=100.0, capacity=5.0)
+        # Very low refill rate so tokens don't refill between check() calls
+        rl = RateLimiter(rate=0.001, capacity=5.0)
         for _ in range(5):
             assert await rl.check("client1") is True
         assert await rl.check("client1") is False
