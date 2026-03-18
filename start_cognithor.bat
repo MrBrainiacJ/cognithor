@@ -8,7 +8,8 @@ color 0F
 ::  Prueft Abhaengigkeiten, bootstrappt beim ersten Start,
 ::  startet dann die Web-UI.
 ::
-::  Alle Logik in :main, damit das pause am Ende IMMER greift.
+::  UI Priority: Flutter pre-built > Flutter SDK > CLI
+::  React UI is deprecated since v0.41.0.
 :: ============================================================
 
 call :main
@@ -32,6 +33,8 @@ echo   / ___^|/ _ \ / ___^| \ ^| ^|_ _^|_   _^| ^| ^| ^|/ _ \^|  _ \
 echo  ^| ^|   ^| ^| ^| ^| ^|  _^|  \^| ^|^| ^|  ^| ^| ^| ^|_^| ^| ^| ^| ^| ^|_^) ^|
 echo  ^| ^|___^| ^|_^| ^| ^|_^| ^| ^|\  ^|^| ^|  ^| ^| ^|  _  ^| ^|_^| ^|  _ ^<
 echo   \____^|\___/ \____^|_^| \_^|___^| ^|_^| ^|_^| ^|_^|\___/^|_^| \_\
+echo.
+echo   v0.41.0 - Flutter UI
 echo.
 
 set "REPO_ROOT=%~dp0"
@@ -67,10 +70,9 @@ if errorlevel 1 (
 )
 
 :: ============================================================
-::  3. Flutter / Node.js erkennen
+::  3. Flutter erkennen
 :: ============================================================
 call :detect_flutter
-call :detect_node
 
 :: ============================================================
 ::  4. Bootstrap ausfuehren
@@ -87,39 +89,34 @@ if errorlevel 1 (
 )
 
 :: ============================================================
-::  5. UI-Modus waehlen
+::  5. UI-Modus waehlen (Flutter-first)
 :: ============================================================
 
-:: --- Modus A: Flutter vorhanden ---
-if "!HAS_FLUTTER!"=="0" goto :check_node_ui
-if not exist "%REPO_ROOT%\flutter_app\pubspec.yaml" goto :check_node_ui
-echo.
-echo   Flutter detected.
-
-:: Flutter Dependencies holen (nur einmal noetig)
-if not exist "%REPO_ROOT%\flutter_app\.dart_tool" (
-    echo   [INFO] Fetching Flutter dependencies...
-    cd /d "%REPO_ROOT%\flutter_app"
-    cmd /c flutter pub get >nul 2>&1
-    cd /d "%REPO_ROOT%"
-)
-
-:: Auto-build Flutter Web if SDK available but no build
+:: --- Modus 1: Pre-built Flutter Web (kein SDK noetig) ---
+:: If no pre-built exists, try to download from GitHub release
 if not exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
-    echo   [INFO] Building Flutter Web UI...
-    cd /d "%REPO_ROOT%\flutter_app"
-    cmd /c flutter build web --release >nul 2>&1
-    cd /d "%REPO_ROOT%"
-    if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
-        echo   [OK] Flutter Web UI built successfully.
+    echo   [INFO] Flutter UI not found locally. Downloading pre-built...
+    if not exist "%REPO_ROOT%\flutter_app\build" mkdir "%REPO_ROOT%\flutter_app\build"
+    curl -sfL "https://github.com/Alex8791-cyber/cognithor/releases/download/v0.41.0/flutter_web_build.tar.gz" -o "%REPO_ROOT%\flutter_app\build\flutter_web_build.tar.gz" 2>nul
+    if exist "%REPO_ROOT%\flutter_app\build\flutter_web_build.tar.gz" (
+        echo   [INFO] Extracting Flutter UI...
+        cd /d "%REPO_ROOT%\flutter_app\build"
+        tar -xzf flutter_web_build.tar.gz 2>nul
+        del flutter_web_build.tar.gz 2>nul
+        cd /d "%REPO_ROOT%"
+        if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
+            echo   [OK] Flutter UI downloaded and extracted.
+        ) else (
+            echo   [WARNING] Download failed or extraction error.
+        )
     ) else (
-        echo   [WARNING] Flutter build failed. Falling back...
+        echo   [WARNING] Could not download Flutter UI from GitHub.
     )
 )
 
-:: Pre-built Flutter Web vorhanden? Backend serviert es direkt
 if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
-    echo   Starting backend with Flutter UI...
+    echo.
+    echo   Starting with Flutter UI...
     echo   Backend + UI at http://localhost:8741
     echo.
     cd /d "%REPO_ROOT%"
@@ -130,77 +127,63 @@ if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
     goto :eof
 )
 
-:: Flutter Dev-Modus: Backend im Hintergrund, Flutter im Vordergrund
-echo   Starting backend...
-cd /d "%REPO_ROOT%"
-start "" /b %PYTHON_CMD% -m jarvis --no-cli
+:: --- Modus 2: Flutter SDK vorhanden -> Build + Start ---
+if "!HAS_FLUTTER!"=="1" (
+    if exist "%REPO_ROOT%\flutter_app\pubspec.yaml" (
+        echo.
+        echo   Flutter SDK detected. Building Flutter Web UI...
 
-:: Warten bis Backend antwortet
-call :wait_for_backend
+        :: Dependencies holen
+        if not exist "%REPO_ROOT%\flutter_app\.dart_tool" (
+            echo   [INFO] Fetching Flutter dependencies...
+            cd /d "%REPO_ROOT%\flutter_app"
+            cmd /c flutter pub get >nul 2>&1
+            cd /d "%REPO_ROOT%"
+        )
 
-echo   Starting Flutter Web UI (dev mode)...
-echo   Open http://127.0.0.1:5173 in your browser.
-echo.
-cd /d "%REPO_ROOT%\flutter_app"
-cmd /c flutter run -d chrome --web-port 5173
-if errorlevel 1 (
-    echo.
-    echo   [INFO] Chrome mode failed. Trying web-server mode...
-    cmd /c flutter run -d web-server --web-port 5173
+        :: Build
+        echo   [INFO] Running flutter build web --release...
+        cd /d "%REPO_ROOT%\flutter_app"
+        cmd /c flutter build web --release
+        cd /d "%REPO_ROOT%"
+
+        if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
+            echo   [OK] Flutter Web UI built successfully.
+            echo.
+            echo   Starting with Flutter UI...
+            echo   Backend + UI at http://localhost:8741
+            echo.
+            start "" http://localhost:8741
+            %PYTHON_CMD% -m jarvis --no-cli
+            echo.
+            echo   Cognithor stopped.
+            goto :eof
+        ) else (
+            echo   [WARNING] Flutter build failed.
+        )
+    )
 )
-call :stop_backend
-goto :eof
 
-:: --- Modus B: Node.js vorhanden -> Vite Dev Server (Legacy/DEPRECATED) ---
-:check_node_ui
-echo.
-echo   [DEPRECATED] React UI is deprecated. Please install Flutter.
-echo   https://docs.flutter.dev/get-started/install
-echo.
-:: Still fall through to pre-built check
-goto :check_prebuilt
-
-:: --- Modus C: Pre-built React UI (DEPRECATED) ---
-:check_prebuilt
-if not exist "%REPO_ROOT%\ui\dist\index.html" goto :check_flutter_prebuilt
-echo.
-echo   [DEPRECATED] React UI is deprecated. Please install Flutter.
-echo   https://docs.flutter.dev/get-started/install
-echo.
-echo   Node.js not found -- starting pre-built UI.
-echo   Backend + UI at http://localhost:8741
-echo.
-cd /d "%REPO_ROOT%"
-start "" http://localhost:8741
-%PYTHON_CMD% -m jarvis --no-cli
-echo.
-echo   Cognithor stopped.
-goto :eof
-
-:: --- Modus D: Flutter pre-built Web (ohne Flutter SDK) ---
-:check_flutter_prebuilt
-if not exist "%REPO_ROOT%\flutter_app\build\web\index.html" goto :cli_fallback
-echo.
-echo   Starting with pre-built Flutter UI...
-echo   Backend + UI at http://localhost:8741
-echo.
-cd /d "%REPO_ROOT%"
-start "" http://localhost:8741
-%PYTHON_CMD% -m jarvis --no-cli
-echo.
-echo   Cognithor stopped.
-goto :eof
-
-:: --- Modus E: CLI-Fallback ---
-:cli_fallback
-echo.
-echo   No UI toolkit found. Starting in CLI mode.
-echo.
-echo   For the Flutter UI (recommended):
-echo     1. Install Flutter: https://docs.flutter.dev/get-started/install
-echo     2. Run: flutter pub get (in flutter_app/)
+:: --- Modus 3: CLI-Fallback ---
 echo.
 echo   ============================================================
+echo   No pre-built Flutter UI found.
+echo.
+if "!HAS_FLUTTER!"=="0" (
+    echo   To get the Flutter UI:
+    echo     1. Install Flutter: https://docs.flutter.dev/get-started/install
+    echo     2. cd flutter_app
+    echo     3. flutter build web --release
+    echo     4. Re-run start_cognithor.bat
+) else (
+    echo   Flutter SDK found but build failed. Try manually:
+    echo     cd flutter_app
+    echo     flutter build web --release
+)
+echo.
+echo   Starting in CLI mode...
+echo   ============================================================
+echo.
 cd /d "%REPO_ROOT%"
 %PYTHON_CMD% -m jarvis
 echo.
@@ -241,38 +224,4 @@ if "!HAS_FLUTTER!"=="0" (
         if not errorlevel 1 set "HAS_FLUTTER=1"
     )
 )
-goto :eof
-
-:detect_node
-set "HAS_NODE=0"
-where node >nul 2>&1
-if not errorlevel 1 set "HAS_NODE=1"
-goto :eof
-
-:wait_for_backend
-echo   Waiting for backend...
-for /l %%i in (1,1,15) do (
-    if "!BACKEND_READY!" neq "1" (
-        curl -sf http://localhost:8741/api/v1/health >nul 2>&1
-        if not errorlevel 1 (
-            set "BACKEND_READY=1"
-        ) else (
-            timeout /t 1 /nobreak >nul
-        )
-    )
-)
-if "!BACKEND_READY!" neq "1" (
-    echo   [WARNING] Backend did not respond within 15s. Continuing...
-) else (
-    echo   Backend ready.
-)
-echo.
-goto :eof
-
-:stop_backend
-echo.
-echo   Stopping backend...
-taskkill /f /fi "WINDOWTITLE eq Cognithor*" >nul 2>&1
-%PYTHON_CMD% -c "import os,signal;[os.kill(int(l.split()[1]),signal.SIGTERM) for l in __import__('subprocess').check_output('tasklist /fi \"IMAGENAME eq python.exe\" /fo list /nh',shell=True).decode().split('PID:')[1:] if 'jarvis' in l.lower()]" >nul 2>&1
-echo   Cognithor stopped.
 goto :eof

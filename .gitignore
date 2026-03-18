@@ -55,6 +55,18 @@ apps/pwa/node_modules/
 ui/node_modules/
 ui/dist/
 
+# ── Flutter ─────────────────────────────────────────────────────
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.pub-cache/
+flutter_app/.pub/
+flutter_app/build/app/
+flutter_app/build/linux/
+flutter_app/build/macos/
+flutter_app/build/windows/
+flutter_app/build/web/
+# Pre-built UI is distributed as release asset (flutter_web_build.tar.gz)
+
 # ── Claude Code ──────────────────────────────────────────────────
 .claude/
 
