@@ -1094,6 +1094,7 @@ def main() -> None:
                         suffix = ".webm"
                         if hasattr(audio_field, "filename") and audio_field.filename:
                             import os.path as _ap
+
                             suffix = _ap.splitext(audio_field.filename)[1] or ".webm"
                         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
                             tmp.write(audio_bytes)
@@ -1146,6 +1147,7 @@ def main() -> None:
                         suffix = ".png"
                         if hasattr(image_field, "filename") and image_field.filename:
                             import os.path as _ip
+
                             suffix = _ip.splitext(image_field.filename)[1] or ".png"
 
                         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:

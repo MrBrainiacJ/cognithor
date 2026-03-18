@@ -192,9 +192,15 @@ def _get_or_create_fernet(config: Any) -> Any | None:
                     username = os.environ.get("USERNAME", "")
                     if username:
                         subprocess.run(
-                            ["icacls", str(key_path), "/inheritance:r",
-                             "/grant:r", f"{username}:(R,W)"],
-                            capture_output=True, timeout=10,
+                            [
+                                "icacls",
+                                str(key_path),
+                                "/inheritance:r",
+                                "/grant:r",
+                                f"{username}:(R,W)",
+                            ],
+                            capture_output=True,
+                            timeout=10,
                         )
                 except Exception:
                     pass  # Best-effort ACL restriction

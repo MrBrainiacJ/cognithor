@@ -59,6 +59,7 @@ class CognithorLLMBridge:
             # Guard: detect if we're ON the event loop thread (would deadlock)
             if threading.current_thread() is threading.main_thread():
                 import warnings
+
                 warnings.warn(
                     "LLMBridge._run_async called from the main thread while "
                     "the event loop is running — this would deadlock. "
@@ -67,6 +68,7 @@ class CognithorLLMBridge:
                     stacklevel=3,
                 )
                 import concurrent.futures
+
                 with concurrent.futures.ThreadPoolExecutor(1) as pool:
                     return pool.submit(asyncio.run, coro).result(timeout=120)
             # Called from a different thread (e.g., consolidation worker)

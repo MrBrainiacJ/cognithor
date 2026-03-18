@@ -1568,9 +1568,9 @@ class CognitioEngine:
             logger.warning(
                 "Admin key matched via plain SHA-256. Please regenerate "
                 "IMP_ADMIN_KEY_HASH using PBKDF2: "
-                "python -c \"import hashlib; print(hashlib.pbkdf2_hmac("
+                'python -c "import hashlib; print(hashlib.pbkdf2_hmac('
                 "'sha256', b'YOUR_KEY', b'IMP-admin-key-salt-v1', 100_000"
-                ").hex())\""
+                ').hex())"'
             )
         else:
             logger.warning("Admin freeze: invalid key attempt.")

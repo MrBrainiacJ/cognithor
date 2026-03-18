@@ -138,8 +138,7 @@ class EpisodicStore:
             with self._write_lock:
                 conn = self._get_conn()
                 cursor = conn.execute(
-                    f"SELECT * FROM episodes {where} "
-                    f"ORDER BY timestamp DESC LIMIT ?",
+                    f"SELECT * FROM episodes {where} ORDER BY timestamp DESC LIMIT ?",
                     params,
                 )
                 return [self._row_to_entry(row) for row in cursor.fetchall()]

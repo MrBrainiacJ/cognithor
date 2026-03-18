@@ -80,9 +80,7 @@ class ActiveLearnerConfig:
             for name in _DEFAULT_WATCH_DIRS:
                 d = home / name
                 # Only add if the directory actually exists
-                self.watch_dirs.append(
-                    WatchDirectory(path=d, enabled=d.exists())
-                )
+                self.watch_dirs.append(WatchDirectory(path=d, enabled=d.exists()))
 
 
 # ---------------------------------------------------------------------------
@@ -241,7 +239,11 @@ class ActiveLearner:
     # ------------------------------------------------------------------
 
     def add_directory(
-        self, path: str | Path, *, enabled: bool = True, recursive: bool = True,
+        self,
+        path: str | Path,
+        *,
+        enabled: bool = True,
+        recursive: bool = True,
     ) -> None:
         """Add a directory to the watch list."""
         p = Path(path).resolve()

@@ -164,7 +164,8 @@ class CanvasManager:
         if len(js) > _MAX_JS_LEN:
             logger.warning(
                 "Canvas eval_js rejected: payload too large (%d > %d)",
-                len(js), _MAX_JS_LEN,
+                len(js),
+                _MAX_JS_LEN,
             )
             return
 

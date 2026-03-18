@@ -224,9 +224,7 @@ class DatabaseTools:
         try:
             if table:
                 if not _SAFE_IDENTIFIER_RE.match(table):
-                    raise DatabaseError(
-                        f"Ungueltiger Tabellenname: {table!r}"
-                    )
+                    raise DatabaseError(f"Ungueltiger Tabellenname: {table!r}")
                 safe_table = f"[{table}]"
                 # Detailed column info for a specific table
                 cursor = conn.execute(f"PRAGMA table_info({safe_table})")
