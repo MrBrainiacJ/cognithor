@@ -1654,4 +1654,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get directoryMissing => 'Directory not found';
+
+  @override
+  String get qaKnowledgeBase => 'Q&A';
+
+  @override
+  String get lineage => 'Lineage';
+
+  @override
+  String get question => 'Question';
+
+  @override
+  String get answer => 'Answer';
+
+  @override
+  String get topic => 'Topic';
+
+  @override
+  String get addQA => 'Add Q&A';
+
+  @override
+  String get verify => 'Verify';
+
+  @override
+  String get source => 'Source';
+
+  @override
+  String get noQAPairs => 'No knowledge entries';
+
+  @override
+  String get noLineage => 'No lineage data';
+
+  @override
+  String get entityLineage => 'Entity Lineage';
+
+  @override
+  String get recentChanges => 'Recent Changes';
+
+  @override
+  String get created => 'Created';
+
+  @override
+  String get updated => 'Updated';
+
+  @override
+  String get decayed => 'Decayed';
+
+  @override
+  String get runExploration => 'Run Exploration';
+
+  @override
+  String get explorationComplete => 'Exploration complete';
 }

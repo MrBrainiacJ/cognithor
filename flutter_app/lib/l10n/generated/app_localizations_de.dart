@@ -1655,4 +1655,55 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get directoryMissing => 'Verzeichnis nicht gefunden';
+
+  @override
+  String get qaKnowledgeBase => 'Wissen';
+
+  @override
+  String get lineage => 'Herkunft';
+
+  @override
+  String get question => 'Frage';
+
+  @override
+  String get answer => 'Antwort';
+
+  @override
+  String get topic => 'Thema';
+
+  @override
+  String get addQA => 'Wissen hinzufuegen';
+
+  @override
+  String get verify => 'Verifizieren';
+
+  @override
+  String get source => 'Quelle';
+
+  @override
+  String get noQAPairs => 'Keine Wissenseintraege';
+
+  @override
+  String get noLineage => 'Keine Herkunftsdaten';
+
+  @override
+  String get entityLineage => 'Entitaets-Herkunft';
+
+  @override
+  String get recentChanges => 'Letzte Aenderungen';
+
+  @override
+  String get created => 'Erstellt';
+
+  @override
+  String get updated => 'Aktualisiert';
+
+  @override
+  String get decayed => 'Verfallen';
+
+  @override
+  String get runExploration => 'Erkundung starten';
+
+  @override
+  String get explorationComplete => 'Erkundung abgeschlossen';
 }

@@ -479,6 +479,32 @@ class ApiClient {
           List<Map<String, dynamic>> dirs) =>
       post('learning/directories', {'directories': dirs});
 
+  // Q&A Knowledge Base
+  Future<Map<String, dynamic>> getQAPairs({String? query, int limit = 50}) {
+    final params = <String>['limit=$limit'];
+    if (query != null && query.isNotEmpty) {
+      params.add('q=${Uri.encodeComponent(query)}');
+    }
+    return get('learning/qa?${params.join('&')}');
+  }
+
+  Future<Map<String, dynamic>> addQAPair(Map<String, dynamic> qa) =>
+      post('learning/qa', qa);
+  Future<Map<String, dynamic>> verifyQA(String id) =>
+      post('learning/qa/$id/verify');
+  Future<Map<String, dynamic>> deleteQA(String id) =>
+      delete('learning/qa/$id');
+
+  // Lineage
+  Future<Map<String, dynamic>> getEntityLineage(String entityId) =>
+      get('learning/lineage/$entityId');
+  Future<Map<String, dynamic>> getRecentLineage({int limit = 100}) =>
+      get('learning/lineage?limit=$limit');
+
+  // Exploration batch
+  Future<Map<String, dynamic>> triggerExplorationBatch() =>
+      post('learning/explore/run');
+
   // ---------------------------------------------------------------------------
   // Internal
   // ---------------------------------------------------------------------------

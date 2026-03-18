@@ -3324,3 +3324,221 @@ def _register_learning_routes(
             if path:
                 learner.add_directory(path, enabled=enabled)
         return {"status": "updated", "count": len(dirs)}
+
+    # -- Q&A Knowledge Base ------------------------------------------------
+
+    def _get_qa() -> Any:
+        return getattr(gateway, "_knowledge_qa", None) if gateway else None
+
+    @app.get("/api/v1/learning/qa", dependencies=deps)
+    async def learning_qa_list(request: Request) -> dict[str, Any]:
+        """List or search Q&A pairs."""
+        qa_store = _get_qa()
+        if not qa_store:
+            return {"error": "QA store not initialized", "status": 503}
+
+        query = request.query_params.get("q", "")
+        limit = int(request.query_params.get("limit", "50"))
+        offset = int(request.query_params.get("offset", "0"))
+
+        if query:
+            pairs = qa_store.search(query, limit=limit)
+        else:
+            pairs = qa_store.list_all(limit=limit, offset=offset)
+
+        return {
+            "pairs": [
+                {
+                    "id": p.id,
+                    "question": p.question,
+                    "answer": p.answer,
+                    "topic": p.topic,
+                    "confidence": round(p.confidence, 4),
+                    "source": p.source,
+                    "entity_id": p.entity_id,
+                    "created_at": p.created_at,
+                    "last_verified": p.last_verified,
+                    "verification_count": p.verification_count,
+                }
+                for p in pairs
+            ],
+            "count": len(pairs),
+            "stats": qa_store.stats(),
+        }
+
+    @app.post("/api/v1/learning/qa", dependencies=deps)
+    async def learning_qa_add(request: Request) -> dict[str, Any]:
+        """Add a new Q&A pair."""
+        qa_store = _get_qa()
+        if not qa_store:
+            return {"error": "QA store not initialized", "status": 503}
+
+        body = await request.json()
+        question = body.get("question", "").strip()
+        answer = body.get("answer", "").strip()
+        if not question or not answer:
+            return {"error": "question and answer are required"}
+
+        pair = qa_store.add(
+            question,
+            answer,
+            topic=body.get("topic", ""),
+            confidence=float(body.get("confidence", 0.5)),
+            source=body.get("source", ""),
+            entity_id=body.get("entity_id", ""),
+        )
+        return {
+            "id": pair.id,
+            "question": pair.question,
+            "answer": pair.answer,
+            "topic": pair.topic,
+            "confidence": pair.confidence,
+            "created_at": pair.created_at,
+        }
+
+    @app.post(
+        "/api/v1/learning/qa/{qa_id}/verify",
+        dependencies=deps,
+    )
+    async def learning_qa_verify(qa_id: str) -> dict[str, Any]:
+        """Verify a Q&A pair, boosting its confidence."""
+        qa_store = _get_qa()
+        if not qa_store:
+            return {"error": "QA store not initialized", "status": 503}
+
+        found = qa_store.verify(qa_id)
+        if not found:
+            return {"error": "QA pair not found", "status": 404}
+        return {"status": "verified", "id": qa_id}
+
+    @app.delete(
+        "/api/v1/learning/qa/{qa_id}",
+        dependencies=deps,
+    )
+    async def learning_qa_delete(qa_id: str) -> dict[str, Any]:
+        """Delete a Q&A pair."""
+        qa_store = _get_qa()
+        if not qa_store:
+            return {"error": "QA store not initialized", "status": 503}
+
+        found = qa_store.delete(qa_id)
+        if not found:
+            return {"error": "QA pair not found", "status": 404}
+        return {"status": "deleted", "id": qa_id}
+
+    # -- Knowledge Lineage -------------------------------------------------
+
+    def _get_lineage() -> Any:
+        return getattr(gateway, "_knowledge_lineage", None) if gateway else None
+
+    @app.get(
+        "/api/v1/learning/lineage/{entity_id}",
+        dependencies=deps,
+    )
+    async def learning_lineage_entity(
+        entity_id: str,
+        request: Request,
+    ) -> dict[str, Any]:
+        """Get lineage entries for a specific entity."""
+        tracker = _get_lineage()
+        if not tracker:
+            return {"error": "Lineage tracker not initialized", "status": 503}
+
+        limit = int(request.query_params.get("limit", "50"))
+        entries = tracker.get_entity_lineage(
+            entity_id,
+            limit=limit,
+        )
+        return {
+            "entity_id": entity_id,
+            "entries": [
+                {
+                    "id": e.id,
+                    "source_type": e.source_type,
+                    "source_path": e.source_path,
+                    "action": e.action,
+                    "old_value": e.old_value,
+                    "new_value": e.new_value,
+                    "confidence_before": e.confidence_before,
+                    "confidence_after": e.confidence_after,
+                    "timestamp": e.timestamp,
+                }
+                for e in entries
+            ],
+            "count": len(entries),
+        }
+
+    @app.get("/api/v1/learning/lineage", dependencies=deps)
+    async def learning_lineage_recent(
+        request: Request,
+    ) -> dict[str, Any]:
+        """Get recent lineage entries."""
+        tracker = _get_lineage()
+        if not tracker:
+            return {"error": "Lineage tracker not initialized", "status": 503}
+
+        limit = int(request.query_params.get("limit", "100"))
+        entries = tracker.get_recent(limit=limit)
+        return {
+            "entries": [
+                {
+                    "id": e.id,
+                    "entity_id": e.entity_id,
+                    "source_type": e.source_type,
+                    "source_path": e.source_path,
+                    "action": e.action,
+                    "old_value": e.old_value,
+                    "new_value": e.new_value,
+                    "confidence_before": e.confidence_before,
+                    "confidence_after": e.confidence_after,
+                    "timestamp": e.timestamp,
+                }
+                for e in entries
+            ],
+            "count": len(entries),
+            "stats": tracker.stats(),
+        }
+
+    # -- Batch Exploration -------------------------------------------------
+
+    def _get_explorer() -> Any:
+        return getattr(gateway, "_exploration_executor", None) if gateway else None
+
+    @app.post(
+        "/api/v1/learning/explore/run",
+        dependencies=deps,
+    )
+    async def learning_explore_run(
+        request: Request,
+    ) -> dict[str, Any]:
+        """Trigger a batch of exploration tasks."""
+        explorer = _get_explorer()
+        if not explorer:
+            return {
+                "error": "Exploration executor not initialized",
+                "status": 503,
+            }
+
+        body = await request.json()
+        max_tasks = int(body.get("max_tasks", 3))
+        max_tasks = max(1, min(max_tasks, 10))
+
+        results = await explorer.execute_batch(
+            max_tasks=max_tasks,
+        )
+        return {
+            "results": [
+                {
+                    "gap_id": r.gap_id,
+                    "query": r.query,
+                    "found_answer": r.found_answer,
+                    "answer_summary": r.answer_summary,
+                    "sources_checked": r.sources_checked,
+                    "entities_updated": r.entities_updated,
+                    "timestamp": r.timestamp.isoformat(),
+                }
+                for r in results
+            ],
+            "count": len(results),
+            "stats": explorer.stats(),
+        }

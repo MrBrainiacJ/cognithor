@@ -3359,6 +3359,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Directory not found'**
   String get directoryMissing;
+
+  /// No description provided for @qaKnowledgeBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Q&A'**
+  String get qaKnowledgeBase;
+
+  /// No description provided for @lineage.
+  ///
+  /// In en, this message translates to:
+  /// **'Lineage'**
+  String get lineage;
+
+  /// No description provided for @question.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get question;
+
+  /// No description provided for @answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get answer;
+
+  /// No description provided for @topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get topic;
+
+  /// No description provided for @addQA.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Q&A'**
+  String get addQA;
+
+  /// No description provided for @verify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get verify;
+
+  /// No description provided for @source.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get source;
+
+  /// No description provided for @noQAPairs.
+  ///
+  /// In en, this message translates to:
+  /// **'No knowledge entries'**
+  String get noQAPairs;
+
+  /// No description provided for @noLineage.
+  ///
+  /// In en, this message translates to:
+  /// **'No lineage data'**
+  String get noLineage;
+
+  /// No description provided for @entityLineage.
+  ///
+  /// In en, this message translates to:
+  /// **'Entity Lineage'**
+  String get entityLineage;
+
+  /// No description provided for @recentChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Changes'**
+  String get recentChanges;
+
+  /// No description provided for @created.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get created;
+
+  /// No description provided for @updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get updated;
+
+  /// No description provided for @decayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Decayed'**
+  String get decayed;
+
+  /// No description provided for @runExploration.
+  ///
+  /// In en, this message translates to:
+  /// **'Run Exploration'**
+  String get runExploration;
+
+  /// No description provided for @explorationComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Exploration complete'**
+  String get explorationComplete;
 }
 
 class _AppLocalizationsDelegate

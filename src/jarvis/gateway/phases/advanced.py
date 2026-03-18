@@ -6,7 +6,8 @@ Attributes handled:
   _ecosystem_policy, _model_registry, _i18n, _reputation_engine,
   _recall_manager, _abuse_reporter, _governance_policy, _interop,
   _governance_hub, _ecosystem_controller, _user_portal, _skill_cli,
-  _setup_wizard, _perf_manager
+  _setup_wizard, _perf_manager, _exploration_executor,
+  _knowledge_qa, _knowledge_lineage
 """
 
 from __future__ import annotations
@@ -59,6 +60,9 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
         "curiosity_engine": None,
         "confidence_manager": None,
         "active_learner": None,
+        "exploration_executor": None,
+        "knowledge_qa": None,
+        "knowledge_lineage": None,
     }
 
     # Phase 5: Live-Monitoring
@@ -319,6 +323,52 @@ async def init_advanced(
         log.info("active_learner_initialized")
     except Exception:
         log.debug("active_learner_init_skipped", exc_info=True)
+
+    # ExplorationExecutor (needs CuriosityEngine)
+    try:
+        from jarvis.learning.explorer import ExplorationExecutor
+
+        curiosity = result.get("curiosity_engine")
+        mm = getattr(config, "_memory_manager", None)
+        result["exploration_executor"] = ExplorationExecutor(
+            curiosity=curiosity,
+            memory=mm,
+        )
+        log.info("exploration_executor_initialized")
+    except Exception:
+        log.debug("exploration_executor_init_skipped", exc_info=True)
+
+    # KnowledgeQAStore
+    try:
+        from jarvis.learning.knowledge_qa import KnowledgeQAStore
+
+        jarvis_home = getattr(
+            config,
+            "jarvis_home",
+            Path.home() / ".jarvis",
+        )
+        qa_db = Path(jarvis_home) / "memory" / "knowledge_qa.db"
+        result["knowledge_qa"] = KnowledgeQAStore(db_path=qa_db)
+        log.info("knowledge_qa_initialized", db=str(qa_db))
+    except Exception:
+        log.debug("knowledge_qa_init_skipped", exc_info=True)
+
+    # KnowledgeLineageTracker
+    try:
+        from jarvis.learning.lineage import KnowledgeLineageTracker
+
+        jarvis_home = getattr(
+            config,
+            "jarvis_home",
+            Path.home() / ".jarvis",
+        )
+        lin_db = Path(jarvis_home) / "memory" / "knowledge_lineage.db"
+        result["knowledge_lineage"] = KnowledgeLineageTracker(
+            db_path=lin_db,
+        )
+        log.info("knowledge_lineage_initialized", db=str(lin_db))
+    except Exception:
+        log.debug("knowledge_lineage_init_skipped", exc_info=True)
 
     # ReplayEngine (needs Gatekeeper for policy re-evaluation)
     if gatekeeper is not None:

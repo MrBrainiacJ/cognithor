@@ -35,6 +35,14 @@ class _LearningScreenState extends State<LearningScreen> {
   // Watch directories data
   List<Map<String, dynamic>> _directories = [];
 
+  // Q&A data
+  List<Map<String, dynamic>> _qaPairs = [];
+  String _qaSearch = '';
+
+  // Lineage data
+  List<Map<String, dynamic>> _lineageEntries = [];
+  String _lineageFilter = '';
+
   bool _loading = true;
   String? _error;
 
@@ -57,6 +65,8 @@ class _LearningScreenState extends State<LearningScreen> {
         api.getConfidenceHistory(),
         api.getLearningQueue(),
         api.getLearningDirectories(),
+        api.getQAPairs(),
+        api.getRecentLineage(),
       ]);
 
       if (!mounted) return;
@@ -66,6 +76,8 @@ class _LearningScreenState extends State<LearningScreen> {
       final historyResult = results[2];
       final queueResult = results[3];
       final dirsResult = results[4];
+      final qaResult = results[5];
+      final lineageResult = results[6];
 
       setState(() {
         _stats = statsResult.containsKey('error') ? null : statsResult;
@@ -73,6 +85,8 @@ class _LearningScreenState extends State<LearningScreen> {
         _confidenceHistory = _parseList(historyResult, 'history');
         _queue = _parseList(queueResult, 'tasks');
         _directories = _parseList(dirsResult, 'directories');
+        _qaPairs = _parseList(qaResult, 'pairs');
+        _lineageEntries = _parseList(lineageResult, 'entries');
         _loading = false;
       });
     } catch (e) {
@@ -163,11 +177,15 @@ class _LearningScreenState extends State<LearningScreen> {
                         l.dashboard,
                         l.knowledgeGaps,
                         l.explorationQueue,
+                        l.qaKnowledgeBase,
+                        l.lineage,
                       ],
                       icons: const [
                         Icons.dashboard,
                         Icons.help_outline,
                         Icons.explore,
+                        Icons.quiz,
+                        Icons.account_tree,
                       ],
                       selectedIndex: _tabIndex,
                       onChanged: (i) => setState(() => _tabIndex = i),
@@ -177,6 +195,8 @@ class _LearningScreenState extends State<LearningScreen> {
                         0 => _buildOverview(l),
                         1 => _buildGaps(l),
                         2 => _buildQueue(l),
+                        3 => _buildQA(l),
+                        4 => _buildLineage(l),
                         _ => const SizedBox.shrink(),
                       },
                     ),
@@ -515,6 +535,462 @@ class _LearningScreenState extends State<LearningScreen> {
           ),
         );
       },
+    );
+  }
+  // ---------------------------------------------------------------------------
+  // Tab 4: Q&A Knowledge Base
+  // ---------------------------------------------------------------------------
+
+  Future<void> _searchQA(String query) async {
+    setState(() => _qaSearch = query);
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      final result = await api.getQAPairs(
+          query: query.isEmpty ? null : query);
+      if (!mounted) return;
+      setState(() => _qaPairs = _parseList(result, 'pairs'));
+    } catch (_) {}
+  }
+
+  Future<void> _verifyQA(String id) async {
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      await api.verifyQA(id);
+      await _searchQA(_qaSearch);
+    } catch (_) {}
+  }
+
+  Future<void> _deleteQA(String id) async {
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      await api.deleteQA(id);
+      setState(() => _qaPairs.removeWhere((p) => p['id']?.toString() == id));
+    } catch (_) {}
+  }
+
+  Future<void> _showAddQADialog(AppLocalizations l) async {
+    final questionCtrl = TextEditingController();
+    final answerCtrl = TextEditingController();
+    final topicCtrl = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.addQA),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: questionCtrl,
+                decoration: InputDecoration(labelText: l.question),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: answerCtrl,
+                decoration: InputDecoration(labelText: l.answer),
+                maxLines: 4,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: topicCtrl,
+                decoration: InputDecoration(labelText: l.topic),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.save),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && questionCtrl.text.isNotEmpty && mounted) {
+      try {
+        final api = context.read<ConnectionProvider>().api;
+        await api.addQAPair({
+          'question': questionCtrl.text,
+          'answer': answerCtrl.text,
+          'topic': topicCtrl.text,
+        });
+        await _searchQA(_qaSearch);
+      } catch (_) {}
+    }
+
+    questionCtrl.dispose();
+    answerCtrl.dispose();
+    topicCtrl.dispose();
+  }
+
+  Widget _buildQA(AppLocalizations l) {
+    final theme = Theme.of(context);
+
+    return Stack(
+      children: [
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(JarvisTheme.spacing),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: l.search,
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onChanged: _searchQA,
+              ),
+            ),
+            Expanded(
+              child: _qaPairs.isEmpty
+                  ? JarvisEmptyState(
+                      icon: Icons.quiz_outlined,
+                      title: l.noQAPairs,
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: JarvisTheme.spacing,
+                      ),
+                      itemCount: _qaPairs.length,
+                      itemBuilder: (context, index) {
+                        final qa = _qaPairs[index];
+                        final question =
+                            (qa['question'] ?? '').toString();
+                        final answer = (qa['answer'] ?? '').toString();
+                        final topic = (qa['topic'] ?? '').toString();
+                        final conf =
+                            ((qa['confidence'] ?? 0) as num).toDouble();
+                        final source =
+                            (qa['source'] ?? '').toString();
+                        final isVerified = qa['verified'] == true;
+                        final id = (qa['id'] ?? '').toString();
+
+                        return JarvisCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                question,
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(answer,
+                                  style: theme.textTheme.bodySmall),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  if (topic.isNotEmpty)
+                                    JarvisStatusBadge(
+                                      label: topic,
+                                      color: JarvisTheme.accent,
+                                    ),
+                                  if (isVerified) ...[
+                                    const SizedBox(width: 8),
+                                    JarvisStatusBadge(
+                                      label: l.verified,
+                                      color: JarvisTheme.green,
+                                      icon: Icons.check,
+                                    ),
+                                  ],
+                                  const Spacer(),
+                                  if (source.isNotEmpty)
+                                    Text(
+                                      '${l.source}: $source',
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              // Confidence bar
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    width: 80,
+                                    child: Text(l.confidence,
+                                        style: theme.textTheme.bodySmall),
+                                  ),
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius:
+                                          BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: conf.clamp(0.0, 1.0),
+                                        backgroundColor:
+                                            theme.dividerColor,
+                                        color: JarvisTheme.accent,
+                                        minHeight: 6,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${(conf * 100).toInt()}%',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  if (!isVerified)
+                                    TextButton.icon(
+                                      onPressed: () => _verifyQA(id),
+                                      icon: const Icon(
+                                          Icons.thumb_up, size: 16),
+                                      label: Text(l.verify),
+                                    ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () => _deleteQA(id),
+                                    icon: const Icon(Icons.delete,
+                                        size: 16),
+                                    label: Text(l.delete),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+        Positioned(
+          bottom: JarvisTheme.spacing,
+          right: JarvisTheme.spacing,
+          child: FloatingActionButton(
+            onPressed: () => _showAddQADialog(l),
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tab 5: Lineage
+  // ---------------------------------------------------------------------------
+
+  Future<void> _loadLineage({String? entityId}) async {
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      final result = entityId != null && entityId.isNotEmpty
+          ? await api.getEntityLineage(entityId)
+          : await api.getRecentLineage();
+      if (!mounted) return;
+      setState(() {
+        _lineageEntries = _parseList(result, 'entries');
+        _lineageFilter = entityId ?? '';
+      });
+    } catch (_) {}
+  }
+
+  IconData _lineageActionIcon(String action) {
+    return switch (action) {
+      'created' => Icons.add_circle_outline,
+      'updated' => Icons.edit,
+      'decayed' => Icons.trending_down,
+      _ => Icons.circle_outlined,
+    };
+  }
+
+  Color _lineageActionColor(String action) {
+    return switch (action) {
+      'created' => JarvisTheme.green,
+      'updated' => JarvisTheme.accent,
+      'decayed' => JarvisTheme.red,
+      _ => JarvisTheme.textSecondary,
+    };
+  }
+
+  IconData _sourceTypeIcon(String sourceType) {
+    return switch (sourceType) {
+      'file' => Icons.insert_drive_file,
+      'web' => Icons.language,
+      'conversation' => Icons.chat,
+      'exploration' => Icons.explore,
+      _ => Icons.source,
+    };
+  }
+
+  Widget _buildLineage(AppLocalizations l) {
+    final theme = Theme.of(context);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(JarvisTheme.spacing),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: l.entityLineage,
+                    prefixIcon: const Icon(Icons.filter_alt),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (value) => _loadLineage(
+                      entityId: value.isEmpty ? null : value),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final api = context.read<ConnectionProvider>().api;
+                  await api.triggerExplorationBatch();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l.explorationComplete)),
+                    );
+                    _loadLineage(
+                        entityId: _lineageFilter.isEmpty
+                            ? null
+                            : _lineageFilter);
+                  }
+                },
+                icon: const Icon(Icons.play_arrow, size: 16),
+                label: Text(l.runExploration),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: JarvisTheme.spacing,
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _lineageFilter.isEmpty
+                  ? l.recentChanges
+                  : '${l.entityLineage}: $_lineageFilter',
+              style: theme.textTheme.titleSmall,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _lineageEntries.isEmpty
+              ? JarvisEmptyState(
+                  icon: Icons.account_tree_outlined,
+                  title: l.noLineage,
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: JarvisTheme.spacing,
+                  ),
+                  itemCount: _lineageEntries.length,
+                  itemBuilder: (context, index) {
+                    final entry = _lineageEntries[index];
+                    final entity =
+                        (entry['entity'] ?? entry['entity_id'] ?? '')
+                            .toString();
+                    final action =
+                        (entry['action'] ?? '').toString();
+                    final sourceType =
+                        (entry['source_type'] ?? '').toString();
+                    final ts =
+                        (entry['timestamp'] ?? '').toString();
+
+                    final actionLabel = switch (action) {
+                      'created' => l.created,
+                      'updated' => l.updated,
+                      'decayed' => l.decayed,
+                      _ => action,
+                    };
+
+                    return Padding(
+                      padding:
+                          const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          // Timeline dot + line
+                          Column(
+                            children: [
+                              Icon(
+                                _lineageActionIcon(action),
+                                color:
+                                    _lineageActionColor(action),
+                                size: 20,
+                              ),
+                              if (index <
+                                  _lineageEntries.length - 1)
+                                Container(
+                                  width: 2,
+                                  height: 32,
+                                  color: theme.dividerColor,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: JarvisCard(
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _sourceTypeIcon(sourceType),
+                                    size: 16,
+                                    color:
+                                        JarvisTheme.textSecondary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment
+                                              .start,
+                                      children: [
+                                        Text(
+                                          entity,
+                                          style: theme
+                                              .textTheme.bodyMedium
+                                              ?.copyWith(
+                                            fontWeight:
+                                                FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          actionLabel,
+                                          style: TextStyle(
+                                            color:
+                                                _lineageActionColor(
+                                                    action),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    ts,
+                                    style:
+                                        theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

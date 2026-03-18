@@ -559,5 +559,23 @@
   "adminLearningSubtitle": "Aktives Lernen & Neugier",
   "watchDirectories": "Ueberwachte Verzeichnisse",
   "directoryExists": "Verzeichnis vorhanden",
-  "directoryMissing": "Verzeichnis nicht gefunden"
+  "directoryMissing": "Verzeichnis nicht gefunden",
+
+  "qaKnowledgeBase": "Wissen",
+  "lineage": "Herkunft",
+  "question": "Frage",
+  "answer": "Antwort",
+  "topic": "Thema",
+  "addQA": "Wissen hinzufuegen",
+  "verify": "Verifizieren",
+  "source": "Quelle",
+  "noQAPairs": "Keine Wissenseintraege",
+  "noLineage": "Keine Herkunftsdaten",
+  "entityLineage": "Entitaets-Herkunft",
+  "recentChanges": "Letzte Aenderungen",
+  "created": "Erstellt",
+  "updated": "Aktualisiert",
+  "decayed": "Verfallen",
+  "runExploration": "Erkundung starten",
+  "explorationComplete": "Erkundung abgeschlossen"
 }

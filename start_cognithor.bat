@@ -104,6 +104,19 @@ if not exist "%REPO_ROOT%\flutter_app\.dart_tool" (
     cd /d "%REPO_ROOT%"
 )
 
+:: Auto-build Flutter Web if SDK available but no build
+if not exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
+    echo   [INFO] Building Flutter Web UI...
+    cd /d "%REPO_ROOT%\flutter_app"
+    cmd /c flutter build web --release >nul 2>&1
+    cd /d "%REPO_ROOT%"
+    if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
+        echo   [OK] Flutter Web UI built successfully.
+    ) else (
+        echo   [WARNING] Flutter build failed. Falling back...
+    )
+)
+
 :: Pre-built Flutter Web vorhanden? Backend serviert es direkt
 if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
     echo   Starting backend with Flutter UI...
@@ -138,30 +151,21 @@ if errorlevel 1 (
 call :stop_backend
 goto :eof
 
-:: --- Modus B: Node.js vorhanden -> Vite Dev Server (Legacy) ---
+:: --- Modus B: Node.js vorhanden -> Vite Dev Server (Legacy/DEPRECATED) ---
 :check_node_ui
-if "!HAS_NODE!"=="0" goto :check_prebuilt
-if not exist "%REPO_ROOT%\ui\node_modules" (
-    echo.
-    echo   [INFO] node_modules not found. Trying npm install...
-    cd /d "%REPO_ROOT%\ui"
-    cmd /c npm install >nul 2>&1
-    if errorlevel 1 goto :check_prebuilt
-    cd /d "%REPO_ROOT%"
-)
 echo.
-echo   Starting Web UI (Vite Dev Server)...
-echo   Open http://127.0.0.1:5173 in your browser.
+echo   [DEPRECATED] React UI is deprecated. Please install Flutter.
+echo   https://docs.flutter.dev/get-started/install
 echo.
-cd /d "%REPO_ROOT%\ui"
-cmd /c npm run dev
-echo.
-echo   Web UI stopped.
-goto :eof
+:: Still fall through to pre-built check
+goto :check_prebuilt
 
-:: --- Modus C: Pre-built React UI ---
+:: --- Modus C: Pre-built React UI (DEPRECATED) ---
 :check_prebuilt
 if not exist "%REPO_ROOT%\ui\dist\index.html" goto :check_flutter_prebuilt
+echo.
+echo   [DEPRECATED] React UI is deprecated. Please install Flutter.
+echo   https://docs.flutter.dev/get-started/install
 echo.
 echo   Node.js not found -- starting pre-built UI.
 echo   Backend + UI at http://localhost:8741
