@@ -551,5 +551,8 @@
   "adminLearningSubtitle": "التعلم النشط والفضول",
   "watchDirectories": "مجلدات المراقبة",
   "directoryExists": "المجلد موجود",
-  "directoryMissing": "المجلد غير موجود"
+  "directoryMissing": "المجلد غير موجود",
+  "activityChart": "النشاط",
+  "stopped": "متوقف",
+  "requestsOverTime": "الطلبات بمرور الوقت"
 }

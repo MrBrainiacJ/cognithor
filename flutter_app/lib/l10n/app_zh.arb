@@ -551,5 +551,8 @@
   "adminLearningSubtitle": "主动学习与好奇心",
   "watchDirectories": "监控目录",
   "directoryExists": "目录存在",
-  "directoryMissing": "目录未找到"
+  "directoryMissing": "目录未找到",
+  "activityChart": "活动图表",
+  "stopped": "已停止",
+  "requestsOverTime": "请求趋势"
 }

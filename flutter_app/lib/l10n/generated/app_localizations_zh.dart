@@ -1701,4 +1701,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get explorationComplete => 'Exploration complete';
+
+  @override
+  String get activityChart => '活动图表';
+
+  @override
+  String get stopped => '已停止';
+
+  @override
+  String get requestsOverTime => '请求趋势';
 }

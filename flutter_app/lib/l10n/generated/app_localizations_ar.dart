@@ -1704,4 +1704,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get explorationComplete => 'Exploration complete';
+
+  @override
+  String get activityChart => 'النشاط';
+
+  @override
+  String get stopped => 'متوقف';
+
+  @override
+  String get requestsOverTime => 'الطلبات بمرور الوقت';
 }

@@ -577,5 +577,8 @@
   "updated": "Aktualisiert",
   "decayed": "Verfallen",
   "runExploration": "Erkundung starten",
-  "explorationComplete": "Erkundung abgeschlossen"
+  "explorationComplete": "Erkundung abgeschlossen",
+  "activityChart": "Aktivitaet",
+  "stopped": "Gestoppt",
+  "requestsOverTime": "Anfragen im Zeitverlauf"
 }

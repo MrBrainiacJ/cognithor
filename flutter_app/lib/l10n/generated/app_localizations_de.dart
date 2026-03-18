@@ -1706,4 +1706,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get explorationComplete => 'Erkundung abgeschlossen';
+
+  @override
+  String get activityChart => 'Aktivitaet';
+
+  @override
+  String get stopped => 'Gestoppt';
+
+  @override
+  String get requestsOverTime => 'Anfragen im Zeitverlauf';
 }

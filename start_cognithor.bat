@@ -89,6 +89,20 @@ if errorlevel 1 (
 )
 
 :: ============================================================
+::  4b. Install identity extras if missing
+:: ============================================================
+%PYTHON_CMD% -c "import jarvis.identity" >nul 2>&1
+if errorlevel 1 (
+    echo   [INFO] Installing identity module...
+    %PYTHON_CMD% -m pip install -e "%REPO_ROOT%[identity]" --quiet >nul 2>&1
+    if not errorlevel 1 (
+        echo   [OK] Identity module installed.
+    ) else (
+        echo   [WARNING] Identity install failed. Identity features may not work.
+    )
+)
+
+:: ============================================================
 ::  5. UI-Modus waehlen (Flutter-first)
 :: ============================================================
 

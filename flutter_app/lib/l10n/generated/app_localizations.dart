@@ -3461,6 +3461,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exploration complete'**
   String get explorationComplete;
+
+  /// No description provided for @activityChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activityChart;
+
+  /// No description provided for @stopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get stopped;
+
+  /// No description provided for @requestsOverTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests over time'**
+  String get requestsOverTime;
 }
 
 class _AppLocalizationsDelegate

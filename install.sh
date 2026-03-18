@@ -603,6 +603,12 @@ install_jarvis() {
         pip install -e "$spec" --progress-bar on 2>&1 | tail -20
     fi
 
+    # Install identity extras if missing
+    if ! python3 -c "import jarvis.identity" 2>/dev/null; then
+        echo "  [INFO] Installing identity module..."
+        pip install -e ".[identity]" --quiet 2>/dev/null || echo "  [WARNING] Identity install failed"
+    fi
+
     # Verify installation
     if python3 -c "import jarvis; print(f'Cognithor v{jarvis.__version__}')" 2>/dev/null; then
         success "Cognithor installed successfully"

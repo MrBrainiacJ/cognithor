@@ -58,28 +58,39 @@ class _JarvisSearchBarState extends State<JarvisSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color;
+    final borderColor = theme.dividerColor;
+
     return TextField(
       controller: _controller,
-      style: TextStyle(color: JarvisTheme.textPrimary),
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: widget.hintText,
         filled: true,
-        fillColor: JarvisTheme.surface,
-        prefixIcon:
-            Icon(Icons.search, color: JarvisTheme.textSecondary, size: JarvisTheme.iconSizeMd),
+        fillColor: theme.cardColor,
+        prefixIcon: Icon(
+          Icons.search,
+          color: JarvisTheme.textSecondary,
+          size: JarvisTheme.iconSizeMd,
+        ),
         suffixIcon: _controller.text.isNotEmpty
             ? IconButton(
-                icon: Icon(Icons.clear, color: JarvisTheme.textSecondary, size: JarvisTheme.iconSizeSm),
+                icon: Icon(
+                  Icons.clear,
+                  color: JarvisTheme.textSecondary,
+                  size: JarvisTheme.iconSizeSm,
+                ),
                 onPressed: _clear,
               )
             : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
-          borderSide: BorderSide(color: JarvisTheme.border),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
-          borderSide: BorderSide(color: JarvisTheme.border),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),

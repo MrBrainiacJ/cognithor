@@ -879,5 +879,11 @@
   "runExploration": "Run Exploration",
   "@runExploration": {},
   "explorationComplete": "Exploration complete",
-  "@explorationComplete": {}
+  "@explorationComplete": {},
+  "activityChart": "Activity",
+  "@activityChart": {},
+  "stopped": "Stopped",
+  "@stopped": {},
+  "requestsOverTime": "Requests over time",
+  "@requestsOverTime": {}
 }
