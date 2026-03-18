@@ -4,8 +4,8 @@ import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/config_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/providers/locale_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
 import 'package:jarvis_ui/widgets/form/form_widgets.dart';
+import 'package:jarvis_ui/widgets/jarvis_toast.dart';
 
 class LanguagePage extends StatefulWidget {
   const LanguagePage({super.key});
@@ -27,11 +27,10 @@ class _LanguagePageState extends State<LanguagePage> {
     setState(() => _translating = false);
     if (mounted) {
       final l = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l.promptsTranslated),
-          backgroundColor: JarvisTheme.green,
-        ),
+      JarvisToast.show(
+        context,
+        l.promptsTranslated,
+        type: ToastType.success,
       );
     }
   }

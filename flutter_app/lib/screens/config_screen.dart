@@ -6,6 +6,7 @@ import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/config_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:jarvis_ui/widgets/jarvis_toast.dart';
 
 import 'package:jarvis_ui/screens/config/general_page.dart';
 import 'package:jarvis_ui/screens/config/language_page.dart';
@@ -83,22 +84,22 @@ class _ConfigScreenState extends State<ConfigScreen> {
 
   Future<void> _save() async {
     final cfg = context.read<ConfigProvider>();
-    final messenger = ScaffoldMessenger.of(context);
     final l = AppLocalizations.of(context);
     final ok = await cfg.save();
     if (!mounted) return;
     if (cfg.sectionErrors.isNotEmpty) {
       final errSections = cfg.sectionErrors.keys.join(', ');
-      messenger.showSnackBar(SnackBar(
-        content: Text(l.savedWithErrors(errSections)),
-        backgroundColor: JarvisTheme.orange,
-        duration: const Duration(seconds: 4),
-      ));
+      JarvisToast.show(
+        context,
+        l.savedWithErrors(errSections),
+        type: ToastType.warning,
+      );
     } else {
-      messenger.showSnackBar(SnackBar(
-        content: Text(ok ? l.configurationSaved : l.saveFailed),
-        backgroundColor: ok ? JarvisTheme.green : JarvisTheme.red,
-      ));
+      JarvisToast.show(
+        context,
+        ok ? l.configurationSaved : l.saveFailed,
+        type: ok ? ToastType.success : ToastType.error,
+      );
     }
   }
 
@@ -239,10 +240,10 @@ class _ConfigScreenState extends State<ConfigScreen> {
                 )),
             trailing: page.key != null
                 ? Text(
-                    page.key!,
+                    '^${page.key!}',
                     style: TextStyle(
                       fontSize: 10,
-                      color: JarvisTheme.textSecondary.withValues(alpha: 0.5),
+                      color: JarvisTheme.textTertiary,
                       fontFamily: 'monospace',
                     ),
                   )

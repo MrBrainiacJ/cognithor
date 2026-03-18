@@ -46,6 +46,12 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
+  void _navigateTab(int index) {
+    if (index >= 0 && index < _screens.length) {
+      setState(() => _currentIndex = index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -56,6 +62,16 @@ class _MainShellState extends State<MainShell> {
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyK, control: true):
             _openSearch,
+        const SingleActivator(LogicalKeyboardKey.digit1, control: true):
+            () => _navigateTab(0),
+        const SingleActivator(LogicalKeyboardKey.digit2, control: true):
+            () => _navigateTab(1),
+        const SingleActivator(LogicalKeyboardKey.digit3, control: true):
+            () => _navigateTab(2),
+        const SingleActivator(LogicalKeyboardKey.digit4, control: true):
+            () => _navigateTab(3),
+        const SingleActivator(LogicalKeyboardKey.digit5, control: true):
+            () => _navigateTab(4),
       },
       child: Focus(
         autofocus: true,
@@ -120,26 +136,27 @@ class _MainShellState extends State<MainShell> {
 
   List<Widget> _buildNavItems(AppLocalizations l) {
     final items = [
-      (Icons.chat_bubble_outline, Icons.chat_bubble, l.chat),
-      (Icons.dashboard_outlined, Icons.dashboard, l.dashboard),
-      (Icons.extension_outlined, Icons.extension, l.skills),
+      (Icons.chat_bubble_outline, Icons.chat_bubble, l.chat, '^1'),
+      (Icons.dashboard_outlined, Icons.dashboard, l.dashboard, '^2'),
+      (Icons.extension_outlined, Icons.extension, l.skills, '^3'),
       (
         Icons.admin_panel_settings_outlined,
         Icons.admin_panel_settings,
-        l.adminTitle
+        l.adminTitle,
+        '^4',
       ),
-      (Icons.psychology_outlined, Icons.psychology, l.identity),
+      (Icons.psychology_outlined, Icons.psychology, l.identity, '^5'),
     ];
 
     return List.generate(items.length, (i) {
-      final (iconOutlined, iconFilled, label) = items[i];
+      final (iconOutlined, iconFilled, label, shortcut) = items[i];
       final selected = i == _currentIndex;
       return Expanded(
         child: InkWell(
           onTap: () => setState(() => _currentIndex = i),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 6),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -163,6 +180,15 @@ class _MainShellState extends State<MainShell> {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  shortcut,
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: JarvisTheme.textTertiary,
+                    fontFamily: 'monospace',
+                  ),
                 ),
               ],
             ),

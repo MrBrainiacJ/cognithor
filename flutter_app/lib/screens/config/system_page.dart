@@ -3,10 +3,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/config_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:jarvis_ui/widgets/jarvis_toast.dart';
 
 class SystemConfigPage extends StatelessWidget {
   const SystemConfigPage({super.key});
@@ -31,11 +33,10 @@ class SystemConfigPage extends StatelessWidget {
                 final api = context.read<ConnectionProvider>().api;
                 await api.restartServer();
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l.restartInitiated),
-                      backgroundColor: JarvisTheme.green,
-                    ),
+                  JarvisToast.show(
+                    context,
+                    l.restartInitiated,
+                    type: ToastType.success,
                   );
                 }
               },
@@ -49,13 +50,24 @@ class SystemConfigPage extends StatelessWidget {
               buttonLabel: 'Export',
               onPressed: () async {
                 final json = cfg.exportJson();
-                await Clipboard.setData(ClipboardData(text: json));
+                final date = DateTime.now().toIso8601String().split('T').first;
+                final dataUri =
+                    'data:application/json;charset=utf-8,${Uri.encodeComponent(json)}';
+                final launched = await launchUrl(
+                  Uri.parse(dataUri),
+                  webOnlyWindowName: 'cognithor-config-$date.json',
+                );
+                if (!launched) {
+                  // Fallback: copy to clipboard
+                  await Clipboard.setData(ClipboardData(text: json));
+                }
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l.copiedToClipboard),
-                      backgroundColor: JarvisTheme.green,
-                    ),
+                  JarvisToast.show(
+                    context,
+                    launched
+                        ? l.exportConfig
+                        : l.copiedToClipboard,
+                    type: ToastType.success,
                   );
                 }
               },
@@ -77,11 +89,10 @@ class SystemConfigPage extends StatelessWidget {
                   final content = utf8.decode(result.files.single.bytes!);
                   await cfg.importJson(content);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l.configImported),
-                        backgroundColor: JarvisTheme.green,
-                      ),
+                    JarvisToast.show(
+                      context,
+                      l.configImported,
+                      type: ToastType.success,
                     );
                   }
                 }
@@ -120,11 +131,10 @@ class SystemConfigPage extends StatelessWidget {
                 if (confirmed == true) {
                   await cfg.factoryReset();
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l.factoryResetComplete),
-                        backgroundColor: JarvisTheme.orange,
-                      ),
+                    JarvisToast.show(
+                      context,
+                      l.factoryResetComplete,
+                      type: ToastType.warning,
                     );
                   }
                 }
