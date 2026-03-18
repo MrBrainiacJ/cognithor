@@ -16,7 +16,7 @@ import json
 import logging
 import re
 import threading
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from jarvis.core.unified_llm import UnifiedLLMClient
@@ -80,7 +80,7 @@ class CognithorLLMBridge:
     def complete(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> str:
@@ -105,7 +105,7 @@ class CognithorLLMBridge:
     def chat(
         self,
         messages: list[dict],
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> str:
@@ -130,8 +130,8 @@ class CognithorLLMBridge:
     def complete_json(
         self,
         prompt: str,
-        expected_keys: Optional[list[str]] = None,
-        system_prompt: Optional[str] = None,
+        expected_keys: list[str] | None = None,
+        system_prompt: str | None = None,
         max_tokens: int = 512,
         temperature: float = 0.2,
     ) -> dict:
@@ -161,7 +161,7 @@ class CognithorLLMBridge:
             return False
 
     @staticmethod
-    def _parse_json_safe(text: str, expected_keys: Optional[list[str]] = None) -> dict:
+    def _parse_json_safe(text: str, expected_keys: list[str] | None = None) -> dict:
         """Extract JSON from LLM output with repair attempts."""
         defaults = {k: None for k in (expected_keys or [])}
 

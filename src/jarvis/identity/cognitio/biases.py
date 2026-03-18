@@ -17,10 +17,10 @@ Biases:
 
 import logging
 import math
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from jarvis.identity.cognitio.memory import MemoryRecord, MemoryValence
+    from jarvis.identity.cognitio.memory import MemoryRecord
 
 logger = logging.getLogger(__name__)
 

@@ -13,13 +13,13 @@ NarrativeSelf:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from jarvis.identity.cognitio.memory import MemoryRecord
     from jarvis.identity.cognitio.character import CognitiveState
     from jarvis.identity.cognitio.epistemic import EpistemicMap
+    from jarvis.identity.cognitio.memory import MemoryRecord
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +40,12 @@ class NarrativeSelf:
 
     def __init__(self, reflect_every_n: int = REFLECT_EVERY_N_DEFAULT) -> None:
         self._narrative: str = ""
-        self._last_reflection_at: Optional[datetime] = None
+        self._last_reflection_at: datetime | None = None
         self._reflection_count: int = 0
         self.reflect_every_n: int = reflect_every_n
         # Snapshot for differential reflection
-        self._personality_snapshot: Optional[dict] = None
-        self._epistemic_snapshot: Optional[dict] = None
+        self._personality_snapshot: dict | None = None
+        self._epistemic_snapshot: dict | None = None
         self._snapshot_interaction: int = 0
 
     def should_reflect(self, total_interactions: int) -> bool:
@@ -68,9 +68,9 @@ class NarrativeSelf:
     def generate(
         self,
         llm_client,
-        memories: list["MemoryRecord"],
-        state: "CognitiveState",
-        epistemic: "EpistemicMap",
+        memories: list[MemoryRecord],
+        state: CognitiveState,
+        epistemic: EpistemicMap,
     ) -> str:
         """
         Perform self-reflection with the LLM and update the narrative.
@@ -102,7 +102,8 @@ class NarrativeSelf:
         uncertain_str = ", ".join(uncertain) if uncertain else "none"
 
         prompt = (
-            "As an AI, I am performing a self-reflection by examining my memories and cognitive state.\n\n"
+            "As an AI, I am performing a self-reflection by examining "
+            "my memories and cognitive state.\n\n"
             f"Total interactions: {state.total_interactions}\n"
             f"Character strength: {state.character_strength:.2f}\n"
             f"Belief crises experienced: {state.belief_crises_experienced}\n"
@@ -113,7 +114,8 @@ class NarrativeSelf:
             "- Who am I? What are my core values and perspective?\n"
             "- How have I changed or grown?\n"
             "- What are my strengths, and what uncertainties do I live with?\n\n"
-            "Please respond sincerely, thoughtfully, and authentically in a maximum of 3 paragraphs. "
+            "Please respond sincerely, thoughtfully, and authentically "
+            "in a maximum of 3 paragraphs. "
             "This is a self-reflection, not a performance."
         )
 
@@ -121,7 +123,7 @@ class NarrativeSelf:
             narrative = llm_client.complete(prompt, max_tokens=600)
             if narrative:
                 self._narrative = narrative.strip()
-                self._last_reflection_at = datetime.now(timezone.utc)
+                self._last_reflection_at = datetime.now(UTC)
                 self._reflection_count += 1
                 logger.info(
                     f"Narrative reflection complete "
@@ -159,7 +161,7 @@ class NarrativeSelf:
         personality_dict: dict,
         epistemic_confidences: dict,
         interaction_count: int,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Produce a change reflection by comparing the current state to the previous snapshot.
 
@@ -276,7 +278,7 @@ class NarrativeSelf:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "NarrativeSelf":
+    def from_dict(cls, data: dict) -> NarrativeSelf:
         """Construct a NarrativeSelf from a dict."""
         ns = cls(reflect_every_n=data.get("reflect_every_n", cls.REFLECT_EVERY_N_DEFAULT))
         ns._narrative = data.get("narrative", "")

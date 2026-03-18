@@ -14,9 +14,12 @@ import contextlib
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis import BANNER_ASCII, __version__
+
+if TYPE_CHECKING:
+    from starlette.requests import Request as _STRequest
 
 # WebSocket/FastAPI types must be at module level so that
 # `from __future__ import annotations` (PEP 563) can resolve
@@ -1071,7 +1074,6 @@ def main() -> None:
                 log.info("cc_tts_endpoint_registered")
 
                 # ── Voice Transcription API ────────────────────────────
-                from starlette.requests import Request as _STRequest
 
                 @api_app.post("/api/v1/voice/transcribe", dependencies=[_Depends(_verify_cc_token)])
                 async def _voice_transcribe(request: _STRequest) -> dict[str, Any]:
@@ -1220,7 +1222,7 @@ def main() -> None:
                     try:
                         state = gateway._identity_layer.get_state_summary()
                         return state
-                    except Exception as e:
+                    except Exception:
                         log.debug("identity_api_error", exc_info=True)
                         return {"error": "Internal identity error", "code": "INTERNAL_ERROR"}
 
@@ -1255,7 +1257,7 @@ def main() -> None:
                             return {"error": "Engine not initialized", "code": "NOT_INITIALIZED"}
                         stats = engine.dream.run(engine)
                         return {"status": "dream_completed", "stats": str(stats)}
-                    except Exception as e:
+                    except Exception:
                         log.debug("identity_api_error", exc_info=True)
                         return {"error": "Internal identity error", "code": "INTERNAL_ERROR"}
 

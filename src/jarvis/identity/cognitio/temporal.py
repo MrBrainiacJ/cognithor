@@ -15,9 +15,7 @@ TemporalDensityTracker:
 from __future__ import annotations
 
 from collections import deque
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-
+from datetime import UTC, datetime, timedelta
 
 # ─────────────────────────────────────────────
 # DATE / DURATION HELPERS
@@ -119,19 +117,19 @@ class SessionRecord:
         message_count: Total messages in this session (user + assistant)
     """
 
-    __slots__ = ("started_at", "ended_at", "message_count")
+    __slots__ = ("ended_at", "message_count", "started_at")
 
     def __init__(
         self,
         started_at: datetime,
-        ended_at: Optional[datetime] = None,
+        ended_at: datetime | None = None,
         message_count: int = 0,
     ) -> None:
         self.started_at = started_at
         self.ended_at = ended_at
         self.message_count = message_count
 
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Session duration in seconds. None if still active."""
         if self.ended_at is None:
             return None
@@ -145,7 +143,7 @@ class SessionRecord:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "SessionRecord":
+    def from_dict(cls, d: dict) -> SessionRecord:
         return cls(
             started_at=datetime.fromisoformat(d["started_at"]),
             ended_at=(datetime.fromisoformat(d["ended_at"]) if d.get("ended_at") else None),
@@ -177,14 +175,14 @@ class TemporalDensityTracker:
 
     def __init__(self, sleep_threshold_minutes: int = 60) -> None:
         self._timestamps: deque[datetime] = deque(maxlen=self.MAX_HISTORY)
-        self.last_active: Optional[datetime] = None
-        self.session_start: datetime = datetime.now(timezone.utc)
+        self.last_active: datetime | None = None
+        self.session_start: datetime = datetime.now(UTC)
         self.sleep_threshold_minutes = sleep_threshold_minutes
         self._sleep_reported: bool = False  # sleep summary delivered only once
 
         # Session history
         self._session_log: list[SessionRecord] = []
-        self._current_session: Optional[SessionRecord] = None
+        self._current_session: SessionRecord | None = None
 
     # ─────────────────────────────────────────────
     # SESSION MANAGEMENT
@@ -197,7 +195,7 @@ class TemporalDensityTracker:
         If a previous session is still open it is closed now (ended_at = now).
         Called by the engine after _load_state() during init.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Close previous session if still open
         if self._current_session is not None and self._current_session.ended_at is None:
@@ -221,7 +219,7 @@ class TemporalDensityTracker:
 
     def record_interaction(self) -> None:
         """Append the current time as an interaction record and update last_active."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         self._timestamps.append(now)
         self.last_active = now
         self._increment_session_messages()
@@ -246,7 +244,7 @@ class TemporalDensityTracker:
         if not self._timestamps:
             return 0.0
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - timedelta(minutes=window_minutes)
 
         count = sum(1 for ts in self._timestamps if ts >= cutoff)
@@ -275,7 +273,7 @@ class TemporalDensityTracker:
     # SLEEP DETECTION
     # ─────────────────────────────────────────────
 
-    def get_sleep_duration(self) -> Optional[timedelta]:
+    def get_sleep_duration(self) -> timedelta | None:
         """
         Sleep duration since last activity.
 
@@ -286,7 +284,7 @@ class TemporalDensityTracker:
         if self.last_active is None:
             return None
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         elapsed = now - self.last_active
 
         if elapsed.total_seconds() >= self.sleep_threshold_minutes * 60:
@@ -294,7 +292,7 @@ class TemporalDensityTracker:
 
         return None
 
-    def get_sleep_summary(self) -> Optional[str]:
+    def get_sleep_summary(self) -> str | None:
         """
         Produce a human-readable sleep period summary.
 
@@ -329,7 +327,7 @@ class TemporalDensityTracker:
         No-op if called multiple times or if _current_session is None.
         """
         if self._current_session is not None and self._current_session.ended_at is None:
-            self._current_session.ended_at = datetime.now(timezone.utc)
+            self._current_session.ended_at = datetime.now(UTC)
             self._session_log.append(self._current_session)
             if len(self._session_log) > self.MAX_SESSION_LOG:
                 self._session_log = self._session_log[-self.MAX_SESSION_LOG :]
@@ -350,7 +348,7 @@ class TemporalDensityTracker:
         Returns:
             str: English natural-language summary
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         parts: list[str] = []
 
         # Current time
@@ -380,7 +378,8 @@ class TemporalDensityTracker:
 
             if sleep_td.total_seconds() > 60:
                 parts.append(
-                    f"Idle time between sessions: {_fmt_duration(sleep_td)} ({_fmt_relative(sleep_td)})."
+                    f"Idle time between sessions: "
+                    f"{_fmt_duration(sleep_td)} ({_fmt_relative(sleep_td)})."
                 )
         else:
             parts.append("I have no record of a previous completed conversation.")
@@ -421,7 +420,7 @@ class TemporalDensityTracker:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "TemporalDensityTracker":
+    def from_dict(cls, data: dict) -> TemporalDensityTracker:
         """Construct a TemporalDensityTracker from a dict."""
         tracker = cls(sleep_threshold_minutes=data.get("sleep_threshold_minutes", 60))
 

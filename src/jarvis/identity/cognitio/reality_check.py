@@ -18,11 +18,11 @@ Goal: Break the hallucination feedback loop.
 import logging
 import math
 import unicodedata
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from jarvis.identity.cognitio.vector_store import VectorStore
     from jarvis.identity.cognitio.memory import MemoryStore
+    from jarvis.identity.cognitio.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +178,7 @@ class RealityCheck:
 
         # Embedder for semantic jailbreak detection
         self._embedder = embedder
-        self._jailbreak_embeddings: Optional[list] = None
+        self._jailbreak_embeddings: list | None = None
         if embedder is not None:
             self._init_jailbreak_embeddings()
 
@@ -206,7 +206,7 @@ class RealityCheck:
             content_emb = self._embedder.encode(content)
 
             def cosine(a: list, b: list) -> float:
-                dot = sum(x * y for x, y in zip(a, b))
+                dot = sum(x * y for x, y in zip(a, b, strict=False))
                 norm_a = math.sqrt(sum(x * x for x in a))
                 norm_b = math.sqrt(sum(x * x for x in b))
                 return dot / (norm_a * norm_b + 1e-8) if norm_a and norm_b else 0.0

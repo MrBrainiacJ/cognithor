@@ -20,8 +20,7 @@ import logging
 import os
 import sqlite3
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class WorkingMemory:
 
         self._session_id = str(uuid.uuid4())
         self._message_count = 0
-        self._last_checkpoint: Optional[datetime] = None
+        self._last_checkpoint: datetime | None = None
 
         os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else ".", exist_ok=True)
         self._initialize_db()
@@ -119,7 +118,7 @@ class WorkingMemory:
             str: Generated interaction ID
         """
         interaction_id = str(uuid.uuid4())
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         with self._get_connection() as conn:
             conn.execute(
@@ -161,7 +160,7 @@ class WorkingMemory:
         Returns:
             list[dict]: Message list in chronological order
         """
-        since = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()
+        since = (datetime.now(UTC) - timedelta(minutes=minutes)).isoformat()
 
         with self._get_connection() as conn:
             rows = conn.execute(
@@ -192,7 +191,7 @@ class WorkingMemory:
         if self._last_checkpoint is None:
             return self._message_count > 0
 
-        elapsed = datetime.now(timezone.utc) - self._last_checkpoint
+        elapsed = datetime.now(UTC) - self._last_checkpoint
         return elapsed >= self.checkpoint_interval and self._message_count > 0
 
     def checkpoint(self, llm_summarizer=None) -> list[dict]:
@@ -226,7 +225,7 @@ class WorkingMemory:
         pending_memories = self._create_pending_memories(interactions, llm_summarizer)
 
         # Write to pending_memories
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             for pm in pending_memories:
                 conn.execute(
@@ -256,7 +255,7 @@ class WorkingMemory:
 
         # Reset counter
         self._message_count = 0
-        self._last_checkpoint = datetime.now(timezone.utc)
+        self._last_checkpoint = datetime.now(UTC)
 
         logger.info(
             f"Checkpoint complete: {len(interactions)} interactions → "
@@ -399,7 +398,7 @@ class WorkingMemory:
         Returns:
             int: Number of records deleted
         """
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=older_than_days)).isoformat()
+        cutoff = (datetime.now(UTC) - timedelta(days=older_than_days)).isoformat()
 
         with self._get_connection() as conn:
             # Delete old flushed pending memories

@@ -24,8 +24,7 @@ import os
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from jarvis.channels.base import Channel, MessageHandler, StatusType
@@ -34,6 +33,9 @@ from jarvis.security.rate_limiter import RateLimiter
 from jarvis.security.token_store import get_token_store
 from jarvis.utils.logging import get_logger
 from jarvis.utils.ttl_dict import TTLDict
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 log = get_logger(__name__)
 

@@ -7,12 +7,12 @@ Stores all snapshots on the local filesystem.
 Continues to work even without an internet connection.
 """
 
+import contextlib
 import json
 import logging
 import os
 import re as _re
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 _SAFE_ID_RE = _re.compile(r"[^a-zA-Z0-9_\-]")
 
@@ -48,7 +48,7 @@ class LocalStore:
         """
         import hashlib
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         safe_id = _SAFE_ID_RE.sub("_", identity_id[:16])
         filename = f"{safe_id}_{timestamp}.json"
         filepath = os.path.join(self.base_dir, filename)
@@ -58,10 +58,8 @@ class LocalStore:
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
-        try:
+        with contextlib.suppress(NotImplementedError):
             os.chmod(filepath, 0o600)
-        except NotImplementedError:
-            pass  # Windows — ACLs handle permissions
 
         uri = f"local://{filepath}"
         logger.info(f"Snapshot saved: {filepath}")
@@ -73,7 +71,7 @@ class LocalStore:
             "timestamp": timestamp,
         }
 
-    def load_snapshot(self, uri: str) -> Optional[dict]:
+    def load_snapshot(self, uri: str) -> dict | None:
         """
         Load a local snapshot.
 
@@ -97,13 +95,13 @@ class LocalStore:
             return None
 
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Snapshot could not be loaded: {e}")
             return None
 
-    def list_snapshots(self, identity_id: Optional[str] = None) -> list[dict]:
+    def list_snapshots(self, identity_id: str | None = None) -> list[dict]:
         """
         List available snapshots.
 
@@ -134,14 +132,14 @@ class LocalStore:
 
         return sorted(snapshots, key=lambda x: x["modified_at"], reverse=True)
 
-    def get_latest_snapshot(self, identity_id: str) -> Optional[dict]:
+    def get_latest_snapshot(self, identity_id: str) -> dict | None:
         """Get the most recent snapshot."""
         snapshots = self.list_snapshots(identity_id)
         if not snapshots:
             return None
         return self.load_snapshot(snapshots[0]["uri"])
 
-    def cleanup_old_snapshots(self, keep_last: int = 10, identity_id: Optional[str] = None) -> int:
+    def cleanup_old_snapshots(self, keep_last: int = 10, identity_id: str | None = None) -> int:
         """
         Clean up old snapshots, keeping the last N.
 

@@ -11,7 +11,6 @@ When the batch fills up, write a single Merkle root hash on-chain.
 
 import hashlib
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ class MerkleBatcher:
         self._batch_size = batch_size
         self._pending: list[str] = []
 
-    def add(self, content_hash: str) -> Optional[str]:
+    def add(self, content_hash: str) -> str | None:
         """
         Add a hash. Returns the Merkle root when the batch is full, otherwise None.
 
@@ -43,7 +42,7 @@ class MerkleBatcher:
             return self.flush()
         return None
 
-    def flush(self) -> Optional[str]:
+    def flush(self) -> str | None:
         """
         Force-finish the current batch and return the Merkle root.
 
@@ -85,7 +84,7 @@ class MerkleBatcher:
         if len(hashes) == 1:
             return hashes[0]
         if len(hashes) % 2 == 1:
-            hashes = hashes + [hashes[-1]]  # Duplicate last — do NOT mutate original list
+            hashes = [*hashes, hashes[-1]]  # Duplicate last — do NOT mutate original list
         parents = [
             hashlib.sha256(
                 b"\x01" + bytes.fromhex(hashes[i]) + bytes.fromhex(hashes[i + 1])

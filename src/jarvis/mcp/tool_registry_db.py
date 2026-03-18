@@ -10,6 +10,7 @@ Markdown-Dump durch dynamische, rollenbasierte Tool-Abschnitte zu ersetzen.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sqlite3
 from dataclasses import dataclass, field
@@ -626,8 +627,12 @@ _TOOL_DESCRIPTIONS_DE: dict[str, str] = {
     "web_search": "Durchsucht das Internet nach Informationen.",
     "web_news_search": "Sucht aktuelle Nachrichten zu einem Thema.",
     "search_and_read": "Sucht im Internet und liest die besten Ergebnisse vollstaendig.",
-    "verified_web_lookup": "Mehrstufiges Fakten-Pruefverfahren mit Quellenvergleich und Konfidenz-Score.",
-    "deep_research": "Tiefgehende Multi-Source-Recherche mit Follow-Up-Suchen und strukturiertem Report.",
+    "verified_web_lookup": (
+        "Mehrstufiges Fakten-Pruefverfahren mit Quellenvergleich und Konfidenz-Score."
+    ),
+    "deep_research": (
+        "Tiefgehende Multi-Source-Recherche mit Follow-Up-Suchen und strukturiertem Report."
+    ),
     "web_fetch": "Ruft den Inhalt einer URL ab.",
     "http_request": "Fuehrt einen HTTP-Request aus (GET/POST/PUT/PATCH/DELETE).",
     "read_file": "Liest den Inhalt einer Datei.",
@@ -861,10 +866,8 @@ class ToolRegistryDB:
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(_SCHEMA_SQL)
         # Migration: add locked column to existing databases
-        try:
+        with contextlib.suppress(sqlite3.OperationalError):
             self._conn.execute("ALTER TABLE tools ADD COLUMN locked INTEGER DEFAULT 1")
-        except sqlite3.OperationalError:
-            pass  # Column already exists
         self._conn.commit()
         log.debug("tool_registry_db_init", path=str(db_path))
 

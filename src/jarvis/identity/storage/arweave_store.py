@@ -27,7 +27,6 @@ import json
 import logging
 import os
 import re
-from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -59,7 +58,7 @@ class MemoryEncryptor:
     NONCE_BYTES = 12  # 96-bit nonce — GCM standard
 
     def __init__(self) -> None:
-        self._key: Optional[bytes] = None
+        self._key: bytes | None = None
         self._load_key()
 
     def _load_key(self) -> None:
@@ -114,7 +113,7 @@ class MemoryEncryptor:
             "ciphertext": ciphertext_and_tag.hex(),
         }
 
-    def decrypt(self, envelope: dict) -> Optional[str]:
+    def decrypt(self, envelope: dict) -> str | None:
         """
         Decrypt an envelope dict and return the plaintext string.
 
@@ -163,7 +162,7 @@ class ArweaveStore:
 
     def __init__(
         self,
-        wallet_path: Optional[str] = None,
+        wallet_path: str | None = None,
         gateway: str = "https://arweave.net",
     ) -> None:
         parsed_gw = urlparse(gateway)
@@ -188,7 +187,7 @@ class ArweaveStore:
     def _load_wallet(self) -> None:
         """Load and validate the Arweave JWK wallet."""
         try:
-            with open(self.wallet_path, "r") as f:
+            with open(self.wallet_path) as f:
                 wallet = json.load(f)
             if not isinstance(wallet, dict) or not _JWK_REQUIRED_FIELDS.issubset(wallet):
                 logger.error(
@@ -201,7 +200,7 @@ class ArweaveStore:
         except Exception as e:
             logger.error(f"Arweave wallet could not be loaded: {e}")
 
-    def upload(self, data: dict, tags: Optional[dict] = None) -> Optional[dict]:
+    def upload(self, data: dict, tags: dict | None = None) -> dict | None:
         """
         Encrypt and upload data to Arweave.
 
@@ -293,7 +292,7 @@ class ArweaveStore:
             logger.error(f"Arweave upload error: {e}")
             return None
 
-    def download(self, tx_id_or_uri: str) -> Optional[dict]:
+    def download(self, tx_id_or_uri: str) -> dict | None:
         """
         Download and decrypt data from Arweave.
 
@@ -341,7 +340,7 @@ class ArweaveStore:
             logger.error(f"Arweave download error: {e}")
             return None
 
-    def get_transaction_status(self, tx_id: str) -> Optional[str]:
+    def get_transaction_status(self, tx_id: str) -> str | None:
         """
         Check transaction status.
 

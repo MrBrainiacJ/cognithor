@@ -12,7 +12,7 @@ EpistemicMap:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from jarvis.identity.cognitio.memory import MemoryRecord
@@ -67,7 +67,7 @@ class EpistemicMap:
         self._confidence[topic] = new_score
         self._evidence_count[topic] = self._evidence_count.get(topic, 0) + 1
 
-    def update_from_memory(self, memory: "MemoryRecord", outcome: str) -> None:
+    def update_from_memory(self, memory: MemoryRecord, outcome: str) -> None:
         """
         Update the confidence map based on a memory record's tags.
 
@@ -94,7 +94,7 @@ class EpistemicMap:
         """
         return self._confidence.get(topic.lower().strip(), self._default_confidence)
 
-    def get_uncertain_topics(self, threshold: Optional[float] = None) -> list[str]:
+    def get_uncertain_topics(self, threshold: float | None = None) -> list[str]:
         """
         List topics with low confidence (uncertain).
 
@@ -108,7 +108,7 @@ class EpistemicMap:
         uncertain = [(topic, score) for topic, score in self._confidence.items() if score <= limit]
         return [t for t, _ in sorted(uncertain, key=lambda x: x[1])]
 
-    def get_confident_topics(self, threshold: Optional[float] = None) -> list[str]:
+    def get_confident_topics(self, threshold: float | None = None) -> list[str]:
         """
         List topics with high confidence.
 
@@ -158,7 +158,7 @@ class EpistemicMap:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "EpistemicMap":
+    def from_dict(cls, data: dict) -> EpistemicMap:
         """Construct an EpistemicMap from a dict."""
         em = cls(default_confidence=data.get("default_confidence", 0.5))
         em._confidence = dict(data.get("confidence", {}))

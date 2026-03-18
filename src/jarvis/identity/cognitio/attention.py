@@ -22,9 +22,9 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from jarvis.identity.cognitio.memory import MemoryRecord
     from jarvis.identity.cognitio.biases import BiasEngine
     from jarvis.identity.cognitio.embeddings import EmbeddingEngine
+    from jarvis.identity.cognitio.memory import MemoryRecord
 
 logger = logging.getLogger(__name__)
 

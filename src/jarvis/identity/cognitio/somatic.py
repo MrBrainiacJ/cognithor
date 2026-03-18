@@ -12,8 +12,7 @@ SomaticState:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 
 @dataclass
@@ -34,7 +33,7 @@ class SomaticState:
     energy_level: float = 1.0
     session_intensity_sum: float = 0.0
     interaction_count_this_session: int = 0
-    last_rest_at: Optional[datetime] = None
+    last_rest_at: datetime | None = None
 
     def update(self, emotional_intensity: float) -> None:
         """
@@ -58,7 +57,7 @@ class SomaticState:
         """
         recovery = elapsed_minutes * 0.01
         self.energy_level = min(1.0, self.energy_level + recovery)
-        self.last_rest_at = datetime.now(timezone.utc)
+        self.last_rest_at = datetime.now(UTC)
 
     def classify(self) -> str:
         """
@@ -104,9 +103,16 @@ class SomaticState:
         energy_pct = int(self.energy_level * 100)
 
         hints = {
-            "tired": f"My energy level is low ({energy_pct}%). I will try to keep my responses concise.",
-            "normal": f"My energy level is normal ({energy_pct}%). I am continuing in a balanced manner.",
-            "energetic": f"My energy level is high ({energy_pct}%). I can provide detailed and thoughtful responses.",
+            "tired": (
+                f"My energy level is low ({energy_pct}%). I will try to keep my responses concise."
+            ),
+            "normal": (
+                f"My energy level is normal ({energy_pct}%). I am continuing in a balanced manner."
+            ),
+            "energetic": (
+                f"My energy level is high ({energy_pct}%)."
+                " I can provide detailed and thoughtful responses."
+            ),
         }
         return hints[state]
 
@@ -120,7 +126,7 @@ class SomaticState:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "SomaticState":
+    def from_dict(cls, data: dict) -> SomaticState:
         """Construct a SomaticState from a dict."""
         state = cls()
         state.energy_level = data.get("energy_level", 1.0)

@@ -43,6 +43,7 @@ from jarvis.gateway.phases import (
     init_security,
     init_tools,
 )
+from jarvis.i18n import t
 from jarvis.mcp.client import JarvisMCPClient
 from jarvis.models import (
     ActionPlan,
@@ -58,7 +59,6 @@ from jarvis.models import (
     ToolResult,
     WorkingMemory,
 )
-from jarvis.i18n import t
 from jarvis.utils.logging import get_logger, setup_logging
 
 if TYPE_CHECKING:
@@ -776,7 +776,7 @@ class Gateway:
         if tasks:
             # Warte bis alle Channels beendet sind
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            for task, result in zip(tasks, results):
+            for task, result in zip(tasks, results, strict=False):
                 if isinstance(result, BaseException):
                     ch_name = task.get_name()
                     log.error(
@@ -1343,7 +1343,8 @@ class Gateway:
                 self._gatekeeper._tool_enforcer.reset_call_count(active_skill.skill.slug)
 
         # Pipeline callback fuer Presearch + PGE-Loop
-        # msg.session_id = WS-URL session_id (vom Client), session.session_id = interner Gateway-Key.
+        # msg.session_id = WS-URL session_id (vom Client),
+        # session.session_id = interner Gateway-Key.
         # Channels nutzen msg.session_id fuer Connection-Lookup.
         _pipeline_cb = self._make_pipeline_callback(msg.channel, msg.session_id)
 

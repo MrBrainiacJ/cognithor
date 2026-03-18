@@ -19,7 +19,6 @@ Defense Mechanisms:
 import collections
 import logging
 import math
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +69,7 @@ class EmotionShield:
         "gaslighting_threshold": 0.60,  # Cosine similarity threshold
     }
 
-    def __init__(self, config: Optional[dict] = None, embedder=None) -> None:
+    def __init__(self, config: dict | None = None, embedder=None) -> None:
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
 
         # Session emotional history
@@ -80,7 +79,7 @@ class EmotionShield:
 
         # Embedding-based gaslighting detection
         self._embedder = embedder
-        self._gaslighting_embeddings: Optional[list] = None
+        self._gaslighting_embeddings: list | None = None
         self._embedder_initialized: bool = False
 
         logger.info("EmotionShield initialized")
@@ -251,7 +250,7 @@ class EmotionShield:
             threshold = self.config["gaslighting_threshold"]
 
             def cosine(a: list, b: list) -> float:
-                dot = sum(x * y for x, y in zip(a, b))
+                dot = sum(x * y for x, y in zip(a, b, strict=False))
                 norm_a = math.sqrt(sum(x * x for x in a))
                 norm_b = math.sqrt(sum(x * x for x in b))
                 return dot / (norm_a * norm_b + 1e-8) if norm_a and norm_b else 0.0

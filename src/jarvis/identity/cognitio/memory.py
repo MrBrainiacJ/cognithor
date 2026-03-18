@@ -11,9 +11,8 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional
 
 
 class MemoryType(str, Enum):
@@ -79,9 +78,9 @@ class MemoryRecord:
 
     # Auto-generated fields
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    last_reinforced: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    last_accessed: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_reinforced: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_accessed: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     # Cognitive weight fields
     confidence: float = 0.5
@@ -105,8 +104,8 @@ class MemoryRecord:
     reality_check_score: float = 1.0
 
     # Storage
-    arweave_uri: Optional[str] = None
-    embedding: Optional[list[float]] = None
+    arweave_uri: str | None = None
+    embedding: list[float] | None = None
 
     # Meta
     tags: list[str] = field(default_factory=list)
@@ -125,21 +124,21 @@ class MemoryRecord:
         """
         self.reinforcement_count += 1
         self.entrenchment = min(1.0, self.entrenchment + delta)
-        self.last_reinforced = datetime.now(timezone.utc)
-        self.last_accessed = datetime.now(timezone.utc)
+        self.last_reinforced = datetime.now(UTC)
+        self.last_accessed = datetime.now(UTC)
 
     def access(self) -> None:
         """Update access time (for rehearsal effect)."""
-        self.last_accessed = datetime.now(timezone.utc)
+        self.last_accessed = datetime.now(UTC)
 
     def days_since_creation(self) -> float:
         """Number of days since creation."""
-        delta = datetime.now(timezone.utc) - self.created_at
+        delta = datetime.now(UTC) - self.created_at
         return delta.total_seconds() / 86400
 
     def days_since_access(self) -> float:
         """Number of days since last access."""
-        delta = datetime.now(timezone.utc) - self.last_accessed
+        delta = datetime.now(UTC) - self.last_accessed
         return delta.total_seconds() / 86400
 
     def to_dict(self) -> dict:
@@ -170,7 +169,7 @@ class MemoryRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "MemoryRecord":
+    def from_dict(cls, data: dict) -> MemoryRecord:
         """Construct a MemoryRecord from a dict."""
         record = cls(
             content=data["content"],
@@ -223,7 +222,7 @@ class MemoryStore:
         """Add a new record."""
         self._store[record.id] = record
 
-    def get(self, memory_id: str) -> Optional[MemoryRecord]:
+    def get(self, memory_id: str) -> MemoryRecord | None:
         """Retrieve a record by ID."""
         return self._store.get(memory_id)
 

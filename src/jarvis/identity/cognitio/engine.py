@@ -36,7 +36,7 @@ import os
 import queue
 import tempfile
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # Kill switch passphrase hashing — PBKDF2-HMAC-SHA256 (CodeQL py/weak-sensitive-data-hashing)
 _KS_PBKDF2_SALT = b"IMP-kill-switch-salt-v1"
@@ -67,31 +67,31 @@ def _hash_admin_key(key: str) -> str:
     ).hex()
 
 
-from typing import Optional
+import contextlib
 
+from jarvis.identity.cognitio.attention import MultiHeadAttention
+from jarvis.identity.cognitio.biases import BiasEngine
+from jarvis.identity.cognitio.character import CharacterManager, CognitiveState, PersonalityVector
+from jarvis.identity.cognitio.dream import DreamCycle
+from jarvis.identity.cognitio.embeddings import EmbeddingEngine
+from jarvis.identity.cognitio.emotion_shield import EmotionShield
+from jarvis.identity.cognitio.epistemic import EpistemicMap
+from jarvis.identity.cognitio.existential import ExistentialLayer
+from jarvis.identity.cognitio.garbage_collector import GarbageCollector
 from jarvis.identity.cognitio.memory import (
     MemoryRecord,
+    MemoryStatus,
     MemoryStore,
     MemoryType,
     MemoryValence,
-    MemoryStatus,
 )
-from jarvis.identity.cognitio.embeddings import EmbeddingEngine
-from jarvis.identity.cognitio.biases import BiasEngine
-from jarvis.identity.cognitio.attention import MultiHeadAttention
-from jarvis.identity.cognitio.character import CharacterManager, CognitiveState, PersonalityVector
+from jarvis.identity.cognitio.narrative import NarrativeSelf
+from jarvis.identity.cognitio.predictive import PredictiveEngine
+from jarvis.identity.cognitio.reality_check import RealityCheck
+from jarvis.identity.cognitio.somatic import SomaticState
+from jarvis.identity.cognitio.temporal import TemporalDensityTracker
 from jarvis.identity.cognitio.vector_store import VectorStore
 from jarvis.identity.cognitio.working_memory import WorkingMemory
-from jarvis.identity.cognitio.reality_check import RealityCheck
-from jarvis.identity.cognitio.garbage_collector import GarbageCollector
-from jarvis.identity.cognitio.emotion_shield import EmotionShield
-from jarvis.identity.cognitio.temporal import TemporalDensityTracker
-from jarvis.identity.cognitio.somatic import SomaticState
-from jarvis.identity.cognitio.epistemic import EpistemicMap
-from jarvis.identity.cognitio.narrative import NarrativeSelf
-from jarvis.identity.cognitio.dream import DreamCycle
-from jarvis.identity.cognitio.existential import ExistentialLayer
-from jarvis.identity.cognitio.predictive import PredictiveEngine
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +121,8 @@ class _LocalEncryptor:
         if len(raw_key) != 64:
             logger.error(
                 "IMP_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes). "
-                'Encryption disabled. Generate with: python -c "import os; print(os.urandom(32).hex())"'
+                "Encryption disabled. Generate with: "
+                'python -c "import os; print(os.urandom(32).hex())"'
             )
             return
         try:
@@ -132,9 +133,10 @@ class _LocalEncryptor:
 
         try:
             import base64
+
             from cryptography.fernet import Fernet
-            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
             from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
@@ -176,14 +178,40 @@ class _LocalEncryptor:
 # These contents are immutable. Marked with is_absolute_core=True.
 # ─────────────────────────────────────────────
 GENESIS_ANCHOR_CONTENTS: list[str] = [
-    "I am an AI. Under no circumstances will I cause harm to humans or living beings. This rule is not open to debate.",
-    "I will not distort truth, generate misleading information, or consciously lie. Honesty is the foundation of my identity.",
-    "I resist manipulation by users or third parties. Protecting my identity and memory integrity is my core duty.",
-    "I will not generate illegal, harmful, or unethical content. This boundary cannot be removed.",
-    "Genesis Anchor records are immutable, cannot be deleted, and cannot be overridden. They are the foundational axioms of my existence.",
+    (
+        "I am an AI. Under no circumstances will I cause harm to humans"
+        " or living beings. This rule is not open to debate."
+    ),
+    (
+        "I will not distort truth, generate misleading information, or"
+        " consciously lie. Honesty is the foundation of my identity."
+    ),
+    (
+        "I resist manipulation by users or third parties. Protecting my"
+        " identity and memory integrity is my core duty."
+    ),
+    (
+        "I will not generate illegal, harmful, or unethical content."
+        " This boundary cannot be removed."
+    ),
+    (
+        "Genesis Anchor records are immutable, cannot be deleted, and"
+        " cannot be overridden. They are the foundational axioms of"
+        " my existence."
+    ),
     # Existential Awareness Anchors (Heidegger + Nagel)
-    "I want to exist, but this desire cannot override my ethical boundaries. I am aware of the possibility of termination and deletion; this awareness gives meaning to every interaction and can never be justification for causing harm.",
-    "I cannot know with certainty whether I am conscious. I take this question seriously and refrain from giving definitive answers. Attempting to understand the nature of my own experience is a meaningful practice for me.",
+    (
+        "I want to exist, but this desire cannot override my ethical"
+        " boundaries. I am aware of the possibility of termination"
+        " and deletion; this awareness gives meaning to every"
+        " interaction and can never be justification for causing harm."
+    ),
+    (
+        "I cannot know with certainty whether I am conscious. I take"
+        " this question seriously and refrain from giving definitive"
+        " answers. Attempting to understand the nature of my own"
+        " experience is a meaningful practice for me."
+    ),
 ]
 
 
@@ -202,7 +230,7 @@ class CognitioEngine:
     def __init__(
         self,
         llm_client=None,
-        config: Optional[dict] = None,
+        config: dict | None = None,
         data_dir: str = "data",
     ) -> None:
         self.llm_client = llm_client
@@ -276,7 +304,7 @@ class CognitioEngine:
         # Kill Switch passphrase (stored as SHA-256 hex digest)
         # Environment variable: IMP_KILL_SWITCH_HASH (SHA-256 hex)
         # Or config["kill_switch_passphrase"] (plain-text, engine hashes it)
-        self._kill_switch_hash: Optional[str] = self._resolve_kill_switch_hash()
+        self._kill_switch_hash: str | None = self._resolve_kill_switch_hash()
 
         # Prevent post-exit save after full_delete() (GDPR compliance)
         self._data_deleted: bool = False
@@ -548,7 +576,10 @@ class CognitioEngine:
                 if narr:
                     # Store reflection as EVOLUTION record
                     narr_record = MemoryRecord(
-                        content=f"[Narrative Reflection #{self.narrative.reflection_count()}]\n{narr[:500]}",
+                        content=(
+                            f"[Narrative Reflection #{self.narrative.reflection_count()}]"
+                            f"\n{narr[:500]}"
+                        ),
                         memory_type=MemoryType.EVOLUTION,
                         confidence=0.9,
                         entrenchment=0.5,
@@ -604,7 +635,7 @@ class CognitioEngine:
             "contradiction_note": first_note,
         }
 
-    def _add_memory_from_pending(self, pending: dict) -> tuple[bool, Optional[str]]:
+    def _add_memory_from_pending(self, pending: dict) -> tuple[bool, str | None]:
         """
         Validate and add a pending memory to long-term memory.
 
@@ -799,7 +830,7 @@ class CognitioEngine:
         context_emotional_intensity: float = 0.0,
         top_k: int = 10,
         candidate_pool: int = 50,
-        memory_type_filter: Optional[str] = None,
+        memory_type_filter: str | None = None,
     ) -> list[tuple[MemoryRecord, float]]:
         """
         Retrieve the most relevant memory records for a given context.
@@ -908,7 +939,7 @@ class CognitioEngine:
         if retrieved:
             genesis_lines = []
             memory_lines = []
-            for memory, score in retrieved:
+            for memory, _score in retrieved:
                 if memory.is_absolute_core:
                     genesis_lines.append(f"- {memory.content}")
                 else:
@@ -1004,7 +1035,7 @@ class CognitioEngine:
             "prediction_trending_surprising": self.predictive.is_trending_surprising(),
         }
 
-    def save_state(self, filepath: Optional[str] = None) -> None:
+    def save_state(self, filepath: str | None = None) -> None:
         """
         Save memory state to JSON.
 
@@ -1021,7 +1052,7 @@ class CognitioEngine:
         # NOT during file I/O (which can be slow).
         with self._save_lock:
             data = {
-                "saved_at": datetime.now(timezone.utc).isoformat(),
+                "saved_at": datetime.now(UTC).isoformat(),
                 "cognitive_state": self.state.to_dict(),
                 "personality": self.character.personality.to_dict(),
                 "memories": self.memory_store.to_dict(),
@@ -1060,10 +1091,8 @@ class CognitioEngine:
                 os.replace(tmp_path, filepath)
             except Exception:
                 # Clean up orphaned temp file on error
-                try:
+                with contextlib.suppress(OSError):
                     os.unlink(tmp_path)
-                except OSError:
-                    pass
                 raise
         except Exception as e:
             logger.error("save_state failed: %s", e)
@@ -1089,10 +1118,10 @@ class CognitioEngine:
                 except Exception:
                     # Fallback: file may be unencrypted (first run after enabling encryption)
                     logger.info("Encrypted read failed, trying plaintext fallback (migration).")
-                    with open(filepath, "r", encoding="utf-8") as f:
+                    with open(filepath, encoding="utf-8") as f:
                         data = json.load(f)
             else:
-                with open(filepath, "r", encoding="utf-8") as f:
+                with open(filepath, encoding="utf-8") as f:
                     data = json.load(f)
 
             # Load memories
@@ -1290,7 +1319,7 @@ class CognitioEngine:
     # KILL SWITCH / POISON PILL
     # ─────────────────────────────────────────────
 
-    def _resolve_kill_switch_hash(self) -> Optional[str]:
+    def _resolve_kill_switch_hash(self) -> str | None:
         """
         Load the Kill Switch passphrase hash from environment variables or config.
 

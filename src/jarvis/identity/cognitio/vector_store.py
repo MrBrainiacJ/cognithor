@@ -14,7 +14,6 @@ even across millions of records.
 
 import logging
 import os
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +109,7 @@ class VectorStore:
         self,
         query_embedding: list[float],
         n_results: int = 50,
-        where: Optional[dict] = None,
+        where: dict | None = None,
     ) -> list[str]:
         """
         Return the nearest n_results memory_ids via ANN search.
@@ -248,7 +247,7 @@ class VectorStore:
         max_list = VectorStore._META_MAX_LIST
         clean = {}
         for key, value in metadata.items():
-            if isinstance(value, (int, float, bool)):
+            if isinstance(value, int | float | bool):
                 clean[key] = value
             elif isinstance(value, str):
                 clean[key] = value[:max_str]

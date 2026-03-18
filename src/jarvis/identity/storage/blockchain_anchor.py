@@ -12,14 +12,14 @@ Smart contract: ImmortalMind.sol
 Fallback: Base → Arbitrum → local queue
 """
 
+import contextlib
 import ipaddress
 import json
 import logging
 import os
 import re
 import socket
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 from jarvis.identity.storage.merkle_batcher import MerkleBatcher
@@ -140,9 +140,9 @@ class BlockchainAnchor:
     def __init__(
         self,
         chain_name: str = "base_sepolia",
-        rpc_url: Optional[str] = None,
-        contract_address: Optional[str] = None,
-        private_key: Optional[str] = None,
+        rpc_url: str | None = None,
+        contract_address: str | None = None,
+        private_key: str | None = None,
     ) -> None:
         self.chain_name = chain_name
         self.chain_info = self.SUPPORTED_CHAINS.get(chain_name, {})
@@ -196,10 +196,8 @@ class BlockchainAnchor:
             os.makedirs(os.path.dirname(self._queue_file) or ".", exist_ok=True)
             with open(self._queue_file, "w") as f:
                 json.dump(self._pending_queue, f, indent=2)
-            try:
+            with contextlib.suppress(NotImplementedError):
                 os.chmod(self._queue_file, 0o600)
-            except NotImplementedError:
-                pass  # Windows — ACLs handle permissions
         except Exception as e:
             logger.warning("Could not save pending queue: %s", e)
 
@@ -270,7 +268,7 @@ class BlockchainAnchor:
         storage_uri: str,
         memory_type: str = "snapshot",
         salience_score: int = 0,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Record memory hash to the blockchain.
 
@@ -286,9 +284,9 @@ class BlockchainAnchor:
         """
         # Input validation
         if not identity_id or len(identity_id) > 256:
-            raise ValueError(f"Invalid identity_id: must be 1-256 chars")
+            raise ValueError("Invalid identity_id: must be 1-256 chars")
         if not _HEX64_RE.match(content_hash):
-            raise ValueError(f"Invalid content_hash: must be 64 hex chars (SHA-256)")
+            raise ValueError("Invalid content_hash: must be 64 hex chars (SHA-256)")
         if memory_type not in _VALID_MEMORY_TYPES:
             raise ValueError(
                 f"Invalid memory_type '{memory_type}': must be one of {sorted(_VALID_MEMORY_TYPES)}"
@@ -296,7 +294,7 @@ class BlockchainAnchor:
         if not (0 <= salience_score <= 100):
             raise ValueError(f"salience_score must be 0-100, got {salience_score}")
         if len(storage_uri) > 512:
-            raise ValueError(f"storage_uri too long: max 512 chars")
+            raise ValueError("storage_uri too long: max 512 chars")
 
         if not self._init_web3():
             logger.warning("Web3 could not be initialized — adding to queue")
@@ -322,6 +320,7 @@ class BlockchainAnchor:
             # registerIdentity() now derives identityId = keccak256(guardian, salt)
             # on-chain, so we must pass the same derived key here (SWC-114 fix).
             import hashlib
+
             from web3 import Web3 as _Web3
 
             salt = hashlib.sha256(identity_id.encode()).digest()
@@ -359,7 +358,7 @@ class BlockchainAnchor:
                 }
             )
 
-    def _simple_log_tx(self, data_hash: str) -> Optional[dict]:
+    def _simple_log_tx(self, data_hash: str) -> dict | None:
         """Log with simple ETH TX when no contract is available."""
         try:
             account = self._web3.eth.account.from_key(self.private_key)
@@ -380,7 +379,7 @@ class BlockchainAnchor:
 
     def _queue_operation(self, data: dict) -> dict:
         """Add a failed operation to the queue."""
-        entry = {**data, "queued_at": datetime.now(timezone.utc).isoformat()}
+        entry = {**data, "queued_at": datetime.now(UTC).isoformat()}
         self._pending_queue.append(entry)
         self._save_queue()
         logger.warning(f"Operation queued: {data.get('type', 'unknown')}")
@@ -432,7 +431,7 @@ class BlockchainAnchor:
         memory_type: str = "snapshot",
         salience: int = 0,
         entrenchment: int = 0,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Add a memory to the Merkle batch.
 
@@ -457,7 +456,7 @@ class BlockchainAnchor:
             )
         return None
 
-    def flush_batch(self, identity_id: str, batch_uri: str = "") -> Optional[dict]:
+    def flush_batch(self, identity_id: str, batch_uri: str = "") -> dict | None:
         """
         Force-write a partial batch to the blockchain.
 
@@ -482,7 +481,7 @@ class BlockchainAnchor:
         merkle_root: str,
         memory_count: int,
         batch_uri: str = "",
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """Write Merkle root on-chain via anchorBatch()."""
         if not self._init_web3():
             return self._queue_operation(
@@ -500,6 +499,7 @@ class BlockchainAnchor:
                 return None
 
             import hashlib
+
             from web3 import Web3 as _Web3
 
             # Derive identityId consistently with anchor_memory_hash (SWC-114 fix)

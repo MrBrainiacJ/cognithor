@@ -7,13 +7,10 @@ policies go through this class.
 
 from __future__ import annotations
 
+import contextlib
 import logging
-import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
-
-if TYPE_CHECKING:
-    from jarvis.config import JarvisConfig
+from typing import Any
 
 logger = logging.getLogger("jarvis.identity")
 
@@ -85,10 +82,8 @@ class IdentityLayer:
                 import asyncio
 
                 loop = None
-                try:
+                with contextlib.suppress(RuntimeError):
                     loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    pass
                 llm_client = CognithorLLMBridge(llm_fn, model=llm_model, loop=loop)
 
             engine_config = {
@@ -163,7 +158,7 @@ class IdentityLayer:
 
             # Character hints
             pv = self._engine.character.personality.to_dict()
-            style_hints = {k: v for k, v in pv.items() if isinstance(v, (int, float)) and v > 0.6}
+            style_hints = {k: v for k, v in pv.items() if isinstance(v, int | float) and v > 0.6}
 
             # Trust boundary (always at the end of context)
             trust_boundary = (
@@ -330,7 +325,7 @@ class IdentityLayer:
             self._engine.memory_store.add(record)
 
             # Also add to VectorStore for ANN search
-            try:
+            with contextlib.suppress(Exception):
                 self._engine.vector_store.add(
                     record.id,
                     record.embedding,
@@ -340,8 +335,6 @@ class IdentityLayer:
                         "source_type": "cognithor",
                     },
                 )
-            except Exception:
-                pass  # VectorStore may not be available
 
         except Exception as exc:
             logger.debug("store_from_cognithor_failed", error=str(exc)[:200])
@@ -428,7 +421,6 @@ class IdentityLayer:
 
     def cognitive_shutdown(self, passphrase: str) -> dict:
         """Emergency cognitive shutdown (requires passphrase)."""
-        if self._engine:
-            if self._engine.check_kill_switch(passphrase):
-                return self._engine.cognitive_shutdown()
+        if self._engine and self._engine.check_kill_switch(passphrase):
+            return self._engine.cognitive_shutdown()
         return {"error": "Invalid passphrase or engine not available"}

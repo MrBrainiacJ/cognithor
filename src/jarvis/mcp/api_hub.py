@@ -183,10 +183,8 @@ def _get_or_create_fernet(config: Any) -> Any | None:
             key_path.parent.mkdir(parents=True, exist_ok=True)
             key_path.write_bytes(key)
             # Restrict file access to owner only
-            try:
+            with contextlib.suppress(OSError):
                 key_path.chmod(0o600)
-            except OSError:
-                pass
             if sys.platform == "win32":
                 try:
                     username = os.environ.get("USERNAME", "")

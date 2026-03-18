@@ -27,8 +27,8 @@ from __future__ import annotations
 
 import logging
 import random
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from jarvis.identity.cognitio.engine import CognitioEngine
@@ -60,16 +60,16 @@ class DreamCycle:
         seed: Seed for random connection discovery (test reproducibility)
     """
 
-    def __init__(self, seed: Optional[int] = None) -> None:
+    def __init__(self, seed: int | None = None) -> None:
         self.dream_count: int = 0
-        self.last_dream_at: Optional[datetime] = None
+        self.last_dream_at: datetime | None = None
         self._dream_log: list[str] = []
         self._last_stats: dict = {}
         self._rng = random.Random(seed)
         # Pending candidates awaiting wakeup validation
         self._insight_candidates: list[dict] = []
 
-    def run(self, engine: "CognitioEngine") -> dict:
+    def run(self, engine: CognitioEngine) -> dict:
         """
         Run the full dream cycle.
 
@@ -84,7 +84,7 @@ class DreamCycle:
         """
         self._dream_log = []
         self.dream_count += 1
-        self.last_dream_at = datetime.now(timezone.utc)
+        self.last_dream_at = datetime.now(UTC)
 
         logger.info(f"Dream cycle #{self.dream_count} starting...")
 
@@ -110,7 +110,7 @@ class DreamCycle:
         )
         return stats
 
-    def _emotional_regulation(self, engine: "CognitioEngine") -> tuple[int, list[str]]:
+    def _emotional_regulation(self, engine: CognitioEngine) -> tuple[int, list[str]]:
         """
         REM effect: soften old memories with high emotional load.
 
@@ -150,7 +150,7 @@ class DreamCycle:
 
         return regulated, log
 
-    def _find_insights(self, engine: "CognitioEngine") -> tuple[int, list[str]]:
+    def _find_insights(self, engine: CognitioEngine) -> tuple[int, list[str]]:
         """
         Default mode network: unexpected memory connections.
 
@@ -258,9 +258,12 @@ class DreamCycle:
                 f"   Similarity: {c['similarity']:.2f}"
             )
         return (
-            "During sleep, possible connections were discovered between the following memory pairs. "
-            "For each pair: is there a genuinely meaningful, logical connection between these two memories? "
-            "Write only the numbers of the meaningful ones separated by commas (e.g.: 0, 2). "
+            "During sleep, possible connections were discovered "
+            "between the following memory pairs. "
+            "For each pair: is there a genuinely meaningful, "
+            "logical connection between these two memories? "
+            "Write only the numbers of the meaningful ones "
+            "separated by commas (e.g.: 0, 2). "
             "If none are meaningful, write only 'none'.\n\n" + "\n\n".join(lines)
         )
 
@@ -335,7 +338,7 @@ class DreamCycle:
             return f"Dream cycle #{stats.get('dream_number', '?')}: " + ", ".join(parts) + "."
         return f"Dream cycle #{stats.get('dream_number', '?')} complete (no changes)."
 
-    def should_dream(self, sleep_duration_seconds: Optional[float]) -> bool:
+    def should_dream(self, sleep_duration_seconds: float | None) -> bool:
         """
         Should the dream cycle run?
 
@@ -348,7 +351,7 @@ class DreamCycle:
             return False
         # If a dream already occurred this session (last_dream_at is recent) — no
         if self.last_dream_at is not None:
-            session_age = (datetime.now(timezone.utc) - self.last_dream_at).total_seconds()
+            session_age = (datetime.now(UTC) - self.last_dream_at).total_seconds()
             if session_age < 60:  # Do not run again within 1 minute
                 return False
         return True
@@ -362,7 +365,7 @@ class DreamCycle:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "DreamCycle":
+    def from_dict(cls, data: dict) -> DreamCycle:
         """Construct a DreamCycle from a dict."""
         dc = cls()
         dc.dream_count = data.get("dream_count", 0)

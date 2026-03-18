@@ -195,7 +195,6 @@ async def init_pge(
         identity_config = getattr(config, "identity", None)
         if identity_config is None or getattr(identity_config, "enabled", True):
             from jarvis.identity import IdentityLayer
-            from jarvis.core.unified_llm import UnifiedLLMClient
 
             _id_name = getattr(getattr(config, "agents", None), "default_identity", "jarvis")
             _id_data_dir = config.jarvis_home / "identity" / _id_name
@@ -217,12 +216,15 @@ async def init_pge(
         log.debug("identity_layer_init_skipped", exc_info=True)
 
     # Memory Bridge: inject IdentityLayer into MemoryManager for bidirectional sync
-    if identity_layer is not None and memory_manager is not None:
-        if hasattr(memory_manager, "set_identity_layer"):
-            try:
-                memory_manager.set_identity_layer(identity_layer)
-            except Exception:
-                log.debug("identity_layer_memory_bridge_failed", exc_info=True)
+    if (
+        identity_layer is not None
+        and memory_manager is not None
+        and hasattr(memory_manager, "set_identity_layer")
+    ):
+        try:
+            memory_manager.set_identity_layer(identity_layer)
+        except Exception:
+            log.debug("identity_layer_memory_bridge_failed", exc_info=True)
 
     # Executor (with retry/backoff + security + profiling + telemetry + gap detection)
     try:

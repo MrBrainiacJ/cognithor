@@ -13,12 +13,13 @@ Pruning Criteria:
     CANDIDATE: recency_score < 0.01 AND entrenchment < 0.4 AND reinforcement_count < 3
 """
 
+import contextlib
 import logging
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from jarvis.identity.cognitio.memory import MemoryRecord, MemoryStore, MemoryStatus
+    from jarvis.identity.cognitio.memory import MemoryRecord, MemoryStore
     from jarvis.identity.cognitio.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ class GarbageCollector:
         self,
         memory_store: "MemoryStore",
         vector_store: "VectorStore",
-        config: Optional[dict] = None,
+        config: dict | None = None,
         bias_engine=None,
     ) -> None:
         self.memory_store = memory_store
@@ -62,7 +63,7 @@ class GarbageCollector:
         # Merge config
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
 
-        self._last_run: Optional[datetime] = None
+        self._last_run: datetime | None = None
         self._pruned_log: list[dict] = []  # Pruning history
 
         # Tombstone log: controls restoration of pruned memories
@@ -147,19 +148,17 @@ class GarbageCollector:
                     "action": "pruned",
                     "memory_id": memory.id,
                     "reason": "low_recency_low_entrenchment",
-                    "pruned_at": datetime.now(timezone.utc).isoformat(),
+                    "pruned_at": datetime.now(UTC).isoformat(),
                     "arweave_uri": getattr(memory, "arweave_uri", None),
                 }
                 self._tombstone_log[memory.id] = tombstone
 
                 # Arweave audit record (optional)
                 if self._arweave_store and getattr(memory, "arweave_uri", None):
-                    try:
+                    with contextlib.suppress(Exception):
                         self._arweave_store.upload(
                             tombstone, tags={"Type": "Tombstone", "MemoryId": memory.id}
                         )
-                    except Exception:
-                        pass  # Pruning continues even if audit fails
 
                 # Pruned log (backwards compatibility)
                 self._pruned_log.append(
@@ -175,7 +174,7 @@ class GarbageCollector:
             except Exception as e:
                 logger.error(f"Pruning error (id={memory.id[:8]}): {e}")
 
-        self._last_run = datetime.now(timezone.utc)
+        self._last_run = datetime.now(UTC)
         total_after = self.memory_store.count_active()
 
         logger.info(
@@ -369,7 +368,8 @@ class GarbageCollector:
         limit_threshold = self.config["max_active_memories"] * 0.8
         if active_count >= limit_threshold:
             logger.info(
-                f"GC: memory limit approaching ({active_count}/{self.config['max_active_memories']}), running now"
+                "GC: memory limit approaching "
+                f"({active_count}/{self.config['max_active_memories']}), running now"
             )
             return True
 
@@ -377,7 +377,7 @@ class GarbageCollector:
         if self._last_run is None:
             return active_count > 0
 
-        hours_since_last = (datetime.now(timezone.utc) - self._last_run).total_seconds() / 3600
+        hours_since_last = (datetime.now(UTC) - self._last_run).total_seconds() / 3600
         return hours_since_last >= self.config["prune_interval_hours"]
 
     def register_crisis_memory(self, memory_id: str) -> None:

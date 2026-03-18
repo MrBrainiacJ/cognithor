@@ -19,10 +19,9 @@ Note: No LLM calls — only cosine distance in embedding space.
      Assistant response = expectation vector, user response = reality vector.
 """
 
-import logging
 import collections
+import logging
 import math
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ class PredictiveEngine:
     """
 
     def __init__(self) -> None:
-        self._expected_embedding: Optional[list[float]] = None
+        self._expected_embedding: list[float] | None = None
         self._last_error: float = 0.0
         self._error_history: collections.deque = collections.deque(maxlen=100)  # for trend analysis
 
@@ -93,7 +92,7 @@ class PredictiveEngine:
         """Is an expectation vector stored?"""
         return self._expected_embedding is not None
 
-    def classify_error(self, error: Optional[float] = None) -> str:
+    def classify_error(self, error: float | None = None) -> str:
         """
         Classify the prediction error.
 
@@ -126,7 +125,7 @@ class PredictiveEngine:
         normalized = min(1.0, (self._last_error - _ROUTINE_THRESHOLD) / (1.0 - _ROUTINE_THRESHOLD))
         return normalized * _EMOTIONAL_BOOST_MAX
 
-    def get_context_hint(self) -> Optional[str]:
+    def get_context_hint(self) -> str | None:
         """
         Surprise hint to include in the LLM context.
 
@@ -139,7 +138,8 @@ class PredictiveEngine:
         if level == "high_surprise":
             return (
                 f"The last message brought an unexpected direction "
-                f"(prediction error: {self._last_error:.2f}) — I directed my attention to this topic."
+                f"(prediction error: {self._last_error:.2f}) "
+                f"— I directed my attention to this topic."
             )
         elif level == "mild_surprise":
             return (
@@ -202,7 +202,7 @@ class PredictiveEngine:
     @staticmethod
     def _cosine(a: list[float], b: list[float]) -> float:
         """Cosine similarity between two vectors."""
-        dot = sum(x * y for x, y in zip(a, b))
+        dot = sum(x * y for x, y in zip(a, b, strict=False))
         na = math.sqrt(sum(x * x for x in a))
         nb = math.sqrt(sum(x * x for x in b))
         return dot / (na * nb + 1e-8) if na and nb else 0.0

@@ -10,8 +10,8 @@ system-level instructions via chat messages.
 Reuses _normalize_content() from reality_check for Unicode bypass protection.
 """
 
-import re
 import logging
+import re
 
 from jarvis.identity.cognitio.reality_check import _normalize_content
 
@@ -66,7 +66,7 @@ def sanitize_input(text: str) -> str:
 
     # Step 1: Normalize to catch Unicode-obfuscated delimiters
     # We normalize a copy for detection but operate on original text
-    normalized = _normalize_content(text)
+    _normalize_content(text)
 
     # Step 2: Strip delimiter tokens (case-insensitive via normalized form)
     result = text

@@ -13,6 +13,7 @@ Ergebnis: Verifizierte Antwort mit Quellenangaben und Konfidenz-Score.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import re
 import time
@@ -91,7 +92,9 @@ Text:
 {text}
 
 Return JSON:
-{{"facts": [{{"claim": "short description", "value": "concrete value", "type": "number|date|name|boolean|text"}}]}}"""
+{{"facts": [{{"claim": "short description",
+"value": "concrete value",
+"type": "number|date|name|boolean|text"}}]}}"""
 
 _CONSENSUS_PROMPT = """\
 Multiple sources were queried to answer: "{query}"
@@ -106,7 +109,9 @@ Task:
 4. Answer in {language}, in natural spoken language (no bullet points).
 
 Return JSON:
-{{"answer": "the verified answer in {language}", "confidence": 0.0-1.0, "discrepancies": ["list of disagreements or empty"]}}"""
+{{"answer": "the verified answer in {language}",
+"confidence": 0.0-1.0,
+"discrepancies": ["list of disagreements or empty"]}}"""
 
 
 # ── VerifiedWebLookup ────────────────────────────────────────────────────────
@@ -305,13 +310,11 @@ class VerifiedWebLookup:
                     text = getattr(page_state, "text_content", "") or ""
                     # Also try table extraction for structured data
                     if len(text.strip()) < 100:
-                        try:
+                        with contextlib.suppress(Exception):
                             text = await asyncio.wait_for(
                                 browser.extract_text("body"),
                                 timeout=5,
                             )
-                        except Exception:
-                            pass
                     ms = (time.monotonic() - start) * 1000
                     method = "browser-v17"
                     success = bool(text and len(text.strip()) > 50)
@@ -333,7 +336,7 @@ class VerifiedWebLookup:
                     success=success,
                     duration_ms=ms,
                 )
-            except (TimeoutError, asyncio.TimeoutError):
+            except TimeoutError:
                 ms = (time.monotonic() - start) * 1000
                 log.debug("browser_extract_timeout", url=url[:80])
                 return SourceResult(
@@ -374,7 +377,7 @@ class VerifiedWebLookup:
                 asyncio.gather(*tasks, return_exceptions=True),
                 timeout=_DEFAULT_EXTRACTION_TIMEOUT_S,
             )
-        except (TimeoutError, asyncio.TimeoutError):
+        except TimeoutError:
             log.warning("verified_lookup_extraction_timeout")
             done = []
 

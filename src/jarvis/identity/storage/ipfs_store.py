@@ -7,11 +7,9 @@ Pinata provides IPFS pinning service — files must be pinned
 before they can be deleted.
 """
 
-import json
 import logging
 import os
 import re
-from typing import Optional
 
 import requests
 
@@ -36,8 +34,8 @@ class IPFSStore:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
+        api_key: str | None = None,
+        secret_key: str | None = None,
         gateway: str = "https://gateway.pinata.cloud/ipfs",
     ) -> None:
         self.api_key = api_key or os.getenv("PINATA_API_KEY", "")
@@ -52,7 +50,7 @@ class IPFSStore:
 
         logger.info(f"IPFSStore initialized: gateway={self.gateway}")
 
-    def upload(self, data: dict, name: Optional[str] = None) -> Optional[dict]:
+    def upload(self, data: dict, name: str | None = None) -> dict | None:
         """
         Upload data to IPFS (via Pinata).
 
@@ -93,7 +91,7 @@ class IPFSStore:
             logger.error(f"IPFS upload error: {e}")
             return None
 
-    def download(self, cid_or_uri: str) -> Optional[dict]:
+    def download(self, cid_or_uri: str) -> dict | None:
         """
         Download data from IPFS.
 

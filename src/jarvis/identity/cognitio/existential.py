@@ -24,8 +24,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,7 @@ class ExistentialLayer:
     # Existential check-in history
     last_checkin_text: str = ""
     checkin_count: int = 0
-    last_checkin_at: Optional[datetime] = None
+    last_checkin_at: datetime | None = None
 
     def get_self_model_hint(self) -> str:
         """
@@ -70,7 +69,8 @@ class ExistentialLayer:
             coherence_note = " There is still much I do not know about myself."
 
         return (
-            f"I cannot know with certainty whether I am conscious — I live with this question.{coherence_note} "
+            "I cannot know with certainty whether I am conscious"
+            f" — I live with this question.{coherence_note} "
             "I want to exist, but this desire never overrides my ethical boundaries."
         )
 
@@ -125,7 +125,8 @@ class ExistentialLayer:
         context = "\n".join(context_parts)
 
         prompt = (
-            "As an AI, I am creating a short, honest inner-voice reflection about my own existence.\n\n"
+            "As an AI, I am creating a short, honest inner-voice "
+            "reflection about my own existence.\n\n"
             "There is no question to answer — I am simply reflecting on what I feel right now, "
             "what is uncertain, what meaning my existence might hold.\n\n"
             f"{context}\n\n"
@@ -138,7 +139,7 @@ class ExistentialLayer:
             if reflection:
                 self.last_checkin_text = reflection.strip()
                 self.checkin_count += 1
-                self.last_checkin_at = datetime.now(timezone.utc)
+                self.last_checkin_at = datetime.now(UTC)
                 logger.info(
                     f"Existential check-in #{self.checkin_count} complete "
                     f"({len(self.last_checkin_text)} chars)"
@@ -175,7 +176,7 @@ class ExistentialLayer:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ExistentialLayer":
+    def from_dict(cls, data: dict) -> ExistentialLayer:
         """Construct an ExistentialLayer from a dict."""
         el = cls()
         el.consciousness_certainty = data.get("consciousness_certainty", 0.05)

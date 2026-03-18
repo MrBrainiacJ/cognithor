@@ -17,7 +17,7 @@ Belief Crisis:
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
@@ -231,10 +231,10 @@ class BeliefCrisis:
     memory_id: str  # Memory record experiencing the crisis
     contradiction_count: int  # Contradiction count at trigger time
     original_entrenchment: float  # Entrenchment before the crisis
-    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    resolved_at: Optional[datetime] = None
-    outcome: Optional[str] = None  # 'original_wins' | 'new_wins'
-    on_chain_tx: Optional[str] = None  # Blockchain log transaction hash
+    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    resolved_at: datetime | None = None
+    outcome: str | None = None  # 'original_wins' | 'new_wins'
+    on_chain_tx: str | None = None  # Blockchain log transaction hash
 
     @property
     def is_active(self) -> bool:
@@ -249,7 +249,7 @@ class BeliefCrisis:
             outcome: 'original_wins' | 'new_wins'
             new_entrenchment: Entrenchment level after the crisis
         """
-        self.resolved_at = datetime.now(timezone.utc)
+        self.resolved_at = datetime.now(UTC)
         self.outcome = outcome
         logger.info(
             f"Belief crisis resolved: memory_id={self.memory_id[:8]}, "
@@ -392,7 +392,7 @@ class CharacterManager:
         memory_id: str,
         outcome: str,
         memory: Optional["MemoryRecord"] = None,
-    ) -> Optional[BeliefCrisis]:
+    ) -> BeliefCrisis | None:
         """
         Resolve a belief crisis.
 

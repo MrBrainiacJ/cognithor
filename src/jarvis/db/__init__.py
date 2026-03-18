@@ -19,8 +19,8 @@ from jarvis.db.factory import create_backend
 SQLITE_BUSY_TIMEOUT_MS = 5000
 
 __all__ = [
-    "DatabaseBackend",
     "SQLITE_BUSY_TIMEOUT_MS",
+    "DatabaseBackend",
     "create_backend",
     "get_encryption_key",
     "init_encryption",
