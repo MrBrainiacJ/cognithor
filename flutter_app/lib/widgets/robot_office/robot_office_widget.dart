@@ -573,6 +573,8 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
           r.emojiTimer = 1.2;
         }
       case RobotState.napping:
+        // Slowly drift to chill spot
+        _moveToTarget(r, dt * 0.3); // slow walk
         // Emit Z particles periodically
         if ((_elapsed * 2).floor() % 2 == 0 && _rng.nextDouble() < 0.03) {
           _particles.emit(
@@ -710,6 +712,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
           }
         }
       case RobotState.stretching:
+        _moveToTarget(r, dt * 0.3);
         if (r.stateTimer <= 0) {
           r.state = RobotState.idle;
           r.stateTimer = 2.0 + _rng.nextDouble() * 2.0;
@@ -749,6 +752,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
           r.stateTimer = 2.0 + _rng.nextDouble() * 2.0;
         }
       case RobotState.dancing:
+        _moveToTarget(r, dt * 0.2);
         r.dancePhase += dt * 6;
         if (r.stateTimer <= 0) {
           r.state = RobotState.idle;
@@ -757,6 +761,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
           r.emojiTimer = 1.2;
         }
       case RobotState.thinking:
+        _moveToTarget(r, dt * 0.15); // very slow, pondering walk
         // Emit question marks
         if (_rng.nextDouble() < 0.03) {
           _particles.emit(
@@ -857,7 +862,27 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     r.msgTimer = 2.5;
   }
 
+  /// Spread-out chill spots so idle robots don't cluster.
+  Offset _randomChillSpot() {
+    const spots = [
+      Offset(0.08, 0.85), // bottom-left corner
+      Offset(0.92, 0.85), // bottom-right corner
+      Offset(0.50, 0.88), // center bottom
+      Offset(0.25, 0.78), // near plant
+      Offset(0.75, 0.82), // near plant
+      Offset(0.15, 0.45), // near board
+      Offset(0.55, 0.35), // near coffee
+      Offset(0.40, 0.75), // mid-floor
+      Offset(0.65, 0.50), // mid-office
+      Offset(0.35, 0.42), // between desks
+    ];
+    return spots[_rng.nextInt(spots.length)];
+  }
+
   void _assignNap(Robot r) {
+    final spot = _randomChillSpot();
+    r.targetX = spot.dx;
+    r.targetY = spot.dy;
     r.state = RobotState.napping;
     r.stateTimer = 5.0 + _rng.nextDouble() * 5.0;
     r.emoji = '😴';
@@ -952,6 +977,9 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
   }
 
   void _assignStretch(Robot r) {
+    final spot = _randomChillSpot();
+    r.targetX = spot.dx;
+    r.targetY = spot.dy;
     r.state = RobotState.stretching;
     r.stateTimer = 2.0 + _rng.nextDouble() * 2.0;
   }
@@ -972,6 +1000,9 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
   }
 
   void _assignDance(Robot r) {
+    final spot = _randomChillSpot();
+    r.targetX = spot.dx;
+    r.targetY = spot.dy;
     r.state = RobotState.dancing;
     r.stateTimer = 3.0 + _rng.nextDouble() * 2.0;
     r.dancePhase = _rng.nextDouble() * 6.28;
@@ -980,6 +1011,9 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
   }
 
   void _assignThink(Robot r) {
+    final spot = _randomChillSpot();
+    r.targetX = spot.dx;
+    r.targetY = spot.dy;
     r.state = RobotState.thinking;
     r.stateTimer = 3.0 + _rng.nextDouble() * 3.0;
     r.emoji = '🤔';
