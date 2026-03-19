@@ -212,8 +212,8 @@ async def init_pge(
                 llm_model=_id_model,
             )
             log.info("identity_layer_initialized", identity_id=_id_name)
-    except Exception:
-        log.debug("identity_layer_init_skipped", exc_info=True)
+    except Exception as _id_exc:
+        log.warning("identity_layer_init_skipped", error=str(_id_exc), exc_info=True)
 
     # Memory Bridge: inject IdentityLayer into MemoryManager for bidirectional sync
     if (
