@@ -3,10 +3,10 @@ import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'package:jarvis_ui/providers/admin_provider.dart';
+import 'package:jarvis_ui/providers/config_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
 import 'package:jarvis_ui/widgets/neon_card.dart';
-import 'package:jarvis_ui/widgets/jarvis_chip.dart';
 import 'package:jarvis_ui/widgets/jarvis_empty_state.dart';
 import 'package:jarvis_ui/widgets/jarvis_section.dart';
 import 'package:jarvis_ui/widgets/jarvis_stat.dart';
@@ -41,9 +41,14 @@ class _ModelsScreenState extends State<ModelsScreen> {
 
   void _loadData() {
     final admin = context.read<AdminProvider>();
-    admin.setApi(context.read<ConnectionProvider>().api);
+    final conn = context.read<ConnectionProvider>();
+    admin.setApi(conn.api);
     admin.loadModels();
     admin.loadModelStats();
+    // Also load config for configured model details
+    final cfg = context.read<ConfigProvider>();
+    cfg.setApi(conn.api);
+    if (cfg.cfg.isEmpty) cfg.loadAll();
   }
 
   @override
@@ -81,19 +86,24 @@ class _ModelsScreenState extends State<ModelsScreen> {
     }
 
     final modelsData = admin.models ?? {};
-    final configured = modelsData['configured'] as Map<String, dynamic>? ?? {};
-    final available = modelsData['available'] as List<dynamic>? ?? [];
-    final warnings = modelsData['warnings'] as List<dynamic>? ?? [];
+    // Available models come as a flat list of strings from /models/available
+    final rawAvailable = modelsData['models'];
+    final available = rawAvailable is List ? rawAvailable : [];
 
     final stats = admin.modelStats ?? {};
-    final totalModels = stats['total']?.toString() ?? available.length.toString();
-    final providerCount = stats['providers']?.toString() ?? '-';
-    final capCount = stats['capabilities']?.toString() ?? '-';
+    final totalModels = stats['total_models']?.toString() ?? available.length.toString();
+    final providersList = stats['providers'];
+    final providerCount = providersList is List ? providersList.length.toString() : '-';
+    final capsList = stats['capabilities'];
+    final capCount = capsList is List ? capsList.length.toString() : '-';
 
-    final planner = _asModelMap(configured['planner']);
-    final executor = _asModelMap(configured['executor']);
-    final coder = _asModelMap(configured['coder']);
-    final embedding = _asModelMap(configured['embedding']);
+    // Configured models come from the config API (ConfigProvider)
+    final cfg = context.watch<ConfigProvider>();
+    final configModels = cfg.cfg['models'] as Map<String, dynamic>? ?? {};
+    final planner = _asModelMap(configModels['planner']);
+    final executor = _asModelMap(configModels['executor']);
+    final coder = _asModelMap(configModels['coder']);
+    final embedding = _asModelMap(configModels['embedding']);
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -136,43 +146,32 @@ class _ModelsScreenState extends State<ModelsScreen> {
               title: l.noModels,
             ),
           ...available.map<Widget>((m) {
-            final model = m as Map<String, dynamic>? ?? {};
-            final name = model['name']?.toString() ?? '';
-            final prov = model['provider']?.toString() ?? '';
-            final caps = model['capabilities'] as List<dynamic>? ?? [];
+            // Available models may be strings or Maps
+            final name = m is String ? m : (m is Map ? m['name']?.toString() ?? '' : m.toString());
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 4),
               child: NeonCard(
                 tint: JarvisTheme.sectionAdmin,
-                glowOnHover: true,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(Icons.model_training, size: 18, color: JarvisTheme.sectionAdmin),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(name, style: Theme.of(context).textTheme.titleMedium)),
-                        if (prov.isNotEmpty)
-                          JarvisStatusBadge(label: prov, color: JarvisTheme.accent),
-                      ],
-                    ),
-                    if (caps.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: caps
-                            .map<Widget>((c) => JarvisChip(label: c.toString()))
-                            .toList(),
-                      ),
-                    ],
+                    Icon(Icons.model_training, size: 16, color: JarvisTheme.sectionAdmin),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(name, style: Theme.of(context).textTheme.bodyMedium)),
                   ],
                 ),
               ),
             );
           }),
+          // Remove the old caps/prov section — replace with a simple note
+          if (available.length > 20) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${available.length} models available from ${cfg.cfg['llm_backend_type'] ?? 'backend'}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: JarvisTheme.textSecondary),
+            ),
+          ],
 
           // Stats
           const SizedBox(height: 8),
@@ -202,11 +201,11 @@ class _ModelsScreenState extends State<ModelsScreen> {
             ],
           ),
 
-          // Warnings
-          if (warnings.isNotEmpty) ...[
+          // Warnings (from model stats)
+          if (stats['warnings'] is List && (stats['warnings'] as List).isNotEmpty) ...[
             const SizedBox(height: 16),
             JarvisSection(title: l.modelWarnings),
-            ...warnings.map<Widget>((w) {
+            ...(stats['warnings'] as List).map<Widget>((w) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: NeonCard(
