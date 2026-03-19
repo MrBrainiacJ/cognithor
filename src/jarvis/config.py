@@ -1391,6 +1391,12 @@ class ChannelConfig(BaseModel):
     discord_enabled: bool = False
     discord_channel_id: str = ""
 
+    @field_validator("discord_channel_id", mode="before")
+    @classmethod
+    def _coerce_discord_id(cls, v: object) -> str:
+        """Accept int (e.g. 0) from YAML and coerce to str."""
+        return str(v) if v is not None else ""
+
     # Erweiterte Messaging-Kanäle
     whatsapp_enabled: bool = False
     whatsapp_default_chat: str = ""
