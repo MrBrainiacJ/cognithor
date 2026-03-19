@@ -1280,6 +1280,22 @@ class Gateway:
         if is_coding and session.max_iterations < 20:
             session.max_iterations = 20
 
+        # ── Token Budget (complexity-based) ──
+        _token_budget = None
+        try:
+            from jarvis.core.token_budget import TokenBudgetManager
+
+            _complexity = TokenBudgetManager.detect_complexity(msg.text)
+            _token_budget = TokenBudgetManager(complexity=_complexity, channel=msg.channel)
+            log.debug(
+                "token_budget_allocated",
+                complexity=_complexity,
+                channel=msg.channel,
+                total=_token_budget.total,
+            )
+        except Exception:
+            log.debug("token_budget_skipped", exc_info=True)
+
         # ── Sentiment Detection (Modul 3) ──
         try:
             from jarvis.core.sentiment import (

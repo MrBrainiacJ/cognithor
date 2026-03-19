@@ -917,6 +917,31 @@ class Planner:
                 )
                 self._record_cost(response, model, session_id=working_memory.session_id)
                 content: str = response.get("message", {}).get("content", "")
+
+                # Four Questions response validation (advisory, non-blocking)
+                try:
+                    from jarvis.core.response_validator import ResponseValidator
+
+                    _validator = ResponseValidator()
+                    _val_result = _validator.validate(content, user_message, results)
+                    if not _val_result.passed:
+                        log.info(
+                            "response_validation_warn",
+                            score=_val_result.score,
+                            issues=_val_result.issues,
+                            consistency=_val_result.consistency_score,
+                            coverage=_val_result.coverage_score,
+                            assumptions=_val_result.assumption_score,
+                            evidence=_val_result.evidence_score,
+                        )
+                    else:
+                        log.debug(
+                            "response_validation_ok",
+                            score=_val_result.score,
+                        )
+                except Exception:
+                    log.debug("response_validation_skipped", exc_info=True)
+
                 return content
             except OllamaError as exc:
                 log.warning(

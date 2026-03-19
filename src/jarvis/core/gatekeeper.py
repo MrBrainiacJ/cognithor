@@ -116,6 +116,15 @@ class Gatekeeper:
         except Exception:
             pass
 
+        # Pre-execution confidence checker
+        self._confidence_checker: Any = None
+        try:
+            from jarvis.core.confidence import ConfidenceChecker
+
+            self._confidence_checker = ConfidenceChecker()
+        except Exception:
+            pass
+
         # Community-Skill ToolEnforcer
         self._tool_enforcer: Any = None
         try:
@@ -187,6 +196,11 @@ class Gatekeeper:
     def set_policies(self, policies: list[PolicyRule]) -> None:
         """Ersetzt die Policy-Regeln (fuer Replay/Testing)."""
         self._policies = sorted(policies, key=lambda r: r.priority, reverse=True)
+
+    def set_reflexion_memory(self, reflexion_memory: Any) -> None:
+        """Setzt die ReflexionMemory-Instanz fuer den ConfidenceChecker."""
+        if self._confidence_checker is not None and reflexion_memory is not None:
+            self._confidence_checker._reflexion = reflexion_memory
 
     def set_active_skill(self, skill: Skill | None) -> None:
         """Setzt den aktiven Skill fuer ToolEnforcer-Checks.
@@ -334,12 +348,41 @@ class Gatekeeper:
         # --- Schritt 6: Default-Risiko-Klassifizierung ---
         risk = self._classify_risk(action)
         status = self._risk_to_status(risk)
+
+        # --- Schritt 7: Pre-Execution Confidence Check (advisory) ---
+        confidence_score: float | None = None
+        if self._confidence_checker is not None:
+            try:
+                conf_result = self._confidence_checker.assess(
+                    message=action.rationale or "",
+                    tool_name=action.tool,
+                    context=None,  # Context injected by gateway when available
+                )
+                confidence_score = conf_result.score
+                if conf_result.should_warn:
+                    log.info(
+                        "confidence_warn",
+                        tool=action.tool,
+                        score=conf_result.score,
+                        blockers=conf_result.blockers,
+                    )
+                elif conf_result.should_block:
+                    log.warning(
+                        "confidence_low",
+                        tool=action.tool,
+                        score=conf_result.score,
+                        blockers=conf_result.blockers,
+                    )
+            except Exception:
+                log.debug("confidence_check_failed", exc_info=True)
+
         decision = GateDecision(
             status=status,
             reason=f"Default-Klassifizierung: {risk.name}",
             risk_level=risk,
             original_action=action,
             policy_name="default_classification",
+            confidence_score=confidence_score,
         )
         self._write_audit(action, decision, context)
         return decision

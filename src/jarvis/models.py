@@ -227,6 +227,7 @@ class GateDecision(BaseModel, frozen=True):
     policy_name: str = ""  # Name der auslösenden Policy-Regel
     original_action: PlannedAction | None = None  # Referenz auf geprüfte Aktion
     masked_params: dict[str, Any] | None = None  # Params nach Credential-Maskierung
+    confidence_score: float | None = None  # Pre-execution confidence (0.0-1.0)
     timestamp: datetime = Field(default_factory=_utc_now)
 
     @property
