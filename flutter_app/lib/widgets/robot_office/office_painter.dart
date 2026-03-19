@@ -214,6 +214,7 @@ class OfficePainter extends CustomPainter {
     _drawPlants(canvas, size);
     _drawFlowers(canvas, size);
     _drawCeilingLightBeams(canvas, size);
+    _drawSystemMonitor(canvas, size);
 
     // Sort robots by Y for depth ordering
     final sorted = [...robots]..sort((a, b) => a.y.compareTo(b.y));
@@ -2090,6 +2091,186 @@ class OfficePainter extends CustomPainter {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
       );
     }
+  }
+
+  // ── System Monitor (wall-mounted screen) ─────────────────────────
+
+  void _drawSystemMonitor(Canvas canvas, Size s) {
+    final mx = s.width * 0.74;
+    final my = s.height * 0.22;
+    final mw = s.width * 0.12;
+    final mh = s.height * 0.16;
+
+    // Monitor frame (dark rectangle with rounded corners)
+    final frame = RRect.fromRectAndRadius(
+      Rect.fromLTWH(mx, my, mw, mh),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(frame, Paint()..color = const Color(0xFF1A1A2E));
+    canvas.drawRRect(
+      frame,
+      Paint()
+        ..color = const Color(0xFF2A3366)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+
+    // Screen background (slightly lighter)
+    const screenInset = 3.0;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          mx + screenInset,
+          my + screenInset,
+          mw - screenInset * 2,
+          mh - screenInset * 2,
+        ),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFF050510),
+    );
+
+    // Subtle scanline / CRT effect
+    final scanPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.02);
+    for (double sy = my + screenInset; sy < my + mh - screenInset; sy += 3) {
+      canvas.drawLine(
+        Offset(mx + screenInset, sy),
+        Offset(mx + mw - screenInset, sy),
+        scanPaint,
+      );
+    }
+
+    // Title "SYSTEM" text
+    final titlePainter = TextPainter(
+      text: TextSpan(
+        text: 'SYSTEM',
+        style: TextStyle(
+          color: JarvisTheme.sectionDashboard.withValues(alpha: 0.7),
+          fontSize: mh * 0.10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    titlePainter.paint(
+      canvas,
+      Offset(mx + screenInset + 4, my + screenInset + 2),
+    );
+
+    // CPU bar
+    final barX = mx + screenInset + 4;
+    final barW = mw - screenInset * 2 - 8;
+    final barH = mh * 0.12;
+    final cpuBarY = my + mh * 0.30;
+
+    _drawMonitorLabel(canvas, 'CPU', Offset(barX, cpuBarY - mh * 0.02), mh * 0.09);
+    _drawMonitorBar(
+      canvas, barX, cpuBarY + mh * 0.08, barW, barH, cpuUsage,
+      cpuUsage > 0.8
+          ? JarvisTheme.red
+          : cpuUsage > 0.5
+              ? JarvisTheme.orange
+              : JarvisTheme.sectionDashboard,
+    );
+
+    // MEM bar
+    final memBarY = cpuBarY + mh * 0.30;
+    _drawMonitorLabel(canvas, 'MEM', Offset(barX, memBarY - mh * 0.02), mh * 0.09);
+    _drawMonitorBar(
+      canvas, barX, memBarY + mh * 0.08, barW, barH, memoryUsage,
+      memoryUsage > 0.8
+          ? JarvisTheme.red
+          : memoryUsage > 0.5
+              ? JarvisTheme.orange
+              : JarvisTheme.accent,
+    );
+
+    // LOAD bar
+    final loadBarY = memBarY + mh * 0.30;
+    _drawMonitorLabel(canvas, 'LOAD', Offset(barX, loadBarY - mh * 0.02), mh * 0.09);
+    _drawMonitorBar(
+      canvas, barX, loadBarY + mh * 0.08, barW, barH, systemLoad,
+      systemLoad > 0.8
+          ? JarvisTheme.red
+          : systemLoad > 0.5
+              ? JarvisTheme.orange
+              : JarvisTheme.gold,
+    );
+
+    // Monitor stand (small trapezoid below the monitor)
+    final standW = mw * 0.25;
+    final standH = mh * 0.06;
+    final standX = mx + mw / 2 - standW / 2;
+    final standY = my + mh;
+    canvas.drawRect(
+      Rect.fromLTWH(standX, standY, standW, standH),
+      Paint()..color = const Color(0xFF2A2A3E),
+    );
+  }
+
+  void _drawMonitorLabel(
+      Canvas canvas, String text, Offset pos, double fontSize) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: Colors.white70,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, pos);
+  }
+
+  void _drawMonitorBar(Canvas canvas, double x, double y, double w, double h,
+      double value, Color color) {
+    // Background track
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(x, y, w, h),
+        const Radius.circular(2),
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.08),
+    );
+    // Value fill
+    final fillW = w * value.clamp(0.0, 1.0);
+    if (fillW > 0) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, y, fillW, h),
+          const Radius.circular(2),
+        ),
+        Paint()..color = color,
+      );
+      // Subtle glow
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, y - 1, fillW, h + 2),
+          const Radius.circular(2),
+        ),
+        Paint()
+          ..color = color.withValues(alpha: 0.3)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      );
+    }
+    // Percentage text
+    final pct = '${(value * 100).round()}%';
+    final tp = TextPainter(
+      text: TextSpan(
+        text: pct,
+        style: TextStyle(
+          color: color,
+          fontSize: h * 0.9,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, Offset(x + w + 3, y - 1));
   }
 }
 

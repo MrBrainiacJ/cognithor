@@ -906,6 +906,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     r.stateTimer = 4.0;
     r.targetX = 0.35; // window area
     r.targetY = 0.30;
+    _setPathForRobot(r);
     r.emoji = '💥';
     r.emojiTimer = 2.5;
     r.typing = false;
@@ -976,6 +977,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final spot = _randomChillSpot();
     r.targetX = spot.dx;
     r.targetY = spot.dy;
+    _setPathForRobot(r);
 
     // When NOT running (no user request): robots chill, play, rest
     // When running (user request active): robots work frantically
@@ -1033,6 +1035,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final desk = desks[_rng.nextInt(desks.length)];
     r.targetX = (desk.x + desk.w / 2 + (_rng.nextDouble() - 0.5) * 0.04).clamp(0.05, 0.95);
     r.targetY = (desk.y + desk.h + 0.02 + _rng.nextDouble() * 0.03).clamp(0.15, 0.90);
+    _setPathForRobot(r);
     r.state = RobotState.walking;
     r.stateTimer = 10;
     r.taskMsg = _RobotMessages.taskMessages(_locale)[_rng.nextInt(_RobotMessages.taskMessages(_locale).length)];
@@ -1048,6 +1051,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final target = targets[_rng.nextInt(targets.length)];
     r.targetX = (target.x + target.w / 2 + (_rng.nextDouble() - 0.5) * 0.04).clamp(0.05, 0.95);
     r.targetY = (target.y + target.h + 0.02 + _rng.nextDouble() * 0.03).clamp(0.15, 0.90);
+    _setPathForRobot(r);
     r.state = RobotState.walking;
     r.stateTimer = 10;
     r.taskMsg = _RobotMessages.taskMessages(_locale)[_rng.nextInt(_RobotMessages.taskMessages(_locale).length)];
@@ -1067,11 +1071,11 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
       Offset(0.56, 0.32), // near coffee
       Offset(0.35, 0.75), // mid-floor left
       Offset(0.65, 0.48), // mid-office
-      Offset(0.30, 0.55), // between desks row1
+      Offset(0.30, 0.58), // between desk rows (corridor)
       Offset(0.50, 0.72), // between desks row2
       Offset(0.80, 0.55), // near server
-      Offset(0.45, 0.42), // desk2 area
-      Offset(0.15, 0.65), // desk3 area
+      Offset(0.45, 0.42), // above desks
+      Offset(0.15, 0.75), // below desk 3
       Offset(0.70, 0.38), // upper right
     ];
 
@@ -1105,6 +1109,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final spot = _randomChillSpot();
     r.targetX = spot.dx;
     r.targetY = spot.dy;
+    _setPathForRobot(r);
     r.state = RobotState.napping;
     r.stateTimer = 5.0 + _rng.nextDouble() * 5.0;
     r.emoji = '😴';
@@ -1190,6 +1195,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final spot = coffeeSpots[_rng.nextInt(coffeeSpots.length)];
     r.targetX = (spot.x + spot.w / 2).clamp(0.05, 0.95);
     r.targetY = (spot.y + spot.h + 0.03).clamp(0.15, 0.90);
+    _setPathForRobot(r);
     r.state = RobotState.coffeeBreak;
     r.stateTimer = 3.0 + _rng.nextDouble() * 3.0;
     r.emoji = '☕';
@@ -1202,6 +1208,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final spot = _randomChillSpot();
     r.targetX = spot.dx;
     r.targetY = spot.dy;
+    _setPathForRobot(r);
     r.state = RobotState.stretching;
     r.stateTimer = 2.0 + _rng.nextDouble() * 2.0;
   }
@@ -1225,6 +1232,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final spot = _randomChillSpot();
     r.targetX = spot.dx;
     r.targetY = spot.dy;
+    _setPathForRobot(r);
     r.state = RobotState.dancing;
     r.stateTimer = 3.0 + _rng.nextDouble() * 2.0;
     r.dancePhase = _rng.nextDouble() * 6.28;
@@ -1236,6 +1244,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final spot = _randomChillSpot();
     r.targetX = spot.dx;
     r.targetY = spot.dy;
+    _setPathForRobot(r);
     r.state = RobotState.thinking;
     r.stateTimer = 3.0 + _rng.nextDouble() * 3.0;
     r.emoji = '🤔';
@@ -1251,6 +1260,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final server = servers[_rng.nextInt(servers.length)];
     r.targetX = (server.x + server.w / 2).clamp(0.05, 0.95);
     r.targetY = (server.y + server.h + 0.03).clamp(0.15, 0.90);
+    _setPathForRobot(r);
     r.state = RobotState.carrying;
     r.carrying = true;
     r.stateTimer = 10;
@@ -1267,6 +1277,7 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final board = boards[_rng.nextInt(boards.length)];
     r.targetX = (board.x + board.w / 2 + 0.02).clamp(0.05, 0.95);
     r.targetY = (board.y + board.h + 0.04).clamp(0.15, 0.90);
+    _setPathForRobot(r);
     r.state = RobotState.walking;
     r.stateTimer = 10;
     r.taskMsg = _RobotMessages.boardMessage(_locale);
@@ -1443,14 +1454,163 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     }
   }
 
+  // ── Desk zones & corridor waypoints for pathfinding ──────────
+
+  /// Axis-aligned bounding boxes for the five office desks (normalized coords).
+  static const _deskZones = [
+    Rect.fromLTRB(0.10, 0.48, 0.26, 0.56), // Desk 1
+    Rect.fromLTRB(0.37, 0.46, 0.53, 0.54), // Desk 2
+    Rect.fromLTRB(0.04, 0.62, 0.20, 0.70), // Desk 3
+    Rect.fromLTRB(0.30, 0.60, 0.46, 0.68), // Desk 4
+    Rect.fromLTRB(0.56, 0.62, 0.72, 0.70), // Desk 5
+  ];
+
+  /// Corridor waypoints — walkable gaps between and around the desks.
+  static const _corridorWaypoints = [
+    Offset(0.30, 0.52), // Between desk 1 and 2 (front row gap)
+    Offset(0.30, 0.72), // Below front row, between desk rows
+    Offset(0.52, 0.72), // Below desk 2/4, right aisle
+    Offset(0.26, 0.60), // Between desk 1/3 and desk 2/4
+    Offset(0.52, 0.58), // Right of desk 2, above desk 5
+    Offset(0.76, 0.60), // Right of desk 5
+    Offset(0.50, 0.42), // Upper middle (near coffee)
+    Offset(0.80, 0.45), // Near server
+    Offset(0.10, 0.38), // Near kanban
+  ];
+
+  /// Check whether a line segment from (x1,y1) to (x2,y2) intersects [rect].
+  /// Uses Liang-Barsky line-clipping against an AABB.
+  static bool _lineIntersectsRect(
+      double x1, double y1, double x2, double y2, Rect rect) {
+    double tMin = 0.0;
+    double tMax = 1.0;
+    final ddx = x2 - x1;
+    final ddy = y2 - y1;
+
+    // Check each edge (left, right, top, bottom).
+    for (final edge in [
+      [-ddx, x1 - rect.left],
+      [ddx, rect.right - x1],
+      [-ddy, y1 - rect.top],
+      [ddy, rect.bottom - y1],
+    ]) {
+      final p = edge[0];
+      final q = edge[1];
+      if (p.abs() < 1e-10) {
+        if (q < 0) return false; // parallel & outside
+      } else {
+        final t = q / p;
+        if (p < 0) {
+          if (t > tMax) return false;
+          if (t > tMin) tMin = t;
+        } else {
+          if (t < tMin) return false;
+          if (t < tMax) tMax = t;
+        }
+      }
+    }
+    return tMin <= tMax;
+  }
+
+  /// Returns true if the straight line from (x1,y1) to (x2,y2) crosses any
+  /// desk bounding box.
+  static bool _pathCrossesDesk(double x1, double y1, double x2, double y2) {
+    for (final desk in _deskZones) {
+      if (_lineIntersectsRect(x1, y1, x2, y2, desk)) return true;
+    }
+    return false;
+  }
+
+  /// Compute a list of waypoints (intermediate + final target) that routes
+  /// from (fromX,fromY) to (toX,toY) while avoiding desks.
+  static List<Offset> _findPath(
+      double fromX, double fromY, double toX, double toY) {
+    // If direct path is clear, no waypoints needed.
+    if (!_pathCrossesDesk(fromX, fromY, toX, toY)) {
+      return const [];
+    }
+
+    // Try each corridor waypoint: pick the one closest to the midpoint that
+    // provides a clear two-segment path (from→wp and wp→to).
+    final midX = (fromX + toX) / 2;
+    final midY = (fromY + toY) / 2;
+    Offset? bestWp;
+    double bestDist = double.infinity;
+    for (final wp in _corridorWaypoints) {
+      if (!_pathCrossesDesk(fromX, fromY, wp.dx, wp.dy) &&
+          !_pathCrossesDesk(wp.dx, wp.dy, toX, toY)) {
+        final dist =
+            (wp.dx - midX) * (wp.dx - midX) + (wp.dy - midY) * (wp.dy - midY);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestWp = wp;
+        }
+      }
+    }
+
+    if (bestWp != null) {
+      return [bestWp];
+    }
+
+    // Two-waypoint search: try all pairs of corridor waypoints.
+    Offset? bestA;
+    Offset? bestB;
+    double bestPairDist = double.infinity;
+    for (final wpA in _corridorWaypoints) {
+      if (_pathCrossesDesk(fromX, fromY, wpA.dx, wpA.dy)) continue;
+      for (final wpB in _corridorWaypoints) {
+        if (wpB == wpA) continue;
+        if (_pathCrossesDesk(wpA.dx, wpA.dy, wpB.dx, wpB.dy)) continue;
+        if (_pathCrossesDesk(wpB.dx, wpB.dy, toX, toY)) continue;
+        final dist = (wpA.dx - fromX) * (wpA.dx - fromX) +
+            (wpA.dy - fromY) * (wpA.dy - fromY) +
+            (wpB.dx - toX) * (wpB.dx - toX) +
+            (wpB.dy - toY) * (wpB.dy - toY);
+        if (dist < bestPairDist) {
+          bestPairDist = dist;
+          bestA = wpA;
+          bestB = wpB;
+        }
+      }
+    }
+
+    if (bestA != null && bestB != null) {
+      return [bestA, bestB];
+    }
+
+    // Fallback: route through bottom corridor to avoid all desks.
+    return [Offset(fromX, 0.78), Offset(toX, 0.78)];
+  }
+
+  /// Populate waypoints for a robot that is about to walk to (targetX, targetY).
+  void _setPathForRobot(Robot r) {
+    final path = _findPath(r.x, r.y, r.targetX, r.targetY);
+    r.waypoints
+      ..clear()
+      ..addAll(path);
+  }
+
   void _moveToTarget(Robot r, double dt) {
     const speed = 0.15; // normalized units per second
-    final dx = r.targetX - r.x;
-    final dy = r.targetY - r.y;
+
+    // If there are intermediate waypoints, walk toward the first one.
+    double goalX = r.targetX;
+    double goalY = r.targetY;
+    if (r.waypoints.isNotEmpty) {
+      goalX = r.waypoints.first.dx;
+      goalY = r.waypoints.first.dy;
+    }
+
+    final dx = goalX - r.x;
+    final dy = goalY - r.y;
     final dist = sqrt(dx * dx + dy * dy);
     if (dist < 0.005) {
-      r.x = r.targetX;
-      r.y = r.targetY;
+      r.x = goalX;
+      r.y = goalY;
+      // Pop the waypoint if we reached it.
+      if (r.waypoints.isNotEmpty) {
+        r.waypoints.removeAt(0);
+      }
       return;
     }
     final step = min(speed * dt, dist);

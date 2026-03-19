@@ -88,4 +88,12 @@ class Robot {
 
   /// For dancing: dance phase offset.
   double dancePhase = 0;
+
+  // ── Pathfinding waypoints ──────────────────────────────────────
+  /// Queue of intermediate waypoints the robot must visit before reaching
+  /// its final [targetX]/[targetY]. Each entry is a normalized Offset.
+  /// When non-empty, the robot walks toward the first waypoint; once
+  /// reached it is removed, and the robot proceeds to the next (or the
+  /// final target when the list is empty).
+  final List<Offset> waypoints = [];
 }
