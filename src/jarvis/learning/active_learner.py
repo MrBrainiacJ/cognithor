@@ -182,6 +182,9 @@ class ActiveLearner:
         # Deduplication: content_hash -> LearnedFile
         self._learned: dict[str, LearnedFile] = {}
 
+        # Failed files: path -> error (never retry)
+        self._failed: dict[str, str] = {}
+
         # Rate limiting
         self._files_this_hour: int = 0
         self._hour_start: float = time.monotonic()
@@ -311,6 +314,7 @@ class ActiveLearner:
             try:
                 await self._process_file(path)
             except Exception as exc:
+                self._failed[str(path)] = str(exc)
                 log.warning("active_learner_file_error", file=str(path), error=str(exc))
 
     def _discover_candidates(self) -> list[Path]:
@@ -329,8 +333,12 @@ class ActiveLearner:
                         continue
                     if f.stat().st_size > self._config.max_file_size_bytes:
                         continue
+                    # Skip files that previously failed
+                    fstr = str(f)
+                    if fstr in self._failed:
+                        continue
                     # Quick dedup check by path (full hash check later)
-                    if str(f) in {rec.path for rec in self._learned.values()}:
+                    if fstr in {rec.path for rec in self._learned.values()}:
                         continue
                     candidates.append(f)
             except (OSError, PermissionError) as exc:
