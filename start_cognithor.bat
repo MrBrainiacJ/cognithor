@@ -89,21 +89,23 @@ if errorlevel 1 (
 )
 
 :: ============================================================
-::  4b. Install identity extras if missing
+::  4b. Verify identity module (now part of [all])
 :: ============================================================
 %PYTHON_CMD% -c "import jarvis.identity" >nul 2>&1
 if errorlevel 1 (
-    echo   [INFO] Installing identity module (this may take a few minutes^)...
+    echo   [INFO] Identity module missing. Installing (may take a few minutes^)...
     echo.
-    %PYTHON_CMD% -m pip install -e "%REPO_ROOT%.[identity]"
+    cd /d "%REPO_ROOT%"
+    %PYTHON_CMD% -m pip install -e ".[identity]"
     echo.
     %PYTHON_CMD% -c "import jarvis.identity" >nul 2>&1
     if not errorlevel 1 (
-        echo   [OK] Identity module installed successfully.
+        echo   [OK] Identity module installed.
     ) else (
-        echo   [WARNING] Identity install failed. Identity features may not work.
-        echo   You can try manually: pip install -e ".[identity]"
+        echo   [WARNING] Identity install failed. Try: pip install -e ".[identity]"
     )
+) else (
+    echo   [OK] Identity module available.
 )
 
 :: ============================================================

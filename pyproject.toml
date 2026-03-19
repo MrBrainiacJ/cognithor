@@ -138,11 +138,13 @@ encryption = [
 identity = [
     "chromadb>=1.5.0",
     "sentence-transformers>=5.0.0",
+    "numpy>=2.0,<3",
+]
+blockchain = [
     "web3>=7.0.0",
-    "cryptography>=44.0.0",
 ]
 all = [
-    "cognithor[memory,vector,mcp,telegram,web,search,cron,documents]",
+    "cognithor[memory,vector,mcp,telegram,web,search,cron,documents,identity]",
 ]
 full = [
     "cognithor[all,voice,elevenlabs,postgresql,google-chat,discord,slack,matrix,whatsapp,signal,teams,irc,twitch,distributed,browser,encryption,dev]",
