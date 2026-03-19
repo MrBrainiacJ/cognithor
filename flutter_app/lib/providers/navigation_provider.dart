@@ -9,12 +9,8 @@ class NavigationProvider extends ChangeNotifier {
   String get sectionName => JarvisTheme.sectionNameFor(_currentTab);
 
   double get sidebarWidth => switch (_currentTab) {
-        0 => 64, // Chat — minimal, maximize chat space
-        1 => 48, // Dashboard — nearly hidden, robot office needs space
-        2 => 180, // Skills
-        3 => 260, // Admin — expanded with sub-navigation
-        4 => 180, // Identity
-        _ => 180,
+        3 => 220, // Admin — slightly wider for sub-navigation
+        _ => 180, // All tabs: consistent expanded sidebar
       };
 
   void setTab(int index) {
