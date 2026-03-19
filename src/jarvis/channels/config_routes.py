@@ -86,6 +86,7 @@ def create_config_routes(
     _register_learning_routes(app, deps, gateway)
     _register_ingest_routes(app, deps, gateway)
     _register_hermes_routes(app, deps, gateway)
+    _register_skill_registry_routes(app, deps, gateway)
     _register_self_improvement_routes(app, deps, gateway)
     _register_gepa_evolution_routes(app, deps, gateway)
 
@@ -3719,6 +3720,42 @@ def _register_ingest_routes(
 # ======================================================================
 # Hermes / agentskills.io compatibility routes
 # ======================================================================
+
+
+def _register_skill_registry_routes(
+    app: Any,
+    deps: list[Any],
+    gateway: Any,
+) -> None:
+    """Expose the built-in skill registry (not marketplace) via REST."""
+
+    def _get_registry() -> Any:
+        return getattr(gateway, "_skill_registry", None) if gateway else None
+
+    @app.get("/api/v1/skills/installed", dependencies=deps)
+    async def list_installed_skills() -> dict[str, Any]:
+        reg = _get_registry()
+        if not reg:
+            return {"installed": [], "count": 0}
+        skills = reg.list_all()
+        return {
+            "installed": [
+                {
+                    "name": s.name,
+                    "slug": s.slug,
+                    "description": s.description,
+                    "category": s.category,
+                    "enabled": s.enabled,
+                    "source": getattr(s, "source", "builtin"),
+                    "version": getattr(s, "version", "1.0.0"),
+                    "author": getattr(s, "author", ""),
+                    "total_uses": s.total_uses,
+                    "success_rate": round(s.success_rate, 2) if s.total_uses > 0 else None,
+                }
+                for s in skills
+            ],
+            "count": len(skills),
+        }
 
 
 def _register_hermes_routes(
