@@ -482,10 +482,10 @@ class OfficePainter extends CustomPainter {
     final sy = s.height * 0.20;
     const text = 'COGNITHOR HQ';
 
-    // Neon glow
+    // Gold neon glow
     final glowPaint = Paint()
-      ..color = JarvisTheme.accent.withValues(alpha: 0.15 + 0.05 * _osc(1.5))
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      ..color = const Color(0xFFFFD700).withValues(alpha: 0.20 + 0.08 * _osc(1.5))
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(center: Offset(sx, sy), width: s.width * 0.18, height: 22),
@@ -508,7 +508,7 @@ class OfficePainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: TextStyle(
-          color: JarvisTheme.accent,
+          color: const Color(0xFFFFD700),
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 2,
@@ -1343,8 +1343,7 @@ class OfficePainter extends CustomPainter {
     _drawPlant(canvas, s, s.width * 0.82, s.height * 0.46, 1);
     // Large plant near entrance area (bottom-left)
     _drawPlant(canvas, s, s.width * 0.12, s.height * 0.82, 2);
-    // Hanging plant from ceiling
-    _drawHangingPlant(canvas, s, s.width * 0.72, s.height * 0.14, 3);
+    // Hanging plant removed — not realistic for office
   }
 
   void _drawPlant(Canvas canvas, Size s, double px, double py, int seed) {
@@ -1476,16 +1475,16 @@ class OfficePainter extends CustomPainter {
   // ── Flowers (day/night bloom) ───────────────────────────────────
 
   void _drawFlowers(Canvas canvas, Size s) {
-    // Flower positions: 2 on desks, 1 near window, 1 near coffee machine
+    // Flowers ON desk surfaces (positioned at desk top edge)
     final flowers = [
-      // On desk 1
-      _FlowerInfo(s.width * 0.14, s.height * 0.50, const Color(0xFFE53935), 0),
-      // On desk 3
-      _FlowerInfo(s.width * 0.76, s.height * 0.51, const Color(0xFF9C27B0), 1),
-      // Near window (on wall ledge)
-      _FlowerInfo(s.width * 0.28, s.height * 0.34, const Color(0xFFFFEB3B), 2),
-      // Near coffee machine
-      _FlowerInfo(s.width * 0.60, s.height * 0.33, const Color(0xFFE91E63), 3),
+      // On desk 1 (right side of desk)
+      _FlowerInfo(s.width * (_desk1.dx + 0.08), s.height * (_desk1.dy - 0.02), const Color(0xFFE53935), 0),
+      // On desk 3 (left side)
+      _FlowerInfo(s.width * (_desk3.dx + 0.02), s.height * (_desk3.dy - 0.02), const Color(0xFF9C27B0), 1),
+      // On desk 5 (right side)
+      _FlowerInfo(s.width * (_desk5.dx + 0.08), s.height * (_desk5.dy - 0.02), const Color(0xFFFFEB3B), 2),
+      // On desk 2 (left side)
+      _FlowerInfo(s.width * (_desk2.dx + 0.02), s.height * (_desk2.dy - 0.02), const Color(0xFFE91E63), 3),
     ];
 
     for (final f in flowers) {

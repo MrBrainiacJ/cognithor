@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_ui/providers/pip_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:jarvis_ui/widgets/robot_office/glass_reflection_painter.dart';
 import 'package:jarvis_ui/widgets/robot_office/robot_office_widget.dart';
 
 // ---------------------------------------------------------------------------
@@ -227,9 +228,10 @@ class _RobotOfficePipState extends State<RobotOfficePip>
           width: _width,
           height: _height,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              width: 3,
+              color: const Color(0xFF4A5568), // metallic gray frame
             ),
             boxShadow: [
               BoxShadow(
@@ -245,7 +247,7 @@ class _RobotOfficePipState extends State<RobotOfficePip>
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Stack(
@@ -263,12 +265,21 @@ class _RobotOfficePipState extends State<RobotOfficePip>
                     child: IgnorePointer(
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.06),
                             width: 1,
                           ),
                         ),
+                      ),
+                    ),
+                  ),
+
+                  // Glass reflection overlay — looks like viewing through a window
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: GlassReflectionPainter(),
                       ),
                     ),
                   ),
@@ -426,3 +437,4 @@ class _ControlButtonState extends State<_ControlButton> {
     );
   }
 }
+

@@ -177,7 +177,13 @@ class WebSocketService {
     if (_disposed) return;
 
     // Always fetch a fresh token before connecting.
-    final token = await apiClient.bootstrap();
+    // Retry bootstrap up to 3 times with 1s delay if server is still starting.
+    String? token;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      token = await apiClient.bootstrap();
+      if (token != null) break;
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
     if (token == null) {
       _scheduleReconnect();
       return;

@@ -16,6 +16,7 @@ import 'package:jarvis_ui/widgets/animated_counter.dart';
 import 'package:jarvis_ui/widgets/jarvis_section.dart';
 import 'package:jarvis_ui/widgets/jarvis_status_badge.dart';
 import 'package:jarvis_ui/widgets/robot_office/robot_office_widget.dart';
+import 'package:jarvis_ui/widgets/robot_office/glass_reflection_painter.dart';
 import 'package:jarvis_ui/widgets/shimmer_loading.dart';
 import 'package:jarvis_ui/widgets/staggered_list.dart';
 
@@ -133,38 +134,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }
               // PiP is hidden — show the Robot Office inline at full width.
-              return SizedBox(
+              return Container(
                 height: 300,
-                child: Stack(
-                  children: [
-                    RobotOfficeWidget(
-                      isRunning: true,
-                      onStateChanged: (task, count) {
-                        setState(() {
-                          _robotCurrentTask = task;
-                          _robotTaskCount = count;
-                        });
-                      },
-                    ),
-                    // Status overlay at bottom
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: _RobotStatusOverlay(
-                        currentTask: _robotCurrentTask,
-                        taskCount: _robotTaskCount,
-                      ),
-                    ),
-                    // Button to switch to PiP mode
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: _PipModeButton(
-                        onTap: () => pip.show(),
-                      ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    width: 3,
+                    color: const Color(0xFF4A5568), // metallic gray frame
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 4),
                     ),
                   ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(9),
+                  child: Stack(
+                    children: [
+                      RobotOfficeWidget(
+                        isRunning: true,
+                        onStateChanged: (task, count) {
+                          setState(() {
+                            _robotCurrentTask = task;
+                            _robotTaskCount = count;
+                          });
+                        },
+                      ),
+                      // Glass reflection overlay
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: GlassReflectionPainter(),
+                          ),
+                        ),
+                      ),
+                      // Status overlay at bottom
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: _RobotStatusOverlay(
+                          currentTask: _robotCurrentTask,
+                          taskCount: _robotTaskCount,
+                        ),
+                      ),
+                      // Button to switch to PiP mode
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: _PipModeButton(
+                          onTap: () => pip.show(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

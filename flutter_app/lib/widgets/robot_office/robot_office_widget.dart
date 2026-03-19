@@ -337,6 +337,9 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
   static const _danceEmojis = ['💃', '🕺', '🎵'];
   static const _thinkEmojis = ['🤔', '💭', '❓'];
 
+  // ── Tap-to-interact reaction cooldown ─────────────────────
+  double _reactionCooldown = 0;
+
   // ── Lifecycle ───────────────────────────────────────────────
 
   @override
@@ -487,6 +490,9 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final dt = (now.difference(_lastTick).inMicroseconds / 1e6).clamp(0.0, 0.1);
     _lastTick = now;
     _elapsed += dt;
+
+    // Decrement tap reaction cooldown
+    _reactionCooldown = (_reactionCooldown - dt).clamp(0.0, double.infinity);
 
     for (final r in _robots) {
       _updateRobot(r, dt);
@@ -780,6 +786,169 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
           r.emojiTimer = 1.2;
         }
     }
+  }
+
+  // ── Tap-to-interact reactions ─────────────────────────────
+
+  void _onTap(Offset localPosition, BuildContext ctx) {
+    if (_reactionCooldown > 0) return;
+
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final size = box.size;
+    if (size.width == 0 || size.height == 0) return;
+
+    final nx = localPosition.dx / size.width;
+    final ny = localPosition.dy / size.height;
+
+    Robot? closest;
+    double closestDist = double.infinity;
+    for (final r in _robots) {
+      final dx = r.x - nx;
+      final dy = r.y - ny;
+      final dist = sqrt(dx * dx + dy * dy);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = r;
+      }
+    }
+
+    if (closest != null && closestDist < 0.10) {
+      _triggerReaction(closest);
+      _reactionCooldown = 1.0; // prevent spam
+    }
+  }
+
+  void _triggerReaction(Robot r) {
+    final reactions = [
+      _reactionFall,
+      _reactionFreakOut,
+      _reactionFire,
+      _reactionWindowBonk,
+      _reactionJumpScare,
+      _reactionDizzy,
+      _reactionSneeze,
+    ];
+    reactions[_rng.nextInt(reactions.length)](r);
+  }
+
+  /// Robot falls over — shake x position, show hurt emoji.
+  void _reactionFall(Robot r) {
+    r.state = RobotState.idle;
+    r.stateTimer = 1.5;
+    r.emoji = '🤕';
+    r.emojiTimer = 1.5;
+    r.typing = false;
+    r.carrying = false;
+    // Wobble by emitting sparks around the robot
+    _particles.emit(
+      ParticleType.spark, r.x, r.y,
+      const Color(0xFFFF8A65), count: 6,
+    );
+  }
+
+  /// Robot freaks out — fast dance with explosion emoji.
+  void _reactionFreakOut(Robot r) {
+    r.state = RobotState.dancing;
+    r.stateTimer = 2.0;
+    r.dancePhase = 0;
+    r.emoji = '🤯';
+    r.emojiTimer = 2.0;
+    r.typing = false;
+    r.carrying = false;
+    // Wild sparks
+    _particles.emit(
+      ParticleType.spark, r.x, r.y - 0.04,
+      const Color(0xFFFF5252), count: 12,
+    );
+  }
+
+  /// Small fire around robot.
+  void _reactionFire(Robot r) {
+    r.state = RobotState.idle;
+    r.stateTimer = 2.0;
+    r.emoji = '🔥';
+    r.emojiTimer = 2.0;
+    r.typing = false;
+    r.carrying = false;
+    // Orange/red sparks simulate fire
+    _particles.emit(
+      ParticleType.spark, r.x, r.y,
+      const Color(0xFFFF6D00), count: 10,
+    );
+    _particles.emit(
+      ParticleType.spark, r.x, r.y - 0.02,
+      const Color(0xFFFF1744), count: 8,
+    );
+  }
+
+  /// Robot runs to window area, bonks, bounces back.
+  void _reactionWindowBonk(Robot r) {
+    r.state = RobotState.walking;
+    r.stateTimer = 4.0;
+    r.targetX = 0.35; // window area
+    r.targetY = 0.30;
+    r.emoji = '💥';
+    r.emojiTimer = 2.5;
+    r.typing = false;
+    r.carrying = false;
+    _particles.emit(
+      ParticleType.spark, 0.35, 0.30,
+      const Color(0xFFFFD600), count: 8,
+    );
+  }
+
+  /// Robot jumps in fright — "!" particles and scared emoji.
+  void _reactionJumpScare(Robot r) {
+    r.state = RobotState.idle;
+    r.stateTimer = 1.5;
+    r.emoji = '😱';
+    r.emojiTimer = 1.8;
+    r.typing = false;
+    r.carrying = false;
+    _particles.emit(
+      ParticleType.text, r.x, r.y - 0.06,
+      const Color(0xFFFF5252), text: '!', count: 1,
+    );
+    _particles.emit(
+      ParticleType.text, r.x + 0.02, r.y - 0.07,
+      const Color(0xFFFF5252), text: '!', count: 1,
+    );
+  }
+
+  /// Stars spin around head — dizzy reaction.
+  void _reactionDizzy(Robot r) {
+    r.state = RobotState.dancing;
+    r.stateTimer = 2.5;
+    r.dancePhase = 0;
+    r.emoji = '😵';
+    r.emojiTimer = 2.5;
+    r.typing = false;
+    r.carrying = false;
+    // Stars
+    _particles.emit(
+      ParticleType.text, r.x - 0.02, r.y - 0.05,
+      const Color(0xFFFFD54F), text: '💫', count: 1,
+    );
+    _particles.emit(
+      ParticleType.text, r.x + 0.02, r.y - 0.06,
+      const Color(0xFFFFD54F), text: '💫', count: 1,
+    );
+  }
+
+  /// Robot sneezes — confetti papers fly everywhere.
+  void _reactionSneeze(Robot r) {
+    r.state = RobotState.idle;
+    r.stateTimer = 2.0;
+    r.emoji = '🤧';
+    r.emojiTimer = 2.0;
+    r.typing = false;
+    r.carrying = false;
+    // Papers fly like a sneeze
+    _particles.emit(
+      ParticleType.confetti, r.x, r.y - 0.04,
+      Colors.white, count: 15,
+    );
   }
 
   // ── Behavior assignment with weighted random ───────────────
@@ -1287,31 +1456,34 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Stack(
-        children: [
-          // Background: detailed office (walls, window, desks, lights)
-          CustomPaint(
-            painter: bg.OfficePainter(
-              robots: const [],
-              time: _elapsed,
-              isRunning: true,
-              brightness: Theme.of(context).brightness,
+      child: GestureDetector(
+        onTapDown: (details) => _onTap(details.localPosition, context),
+        child: Stack(
+          children: [
+            // Background: detailed office (walls, window, desks, lights)
+            CustomPaint(
+              painter: bg.OfficePainter(
+                robots: const [],
+                time: _elapsed,
+                isRunning: true,
+                brightness: Theme.of(context).brightness,
+              ),
+              child: const SizedBox.expand(),
             ),
-            child: const SizedBox.expand(),
-          ),
-          // Foreground: robots, pets, particles
-          CustomPaint(
-            painter: RobotOfficePainter(
-              robots: _robots,
-              furniture: officeFurniture,
-              elapsed: _elapsed,
-              dog: _dog,
-              cat: _cat,
-              particles: _particles,
+            // Foreground: robots, pets, particles
+            CustomPaint(
+              painter: RobotOfficePainter(
+                robots: _robots,
+                furniture: officeFurniture,
+                elapsed: _elapsed,
+                dog: _dog,
+                cat: _cat,
+                particles: _particles,
+              ),
+              child: const SizedBox.expand(),
             ),
-            child: const SizedBox.expand(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
