@@ -23,10 +23,15 @@ class _IdentityScreenState extends State<IdentityScreen> {
   bool _available = true;
   String? _error;
 
+  bool _initialized = false;
+
   @override
-  void initState() {
-    super.initState();
-    _loadState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _loadState();
+    }
   }
 
   Future<void> _loadState() async {
@@ -36,7 +41,7 @@ class _IdentityScreenState extends State<IdentityScreen> {
     });
     try {
       final api = context.read<ConnectionProvider>().api;
-      final result = await api.get('/identity/state');
+      final result = await api.getIdentityState();
       if (result.containsKey('error')) {
         setState(() {
           _error = result['error'] as String;
@@ -63,7 +68,7 @@ class _IdentityScreenState extends State<IdentityScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final result = await api.post('/identity/$action');
+      final result = await api.post('identity/$action');
       if (result.containsKey('error')) {
         messenger.showSnackBar(
           SnackBar(
