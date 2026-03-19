@@ -9,7 +9,7 @@ class Furniture {
     required this.h,
   });
 
-  final String type; // desk, server, board, plant, coffee
+  final String type; // desk, server, board, plant, coffee, flower, hanging_plant
   final double x;
   final double y;
   final double w;
@@ -25,5 +25,11 @@ const List<Furniture> officeFurniture = [
   Furniture(type: 'board', x: 0.04, y: 0.2, w: 0.1, h: 0.14),
   Furniture(type: 'plant', x: 0.92, y: 0.78, w: 0.04, h: 0.12),
   Furniture(type: 'plant', x: 0.02, y: 0.82, w: 0.04, h: 0.12),
+  Furniture(type: 'plant', x: 0.10, y: 0.80, w: 0.04, h: 0.12),
+  Furniture(type: 'hanging_plant', x: 0.70, y: 0.12, w: 0.06, h: 0.10),
   Furniture(type: 'coffee', x: 0.56, y: 0.2, w: 0.05, h: 0.08),
+  Furniture(type: 'flower', x: 0.13, y: 0.48, w: 0.03, h: 0.06),
+  Furniture(type: 'flower', x: 0.75, y: 0.49, w: 0.03, h: 0.06),
+  Furniture(type: 'flower', x: 0.27, y: 0.32, w: 0.03, h: 0.06),
+  Furniture(type: 'flower', x: 0.59, y: 0.31, w: 0.03, h: 0.06),
 ];

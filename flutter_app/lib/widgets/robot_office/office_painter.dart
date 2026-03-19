@@ -7,7 +7,7 @@ import 'package:jarvis_ui/theme/jarvis_theme.dart';
 // ──────────────────────────────────────────────────────────────────────
 // Robot Office – Animated CustomPainter (centerpiece visualization)
 //
-// Draws a fully procedural office scene at 60 fps with 4 AI-agent robots,
+// Draws a fully procedural office scene at 60 fps with 8 AI-agent robots,
 // desks, a server rack, kanban board, coffee machine, plants, window
 // that reflects the real time-of-day, data-stream particles, and more.
 // ──────────────────────────────────────────────────────────────────────
@@ -102,6 +102,49 @@ const _gatekeeper = RobotType(
   role: 'Sicherheitsprüfung',
 );
 
+const _coder = RobotType(
+  id: 'coder',
+  name: 'Coder',
+  role: 'Programmierung',
+  color: Color(0xFF8b5cf6),
+  eyeColor: Color(0xFFc4b5fd),
+);
+
+const _analyst = RobotType(
+  id: 'analyst',
+  name: 'Analyst',
+  role: 'Datenanalyse',
+  color: Color(0xFF06b6d4),
+  eyeColor: Color(0xFF67e8f9),
+  antenna: true,
+);
+
+const _memory = RobotType(
+  id: 'memory',
+  name: 'Memory',
+  role: 'Wissen',
+  color: Color(0xFFec4899),
+  eyeColor: Color(0xFFf9a8d4),
+);
+
+const _ops = RobotType(
+  id: 'ops',
+  name: 'DevOps',
+  role: 'Infrastruktur',
+  color: Color(0xFF84cc16),
+  eyeColor: Color(0xFFbef264),
+  antenna: true,
+);
+
+/// Helper for flower positioning.
+class _FlowerInfo {
+  const _FlowerInfo(this.x, this.y, this.color, this.seed);
+  final double x;
+  final double y;
+  final Color color;
+  final int seed;
+}
+
 // ── Office Landmark Positions (normalized 0..1) ──────────────────────
 
 const _desk1 = Offset(0.18, 0.55);
@@ -144,6 +187,8 @@ class OfficePainter extends CustomPainter {
     _drawServerRack(canvas, size);
     _drawCoffeeMachine(canvas, size);
     _drawPlants(canvas, size);
+    _drawFlowers(canvas, size);
+    _drawCeilingLightBeams(canvas, size);
 
     // Sort robots by Y for depth ordering
     final sorted = [...robots]..sort((a, b) => a.y.compareTo(b.y));
@@ -159,6 +204,15 @@ class OfficePainter extends CustomPainter {
   // ── Helpers ────────────────────────────────────────────────────────
 
   bool get _isDark => brightness == Brightness.dark;
+
+  /// 0.0 = full night, 1.0 = full day. Smooth transitions at dawn/dusk.
+  double get _dayFactor {
+    final h = DateTime.now().hour + DateTime.now().minute / 60.0;
+    if (h >= 8 && h <= 17) return 1.0; // full day
+    if (h >= 20 || h <= 5) return 0.0; // full night
+    if (h < 8) return (h - 5) / 3.0; // dawn transition
+    return 1.0 - (h - 17) / 3.0; // dusk transition
+  }
 
   Color _wallColor() => _isDark ? const Color(0xFF1a1a2e) : const Color(0xFFe8e8f0);
   Color _floorBase() => _isDark ? const Color(0xFF22223a) : const Color(0xFFd0d0dc);
@@ -382,15 +436,14 @@ class OfficePainter extends CustomPainter {
   // ── Light Beams from Window ────────────────────────────────────────
 
   void _drawLightBeams(Canvas canvas, Size s) {
-    final hour = DateTime.now().hour;
-    if (hour < 6 || hour >= 22) return; // no beams at night
+    if (_dayFactor < 0.1) return; // no window beams at night
 
     final wx = s.width * 0.32;
     final wy = s.height * 0.06;
     final ww = s.width * 0.36;
     final wh = s.height * 0.30;
 
-    final beamAlpha = _isDark ? 0.06 : 0.04;
+    final beamAlpha = (_isDark ? 0.06 : 0.04) * _dayFactor;
     final beamPaint = Paint()
       ..color = const Color(0xFFFFD700).withValues(alpha: beamAlpha)
       ..style = PaintingStyle.fill;
@@ -589,6 +642,7 @@ class OfficePainter extends CustomPainter {
   // ── Ceiling Lights ─────────────────────────────────────────────────
 
   void _drawCeilingLights(Canvas canvas, Size s) {
+    final nightIntensity = 1.0 - _dayFactor; // 1.0 at night, 0.0 during day
     for (int i = 0; i < 3; i++) {
       final lx = s.width * (0.22 + i * 0.28);
       final ly = s.height * 0.16;
@@ -604,14 +658,30 @@ class OfficePainter extends CustomPainter {
         Paint()..color = const Color(0xFF888898),
       );
 
-      // Glow
-      final glowAlpha = 0.06 + 0.02 * _osc(0.8, i * 2.0);
+      // Light strip glow — brighter at night, subtle during day
+      final baseAlpha = nightIntensity * 0.3 + 0.03;
+      final glowAlpha = baseAlpha + 0.02 * _osc(0.8, i * 2.0);
+      final glowColor = nightIntensity > 0.3
+          ? const Color(0xFFFFE0A0) // warm yellow at night
+          : Colors.white;
       canvas.drawOval(
         Rect.fromCenter(center: Offset(lx, ly + 10), width: lw * 1.3, height: 30),
         Paint()
-          ..color = Colors.white.withValues(alpha: glowAlpha)
+          ..color = glowColor.withValues(alpha: glowAlpha)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15),
       );
+
+      // Warm light strip on fixture at night
+      if (nightIntensity > 0.1) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset(lx, ly + 1), width: lw * 0.9, height: 3),
+            const Radius.circular(1.5),
+          ),
+          Paint()
+            ..color = const Color(0xFFFFE0A0).withValues(alpha: nightIntensity * 0.6),
+        );
+      }
     }
   }
 
@@ -775,15 +845,17 @@ class OfficePainter extends CustomPainter {
       }
     }
 
-    // Screen glow
+    // Screen glow — brighter at night
+    final nightBoost = (1.0 - _dayFactor) * 0.08;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(monX, monY, monW, monH),
         const Radius.circular(2),
       ),
       Paint()
-        ..color = JarvisTheme.accent.withValues(alpha: 0.04 + 0.02 * _osc(2, index.toDouble()))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        ..color = JarvisTheme.accent.withValues(
+            alpha: 0.04 + nightBoost + 0.02 * _osc(2, index.toDouble()))
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 + nightBoost * 30),
     );
 
     // Keyboard
@@ -1015,6 +1087,10 @@ class OfficePainter extends CustomPainter {
   void _drawPlants(Canvas canvas, Size s) {
     _drawPlant(canvas, s, s.width * 0.04, s.height * 0.48, 0);
     _drawPlant(canvas, s, s.width * 0.82, s.height * 0.46, 1);
+    // Large plant near entrance area (bottom-left)
+    _drawPlant(canvas, s, s.width * 0.12, s.height * 0.82, 2);
+    // Hanging plant from ceiling
+    _drawHangingPlant(canvas, s, s.width * 0.72, s.height * 0.14, 3);
   }
 
   void _drawPlant(Canvas canvas, Size s, double px, double py, int seed) {
@@ -1080,6 +1156,249 @@ class OfficePainter extends CustomPainter {
         ..color = const Color(0xFF388E3C)
         ..strokeWidth = 1.5,
     );
+  }
+
+  // ── Hanging Plant ────────────────────────────────────────────────
+
+  void _drawHangingPlant(Canvas canvas, Size s, double hx, double hy, int seed) {
+    // Hook on ceiling
+    canvas.drawCircle(
+      Offset(hx, hy),
+      3,
+      Paint()..color = const Color(0xFF888898),
+    );
+
+    // Vines drooping down
+    final vinePaint = Paint()
+      ..color = const Color(0xFF388E3C)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    for (int v = 0; v < 5; v++) {
+      final vx = hx + (v - 2) * 8;
+      final vineLen = s.height * (0.06 + (v % 3) * 0.02);
+      final sway = _osc(0.6 + seed * 0.2, v * 2.0 + seed * 5.0) * 4;
+
+      final path = Path();
+      path.moveTo(hx, hy + 2);
+      path.quadraticBezierTo(
+        vx + sway,
+        hy + vineLen * 0.5,
+        vx + sway * 1.5,
+        hy + vineLen,
+      );
+      canvas.drawPath(path, vinePaint);
+
+      // Small leaves along vine
+      for (int l = 0; l < 3; l++) {
+        final lt = 0.3 + l * 0.25;
+        final lx = hx + (vx - hx + sway) * lt;
+        final ly = hy + 2 + vineLen * lt;
+        final leafSway = _osc(1.0, v * 3.0 + l * 1.5 + seed * 4.0) * 0.15;
+        final leafAngle = pi / 4 + leafSway + (v.isEven ? 0 : pi / 2);
+        const leafLen = 5.0;
+
+        final leafPath = Path();
+        leafPath.moveTo(lx, ly);
+        leafPath.quadraticBezierTo(
+          lx + cos(leafAngle) * leafLen,
+          ly + sin(leafAngle) * leafLen * 0.5,
+          lx + cos(leafAngle) * leafLen * 0.8,
+          ly + sin(leafAngle) * leafLen,
+        );
+        canvas.drawPath(
+          leafPath,
+          Paint()
+            ..color = const Color(0xFF4CAF50).withValues(alpha: 0.8)
+            ..strokeWidth = 2.5
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round,
+        );
+      }
+    }
+  }
+
+  // ── Flowers (day/night bloom) ───────────────────────────────────
+
+  void _drawFlowers(Canvas canvas, Size s) {
+    // Flower positions: 2 on desks, 1 near window, 1 near coffee machine
+    final flowers = [
+      // On desk 1
+      _FlowerInfo(s.width * 0.14, s.height * 0.50, const Color(0xFFE53935), 0),
+      // On desk 3
+      _FlowerInfo(s.width * 0.76, s.height * 0.51, const Color(0xFF9C27B0), 1),
+      // Near window (on wall ledge)
+      _FlowerInfo(s.width * 0.28, s.height * 0.34, const Color(0xFFFFEB3B), 2),
+      // Near coffee machine
+      _FlowerInfo(s.width * 0.60, s.height * 0.33, const Color(0xFFE91E63), 3),
+    ];
+
+    for (final f in flowers) {
+      _drawFlowerPot(canvas, s, f.x, f.y, f.color, f.seed);
+    }
+  }
+
+  void _drawFlowerPot(
+    Canvas canvas,
+    Size s,
+    double fx,
+    double fy,
+    Color petalColor,
+    int seed,
+  ) {
+    final potW = s.width * 0.018;
+    final potH = s.height * 0.025;
+    final sway = _osc(0.7 + seed * 0.15, seed * 3.0) * 2;
+
+    // Bloom factor: 1.0 = fully open (day), 0.0 = closed bud (night)
+    final bloom = _dayFactor;
+
+    // Terracotta pot (trapezoid)
+    final potPath = Path();
+    potPath.moveTo(fx - potW * 0.5, fy);
+    potPath.lineTo(fx - potW * 0.35, fy + potH);
+    potPath.lineTo(fx + potW * 0.35, fy + potH);
+    potPath.lineTo(fx + potW * 0.5, fy);
+    potPath.close();
+    canvas.drawPath(potPath, Paint()..color = const Color(0xFFC67B5C));
+
+    // Pot rim
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(fx - potW * 0.55, fy - 1.5, potW * 1.1, 3),
+        const Radius.circular(1),
+      ),
+      Paint()..color = const Color(0xFFB06B4C),
+    );
+
+    // Green stem
+    final stemTop = fy - potH * 1.2;
+    canvas.drawLine(
+      Offset(fx + sway * 0.3, fy - 1),
+      Offset(fx + sway, stemTop),
+      Paint()
+        ..color = const Color(0xFF388E3C)
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Small leaf on stem
+    final leafPath = Path();
+    final leafMidY = fy - potH * 0.6;
+    leafPath.moveTo(fx + sway * 0.5, leafMidY);
+    leafPath.quadraticBezierTo(
+      fx + sway * 0.5 + 5,
+      leafMidY - 3,
+      fx + sway * 0.5 + 3,
+      leafMidY - 6,
+    );
+    canvas.drawPath(
+      leafPath,
+      Paint()
+        ..color = const Color(0xFF4CAF50)
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Flower head
+    final flowerCx = fx + sway;
+    final flowerCy = stemTop;
+    const petalCount = 5;
+    const centerR = 2.5;
+    final petalLen = 5.0 * bloom + 1.5; // closed: small bud, open: full petals
+    final petalWidth = 3.0 * bloom + 1.0;
+
+    if (bloom > 0.05) {
+      // Draw petals
+      for (int p = 0; p < petalCount; p++) {
+        final angle = (p / petalCount) * pi * 2 + seed * 1.2 + sway * 0.05;
+        // Petal spread depends on bloom factor
+        final petalEndX = flowerCx + cos(angle) * petalLen;
+        final petalEndY = flowerCy + sin(angle) * petalLen;
+        final ctrlX = flowerCx + cos(angle + 0.3) * petalLen * 0.6;
+        final ctrlY = flowerCy + sin(angle + 0.3) * petalLen * 0.6;
+        final ctrlX2 = flowerCx + cos(angle - 0.3) * petalLen * 0.6;
+        final ctrlY2 = flowerCy + sin(angle - 0.3) * petalLen * 0.6;
+
+        final pPath = Path();
+        pPath.moveTo(flowerCx, flowerCy);
+        pPath.quadraticBezierTo(ctrlX, ctrlY, petalEndX, petalEndY);
+        pPath.quadraticBezierTo(ctrlX2, ctrlY2, flowerCx, flowerCy);
+        canvas.drawPath(
+          pPath,
+          Paint()..color = petalColor.withValues(alpha: 0.8),
+        );
+      }
+    } else {
+      // Closed bud: draw a small oval
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(flowerCx, flowerCy),
+          width: petalWidth * 1.2,
+          height: petalWidth * 1.8,
+        ),
+        Paint()..color = petalColor.withValues(alpha: 0.6),
+      );
+    }
+
+    // Yellow center (visible when open)
+    if (bloom > 0.3) {
+      canvas.drawCircle(
+        Offset(flowerCx, flowerCy),
+        centerR * bloom,
+        Paint()..color = const Color(0xFFFFEB3B),
+      );
+    }
+  }
+
+  // ── Ceiling Light Beams (night-time downward cones) ──────────────
+
+  void _drawCeilingLightBeams(Canvas canvas, Size s) {
+    final nightIntensity = 1.0 - _dayFactor;
+    if (nightIntensity < 0.1) return; // no beams during day
+
+    for (int i = 0; i < 3; i++) {
+      final lx = s.width * (0.22 + i * 0.28);
+      final ly = s.height * 0.18;
+      final beamW = s.width * 0.08;
+      final beamH = s.height * 0.35;
+
+      // Cone-shaped light beam downward
+      final beamPath = Path();
+      beamPath.moveTo(lx - beamW * 0.15, ly);
+      beamPath.lineTo(lx - beamW, ly + beamH);
+      beamPath.lineTo(lx + beamW, ly + beamH);
+      beamPath.lineTo(lx + beamW * 0.15, ly);
+      beamPath.close();
+
+      final beamAlpha = nightIntensity * (0.04 + 0.01 * _osc(0.8, i * 2.0));
+      canvas.drawPath(
+        beamPath,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset(lx, ly),
+            Offset(lx, ly + beamH),
+            [
+              const Color(0xFFFFE0A0).withValues(alpha: beamAlpha * 2),
+              const Color(0xFFFFE0A0).withValues(alpha: 0),
+            ],
+          ),
+      );
+
+      // Floor light pool
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(lx, ly + beamH),
+          width: beamW * 2.2,
+          height: beamH * 0.15,
+        ),
+        Paint()
+          ..color = const Color(0xFFFFE0A0).withValues(alpha: nightIntensity * 0.06)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+      );
+    }
   }
 
   // ── Robot Drawing ──────────────────────────────────────────────────
@@ -1531,6 +1850,10 @@ class _RobotOfficeState extends State<RobotOffice> with SingleTickerProviderStat
       Robot(type: _executor, x: _desk2.dx, y: _desk2.dy + 0.12),
       Robot(type: _researcher, x: _desk3.dx, y: _desk3.dy + 0.12),
       Robot(type: _gatekeeper, x: 0.50, y: 0.70),
+      Robot(type: _coder, x: 0.30, y: 0.68),
+      Robot(type: _analyst, x: 0.65, y: 0.72),
+      Robot(type: _memory, x: 0.80, y: 0.62),
+      Robot(type: _ops, x: 0.38, y: 0.78),
     ];
 
     _controller = AnimationController(
@@ -1548,7 +1871,7 @@ class _RobotOfficeState extends State<RobotOffice> with SingleTickerProviderStat
   }
 
   void _onTick() {
-    final dt = 1.0 / 60.0; // approximate dt
+    const dt = 1.0 / 60.0; // approximate dt
     _elapsed += dt;
     _updateRobots(dt);
     // setState is implicitly called by the listener triggering a rebuild
