@@ -29,6 +29,20 @@ class _SecurityScreenState extends State<SecurityScreen> {
   bool _initialLoaded = false;
   bool _initialized = false;
 
+  static int _toInt(dynamic v) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? 0;
+    return 0;
+  }
+
+  static double _toDouble(dynamic v) {
+    if (v is double) return v;
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -131,18 +145,18 @@ class _SecurityScreenState extends State<SecurityScreen> {
     final stats = sec.complianceStats ?? {};
     final totalDecisions = stats['total_decisions']?.toString() ?? '0';
     final flagged = stats['flagged']?.toString() ?? '0';
-    final approvalRate = (stats['approval_rate'] as num?)?.toDouble() ?? 0.0;
+    final approvalRate = _toDouble(stats['approval_rate']);
     final avgConfidence = stats['avg_confidence']?.toString() ?? '-';
 
     final rems = sec.remediations ?? {};
-    final open = rems['open'] as int? ?? 0;
-    final inProgress = rems['in_progress'] as int? ?? 0;
-    final resolved = rems['resolved'] as int? ?? 0;
-    final overdue = rems['overdue'] as int? ?? 0;
+    final open = _toInt(rems['open']);
+    final inProgress = _toInt(rems['in_progress']);
+    final resolved = _toInt(rems['resolved']);
+    final overdue = _toInt(rems['overdue']);
 
     final report = sec.complianceReport ?? {};
-    final euAiAct = report['eu_ai_act'] as bool? ?? false;
-    final dsgvo = report['dsgvo'] as bool? ?? false;
+    final euAiAct = report['eu_ai_act'] == true;
+    final dsgvo = report['dsgvo'] == true;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -260,7 +274,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
 
   Widget _buildRolesTab(AppLocalizations l, SecurityProvider sec) {
     final rolesData = sec.roles ?? {};
-    final rolesList = rolesData['roles'] as List<dynamic>? ?? [];
+    final rolesList = rolesData['roles'] is List ? rolesData['roles'] as List : [];
     final authData = sec.authStats ?? {};
 
     return ListView(
@@ -296,10 +310,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
             icon: Icons.people_outline,
             title: l.noData,
           ),
-        ...rolesList.map<Widget>((role) {
-          final r = role as Map<String, dynamic>;
+        ...rolesList.whereType<Map<String, dynamic>>().map<Widget>((r) {
           final name = r['name']?.toString() ?? '';
-          final perms = r['permissions'] as List<dynamic>? ?? [];
+          final perms = r['permissions'] is List ? r['permissions'] as List : [];
           return _RoleCard(name: name, permissions: perms);
         }),
       ],
@@ -312,7 +325,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
 
   Widget _buildRedTeamTab(AppLocalizations l, SecurityProvider sec) {
     final status = sec.redteamStatus ?? {};
-    final available = status['available'] as bool? ?? false;
+    final available = status['available'] == true;
     final lastScan = status['last_scan']?.toString();
     final rawResults = status['results'];
     final results = rawResults is Map<String, dynamic> ? rawResults : null;
@@ -495,7 +508,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   itemCount: entries.length,
                   itemBuilder: (context, index) {
                     final entry =
-                        entries[index] as Map<String, dynamic>? ?? {};
+                        entries[index] is Map<String, dynamic>
+                            ? entries[index] as Map<String, dynamic>
+                            : <String, dynamic>{};
                     final action = entry['action']?.toString() ?? '';
                     final actor = entry['actor']?.toString() ?? '';
                     final ts = entry['timestamp']?.toString() ?? '';
