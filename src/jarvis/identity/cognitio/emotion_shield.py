@@ -218,7 +218,7 @@ class EmotionShield:
         if len(self._session_emotion_history) < window:
             return False, raw
 
-        recent = self._session_emotion_history[-window:]
+        recent = list(self._session_emotion_history)[-window:]
         prev_avg = sum(recent) / len(recent)
 
         spike = (raw - prev_avg) > self.config["spike_threshold"]

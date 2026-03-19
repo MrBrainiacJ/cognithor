@@ -197,7 +197,7 @@ class PredictiveEngine:
         """Construct a PredictiveEngine from a dict."""
         pe = cls()
         pe._last_error = data.get("last_error", 0.0)
-        pe._error_history = list(data.get("error_history", []))
+        pe._error_history = collections.deque(data.get("error_history", []), maxlen=100)
         return pe
 
     @staticmethod
