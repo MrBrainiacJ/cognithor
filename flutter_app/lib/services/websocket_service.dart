@@ -112,6 +112,9 @@ class WebSocketService {
   /// Disconnect and reconnect with a different session.
   Future<void> switchSession(String newSessionId) async {
     disconnect();
+    // Brief delay to let the old connection close cleanly
+    // before opening a new one (avoids ASGI race condition).
+    await Future<void>.delayed(const Duration(milliseconds: 300));
     _disposed = false;
     await connect(newSessionId);
   }
