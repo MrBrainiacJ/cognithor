@@ -2746,7 +2746,7 @@ class Gateway:
                 try:
                     self._session_store.auto_title(session.session_id)
                 except Exception:
-                    pass
+                    log.debug("auto_title_failed", exc_info=True)
 
     # =========================================================================
     # Agent-zu-Agent Delegation
