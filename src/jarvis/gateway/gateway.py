@@ -1340,6 +1340,51 @@ class Gateway:
             except Exception:
                 log.debug("user_preferences_skipped", exc_info=True)
 
+        # ── Channel Flags (Modul 5) ──
+        _channel_flags = None
+        try:
+            from jarvis.core.channel_flags import get_channel_flags
+
+            _channel_flags = get_channel_flags(msg.channel)
+            if _channel_flags.compact_output or _channel_flags.token_efficient:
+                wm.add_message(
+                    Message(
+                        role=MessageRole.SYSTEM,
+                        content=(
+                            f"Channel: {msg.channel}. "
+                            + (
+                                "Halte Antworten kurz und kompakt. "
+                                if _channel_flags.compact_output
+                                else ""
+                            )
+                            + (
+                                f"Max {_channel_flags.max_response_length} Zeichen. "
+                                if _channel_flags.max_response_length
+                                else ""
+                            )
+                            + (
+                                "Kein Markdown verwenden. "
+                                if not _channel_flags.allow_markdown
+                                else ""
+                            )
+                            + (
+                                "Keine Code-Bloecke. "
+                                if not _channel_flags.allow_code_blocks
+                                else ""
+                            )
+                        ).strip(),
+                        channel=msg.channel,
+                    )
+                )
+                log.debug(
+                    "channel_flags_applied",
+                    channel=msg.channel,
+                    compact=_channel_flags.compact_output,
+                    max_len=_channel_flags.max_response_length,
+                )
+        except Exception:
+            log.debug("channel_flags_skipped", exc_info=True)
+
         all_results: list[ToolResult] = []
         all_plans: list[ActionPlan] = []
         all_audit: list[AuditEntry] = []
@@ -2497,6 +2542,13 @@ class Gateway:
             except Exception:
                 log.debug("session_analysis_failed", exc_info=True)
 
+        # Pattern Documentation: record successful tool sequences
+        if self._memory_manager:
+            try:
+                self._maybe_record_pattern(session, wm, agent_result)
+            except Exception:
+                log.debug("pattern_documentation_post_failed", exc_info=True)
+
         # Self-Learning: Process actionable skill gaps (auto-generate new tools)
         if hasattr(self, "_skill_generator") and self._skill_generator:
             try:
@@ -2523,6 +2575,156 @@ class Gateway:
                         log.debug("core_inventory_sync_after_skill_gen_failed", exc_info=True)
             except Exception:
                 log.debug("skill_gap_processing_failed", exc_info=True)
+
+    # ── Pattern Documentation ────────────────────────────────────
+
+    # Rate limiter for pattern recordings: max 5 per hour
+    _pattern_record_timestamps: ClassVar[list[float]] = []
+    _PATTERN_MAX_PER_HOUR: ClassVar[int] = 5
+
+    def _maybe_record_pattern(
+        self,
+        session: SessionContext,
+        wm: WorkingMemory,
+        agent_result: AgentResult,
+    ) -> None:
+        """Extract and store execution patterns for procedural memory.
+
+        After successful execution, extracts the tool sequence and user intent,
+        checks for similar existing patterns, and stores new ones.
+        Rate limited to max 5 recordings per hour.
+        """
+        try:
+            # Only record successful executions with tool results
+            if not agent_result.success or not agent_result.tool_results:
+                return
+
+            # Check for errors in tool results
+            if any(getattr(tr, "is_error", False) for tr in agent_result.tool_results):
+                return
+
+            # Rate limit check
+            now = time.monotonic()
+            # Prune old timestamps (older than 1 hour)
+            self._pattern_record_timestamps[:] = [
+                ts for ts in self._pattern_record_timestamps if now - ts < 3600
+            ]
+            if len(self._pattern_record_timestamps) >= self._PATTERN_MAX_PER_HOUR:
+                return
+
+            # Extract tool sequence
+            tool_sequence = [
+                getattr(tr, "tool_name", "") or ""
+                for tr in agent_result.tool_results
+                if getattr(tr, "tool_name", "")
+            ]
+            if not tool_sequence:
+                return
+
+            # Extract user intent keywords from working memory
+            user_text = ""
+            for m in getattr(wm, "chat_history", []):
+                if getattr(m, "role", None) and m.role.value == "user":
+                    user_text = getattr(m, "content", "")
+                    break
+            if not user_text:
+                return
+
+            # Build keywords (simple: take significant words)
+            keywords = [
+                w
+                for w in user_text.lower().split()
+                if len(w) > 3
+                and w
+                not in {
+                    "bitte",
+                    "kannst",
+                    "koenntest",
+                    "wuerdest",
+                    "mach",
+                    "zeig",
+                    "dass",
+                    "diese",
+                    "dieser",
+                    "dieses",
+                    "eine",
+                    "einen",
+                    "einem",
+                    "einer",
+                    "the",
+                    "and",
+                    "for",
+                    "that",
+                    "this",
+                    "with",
+                    "please",
+                    "could",
+                    "would",
+                    "show",
+                    "make",
+                }
+            ][:5]
+
+            if not keywords:
+                return
+
+            channel = getattr(session, "channel", "")
+            tools_str = ", ".join(tool_sequence)
+            keywords_str = ", ".join(keywords)
+
+            # Check if similar pattern exists (fuzzy match via procedural memory)
+            if self._memory_manager:
+                procedural = getattr(self._memory_manager, "procedural", None)
+                if procedural is not None:
+                    # Check for existing procedures with similar tool sequences
+                    existing = getattr(procedural, "search_procedures", None)
+                    if existing:
+                        try:
+                            matches = existing(keywords_str)
+                            if matches and tools_str in str(matches):
+                                log.debug(
+                                    "pattern_already_documented",
+                                    tools=tools_str,
+                                )
+                                return
+                        except Exception:
+                            pass  # search_procedures may not exist or fail
+
+                    # Store new pattern as procedure
+                    pattern_body = (
+                        f"When user asks about {keywords_str}, "
+                        f"use tools [{tools_str}]. "
+                        f"Context: {user_text[:200]}"
+                    )
+                    try:
+                        from jarvis.models import ProcedureMetadata
+
+                        slug = hashlib.sha256(f"{tools_str}:{keywords_str}".encode()).hexdigest()[
+                            :12
+                        ]
+                        name = f"pattern-{slug}"
+
+                        procedural.save_procedure(
+                            name=name,
+                            body=pattern_body,
+                            metadata=ProcedureMetadata(
+                                name=name,
+                                trigger_keywords=keywords,
+                                tools_required=tool_sequence,
+                            ),
+                        )
+                        self._pattern_record_timestamps.append(now)
+                        log.info(
+                            "pattern_documented",
+                            name=name,
+                            tools=tools_str,
+                            keywords=keywords_str,
+                            channel=channel,
+                        )
+                    except Exception:
+                        log.debug("pattern_save_failed", exc_info=True)
+        except Exception:
+            log.debug("pattern_documentation_failed", exc_info=True)
 
     async def _persist_session(
         self,

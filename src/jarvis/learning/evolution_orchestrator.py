@@ -93,6 +93,7 @@ class EvolutionOrchestrator:
         proposal_store: ProposalStore,
         prompt_evolution: PromptEvolutionEngine | None = None,
         session_analyzer: SessionAnalyzer | None = None,
+        reflexion_memory: Any = None,
         *,
         min_traces: int = 10,
         max_active: int = 1,
@@ -105,6 +106,7 @@ class EvolutionOrchestrator:
         self._proposals = proposal_store
         self._prompt_evolution = prompt_evolution
         self._session_analyzer = session_analyzer
+        self._reflexion_memory = reflexion_memory
 
         self.min_traces = min_traces
         self.max_active = max_active
@@ -422,6 +424,10 @@ class EvolutionOrchestrator:
                 confidence=proposal.confidence,
                 metrics_before=metrics_before,
             )
+
+            # Mark associated prevention rule as adopted
+            self._mark_prevention_rule(proposal, "adopted")
+
             return True
 
         except Exception as exc:
@@ -469,6 +475,10 @@ class EvolutionOrchestrator:
                 metrics_before=proposal.metrics_before,
                 metrics_after=metrics_after,
             )
+
+            # Mark associated prevention rule as rejected
+            self._mark_prevention_rule(proposal, "rejected")
+
             return True
 
         except Exception as exc:
@@ -634,6 +644,39 @@ class EvolutionOrchestrator:
                 "evolution_get_proposal_detail_failed", proposal_id=proposal_id, error=str(exc)
             )
             return None
+
+    # ------------------------------------------------------------------
+    # Private: prevention rule management
+    # ------------------------------------------------------------------
+
+    def _mark_prevention_rule(self, proposal: Any, status: str) -> None:
+        """Mark the prevention rule associated with a proposal as adopted or rejected.
+
+        Looks up the reflexion entry by task_context containing the proposal_id.
+        """
+        if self._reflexion_memory is None:
+            return
+        try:
+            # Find the reflexion entry linked to this proposal
+            from jarvis.learning.reflexion import ReflexionMemory
+
+            rm: ReflexionMemory = self._reflexion_memory
+            task_key = f"proposal:{proposal.proposal_id}"
+            for entry in rm._all_entries:
+                if entry.task_context == task_key:
+                    if status == "adopted":
+                        rm.adopt_rule(entry.error_signature)
+                    elif status == "rejected":
+                        rm.reject_rule(entry.error_signature)
+                    log.info(
+                        "prevention_rule_marked",
+                        proposal_id=proposal.proposal_id,
+                        status=status,
+                        signature=entry.error_signature,
+                    )
+                    return
+        except Exception:
+            log.debug("prevention_rule_mark_failed", exc_info=True)
 
     # ------------------------------------------------------------------
     # Private: metrics calculation

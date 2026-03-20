@@ -263,6 +263,22 @@ class ProposalStore:
 # ---------------------------------------------------------------------------
 
 
+_PREVENTION_RULES: dict[str, str] = {
+    "timeout": "Rate-limit {tool}: max 1 call per 2 seconds",
+    "bad_parameters": "Validate {parameter} exists before calling {tool}",
+    "bad_params": "Validate {parameter} exists before calling {tool}",
+    "hallucination": "Cross-reference {tool} results with web_search before presenting",
+    "wrong_tool_choice": "For {context}, prefer {alternative_tool} over {tool}",
+    "wrong_tool": "For {context}, prefer {alternative_tool} over {tool}",
+    "missing_context": "Load memory + vault before executing {tool}",
+    "cascade_failure": "Check {upstream_tool} success before running {tool}",
+    "permission_denied": "Request approval before {tool} on {resource}",
+    "rate_limited": "Add exponential backoff: 1s, 2s, 4s for {tool}",
+    "rate_limit": "Add exponential backoff: 1s, 2s, 4s for {tool}",
+    "parse_error": "Validate {tool} output format before processing",
+}
+
+
 class TraceOptimizer:
     """Generates targeted optimization proposals from causal findings."""
 
@@ -270,9 +286,11 @@ class TraceOptimizer:
         self,
         proposal_store: ProposalStore,
         llm_client: Any = None,
+        reflexion_memory: Any = None,
     ) -> None:
         self._store = proposal_store
         self._llm = llm_client
+        self._reflexion_memory = reflexion_memory
 
     # -- public API ----------------------------------------------------------
 
@@ -284,7 +302,8 @@ class TraceOptimizer:
         """Generate proposals for each improvement target.
 
         For each target, call the appropriate generator based on
-        ``failure_category``.
+        ``failure_category``.  Also generates a prevention rule and
+        stores it via ReflexionMemory if available.
         """
         proposals: list[OptimizationProposal] = []
 
@@ -316,10 +335,63 @@ class TraceOptimizer:
                         tool_name,
                         proposal.estimated_impact,
                     )
+
+                    # Generate and store prevention rule
+                    rule = self._generate_prevention_rule(target, category)
+                    if rule and self._reflexion_memory is not None:
+                        try:
+                            self._reflexion_memory.record_error(
+                                tool_name=tool_name,
+                                error_category=category,
+                                error_message=proposal.description[:200],
+                                root_cause=proposal.description,
+                                prevention_rule=rule,
+                                task_context=f"proposal:{proposal.proposal_id}",
+                            )
+                            log.info(
+                                "prevention_rule_stored",
+                                tool=tool_name,
+                                category=category,
+                                rule=rule[:80],
+                            )
+                        except Exception:
+                            log.debug("prevention_rule_store_failed", exc_info=True)
             except Exception:
                 log.exception("Failed to generate proposal for target %s", target)
 
         return proposals
+
+    # -- prevention rule generation ------------------------------------------
+
+    @staticmethod
+    def _generate_prevention_rule(
+        target: dict[str, Any],
+        category: str,
+    ) -> str:
+        """Generate a concrete prevention rule string for a failure category.
+
+        Substitutes context-specific values (tool name, parameters, etc.)
+        into the template for the given category.
+        """
+        template = _PREVENTION_RULES.get(category, "")
+        if not template:
+            return ""
+
+        tool = target.get("tool_name", "unknown")
+        parameter = target.get("error_param", "input")
+        context = target.get("context", "this task")
+        alternative_tool = target.get("suggested_tool", "alternative_tool")
+        upstream_tool = target.get("upstream_tool", "upstream_tool")
+        resource = target.get("resource", "resource")
+
+        return template.format(
+            tool=tool,
+            parameter=parameter,
+            context=context,
+            alternative_tool=alternative_tool,
+            upstream_tool=upstream_tool,
+            resource=resource,
+        )
 
     # -- category-specific generators ----------------------------------------
 
