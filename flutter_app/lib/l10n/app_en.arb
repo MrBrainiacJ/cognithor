@@ -1246,5 +1246,27 @@
         "type": "String"
       }
     }
+  },
+  "folders": "Folders",
+  "@folders": {},
+  "moveToFolder": "Move to folder",
+  "@moveToFolder": {},
+  "newFolder": "New Folder",
+  "@newFolder": {},
+  "folderName": "Folder name",
+  "@folderName": {},
+  "noFolder": "Unfiled",
+  "@noFolder": {},
+  "renameChat": "Rename",
+  "@renameChat": {},
+  "editTitle": "Edit title",
+  "@editTitle": {},
+  "sessionCount": "{count} chats",
+  "@sessionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

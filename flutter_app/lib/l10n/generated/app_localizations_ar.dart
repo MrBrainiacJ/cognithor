@@ -2166,4 +2166,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String daysAgo(String count) {
     return 'منذ $count يوم';
   }
+
+  @override
+  String get folders => 'المجلدات';
+
+  @override
+  String get moveToFolder => 'نقل إلى مجلد';
+
+  @override
+  String get newFolder => 'مجلد جديد';
+
+  @override
+  String get folderName => 'اسم المجلد';
+
+  @override
+  String get noFolder => 'بدون مجلد';
+
+  @override
+  String get renameChat => 'إعادة تسمية';
+
+  @override
+  String get editTitle => 'تعديل العنوان';
+
+  @override
+  String sessionCount(int count) {
+    return '$count محادثات';
+  }
 }

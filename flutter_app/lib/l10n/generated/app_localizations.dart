@@ -4313,6 +4313,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}d ago'**
   String daysAgo(String count);
+
+  /// No description provided for @folders.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get folders;
+
+  /// No description provided for @moveToFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to folder'**
+  String get moveToFolder;
+
+  /// No description provided for @newFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New Folder'**
+  String get newFolder;
+
+  /// No description provided for @folderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get folderName;
+
+  /// No description provided for @noFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfiled'**
+  String get noFolder;
+
+  /// No description provided for @renameChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameChat;
+
+  /// No description provided for @editTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit title'**
+  String get editTitle;
+
+  /// No description provided for @sessionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chats'**
+  String sessionCount(int count);
 }
 
 class _AppLocalizationsDelegate

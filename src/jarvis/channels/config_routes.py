@@ -1207,16 +1207,28 @@ def _register_session_routes(
         messages = store.get_session_history(session_id, limit=limit)
         return {"messages": messages, "session_id": session_id}
 
+    @app.get("/api/v1/sessions/folders", dependencies=deps)
+    async def list_folders(channel: str = "webui") -> dict[str, Any]:
+        """Eindeutige Ordnernamen auflisten."""
+        store = _get_session_store()
+        if not store:
+            return {"folders": []}
+        folders = store.list_folders(channel=channel)
+        return {"folders": folders}
+
     @app.patch("/api/v1/sessions/{session_id}", dependencies=deps)
     async def update_session(session_id: str, request: Request) -> dict[str, Any]:
-        """Session-Metadaten aktualisieren (Titel)."""
+        """Session-Metadaten aktualisieren (Titel, Ordner)."""
         body = await request.json()
         store = _get_session_store()
         if not store:
             raise HTTPException(status_code=503, detail="Session store not available")
         title = body.get("title")
-        if title:
+        if title is not None:
             store.update_session_title(session_id, title)
+        folder = body.get("folder")
+        if folder is not None:
+            store.update_session_folder(session_id, folder)
         return {"status": "updated", "session_id": session_id}
 
     @app.delete("/api/v1/sessions/{session_id}", dependencies=deps)

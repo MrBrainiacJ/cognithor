@@ -2169,4 +2169,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgo(String count) {
     return '${count}d ago';
   }
+
+  @override
+  String get folders => 'Folders';
+
+  @override
+  String get moveToFolder => 'Move to folder';
+
+  @override
+  String get newFolder => 'New Folder';
+
+  @override
+  String get folderName => 'Folder name';
+
+  @override
+  String get noFolder => 'Unfiled';
+
+  @override
+  String get renameChat => 'Rename';
+
+  @override
+  String get editTitle => 'Edit title';
+
+  @override
+  String sessionCount(int count) {
+    return '$count chats';
+  }
 }

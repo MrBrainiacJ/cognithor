@@ -698,5 +698,13 @@
   "justNow": "刚刚",
   "minutesAgo": "{count} 分钟前",
   "hoursAgo": "{count} 小时前",
-  "daysAgo": "{count} 天前"
+  "daysAgo": "{count} 天前",
+  "folders": "文件夹",
+  "moveToFolder": "移动到文件夹",
+  "newFolder": "新建文件夹",
+  "folderName": "文件夹名称",
+  "noFolder": "未分类",
+  "renameChat": "重命名",
+  "editTitle": "编辑标题",
+  "sessionCount": "{count} 个聊天"
 }

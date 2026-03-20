@@ -15,6 +15,7 @@ class SessionsProvider extends ChangeNotifier {
   ApiClient? _api;
 
   List<Map<String, dynamic>> sessions = [];
+  List<String> folders = [];
   String? activeSessionId;
   bool isLoading = false;
   String? error;
@@ -117,6 +118,37 @@ class SessionsProvider extends ChangeNotifier {
       await loadSessions();
     } catch (e) {
       _log('[Sessions] renameSession error: $e');
+      error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadFolders() async {
+    if (_api == null) return;
+    try {
+      final result = await _api!.listFolders();
+      if (result.containsKey('error')) {
+        _log('[Sessions] loadFolders error: ${result['error']}');
+        return;
+      }
+      final raw = result['folders'];
+      if (raw is List) {
+        folders = raw.cast<String>();
+        notifyListeners();
+      }
+    } catch (e) {
+      _log('[Sessions] loadFolders error: $e');
+    }
+  }
+
+  Future<void> moveToFolder(String sessionId, String folder) async {
+    if (_api == null) return;
+    try {
+      await _api!.moveSessionToFolder(sessionId, folder);
+      await loadSessions();
+      await loadFolders();
+    } catch (e) {
+      _log('[Sessions] moveToFolder error: $e');
       error = e.toString();
       notifyListeners();
     }

@@ -71,6 +71,8 @@ _MIGRATIONS = [
     """,
     # Migration 4: Title-Spalte für Chat-History-Sidebar
     "ALTER TABLE sessions ADD COLUMN title TEXT DEFAULT '';",
+    # Migration 5: Folder-Spalte für Ordner-/Projektsystem
+    "ALTER TABLE sessions ADD COLUMN folder TEXT DEFAULT '';",
 ]
 
 
@@ -340,7 +342,7 @@ class SessionStore:
         """
         rows = self.conn.execute(
             """
-            SELECT session_id, title, message_count, started_at, last_activity
+            SELECT session_id, title, message_count, started_at, last_activity, folder
             FROM sessions
             WHERE channel = ? AND user_id = ? AND active = 1
             ORDER BY last_activity DESC
@@ -357,6 +359,7 @@ class SessionStore:
                     "message_count": row["message_count"],
                     "started_at": row["started_at"],
                     "last_activity": row["last_activity"],
+                    "folder": row["folder"] or "",
                 }
             )
         return result
@@ -402,6 +405,40 @@ class SessionStore:
         )
         self.conn.commit()
         return cursor.rowcount > 0
+
+    def update_session_folder(self, session_id: str, folder: str) -> bool:
+        """Setzt den Ordner für eine Session.
+
+        Returns:
+            True wenn eine Zeile aktualisiert wurde.
+        """
+        cursor = self.conn.execute(
+            "UPDATE sessions SET folder = ? WHERE session_id = ?",
+            (folder, session_id),
+        )
+        self.conn.commit()
+        return cursor.rowcount > 0
+
+    def list_folders(
+        self,
+        channel: str = "webui",
+        user_id: str = "web_user",
+    ) -> list[str]:
+        """Gibt alle eindeutigen Ordnernamen für einen Channel/User zurück.
+
+        Returns:
+            Sortierte Liste von Ordnernamen (ohne Leerstring).
+        """
+        rows = self.conn.execute(
+            """
+            SELECT DISTINCT folder FROM sessions
+            WHERE channel = ? AND user_id = ? AND active = 1
+              AND folder IS NOT NULL AND folder != ''
+            ORDER BY folder
+            """,
+            (channel, user_id),
+        ).fetchall()
+        return [row["folder"] for row in rows]
 
     def delete_session(self, session_id: str) -> bool:
         """Soft-Delete: Setzt active=0.

@@ -724,5 +724,13 @@
   "justNow": "Gerade eben",
   "minutesAgo": "Vor {count} Min.",
   "hoursAgo": "Vor {count} Std.",
-  "daysAgo": "Vor {count} T."
+  "daysAgo": "Vor {count} T.",
+  "folders": "Ordner",
+  "moveToFolder": "In Ordner verschieben",
+  "newFolder": "Neuer Ordner",
+  "folderName": "Ordnername",
+  "noFolder": "Ohne Ordner",
+  "renameChat": "Umbenennen",
+  "editTitle": "Titel bearbeiten",
+  "sessionCount": "{count} Chats"
 }

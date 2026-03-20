@@ -2173,4 +2173,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String daysAgo(String count) {
     return 'Vor $count T.';
   }
+
+  @override
+  String get folders => 'Ordner';
+
+  @override
+  String get moveToFolder => 'In Ordner verschieben';
+
+  @override
+  String get newFolder => 'Neuer Ordner';
+
+  @override
+  String get folderName => 'Ordnername';
+
+  @override
+  String get noFolder => 'Ohne Ordner';
+
+  @override
+  String get renameChat => 'Umbenennen';
+
+  @override
+  String get editTitle => 'Titel bearbeiten';
+
+  @override
+  String sessionCount(int count) {
+    return '$count Chats';
+  }
 }

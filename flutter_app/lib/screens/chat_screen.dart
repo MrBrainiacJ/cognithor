@@ -51,6 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
         final sessions = context.read<SessionsProvider>();
         sessions.setApi(conn.api);
         sessions.loadSessions();
+        sessions.loadFolders();
       }
       _sessionsInitialized = true;
     }
@@ -101,10 +102,13 @@ class _ChatScreenState extends State<ChatScreen> {
           builder: (context, sessions, _) {
             return ChatHistoryDrawer(
               sessions: sessions.sessions,
+              folders: sessions.folders,
               activeSessionId: sessions.activeSessionId,
               onSelectSession: _onSelectSession,
               onNewChat: _onNewChat,
               onDeleteSession: _onDeleteSession,
+              onRenameSession: _onRenameSession,
+              onMoveToFolder: _onMoveToFolder,
             );
           },
         ),
@@ -354,6 +358,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _onDeleteSession(String sessionId) {
     context.read<SessionsProvider>().deleteSession(sessionId);
+  }
+
+  void _onRenameSession(String sessionId, String newTitle) {
+    context.read<SessionsProvider>().renameSession(sessionId, newTitle);
+  }
+
+  void _onMoveToFolder(String sessionId, String folder) {
+    context.read<SessionsProvider>().moveToFolder(sessionId, folder);
   }
 
   PreferredSizeWidget _buildAppBar(AppLocalizations l) {

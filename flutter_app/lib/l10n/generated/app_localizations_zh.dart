@@ -2156,4 +2156,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String daysAgo(String count) {
     return '$count 天前';
   }
+
+  @override
+  String get folders => '文件夹';
+
+  @override
+  String get moveToFolder => '移动到文件夹';
+
+  @override
+  String get newFolder => '新建文件夹';
+
+  @override
+  String get folderName => '文件夹名称';
+
+  @override
+  String get noFolder => '未分类';
+
+  @override
+  String get renameChat => '重命名';
+
+  @override
+  String get editTitle => '编辑标题';
+
+  @override
+  String sessionCount(int count) {
+    return '$count 个聊天';
+  }
 }

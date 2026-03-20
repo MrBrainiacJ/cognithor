@@ -698,5 +698,13 @@
   "justNow": "الآن",
   "minutesAgo": "منذ {count} دقيقة",
   "hoursAgo": "منذ {count} ساعة",
-  "daysAgo": "منذ {count} يوم"
+  "daysAgo": "منذ {count} يوم",
+  "folders": "المجلدات",
+  "moveToFolder": "نقل إلى مجلد",
+  "newFolder": "مجلد جديد",
+  "folderName": "اسم المجلد",
+  "noFolder": "بدون مجلد",
+  "renameChat": "إعادة تسمية",
+  "editTitle": "تعديل العنوان",
+  "sessionCount": "{count} محادثات"
 }
