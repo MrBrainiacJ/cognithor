@@ -34,8 +34,12 @@ from jarvis.models import (
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
     from jarvis.audit import AuditLogger
     from jarvis.config import JarvisConfig
+
+    StreamCallback = Callable[[str, dict[str, Any]], Coroutine[Any, Any, None]]
 
 log = get_logger(__name__)
 
@@ -612,116 +616,7 @@ class Planner:
         ausgeführt wurden und eine zusammenfassende Antwort nötig ist.
         """
         model = self._router.select_model("summarization", "medium")
-
-        results_text = self._format_results(results)
-
-        # Prüfe ob Suchergebnisse unter den Tool-Ergebnissen sind
-        has_search_results = any(
-            r.tool_name in ("web_search", "web_news_search", "search_and_read", "web_fetch")
-            and r.success
-            for r in results
-        )
-
-        if not results:
-            # No tool results at all — pure conversational fallback
-            # (e.g. REPLAN text was detected on first iteration)
-            prompt = (
-                f"Der User hat gesagt: {user_message}\n\n"
-                f"Beantworte die Nachricht des Users direkt und hilfreich "
-                f"auf Deutsch in natuerlicher, gesprochener Sprache.\n"
-                f"Generiere KEINE Planungs-Metaebene, KEIN REPLAN-Format. "
-                f"Antworte wie ein Mensch im Gespraech."
-            )
-        elif has_search_results:
-            # Extrahiere den tatsächlichen Such-Content für die Antwort
-            search_content_parts = []
-            for r in results:
-                if (
-                    r.tool_name in ("web_search", "web_news_search", "search_and_read", "web_fetch")
-                    and r.success
-                ):
-                    search_content_parts.append(r.content[:5000])
-            search_content_block = "\n\n".join(search_content_parts)
-
-            prompt = (
-                f"Der User hat gefragt: {user_message}\n\n"
-                f"## Suchergebnisse aus dem Internet (AKTUELLE FAKTEN)\n\n"
-                f"{search_content_block}\n\n"
-                f"## Anweisungen\n"
-                f"Beantworte die Frage des Users AUSSCHLIEẞLICH "
-                f"auf Basis der obigen Suchergebnisse.\n"
-                f"REGELN:\n"
-                f"1. Die Suchergebnisse sind AKTUELL und KORREKT. "
-                f"Dein Trainingswissen ist VERALTET.\n"
-                f"2. Wenn die Suchergebnisse ein Ereignis beschreiben, dann IST es passiert.\n"
-                f"3. Sage NIEMALS 'es gibt keinen Beleg' oder 'das ist nicht passiert', wenn die "
-                f"Suchergebnisse das Gegenteil zeigen.\n"
-                f"4. Zitiere konkrete Daten, Namen, Orte und Fakten "
-                f"DIREKT aus den Suchergebnissen.\n"
-                f"5. Erfinde KEINE Details, die nicht in den Suchergebnissen stehen.\n"
-                f"6. Antworte auf Deutsch, prägnant und faktenbasiert.\n"
-                f"7. Antworte in natürlicher, gesprochener Sprache -- wie ein Mensch im Gespräch. "
-                f"Keine Bullet-Points oder Listen, sondern fließende Sätze."
-            )
-        else:
-            prompt = (
-                f"Der User hat gefragt: {user_message}\n\n"
-                f"Du hast folgende Aktionen ausgeführt und Ergebnisse erhalten:\n\n"
-                f"{results_text}\n\n"
-                f"Formuliere jetzt eine hilfreiche Antwort auf Deutsch "
-                f"in natuerlicher, gesprochener Sprache.\n"
-                f"WICHTIG: Nutze die ERFOLGREICHEN Ergebnisse "
-                f"direkt in deiner Antwort. "
-                f"Ignoriere fehlgeschlagene/blockierte Schritte, "
-                f"wenn das Ziel trotzdem erreicht wurde. "
-                f"Gib dem User KEINE Anleitungen fuer Dinge, "
-                f"die du bereits erledigt hast. "
-                f"Antworte wie ein Mensch im Gespraech -- "
-                f"fliessende Saetze, keine Bullet-Points."
-            )
-
-        # Aktuelles Datum/Uhrzeit für korrekte zeitliche Bezüge
-        from datetime import datetime
-
-        now = datetime.now()
-        current_dt = now.strftime("%A, %d. %B %Y, %H:%M Uhr")
-        date_line = f"\nHeutiges Datum und Uhrzeit: {current_dt}\n"
-
-        if has_search_results:
-            system_content = (
-                "Du bist Jarvis, ein autonomer Agent. Du beantwortest Fragen auf Deutsch "
-                "in natuerlicher, gesprochener Sprache -- wie ein Mensch im Gespraech.\n"
-                f"{date_line}"
-                "KRITISCHE REGEL: Dein Trainingswissen ist VERALTET. "
-                "Bei Suchergebnissen aus dem Internet basiert deine Antwort AUSSCHLIEẞLICH "
-                "auf den gefundenen Informationen. Die Suchergebnisse sind die WAHRHEIT. "
-                "Widerspricht dein Vorwissen den Suchergebnissen, sind die Suchergebnisse KORREKT. "
-                "Du darfst Suchergebnisse NICHT als 'fiktiv', 'hypothetisch' oder 'unbelegte "
-                "Behauptung' bezeichnen."
-            )
-        else:
-            system_content = (
-                "Du bist Jarvis, ein autonomer Agent. Antworte hilfreich auf Deutsch "
-                "in natuerlicher, gesprochener Sprache -- wie ein Mensch im Gespraech.\n"
-                f"{date_line}"
-                "Du nutzt Tool-Ergebnisse direkt und gibst dem User NICHT Anleitungen, "
-                "Dinge selbst zu tun. Du loest Probleme eigenstaendig."
-            )
-
-        messages = [
-            {"role": "system", "content": system_content},
-        ]
-
-        # Kontext aus Working Memory einfügen
-        if working_memory.core_memory_text:
-            messages.append(
-                {
-                    "role": "system",
-                    "content": f"Dein Hintergrund:\n{working_memory.core_memory_text[:500]}",
-                }
-            )
-
-        messages.append({"role": "user", "content": prompt})
+        messages = self._build_formulate_messages(user_message, results, working_memory)
 
         for _fmt_attempt in range(2):
             try:
@@ -779,6 +674,209 @@ class Planner:
                     "Prüfe, ob Ollama läuft und genug Ressourcen hat."
                 )
         return ""  # Unreachable, aber fuer Type-Checker
+
+    async def formulate_response_stream(
+        self,
+        user_message: str,
+        results: list[ToolResult],
+        working_memory: WorkingMemory,
+        stream_callback: StreamCallback,
+    ) -> str:
+        """Streaming-Variante von formulate_response().
+
+        Sendet Tokens via stream_callback an den Client, waehrend die
+        Antwort generiert wird. Gibt den vollstaendigen Text zurueck.
+
+        Args:
+            user_message: Urspruengliche User-Nachricht.
+            results: Tool-Ergebnisse aus dem PGE-Zyklus.
+            working_memory: Aktueller Kontext.
+            stream_callback: Async callback fuer stream_token Events.
+
+        Returns:
+            Vollstaendiger Antwort-Text.
+        """
+        # Pruefe ob chat_stream verfuegbar ist
+        if not hasattr(self._ollama, "chat_stream"):
+            # Fallback: nicht-streamende Variante
+            return await self.formulate_response(user_message, results, working_memory)
+
+        model = self._router.select_model("summarization", "medium")
+        messages = self._build_formulate_messages(user_message, results, working_memory)
+
+        try:
+            full_text = ""
+            async for chunk in self._ollama.chat_stream(
+                model=model,
+                messages=messages,
+                temperature=0.7,
+                top_p=0.9,
+            ):
+                token = chunk.get("message", {}).get("content", "")
+                if token and not chunk.get("done", False):
+                    full_text += token
+                    try:
+                        await stream_callback("stream_token", {"token": token})
+                    except Exception:
+                        log.debug("stream_callback_failed", exc_info=True)
+
+            # Post-processing: Personality, /think-Block entfernen, etc.
+            content = full_text.strip()
+            if not content:
+                # Streaming lieferte keinen Text — Fallback
+                return await self.formulate_response(user_message, results, working_memory)
+
+            # /think-Bloecke entfernen (Qwen3)
+            content = re.sub(
+                r"<think>.*?</think>",
+                "",
+                content,
+                flags=re.DOTALL,
+            ).strip()
+
+            # Personality-Engine Postprocessing (same as formulate_response)
+            if self._personality_engine is not None:
+                try:
+                    content = self._personality_engine.enhance_response(
+                        content,
+                        context={"user_message": user_message},
+                    )
+                except Exception:
+                    log.debug("personality_enhance_failed", exc_info=True)
+
+            return content
+
+        except OllamaError as exc:
+            log.warning("formulate_stream_error", error=str(exc))
+            # Fallback: nicht-streamende Variante
+            return await self.formulate_response(user_message, results, working_memory)
+
+    def _build_formulate_messages(
+        self,
+        user_message: str,
+        results: list[ToolResult],
+        working_memory: WorkingMemory,
+    ) -> list[dict[str, Any]]:
+        """Baut die Messages fuer formulate_response (shared by stream/non-stream)."""
+        results_text = self._format_results(results)
+
+        has_search_results = any(
+            r.tool_name in ("web_search", "web_news_search", "search_and_read", "web_fetch")
+            and r.success
+            for r in results
+        )
+
+        if not results:
+            prompt = (
+                f"Der User hat gesagt: {user_message}\n\n"
+                f"Beantworte die Nachricht des Users direkt und hilfreich "
+                f"auf Deutsch in natuerlicher, gesprochener Sprache.\n"
+                f"Generiere KEINE Planungs-Metaebene, KEIN REPLAN-Format. "
+                f"Antworte wie ein Mensch im Gespraech."
+            )
+        elif has_search_results:
+            search_content_parts = []
+            for r in results:
+                if (
+                    r.tool_name in ("web_search", "web_news_search", "search_and_read", "web_fetch")
+                    and r.success
+                ):
+                    search_content_parts.append(r.content[:5000])
+            search_content_block = "\n\n".join(search_content_parts)
+
+            prompt = (
+                f"Der User hat gefragt: {user_message}\n\n"
+                f"## Suchergebnisse aus dem Internet (AKTUELLE FAKTEN)\n\n"
+                f"{search_content_block}\n\n"
+                f"## Anweisungen\n"
+                f"Beantworte die Frage des Users AUSSCHLIEẞLICH "
+                f"auf Basis der obigen Suchergebnisse.\n"
+                f"REGELN:\n"
+                f"1. Die Suchergebnisse sind AKTUELL und KORREKT. "
+                f"Dein Trainingswissen ist VERALTET.\n"
+                f"2. Wenn die Suchergebnisse ein Ereignis beschreiben, "
+                f"dann IST es passiert.\n"
+                f"3. Sage NIEMALS 'es gibt keinen Beleg' oder "
+                f"'das ist nicht passiert', wenn die "
+                f"Suchergebnisse das Gegenteil zeigen.\n"
+                f"4. Zitiere konkrete Daten, Namen, Orte und Fakten "
+                f"DIREKT aus den Suchergebnissen.\n"
+                f"5. Erfinde KEINE Details, die nicht in den "
+                f"Suchergebnissen stehen.\n"
+                f"6. Antworte auf Deutsch, praegnant und faktenbasiert.\n"
+                f"7. Antworte in natuerlicher, gesprochener Sprache "
+                f"-- wie ein Mensch im Gespraech. "
+                f"Keine Bullet-Points oder Listen, sondern "
+                f"fliessende Saetze."
+            )
+        else:
+            prompt = (
+                f"Der User hat gefragt: {user_message}\n\n"
+                f"Du hast folgende Aktionen ausgefuehrt und "
+                f"Ergebnisse erhalten:\n\n"
+                f"{results_text}\n\n"
+                f"Formuliere jetzt eine hilfreiche Antwort auf Deutsch "
+                f"in natuerlicher, gesprochener Sprache.\n"
+                f"WICHTIG: Nutze die ERFOLGREICHEN Ergebnisse "
+                f"direkt in deiner Antwort. "
+                f"Ignoriere fehlgeschlagene/blockierte Schritte, "
+                f"wenn das Ziel trotzdem erreicht wurde. "
+                f"Gib dem User KEINE Anleitungen fuer Dinge, "
+                f"die du bereits erledigt hast. "
+                f"Antworte wie ein Mensch im Gespraech -- "
+                f"fliessende Saetze, keine Bullet-Points."
+            )
+
+        from datetime import datetime
+
+        now = datetime.now()
+        current_dt = now.strftime("%A, %d. %B %Y, %H:%M Uhr")
+        date_line = f"\nHeutiges Datum und Uhrzeit: {current_dt}\n"
+
+        if has_search_results:
+            system_content = (
+                "Du bist Jarvis, ein autonomer Agent. Du beantwortest "
+                "Fragen auf Deutsch "
+                "in natuerlicher, gesprochener Sprache -- wie ein "
+                "Mensch im Gespraech.\n"
+                f"{date_line}"
+                "KRITISCHE REGEL: Dein Trainingswissen ist VERALTET. "
+                "Bei Suchergebnissen aus dem Internet basiert deine "
+                "Antwort AUSSCHLIEẞLICH "
+                "auf den gefundenen Informationen. Die Suchergebnisse "
+                "sind die WAHRHEIT. "
+                "Widerspricht dein Vorwissen den Suchergebnissen, sind "
+                "die Suchergebnisse KORREKT. "
+                "Du darfst Suchergebnisse NICHT als 'fiktiv', "
+                "'hypothetisch' oder 'unbelegte "
+                "Behauptung' bezeichnen."
+            )
+        else:
+            system_content = (
+                "Du bist Jarvis, ein autonomer Agent. Antworte "
+                "hilfreich auf Deutsch "
+                "in natuerlicher, gesprochener Sprache -- wie ein "
+                "Mensch im Gespraech.\n"
+                f"{date_line}"
+                "Du nutzt Tool-Ergebnisse direkt und gibst dem User "
+                "NICHT Anleitungen, "
+                "Dinge selbst zu tun. Du loest Probleme eigenstaendig."
+            )
+
+        messages: list[dict[str, Any]] = [
+            {"role": "system", "content": system_content},
+        ]
+
+        if working_memory.core_memory_text:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": f"Dein Hintergrund:\n{working_memory.core_memory_text[:500]}",
+                }
+            )
+
+        messages.append({"role": "user", "content": prompt})
+        return messages
 
     # =========================================================================
     # Private Methoden
