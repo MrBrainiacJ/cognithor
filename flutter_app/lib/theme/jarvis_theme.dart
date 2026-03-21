@@ -28,6 +28,14 @@ abstract final class JarvisTheme {
   static const _blue = Color(0xFF448AFF);
   static const _purple = Color(0xFFB388FF);
 
+  /// Updated by ThemeProvider — allows static getters to return theme-aware colors.
+  static bool _isDark = true;
+
+  /// Call when theme changes.
+  static void setDarkMode(bool dark) {
+    _isDark = dark;
+  }
+
   // ── Dark Theme Surfaces ─────────────────────────────────
   static const _bg = Color(0xFF050510); // Deep space black
   static const _surface = Color(0xFF0A0F24); // Dark navy
@@ -72,9 +80,9 @@ abstract final class JarvisTheme {
   static Color get bg => _bg;
   static Color get border => _border;
   static Color get borderHover => _borderHover;
-  static Color get textPrimary => _text1;
-  static Color get textSecondary => _text2;
-  static Color get textTertiary => _text3;
+  static Color get textPrimary => _isDark ? _text1 : _lightText1;
+  static Color get textSecondary => _isDark ? _text2 : _lightText2;
+  static Color get textTertiary => _isDark ? _text3 : const Color(0xFF9090A0);
 
   // ── Semantic Aliases ────────────────────────────────────
   static Color get success => _green;
@@ -103,8 +111,8 @@ abstract final class JarvisTheme {
   };
 
   // ── Code Block Colors ─────────────────────────────────────
-  static const codeBlockBg = Color(0xFF0A0F24);
-  static const codeBlockBorder = Color(0xFF1A2044);
+  static Color get codeBlockBg => _isDark ? const Color(0xFF0A0F24) : const Color(0xFFF0F0F5);
+  static Color get codeBlockBorder => _isDark ? const Color(0xFF1A2044) : const Color(0xFFD8D8E4);
 
   // ── Component-Specific ────────────────────────────────────
   /// Semi-transparent accent for button backgrounds

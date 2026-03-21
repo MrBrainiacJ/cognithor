@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../theme/jarvis_theme.dart';
+
 class ThemeProvider extends ChangeNotifier {
   ThemeProvider() {
     _load();
@@ -15,12 +17,14 @@ class ThemeProvider extends ChangeNotifier {
     final stored = prefs.getString('theme_mode');
     if (stored == 'light') {
       _mode = ThemeMode.light;
+      JarvisTheme.setDarkMode(false);
       notifyListeners();
     }
   }
 
   Future<void> toggle() async {
     _mode = isDark ? ThemeMode.light : ThemeMode.dark;
+    JarvisTheme.setDarkMode(_mode == ThemeMode.dark);
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme_mode', isDark ? 'dark' : 'light');
