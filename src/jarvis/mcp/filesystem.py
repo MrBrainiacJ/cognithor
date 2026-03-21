@@ -66,6 +66,24 @@ class FileSystemTools:
             "max_tree_entries",
             _DEFAULT_MAX_TREE_ENTRIES,
         )
+        # Hashline Guard integration
+        self._hashline_guard = None
+        try:
+            hl_cfg_model = getattr(config, "hashline", None)
+            if hl_cfg_model and getattr(hl_cfg_model, "enabled", False):
+                from jarvis.hashline import HashlineGuard
+                from jarvis.hashline.config import HashlineConfig as HLConfig
+
+                hl_dict = hl_cfg_model.model_dump() if hasattr(hl_cfg_model, "model_dump") else {}
+                hl_cfg = HLConfig.from_dict(hl_dict)
+                if hl_cfg.enabled:
+                    self._hashline_guard = HashlineGuard.create(
+                        config=hl_cfg,
+                        data_dir=getattr(config, "jarvis_home", None),
+                    )
+                    log.info("hashline_guard_enabled_for_fs")
+        except Exception:
+            log.debug("hashline_guard_fs_init_skipped", exc_info=True)
 
     def _validate_path(self, path_str: str) -> Path:
         """Validiert und normalisiert einen Dateipfad.
@@ -119,6 +137,21 @@ class FileSystemTools:
 
         if not validated.is_file():
             raise FileSystemError(f"Kein reguläres File: {path}")
+
+        # Hashline Guard: return tagged output if enabled
+        if self._hashline_guard is not None:
+            try:
+                if line_start > 0 or line_end >= 0:
+                    # Convert 0-based to 1-based for hashline
+                    hl_start = line_start + 1
+                    hl_end = line_end + 1 if line_end >= 0 else -1
+                    if hl_end < 0:
+                        return self._hashline_guard.read_file(validated)
+                    return self._hashline_guard.read_range(validated, hl_start, hl_end)
+                return self._hashline_guard.read_file(validated)
+            except Exception:
+                log.debug("hashline_read_fallback", path=path, exc_info=True)
+                # Fall through to normal read
 
         # Größenbeschränkung (maximal 1MB lesen)
         size = validated.stat().st_size
@@ -222,6 +255,10 @@ class FileSystemTools:
 
         if not validated.exists():
             raise FileSystemError(f"Datei nicht gefunden: {path}")
+
+        # Hashline Guard: invalidate cache after edit so next read is fresh
+        if self._hashline_guard is not None:
+            self._hashline_guard.invalidate(validated)
 
         content = validated.read_text(encoding="utf-8")
 

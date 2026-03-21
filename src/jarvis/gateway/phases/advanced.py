@@ -70,6 +70,7 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
         "trace_store": None,
         "proposal_store": None,
         "evolution_orchestrator": None,
+        "hashline_guard": None,
     }
 
     # Phase 5: Live-Monitoring
@@ -474,5 +475,26 @@ async def init_advanced(
             orch._prompt_evolution = result["prompt_evolution"]
         if result.get("session_analyzer"):
             orch._session_analyzer = result["session_analyzer"]
+
+    # Hashline Guard — line-level integrity for file edits
+    try:
+        from jarvis.hashline import HashlineGuard
+        from jarvis.hashline.config import HashlineConfig as HLConfig
+
+        hl_cfg_model = getattr(config, "hashline", None)
+        hl_dict = (
+            hl_cfg_model.model_dump()
+            if hl_cfg_model and hasattr(hl_cfg_model, "model_dump")
+            else {}
+        )
+        hl_cfg = HLConfig.from_dict(hl_dict)
+        if hl_cfg.enabled:
+            jarvis_home = getattr(config, "jarvis_home", Path.home() / ".jarvis")
+            result["hashline_guard"] = HashlineGuard.create(
+                config=hl_cfg, data_dir=Path(jarvis_home)
+            )
+            log.info("hashline_guard_initialized")
+    except Exception:
+        log.debug("hashline_guard_init_skipped", exc_info=True)
 
     return result

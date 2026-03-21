@@ -30,6 +30,8 @@ dependencies = [
     "pydantic-settings>=2.7,<3",
     "httpx>=0.28,<1",
     "pyyaml>=6.0,<7",
+    # Hashing (Hashline Guard)
+    "xxhash>=3.0,<4",
     # Logging
     "structlog>=25.4,<26",
     # CLI

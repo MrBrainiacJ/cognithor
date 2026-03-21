@@ -1612,6 +1612,37 @@ class GEPAConfig(BaseModel):
 
 
 # ============================================================================
+# Hashline Guard
+# ============================================================================
+
+
+class HashlineGuardConfig(BaseModel):
+    """Configuration for the Hashline Guard line-level integrity system."""
+
+    enabled: bool = True
+    hash_algorithm: str = "xxhash64"
+    tag_length: int = Field(default=2, ge=2, le=4)
+    max_file_size_mb: int = Field(default=10, ge=1, le=100)
+    max_line_length: int = Field(default=10000, ge=100)
+    stale_threshold_seconds: int = Field(default=300, ge=10)
+    max_retries: int = Field(default=3, ge=0, le=10)
+    retry_delay_seconds: float = Field(default=0.5, ge=0)
+    cache_max_files: int = Field(default=100, ge=10, le=1000)
+    binary_detection: bool = True
+    audit_enabled: bool = True
+    excluded_patterns: list[str] = Field(
+        default_factory=lambda: [
+            "*.pyc",
+            "__pycache__/**",
+            ".git/**",
+            "*.lock",
+            "node_modules/**",
+        ]
+    )
+    protected_paths: list[str] = Field(default_factory=list)
+
+
+# ============================================================================
 # Haupt-Konfiguration
 # ============================================================================
 
@@ -1743,6 +1774,7 @@ class JarvisConfig(BaseModel):
     improvement: ImprovementGovernanceConfig = Field(default_factory=ImprovementGovernanceConfig)
     prompt_evolution: PromptEvolutionConfig = Field(default_factory=PromptEvolutionConfig)
     gepa: GEPAConfig = Field(default_factory=GEPAConfig)
+    hashline: HashlineGuardConfig = Field(default_factory=HashlineGuardConfig)
 
     # Heartbeat- und Plugin-Konfigurationen
     # Die HeartbeatConfig steuert einen periodischen Check (Heartbeat), der
