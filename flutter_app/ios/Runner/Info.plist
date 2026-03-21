@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Jarvis Ui</string>
+	<string>Cognithor</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>jarvis_ui</string>
+	<string>Cognithor</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -66,5 +66,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Cognithor needs location to provide context-aware responses</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Cognithor needs location for background context</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Cognithor needs camera to analyze images and documents</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Cognithor needs microphone for voice commands</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Cognithor needs photo access to analyze images</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Cognithor uses Face ID to secure your data</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

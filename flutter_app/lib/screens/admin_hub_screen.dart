@@ -13,6 +13,7 @@ import 'package:jarvis_ui/screens/credentials_screen.dart';
 import 'package:jarvis_ui/screens/knowledge_graph_screen.dart';
 import 'package:jarvis_ui/screens/vault_screen.dart';
 import 'package:jarvis_ui/screens/learning_screen.dart';
+import 'package:jarvis_ui/screens/device_settings_screen.dart';
 import 'package:jarvis_ui/screens/teach_screen.dart';
 import 'package:jarvis_ui/screens/workflows_screen.dart';
 
@@ -98,6 +99,12 @@ class _AdminHubScreenState extends State<AdminHubScreen> {
           title: l.teachCognithor,
           subtitle: l.adminTeachSubtitle,
           builder: (_) => const TeachScreen(),
+        ),
+        _AdminSection(
+          icon: Icons.devices,
+          title: 'Device',
+          subtitle: 'Native device features & connection',
+          builder: (_) => const DeviceSettingsScreen(),
         ),
       ];
 

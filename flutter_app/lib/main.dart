@@ -17,6 +17,7 @@ import 'package:jarvis_ui/providers/theme_provider.dart';
 import 'package:jarvis_ui/providers/hacker_mode_provider.dart';
 import 'package:jarvis_ui/providers/pip_provider.dart';
 import 'package:jarvis_ui/providers/voice_provider.dart';
+import 'package:jarvis_ui/providers/device_provider.dart';
 import 'package:jarvis_ui/providers/workflow_provider.dart';
 import 'package:jarvis_ui/screens/splash_screen.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
@@ -47,12 +48,13 @@ class JarvisApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PipProvider()),
         ChangeNotifierProvider(create: (_) => HackerModeProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => DeviceProvider()),
         ChangeNotifierProvider(create: (_) => SessionsProvider()),
       ],
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, _) {
           return MaterialApp(
-            title: 'Jarvis',
+            title: 'Cognithor',
             debugShowCheckedModeBanner: false,
             theme: JarvisTheme.light,
             darkTheme: JarvisTheme.dark,

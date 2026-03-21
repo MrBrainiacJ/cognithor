@@ -50,6 +50,20 @@ dependencies:
   just_audio: ^0.9.0
   google_fonts: ^6.2.1
 
+  # Native device features
+  geolocator: ^14.0.0
+  permission_handler: ^11.0.0
+  camera: ^0.11.0
+  image_picker: ^1.0.0
+  record: ^5.0.0
+  local_auth: ^2.0.0
+  flutter_local_notifications: ^18.0.0
+  connectivity_plus: ^6.0.0
+  device_info_plus: ^10.0.0
+  battery_plus: ^6.0.0
+  share_plus: ^10.0.0
+  path_provider: ^2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
