@@ -343,6 +343,7 @@ class SessionContext(BaseModel):
     # Agent-Loop Steuerung [B§3.4]
     max_iterations: int = 10
     iteration_count: int = 0
+    incognito: bool = False  # Inkognito-Modus: kein Memory, keine Persistierung
     _blocked_tools: dict[str, int] = PrivateAttr(default_factory=dict)  # Tool → Block-Counter
 
     model_config = {"arbitrary_types_allowed": True}
