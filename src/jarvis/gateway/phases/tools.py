@@ -362,6 +362,19 @@ async def init_tools(
     except Exception:
         log.debug("docker_tools_not_registered", exc_info=True)
 
+    # Remote Shell Tools (SSH)
+    try:
+        from jarvis.mcp.remote_shell import register_remote_shell_tools
+
+        remote_cfg = getattr(config, "remote_shell", None)
+        register_remote_shell_tools(
+            mcp_client,
+            config=remote_cfg._asdict() if remote_cfg else None,
+        )
+        log.info("remote_shell_tools_registered")
+    except Exception:
+        log.debug("remote_shell_skip", exc_info=True)
+
     # API Integration Hub
     try:
         from jarvis.mcp.api_hub import register_api_hub_tools

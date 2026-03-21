@@ -510,6 +510,9 @@ class Gatekeeper:
             "docker_inspect",
             # API Hub (read-only)
             "api_list",
+            # Remote Shell (read-only)
+            "remote_list_hosts",
+            "remote_test_connection",
         }
         if tool in green_tools:
             return RiskLevel.GREEN
@@ -563,6 +566,8 @@ class Gatekeeper:
             "db_execute",
             # Docker (container creation)
             "docker_run",
+            # Remote Shell (execution requires approval)
+            "remote_exec",
         }
         if tool in orange_tools:
             return RiskLevel.ORANGE
