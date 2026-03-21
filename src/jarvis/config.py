@@ -1326,23 +1326,23 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
     "claude-code": {
         "planner": {
             "name": "opus",
-            "context_window": 200000,
+            "context_window": 1000000,
             "vram_gb": 0.0,
-            "strengths": ["reasoning", "planning", "reflection", "german"],
+            "strengths": ["reasoning", "planning", "reflection", "german", "multi-agent"],
             "speed": "medium",
         },
         "executor": {
             "name": "haiku",
             "context_window": 200000,
             "vram_gb": 0.0,
-            "strengths": ["tool-calling", "simple-tasks"],
+            "strengths": ["tool-calling", "simple-tasks", "fast-responses"],
             "speed": "fast",
         },
         "coder": {
             "name": "sonnet",
-            "context_window": 200000,
+            "context_window": 1000000,
             "vram_gb": 0.0,
-            "strengths": ["code-generation", "debugging", "testing"],
+            "strengths": ["code-generation", "debugging", "testing", "long-context"],
             "speed": "medium",
         },
         "coder_fast": {

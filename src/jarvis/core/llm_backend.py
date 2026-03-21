@@ -766,8 +766,10 @@ class AnthropicBackend(LLMBackend):
     async def list_models(self) -> list[str]:
         # Statische Liste -- Anthropic hat keinen dynamischen Modell-Endpunkt
         return [
-            "claude-sonnet-4-20250514",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6",
             "claude-haiku-4-5-20251001",
+            "claude-sonnet-4-20250514",
             "claude-opus-4-5-20250918",
         ]
 
@@ -1269,7 +1271,11 @@ class ClaudeCodeBackend(LLMBackend):
             return False
 
     async def list_models(self) -> list[str]:
-        return ["sonnet", "opus", "haiku"]
+        return [
+            "opus",  # claude-opus-4-6 (1M context, deep reasoning)
+            "sonnet",  # claude-sonnet-4-6 (1M context, daily driver)
+            "haiku",  # claude-haiku-4-5 (200K, fast)
+        ]
 
     async def close(self) -> None:
         pass  # No persistent connections
