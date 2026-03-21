@@ -315,7 +315,7 @@ class TraceOptimizer:
             # Collect example traces for context
             examples: list[ExecutionTrace] = []
             for tid in trace_ids[:10]:  # cap to avoid excessive lookups
-                trace = trace_store.get(tid)
+                trace = trace_store.get_trace(tid)
                 if trace is not None:
                     examples.append(trace)
 
@@ -812,7 +812,7 @@ class TraceOptimizer:
         ``estimated_impact = (affected_count / total_recent) * confidence``
         """
         try:
-            recent = trace_store.get_recent(limit=200)
+            recent = trace_store.get_recent_traces(limit=200)
         except Exception:
             log.debug("Could not fetch recent traces for scoring", exc_info=True)
             return proposal.confidence * 0.1  # minimal fallback

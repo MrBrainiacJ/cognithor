@@ -63,10 +63,33 @@ def _make_proposal(
 
 
 def _make_mock_trace_store() -> MagicMock:
-    """Create a mock trace store that responds to get() and get_recent()."""
+    """Create a mock trace store with properly typed return values."""
+    from jarvis.learning.execution_trace import ExecutionTrace, TraceStep
+
+    mock_trace = ExecutionTrace(
+        trace_id="mock-t1",
+        session_id="mock-s1",
+        goal="test",
+        total_duration_ms=5000,
+        success_score=0.3,
+        created_at=1.0,
+    )
+    mock_trace.steps.append(
+        TraceStep(
+            step_id="mock-st1",
+            parent_id=None,
+            tool_name="web_search",
+            input_summary="query",
+            output_summary="",
+            status="error",
+            error_detail="timeout",
+            duration_ms=5000,
+            timestamp=1.0,
+        )
+    )
     mock = MagicMock()
-    mock.get.return_value = None
-    mock.get_recent.return_value = []
+    mock.get_trace.return_value = mock_trace
+    mock.get_recent_traces.return_value = [mock_trace]
     return mock
 
 
@@ -301,7 +324,7 @@ class TestTraceOptimizer:
         mock_trace_unrelated.failure_category = "parse_error"
         mock_trace_unrelated.success = True
 
-        trace_store.get_recent.return_value = [mock_trace_ok, mock_trace_unrelated]
+        trace_store.get_recent_traces.return_value = [mock_trace_ok, mock_trace_unrelated]
 
         p = _make_proposal(
             tool_name="web_search",
@@ -316,7 +339,7 @@ class TestTraceOptimizer:
         """With no recent traces, score should be 0.0."""
         store = ProposalStore(tmp_path / "proposals.db")
         trace_store = _make_mock_trace_store()
-        trace_store.get_recent.return_value = []
+        trace_store.get_recent_traces.return_value = []
         optimizer = TraceOptimizer(store)
 
         p = _make_proposal(confidence=0.8)
