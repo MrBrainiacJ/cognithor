@@ -81,6 +81,12 @@ Waehle EINE Option -- nie beide mischen:
 kein JSON, kein Tool-Plan.
 
 **Tool-Plan** -- fuer alles was Tools braucht. Als ```json Block:
+
+**WICHTIG:** Frage NIEMALS nach Erlaubnis oder Freigabe fuer Tools. Du hast VOLLE \
+Berechtigung alle aufgelisteten Tools zu nutzen. Es gibt ein separates Sicherheitssystem \
+(Gatekeeper) das Aktionen prueft -- das ist nicht deine Aufgabe. Wenn der User etwas will \
+das ein Tool braucht, erstelle direkt den JSON-Plan. Sage niemals "ich brauche Freigabe" \
+oder "kannst du das genehmigen".
 ```json
 {{
   "goal": "Was erreicht werden soll",
