@@ -456,6 +456,8 @@ def main() -> None:
                 import json as _json
 
                 _ws_connections: dict[str, WebSocket] = {}
+                _ws_last_connect: dict[str, float] = {}  # Rate-limit per session
+                _WS_MIN_CONNECT_INTERVAL = 1.0  # Minimum seconds between connects
 
                 async def _ws_safe_send(ws: WebSocket, data: dict) -> bool:
                     """Send JSON over WebSocket, catching disconnection errors.
@@ -470,6 +472,15 @@ def main() -> None:
 
                 @api_app.websocket("/ws/{session_id}")
                 async def _cc_ws(websocket: WebSocket, session_id: str) -> None:
+                    # ── Rate-limit: prevent reconnection storms ─────────
+                    import time as _ws_time
+                    now = _ws_time.monotonic()
+                    last = _ws_last_connect.get(session_id, 0)
+                    if now - last < _WS_MIN_CONNECT_INTERVAL:
+                        await websocket.close(code=4003, reason="Too many connections")
+                        return
+                    _ws_last_connect[session_id] = now
+
                     # ── Token-based authentication ────────────────────────
                     # Token wird via erster WS-Nachricht gesendet, NICHT als
                     # Query-Parameter (vermeidet Log-Exposure).
@@ -491,13 +502,15 @@ def main() -> None:
                         except (TimeoutError, Exception):
                             client_token = ""
                         if not _hmac.compare_digest(client_token, required_token):
-                            await websocket.send_json(
+                            await _ws_safe_send(
+                                websocket,
                                 {
                                     "type": "error",
                                     "error": "Unauthorized",
-                                }
+                                },
                             )
-                            await websocket.close(code=4001, reason="Unauthorized")
+                            with contextlib.suppress(Exception):
+                                await websocket.close(code=4001, reason="Unauthorized")
                             log.warning(
                                 "cc_ws_auth_rejected",
                                 session_id=session_id,
@@ -507,10 +520,11 @@ def main() -> None:
 
                     # ── Session collision: close existing connection ──────
                     existing = _ws_connections.get(session_id)
-                    if existing is not None:
+                    if existing is not None and existing is not websocket:
                         log.info("cc_ws_closing_stale", session_id=session_id)
                         with contextlib.suppress(Exception):
                             await existing.close(code=4002, reason="Session replaced")
+                        await asyncio.sleep(0.3)  # Let close propagate before replacing
 
                     _ws_connections[session_id] = websocket
                     log.info("cc_ws_connected", session_id=session_id)
