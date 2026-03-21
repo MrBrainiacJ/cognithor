@@ -1274,6 +1274,22 @@ def _register_session_routes(
         )
         return {"session_id": session_id}
 
+    @app.get("/api/v1/sessions/should-new", dependencies=deps)
+    async def should_new_session(
+        channel: str = "webui",
+        timeout_minutes: int = 30,
+    ) -> dict[str, Any]:
+        """Check if client should start a new session due to inactivity."""
+        store = _get_session_store()
+        if not store:
+            return {"should_new": True}
+        should_new = store.should_create_new_session(
+            channel=channel,
+            user_id="web_user",
+            inactivity_timeout_minutes=timeout_minutes,
+        )
+        return {"should_new": should_new}
+
 
 # ======================================================================
 # Memory / search routes

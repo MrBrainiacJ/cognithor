@@ -1683,6 +1683,19 @@ class HashlineGuardConfig(BaseModel):
     protected_paths: list[str] = Field(default_factory=list)
 
 
+class SessionConfig(BaseModel):
+    """Session lifecycle settings."""
+
+    inactivity_timeout_minutes: int = Field(
+        default=30,
+        description="Nach dieser Inaktivitaetszeit (Minuten) wird automatisch eine neue Session erstellt.",
+    )
+    chat_history_limit: int = Field(
+        default=100,
+        description="Maximale Anzahl Chat-Nachrichten die beim Session-Resume geladen werden.",
+    )
+
+
 # ============================================================================
 # Haupt-Konfiguration
 # ============================================================================
@@ -1817,6 +1830,7 @@ class JarvisConfig(BaseModel):
     prompt_evolution: PromptEvolutionConfig = Field(default_factory=PromptEvolutionConfig)
     gepa: GEPAConfig = Field(default_factory=GEPAConfig)
     hashline: HashlineGuardConfig = Field(default_factory=HashlineGuardConfig)
+    session: SessionConfig = Field(default_factory=SessionConfig)
 
     # Heartbeat- und Plugin-Konfigurationen
     # Die HeartbeatConfig steuert einen periodischen Check (Heartbeat), der

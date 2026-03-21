@@ -577,6 +577,28 @@ class SessionStore:
             )
         return count
 
+    def should_create_new_session(
+        self,
+        channel: str,
+        user_id: str,
+        inactivity_timeout_minutes: int = 30,
+        agent_id: str = "jarvis",
+    ) -> bool:
+        """Check if the most recent session is too old to resume."""
+        row = self.conn.execute(
+            """
+            SELECT last_activity FROM sessions
+            WHERE channel = ? AND user_id = ? AND agent_id = ? AND active = 1
+            ORDER BY last_activity DESC LIMIT 1
+            """,
+            (channel, user_id, agent_id),
+        ).fetchone()
+        if row is None:
+            return True  # No session exists
+        last = datetime.fromtimestamp(row["last_activity"], tz=UTC)
+        age = datetime.now(tz=UTC) - last
+        return age.total_seconds() > inactivity_timeout_minutes * 60
+
     def close(self) -> None:
         """Schließt die DB-Verbindung."""
         if self._conn:

@@ -141,6 +141,30 @@ class SessionsProvider extends ChangeNotifier {
     }
   }
 
+  /// Check if we should auto-create a new session on app open.
+  /// Returns the session ID to use (new or existing).
+  Future<String?> autoSessionOnStartup({int timeoutMinutes = 30}) async {
+    if (_api == null) return null;
+    try {
+      final shouldNew = await _api!.shouldNewSession(
+        timeoutMinutes: timeoutMinutes,
+      );
+      if (shouldNew) {
+        return createNewSession();
+      }
+      // Resume most recent session
+      await loadSessions();
+      if (sessions.isNotEmpty) {
+        final mostRecent = sessions.first;
+        activeSessionId = mostRecent['id'] as String?;
+        return activeSessionId;
+      }
+      return createNewSession();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> moveToFolder(String sessionId, String folder) async {
     if (_api == null) return;
     try {
