@@ -55,7 +55,7 @@ dependencies:
   permission_handler: ^11.0.0
   camera: ^0.11.0
   image_picker: ^1.0.0
-  record: ^5.0.0
+  # record removed — using speech_to_text for voice input instead
   local_auth: ^2.0.0
   flutter_local_notifications: ^18.0.0
   connectivity_plus: ^6.0.0
