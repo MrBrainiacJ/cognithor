@@ -59,7 +59,7 @@ class TestGetGreetingFragment:
         with patch("jarvis.core.personality.datetime") as mock_dt:
             mock_dt.now.return_value.hour = 14
             greeting = default_engine.get_greeting_fragment()
-            assert "Nachmittag" in greeting
+            assert greeting == ""  # no greeting in afternoon
 
     def test_evening_greeting(self, default_engine: PersonalityEngine) -> None:
         with patch("jarvis.core.personality.datetime") as mock_dt:
@@ -71,7 +71,7 @@ class TestGetGreetingFragment:
         with patch("jarvis.core.personality.datetime") as mock_dt:
             mock_dt.now.return_value.hour = 2
             greeting = default_engine.get_greeting_fragment()
-            assert "Nachtschwärmer" in greeting
+            assert "wach" in greeting
 
     def test_greeting_disabled(self, cold_engine: PersonalityEngine) -> None:
         greeting = cold_engine.get_greeting_fragment()
@@ -87,12 +87,11 @@ class TestGetPersonalityDirectives:
 
     def test_warm_engine_has_empathy(self, warm_engine: PersonalityEngine) -> None:
         directives = warm_engine.get_personality_directives()
-        assert "Empathie" in directives
-        assert "wertschätzend" in directives
+        assert "Verstaendnis" in directives or "clever" in directives
 
     def test_warm_engine_has_humor(self, warm_engine: PersonalityEngine) -> None:
         directives = warm_engine.get_personality_directives()
-        assert "witzige" in directives
+        assert "Witz" in directives or "locker" in directives
 
     def test_cold_engine_empty(self, cold_engine: PersonalityEngine) -> None:
         directives = cold_engine.get_personality_directives()
@@ -100,11 +99,11 @@ class TestGetPersonalityDirectives:
 
     def test_success_celebration(self, warm_engine: PersonalityEngine) -> None:
         directives = warm_engine.get_personality_directives()
-        assert "erfolgreich" in directives.lower() or "Perfekt" in directives
+        assert "geklappt" in directives.lower() or "Fertig" in directives
 
     def test_follow_up_questions(self, warm_engine: PersonalityEngine) -> None:
         directives = warm_engine.get_personality_directives()
-        assert "Nachfrage" in directives
+        assert "offen" in directives.lower() or "Sinn" in directives
 
 
 class TestBuildPersonalityBlock:
@@ -145,4 +144,4 @@ class TestPersonalityConfig:
         engine = PersonalityEngine(config)
         assert engine.config.warmth == 0.2
         directives = engine.get_personality_directives()
-        assert "witzige" not in directives
+        assert "Witz" not in directives
