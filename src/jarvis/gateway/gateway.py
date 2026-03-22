@@ -1971,7 +1971,7 @@ class Gateway:
             # Stop keepalive once planner responds
             _keepalive_running = False
             _keepalive_task.cancel()
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(BaseException):
                 await _keepalive_task
 
             all_plans.append(plan)
