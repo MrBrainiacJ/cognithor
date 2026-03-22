@@ -1,4 +1,5 @@
 """Tests for autonomous task orchestrator."""
+
 from __future__ import annotations
 
 from jarvis.core.autonomous_orchestrator import AutonomousOrchestrator, AutonomousTask
@@ -93,9 +94,7 @@ def test_orchestration_prompt_basic():
 
 def test_orchestration_prompt_includes_recurring():
     orch = AutonomousOrchestrator()
-    task = AutonomousTask(
-        task_id="test1", description="Daily report", recurring="daily"
-    )
+    task = AutonomousTask(task_id="test1", description="Daily report", recurring="daily")
     prompt = orch.get_orchestration_prompt(task)
     assert "taeglich" in prompt
     assert "set_reminder" in prompt
@@ -103,9 +102,7 @@ def test_orchestration_prompt_includes_recurring():
 
 def test_orchestration_prompt_recurring_weekly():
     orch = AutonomousOrchestrator()
-    task = AutonomousTask(
-        task_id="test1", description="Weekly report", recurring="weekly"
-    )
+    task = AutonomousTask(task_id="test1", description="Weekly report", recurring="weekly")
     prompt = orch.get_orchestration_prompt(task)
     assert "woechentlich" in prompt
 

@@ -1,4 +1,5 @@
 """Tests for remote shell SSH execution."""
+
 from __future__ import annotations
 
 import pytest
@@ -39,9 +40,7 @@ def test_validate_allows_safe():
 
 def test_build_ssh_command():
     tools = RemoteShellTools()
-    host = RemoteHost(
-        name="dev", host="10.0.0.5", user="admin", port=2222, key_path="/keys/id_rsa"
-    )
+    host = RemoteHost(name="dev", host="10.0.0.5", user="admin", port=2222, key_path="/keys/id_rsa")
     cmd = tools._build_ssh_command(host, "echo hello")
     assert "ssh" in cmd[0]
     assert "-p" in cmd

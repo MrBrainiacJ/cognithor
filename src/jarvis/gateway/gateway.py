@@ -1409,13 +1409,10 @@ class Gateway:
 
         # ── Autonomous Orchestration (complex/recurring tasks) ──
         auto_task = None
-        if (
-            hasattr(self, "_autonomous_orchestrator")
-            and self._autonomous_orchestrator.should_orchestrate(msg.text)
-        ):
-            auto_task = self._autonomous_orchestrator.create_task(
-                msg.text, session.session_id
-            )
+        if hasattr(
+            self, "_autonomous_orchestrator"
+        ) and self._autonomous_orchestrator.should_orchestrate(msg.text):
+            auto_task = self._autonomous_orchestrator.create_task(msg.text, session.session_id)
             orchestration_context = self._autonomous_orchestrator.get_orchestration_prompt(
                 auto_task
             )
@@ -3640,7 +3637,8 @@ class Gateway:
             try:
                 history_limit = getattr(
                     getattr(self._config, "session", None),
-                    "chat_history_limit", 100,
+                    "chat_history_limit",
+                    100,
                 )
                 history = self._session_store.load_chat_history(
                     session.session_id,

@@ -479,6 +479,7 @@ def main() -> None:
 
                     # ── Rate-limit: prevent reconnection storms ─────────
                     import time as _ws_time
+
                     now = _ws_time.monotonic()
                     last = _ws_last_connect.get(session_id, 0)
                     if now - last < _WS_MIN_CONNECT_INTERVAL:

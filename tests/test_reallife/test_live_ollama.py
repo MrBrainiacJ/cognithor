@@ -5,6 +5,7 @@ Skip automatically if Ollama is not available.
 
 Run: pytest tests/test_reallife/test_live_ollama.py -v --timeout=120
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -86,9 +87,7 @@ class TestLiveAutonomousDetection:
         assert orch.should_orchestrate(
             "Monitor Facebook Marketplace for cheap GPUs and notify me daily"
         )
-        assert orch.should_orchestrate(
-            "Setup a Python project with tests and deploy it"
-        )
+        assert orch.should_orchestrate("Setup a Python project with tests and deploy it")
 
         # Simple tasks — should NOT trigger
         assert not orch.should_orchestrate("Hi")
@@ -114,9 +113,15 @@ class TestLiveGatekeeperSafety:
 
         gk = Gatekeeper(JarvisConfig())
         green_tools = [
-            "web_search", "search_and_read", "deep_research",
-            "verified_web_lookup", "web_fetch", "read_file",
-            "list_directory", "search_memory", "memory_stats",
+            "web_search",
+            "search_and_read",
+            "deep_research",
+            "verified_web_lookup",
+            "web_fetch",
+            "read_file",
+            "list_directory",
+            "search_memory",
+            "memory_stats",
         ]
         for tool in green_tools:
             action = PlannedAction(tool=tool, params={}, rationale="test")

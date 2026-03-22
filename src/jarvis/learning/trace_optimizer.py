@@ -811,7 +811,9 @@ class TraceOptimizer:
                 # Fallback to generate-style API
                 response = self._llm.generate(prompt)
                 text = (
-                    response if isinstance(response, str) else getattr(response, "text", str(response))
+                    response
+                    if isinstance(response, str)
+                    else getattr(response, "text", str(response))
                 )
             text = text.strip()
             if text and len(text) < 1000:

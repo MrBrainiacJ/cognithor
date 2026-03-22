@@ -1,4 +1,5 @@
 """Tests for GDPR retention enforcement."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, UTC

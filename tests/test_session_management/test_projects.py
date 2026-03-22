@@ -1,4 +1,5 @@
 """Tests for project/folder grouping."""
+
 from __future__ import annotations
 
 from jarvis.gateway.session_store import SessionStore

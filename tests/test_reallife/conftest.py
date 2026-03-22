@@ -1,4 +1,5 @@
 """Fixtures for real-life integration tests."""
+
 from __future__ import annotations
 
 import asyncio

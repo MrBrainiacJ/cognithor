@@ -7,6 +7,7 @@ Handles complex, multi-step tasks that may require:
 - Self-evaluation and iterative refinement
 - Learning from results for future tasks
 """
+
 from __future__ import annotations
 
 import logging
@@ -171,19 +172,23 @@ class AutonomousOrchestrator:
                 "weekly": "woechentlich",
             }
             freq_de = freq_map.get(task.recurring, task.recurring)
-            parts.extend([
-                "",
-                f"5. **Wiederkehrend**: Diese Aufgabe soll {freq_de} ausgefuehrt werden.",
-                f"   Erstelle am Ende einen Reminder mit set_reminder(repeat='{task.recurring}').",
-                "   Der Reminder-Text soll die Aufgabe beschreiben, damit sie automatisch wiederholt wird.",
-            ])
+            parts.extend(
+                [
+                    "",
+                    f"5. **Wiederkehrend**: Diese Aufgabe soll {freq_de} ausgefuehrt werden.",
+                    f"   Erstelle am Ende einen Reminder mit set_reminder(repeat='{task.recurring}').",
+                    "   Der Reminder-Text soll die Aufgabe beschreiben, damit sie automatisch wiederholt wird.",
+                ]
+            )
 
         if task.current_attempt > 0:
-            parts.extend([
-                "",
-                f"HINWEIS: Dies ist Versuch {task.current_attempt + 1} von {task.max_attempts}.",
-                "Vorherige Versuche waren nicht gut genug. Probiere einen anderen Ansatz.",
-            ])
+            parts.extend(
+                [
+                    "",
+                    f"HINWEIS: Dies ist Versuch {task.current_attempt + 1} von {task.max_attempts}.",
+                    "Vorherige Versuche waren nicht gut genug. Probiere einen anderen Ansatz.",
+                ]
+            )
 
         return "\n".join(parts)
 

@@ -3,6 +3,7 @@
 Supports executing commands on remote hosts via SSH subprocess.
 Uses the system's ssh client (no paramiko dependency needed).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -94,16 +95,18 @@ class RemoteShellTools:
                 return f"Blocked dangerous command pattern: {pattern}"
         return None
 
-    def _build_ssh_command(
-        self, host: RemoteHost, command: str
-    ) -> list[str]:
+    def _build_ssh_command(self, host: RemoteHost, command: str) -> list[str]:
         """Build the ssh subprocess command."""
         ssh_cmd = [
             "ssh",
-            "-o", "StrictHostKeyChecking=accept-new",
-            "-o", "ConnectTimeout=10",
-            "-o", "BatchMode=yes",
-            "-p", str(host.port),
+            "-o",
+            "StrictHostKeyChecking=accept-new",
+            "-o",
+            "ConnectTimeout=10",
+            "-o",
+            "BatchMode=yes",
+            "-p",
+            str(host.port),
         ]
         if host.key_path:
             ssh_cmd.extend(["-i", host.key_path])
