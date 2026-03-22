@@ -1114,7 +1114,7 @@ class ClaudeCodeBackend(LLMBackend):
         timeout: Maximum seconds to wait for the CLI to respond.
     """
 
-    def __init__(self, model: str = "sonnet", timeout: int = 120) -> None:
+    def __init__(self, model: str = "sonnet", timeout: int = 600) -> None:
         self._model = model
         self._timeout = timeout
         self._claude_path = shutil.which("claude") or "claude"
