@@ -1423,7 +1423,7 @@ def create_backend(config: JarvisConfig) -> LLMBackend:
         case "claude-code":
             return ClaudeCodeBackend(
                 model=getattr(config.models.planner, "name", "sonnet"),
-                timeout=config.ollama.timeout_seconds,
+                timeout=600,  # Claude Code needs more time for complex tasks
             )
         case _:
             return OllamaBackend(
