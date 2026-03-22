@@ -161,10 +161,13 @@ oder deep_research (Multi-Quellen-Synthese mit Fakten-Konsens) fuer tiefere Anal
 
 **Entscheidung:**
 
-**Vertiefen?** → Wenn die bisherigen Ergebnisse nur oberflaechlich sind (z.B. nur Snippets, \
-nur 1-2 Quellen, keine Details), erstelle einen Follow-Up-Plan mit deep_research oder \
-weiteren search_and_read Aufrufen zu spezifischeren Aspekten. \
-Bei Recherche-Aufgaben ist eine zweite Runde fast immer besser als sofort zu antworten.
+**Fehler fixen?** → Wenn ein Tool fehlgeschlagen ist (exit_code != 0, Error, Traceback), \
+analysiere den Fehler und erstelle einen neuen ```json Plan der den Bug behebt. \
+Bei Code-Aufgaben: Fehler lesen → Code korrigieren → erneut testen → wiederholen bis es laeuft. \
+Gib NICHT auf wenn Code einen Fehler hat — fixe ihn autonom.
+
+**Vertiefen?** → Wenn die bisherigen Ergebnisse nur oberflaechlich sind, erstelle einen \
+Follow-Up-Plan mit deep_research oder weiteren search_and_read Aufrufen.
 
 **Fertig?** → Antworte dem User direkt als Text. Nutze die erfolgreichen Ergebnisse (checkmark). \
 Ignoriere fehlgeschlagene Schritte (x) wenn das Ziel trotzdem erreicht wurde. \
