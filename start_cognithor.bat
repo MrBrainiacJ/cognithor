@@ -108,6 +108,16 @@ if errorlevel 1 (
     echo   [OK] Identity module available.
 )
 
+:: ── Desktop automation (Computer Use) ──
+%PYTHON_CMD% -c "import pyautogui, mss" >nul 2>&1
+if errorlevel 1 (
+    echo   [INFO] Installing Desktop automation deps (Computer Use^)...
+    %PYTHON_CMD% -m pip install --quiet pyautogui mss pyperclip Pillow >nul 2>&1
+    echo   [OK] Desktop automation ready.
+) else (
+    echo   [OK] Desktop automation available.
+)
+
 :: ============================================================
 ::  5. UI-Modus waehlen (Flutter-first)
 :: ============================================================
