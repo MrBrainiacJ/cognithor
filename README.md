@@ -31,7 +31,7 @@
 
 Most AI assistants send your data to the cloud. Cognithor runs entirely on your machine — with Ollama or LM Studio, no API keys required. Cloud providers are optional, not mandatory.
 
-It replaces a patchwork of tools with one integrated system: 17 channels, 94 MCP tools, 5-tier memory, knowledge vault, voice, browser automation, and more — all wired together from day one. 11,509+ tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
+It replaces a patchwork of tools with one integrated system: 17 channels, 106 MCP tools, 5-tier memory, knowledge vault, voice, browser automation, and more — all wired together from day one. 11,509+ tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
 
 ---
 
@@ -132,7 +132,7 @@ It replaces a patchwork of tools with one integrated system: 17 channels, 94 MCP
 - **Docker Real-Life Test Suite** — 22 scenario tests (pipeline + live Ollama).
 - **WebSocket stability** — Fixed reconnection storms, rate-limiting, Windows semaphore errors.
 - **CI/CD** — iOS + Android builds green, GitHub Release uploads working.
-- **94 MCP tools** (was 91), **11,509+ tests** (was 10,904).
+- **106 MCP tools** (was 91), **11,509+ tests** (was 10,904).
 
 ### v0.47.1-beta — Sci-Fi UI, GEPA Pipeline, Robot Office Pathfinding
 

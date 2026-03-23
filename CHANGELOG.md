@@ -9,8 +9,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 - **Computer Use** — GPT-5.4-style desktop automation: 6 new MCP tools (`computer_screenshot`, `computer_click`, `computer_type`, `computer_hotkey`, `computer_scroll`, `computer_drag`). Takes screenshots, analyzes with vision model, clicks at pixel coordinates. Uses PyAutoGUI + mss.
-- **Deep Research Agent** — Architecture files for deep research capabilities.
+- **Deep Research v2** — Perplexity-style iterative search engine: up to 25 search rounds, automatic query decomposition (official → github → community → lateral), LLM-powered result evaluation, cross-verification across independent sources, confidence scoring, and final synthesis with source attribution. Registered as `deep_research_v2` MCP tool.
 - **`[desktop]` dependency group** — `pip install cognithor[desktop]` for Computer Use (pyautogui, mss, pyperclip, Pillow).
+- **106 MCP tools** total (was 99).
 
 ### Fixed
 - Computer Use: hotkey string splitting, Unicode clipboard fallback, primary monitor selection, graceful degradation when deps missing.
