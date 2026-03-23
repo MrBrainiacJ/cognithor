@@ -523,4 +523,27 @@ async def init_tools(
     except Exception:
         log.debug("verified_lookup_not_registered", exc_info=True)
 
+    # Deep Research v2 (Perplexity-style iterative search)
+    try:
+        from jarvis.mcp.deep_research_v2 import register_deep_research_v2
+        from jarvis.mcp.web import WebTools
+
+        _web_tools = None
+        for tool_name, handler in result.items():
+            if hasattr(handler, "__self__") and isinstance(handler.__self__, WebTools):
+                _web_tools = handler.__self__
+                break
+
+        if _web_tools is None:
+            # Fallback: create WebTools instance
+            _web_tools = WebTools(config)
+
+        _llm = getattr(gateway, "_llm", None) if gateway else None
+        _model = getattr(config.models.planner, "name", "") if config else ""
+
+        if register_deep_research_v2(mcp_client, _web_tools, _llm, _model):
+            log.info("deep_research_v2_registered")
+    except Exception:
+        log.debug("deep_research_v2_not_registered", exc_info=True)
+
     return result

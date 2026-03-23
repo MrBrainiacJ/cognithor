@@ -463,6 +463,7 @@ class Gatekeeper:
             "search_and_read",
             "verified_web_lookup",
             "deep_research",
+            "deep_research_v2",
             "browse_url",
             "search_procedures",
             "media_analyze_image",
