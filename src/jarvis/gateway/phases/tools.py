@@ -120,6 +120,7 @@ async def init_tools(
     memory_manager: Any,
     interop: Any = None,
     handle_message: Any = None,
+    gateway: Any = None,
 ) -> PhaseResult:
     """Initialize MCP tools, browser, graph engine, telemetry, HITL, A2A.
 

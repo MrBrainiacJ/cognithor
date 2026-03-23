@@ -17,6 +17,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Computer Use: hotkey string splitting, Unicode clipboard fallback, primary monitor selection, graceful degradation when deps missing.
 - Gatekeeper tests updated for GREEN tool classification.
 
+### VS Code Extension
+- **cognithor-vscode/** — Complete VS Code Extension with Chat sidebar, Code Lens, 11 commands, WebSocket streaming, context-aware code assistance.
+- **Backend**: `POST /api/v1/chat/completions` endpoint with CodeContext support.
+- **VSIX**: Built and installable (`cognithor-vscode-0.1.0.vsix`, 26KB).
+
 ## [0.53.0] -- 2026-03-22
 
 ### Added

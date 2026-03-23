@@ -98,6 +98,28 @@ It replaces a patchwork of tools with one integrated system: 17 channels, 106 MC
 
 ## What's New
 
+### v0.54.0 — Computer Use, Deep Research v2, VS Code Extension
+
+**Computer Use (GPT-5.4-style)**
+- **6 new MCP tools** — `computer_screenshot`, `computer_click`, `computer_type`, `computer_hotkey`, `computer_scroll`, `computer_drag`
+- Takes desktop screenshots, analyzes with vision model, clicks at pixel coordinates
+- Auto-installed via `start_cognithor.bat`
+
+**Deep Research v2 (Perplexity-style)**
+- **Iterative search engine** — up to 25 rounds with query decomposition, source evaluation, cross-verification, confidence scoring
+- Source priority: Official Docs → GitHub → Community → Lateral approaches
+- Automatically invoked for complex queries ("recherchiere", "analysiere", "untersuche")
+
+**VS Code Extension**
+- **cognithor-vscode/** — Full extension with Chat sidebar, Code Lens, 11 commands
+- WebSocket streaming, context-aware code assistance, editor integration
+- `POST /api/v1/chat/completions` backend endpoint
+
+**Autonomous Coding**
+- 50 iterations for coding tasks, auto-debug, auto-fix
+- Ollama/Qwen3:32b as default local planner
+- GREEN gatekeeper for core tools (write_file, run_python, exec_command)
+
 ### v0.52.0 — Autonomous Agent Framework, SSH Backend, Session Management Overhaul
 
 **Autonomous Task Execution**

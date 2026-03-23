@@ -1294,7 +1294,8 @@ def main() -> None:
                 # VS Code Extension API
                 try:
                     from jarvis.channels.vscode_routes import register_vscode_routes
-                    register_vscode_routes(api_app, gateway, _api_deps)
+
+                    register_vscode_routes(api_app, gateway, [_Depends(_verify_cc_token)])
                     log.info("vscode_api_registered")
                 except Exception:
                     log.debug("vscode_api_not_registered", exc_info=True)
