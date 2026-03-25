@@ -5,6 +5,60 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.55.0] -- 2026-03-26
+
+### Added
+
+#### Audit & Compliance (EU AI Act + GDPR)
+- **HMAC-SHA256 Audit Signatures** — Every audit trail entry is cryptographically signed. Auto-generates 256-bit key at `~/.jarvis/audit_key` on first use.
+- **Ed25519 Asymmetric Signatures** — Optional upgrade: private key signs, public key verifies. Key pair auto-generated at `~/.jarvis/audit_ed25519.key` + `.pub`. Requires `cryptography` package.
+- **Blockchain Audit Anchoring** — `AuditTrail.get_anchor()` returns chain head hash + entry count for external blockchain/Arweave anchoring.
+- **RFC 3161 TSA Timestamps** — Daily timestamp on audit anchor hash via OpenSSL CLI + FreeTSA.org. Proves audit log existed at specific time. Raw ASN.1 DER fallback when OpenSSL unavailable.
+- **S3/MinIO WORM Backend** — Optional append-only storage: `audit.worm_backend: "s3"` or `"minio"`. Object Lock Compliance Mode (SEC 17a-4(f) compatible). Requires `pip install cognithor[worm]`.
+- **GDPR Art. 15 User Data Export** — `GET /api/v1/user/audit-data` with channel/hours filter. Returns sanitized audit entries without internal IDs.
+- **GDPR Art. 33 Breach Notification** — `BreachDetector` scans every 5 minutes for SECURITY events with CRITICAL/ERROR severity. Configurable cooldown. Logs `gdpr_breach_notification` at CRITICAL level.
+- **Audit Hash-Chain Verification** — `GET /api/v1/audit/verify` reads `gatekeeper.jsonl` and validates the full SHA-256 hash chain.
+- **Audit Timestamps API** — `GET /api/v1/audit/timestamps` lists all RFC 3161 `.tsr` files.
+- **Daily Audit Retention Cleanup** — Background task removes entries older than `audit.retention_days` (default 90) and background job logs older than 7 days.
+- **Flutter Audit Page** — New config page under Security > Audit with chain verification button, TSA timestamp list, and GDPR data export.
+
+#### Background Process Manager
+- **6 new MCP tools**: `start_background`, `list_background_jobs`, `check_background_job`, `read_background_log`, `stop_background_job`, `wait_background_job`.
+- **ProcessMonitor** with 5 verification methods: process-alive, exit-code, output-stall detection, timeout enforcement, resource check (optional psutil).
+- **SQLite persistence** (`~/.jarvis/background_jobs.db`) — survives restarts, orphan detection on boot.
+- **Log management** — Per-job log files at `~/.jarvis/workspace/background_logs/`, tail/head/grep support, 10MB limit, auto-cleanup.
+- **Status notifications** — Channel-aware callbacks when background jobs complete/fail/timeout.
+
+#### Multi-Agent System
+- **5 Specialized Agents** — jarvis (generalist), researcher (web research), coder (programming), office (email/calendar), operator (DevOps). Each with custom system prompt, trigger keywords/patterns, and tool restrictions.
+- **Agent Model Overrides** — `preferred_model`, `temperature`, `top_p` per agent, wired through gateway to planner. Coder uses `qwen3-coder:30b`, Office/Operator use `qwen3:8b`.
+- **Agent Delegation Chain** — jarvis delegates to all 4 specialists; each can delegate back. Delegation path also respects agent LLM overrides.
+- **`top_p` field** added to AgentProfile and agent CRUD API.
+
+#### Tool Configuration
+- **Computer Use Toggle** — `config.tools.computer_use_enabled` (default OFF). Desktop automation only when explicitly enabled.
+- **Desktop Tools Toggle** — `config.tools.desktop_tools_enabled` (default OFF). Clipboard/screenshot access gated.
+- **Flutter Tools Page** — New config page under Security > Tools with warning banner and toggles.
+- **Gatekeeper enforcement** — Disabled tool groups blocked as RED even if somehow registered.
+- **Runtime reload** — Toggle changes take effect immediately via `reload_disabled_tools()`.
+
+#### MCP Server for VSCode
+- **`--mcp-server` CLI flag** — Starts Jarvis as pure stdio MCP server for VSCode/Claude Desktop/Cursor. Only workspace-safe tools exposed (37 tools, no shell/desktop/docker).
+- **`MCP_WORKSPACE_SAFE_TOOLS`** allowlist in `bridge.py`.
+- **`mode_override`** parameter on `MCPBridge.setup()` to force stdio mode.
+
+### Changed
+- **Planner prompt** — Capability questions ("was kannst du?") answered as text from tool list, no web search. Agents answer from tool knowledge, not via `list_skills` tool plan.
+- **11,595+ tests** (was 11,509).
+
+### Fixed
+- **start_cognithor.bat** — CRLF line endings (was LF, caused cmd.exe parse errors on Windows).
+- **Flutter Ctrl+S** — Prevented browser Save-As dialog; now triggers Flutter config save.
+- **Flutter config_provider.dart** — `tools` section added to save() list and defaults (toggle was reverting).
+- **config_manager.py** — `tools` and `audit` added to `_EDITABLE_SECTIONS`.
+- **Icons** — `Icons.mouse` replaced with `Icons.desktop_windows` (mouse was tree-shaken).
+- **Planner log file handle leak** — Closed parent's fd copy after subprocess spawn in `BackgroundProcessManager`.
+
 ## [0.54.0] -- 2026-03-23
 
 ### Added
