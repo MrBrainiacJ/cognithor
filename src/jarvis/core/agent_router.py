@@ -79,6 +79,7 @@ class AgentProfile:
     # Modell-Präferenz
     preferred_model: str = ""  # Leer = Default des ModelRouters
     temperature: float | None = None  # Leer = Default
+    top_p: float | None = None  # None = Default des Modells
 
     # --- NEU: Workspace-Isolation ---
     workspace_subdir: str = ""  # Unterverzeichnis in ~/.jarvis/workspace/
