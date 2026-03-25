@@ -2940,6 +2940,42 @@ abstract class AppLocalizations {
   /// **'Tools'**
   String get configPageTools;
 
+  /// No description provided for @configPageAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit'**
+  String get configPageAudit;
+
+  /// No description provided for @auditChainIntegrity.
+  ///
+  /// In en, this message translates to:
+  /// **'Chain Integrity'**
+  String get auditChainIntegrity;
+
+  /// No description provided for @auditVerifyChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Hash Chain'**
+  String get auditVerifyChain;
+
+  /// No description provided for @auditTimestamps.
+  ///
+  /// In en, this message translates to:
+  /// **'TSA Timestamps'**
+  String get auditTimestamps;
+
+  /// No description provided for @auditGdprExport.
+  ///
+  /// In en, this message translates to:
+  /// **'GDPR Data Export'**
+  String get auditGdprExport;
+
+  /// No description provided for @auditExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get auditExport;
+
   /// No description provided for @configTitle.
   ///
   /// In en, this message translates to:

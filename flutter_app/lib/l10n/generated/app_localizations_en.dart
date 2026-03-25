@@ -1443,6 +1443,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get configPageTools => 'Tools';
 
   @override
+  String get configPageAudit => 'Audit';
+
+  @override
+  String get auditChainIntegrity => 'Chain Integrity';
+
+  @override
+  String get auditVerifyChain => 'Verify Hash Chain';
+
+  @override
+  String get auditTimestamps => 'TSA Timestamps';
+
+  @override
+  String get auditGdprExport => 'GDPR Data Export';
+
+  @override
+  String get auditExport => 'Export';
+
+  @override
   String get configTitle => 'Configuration';
 
   @override

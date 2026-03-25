@@ -28,6 +28,7 @@ import 'package:jarvis_ui/screens/config/agents_page.dart';
 import 'package:jarvis_ui/screens/config/bindings_page.dart';
 import 'package:jarvis_ui/screens/config/system_page.dart';
 import 'package:jarvis_ui/screens/config/tools_page.dart';
+import 'package:jarvis_ui/screens/config/audit_page.dart';
 
 // ── Category definition ──────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ final _categories = [
     'memory', 'agents', 'bindings', 'web',
   ]),
   _Category((l) => l.catSecurity, Icons.shield, [
-    'security', 'tools', 'database',
+    'security', 'tools', 'audit', 'database',
   ]),
   _Category((l) => l.catSystem, Icons.settings, [
     'general', 'language', 'logging', 'cron', 'mcp', 'system',
@@ -86,6 +87,8 @@ final _pageRegistry = <String, _SubPageDef>{
       Icons.shield, (l) => l.configPageSecurity, () => const SecurityPage()),
   'tools': _SubPageDef(
       Icons.desktop_windows, (l) => l.configPageTools, () => const ToolsPage()),
+  'audit': _SubPageDef(Icons.verified_user, (l) => l.configPageAudit,
+      () => const AuditPage()),
   'web': _SubPageDef(
       Icons.public, (l) => l.configPageWeb, () => const WebPage()),
   'mcp':
