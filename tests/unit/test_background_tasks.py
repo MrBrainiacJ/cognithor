@@ -91,3 +91,56 @@ class TestBackgroundProcessManager:
         active = manager.list_jobs(active_only=True)
         # Short command should be done by now
         assert all(j["status"] == "running" for j in active)
+
+
+class TestProcessMonitor:
+    """ProcessMonitor polls jobs and detects status changes."""
+
+    @pytest.fixture
+    def manager(self, tmp_path):
+        from jarvis.mcp.background_tasks import BackgroundProcessManager
+        return BackgroundProcessManager(
+            db_path=tmp_path / "jobs.db",
+            log_dir=tmp_path / "logs",
+        )
+
+    @pytest.mark.asyncio
+    async def test_monitor_detects_completion(self, manager):
+        from jarvis.mcp.background_tasks import ProcessMonitor
+
+        notifications = []
+
+        async def on_change(job_id, old, new, job):
+            notifications.append((job_id, old, new))
+
+        monitor = ProcessMonitor(manager, on_status_change=on_change)
+        import sys
+        job_id = await manager.start(
+            f"{sys.executable} -c \"print('done')\"",
+            check_interval=1,
+        )
+        # Run one monitor cycle
+        await asyncio.sleep(1.5)
+        await monitor.poll_once()
+        assert len(notifications) >= 1
+        assert notifications[0][2] in ("completed", "failed")
+
+    @pytest.mark.asyncio
+    async def test_monitor_detects_timeout(self, manager):
+        from jarvis.mcp.background_tasks import ProcessMonitor
+
+        notifications = []
+
+        async def on_change(job_id, old, new, job):
+            notifications.append((job_id, old, new))
+
+        monitor = ProcessMonitor(manager, on_status_change=on_change)
+        import sys
+        job_id = await manager.start(
+            f"{sys.executable} -c \"import time; time.sleep(60)\"",
+            timeout_seconds=1,
+            check_interval=1,
+        )
+        await asyncio.sleep(2)
+        await monitor.poll_once()
+        assert any(n[2] in ("timeout", "killed") for n in notifications)

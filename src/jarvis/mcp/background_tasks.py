@@ -12,6 +12,7 @@ Architecture:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import re
 import signal
@@ -32,6 +33,7 @@ log = get_logger(__name__)
 
 __all__ = [
     "BackgroundProcessManager",
+    "ProcessMonitor",
 ]
 
 # Limits
@@ -406,3 +408,114 @@ class BackgroundProcessManager:
                     "DELETE FROM background_jobs WHERE id = ?", (row["id"],)
                 )
         return removed
+
+
+# ============================================================================
+# ProcessMonitor
+# ============================================================================
+
+
+class ProcessMonitor:
+    """Async polling loop that checks background jobs periodically.
+
+    5 verification methods per job:
+      1. Process-Alive (os.waitpid / proc.poll)
+      2. Exit-Code (success vs failure)
+      3. Output-Stall (log size unchanged for 2+ intervals)
+      4. Timeout (elapsed > timeout_seconds)
+      5. Resource-Check (optional, via psutil if available)
+
+    Fires on_status_change callback when a job transitions.
+    """
+
+    def __init__(
+        self,
+        manager: BackgroundProcessManager,
+        *,
+        on_status_change: Any = None,
+        default_interval: int = DEFAULT_CHECK_INTERVAL,
+    ) -> None:
+        self._manager = manager
+        self._on_change = on_status_change
+        self._default_interval = default_interval
+        self._running = False
+        self._task: asyncio.Task | None = None
+
+    async def start(self) -> None:
+        """Start the monitor loop as an asyncio task."""
+        self._running = True
+        self._task = asyncio.create_task(self._loop(), name="bg-process-monitor")
+        log.info("process_monitor_started")
+
+    async def stop(self) -> None:
+        """Stop the monitor loop."""
+        self._running = False
+        if self._task:
+            self._task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._task
+        log.info("process_monitor_stopped")
+
+    async def poll_once(self) -> int:
+        """Run a single poll cycle. Returns number of status changes."""
+        changes = 0
+        jobs = self._manager.list_jobs(active_only=True)
+        for job in jobs:
+            old_status = job["status"]
+            updated = await self._manager.check_job(job["id"])
+            if updated and updated["status"] != old_status:
+                changes += 1
+                if self._on_change:
+                    try:
+                        await self._on_change(
+                            job["id"], old_status, updated["status"], updated
+                        )
+                    except Exception:
+                        log.debug("monitor_callback_error", exc_info=True)
+
+                # Method 5: Resource check (optional)
+                self._check_resources(job)
+
+            # Method 3 supplement: warn on stall
+            if updated and updated.get("_stalled"):
+                log.warning(
+                    "background_job_stalled",
+                    job_id=job["id"],
+                    command=job["command"][:80],
+                )
+        return changes
+
+    def _check_resources(self, job: dict) -> None:
+        """Optional resource check via psutil."""
+        try:
+            import psutil
+            pid = job.get("pid")
+            if pid and psutil.pid_exists(pid):
+                proc = psutil.Process(pid)
+                mem_mb = proc.memory_info().rss / (1024 * 1024)
+                cpu = proc.cpu_percent(interval=0.1)
+                if mem_mb > 2048:
+                    log.warning(
+                        "background_job_high_memory",
+                        job_id=job["id"],
+                        mem_mb=round(mem_mb),
+                    )
+                if cpu > 95:
+                    log.warning(
+                        "background_job_high_cpu",
+                        job_id=job["id"],
+                        cpu_percent=round(cpu),
+                    )
+        except ImportError:
+            pass  # psutil not installed, skip
+        except Exception:
+            pass  # Process may have exited
+
+    async def _loop(self) -> None:
+        """Main polling loop."""
+        while self._running:
+            try:
+                await self.poll_once()
+            except Exception:
+                log.debug("process_monitor_poll_error", exc_info=True)
+            await asyncio.sleep(self._default_interval)
