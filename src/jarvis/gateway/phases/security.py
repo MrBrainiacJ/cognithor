@@ -190,8 +190,32 @@ async def init_security(config: Any, llm_backend: Any = None) -> PhaseResult:
                 log.info("audit_hmac_key_generated", path=str(key_path))
             _hmac_key = key_path.read_bytes()
 
+        _ed25519_key = None
+        if getattr(config, "audit", None) and config.audit.ed25519_enabled:
+            key_file = config.audit.ed25519_key_file or str(
+                config.jarvis_home / "audit_ed25519.key"
+            )
+            key_path = _Path(key_file)
+            if not key_path.exists():
+                try:
+                    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+                        Ed25519PrivateKey,
+                    )
+
+                    key_path.parent.mkdir(parents=True, exist_ok=True)
+                    private_key = Ed25519PrivateKey.generate()
+                    key_bytes = private_key.private_bytes_raw()
+                    pub_bytes = private_key.public_key().public_bytes_raw()
+                    key_path.write_bytes(key_bytes)
+                    key_path.with_suffix(".pub").write_bytes(pub_bytes)
+                    log.info("audit_ed25519_key_generated", path=str(key_path))
+                except ImportError:
+                    log.warning("ed25519_requires_cryptography_package")
+            if key_path.exists():
+                _ed25519_key = key_path.read_bytes()
+
         result["audit_trail"] = AuditTrail(
-            log_dir=audit_log_dir, hmac_key=_hmac_key,
+            log_dir=audit_log_dir, hmac_key=_hmac_key, ed25519_key=_ed25519_key,
         )
     except Exception:
         log.debug("audit_trail_init_skipped", exc_info=True)

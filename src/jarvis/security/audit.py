@@ -117,6 +117,7 @@ class AuditTrail:
         *,
         log_path: Path | str | None = None,
         hmac_key: bytes | None = None,
+        ed25519_key: bytes | None = None,
     ) -> None:
         if log_path is not None:
             self._log_path = Path(log_path)
@@ -128,6 +129,7 @@ class AuditTrail:
         self._last_hash = "genesis"
         self._entry_count = 0
         self._hmac_key = hmac_key
+        self._ed25519_key = ed25519_key
 
         # Chain vom letzten Eintrag fortsetzen
         self._restore_chain()
@@ -175,6 +177,21 @@ class AuditTrail:
             record["hmac"] = hmac_mod.new(
                 self._hmac_key, record["hash"].encode(), hashlib.sha256
             ).hexdigest()
+
+        # Ed25519 asymmetric signature (verify without the secret)
+        if self._ed25519_key:
+            try:
+                from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+                    Ed25519PrivateKey,
+                )
+
+                private_key = Ed25519PrivateKey.from_private_bytes(
+                    self._ed25519_key[:32]
+                )
+                signature = private_key.sign(record["hash"].encode())
+                record["ed25519_sig"] = signature.hex()
+            except ImportError:
+                log.warning("ed25519_requires_cryptography_package")
 
         line = json.dumps(record, ensure_ascii=False)
         try:
@@ -264,7 +281,8 @@ class AuditTrail:
 
                     # Verify hash
                     verify_entry = {
-                        k: v for k, v in entry.items() if k not in ("prev_hash", "hash", "hmac")
+                        k: v for k, v in entry.items()
+                        if k not in ("prev_hash", "hash", "hmac", "ed25519_sig")
                     }
                     data_str = json.dumps(verify_entry, ensure_ascii=False, sort_keys=True)
                     expected = _compute_hash(data_str, prev_hash)
@@ -277,6 +295,32 @@ class AuditTrail:
             return (False, count, count)
 
         return (True, count, -1)
+
+    @staticmethod
+    def verify_signature(entry: dict[str, Any], public_key_bytes: bytes) -> bool:
+        """Verify an Ed25519 signature on an audit entry.
+
+        Args:
+            entry: Audit entry dict with 'ed25519_sig' and 'hash' fields.
+            public_key_bytes: 32-byte Ed25519 public key.
+
+        Returns:
+            True if signature is valid, False otherwise.
+        """
+        sig_hex = entry.get("ed25519_sig", "")
+        hash_value = entry.get("hash", "")
+        if not sig_hex or not hash_value:
+            return False
+        try:
+            from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+                Ed25519PublicKey,
+            )
+
+            public_key = Ed25519PublicKey.from_public_bytes(public_key_bytes)
+            public_key.verify(bytes.fromhex(sig_hex), hash_value.encode())
+            return True
+        except Exception:
+            return False
 
     def query(
         self,

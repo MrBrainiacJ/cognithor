@@ -1606,6 +1606,14 @@ class AuditConfig(BaseModel):
         default="",
         description="Pfad zur HMAC-Key-Datei (leer = ~/.jarvis/audit_key)",
     )
+    ed25519_enabled: bool = Field(
+        default=False,
+        description="Ed25519 asymmetrische Signaturen auf Audit-Eintraege (erfordert cryptography)",
+    )
+    ed25519_key_file: str = Field(
+        default="",
+        description="Pfad zur Ed25519-Key-Datei (leer = ~/.jarvis/audit_ed25519.key)",
+    )
     breach_notification_enabled: bool = Field(
         default=True,
         description="Automatische Breach-Erkennung und Benachrichtigung",
