@@ -370,6 +370,10 @@ class Planner:
         user_message: str,
         working_memory: WorkingMemory,
         tool_schemas: dict[str, Any],
+        *,
+        model_override: str | None = None,
+        temperature_override: float | None = None,
+        top_p_override: float | None = None,
     ) -> ActionPlan:
         """Erstellt einen Plan für eine User-Nachricht.
 
@@ -381,7 +385,10 @@ class Planner:
         Returns:
             ActionPlan mit Schritten oder einer direkten Antwort.
         """
-        model = self._router.select_model("planning", "high")
+        if model_override:
+            model = model_override
+        else:
+            model = self._router.select_model("planning", "high")
         model_config = self._router.get_model_config(model)
 
         # System-Prompt bauen
@@ -406,8 +413,8 @@ class Planner:
                 self._ollama.chat(
                     model=model,
                     messages=messages,
-                    temperature=model_config.get("temperature", 0.7),
-                    top_p=model_config.get("top_p", 0.9),
+                    temperature=temperature_override if temperature_override is not None else model_config.get("temperature", 0.7),
+                    top_p=top_p_override if top_p_override is not None else model_config.get("top_p", 0.9),
                     options=self._build_llm_options(),
                 )
             )
@@ -506,8 +513,8 @@ class Planner:
                 retry_response = await self._ollama.chat(
                     model=model,
                     messages=retry_messages,
-                    temperature=max(0.3, model_config.get("temperature", 0.7) - 0.3),
-                    top_p=model_config.get("top_p", 0.9),
+                    temperature=temperature_override if temperature_override is not None else max(0.3, model_config.get("temperature", 0.7) - 0.3),
+                    top_p=top_p_override if top_p_override is not None else model_config.get("top_p", 0.9),
                     options=self._build_llm_options(),
                 )
                 retry_text = retry_response.get("message", {}).get("content", "")
@@ -528,12 +535,19 @@ class Planner:
         results: list[ToolResult],
         working_memory: WorkingMemory,
         tool_schemas: dict[str, Any],
+        *,
+        model_override: str | None = None,
+        temperature_override: float | None = None,
+        top_p_override: float | None = None,
     ) -> ActionPlan:
         """Erstellt einen neuen Plan basierend auf bisherigen Ergebnissen. [B§3.4]
 
         Wird aufgerufen wenn der Agent-Loop weitere Iterationen braucht.
         """
-        model = self._router.select_model("planning", "high")
+        if model_override:
+            model = model_override
+        else:
+            model = self._router.select_model("planning", "high")
         model_config = self._router.get_model_config(model)
 
         # Ergebnisse formatieren
@@ -564,8 +578,8 @@ class Planner:
                 response = await self._ollama.chat(
                     model=model,
                     messages=messages,
-                    temperature=model_config.get("temperature", 0.7),
-                    top_p=model_config.get("top_p", 0.9),
+                    temperature=temperature_override if temperature_override is not None else model_config.get("temperature", 0.7),
+                    top_p=top_p_override if top_p_override is not None else model_config.get("top_p", 0.9),
                     options=self._build_llm_options(),
                 )
                 break
@@ -612,8 +626,8 @@ class Planner:
                 retry_response = await self._ollama.chat(
                     model=model,
                     messages=retry_messages,
-                    temperature=max(0.3, model_config.get("temperature", 0.7) - 0.3),
-                    top_p=model_config.get("top_p", 0.9),
+                    temperature=temperature_override if temperature_override is not None else max(0.3, model_config.get("temperature", 0.7) - 0.3),
+                    top_p=top_p_override if top_p_override is not None else model_config.get("top_p", 0.9),
                     options=self._build_llm_options(),
                 )
                 retry_text = retry_response.get("message", {}).get("content", "")
