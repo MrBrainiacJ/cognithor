@@ -352,6 +352,18 @@ class AuditTrail:
 
         return results
 
+    def get_anchor(self) -> dict[str, Any]:
+        """Get current chain state for blockchain anchoring.
+
+        Returns a dict suitable for writing to a blockchain or external store
+        to prove the audit log existed in this exact state at this time.
+        """
+        return {
+            "hash": self._last_hash,
+            "entry_count": self._entry_count,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+
     @property
     def entry_count(self) -> int:
         """Anzahl der protokollierten Einträge."""

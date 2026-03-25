@@ -103,3 +103,46 @@ class TestHMACSignatures:
         assert valid is True
         assert total == 5
         assert broken == -1
+
+
+class TestBlockchainAnchoring:
+    """Periodic hash anchoring to external store."""
+
+    @pytest.fixture
+    def audit_trail(self, tmp_path):
+        from jarvis.security.audit import AuditTrail
+        return AuditTrail(log_path=tmp_path / "bc_audit.jsonl")
+
+    def test_get_anchor_returns_hash_and_count(self, audit_trail):
+        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        for i in range(3):
+            entry = GateAuditEntry(
+                session_id=f"s{i}", action_tool=f"tool{i}", action_params_hash=f"h{i}",
+                decision_status=GateStatus.ALLOW, decision_reason=f"r{i}",
+                risk_level=RiskLevel.GREEN, policy_name="p",
+            )
+            audit_trail.record(entry)
+        anchor = audit_trail.get_anchor()
+        assert "hash" in anchor
+        assert anchor["entry_count"] == 3
+        assert len(anchor["hash"]) == 64
+        assert "timestamp" in anchor
+
+    def test_anchor_changes_after_new_entry(self, audit_trail):
+        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        entry = GateAuditEntry(
+            session_id="s1", action_tool="t1", action_params_hash="h1",
+            decision_status=GateStatus.ALLOW, decision_reason="r1",
+            risk_level=RiskLevel.GREEN, policy_name="p",
+        )
+        audit_trail.record(entry)
+        anchor1 = audit_trail.get_anchor()
+        entry2 = GateAuditEntry(
+            session_id="s2", action_tool="t2", action_params_hash="h2",
+            decision_status=GateStatus.ALLOW, decision_reason="r2",
+            risk_level=RiskLevel.GREEN, policy_name="p",
+        )
+        audit_trail.record(entry2)
+        anchor2 = audit_trail.get_anchor()
+        assert anchor1["hash"] != anchor2["hash"]
+        assert anchor2["entry_count"] == 2
