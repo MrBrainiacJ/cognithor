@@ -739,6 +739,8 @@
   "configPageAgents": "Agents",
   "configPageBindings": "Bindings",
   "configPageSystem": "System",
+  "configPageTools": "Tools",
+  "@configPageTools": {},
 
   "configTitle": "Configuration",
   "reloadFromBackend": "Reload config from backend",
@@ -1303,5 +1305,17 @@
   "restartRequired": "Restart required for full effect",
   "@restartRequired": {},
   "installClaude": "Install Claude Code",
-  "@installClaude": {}
+  "@installClaude": {},
+  "toolsComputerUseLabel": "Computer Use",
+  "@toolsComputerUseLabel": {},
+  "toolsComputerUseDesc": "Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.",
+  "@toolsComputerUseDesc": {},
+  "toolsDesktopLabel": "Desktop Tools",
+  "@toolsDesktopLabel": {},
+  "toolsDesktopDesc": "Clipboard access (read/write) and screenshot capture.",
+  "@toolsDesktopDesc": {},
+  "toolsSectionDesktop": "Desktop & Automation",
+  "@toolsSectionDesktop": {},
+  "toolsWarning": "These tools give Jarvis access to your desktop. Enable only when needed.",
+  "@toolsWarning": {}
 }

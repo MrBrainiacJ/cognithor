@@ -2934,6 +2934,12 @@ abstract class AppLocalizations {
   /// **'System'**
   String get configPageSystem;
 
+  /// No description provided for @configPageTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get configPageTools;
+
   /// No description provided for @configTitle.
   ///
   /// In en, this message translates to:
@@ -4463,6 +4469,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Install Claude Code'**
   String get installClaude;
+
+  /// No description provided for @toolsComputerUseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer Use'**
+  String get toolsComputerUseLabel;
+
+  /// No description provided for @toolsComputerUseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.'**
+  String get toolsComputerUseDesc;
+
+  /// No description provided for @toolsDesktopLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop Tools'**
+  String get toolsDesktopLabel;
+
+  /// No description provided for @toolsDesktopDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard access (read/write) and screenshot capture.'**
+  String get toolsDesktopDesc;
+
+  /// No description provided for @toolsSectionDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop & Automation'**
+  String get toolsSectionDesktop;
+
+  /// No description provided for @toolsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'These tools give Jarvis access to your desktop. Enable only when needed.'**
+  String get toolsWarning;
 }
 
 class _AppLocalizationsDelegate

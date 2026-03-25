@@ -1439,6 +1439,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get configPageSystem => 'النظام';
 
   @override
+  String get configPageTools => 'Tools';
+
+  @override
   String get configTitle => 'التكوين';
 
   @override
@@ -2245,4 +2248,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get installClaude => 'تثبيت Claude Code';
+
+  @override
+  String get toolsComputerUseLabel => 'Computer Use';
+
+  @override
+  String get toolsComputerUseDesc =>
+      'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.';
+
+  @override
+  String get toolsDesktopLabel => 'Desktop Tools';
+
+  @override
+  String get toolsDesktopDesc =>
+      'Clipboard access (read/write) and screenshot capture.';
+
+  @override
+  String get toolsSectionDesktop => 'Desktop & Automation';
+
+  @override
+  String get toolsWarning =>
+      'These tools give Jarvis access to your desktop. Enable only when needed.';
 }
