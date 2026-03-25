@@ -785,6 +785,38 @@ class Gateway:
                     if hasattr(self, "_bg_manager") and self._bg_manager:
                         removed_logs = self._bg_manager.cleanup_old_logs()
                         log.info("background_log_cleanup", removed=removed_logs)
+                    # RFC 3161 TSA: Daily timestamp on audit anchor
+                    if (
+                        getattr(self._config, "audit", None)
+                        and getattr(self._config.audit, "tsa_enabled", False)
+                        and hasattr(self, "_audit_trail")
+                        and self._audit_trail
+                    ):
+                        try:
+                            from jarvis.security.tsa import TSAClient
+                            from datetime import UTC, datetime
+
+                            anchor = self._audit_trail.get_anchor()
+                            if anchor["entry_count"] > 0:
+                                date_str = datetime.now(UTC).strftime("%Y-%m-%d")
+                                tsa_url = getattr(self._config.audit, "tsa_url", "https://freetsa.org/tsr")
+                                tsa_dir = self._config.jarvis_home / "tsa"
+                                tsa_client = TSAClient(tsa_url=tsa_url, storage_dir=tsa_dir)
+                                tsr_path = tsa_client.request_timestamp(
+                                    anchor["hash"], date_str
+                                )
+                                if tsr_path:
+                                    log.info(
+                                        "tsa_daily_timestamp_created",
+                                        date=date_str,
+                                        anchor_hash=anchor["hash"][:16],
+                                        entry_count=anchor["entry_count"],
+                                        tsr_path=str(tsr_path),
+                                    )
+                                else:
+                                    log.warning("tsa_daily_timestamp_failed", date=date_str)
+                        except Exception:
+                            log.debug("tsa_daily_failed", exc_info=True)
                 except Exception:
                     log.debug("retention_cleanup_failed", exc_info=True)
 
