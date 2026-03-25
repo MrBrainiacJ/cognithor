@@ -1141,6 +1141,14 @@ class Gateway:
                 except Exception:
                     log.debug("web_tools_config_reload_failed", exc_info=True)
 
+            # Live-update Gatekeeper tool toggles (disabled_tools list)
+            if self._gatekeeper and hasattr(self._gatekeeper, "reload_disabled_tools"):
+                try:
+                    self._gatekeeper.reload_disabled_tools()
+                    reloaded.append("tool_toggles")
+                except Exception:
+                    log.debug("gatekeeper_tool_toggles_reload_failed", exc_info=True)
+
             reloaded.append("config")
         log.info("gateway_components_reloaded", components=reloaded)
         return {"reloaded": reloaded}
