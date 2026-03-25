@@ -1954,6 +1954,53 @@ def _register_monitoring_routes(
             "severity_counts": hub.audit.severity_counts(),
         }
 
+    @app.get("/api/v1/audit/verify", dependencies=deps)
+    async def verify_audit_integrity() -> dict[str, Any]:
+        """Verify the integrity of the gatekeeper audit hash-chain."""
+        import hashlib
+        import json as json_mod
+
+        gk_log = config_manager.config.jarvis_home / "logs" / "gatekeeper.jsonl"
+        if not gk_log.exists():
+            return {"status": "no_log", "message": "No gatekeeper audit log found."}
+
+        total = 0
+        valid = 0
+        broken_at = None
+        prev_hash = "genesis"
+
+        try:
+            with open(gk_log, encoding="utf-8") as f:
+                for line_no, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    total += 1
+                    try:
+                        entry = json_mod.loads(line)
+                    except json_mod.JSONDecodeError:
+                        broken_at = line_no
+                        break
+
+                    stored_prev = entry.get("prev_hash", "")
+                    if stored_prev != prev_hash and broken_at is None:
+                        broken_at = line_no
+
+                    if broken_at is None:
+                        valid += 1
+
+                    prev_hash = entry.get("hash", "")
+        except OSError as exc:
+            return {"status": "error", "message": str(exc)}
+
+        return {
+            "status": "intact" if broken_at is None else "broken",
+            "total_entries": total,
+            "valid_entries": valid,
+            "broken_at_line": broken_at,
+            "log_file": str(gk_log),
+        }
+
     @app.get("/api/v1/monitoring/heartbeat", dependencies=deps)
     async def heartbeat_status() -> dict[str, Any]:
         """Heartbeat-Status und Historie."""
