@@ -203,6 +203,10 @@ class ConfigProvider extends ChangeNotifier {
       'blocked_commands': <String>[],
       'credential_patterns': <String>[],
     },
+    'tools': {
+      'computer_use_enabled': false,
+      'desktop_tools_enabled': false,
+    },
     'executor': {
       'default_timeout_seconds': 30,
       'max_output_chars': 10000,
@@ -407,7 +411,7 @@ class ConfigProvider extends ChangeNotifier {
       for (final section in [
         'ollama', 'models', 'gatekeeper', 'planner', 'memory', 'channels',
         'sandbox', 'logging', 'security', 'heartbeat', 'plugins', 'dashboard',
-        'model_overrides', 'web', 'database', 'executor',
+        'model_overrides', 'web', 'database', 'executor', 'tools',
       ]) {
         if (_cfg.containsKey(section)) {
           futures.add(_api!.patch('config/$section', _cfg[section] as Map<String, dynamic>)
