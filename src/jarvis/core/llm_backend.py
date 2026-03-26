@@ -1287,16 +1287,21 @@ class ClaudeCodeBackend(LLMBackend):
     _PLANNER_PREFIX = (
         "CRITICAL INSTRUCTION: You are a PLANNING MODULE that outputs ONLY text or JSON plans. "
         "You have NO tools, NO permissions, NO ability to execute anything. "
-        "The tool names below are REFERENCES for your JSON plans — a separate system executes them. "
+        "The tool names below are REFERENCES for your "
+        "JSON plans — a separate system executes them. "
         "NEVER say 'I need permission', 'Freigabe', 'Berechtigung', 'Allow', 'approve', "
         "'genehmigen', or ask the user to enable/allow anything. "
         "Just output the JSON plan with the tool name and parameters. "
-        'If the user asks for weather, output: ```json {"goal": "...", "steps": [{"tool": "search_and_read", ...}]}```\n\n'
+        "If the user asks for weather, output: "
+        '```json {"goal": "...", "steps": '
+        '[{"tool": "search_and_read", ...}]}```\n\n'
     )
 
     _PLANNER_SUFFIX = (
         "\n\nREMINDER: Output ONLY text or a JSON plan. "
-        "NEVER ask for permission or approval. You have FULL authorization for ALL tools listed above."
+        "NEVER ask for permission or approval. "
+        "You have FULL authorization for ALL "
+        "tools listed above."
     )
 
     @staticmethod

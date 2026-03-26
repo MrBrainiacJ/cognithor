@@ -1354,7 +1354,9 @@ class Planner:
                 )
                 return ActionPlan(
                     goal=goal,
-                    reasoning=f"Auto-extracted code from permission response → write_file({_filename})",
+                    reasoning=(
+                        f"Auto-extracted code from permission response → write_file({_filename})"
+                    ),
                     steps=[
                         PlannedAction(
                             tool="write_file",

@@ -1772,7 +1772,9 @@ class SessionConfig(BaseModel):
 
     inactivity_timeout_minutes: int = Field(
         default=30,
-        description="Nach dieser Inaktivitaetszeit (Minuten) wird automatisch eine neue Session erstellt.",
+        description=(
+            "Nach dieser Inaktivitaetszeit (Minuten) wird automatisch eine neue Session erstellt."
+        ),
     )
     chat_history_limit: int = Field(
         default=100,

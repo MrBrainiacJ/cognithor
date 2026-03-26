@@ -646,7 +646,9 @@ def register_skill_tools(
                 },
                 "github_token": {
                     "type": "string",
-                    "description": "GitHub Personal Access Token (optional, uses credential manager if empty)",
+                    "description": (
+                        "GitHub Personal Access Token (optional, uses credential manager if empty)"
+                    ),
                     "default": "",
                 },
             },

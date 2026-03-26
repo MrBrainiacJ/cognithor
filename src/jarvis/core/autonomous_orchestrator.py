@@ -162,7 +162,8 @@ class AutonomousOrchestrator:
             "1. **Zerlege** die Aufgabe in konkrete Teilschritte",
             "2. **Pruefe** nach jedem Schritt: War das Ergebnis gut genug?",
             "3. **Verbessere** wenn noetig: Suche mehr Quellen, probiere andere Tools",
-            "4. **Lerne** daraus: Wenn du einen neuen Workflow entdeckst, erstelle einen Skill mit create_skill",
+            "4. **Lerne** daraus: Wenn du einen neuen Workflow "
+            "entdeckst, erstelle einen Skill mit create_skill",
         ]
 
         if task.recurring != "none":
@@ -176,8 +177,11 @@ class AutonomousOrchestrator:
                 [
                     "",
                     f"5. **Wiederkehrend**: Diese Aufgabe soll {freq_de} ausgefuehrt werden.",
-                    f"   Erstelle am Ende einen Reminder mit set_reminder(repeat='{task.recurring}').",
-                    "   Der Reminder-Text soll die Aufgabe beschreiben, damit sie automatisch wiederholt wird.",
+                    "   Erstelle am Ende einen Reminder mit "
+                    f"set_reminder(repeat='{task.recurring}').",
+                    "   Der Reminder-Text soll die Aufgabe "
+                    "beschreiben, damit sie automatisch "
+                    "wiederholt wird.",
                 ]
             )
 
@@ -185,7 +189,9 @@ class AutonomousOrchestrator:
             parts.extend(
                 [
                     "",
-                    f"HINWEIS: Dies ist Versuch {task.current_attempt + 1} von {task.max_attempts}.",
+                    f"HINWEIS: Dies ist Versuch "
+                    f"{task.current_attempt + 1} "
+                    f"von {task.max_attempts}.",
                     "Vorherige Versuche waren nicht gut genug. Probiere einen anderen Ansatz.",
                 ]
             )

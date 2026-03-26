@@ -103,6 +103,11 @@ _EDITABLE_SECTIONS = frozenset(
         "executor",
         "tools",
         "audit",
+        "browser",
+        "calendar",
+        "email",
+        "identity",
+        "personality",
     }
 )
 

@@ -251,7 +251,9 @@ class ProposalStore:
         cutoff = time.time() - older_than_days * 86400
         conn = self._get_conn()
         cur = conn.execute(
-            "DELETE FROM optimization_proposals WHERE created_at < ? AND status IN ('rejected', 'rolled_back')",
+            "DELETE FROM optimization_proposals "
+            "WHERE created_at < ? AND status "
+            "IN ('rejected', 'rolled_back')",
             (cutoff,),
         )
         conn.commit()

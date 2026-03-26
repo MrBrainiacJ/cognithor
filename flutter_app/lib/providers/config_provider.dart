@@ -207,6 +207,35 @@ class ConfigProvider extends ChangeNotifier {
       'computer_use_enabled': false,
       'desktop_tools_enabled': false,
     },
+    'browser': {
+      'headless': true,
+      'timeout_seconds': 30,
+      'max_pages': 5,
+    },
+    'calendar': {
+      'enabled': false,
+      'ics_path': '',
+    },
+    'email': {
+      'enabled': false,
+      'imap_host': '',
+      'imap_port': 993,
+      'smtp_host': '',
+      'smtp_port': 587,
+      'username': '',
+      'password': '',
+    },
+    'identity': {
+      'enabled': true,
+      'blockchain_enabled': false,
+      'arweave_enabled': false,
+    },
+    'personality': {
+      'warmth': 0.7,
+      'humor': 0.3,
+      'greeting_enabled': true,
+      'success_celebration': true,
+    },
     'executor': {
       'default_timeout_seconds': 30,
       'max_output_chars': 10000,
@@ -413,6 +442,7 @@ class ConfigProvider extends ChangeNotifier {
         'sandbox', 'logging', 'security', 'heartbeat', 'plugins', 'dashboard',
         'model_overrides', 'web', 'database', 'executor', 'tools', 'audit',
         'improvement', 'prompt_evolution',
+        'browser', 'calendar', 'email', 'identity', 'personality',
       ]) {
         if (_cfg.containsKey(section)) {
           futures.add(_api!.patch('config/$section', _cfg[section] as Map<String, dynamic>)

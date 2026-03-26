@@ -4272,7 +4272,10 @@ def _register_skill_registry_routes(
             frontmatter["agent"] = body["agent"]
 
         skill_body = body.get("body", "")
-        content = f"---\n{yaml.dump(frontmatter, default_flow_style=False, allow_unicode=True)}---\n\n{skill_body}\n"
+        front_yaml = yaml.dump(
+            frontmatter, default_flow_style=False, allow_unicode=True
+        )
+        content = f"---\n{front_yaml}---\n\n{skill_body}\n"
 
         # Determine save directory
         config = getattr(gateway, "_config", None)
@@ -4331,7 +4334,10 @@ def _register_skill_registry_routes(
             frontmatter["last_used"] = skill.last_used
 
         skill_body = body.get("body", skill.body)
-        content = f"---\n{yaml.dump(frontmatter, default_flow_style=False, allow_unicode=True)}---\n\n{skill_body}\n"
+        front_yaml = yaml.dump(
+            frontmatter, default_flow_style=False, allow_unicode=True
+        )
+        content = f"---\n{front_yaml}---\n\n{skill_body}\n"
 
         file_path.write_text(content, encoding="utf-8")
 
