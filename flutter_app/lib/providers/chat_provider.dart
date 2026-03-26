@@ -188,6 +188,8 @@ class ChatProvider extends ChangeNotifier {
   }
 
   /// Switch to a different version of an edited message.
+  /// Removes ALL messages after the user message, then inserts
+  /// the version's assistant response (if any).
   void switchVersion(int messageIndex, int versionIndex) {
     if (messageIndex < 0 || messageIndex >= messages.length) return;
     final msg = messages[messageIndex];
@@ -197,14 +199,14 @@ class ChatProvider extends ChangeNotifier {
     msg.text = version.userText;
     msg.activeVersion = versionIndex;
 
-    // Update the assistant response too (if it exists right after)
-    if (messageIndex + 1 < messages.length &&
-        messages[messageIndex + 1].role == MessageRole.assistant) {
-      messages[messageIndex + 1].text = version.assistantText;
-    } else if (version.assistantText.isNotEmpty) {
-      // Re-insert assistant message
-      messages.insert(
-        messageIndex + 1,
+    // Remove everything after the user message
+    if (messageIndex + 1 < messages.length) {
+      messages.removeRange(messageIndex + 1, messages.length);
+    }
+
+    // Insert the version's assistant response (if it has one)
+    if (version.assistantText.isNotEmpty) {
+      messages.add(
         ChatMessage(role: MessageRole.assistant, text: version.assistantText),
       );
     }
