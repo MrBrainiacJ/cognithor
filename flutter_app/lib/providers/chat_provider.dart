@@ -113,6 +113,43 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Edit a user message at [index]: remove it + all messages after it,
+  /// then send the new text. This is the Claude-style "edit and resend"
+  /// behavior where the conversation is rewound to that point.
+  void editAndResend(int index, String newText) {
+    if (index < 0 || index >= messages.length) return;
+    _log('[Chat] editAndResend: index=$index newText="$newText"');
+    // Remove this message and everything after it
+    messages.removeRange(index, messages.length);
+    notifyListeners();
+    // Send as new message (will be appended + sent via WS)
+    sendMessage(newText);
+  }
+
+  /// Retry the last assistant response: remove it and resend the
+  /// last user message.
+  void retryLastResponse() {
+    // Find last assistant message
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role == MessageRole.assistant) {
+        messages.removeRange(i, messages.length);
+        break;
+      }
+    }
+    // Find last user message and resend
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role == MessageRole.user) {
+        final text = messages[i].text;
+        _log('[Chat] retryLastResponse: resending "$text"');
+        if (_ws != null) {
+          _ws!.sendMessage(text);
+        }
+        notifyListeners();
+        return;
+      }
+    }
+  }
+
   void sendFile(String name, String type, String base64) {
     messages.add(ChatMessage(role: MessageRole.user, text: '[File: $name]'));
     _ws?.sendFile(name, type, base64);

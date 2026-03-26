@@ -100,10 +100,24 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void _editMessage(String text) {
+  /// Claude-style edit: rewind conversation to this message, put text in
+  /// input field for editing. User submits → editAndResend removes all
+  /// messages from this point and sends the new version.
+  int? _editingIndex;
+
+  void _startEdit(int index, String text) {
+    setState(() => _editingIndex = index);
     _inputController.text = text;
     _inputController.selection = TextSelection.collapsed(offset: text.length);
     _inputFocusNode.requestFocus();
+  }
+
+  void _submitEdit(String text) {
+    final idx = _editingIndex;
+    setState(() => _editingIndex = null);
+    if (idx != null) {
+      context.read<ChatProvider>().editAndResend(idx, text);
+    }
   }
 
   void _scrollToBottom() {
@@ -253,6 +267,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                       MessageActionButtons(
                                         text: msg.text,
                                         isUser: false,
+                                        onRetry: () => chat.retryLastResponse(),
+                                        showRetry: index == chat.messages.length - 1,
                                       ),
                                       const SizedBox(width: 4),
                                       FeedbackButtons(
@@ -274,7 +290,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 MessageActionButtons(
                                   text: msg.text,
                                   isUser: true,
-                                  onEdit: () => _editMessage(msg.text),
+                                  onEdit: () => _startEdit(index, msg.text),
                                 ),
                               ],
                             );
@@ -354,7 +370,12 @@ class _ChatScreenState extends State<ChatScreen> {
                         controller: _inputController,
                         focusNode: _inputFocusNode,
                         onSend: (text) {
-                          chat.sendMessage(text);
+                          if (_editingIndex != null) {
+                            // Claude-style: rewind + resend
+                            _submitEdit(text);
+                          } else {
+                            chat.sendMessage(text);
+                          }
                           // Wake up the robots!
                           context.read<PipProvider>().setBusy(true);
                           // Also forward voice transcripts

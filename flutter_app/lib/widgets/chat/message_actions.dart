@@ -13,6 +13,8 @@ class MessageActionButtons extends StatefulWidget {
     required this.text,
     required this.isUser,
     this.onEdit,
+    this.onRetry,
+    this.showRetry = false,
   });
 
   /// The plain-text content of the message (used for clipboard / edit).
@@ -21,9 +23,14 @@ class MessageActionButtons extends StatefulWidget {
   /// Whether this message belongs to the user (determines which icons show).
   final bool isUser;
 
-  /// Called when the user taps the edit icon. Typically populates the input
-  /// field with [text].
+  /// Called when the user taps the edit icon (user messages only).
   final VoidCallback? onEdit;
+
+  /// Called when the user taps the retry icon (assistant messages only).
+  final VoidCallback? onRetry;
+
+  /// Whether to show the retry icon (only on last assistant message).
+  final bool showRetry;
 
   @override
   State<MessageActionButtons> createState() => _MessageActionButtonsState();
@@ -65,6 +72,14 @@ class _MessageActionButtonsState extends State<MessageActionButtons> {
             onTap: _copied ? null : _copyToClipboard,
             highlight: _copied,
           ),
+          if (!widget.isUser && widget.showRetry && widget.onRetry != null) ...[
+            const SizedBox(width: 2),
+            _ActionIcon(
+              icon: Icons.refresh,
+              tooltip: 'Erneut versuchen',
+              onTap: widget.onRetry!,
+            ),
+          ],
         ],
       ),
     );
