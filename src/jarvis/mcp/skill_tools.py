@@ -462,10 +462,10 @@ def register_skill_tools(
 
         # Find the skill file locally
         skill_file = None
-        for search_dir in [
-            config.jarvis_home / "skills",
+        _search_dirs = list(skills_dirs) + [
             Path(__file__).parent.parent.parent / "data" / "procedures",
-        ]:
+        ]
+        for search_dir in _search_dirs:
             candidate = search_dir / f"{name}.md"
             if candidate.exists():
                 skill_file = candidate
@@ -602,18 +602,22 @@ def register_skill_tools(
             # Remove old entry if exists
             reg_data["skills"] = [s for s in reg_data.get("skills", []) if s["name"] != name]
             # Add new entry
-            reg_data["skills"].append({
-                "name": name,
-                "version": "1.0.0",
-                "description": frontmatter.get("name", name),
-                "author_github": "Alex8791-cyber",
-                "category": frontmatter.get("category", "productivity"),
-                "tools_required": frontmatter.get("tools_required", []),
-                "content_hash": content_hash,
-                "recalled": False,
-            })
+            reg_data["skills"].append(
+                {
+                    "name": name,
+                    "version": "1.0.0",
+                    "description": frontmatter.get("name", name),
+                    "author_github": "Alex8791-cyber",
+                    "category": frontmatter.get("category", "productivity"),
+                    "tools_required": frontmatter.get("tools_required", []),
+                    "content_hash": content_hash,
+                    "recalled": False,
+                }
+            )
             reg_data["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-            r3 = _put("registry.json", json.dumps(reg_data, indent=2), f"registry: add {name}", reg_sha)
+            r3 = _put(
+                "registry.json", json.dumps(reg_data, indent=2), f"registry: add {name}", reg_sha
+            )
             if "error" in r3:
                 return f"Skill uploaded but registry update failed: {r3['error'][:200]}"
 
