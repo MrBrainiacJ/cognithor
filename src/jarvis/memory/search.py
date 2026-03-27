@@ -1,4 +1,4 @@
-"""3-Kanal Hybrid-Suche · BM25 + Vektor + Graph. [B§4.7]
+"""3-channel hybrid search · BM25 + vector + graph. [B§4.7]
 
 Merge:
 final_score = (

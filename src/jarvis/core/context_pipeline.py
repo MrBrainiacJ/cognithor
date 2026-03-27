@@ -1,13 +1,13 @@
-"""Adaptive Context Pipeline — Automatische Kontext-Anreicherung.
+"""Adaptive Context Pipeline — Automatic context enrichment.
 
-Sammelt vor jedem Planner-Aufruf relevanten Kontext aus:
-- Wave 1 (parallel): Memory (BM25-only), Vault (Volltextsuche), Episoden
+Collects relevant context before each planner call from:
+- Wave 1 (parallel): Memory (BM25-only), Vault (full-text search), Episodes
 - Checkpoint: merge and deduplicate
 - Wave 2 (parallel): Skill injection, User preference lookup
 
-Das Ergebnis wird in WorkingMemory.injected_memories und
-injected_procedures injiziert, sodass der Planner automatisch
-über relevantes Wissen verfügt.
+The result is injected into WorkingMemory.injected_memories and
+injected_procedures so the planner automatically has access
+to relevant knowledge.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ log = get_logger(__name__)
 
 @dataclass
 class ContextResult:
-    """Ergebnis der Kontext-Anreicherung."""
+    """Result of context enrichment."""
 
     memory_results: list[Any] = field(default_factory=list)  # MemorySearchResult
     vault_snippets: list[str] = field(default_factory=list)
@@ -43,16 +43,16 @@ class ContextResult:
 
 
 class ContextPipeline:
-    """Sammelt automatisch relevanten Kontext vor dem Planner-Aufruf.
+    """Automatically collect relevant context before the planner call.
 
     Two-wave parallel execution:
       Wave 1: memory search, vault search, episode retrieval (parallel)
       Checkpoint: merge and deduplicate results
       Wave 2: skill injection, user preference lookup (parallel)
 
-    Dependency Injection: Memory und Vault werden nach der Initialisierung
-    ueber set_memory_manager() / set_vault_tools() gesetzt (gleicher Pattern
-    wie Synthesis).
+    Dependency Injection: Memory and Vault are set after initialization
+    via set_memory_manager() / set_vault_tools() (same pattern
+    as Synthesis).
     """
 
     def __init__(self, config: ContextPipelineConfig) -> None:
@@ -65,26 +65,26 @@ class ContextPipeline:
     # ── Dependency Injection ──────────────────────────────────────
 
     def set_memory_manager(self, mm: Any) -> None:
-        """Setzt den MemoryManager fuer BM25-Suche und Episoden."""
+        """Set the MemoryManager for BM25 search and episodes."""
         self._memory_manager = mm
 
     def set_vault_tools(self, vt: Any) -> None:
-        """Setzt die VaultTools fuer Volltextsuche."""
+        """Set the VaultTools for full-text search."""
         self._vault_tools = vt
 
     def set_skill_registry(self, sr: Any) -> None:
-        """Setzt die SkillRegistry fuer Skill-Kontext-Injection."""
+        """Set the SkillRegistry for skill context injection."""
         self._skill_registry = sr
 
     def set_correction_memory(self, cm: Any) -> None:
-        """Setzt die CorrectionMemory fuer Korrektur-Erinnerungen."""
+        """Set the CorrectionMemory for correction reminders."""
         self._correction_memory = cm
 
     def set_user_pref_store(self, ups: Any) -> None:
-        """Setzt den UserPreferenceStore fuer Preference-Lookup."""
+        """Set the UserPreferenceStore for preference lookup."""
         self._user_pref_store = ups
 
-    # ── Hauptmethode ──────────────────────────────────────────────
+    # ── Main method ──────────────────────────────────────────────
 
     async def enrich(
         self,
@@ -93,7 +93,7 @@ class ContextPipeline:
         *,
         user_id: str = "",
     ) -> ContextResult:
-        """Sammelt relevanten Kontext und injiziert ihn in WorkingMemory.
+        """Collect relevant context and inject it into WorkingMemory.
 
         Uses two-wave parallel execution:
           Wave 1: memory, vault, episodes (parallel via asyncio.gather)
@@ -101,12 +101,12 @@ class ContextPipeline:
           Wave 2: skill injection, user preferences (parallel)
 
         Args:
-            user_message: Die aktuelle User-Nachricht.
-            wm: Die aktive WorkingMemory-Instanz.
+            user_message: The current user message.
+            wm: The active WorkingMemory instance.
             user_id: Optional user ID for preference lookup.
 
         Returns:
-            ContextResult mit den gesammelten Daten und Metriken.
+            ContextResult with collected data and metrics.
         """
         if not self._config.enabled:
             return ContextResult(skipped=True, skip_reason="disabled")
@@ -142,7 +142,7 @@ class ContextPipeline:
             return_exceptions=True,
         )
 
-        # Exceptions graceful behandeln
+        # Handle exceptions gracefully
         if isinstance(memory_results, BaseException):
             log.debug("context_memory_gather_failed", exc_info=memory_results)
             memory_results = []
@@ -195,10 +195,10 @@ class ContextPipeline:
         if memory_results:
             wm.injected_memories = list(memory_results)
 
-        # Vault + Episoden -> wm.injected_procedures (max 1 Slot)
+        # Vault + episodes -> wm.injected_procedures (max 1 slot)
         supplementary = self._format_supplementary_context(vault_snippets, episode_snippets)
         if supplementary and len(wm.injected_procedures) < 2:
-            # Budget kuerzen
+            # Truncate budget
             if len(supplementary) > self._config.max_context_chars:
                 supplementary = supplementary[: self._config.max_context_chars] + "\n[...]"
             wm.injected_procedures.insert(0, supplementary)
@@ -233,17 +233,17 @@ class ContextPipeline:
             wave2_ms=wave2_ms,
         )
 
-    # ── Hilfsmethoden ─────────────────────────────────────────────
+    # ── Helper methods ─────────────────────────────────────────────
 
     def _is_smalltalk(self, text: str) -> bool:
-        """Prüft ob Nachricht Smalltalk ist (keine Suche nötig)."""
+        """Check whether message is smalltalk (no search needed)."""
         normalized = text.strip().lower().rstrip("!?.,")
         if len(normalized) < self._config.min_query_length:
             return True
         return normalized in self._config.smalltalk_patterns
 
     def _search_memory(self, query: str) -> list[MemorySearchResult]:
-        """BM25-only Suche via MemoryManager.search_memory_sync() — sync, ~5-20ms."""
+        """BM25-only search via MemoryManager.search_memory_sync() -- sync, ~5-20ms."""
         if not self._memory_manager:
             return []
         try:
@@ -256,7 +256,7 @@ class ContextPipeline:
             return []
 
     async def _search_vault(self, query: str) -> list[str]:
-        """Vault-Volltextsuche — async, ~10-50ms."""
+        """Vault full-text search -- async, ~10-50ms."""
         if not self._vault_tools:
             return []
         try:
@@ -264,7 +264,7 @@ class ContextPipeline:
                 query=query,
                 limit=self._config.vault_top_k,
             )
-            # result ist ein String mit formatierten Treffern
+            # result is a string with formatted hits
             if result and "Keine Treffer" not in result:
                 return [result]
             return []
@@ -273,7 +273,7 @@ class ContextPipeline:
             return []
 
     def _get_episodes(self) -> list[str]:
-        """Letzte Episoden — sync, ~1-5ms."""
+        """Recent episodes -- sync, ~1-5ms."""
         if not self._memory_manager:
             return []
         try:
@@ -368,7 +368,7 @@ class ContextPipeline:
         vault_snippets: list[str],
         episode_snippets: list[str],
     ) -> str:
-        """Formatiert Vault+Episoden als einen kompakten Kontext-String."""
+        """Format vault+episodes as a compact context string."""
         parts: list[str] = []
         if vault_snippets:
             parts.append("**Vault-Notizen:**\n" + "\n".join(vault_snippets[:3]))

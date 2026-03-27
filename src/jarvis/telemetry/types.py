@@ -1,15 +1,15 @@
 """OpenTelemetry Types -- v19.
 
-OTLP-kompatible Datenmodelle für Distributed Tracing und Metrics.
-Folgt der OpenTelemetry Specification (Traces + Metrics).
+OTLP-compatible data models for distributed tracing and metrics.
+Follows the OpenTelemetry Specification (Traces + Metrics).
 
-Kern-Konzepte:
-  - TraceId / SpanId:  128/64-bit Hex-IDs
-  - SpanContext:       Propagation-Kontext (TraceId + SpanId + Flags)
-  - Span:              Einzelne Operation mit Timing, Status, Events
+Core concepts:
+  - TraceId / SpanId:  128/64-bit hex IDs
+  - SpanContext:       Propagation context (TraceId + SpanId + Flags)
+  - Span:              Single operation with timing, status, events
   - SpanKind:          CLIENT, SERVER, INTERNAL, PRODUCER, CONSUMER
-  - Trace:             Baum von Spans (vollständige Request-Kette)
-  - Metric:            Counter, Histogram, Gauge (OTLP-kompatibel)
+  - Trace:             Tree of spans (complete request chain)
+  - Metric:            Counter, Histogram, Gauge (OTLP-compatible)
 """
 
 from __future__ import annotations
@@ -25,12 +25,12 @@ from typing import Any
 
 
 def generate_trace_id() -> str:
-    """Generiert eine 32-Hex-Char Trace-ID (128 bit)."""
+    """Generates a 32-hex-char trace ID (128 bit)."""
     return uuid.uuid4().hex
 
 
 def generate_span_id() -> str:
-    """Generiert eine 16-Hex-Char Span-ID (64 bit)."""
+    """Generates a 16-hex-char span ID (64 bit)."""
     return os.urandom(8).hex()
 
 
@@ -38,13 +38,13 @@ def generate_span_id() -> str:
 
 
 class SpanKind(IntEnum):
-    """Art des Spans (OpenTelemetry Spec)."""
+    """Kind of span (OpenTelemetry Spec)."""
 
-    INTERNAL = 0  # Default: Interne Operation
-    SERVER = 1  # Eingehender Request
-    CLIENT = 2  # Ausgehender Request
-    PRODUCER = 3  # Nachricht senden (async)
-    CONSUMER = 4  # Nachricht empfangen (async)
+    INTERNAL = 0  # Default: internal operation
+    SERVER = 1  # Incoming request
+    CLIENT = 2  # Outgoing request
+    PRODUCER = 3  # Send message (async)
+    CONSUMER = 4  # Receive message (async)
 
 
 class StatusCode(IntEnum):
@@ -56,12 +56,12 @@ class StatusCode(IntEnum):
 
 
 class MetricKind(str, Enum):
-    """Art einer Metrik."""
+    """Kind of metric."""
 
-    COUNTER = "counter"  # Monoton steigend
-    UP_DOWN_COUNTER = "up_down"  # Kann steigen/fallen
-    HISTOGRAM = "histogram"  # Verteilung
-    GAUGE = "gauge"  # Aktueller Wert
+    COUNTER = "counter"  # Monotonically increasing
+    UP_DOWN_COUNTER = "up_down"  # Can increase/decrease
+    HISTOGRAM = "histogram"  # Distribution
+    GAUGE = "gauge"  # Current value
 
 
 # ── SpanContext ──────────────────────────────────────────────────
@@ -69,9 +69,9 @@ class MetricKind(str, Enum):
 
 @dataclass
 class SpanContext:
-    """Propagation-Kontext für Distributed Tracing.
+    """Propagation context for distributed tracing.
 
-    Wird über HTTP-Header (traceparent) oder gRPC-Metadata propagiert.
+    Propagated via HTTP header (traceparent) or gRPC metadata.
     Format: 00-{trace_id}-{span_id}-{trace_flags}
     """
 
@@ -100,10 +100,10 @@ class SpanContext:
 
     @classmethod
     def from_traceparent(cls, header: str) -> SpanContext:
-        """Parst W3C traceparent Header."""
+        """Parses W3C traceparent header."""
         parts = header.split("-")
         if len(parts) != 4:
-            return cls()  # Invalid → neuer Kontext
+            return cls()  # Invalid -> new context
         return cls(
             trace_id=parts[1],
             span_id=parts[2],
@@ -112,7 +112,7 @@ class SpanContext:
         )
 
     def child_context(self) -> SpanContext:
-        """Erstellt Kind-Kontext (gleiche Trace-ID, neue Span-ID)."""
+        """Creates child context (same trace ID, new span ID)."""
         return SpanContext(
             trace_id=self.trace_id,
             span_id=generate_span_id(),
@@ -132,7 +132,7 @@ class SpanContext:
 
 @dataclass
 class SpanEvent:
-    """Ein zeitgestempeltes Event innerhalb eines Spans."""
+    """A timestamped event within a span."""
 
     name: str
     timestamp_ns: int = 0
@@ -157,7 +157,7 @@ class SpanEvent:
 
 @dataclass
 class SpanLink:
-    """Verknüpfung zu einem anderen Span (z.B. für Batch-Jobs)."""
+    """Link to another span (e.g. for batch jobs)."""
 
     context: SpanContext
     attributes: dict[str, Any] = field(default_factory=dict)
@@ -175,9 +175,9 @@ class SpanLink:
 
 @dataclass
 class Span:
-    """Eine einzelne Operation im Distributed Trace.
+    """A single operation in the distributed trace.
 
-    Lebenszyklus: start() → add_event() → set_status() → end()
+    Lifecycle: start() -> add_event() -> set_status() -> end()
     """
 
     name: str
@@ -274,13 +274,13 @@ class Span:
         return d
 
     def to_otlp(self) -> dict[str, Any]:
-        """OTLP-kompatibles Format (für Export)."""
+        """OTLP-compatible format (for export)."""
         return {
             "traceId": self.trace_id,
             "spanId": self.span_id,
             "parentSpanId": self.parent_span_id,
             "name": self.name,
-            "kind": self.kind.value + 1,  # OTLP ist 1-basiert
+            "kind": self.kind.value + 1,  # OTLP is 1-based
             "startTimeUnixNano": str(self.start_time_ns),
             "endTimeUnixNano": str(self.end_time_ns),
             "attributes": [{"key": k, "value": _otlp_value(v)} for k, v in self.attributes.items()],
@@ -306,7 +306,7 @@ class Span:
 
 @dataclass
 class Trace:
-    """Vollständiger Trace -- Baum von Spans."""
+    """Complete trace -- tree of spans."""
 
     trace_id: str = ""
     spans: list[Span] = field(default_factory=list)
@@ -359,7 +359,7 @@ class Trace:
 
 @dataclass
 class MetricDataPoint:
-    """Ein einzelner Metrik-Datenpunkt."""
+    """A single metric data point."""
 
     timestamp_ns: int = 0
     value: float = 0.0
@@ -379,7 +379,7 @@ class MetricDataPoint:
 
 @dataclass
 class HistogramDataPoint:
-    """Datenpunkt für Histogram-Metriken."""
+    """Data point for histogram metrics."""
 
     timestamp_ns: int = 0
     count: int = 0
@@ -441,7 +441,7 @@ class HistogramDataPoint:
 
 @dataclass
 class MetricDefinition:
-    """Definition einer Metrik."""
+    """Definition of a metric."""
 
     name: str
     kind: MetricKind
@@ -469,7 +469,7 @@ class MetricDefinition:
 
 
 def _otlp_value(v: Any) -> dict[str, Any]:
-    """Konvertiert Python-Wert zu OTLP AnyValue."""
+    """Converts Python value to OTLP AnyValue."""
     if isinstance(v, bool):
         return {"boolValue": v}
     if isinstance(v, int):

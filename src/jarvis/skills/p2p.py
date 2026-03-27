@@ -1,4 +1,4 @@
-"""P2P Skill Distribution: Verteiltes Netzwerk für Jarvis-Skills.
+"""P2P Skill Distribution: Distributed network for Jarvis skills.
 
 Ermöglicht die dezentrale Verteilung von Skill-Paketen ohne
 zentralen Server. Jede Jarvis-Instanz kann Skills publizieren,
@@ -75,7 +75,7 @@ logger = logging.getLogger("jarvis.skills.p2p")
 
 @dataclass
 class PeerNode:
-    """Ein Knoten im P2P-Netzwerk.
+    """A node in the P2P network.
 
     Jede Jarvis-Instanz ist ein PeerNode mit eindeutiger ID
     und optionalem Schlüsselpaar für Signierung.
@@ -95,7 +95,7 @@ class PeerNode:
 
     @property
     def is_stale(self) -> bool:
-        """Peer gilt als stale wenn >1h nicht gesehen."""
+        """Peer is considered stale when not seen for >1h."""
         try:
             last = datetime.fromisoformat(self.last_seen)
             age = (datetime.now(UTC) - last).total_seconds()
@@ -104,7 +104,7 @@ class PeerNode:
             return True
 
     def touch(self) -> None:
-        """Aktualisiert last_seen."""
+        """Update last_seen."""
         self.last_seen = datetime.now(UTC).isoformat()
         self.is_online = True
 
@@ -163,7 +163,7 @@ class PeerRegistry:
         return list(self._peers.values())
 
     def heartbeat(self, peer_id: str) -> bool:
-        """Aktualisiert den Zeitstempel eines Peers.
+        """Update the timestamp of a peer.
 
         Returns:
             True wenn Peer bekannt.
@@ -175,7 +175,7 @@ class PeerRegistry:
         return False
 
     def cleanup_stale(self, max_age_seconds: int = 7200) -> int:
-        """Entfernt Peers die zu lange nicht gesehen wurden.
+        """Remove peers that have not been seen for too long.
 
         Args:
             max_age_seconds: Maximales Alter (Default: 2h).
@@ -200,7 +200,7 @@ class PeerRegistry:
         return len(to_remove)
 
     def _evict_stale(self) -> None:
-        """Entfernt die ältesten stale Peers bis unter max_peers."""
+        """Remove the oldest stale peers until below max_peers."""
         stale = sorted(
             [(pid, p) for pid, p in self._peers.items() if p.is_stale],
             key=lambda x: x[1].last_seen,
@@ -359,7 +359,7 @@ class SkillIndex:
         return versions[0] if versions else None
 
     def remove(self, package_id: str) -> bool:
-        """Entfernt ein Paket aus dem Index."""
+        """Remove a package from the index."""
         entry = self._entries.pop(package_id, None)
         if not entry:
             return False
@@ -418,7 +418,7 @@ _REPUTATION_SCORES: dict[ReputationEvent, float] = {
 class ReputationProfile:
     """Reputationsprofil eines Peers oder Pakets."""
 
-    entity_id: str  # Peer-ID oder Package-ID
+    entity_id: str  # Peer ID oder Package-ID
     score: float = 0.0
     events: list[tuple[str, float]] = field(default_factory=list)  # (event, delta)
     quarantined: bool = False  # Isoliert nach Malware-Report
@@ -480,12 +480,12 @@ class ReputationTracker:
             # Package-ID (name@version:hash)
             if profile.score <= self._package_threshold:
                 profile.quarantined = True
-                logger.warning("Paket quarantiniert: %s (score=%.1f)", entity_id, profile.score)
+                logger.warning("Package quarantined: %s (score=%.1f)", entity_id, profile.score)
         else:
-            # Peer-ID
+            # Peer ID
             if profile.score <= self._peer_threshold:
                 profile.quarantined = True
-                logger.warning("Peer quarantiniert: %s (score=%.1f)", entity_id, profile.score)
+                logger.warning("Peer quarantined: %s (score=%.1f)", entity_id, profile.score)
 
         return profile.score
 
@@ -579,9 +579,9 @@ class SubscriptionFeed:
         keyword: str = "",
         author_id: str = "",
     ) -> Subscription:
-        """Erstellt ein neues Abonnement.
+        """Create a new subscription.
 
-        Mindestens eines von category, keyword oder author_id muss gesetzt sein.
+        At least one of category, keyword, or author_id must be set.
         """
         sub = Subscription(
             subscriber_id=subscriber_id,
@@ -593,13 +593,13 @@ class SubscriptionFeed:
         return sub
 
     def unsubscribe_all(self, subscriber_id: str) -> int:
-        """Entfernt alle Abonnements eines Subscribers."""
+        """Remove all subscriptions of a subscriber."""
         before = len(self._subscriptions)
         self._subscriptions = [s for s in self._subscriptions if s.subscriber_id != subscriber_id]
         return before - len(self._subscriptions)
 
     def check_new_entry(self, entry: IndexEntry) -> list[str]:
-        """Prüft ob ein neuer Index-Eintrag Abonnements auslöst.
+        """Check if a new index entry triggers subscriptions.
 
         Args:
             entry: Neuer Skill-Index-Eintrag.
@@ -629,7 +629,7 @@ class SubscriptionFeed:
         return notified
 
     def get_notifications(self, limit: int = 50) -> list[tuple[str, IndexEntry]]:
-        """Holt die neuesten Benachrichtigungen."""
+        """Get the latest notifications."""
         return self._notifications[-limit:]
 
     def clear_notifications(self) -> None:
@@ -746,7 +746,7 @@ class SkillExchange:
     # ── Setup ────────────────────────────────────────────────────
 
     def set_identity(self, peer: PeerNode) -> None:
-        """Setzt die lokale Identität."""
+        """Set the local identity."""
         self._identity = peer
         self._peers.register(peer)
 
@@ -759,7 +759,7 @@ class SkillExchange:
         test_code: str = "",
         documentation: str = "",
     ) -> SkillPackage | None:
-        """Publiziert einen neuen Skill im Netzwerk.
+        """Publish a new skill to the network.
 
         1. Paket bauen + signieren
         2. Im Index registrieren
@@ -776,7 +776,7 @@ class SkillExchange:
                 documentation,
             )
         except ValueError as exc:
-            logger.error("Publish fehlgeschlagen: %s", exc)
+            logger.error("Publish failed: %s", exc)
             return None
 
         # Im Index registrieren
@@ -799,7 +799,7 @@ class SkillExchange:
         notified = self._subscriptions.check_new_entry(entry)
         if notified:
             logger.info(
-                "Skill publiziert + %d Subscriber benachrichtigt: %s",
+                "Skill published + %d subscribers notified: %s",
                 len(notified),
                 package.package_id,
             )
@@ -817,7 +817,7 @@ class SkillExchange:
         trust_filter: bool = False,
         min_trust_score: float = 0.0,
     ) -> list[IndexEntry]:
-        """Sucht im Skill-Index.
+        """Search the skill index.
 
         Filtert quarantinierte Pakete und Herausgeber automatisch.
         Optional: Trust-Filter über Trusted Circles.
@@ -859,7 +859,7 @@ class SkillExchange:
         package_id: str,
         package_data: bytes | None = None,
     ) -> InstallResult:
-        """Installiert ein Skill-Paket.
+        """Install a skill package.
 
         1. Paket laden (lokal oder aus Bytes)
         2. Reputation prüfen
@@ -882,7 +882,7 @@ class SkillExchange:
                 return InstallResult(
                     success=False,
                     package_id=package_id,
-                    message=f"Paket-Deserialisierung fehlgeschlagen: {exc}",
+                    message=f"Package deserialization failed: {exc}",
                 )
         else:
             package = self._packages.get(package_id)
@@ -891,7 +891,7 @@ class SkillExchange:
             return InstallResult(
                 success=False,
                 package_id=package_id,
-                message="Paket nicht gefunden",
+                message="Package not found",
             )
 
         # Reputation prüfen
@@ -899,7 +899,7 @@ class SkillExchange:
             return InstallResult(
                 success=False,
                 package_id=package_id,
-                message="Paket ist quarantiniert (Malware-Verdacht)",
+                message="Package is quarantined (malware suspected)",
             )
 
         # Installieren
@@ -926,7 +926,7 @@ class SkillExchange:
         *,
         positive: bool = True,
     ) -> float:
-        """Meldet User-Feedback zu einem Paket.
+        """Report user feedback for a package.
 
         Returns:
             Neuer Reputation-Score.
@@ -935,7 +935,7 @@ class SkillExchange:
         return self._reputation.record(package_id, event)
 
     def report_malware(self, package_id: str) -> None:
-        """Meldet ein Paket als Malware.
+        """Report a package as malware.
 
         Paket wird sofort quarantiniert.
         """
@@ -947,29 +947,29 @@ class SkillExchange:
         if entry:
             self._reputation.record(entry.publisher_id, ReputationEvent.MALWARE_REPORT)
 
-        logger.warning("Malware gemeldet: %s", package_id)
+        logger.warning("Malware reported: %s", package_id)
 
     # ── Peer Exchange ────────────────────────────────────────────
 
     def sync_with_peer(self, peer_entries: list[IndexEntry]) -> int:
-        """Synchronisiert den Index mit Einträgen eines anderen Peers.
+        """Synchronize the index with entries from another peer.
 
         Returns:
             Anzahl neuer Einträge.
         """
         new = self._index.merge_from(peer_entries)
         if new:
-            logger.info("Index-Sync: %d neue Einträge", new)
+            logger.info("Index sync: %d new entries", new)
         return new
 
     def get_index_for_sync(self) -> list[IndexEntry]:
-        """Gibt den lokalen Index für Peer-Sync zurück."""
+        """Return the local index for peer sync."""
         return list(self._index._entries.values())
 
     # ── Stats ────────────────────────────────────────────────────
 
     def stats(self) -> dict[str, Any]:
-        """Netzwerk-Statistiken."""
+        """Network statistics."""
         circle_stats = self._circles.stats()
         market_stats = self._marketplace.stats()
         return {

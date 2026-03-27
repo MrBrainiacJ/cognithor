@@ -1,16 +1,16 @@
-"""State Manager -- Checkpoint-Persistierung für Graph Orchestrator v18.
+"""State Manager -- Checkpoint persistence for Graph Orchestrator v18.
 
-Verwaltet:
-  - Checkpoint-Erstellung und -Serialisierung
-  - State-Restore für Pause/Resume
-  - Checkpoint-History pro Execution
-  - Disk-Persistierung in ~/.jarvis/graph/checkpoints/
-  - Automatische Bereinigung alter Checkpoints
+Manages:
+  - Checkpoint creation and serialization
+  - State restore for pause/resume
+  - Checkpoint history per execution
+  - Disk persistence in ~/.jarvis/graph/checkpoints/
+  - Automatic cleanup of old checkpoints
 
-Ermöglicht:
-  - HITL-Pause: Graph pausieren, Zustand speichern, später fortsetzen
-  - Fehler-Recovery: Nach Absturz beim letzten Checkpoint weitermachen
-  - Audit-Trail: Vollständige State-History nachvollziehbar
+Enables:
+  - HITL pause: pause graph, save state, resume later
+  - Error recovery: continue from last checkpoint after crash
+  - Audit trail: complete state history traceable
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ log = get_logger(__name__)
 
 
 class StateManager:
-    """Verwaltet Checkpoints und State-Persistierung."""
+    """Manages checkpoints and state persistence."""
 
     def __init__(self, storage_dir: str | Path = "") -> None:
         if storage_dir:
@@ -57,7 +57,7 @@ class StateManager:
         history: list[NodeResult] | None = None,
         status: ExecutionStatus = ExecutionStatus.PAUSED,
     ) -> Checkpoint:
-        """Erstellt einen neuen Checkpoint."""
+        """Creates a new checkpoint."""
         cp = Checkpoint(
             execution_id=execution_id,
             graph_name=graph_name,
@@ -68,7 +68,7 @@ class StateManager:
         )
         self._checkpoints[cp.checkpoint_id] = cp
 
-        # Zur Execution hinzufügen
+        # Add to execution
         if execution_id in self._executions:
             self._executions[execution_id].checkpoints.append(cp.checkpoint_id)
 
@@ -81,16 +81,16 @@ class StateManager:
         return cp
 
     def get_checkpoint(self, checkpoint_id: str) -> Checkpoint | None:
-        """Lädt Checkpoint aus Cache oder Disk."""
+        """Loads checkpoint from cache or disk."""
         if checkpoint_id in self._checkpoints:
             return self._checkpoints[checkpoint_id]
         return self._load_from_disk(checkpoint_id)
 
     def get_latest_checkpoint(self, execution_id: str) -> Checkpoint | None:
-        """Gibt den neuesten Checkpoint einer Execution zurück."""
+        """Returns the latest checkpoint of an execution."""
         candidates = [cp for cp in self._checkpoints.values() if cp.execution_id == execution_id]
         if not candidates:
-            # Auch von Disk laden
+            # Also load from disk
             self._load_execution_checkpoints(execution_id)
             candidates = [
                 cp for cp in self._checkpoints.values() if cp.execution_id == execution_id
@@ -108,7 +108,7 @@ class StateManager:
         return False
 
     def list_checkpoints(self, execution_id: str = "") -> list[Checkpoint]:
-        """Listet Checkpoints, optional gefiltert nach Execution."""
+        """Lists checkpoints, optionally filtered by execution."""
         if execution_id:
             return [cp for cp in self._checkpoints.values() if cp.execution_id == execution_id]
         return list(self._checkpoints.values())
@@ -116,10 +116,10 @@ class StateManager:
     # ── State Restore ────────────────────────────────────────────
 
     def restore_state(self, checkpoint_id: str) -> tuple[GraphState | None, str]:
-        """Stellt State aus Checkpoint wieder her.
+        """Restores state from checkpoint.
 
         Returns:
-            (GraphState, current_node) oder (None, "")
+            (GraphState, current_node) or (None, "")
         """
         cp = self.get_checkpoint(checkpoint_id)
         if cp is None:
@@ -129,7 +129,7 @@ class StateManager:
         return state, cp.current_node
 
     def restore_from_latest(self, execution_id: str) -> tuple[GraphState | None, str]:
-        """Stellt State vom neuesten Checkpoint wieder her."""
+        """Restores state from the latest checkpoint."""
         cp = self.get_latest_checkpoint(execution_id)
         if cp is None:
             return None, ""
@@ -138,7 +138,7 @@ class StateManager:
     # ── Execution Records ────────────────────────────────────────
 
     def create_execution(self, graph_name: str, initial_state: GraphState) -> ExecutionRecord:
-        """Erstellt einen neuen Execution-Record."""
+        """Creates a new execution record."""
         record = ExecutionRecord(
             graph_name=graph_name,
             status=ExecutionStatus.RUNNING,
@@ -166,7 +166,7 @@ class StateManager:
     # ── Persistence ──────────────────────────────────────────────
 
     def save_checkpoint_to_disk(self, checkpoint_id: str) -> bool:
-        """Speichert Checkpoint auf Disk."""
+        """Saves checkpoint to disk."""
         cp = self._checkpoints.get(checkpoint_id)
         if cp is None:
             return False
@@ -184,7 +184,7 @@ class StateManager:
             return False
 
     def save_all_checkpoints(self) -> int:
-        """Speichert alle Checkpoints auf Disk."""
+        """Saves all checkpoints to disk."""
         saved = 0
         for cp_id in self._checkpoints:
             if self.save_checkpoint_to_disk(cp_id):
@@ -209,7 +209,7 @@ class StateManager:
             return None
 
     def _load_execution_checkpoints(self, execution_id: str) -> None:
-        """Lädt alle Checkpoints einer Execution von Disk."""
+        """Loads all checkpoints of an execution from disk."""
         if not self._storage_dir.exists():
             return
         for path in self._storage_dir.glob("*.json"):
@@ -224,7 +224,7 @@ class StateManager:
     # ── Cleanup ──────────────────────────────────────────────────
 
     def cleanup(self, max_age_days: int = 7, max_checkpoints: int = 1000) -> int:
-        """Bereinigt alte Checkpoints."""
+        """Cleans up old checkpoints."""
         cutoff = time.time() - (max_age_days * 86400)
         removed = 0
 
@@ -240,7 +240,7 @@ class StateManager:
             except (ValueError, OverflowError):
                 pass
 
-        # Max-Limit
+        # Max limit
         if len(self._checkpoints) > max_checkpoints:
             sorted_cps = sorted(self._checkpoints.values(), key=lambda c: c.created_at)
             for cp in sorted_cps[: len(self._checkpoints) - max_checkpoints]:

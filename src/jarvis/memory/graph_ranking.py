@@ -1,4 +1,4 @@
-"""Graph Ranking: PageRank, Staleness-Detection und Auto-Pruning.
+"""Graph Ranking: PageRank, staleness detection, and auto-pruning.
 
 Erweitert den bestehenden Wissensgraphen um:
 
@@ -117,7 +117,7 @@ class GraphRanking:
     # ========================================================================
 
     def compute_pagerank(self) -> dict[str, EntityRank]:
-        """Berechnet PageRank für alle Entitäten im Graphen.
+        """Compute PageRank for all entities in the graph.
 
         Algorithmus:
           1. Adjacency-Liste aus Relationen bauen
@@ -226,7 +226,7 @@ class GraphRanking:
         return ranks
 
     def get_rank(self, entity_id: str) -> EntityRank | None:
-        """Gibt den Rank einer einzelnen Entität zurück."""
+        """Return the rank of a single entity."""
         return self._ranks.get(entity_id)
 
     def top_entities(self, n: int = 10) -> list[EntityRank]:
@@ -263,7 +263,7 @@ class GraphRanking:
         *,
         reference_date: date | None = None,
     ) -> float:
-        """Berechnet die Staleness einer Entität.
+        """Calculate the staleness of an entity.
 
         Exponentieller Decay basierend auf dem letzten Update.
 
@@ -329,7 +329,7 @@ class GraphRanking:
         return boosted
 
     def _compute_chunk_boost(self, chunk: Any) -> float:
-        """Berechnet den PageRank-Boost für einen Chunk.
+        """Calculate the PageRank boost for a chunk.
 
         Basiert auf den Entitäten die im Chunk referenziert werden.
         """
@@ -364,7 +364,7 @@ class GraphRanking:
         min_degree: int = 0,
         dry_run: bool = False,
     ) -> PruneResult:
-        """Entfernt veraltete, niedrig-vertrauenswürdige Entitäten.
+        """Remove stale, low-trust entities.
 
         Kriterien (alle müssen zutreffen):
           - Staleness > threshold

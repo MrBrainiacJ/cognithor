@@ -1,20 +1,20 @@
 """Jarvis · Compliance & Audit-Report Framework.
 
-EU-AI-Act-konforme Audit-Berichte mit:
+EU AI Act compliant audit reports with:
 
-  - ComplianceFramework:  Regulatorische Prüfungen (DSGVO, EU-AI-Act)
-  - DecisionLog:          Nachvollziehbare Entscheidungsprotokolle
-  - ComplianceReport:     Strukturierte Berichte mit Risiko-Scores
-  - ReportExporter:       Export als JSON, CSV, Markdown
-  - RemediationTracker:   Tracking offener Maßnahmen mit Fristen
+  - ComplianceFramework:  Regulatory checks (GDPR, EU AI Act)
+  - DecisionLog:          Traceable decision logs
+  - ComplianceReport:     Structured reports with risk scores
+  - ReportExporter:       Export as JSON, CSV, Markdown
+  - RemediationTracker:   Tracking open measures with deadlines
 
-Architektur-Bibel: §14.6 (Compliance), §15 (Regulatorik)
+Architecture Bible: §14.6 (Compliance), §15 (Regulation)
 
-EU-AI-Act Anforderungen:
-  - Art. 9: Risikomanagement-System
-  - Art. 12: Aufzeichnungspflichten
-  - Art. 13: Transparenzanforderungen
-  - Art. 14: Menschliche Aufsicht
+EU AI Act requirements:
+  - Art. 9: Risk management system
+  - Art. 12: Record-keeping obligations
+  - Art. 13: Transparency requirements
+  - Art. 14: Human oversight
 """
 
 from __future__ import annotations
@@ -31,16 +31,16 @@ from typing import Any
 
 
 class RiskLevel(Enum):
-    """EU-AI-Act Risikoklassifikation."""
+    """EU AI Act risk classification."""
 
-    MINIMAL = "minimal"  # Art. 6: Minimales Risiko
-    LIMITED = "limited"  # Art. 6: Begrenztes Risiko
-    HIGH = "high"  # Art. 6: Hochrisiko
-    UNACCEPTABLE = "unacceptable"  # Art. 5: Verbotene Praktiken
+    MINIMAL = "minimal"  # Art. 6: Minimal risk
+    LIMITED = "limited"  # Art. 6: Limited risk
+    HIGH = "high"  # Art. 6: High risk
+    UNACCEPTABLE = "unacceptable"  # Art. 5: Prohibited practices
 
 
 class ComplianceStatus(Enum):
-    """Status einer Compliance-Prüfung."""
+    """Status of a compliance check."""
 
     COMPLIANT = "compliant"
     PARTIAL = "partial"
@@ -49,7 +49,7 @@ class ComplianceStatus(Enum):
 
 
 class RemediationStatus(Enum):
-    """Status einer Remediation-Maßnahme."""
+    """Status of a remediation measure."""
 
     OPEN = "open"
     IN_PROGRESS = "in_progress"
@@ -59,13 +59,13 @@ class RemediationStatus(Enum):
 
 
 # ============================================================================
-# Decision-Log: Entscheidungsprotokolle
+# Decision Log: Decision records
 # ============================================================================
 
 
 @dataclass
 class DecisionRecord:
-    """Protokollierte Agenten-Entscheidung."""
+    """Recorded agent decision."""
 
     decision_id: str
     agent_id: str
@@ -96,11 +96,11 @@ class DecisionRecord:
 
 
 class DecisionLog:
-    """Nachvollziehbare Entscheidungsprotokolle für alle Agenten.
+    """Traceable decision logs for all agents.
 
-    Erfüllt EU-AI-Act Art. 12 (Aufzeichnungspflichten):
-    Jede Agenten-Entscheidung wird mit Kontext, Begründung
-    und Quellen protokolliert.
+    Fulfils EU AI Act Art. 12 (record-keeping obligations):
+    Every agent decision is logged with context, reasoning,
+    and sources.
     """
 
     def __init__(self, max_entries: int = 10_000) -> None:
@@ -112,7 +112,7 @@ class DecisionLog:
         return len(self._entries)
 
     def log(self, record: DecisionRecord) -> None:
-        """Protokolliert eine Entscheidung."""
+        """Records a decision."""
         self._entries.append(record)
         if len(self._entries) > self._max:
             self._entries = self._entries[-self._max :]
@@ -126,7 +126,7 @@ class DecisionLog:
         has_risk_flags: bool = False,
         limit: int = 100,
     ) -> list[DecisionRecord]:
-        """Durchsucht das Decision-Log."""
+        """Searches the decision log."""
         results = self._entries
 
         if agent_id:
@@ -141,11 +141,11 @@ class DecisionLog:
         return results[-limit:]
 
     def flagged_decisions(self) -> list[DecisionRecord]:
-        """Gibt alle Entscheidungen mit Risiko-Flags zurück."""
+        """Returns all decisions with risk flags."""
         return [r for r in self._entries if r.risk_flags]
 
     def approval_rate(self) -> float:
-        """Anteil der menschlich genehmigten Entscheidungen."""
+        """Proportion of human-approved decisions."""
         if not self._entries:
             return 0.0
         approved = sum(1 for r in self._entries if r.human_approved)
@@ -166,16 +166,16 @@ class DecisionLog:
 
 
 # ============================================================================
-# Compliance-Check: Regulatorische Prüfungen
+# Compliance Check: Regulatory checks
 # ============================================================================
 
 
 @dataclass
 class ComplianceCheck:
-    """Eine einzelne Compliance-Prüfung."""
+    """A single compliance check."""
 
     check_id: str
-    regulation: str  # z.B. "EU-AI-Act Art. 12"
+    regulation: str  # e.g. "EU-AI-Act Art. 12"
     requirement: str
     description: str
     status: ComplianceStatus = ComplianceStatus.NOT_ASSESSED
@@ -197,7 +197,7 @@ class ComplianceCheck:
         }
 
 
-# Standard EU-AI-Act Compliance-Checks
+# Standard EU AI Act compliance checks
 _EU_AI_ACT_CHECKS: list[ComplianceCheck] = [
     ComplianceCheck(
         check_id="EUAIA-9.1",
@@ -273,10 +273,10 @@ _EU_AI_ACT_CHECKS: list[ComplianceCheck] = [
 
 
 class ComplianceFramework:
-    """Regulatorische Compliance-Prüfungen.
+    """Regulatory compliance checks.
 
-    Prüft das System gegen regulatorische Anforderungen
-    (EU-AI-Act, DSGVO) und erstellt Compliance-Berichte.
+    Checks the system against regulatory requirements
+    (EU AI Act, GDPR) and creates compliance reports.
     """
 
     def __init__(
@@ -298,7 +298,7 @@ class ComplianceFramework:
         evidence: str = "",
         remediation: str = "",
     ) -> ComplianceCheck | None:
-        """Bewertet eine Compliance-Prüfung."""
+        """Evaluates a compliance check."""
         check = self._assessments.get(check_id)
         if not check:
             return None
@@ -320,7 +320,7 @@ class ComplianceFramework:
         has_approval_workflow: bool = False,
         has_redteam: bool = False,
     ) -> None:
-        """Automatische Bewertung basierend auf System-Capabilities."""
+        """Automatic assessment based on system capabilities."""
         assessments = {
             "EUAIA-9.1": (
                 ComplianceStatus.COMPLIANT if has_redteam else ComplianceStatus.PARTIAL,
@@ -370,7 +370,7 @@ class ComplianceFramework:
             self.assess(check_id, status, evidence)
 
     def compliance_score(self) -> float:
-        """Berechnet den Compliance-Score (0-100)."""
+        """Calculates the compliance score (0-100)."""
         if not self._checks:
             return 0.0
 
@@ -388,7 +388,7 @@ class ComplianceFramework:
         return [c for c in self._checks if c.status == ComplianceStatus.NON_COMPLIANT]
 
     def generate_report(self) -> ComplianceReport:
-        """Erstellt einen vollständigen Compliance-Bericht."""
+        """Creates a complete compliance report."""
         return ComplianceReport(
             report_id=hashlib.sha256(str(time.time()).encode()).hexdigest()[:16],
             framework_name="EU-AI-Act + DSGVO",
@@ -423,7 +423,7 @@ class ComplianceFramework:
 
 @dataclass
 class ComplianceReport:
-    """Strukturierter Compliance-Bericht."""
+    """Structured compliance report."""
 
     report_id: str
     framework_name: str
@@ -457,22 +457,22 @@ class ComplianceReport:
 
 
 class ReportExporter:
-    """Export-Funktionen für Compliance-Berichte.
+    """Export functions for compliance reports.
 
-    Exportiert als JSON, CSV oder Markdown für Prüfer
-    und regulatorische Dokumentation.
+    Exports as JSON, CSV, or Markdown for auditors
+    and regulatory documentation.
     """
 
     @staticmethod
     def to_json(report: ComplianceReport) -> str:
-        """Exportiert als JSON-String."""
+        """Exports as JSON string."""
         import json
 
         return json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
 
     @staticmethod
     def to_csv(report: ComplianceReport) -> str:
-        """Exportiert als CSV-String."""
+        """Exports as CSV string."""
         lines = ["Check-ID;Regulierung;Anforderung;Status;Risiko;Evidenz;Bewertungsdatum"]
         for c in report.checks:
             lines.append(
@@ -484,7 +484,7 @@ class ReportExporter:
 
     @staticmethod
     def to_markdown(report: ComplianceReport) -> str:
-        """Exportiert als Markdown-Bericht."""
+        """Exports as Markdown report."""
         status_emoji = {
             "compliant": "✅",
             "partial": "⚠️",
@@ -534,7 +534,7 @@ class ReportExporter:
 
 @dataclass
 class RemediationItem:
-    """Eine offene Korrekturmaßnahme."""
+    """An open remediation item."""
 
     item_id: str
     check_id: str
@@ -561,10 +561,10 @@ class RemediationItem:
 
 
 class RemediationTracker:
-    """Tracking offener Korrekturmaßnahmen.
+    """Tracking open remediation items.
 
-    Verfolgt Remediation-Items, prüft auf Überfällige
-    und berechnet MTTR (Mean Time to Remediate).
+    Tracks remediation items, checks for overdue items,
+    and calculates MTTR (Mean Time to Remediate).
     """
 
     def __init__(self) -> None:
@@ -622,7 +622,7 @@ class RemediationTracker:
 
 
 def _clone_check(c: ComplianceCheck) -> ComplianceCheck:
-    """Erstellt eine Kopie einer ComplianceCheck."""
+    """Creates a copy of a ComplianceCheck."""
     return ComplianceCheck(
         check_id=c.check_id,
         regulation=c.regulation,

@@ -1,15 +1,15 @@
-"""Jarvis · Strikte Sandbox-Isolierung & Multi-Tenant.
+"""Jarvis · Strict sandbox isolation & multi-tenant.
 
-Behandelt jeden Agenten wie untrusted Code:
+Treats every agent as untrusted code:
 
-  - AgentSandbox:         Isolierte Ausführungsumgebung pro Agent
-  - SecretVault:          Per-Agent Secret-Store (kein zentraler Zugriff)
-  - NamespaceIsolation:   Getrennte Namensräume für Memory, Files, Config
-  - TenantManager:        Multi-Tenant: getrennte Daten pro Organisation
-  - DelegatedAdmin:       Delegierte Admin-Rollen pro Tenant
-  - IsolationEnforcer:    Hauptklasse, erzwingt Isolation
+  - AgentSandbox:         Isolated execution environment per agent
+  - SecretVault:          Per-agent secret store (no central access)
+  - NamespaceIsolation:   Separate namespaces for memory, files, config
+  - TenantManager:        Multi-tenant: separate data per organization
+  - DelegatedAdmin:       Delegated admin roles per tenant
+  - IsolationEnforcer:    Main class, enforces isolation
 
-Architektur-Bibel: §9.3 (Sandbox), §16.1 (Multi-Tenant)
+Architecture Bible: §9.3 (Sandbox), §16.1 (Multi-Tenant)
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ class ResourceType(Enum):
 
 @dataclass
 class ResourceLimit:
-    """Ressourcen-Limit für eine Sandbox."""
+    """Resource limit for a sandbox."""
 
     resource: ResourceType
     max_value: float
@@ -75,7 +75,7 @@ class ResourceLimit:
 
 @dataclass
 class AgentSandbox:
-    """Isolierte Ausführungsumgebung für einen Agenten."""
+    """Isolated execution environment for an agent."""
 
     sandbox_id: str
     agent_id: str
@@ -123,7 +123,7 @@ class AgentSandbox:
 
 
 class SandboxManager:
-    """Verwaltet isolierte Sandbox-Umgebungen."""
+    """Manages isolated sandbox environments."""
 
     DEFAULT_LIMITS = {
         ResourceType.CPU: ResourceLimit(ResourceType.CPU, 100.0, unit="percent"),
@@ -212,10 +212,10 @@ class SandboxManager:
 
 @dataclass
 class AgentSecret:
-    """Ein Secret, das zu genau einem Agenten gehört."""
+    """A secret that belongs to exactly one agent."""
 
     key: str
-    encrypted_value: str  # Fernet-verschluesselter Ciphertext
+    encrypted_value: str  # Fernet-encrypted ciphertext
     agent_id: str
     tenant_id: str = "default"
     created_at: str = ""
@@ -232,7 +232,7 @@ class AgentSecret:
 
 
 def _derive_fernet(agent_id: str, salt: bytes, master_secret: bytes) -> Fernet:
-    """Leitet einen Fernet-Key aus master_secret + agent_id + zufaelligem Salt ab."""
+    """Derives a Fernet key from master_secret + agent_id + random salt."""
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -244,12 +244,12 @@ def _derive_fernet(agent_id: str, salt: bytes, master_secret: bytes) -> Fernet:
 
 
 class PerAgentSecretVault:
-    """Jeder Agent hat seinen eigenen Secret-Store.
+    """Each agent has its own secret store.
 
-    Kein Agent kann auf Secrets anderer Agenten zugreifen.
-    Secrets werden mit Fernet (AES-128-CBC + HMAC) verschluesselt.
-    Jeder Agent erhaelt einen eigenen kryptographischen Schluessel,
-    abgeleitet aus seiner agent_id und einem zufaelligen Salt.
+    No agent can access secrets of other agents.
+    Secrets are encrypted with Fernet (AES-128-CBC + HMAC).
+    Each agent receives its own cryptographic key,
+    derived from its agent_id and a random salt.
     """
 
     def __init__(self) -> None:
@@ -260,7 +260,7 @@ class PerAgentSecretVault:
         self._master_secret: bytes = os.urandom(32)
 
     def _get_fernet(self, agent_id: str) -> Fernet:
-        """Gibt den Fernet-Cipher fuer einen Agenten zurueck (erstellt bei Bedarf)."""
+        """Returns the Fernet cipher for an agent (creates on demand)."""
         if agent_id not in self._fernets:
             salt = os.urandom(16)
             self._salts[agent_id] = salt
@@ -283,7 +283,7 @@ class PerAgentSecretVault:
         return secret
 
     def retrieve(self, agent_id: str, key: str, requesting_agent: str = "") -> str | None:
-        """Holt ein Secret -- nur der eigene Agent darf zugreifen."""
+        """Gets a secret -- only the owning agent may access."""
         effective_requester = requesting_agent or agent_id
         self._access_log.append(
             {
@@ -296,7 +296,7 @@ class PerAgentSecretVault:
         )
 
         if effective_requester != agent_id:
-            return None  # BLOCKIERT: Cross-Agent-Zugriff
+            return None  # BLOCKED: Cross-agent access
 
         agent_secrets = self._secrets.get(agent_id, {})
         secret = agent_secrets.get(key)
@@ -350,7 +350,7 @@ class PerAgentSecretVault:
 
 @dataclass
 class Namespace:
-    """Isolierter Namensraum für einen Agenten/Tenant."""
+    """Isolated namespace for an agent/tenant."""
 
     namespace_id: str
     agent_id: str
@@ -371,7 +371,7 @@ class Namespace:
 
 
 class NamespaceIsolation:
-    """Erzwingt getrennte Namensräume für Memory, Files, Config."""
+    """Enforces separate namespaces for memory, files, config."""
 
     def __init__(self) -> None:
         self._namespaces: dict[str, Namespace] = {}
@@ -394,7 +394,7 @@ class NamespaceIsolation:
         return self._namespaces.get(f"{tenant_id}:{agent_id}")
 
     def validate_path(self, agent_id: str, path: str, tenant_id: str = "default") -> bool:
-        """Prüft ob ein Pfad im erlaubten Namensraum liegt.
+        """Checks if a path is within the allowed namespace.
 
         Uses proper path containment checks to prevent path traversal
         attacks (e.g. ``/data/tenant1-evil/`` matching ``/data/tenant1/``).
@@ -451,7 +451,7 @@ class TenantTier(Enum):
 
 @dataclass
 class Tenant:
-    """Ein Mandant (Organisation) im System."""
+    """A tenant (organization) in the system."""
 
     tenant_id: str
     name: str
@@ -477,7 +477,7 @@ class Tenant:
 
 
 class TenantManager:
-    """Multi-Tenant: Getrennte Daten und Konfiguration pro Organisation."""
+    """Multi-tenant: Separate data and configuration per organization."""
 
     def __init__(self) -> None:
         self._tenants: dict[str, Tenant] = {}
@@ -565,7 +565,7 @@ class AdminRole(Enum):
 
 @dataclass
 class DelegatedAdmin:
-    """Ein delegierter Admin innerhalb eines Tenants."""
+    """A delegated admin within a tenant."""
 
     admin_id: str
     email: str
@@ -588,7 +588,7 @@ class DelegatedAdmin:
         }
 
 
-# Standard-Permissions pro Rolle
+# Standard permissions per role
 ROLE_PERMISSIONS: dict[AdminRole, set[str]] = {
     AdminRole.SUPER_ADMIN: {"*"},
     AdminRole.TENANT_ADMIN: {
@@ -613,7 +613,7 @@ ROLE_PERMISSIONS: dict[AdminRole, set[str]] = {
 
 
 class AdminManager:
-    """Verwaltet delegierte Admin-Rollen."""
+    """Manages delegated admin roles."""
 
     def __init__(self) -> None:
         self._admins: dict[str, DelegatedAdmin] = {}
@@ -670,12 +670,12 @@ class AdminManager:
 
 
 # ============================================================================
-# Isolation Enforcer (Hauptklasse)
+# Isolation Enforcer (Main Class)
 # ============================================================================
 
 
 class IsolationEnforcer:
-    """Orchestriert alle Isolierungsmechanismen."""
+    """Orchestrates all isolation mechanisms."""
 
     def __init__(self) -> None:
         self._sandboxes = SandboxManager()
@@ -711,7 +711,7 @@ class IsolationEnforcer:
         *,
         allowed_tools: set[str] | None = None,
     ) -> dict[str, Any]:
-        """Provisioniert einen komplett isolierten Agenten."""
+        """Provisions a completely isolated agent."""
         sandbox = self._sandboxes.create(agent_id, tenant_id, allowed_tools=allowed_tools)
         ns = self._namespaces.create(agent_id, tenant_id)
         self._tenants.add_agent(tenant_id)
@@ -724,7 +724,7 @@ class IsolationEnforcer:
         }
 
     def decommission_agent(self, agent_id: str, tenant_id: str = "default") -> dict[str, Any]:
-        """Deprovisioniert einen Agenten sauber."""
+        """Cleanly deprovisions an agent."""
         sandbox = self._sandboxes.get_by_agent(agent_id)
         if sandbox:
             self._sandboxes.terminate(sandbox.sandbox_id)

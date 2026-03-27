@@ -1,17 +1,16 @@
-"""Sandbox: Isolierte Ausführungsumgebungen.
+"""Sandbox: Isolated execution environments.
 
-Stellt verschiedene Isolierungsstufen bereit, in denen
-der Executor Code ausführen kann. Je höher die Stufe,
-desto stärker die Isolation.
+Provides different isolation levels in which the executor
+can run code. The higher the level, the stronger the isolation.
 
-Isolierungsstufen [B§3.3]:
+Isolation levels [B§3.3]:
   L0 (PROCESS):   subprocess + ulimit (Unix) / Job Objects (Windows)
-  L-JOB (JOBOBJECT): Windows Job Objects -- native Windows-Isolation
-  L1 (NAMESPACE): nsjail/bubblewrap (Linux-Namespaces)
-  L2 (CONTAINER): Docker mit Resource-Limits
-  L3 (VM):        Reserved (nicht implementiert)
+  L-JOB (JOBOBJECT): Windows Job Objects -- native Windows isolation
+  L1 (NAMESPACE): nsjail/bubblewrap (Linux namespaces)
+  L2 (CONTAINER): Docker with resource limits
+  L3 (VM):        Reserved (not implemented)
 
-Bibel-Referenz: §3.3 (Sandbox), §11.1 (Sicherheitsarchitektur)
+Bible reference: §3.3 (Sandbox), §11.1 (Security Architecture)
 """
 
 from __future__ import annotations
@@ -34,7 +33,7 @@ log = get_logger(__name__)
 
 @dataclass
 class SandboxResult:
-    """Ergebnis einer Sandbox-Ausführung."""
+    """Result of a sandbox execution."""
 
     exit_code: int
     stdout: str
@@ -48,10 +47,10 @@ class SandboxResult:
 
 
 class Sandbox:
-    """Multi-Level Sandbox für isolierte Ausführung. [B§3.3]
+    """Multi-level sandbox for isolated execution. [B§3.3]
 
-    Wählt automatisch die höchste verfügbare Isolierungsstufe
-    oder verwendet die explizit konfigurierte.
+    Automatically selects the highest available isolation level
+    or uses the explicitly configured one.
     """
 
     def __init__(self, config: SandboxConfig | None = None) -> None:
@@ -59,9 +58,9 @@ class Sandbox:
         self._capabilities = self._detect_capabilities()
 
     def _detect_capabilities(self) -> dict[str, bool]:
-        """Erkennt verfügbare Sandbox-Tools."""
+        """Detects available sandbox tools."""
         return {
-            "process": True,  # Immer verfügbar
+            "process": True,  # Always available
             "jobobject": sys.platform == "win32",  # Windows Job Objects
             "bwrap": shutil.which("bwrap") is not None,
             "nsjail": shutil.which("nsjail") is not None,
@@ -70,7 +69,7 @@ class Sandbox:
 
     @property
     def available_levels(self) -> list[SandboxLevel]:
-        """Verfügbare Isolierungsstufen."""
+        """Available isolation levels."""
         levels = [SandboxLevel.PROCESS]
         if self._capabilities["jobobject"]:
             levels.append(SandboxLevel.JOBOBJECT)
@@ -82,13 +81,13 @@ class Sandbox:
 
     @property
     def max_level(self) -> SandboxLevel:
-        """Höchste verfügbare Isolierungsstufe."""
+        """Highest available isolation level."""
         levels = self.available_levels
         return levels[-1]
 
     @property
     def capabilities(self) -> dict[str, bool]:
-        """Erkannte Sandbox-Fähigkeiten."""
+        """Detected sandbox capabilities."""
         return dict(self._capabilities)
 
     async def execute(
@@ -101,15 +100,15 @@ class Sandbox:
         timeout: int | None = None,
         network: bool | None = None,
     ) -> SandboxResult:
-        """Führt einen Befehl in der Sandbox aus.
+        """Executes a command in the sandbox.
 
         Args:
-            command: Shell-Befehl.
-            level: Gewünschte Isolierungsstufe (None = Config-Default).
-            working_dir: Arbeitsverzeichnis.
-            env: Zusätzliche Umgebungsvariablen.
-            timeout: Timeout in Sekunden (None = Config-Default).
-            network: Netzwerkzugriff erlauben (None = Config-Default).
+            command: Shell command.
+            level: Desired isolation level (None = config default).
+            working_dir: Working directory.
+            env: Additional environment variables.
+            timeout: Timeout in seconds (None = config default).
+            network: Allow network access (None = config default).
 
         Returns:
             SandboxResult.
@@ -118,7 +117,7 @@ class Sandbox:
         effective_timeout = timeout or self._config.timeout_seconds
         effective_network = network if network is not None else self._config.network_access
 
-        # Downgrade wenn Level nicht verfügbar
+        # Downgrade if level is not available
         if effective_level not in self.available_levels:
             old = effective_level
             effective_level = self.max_level
@@ -194,10 +193,10 @@ class Sandbox:
         env: dict[str, str] | None = None,
         timeout: int = 30,
     ) -> SandboxResult:
-        """Führt Befehl als subprocess mit Resource-Limits aus.
+        """Executes command as subprocess with resource limits.
 
-        Auf Windows werden Job Objects für Resource-Limits genutzt
-        (ulimit ist nicht verfügbar). Auf Unix wird ulimit verwendet.
+        On Windows, Job Objects are used for resource limits
+        (ulimit is not available). On Unix, ulimit is used.
         """
         merged_env = self._build_env(env)
 
@@ -266,7 +265,7 @@ class Sandbox:
                 return SandboxResult(
                     exit_code=-1,
                     stdout="",
-                    stderr=f"Timeout nach {timeout}s",
+                    stderr=f"Timeout after {timeout}s",
                     duration_ms=timeout * 1000,
                     sandbox_level=SandboxLevel.PROCESS,
                     killed=True,
@@ -289,9 +288,9 @@ class Sandbox:
         env: dict[str, str] | None = None,
         timeout: int = 30,
     ) -> SandboxResult:
-        """Führt Befehl als subprocess mit Windows Job Object Resource-Limits aus.
+        """Executes command as subprocess with Windows Job Object resource limits.
 
-        Wird intern von _exec_process auf Windows verwendet, um ulimit zu ersetzen.
+        Used internally by _exec_process on Windows to replace ulimit.
         """
         import ctypes
 
@@ -309,7 +308,7 @@ class Sandbox:
         proc_handle = None
 
         try:
-            # 1. Job Object erstellen
+            # 1. Create Job Object
             job_handle = kernel32.CreateJobObjectW(None, None)
             if not job_handle:
                 last_err = ctypes.get_last_error()
@@ -322,9 +321,9 @@ class Sandbox:
                         exit_code=-1,
                         stdout="",
                         stderr=(
-                            "CreateJobObjectW fehlgeschlagen und "
-                            "allow_degraded_sandbox=False — "
-                            "Ausfuehrung verweigert"
+                            "CreateJobObjectW failed and "
+                            "allow_degraded_sandbox=False -- "
+                            "execution refused"
                         ),
                         duration_ms=0,
                         sandbox_level=SandboxLevel.PROCESS,
@@ -334,14 +333,14 @@ class Sandbox:
                     "jobobject_create_failed_degraded_fallback",
                     error=last_err,
                 )
-                # Fallback: ohne Job Object ausführen (nur Timeout-Schutz)
+                # Fallback: execute without Job Object (timeout protection only)
                 result = await self._exec_process_bare(
                     command, working_dir=working_dir, env=env, timeout=timeout
                 )
                 result.isolation_degraded = True
                 return result
 
-            # 2. Limits konfigurieren
+            # 2. Configure limits
             info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
             info.BasicLimitInformation.LimitFlags = (
                 JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
@@ -349,15 +348,15 @@ class Sandbox:
                 | JOB_OBJECT_LIMIT_JOB_TIME
             )
 
-            # Memory-Limit
+            # Memory limit
             info.ProcessMemoryLimit = self._config.max_memory_mb * 1024 * 1024
 
-            # CPU-Zeit-Limit (100-Nanosekunden-Einheiten)
+            # CPU time limit (100-nanosecond units)
             info.BasicLimitInformation.PerJobUserTimeLimit = (
                 self._config.max_cpu_seconds * 10_000_000
             )
 
-            # 3. Limits auf Job setzen
+            # 3. Set limits on job
             kernel32.SetInformationJobObject(
                 job_handle,
                 JobObjectExtendedLimitInformation,
@@ -365,7 +364,7 @@ class Sandbox:
                 ctypes.sizeof(info),
             )
 
-            # 4. Subprocess starten
+            # 4. Start subprocess
             cmd_args = shlex.split(command)
             proc = await asyncio.create_subprocess_exec(
                 *cmd_args,
@@ -375,12 +374,12 @@ class Sandbox:
                 env=env,
             )
 
-            # 5. Prozess dem Job zuweisen
+            # 5. Assign process to job
             proc_handle = kernel32.OpenProcess(PROCESS_ALL_ACCESS, False, proc.pid)
             if proc_handle:
                 kernel32.AssignProcessToJobObject(job_handle, proc_handle)
 
-            # 6. Auf Abschluss warten
+            # 6. Wait for completion
             try:
                 stdout_bytes, stderr_bytes = await asyncio.wait_for(
                     proc.communicate(), timeout=timeout
@@ -426,7 +425,7 @@ class Sandbox:
         env: dict[str, str] | None = None,
         timeout: int = 30,
     ) -> SandboxResult:
-        """Bare subprocess ohne Resource-Limits (Windows-Fallback)."""
+        """Bare subprocess without resource limits (Windows fallback)."""
         try:
             cmd_args = shlex.split(command)
             proc = await asyncio.create_subprocess_exec(
@@ -481,7 +480,7 @@ class Sandbox:
         timeout: int = 30,
         network: bool = False,
     ) -> SandboxResult:
-        """Führt Befehl mit bubblewrap (Linux-Namespaces) aus."""
+        """Executes command with bubblewrap (Linux namespaces)."""
         if not self._capabilities.get("bwrap"):
             log.warning("bwrap_not_available_fallback_to_process")
             return await self._exec_process(
@@ -498,7 +497,7 @@ class Sandbox:
             "bwrap",
         ]
 
-        # Systemverzeichnisse read-only (nur wenn vorhanden)
+        # System directories read-only (only if they exist)
         for sys_path in ["/usr", "/lib", "/lib64", "/bin", "/sbin"]:
             if os.path.isdir(sys_path):
                 bwrap_args += ["--ro-bind", sys_path, sys_path]
@@ -519,11 +518,11 @@ class Sandbox:
             "--new-session",
         ]
 
-        # Netzwerk isolieren
+        # Isolate network
         if not network:
             bwrap_args.append("--unshare-net")
 
-        # Erlaubte Pfade hinzufügen
+        # Add allowed paths
         for allowed in self._config.allowed_paths:
             expanded = os.path.expanduser(allowed)
             if os.path.exists(expanded):
@@ -590,7 +589,7 @@ class Sandbox:
         timeout: int = 30,
         network: bool = False,
     ) -> SandboxResult:
-        """Führt Befehl in einem Docker-Container aus."""
+        """Executes command in a Docker container."""
         if not self._capabilities.get("docker"):
             log.warning("docker_not_available_fallback")
             return await self._exec_namespace(
@@ -621,11 +620,11 @@ class Sandbox:
         if not network:
             docker_args.extend(["--network", "none"])
 
-        # Arbeitsverzeichnis mounten
+        # Mount working directory
         if working_dir and os.path.exists(working_dir):
             docker_args.extend(["-v", f"{working_dir}:/workspace", "-w", "/workspace"])
 
-        # Env-Variablen
+        # Environment variables
         merged_env = env or {}
         for k, v in merged_env.items():
             docker_args.extend(["-e", f"{k}={v}"])
@@ -682,10 +681,10 @@ class Sandbox:
         env: dict[str, str] | None = None,
         timeout: int = 30,
     ) -> SandboxResult:
-        """Führt Befehl mit Windows Job Object Isolation aus.
+        """Executes command with Windows Job Object isolation.
 
-        Bietet Memory-, CPU- und Prozess-Limits via Win32 Job Objects.
-        Stärker als PROCESS-Level, aber schwächer als NAMESPACE/CONTAINER.
+        Provides memory, CPU, and process limits via Win32 Job Objects.
+        Stronger than PROCESS level, but weaker than NAMESPACE/CONTAINER.
         """
         import ctypes
 
@@ -810,12 +809,12 @@ class Sandbox:
                 shutil.rmtree(work_dir, ignore_errors=True)
 
     # ========================================================================
-    # Hilfsmethoden
+    # Helper methods
     # ========================================================================
 
     def _build_env(self, extra: dict[str, str] | None = None) -> dict[str, str]:
-        """Baut sichere Umgebungsvariablen zusammen."""
-        # Minimales Environment
+        """Builds safe environment variables."""
+        # Minimal environment
         if sys.platform == "win32":
             _sysroot = os.environ.get("SYSTEMROOT", r"C:\Windows")
             _minimal_path = os.pathsep.join(

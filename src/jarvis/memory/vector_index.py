@@ -1,4 +1,4 @@
-"""Vector-Index Abstraktion mit FAISS ANN-Support.
+"""Vector index abstraction with FAISS ANN support.
 
 Bietet O(log N) statt O(N×D) fuer Vector-Similarity-Search.
 
@@ -33,10 +33,10 @@ logger = logging.getLogger("jarvis.memory.vector_index")
 
 @runtime_checkable
 class VectorIndex(Protocol):
-    """Protocol fuer Vector-Index Implementierungen."""
+    """Protocol for vector index implementations."""
 
     def add(self, key: str, vector: list[float]) -> None:
-        """Fuegt einen Vektor hinzu oder aktualisiert einen bestehenden."""
+        """Add a vector or update an existing one."""
         ...
 
     def search(self, query_vector: list[float], top_k: int = 10) -> list[tuple[str, float]]:

@@ -1,11 +1,11 @@
-"""Tracer Provider -- Span-Erzeugung und Trace-Management (v19).
+"""Tracer Provider -- Span creation and trace management (v19).
 
-Zentrale Instanz für Distributed Tracing:
-  - Span-Erzeugung mit automatischer Parent-Verknüpfung
-  - Context-Propagation (W3C traceparent)
+Central instance for distributed tracing:
+  - Span creation with automatic parent linking
+  - Context propagation (W3C traceparent)
   - Sampling (AlwaysOn, RateBased, Probabilistic)
-  - In-Memory Trace-Speicher mit Retention
-  - Export-Interface für OTLP/JSON/Console
+  - In-memory trace store with retention
+  - Export interface for OTLP/JSON/Console
 
 Usage:
     tracer = TracerProvider(service_name="jarvis")
@@ -34,7 +34,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# Context-Variable für aktiven Span
+# Context variable for active span
 _current_span: contextvars.ContextVar[Span | None] = contextvars.ContextVar(
     "_current_span", default=None
 )
@@ -44,39 +44,39 @@ _current_span: contextvars.ContextVar[Span | None] = contextvars.ContextVar(
 
 
 class Sampler:
-    """Basis-Sampler -- entscheidet ob ein Trace aufgezeichnet wird."""
+    """Base sampler -- decides whether a trace is recorded."""
 
     def should_sample(self, trace_id: str, name: str) -> bool:
         return True
 
 
 class AlwaysOnSampler(Sampler):
-    """Zeichnet jeden Trace auf."""
+    """Records every trace."""
 
     pass
 
 
 class AlwaysOffSampler(Sampler):
-    """Zeichnet keinen Trace auf."""
+    """Records no traces."""
 
     def should_sample(self, trace_id: str, name: str) -> bool:
         return False
 
 
 class ProbabilisticSampler(Sampler):
-    """Zeichnet einen Anteil der Traces auf."""
+    """Records a fraction of traces."""
 
     def __init__(self, ratio: float = 1.0) -> None:
         self._ratio = max(0.0, min(1.0, ratio))
 
     def should_sample(self, trace_id: str, name: str) -> bool:
-        # Deterministic: basierend auf trace_id
+        # Deterministic: based on trace_id
         hash_val = int(trace_id[:8], 16) if trace_id else 0
         return (hash_val / 0x100000000) < self._ratio
 
 
 class RateBasedSampler(Sampler):
-    """Limitiert auf N Traces pro Sekunde."""
+    """Limits to N traces per second."""
 
     def __init__(self, max_per_second: float = 10.0) -> None:
         self._max = max_per_second
@@ -99,7 +99,7 @@ class RateBasedSampler(Sampler):
 
 
 class SpanProcessor:
-    """Verarbeitet Spans nach Abschluss."""
+    """Processes spans after completion."""
 
     def on_start(self, span: Span) -> None:
         pass
@@ -112,7 +112,7 @@ class SpanProcessor:
 
 
 class InMemoryProcessor(SpanProcessor):
-    """Speichert Spans im Memory (für Tests und lokales Debugging)."""
+    """Stores spans in memory (for tests and local debugging)."""
 
     def __init__(self, max_spans: int = 10000) -> None:
         self._spans: deque[Span] = deque(maxlen=max_spans)
@@ -129,7 +129,7 @@ class InMemoryProcessor(SpanProcessor):
 
 
 class ConsoleProcessor(SpanProcessor):
-    """Gibt Spans auf der Konsole aus."""
+    """Outputs spans to the console."""
 
     def on_end(self, span: Span) -> None:
         status = (
@@ -148,7 +148,7 @@ class ConsoleProcessor(SpanProcessor):
 
 
 class BatchProcessor(SpanProcessor):
-    """Sammelt Spans und exportiert sie in Batches."""
+    """Collects spans and exports them in batches."""
 
     def __init__(
         self,
@@ -182,7 +182,7 @@ class BatchProcessor(SpanProcessor):
 
 
 class SpanExporter:
-    """Basis-Interface für Span-Export."""
+    """Base interface for span export."""
 
     def export(self, spans: list[Span]) -> bool:
         return True
@@ -192,7 +192,7 @@ class SpanExporter:
 
 
 class OTLPJsonExporter(SpanExporter):
-    """Exportiert Spans im OTLP-JSON-Format (lokal oder remote)."""
+    """Exports spans in OTLP JSON format (local or remote)."""
 
     def __init__(self, endpoint: str = "", file_path: str = "") -> None:
         self._endpoint = endpoint
@@ -219,7 +219,7 @@ class OTLPJsonExporter(SpanExporter):
         return True
 
     def _build_payload(self, spans: list[Span]) -> dict[str, Any]:
-        """Baut OTLP ExportTraceServiceRequest."""
+        """Builds OTLP ExportTraceServiceRequest."""
         resource_spans: dict[str, list[dict]] = {}
         for span in spans:
             svc = span.service_name
@@ -255,10 +255,10 @@ class OTLPJsonExporter(SpanExporter):
 
 
 class TracerProvider:
-    """Zentrale Instanz für Distributed Tracing.
+    """Central instance for distributed tracing.
 
-    Erzeugt Spans, verwaltet Context-Propagation und koordiniert
-    Processors/Exporters.
+    Creates spans, manages context propagation and coordinates
+    processors/exporters.
     """
 
     def __init__(
@@ -295,12 +295,12 @@ class TracerProvider:
         attributes: dict[str, Any] | None = None,
         links: list[SpanContext] | None = None,
     ) -> SpanContextManager:
-        """Startet einen neuen Span.
+        """Starts a new span.
 
-        Automatische Parent-Verknüpfung über ContextVar.
-        Gibt SpanContextManager zurück für with-Statement.
+        Automatic parent linking via ContextVar.
+        Returns SpanContextManager for with-statement.
         """
-        # Parent bestimmen
+        # Determine parent
         parent_span = _current_span.get()
         if parent:
             context = parent.child_context()
@@ -332,7 +332,7 @@ class TracerProvider:
             for link_ctx in links:
                 span.add_link(link_ctx)
 
-        # Processors benachrichtigen
+        # Notify processors
         for proc in self._processors:
             proc.on_start(span)
 
@@ -340,7 +340,7 @@ class TracerProvider:
         self._active_spans[span.span_id] = span
         self._span_count += 1
 
-        # Trace zuordnen
+        # Assign to trace
         if context.trace_id not in self._traces:
             self._traces[context.trace_id] = Trace(
                 trace_id=context.trace_id,
@@ -351,7 +351,7 @@ class TracerProvider:
         return SpanContextManager(span, self)
 
     def _end_span(self, span: Span) -> None:
-        """Beendet einen Span (intern)."""
+        """Ends a span (internal)."""
         span.end()
         self._active_spans.pop(span.span_id, None)
         for proc in self._processors:
@@ -360,14 +360,14 @@ class TracerProvider:
     # ── Context Propagation ──────────────────────────────────────
 
     def extract_context(self, headers: dict[str, str]) -> SpanContext | None:
-        """Extrahiert SpanContext aus HTTP-Headers."""
+        """Extracts SpanContext from HTTP headers."""
         traceparent = headers.get("traceparent", "")
         if traceparent:
             return SpanContext.from_traceparent(traceparent)
         return None
 
     def inject_context(self, span: Span, headers: dict[str, str]) -> None:
-        """Injiziert SpanContext in HTTP-Headers."""
+        """Injects SpanContext into HTTP headers."""
         headers["traceparent"] = span.context.to_traceparent()
 
     # ── Trace Access ─────────────────────────────────────────────
@@ -397,7 +397,7 @@ class TracerProvider:
     # ── Cleanup ──────────────────────────────────────────────────
 
     def cleanup(self, max_traces: int = 1000) -> int:
-        """Entfernt alte Traces."""
+        """Removes old traces."""
         if len(self._traces) <= max_traces:
             return 0
         sorted_traces = sorted(self._traces.items(), key=lambda x: x[1].started_at)
@@ -423,7 +423,7 @@ class TracerProvider:
 
 
 class SpanContextManager:
-    """Context-Manager für automatisches Span-Lifecycle."""
+    """Context manager for automatic span lifecycle."""
 
     def __init__(self, span: Span | None, provider: TracerProvider) -> None:
         self._span = span
@@ -458,7 +458,7 @@ class SpanContextManager:
 
 
 class _NoOpSpan:
-    """Dummy-Span wenn Sampling den Span verwirft."""
+    """Dummy span when sampling discards the span."""
 
     def set_attribute(self, key: str, value: Any) -> None:
         pass

@@ -1,4 +1,4 @@
-"""Sicherheitsmodule für Jarvis Agent OS. [B§11]"""
+"""Security modules for Jarvis Agent OS. [B§11]"""
 
 from jarvis.security.agent_vault import (
     AgentVaultManager,

@@ -1,17 +1,17 @@
-"""Credential-Manager: Sichere Verwaltung von Secrets.
+"""Credential manager: Secure management of secrets.
 
-Speichert Credentials verschlüsselt (Fernet/AES-256) auf Disk.
-Der Planner (LLM) sieht NIEMALS Klartext-Credentials.
-Der Gatekeeper injiziert Credentials in den Executor-Kontext.
+Stores credentials encrypted (Fernet/AES-256) on disk.
+The planner (LLM) NEVER sees plaintext credentials.
+The gatekeeper injects credentials into the executor context.
 
-Sicherheitsgarantien:
-  - Credentials werden mit AES-256 (via Fernet) verschlüsselt
-  - Master-Key wird aus Passphrase + Salt abgeleitet (PBKDF2)
-  - Planner hat keinen Zugriff auf den Store
-  - Audit-Log maskiert alle Credential-Werte
-  - Datei-Permissions werden auf 0600 gesetzt
+Security guarantees:
+  - Credentials are encrypted with AES-256 (via Fernet)
+  - Master key is derived from passphrase + salt (PBKDF2)
+  - Planner has no access to the store
+  - Audit log masks all credential values
+  - File permissions are set to 0600
 
-Bibel-Referenz: §11.2 (Credential-Management)
+Bible reference: §11.2 (Credential-Management)
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# Optionaler Import: cryptography für Fernet
+# Optional import: cryptography for Fernet
 _HAS_CRYPTO = False
 try:
     from cryptography.fernet import Fernet
@@ -42,9 +42,9 @@ except ImportError:
 
 
 def _derive_key(passphrase: str, salt: bytes) -> bytes:
-    """Leitet einen Fernet-Key aus Passphrase + Salt ab (PBKDF2)."""
+    """Derives a Fernet key from passphrase + salt (PBKDF2)."""
     if not _HAS_CRYPTO:
-        raise RuntimeError("cryptography-Paket nicht installiert. pip install cryptography")
+        raise RuntimeError("cryptography package not installed. pip install cryptography")
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -56,15 +56,15 @@ def _derive_key(passphrase: str, salt: bytes) -> bytes:
 
 
 def _obfuscate_key(passphrase: str, salt: bytes) -> bytes:
-    """Veraltet -- wird nicht mehr verwendet.
+    """Deprecated -- no longer used.
 
-    Existiert nur noch für Abwärtskompatibilität beim Lesen alter Stores.
+    Exists only for backward compatibility when reading old stores.
     """
     if not _HAS_CRYPTO:
         raise RuntimeError("cryptography-Paket nicht installiert. pip install cryptography")
-    # Historische Obfuskations-Funktion: verwendet jetzt dieselbe
-    # PBKDF2-Konfiguration wie _derive_key, um Brute-Force-Angriffe
-    # zu erschweren, behält aber das Base64-Format bei.
+    # Historical obfuscation function: now uses the same
+    # PBKDF2 configuration as _derive_key to make brute-force attacks
+    # harder, but retains the Base64 format.
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -76,15 +76,15 @@ def _obfuscate_key(passphrase: str, salt: bytes) -> bytes:
 
 
 class CredentialStore:
-    """Verschlüsselter Credential-Store. [B§11.2]
+    """Encrypted credential store. [B§11.2]
 
-    Speichert Key-Value-Paare verschlüsselt als JSON auf Disk.
-    Unterstützt zwei Modi:
-      1. Fernet (AES-256) -- wenn `cryptography` installiert ist
-      2. Base64-Obfuskation -- Fallback für Entwicklung (UNSICHER)
+    Stores key-value pairs encrypted as JSON on disk.
+    Supports two modes:
+      1. Fernet (AES-256) -- when `cryptography` is installed
+      2. Base64 obfuscation -- fallback for development (INSECURE)
 
-    Der Planner hat keinen direkten Zugriff. Credentials werden
-    vom Gatekeeper über inject_credentials() bereitgestellt.
+    The planner has no direct access. Credentials are
+    provided by the gatekeeper via inject_credentials().
     """
 
     def __init__(
@@ -92,12 +92,12 @@ class CredentialStore:
         store_path: Path | None = None,
         passphrase: str | None = None,
     ) -> None:
-        """Initialisiert den Credential-Store.
+        """Initializes the credential store.
 
         Args:
-            store_path: Pfad zur verschlüsselten Store-Datei.
-            passphrase: Master-Passphrase für Verschlüsselung.
-                       Wenn None: JARVIS_CREDENTIAL_KEY Env-Variable.
+            store_path: Path to the encrypted store file.
+            passphrase: Master passphrase for encryption.
+                       If None: JARVIS_CREDENTIAL_KEY env variable.
         """
         self._store_path = store_path or (Path.home() / ".jarvis" / "credentials.enc")
         self._store_path.parent.mkdir(parents=True, exist_ok=True)
@@ -109,7 +109,7 @@ class CredentialStore:
         self._loaded = False
 
     def _init_fernet(self) -> Any:
-        """Initialisiert Fernet-Verschlüsselung."""
+        """Initializes Fernet encryption."""
         if not self._passphrase:
             log.warning(
                 "credential_store_no_passphrase: Credentials are NOT encrypted! "
@@ -118,14 +118,13 @@ class CredentialStore:
             return None
         if not _HAS_CRYPTO:
             raise RuntimeError(
-                "cryptography-Paket erforderlich für Credential-Verschlüsselung. "
-                "pip install cryptography"
+                "cryptography package required for credential encryption. pip install cryptography"
             )
         key = _derive_key(self._passphrase, self._salt)
         return Fernet(key)
 
     def _load_or_create_salt(self) -> bytes:
-        """Lädt oder erstellt den Salt für Key-Derivation."""
+        """Loads or creates the salt for key derivation."""
         salt_path = self._store_path.parent / ".credential_salt"
         if salt_path.exists():
             return salt_path.read_bytes()
@@ -135,16 +134,16 @@ class CredentialStore:
         return salt
 
     def store(self, service: str, key: str, value: str, agent_id: str = "") -> CredentialEntry:
-        """Speichert ein Credential.
+        """Stores a credential.
 
         Args:
-            service: Service-Name (z.B. 'telegram', 'searxng').
-            key: Schlüssel (z.B. 'api_key', 'bot_token').
-            value: Klartext-Wert.
-            agent_id: Optionale Agent-Zuordnung. Leer = global verfügbar.
+            service: Service name (e.g. 'telegram', 'searxng').
+            key: Key (e.g. 'api_key', 'bot_token').
+            value: Plaintext value.
+            agent_id: Optional agent assignment. Empty = globally available.
 
         Returns:
-            CredentialEntry (ohne Klartext-Wert).
+            CredentialEntry (without plaintext value).
         """
         self._ensure_loaded()
         lookup = f"{service}:{key}" if not agent_id else f"{agent_id}/{service}:{key}"
@@ -172,21 +171,21 @@ class CredentialStore:
         )
 
     def retrieve(self, service: str, key: str, agent_id: str = "") -> str | None:
-        """Ruft ein Credential ab (NUR für Executor/Gatekeeper).
+        """Retrieves a credential (ONLY for executor/gatekeeper).
 
-        Prüft zuerst agent-spezifische Credentials, dann globale.
+        Checks agent-specific credentials first, then global.
 
         Args:
-            service: Service-Name.
-            key: Schlüssel.
-            agent_id: Agent-ID für scoped Zugriff.
+            service: Service name.
+            key: Key.
+            agent_id: Agent ID for scoped access.
 
         Returns:
-            Klartext-Wert oder None wenn nicht gefunden.
+            Plaintext value or None if not found.
         """
         self._ensure_loaded()
 
-        # 1. Agent-spezifisches Credential
+        # 1. Agent-specific credential
         if agent_id:
             agent_lookup = f"{agent_id}/{service}:{key}"
             stored = self._entries.get(agent_lookup)
@@ -194,7 +193,7 @@ class CredentialStore:
                 stored.last_accessed = datetime.now(UTC)
                 return self._decrypt(stored.encrypted_value)
 
-        # 2. Globales Credential (Fallback)
+        # 2. Global credential (fallback)
         global_lookup = f"{service}:{key}"
         stored = self._entries.get(global_lookup)
         if not stored:
@@ -204,15 +203,15 @@ class CredentialStore:
         return self._decrypt(stored.encrypted_value)
 
     def delete(self, service: str, key: str, agent_id: str = "") -> bool:
-        """Löscht ein Credential.
+        """Deletes a credential.
 
         Args:
-            service: Service-Name.
-            key: Schlüssel.
-            agent_id: Wenn gesetzt, agent-spezifisches Credential loeschen.
+            service: Service name.
+            key: Key.
+            agent_id: If set, delete agent-specific credential.
 
         Returns:
-            True wenn gelöscht, False wenn nicht gefunden.
+            True if deleted, False if not found.
         """
         self._ensure_loaded()
         if agent_id:
@@ -233,20 +232,20 @@ class CredentialStore:
         return True
 
     def list_entries(self, agent_id: str = "") -> list[CredentialEntry]:
-        """Listet Credentials (ohne Werte).
+        """Lists credentials (without values).
 
         Args:
-            agent_id: Wenn gesetzt, nur Credentials dieses Agenten + globale.
-                     Leer = alle Credentials.
+            agent_id: If set, only credentials of this agent + global.
+                     Empty = all credentials.
 
         Returns:
-            Liste von CredentialEntry-Objekten.
+            List of CredentialEntry objects.
         """
         self._ensure_loaded()
         results = []
         for e in self._entries.values():
             if agent_id and e.agent_id and e.agent_id != agent_id:
-                continue  # Anderer Agent → überspringen
+                continue  # Different agent -> skip
             results.append(
                 CredentialEntry(
                     service=e.service,
@@ -259,24 +258,24 @@ class CredentialStore:
         return results
 
     def has(self, service: str, key: str, agent_id: str = "") -> bool:
-        """Prüft ob ein Credential existiert."""
+        """Checks if a credential exists."""
         self._ensure_loaded()
         if agent_id and f"{agent_id}/{service}:{key}" in self._entries:
             return True
         return f"{service}:{key}" in self._entries
 
     def inject_credentials(self, params: dict[str, Any], mapping: dict[str, str]) -> dict[str, Any]:
-        """Injiziert Credentials in Tool-Parameter.
+        """Injects credentials into tool parameters.
 
-        Wird vom Gatekeeper aufgerufen, NICHT vom Planner.
+        Called by the gatekeeper, NOT by the planner.
 
         Args:
-            params: Die Tool-Parameter.
-            mapping: Mapping von Param-Name → 'service:key'.
-                    z.B. {'api_key': 'searxng:api_key'}
+            params: The tool parameters.
+            mapping: Mapping from param name -> 'service:key'.
+                    e.g. {'api_key': 'searxng:api_key'}
 
         Returns:
-            Kopie der Parameter mit injizierten Credentials.
+            Copy of parameters with injected credentials.
         """
         result = dict(params)
         for param_name, credential_ref in mapping.items():
@@ -291,21 +290,21 @@ class CredentialStore:
 
     @property
     def count(self) -> int:
-        """Anzahl gespeicherter Credentials."""
+        """Number of stored credentials."""
         self._ensure_loaded()
         return len(self._entries)
 
     @property
     def is_encrypted(self) -> bool:
-        """True wenn echte Verschlüsselung aktiv ist."""
+        """True if real encryption is active."""
         return self._fernet is not None and _HAS_CRYPTO
 
     # ========================================================================
-    # Private Methoden
+    # Private Methods
     # ========================================================================
 
     def _encrypt(self, plaintext: str) -> str:
-        """Verschlüsselt einen Klartext-Wert."""
+        """Encrypts a plaintext value."""
         if not self._fernet:
             raise RuntimeError(
                 "cryptography-Paket erforderlich für Credential-Verschlüsselung. "
@@ -314,16 +313,16 @@ class CredentialStore:
         return self._fernet.encrypt(plaintext.encode()).decode()  # type: ignore[no-any-return]
 
     def _decrypt(self, ciphertext: str) -> str | None:
-        """Entschlüsselt einen verschlüsselten Wert."""
+        """Decrypts an encrypted value."""
         try:
             if not self._fernet:
                 raise RuntimeError(
-                    "cryptography-Paket erforderlich für Credential-Entschlüsselung. "
+                    "cryptography package required for credential decryption. "
                     "pip install cryptography"
                 )
             return self._fernet.decrypt(ciphertext.encode()).decode()  # type: ignore[no-any-return]
         except Exception as exc:
-            # Ciphertext-Prefix fuer Debugging (erste 8 Zeichen, keine Secrets exponiert)
+            # Ciphertext prefix for debugging (first 8 chars, no secrets exposed)
             preview = ciphertext[:8] + "..." if len(ciphertext) > 8 else ciphertext
             log.warning(
                 "credential_decrypt_failed",
@@ -333,7 +332,7 @@ class CredentialStore:
             return None
 
     def _ensure_loaded(self) -> None:
-        """Lädt den Store von Disk wenn nötig."""
+        """Loads the store from disk if needed."""
         if self._loaded:
             return
         if self._store_path.exists():
@@ -364,7 +363,7 @@ class CredentialStore:
         self._loaded = True
 
     def _save(self) -> None:
-        """Speichert den Store auf Disk."""
+        """Saves the store to disk."""
         data: dict[str, Any] = {}
         for lookup, entry in self._entries.items():
             data[lookup] = {
@@ -384,7 +383,7 @@ class CredentialStore:
 
     @staticmethod
     def _set_file_permissions(path: Path) -> None:
-        """Setzt Datei-Permissions auf Owner-only (0600)."""
+        """Sets file permissions to owner-only (0600)."""
         try:
             path.chmod(stat.S_IRUSR | stat.S_IWUSR)
         except OSError as exc:
@@ -396,7 +395,7 @@ class CredentialStore:
 
 
 class _StoredCredential:
-    """Internes Speicher-Format für Credentials."""
+    """Internal storage format for credentials."""
 
     __slots__ = (
         "agent_id",

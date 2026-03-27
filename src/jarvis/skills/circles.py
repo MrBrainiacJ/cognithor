@@ -1,4 +1,4 @@
-"""Trusted Circles: Web-of-Trust-basiertes Skill-Ökosystem.
+"""Trusted Circles: Web-of-Trust-based skill ecosystem.
 
 Löst das Ecosystem-Problem: P2P-Skills sind sicher, aber ohne
 kritische Masse nutzlos. Trusted Circles schaffen kleine,
@@ -36,16 +36,16 @@ log = get_logger(__name__)
 
 
 class CircleRole(Enum):
-    """Rolle eines Mitglieds in einem Circle."""
+    """Role of a member in a circle."""
 
-    OWNER = "owner"  # Ersteller, kann alles
-    ADMIN = "admin"  # Kann Mitglieder verwalten + Skills kuratieren
-    MEMBER = "member"  # Kann Skills teilen + installieren
-    OBSERVER = "observer"  # Kann nur Skills installieren, nicht teilen
+    OWNER = "owner"  # Creator, can do everything
+    ADMIN = "admin"  # Can manage members + curate skills
+    MEMBER = "member"  # Can share + install skills
+    OBSERVER = "observer"  # Can only install skills, not share
 
 
 class InviteStatus(Enum):
-    """Status einer Circle-Einladung."""
+    """Status of a circle invitation."""
 
     PENDING = "pending"
     ACCEPTED = "accepted"
@@ -55,7 +55,7 @@ class InviteStatus(Enum):
 
 
 class ReviewVerdict(Enum):
-    """Ergebnis eines Skill-Reviews."""
+    """Result of a skill review."""
 
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -69,13 +69,13 @@ class ReviewVerdict(Enum):
 
 @dataclass
 class CircleMember:
-    """Mitglied eines Trusted Circle."""
+    """Member of a trusted circle."""
 
     peer_id: str
     display_name: str = ""
     role: CircleRole = CircleRole.MEMBER
     joined_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    invited_by: str = ""  # Peer-ID des Einladenden
+    invited_by: str = ""  # Peer ID of the inviter
     skills_shared: int = 0
     skills_installed: int = 0
 
@@ -94,12 +94,12 @@ class CircleMember:
 
 @dataclass
 class CircleInvite:
-    """Einladung in einen Trusted Circle."""
+    """Invitation to a trusted circle."""
 
     invite_id: str
     circle_id: str
-    inviter_id: str  # Wer einlädt
-    invitee_id: str  # Wer eingeladen wird
+    inviter_id: str  # Who invites
+    invitee_id: str  # Who is invited
     role: CircleRole = CircleRole.MEMBER
     status: InviteStatus = InviteStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -109,9 +109,9 @@ class CircleInvite:
 
 @dataclass
 class SkillReview:
-    """Review eines Skills in einer kuratierten Sammlung."""
+    """Review of a skill in a curated collection."""
 
-    reviewer_id: str  # Peer-ID des Reviewers
+    reviewer_id: str  # Peer ID of the reviewer
     package_id: str
     verdict: ReviewVerdict
     comment: str = ""
@@ -122,7 +122,7 @@ class SkillReview:
 
 @dataclass
 class CuratedSkill:
-    """Ein kuratierter Skill in einer Sammlung."""
+    """A curated skill in a collection."""
 
     package_id: str
     name: str
@@ -130,7 +130,7 @@ class CuratedSkill:
     category: str = ""
     reviews: list[SkillReview] = field(default_factory=list)
     added_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    added_by: str = ""  # Peer-ID
+    added_by: str = ""  # Peer ID
 
     @property
     def approval_count(self) -> int:
@@ -142,7 +142,7 @@ class CuratedSkill:
 
     @property
     def is_approved(self) -> bool:
-        """Mindestens 2 Approvals und keine ungelösten Rejections."""
+        """At least 2 approvals and no unresolved rejections."""
         return self.approval_count >= 2 and self.rejection_count == 0
 
 
@@ -167,19 +167,19 @@ class TrustedCircle:
     description: str = ""
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
-    # Mitglieder
+    # Members
     members: dict[str, CircleMember] = field(default_factory=dict)
 
-    # Einladungen
+    # Invitations
     invites: dict[str, CircleInvite] = field(default_factory=dict)
 
-    # Kuratierte Skills
+    # Curated skills
     curated_skills: dict[str, CuratedSkill] = field(default_factory=dict)
 
-    # Einstellungen
-    require_review: bool = True  # Skills müssen reviewed werden
+    # Settings
+    require_review: bool = True  # Skills must be reviewed
     min_reviews_for_approval: int = 2
-    auto_share_approved: bool = True  # Approved Skills automatisch an alle teilen
+    auto_share_approved: bool = True  # Automatically share approved skills with all
     max_members: int = 50
 
     # ── Mitglieder-Verwaltung ────────────────────────────────────
@@ -191,11 +191,11 @@ class TrustedCircle:
         role: CircleRole = CircleRole.MEMBER,
         invited_by: str = "",
     ) -> CircleMember | None:
-        """Fügt ein Mitglied hinzu."""
+        """Add a member."""
         if peer_id in self.members:
-            return None  # Bereits Mitglied
+            return None  # Already a member
         if len(self.members) >= self.max_members:
-            return None  # Voll
+            return None  # Full
 
         member = CircleMember(
             peer_id=peer_id,
@@ -208,12 +208,12 @@ class TrustedCircle:
         return member
 
     def remove_member(self, peer_id: str, removed_by: str = "") -> bool:
-        """Entfernt ein Mitglied."""
+        """Remove a member."""
         member = self.members.get(peer_id)
         if not member:
             return False
 
-        # Owner kann nicht entfernt werden
+        # Owner cannot be removed
         if member.role == CircleRole.OWNER:
             return False
 
@@ -222,12 +222,12 @@ class TrustedCircle:
         return True
 
     def update_role(self, peer_id: str, new_role: CircleRole) -> bool:
-        """Ändert die Rolle eines Mitglieds."""
+        """Change the role of a member."""
         member = self.members.get(peer_id)
         if not member:
             return False
         if member.role == CircleRole.OWNER and new_role != CircleRole.OWNER:
-            return False  # Owner-Rolle kann nicht geändert werden
+            return False  # Owner role cannot be changed
         member.role = new_role
         return True
 
@@ -257,13 +257,13 @@ class TrustedCircle:
         role: CircleRole = CircleRole.MEMBER,
         message: str = "",
     ) -> CircleInvite | None:
-        """Erstellt eine Einladung."""
+        """Create an invitation."""
         inviter = self.members.get(inviter_id)
         if not inviter or not inviter.can_manage:
-            return None  # Keine Berechtigung
+            return None  # No permission
 
         if invitee_id in self.members:
-            return None  # Bereits Mitglied
+            return None  # Already a member
 
         invite_id = hashlib.sha256(
             f"{self.circle_id}:{invitee_id}:{datetime.now(UTC).isoformat()}".encode()
@@ -282,7 +282,7 @@ class TrustedCircle:
         return invite
 
     def accept_invite(self, invite_id: str) -> CircleMember | None:
-        """Nimmt eine Einladung an."""
+        """Accept an invitation."""
         invite = self.invites.get(invite_id)
         if not invite or invite.status != InviteStatus.PENDING:
             return None
@@ -295,7 +295,7 @@ class TrustedCircle:
         )
 
     def reject_invite(self, invite_id: str) -> bool:
-        """Lehnt eine Einladung ab."""
+        """Reject an invitation."""
         invite = self.invites.get(invite_id)
         if not invite or invite.status != InviteStatus.PENDING:
             return False
@@ -315,13 +315,13 @@ class TrustedCircle:
         description: str = "",
         category: str = "",
     ) -> CuratedSkill | None:
-        """Reicht einen Skill zur Kuratierung ein."""
+        """Submit a skill for curation."""
         member = self.members.get(submitted_by)
         if not member or not member.can_share:
             return None
 
         if package_id in self.curated_skills:
-            return None  # Bereits eingereicht
+            return None  # Already submitted
 
         skill = CuratedSkill(
             package_id=package_id,
@@ -345,7 +345,7 @@ class TrustedCircle:
         security_checked: bool = False,
         test_passed: bool = False,
     ) -> SkillReview | None:
-        """Reviewed einen eingereichten Skill."""
+        """Review a submitted skill."""
         member = self.members.get(reviewer_id)
         if not member or not member.can_curate:
             return None
@@ -354,7 +354,7 @@ class TrustedCircle:
         if not skill:
             return None
 
-        # Nicht sich selbst reviewen
+        # Cannot review own submission
         if skill.added_by == reviewer_id:
             return None
 
@@ -378,13 +378,13 @@ class TrustedCircle:
         return review
 
     def approved_skills(self) -> list[CuratedSkill]:
-        """Alle genehmigten Skills."""
+        """All approved skills."""
         if not self.require_review:
             return list(self.curated_skills.values())
         return [s for s in self.curated_skills.values() if s.is_approved]
 
     def pending_reviews(self) -> list[CuratedSkill]:
-        """Skills die noch Reviews brauchen."""
+        """Skills that still need reviews."""
         return [
             s for s in self.curated_skills.values() if not s.is_approved and s.rejection_count == 0
         ]
@@ -407,11 +407,11 @@ class CuratedCollection:
     collection_id: str
     name: str
     description: str = ""
-    maintainer_id: str = ""  # Peer-ID des Kurators
+    maintainer_id: str = ""  # Peer ID des Kurators
     tags: list[str] = field(default_factory=list)
     skills: list[str] = field(default_factory=list)  # Package-IDs
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    public: bool = False  # Öffentlich sichtbar?
+    public: bool = False  # Publicly visible?
 
     def add_skill(self, package_id: str) -> bool:
         if package_id in self.skills:
@@ -436,7 +436,7 @@ class CuratedCollection:
 
 
 class CircleManager:
-    """Verwaltet Trusted Circles und integriert sie mit dem Ökosystem.
+    """Manage Trusted Circles and integrate them with the ecosystem.
 
     Verantwortlich für:
     - Circle CRUD
@@ -446,9 +446,9 @@ class CircleManager:
     - Discovery (welche Circles gibt es?)
     """
 
-    # Reputation-Boost wenn Skill aus eigenem Circle
+    # Reputation boost when skill is from own circle
     CIRCLE_REPUTATION_BOOST = 3.0
-    # Maximale Kreise pro Peer
+    # Maximum circles per peer
     MAX_CIRCLES_PER_PEER = 10
 
     def __init__(self) -> None:
@@ -466,7 +466,7 @@ class CircleManager:
         description: str = "",
         **kwargs: Any,
     ) -> TrustedCircle:
-        """Erstellt einen neuen Trusted Circle."""
+        """Create a new trusted circle."""
         circle_id = hashlib.sha256(
             f"{name}:{owner_id}:{datetime.now(UTC).isoformat()}".encode()
         ).hexdigest()[:12]
@@ -496,7 +496,7 @@ class CircleManager:
         if not by_peer or circle.owner_id != by_peer:
             return False
 
-        # Peer-Zuordnungen bereinigen
+        # Clean up peer associations
         for member_id in circle.members:
             if member_id in self._peer_circles:
                 self._peer_circles[member_id].discard(circle_id)
@@ -506,7 +506,7 @@ class CircleManager:
         return True
 
     def list_circles(self, peer_id: str = "") -> list[TrustedCircle]:
-        """Listet Circles, optional gefiltert nach Peer-Mitgliedschaft."""
+        """List circles, optionally filtered by peer membership."""
         if not peer_id:
             return list(self._circles.values())
         circle_ids = self._peer_circles.get(peer_id, set())
@@ -521,14 +521,14 @@ class CircleManager:
         invitee_id: str,
         **kwargs: Any,
     ) -> CircleInvite | None:
-        """Erstellt eine Einladung."""
+        """Create an invitation."""
         circle = self._circles.get(circle_id)
         if not circle:
             return None
         return circle.create_invite(inviter_id, invitee_id, **kwargs)
 
     def accept_invite(self, circle_id: str, invite_id: str) -> CircleMember | None:
-        """Nimmt eine Circle-Einladung an."""
+        """Accept a circle invitation."""
         circle = self._circles.get(circle_id)
         if not circle:
             return None
@@ -537,7 +537,7 @@ class CircleManager:
         if not invite:
             return None
 
-        # Max-Circle-Check
+        # Max circle check
         peer_circles = self._peer_circles.get(invite.invitee_id, set())
         if len(peer_circles) >= self.MAX_CIRCLES_PER_PEER:
             return None
@@ -550,13 +550,13 @@ class CircleManager:
     # ── Trust-Abfragen ───────────────────────────────────────────
 
     def is_in_shared_circle(self, peer_a: str, peer_b: str) -> bool:
-        """Prüft ob zwei Peers mindestens einen gemeinsamen Circle haben."""
+        """Check if two peers share at least one common circle."""
         circles_a = self._peer_circles.get(peer_a, set())
         circles_b = self._peer_circles.get(peer_b, set())
         return bool(circles_a & circles_b)
 
     def shared_circles(self, peer_a: str, peer_b: str) -> list[str]:
-        """Gibt gemeinsame Circle-IDs zurück."""
+        """Return shared circle IDs."""
         circles_a = self._peer_circles.get(peer_a, set())
         circles_b = self._peer_circles.get(peer_b, set())
         return list(circles_a & circles_b)
@@ -567,7 +567,7 @@ class CircleManager:
         publisher_id: str,
         requester_id: str,
     ) -> float:
-        """Berechnet Trust-Score eines Pakets basierend auf Circle-Zugehörigkeit.
+        """Calculate trust score of a package based on circle membership.
 
         Returns:
             Basis-Score + Circle-Boost.
@@ -598,7 +598,7 @@ class CircleManager:
         requester_id: str,
         min_score: float = 0.0,
     ) -> list[tuple[str, float]]:
-        """Filtert Pakete nach Trust-Score.
+        """Filter packages by trust score.
 
         Args:
             package_ids: Liste von Paket-IDs.
@@ -628,7 +628,7 @@ class CircleManager:
         tags: list[str] | None = None,
         public: bool = False,
     ) -> CuratedCollection:
-        """Erstellt eine kuratierte Sammlung."""
+        """Create a curated collection."""
         collection_id = hashlib.sha256(f"col:{name}:{maintainer_id}".encode()).hexdigest()[:12]
 
         collection = CuratedCollection(
@@ -647,13 +647,13 @@ class CircleManager:
         return self._collections.get(collection_id)
 
     def list_collections(self, public_only: bool = False) -> list[CuratedCollection]:
-        """Listet alle Sammlungen."""
+        """List all collections."""
         if public_only:
             return [c for c in self._collections.values() if c.public]
         return list(self._collections.values())
 
     def search_collections(self, query: str) -> list[CuratedCollection]:
-        """Sucht in Sammlungen nach Name, Beschreibung oder Tags."""
+        """Search collections by name, description, or tags."""
         query_lower = query.lower()
         return [
             c
@@ -668,7 +668,7 @@ class CircleManager:
     # ── Statistiken ──────────────────────────────────────────────
 
     def stats(self) -> dict[str, Any]:
-        """Ecosystem-Statistiken."""
+        """Ecosystem statistics."""
         total_members = sum(c.member_count for c in self._circles.values())
         total_curated = sum(len(c.curated_skills) for c in self._circles.values())
         total_approved = sum(len(c.approved_skills()) for c in self._circles.values())

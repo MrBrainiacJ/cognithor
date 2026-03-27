@@ -1,6 +1,6 @@
 """Jarvis · Rate-Limiter Middleware.
 
-Einfacher Token-Bucket-Algorithmus fuer API-Endpoints.
+Simple token-bucket algorithm for API endpoints.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class TokenBucket:
-    """Token-Bucket fuer einen Client."""
+    """Token bucket for a client."""
 
     rate: float  # tokens per second
     capacity: float  # max burst

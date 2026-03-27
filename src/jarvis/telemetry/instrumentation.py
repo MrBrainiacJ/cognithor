@@ -1,13 +1,13 @@
-"""Instrumentation -- Auto-Instrumentierung für Jarvis-Module (v19).
+"""Instrumentation -- Auto-instrumentation for Jarvis modules (v19).
 
-Instrumentiert automatisch:
-  - Gateway:     Request-Spans, Latenz-Histogramme, Error-Counter
-  - GraphEngine: Workflow-Spans, Node-Spans, Checkpoint-Events
-  - A2A:         Agent-zu-Agent-Spans mit Cross-Trace-Propagation
-  - Browser:     Navigation-Spans, Action-Spans
-  - LLM:         Model-Aufrufe mit Token-Metriken
+Automatically instruments:
+  - Gateway:     Request spans, latency histograms, error counters
+  - GraphEngine: Workflow spans, node spans, checkpoint events
+  - A2A:         Agent-to-agent spans with cross-trace propagation
+  - Browser:     Navigation spans, action spans
+  - LLM:         Model calls with token metrics
 
-Alle Instrumentierungen sind optional (graceful degradation).
+All instrumentations are optional (graceful degradation).
 
 Usage:
     from jarvis.telemetry import TelemetryHub
@@ -43,7 +43,7 @@ def trace(
     kind: SpanKind = SpanKind.INTERNAL,
     attributes: dict[str, Any] | None = None,
 ) -> Callable:
-    """Decorator der eine Funktion mit einem Span umhüllt.
+    """Decorator that wraps a function with a span.
 
     Usage:
         @trace(tracer, "process_message")
@@ -92,7 +92,7 @@ def measure(
     counter_name: str = "",
     **labels: str,
 ) -> Callable:
-    """Decorator der Latenz in ein Histogram schreibt.
+    """Decorator that writes latency to a histogram.
 
     Usage:
         @measure(metrics, "llm_latency_ms", "llm_calls_total", model="claude")
@@ -146,9 +146,9 @@ def measure(
 
 
 class TelemetryHub:
-    """Zentrale Telemetry-Instanz -- verbindet Tracer + Metrics.
+    """Central telemetry instance -- connects tracer + metrics.
 
-    Stellt Standard-Metriken und Instrumentierung bereit.
+    Provides standard metrics and instrumentation.
     """
 
     def __init__(
@@ -163,7 +163,7 @@ class TelemetryHub:
         self._setup_default_metrics()
 
     def _setup_default_metrics(self) -> None:
-        """Registriert Standard-Metrik-Beschreibungen."""
+        """Registers standard metric descriptions."""
         self.metrics.describe("requests_total", "Total requests processed", "1")
         self.metrics.describe("request_latency_ms", "Request latency", "ms")
         self.metrics.describe("errors_total", "Total errors", "1")
@@ -181,9 +181,9 @@ class TelemetryHub:
     def trace_request(
         self, method: str, path: str, headers: dict[str, str] | None = None
     ) -> SpanContextManager:
-        """Startet einen Request-Span (SERVER).
+        """Starts a request span (SERVER).
 
-        Extrahiert ggf. Parent-Context aus Headers.
+        Extracts parent context from headers if available.
         """
         parent = None
         if headers:
@@ -197,7 +197,7 @@ class TelemetryHub:
         )
 
     def trace_llm_call(self, model: str, prompt_length: int = 0) -> SpanContextManager:
-        """Startet einen LLM-Aufruf-Span."""
+        """Starts an LLM call span."""
         self.metrics.counter("llm_calls_total", 1, model=model)
         return self.tracer.start_span(
             f"llm.{model}",
@@ -209,7 +209,7 @@ class TelemetryHub:
         )
 
     def trace_tool_call(self, tool_name: str) -> SpanContextManager:
-        """Startet einen Tool-Aufruf-Span."""
+        """Starts a tool call span."""
         return self.tracer.start_span(
             f"tool.{tool_name}",
             kind=SpanKind.CLIENT,
@@ -217,7 +217,7 @@ class TelemetryHub:
         )
 
     def trace_graph_execution(self, graph_name: str) -> SpanContextManager:
-        """Startet einen Graph-Execution-Span."""
+        """Starts a graph execution span."""
         self.metrics.counter("graph_executions_total", 1, graph=graph_name)
         return self.tracer.start_span(
             f"graph.{graph_name}",
@@ -228,7 +228,7 @@ class TelemetryHub:
     def trace_a2a_message(
         self, remote_agent: str, direction: str = "outbound"
     ) -> SpanContextManager:
-        """Startet einen A2A-Nachrichten-Span."""
+        """Starts an A2A message span."""
         kind = SpanKind.CLIENT if direction == "outbound" else SpanKind.SERVER
         self.metrics.counter("a2a_messages_total", 1, agent=remote_agent, direction=direction)
         return self.tracer.start_span(
@@ -241,7 +241,7 @@ class TelemetryHub:
         )
 
     def trace_browser_action(self, action: str, url: str = "") -> SpanContextManager:
-        """Startet einen Browser-Action-Span."""
+        """Starts a browser action span."""
         self.metrics.counter("browser_actions_total", 1, action=action)
         return self.tracer.start_span(
             f"browser.{action}",
@@ -252,7 +252,7 @@ class TelemetryHub:
     # ── Metric Shortcuts ─────────────────────────────────────────
 
     def record_request(self, method: str, status: int, latency_ms: float) -> None:
-        """Zeichnet Request-Metriken auf."""
+        """Records request metrics."""
         self.metrics.counter("requests_total", 1, method=method, status=str(status))
         self.metrics.histogram("request_latency_ms", latency_ms, method=method)
         if status >= 400:
@@ -261,7 +261,7 @@ class TelemetryHub:
     def record_llm_usage(
         self, model: str, latency_ms: float, input_tokens: int = 0, output_tokens: int = 0
     ) -> None:
-        """Zeichnet LLM-Nutzung auf."""
+        """Records LLM usage."""
         self.metrics.histogram("llm_latency_ms", latency_ms, model=model)
         if input_tokens:
             self.metrics.counter("llm_tokens_total", input_tokens, model=model, direction="input")
@@ -271,7 +271,7 @@ class TelemetryHub:
     def record_graph_execution(
         self, graph_name: str, latency_ms: float, status: str = "completed"
     ) -> None:
-        """Zeichnet Graph-Execution-Metriken auf."""
+        """Records graph execution metrics."""
         self.metrics.histogram("graph_execution_latency_ms", latency_ms, graph=graph_name)
         self.metrics.counter("graph_executions_total", 1, graph=graph_name, status=status)
 
@@ -281,7 +281,7 @@ class TelemetryHub:
     # ── Dashboard ────────────────────────────────────────────────
 
     def dashboard_snapshot(self) -> dict[str, Any]:
-        """Snapshot für Dashboard."""
+        """Snapshot for dashboard."""
         return {
             "service": self._service_name,
             "tracer": self.tracer.stats(),

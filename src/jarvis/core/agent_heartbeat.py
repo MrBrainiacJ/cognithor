@@ -1,12 +1,12 @@
-"""Per-Agent-Heartbeat: Agent-spezifische Aufgabenplanung.
+"""Per-agent heartbeat: Agent-specific task scheduling.
 
-Jeder Agent bekommt einen eigenen Heartbeat-Kontext:
-  - Eigene Tasks und Trigger
-  - Eigenes Intervall und eigene Konfiguration
-  - Isolation: Agent A's Tasks beeinflussen Agent B nicht
-  - Dashboard-Übersicht zeigt alle Agents und ihre Tasks
+Each agent gets its own heartbeat context:
+  - Own tasks and triggers
+  - Own interval and configuration
+  - Isolation: Agent A's tasks do not affect Agent B
+  - Dashboard overview shows all agents and their tasks
 
-Bibel-Referenz: §10 (Cron-Engine & Proaktive Autonomie)
+Reference: §10 (Cron Engine & Proactive Autonomy)
 """
 
 from __future__ import annotations
@@ -32,13 +32,13 @@ class TaskStatus(Enum):
 
 @dataclass
 class AgentTask:
-    """Eine Heartbeat-Aufgabe für einen spezifischen Agenten."""
+    """A heartbeat task for a specific agent."""
 
     task_id: str
     agent_id: str
     name: str
     description: str = ""
-    cron_expression: str = ""  # Leer = wird manuell getriggert
+    cron_expression: str = ""  # Empty = triggered manually
     enabled: bool = True
     last_run: datetime | None = None
     last_status: TaskStatus = TaskStatus.PENDING
@@ -71,7 +71,7 @@ class AgentTask:
 
 @dataclass
 class AgentHeartbeatConfig:
-    """Heartbeat-Konfiguration für einen Agenten."""
+    """Heartbeat configuration for an agent."""
 
     agent_id: str
     enabled: bool = True
@@ -91,7 +91,7 @@ class AgentHeartbeatConfig:
 
 @dataclass
 class TaskRun:
-    """Protokoll einer Task-Ausführung."""
+    """Record of a task execution."""
 
     task_id: str
     agent_id: str
@@ -109,15 +109,15 @@ class TaskRun:
 
 
 class AgentHeartbeatScheduler:
-    """Verwaltet Heartbeat-Tasks pro Agent.
+    """Manages heartbeat tasks per agent.
 
-    Jeder Agent bekommt:
-      - Eigene Task-Liste
-      - Eigenes Intervall
-      - Eigene Ausführungs-Historie
-      - Isolierte Trigger
+    Each agent gets:
+      - Own task list
+      - Own interval
+      - Own execution history
+      - Isolated triggers
 
-    Dashboard-Übersicht zeigt alle Agents zentral.
+    Dashboard overview shows all agents centrally.
     """
 
     def __init__(self) -> None:
@@ -127,11 +127,11 @@ class AgentHeartbeatScheduler:
         self._max_history = 100
 
     # ------------------------------------------------------------------
-    # Konfiguration
+    # Configuration
     # ------------------------------------------------------------------
 
     def configure_agent(self, config: AgentHeartbeatConfig) -> None:
-        """Setzt die Heartbeat-Konfiguration für einen Agenten."""
+        """Set the heartbeat configuration for an agent."""
         self._configs[config.agent_id] = config
         log.info(
             "agent_heartbeat_configured",
@@ -144,16 +144,16 @@ class AgentHeartbeatScheduler:
         return self._configs.get(agent_id)
 
     # ------------------------------------------------------------------
-    # Task-Verwaltung
+    # Task management
     # ------------------------------------------------------------------
 
     def add_task(self, task: AgentTask) -> None:
-        """Fügt eine Task für einen Agenten hinzu."""
+        """Add a task for an agent."""
         self._tasks[task.agent_id][task.task_id] = task
         log.info("agent_task_added", agent_id=task.agent_id, task_id=task.task_id)
 
     def remove_task(self, agent_id: str, task_id: str) -> bool:
-        """Entfernt eine Task."""
+        """Remove a task."""
         tasks = self._tasks.get(agent_id, {})
         if task_id in tasks:
             del tasks[task_id]
@@ -164,19 +164,19 @@ class AgentHeartbeatScheduler:
         return self._tasks.get(agent_id, {}).get(task_id)
 
     def agent_tasks(self, agent_id: str) -> list[AgentTask]:
-        """Alle Tasks eines Agenten."""
+        """All tasks for an agent."""
         return list(self._tasks.get(agent_id, {}).values())
 
     def enabled_tasks(self, agent_id: str) -> list[AgentTask]:
-        """Nur aktivierte Tasks eines Agenten."""
+        """Only enabled tasks for an agent."""
         return [t for t in self.agent_tasks(agent_id) if t.enabled]
 
     # ------------------------------------------------------------------
-    # Ausführung
+    # Execution
     # ------------------------------------------------------------------
 
     def start_task(self, agent_id: str, task_id: str) -> TaskRun | None:
-        """Startet eine Task-Ausführung."""
+        """Start a task execution."""
         task = self.get_task(agent_id, task_id)
         if not task:
             return None
@@ -188,7 +188,7 @@ class AgentHeartbeatScheduler:
         return run
 
     def complete_task(self, run: TaskRun, *, success: bool = True, error: str = "") -> None:
-        """Beendet eine Task-Ausführung."""
+        """Complete a task execution."""
         run.complete(success=success, error=error)
 
         task = self.get_task(run.agent_id, run.task_id)
@@ -203,17 +203,17 @@ class AgentHeartbeatScheduler:
             total = task.avg_duration_ms * (task.run_count - 1) + run.duration_ms
             task.avg_duration_ms = total / task.run_count
 
-        # Historie
+        # History
         self._history[run.agent_id].append(run)
         if len(self._history[run.agent_id]) > self._max_history:
             self._history[run.agent_id] = self._history[run.agent_id][-self._max_history :]
 
     # ------------------------------------------------------------------
-    # Dashboard-Übersicht
+    # Dashboard overview
     # ------------------------------------------------------------------
 
     def agent_summary(self, agent_id: str) -> dict[str, Any]:
-        """Zusammenfassung für einen Agenten."""
+        """Summary for an agent."""
         config = self._configs.get(agent_id)
         tasks = self.agent_tasks(agent_id)
         history = self._history.get(agent_id, [])
@@ -230,7 +230,7 @@ class AgentHeartbeatScheduler:
         }
 
     def global_dashboard(self) -> dict[str, Any]:
-        """Globale Übersicht aller Agenten und Tasks."""
+        """Global overview of all agents and tasks."""
         all_agents = set(list(self._configs.keys()) + list(self._tasks.keys()))
         summaries = [self.agent_summary(aid) for aid in sorted(all_agents)]
 

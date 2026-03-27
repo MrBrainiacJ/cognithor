@@ -1,7 +1,7 @@
-"""File Watcher · Auto-Reindexierung bei Dateiänderungen. [B§4]
+"""File watcher · Auto-reindexing on file changes. [B§4]
 
-Überwacht ~/.jarvis/memory/ und re-indexiert geänderte Dateien.
-Nutzt watchdog für Filesystem-Events.
+Monitors ~/.jarvis/memory/ and re-indexes changed files.
+Uses watchdog for filesystem events.
 """
 
 from __future__ import annotations

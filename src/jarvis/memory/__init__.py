@@ -1,15 +1,15 @@
 """Jarvis 5-Tier Cognitive Memory System. [B§4]
 
 Public API:
-    MemoryManager      -- Zentrale Schnittstelle (nutze diese!)
+    MemoryManager      -- Central interface (use this!)
     CoreMemory         -- Tier 1: Identität (CORE.md)
-    EpisodicMemory     -- Tier 2: Tageslog
-    SemanticMemory     -- Tier 3: Wissens-Graph
-    ProceduralMemory   -- Tier 4: Gelernte Skills
-    WorkingMemoryManager -- Tier 5: Session-Kontext
-    HybridSearch       -- 3-Kanal Suche
+    EpisodicMemory     -- Tier 2: Daily log
+    SemanticMemory     -- Tier 3: Knowledge graph
+    ProceduralMemory   -- Tier 4: Learned skills
+    WorkingMemoryManager -- Tier 5: Session context
+    HybridSearch       -- 3-channel search
     MemoryIndex        -- SQLite Index
-    EmbeddingClient    -- Embedding-Generierung
+    EmbeddingClient    -- Embedding generation
 """
 
 from jarvis.memory.chunker import chunk_file, chunk_text

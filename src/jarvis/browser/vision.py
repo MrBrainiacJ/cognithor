@@ -1,8 +1,8 @@
-"""Browser Vision -- VisionAnalyzer: Screenshot → LLM → Beschreibung.
+"""Browser Vision -- VisionAnalyzer: Screenshot -> LLM -> Description.
 
-Verbindet Browser-Screenshots mit Vision-fähigen LLMs.
-Nutzt core/vision.py für Backend-agnostische Message-Formatierung
-und UnifiedLLMClient für die LLM-Kommunikation.
+Connects browser screenshots with vision-capable LLMs.
+Uses core/vision.py for backend-agnostic message formatting
+and UnifiedLLMClient for LLM communication.
 """
 
 from __future__ import annotations
@@ -20,12 +20,12 @@ from jarvis.utils.logging import get_logger
 log = get_logger(__name__)
 
 
-# ── Konfiguration ────────────────────────────────────────────────────
+# ── Configuration ────────────────────────────────────────────────────
 
 
 @dataclass
 class VisionConfig:
-    """Konfiguration für den VisionAnalyzer."""
+    """Configuration for the VisionAnalyzer."""
 
     enabled: bool = False
     model: str = ""
@@ -35,12 +35,12 @@ class VisionConfig:
     analysis_temperature: float = 0.3
 
 
-# ── Ergebnis ─────────────────────────────────────────────────────────
+# ── Result ─────────────────────────────────────────────────────────
 
 
 @dataclass
 class VisionAnalysisResult:
-    """Ergebnis einer Vision-Analyse."""
+    """Result of a vision analysis."""
 
     success: bool = False
     description: str = ""
@@ -80,11 +80,11 @@ _DESCRIBE_PAGE_PROMPT = (
 
 
 class VisionAnalyzer:
-    """Verbindet Browser-Screenshots mit Vision-LLMs.
+    """Connects browser screenshots with vision LLMs.
 
     Args:
-        llm_client: Ein UnifiedLLMClient (oder kompatibles Objekt mit chat()-Methode).
-        config: VisionConfig mit Model/Backend-Einstellungen.
+        llm_client: A UnifiedLLMClient (or compatible object with chat() method).
+        config: VisionConfig with model/backend settings.
     """
 
     def __init__(self, llm_client: Any, config: VisionConfig) -> None:
@@ -104,15 +104,15 @@ class VisionAnalyzer:
         prompt: str = "",
         page_content: str = "",
     ) -> VisionAnalysisResult:
-        """Analysiert einen Screenshot mit dem Vision-LLM.
+        """Analyzes a screenshot with the vision LLM.
 
         Args:
-            screenshot_b64: Base64-kodierter Screenshot (PNG).
-            prompt: Optionaler Custom-Prompt (Default: Seitenstruktur-Analyse).
-            page_content: Optionaler bereinigter HTML-Inhalt der Seite.
+            screenshot_b64: Base64-encoded screenshot (PNG).
+            prompt: Optional custom prompt (default: page structure analysis).
+            page_content: Optional cleaned HTML content of the page.
 
         Returns:
-            VisionAnalysisResult mit Beschreibung oder Fehler.
+            VisionAnalysisResult with description or error.
         """
         if not self.is_enabled:
             return VisionAnalysisResult(error="Vision nicht aktiviert")
@@ -129,15 +129,15 @@ class VisionAnalyzer:
         description: str,
         page_content: str = "",
     ) -> VisionAnalysisResult:
-        """Sucht ein Element auf dem Screenshot per Beschreibung.
+        """Searches for an element on the screenshot by description.
 
         Args:
-            screenshot_b64: Base64-kodierter Screenshot.
-            description: Beschreibung des gesuchten Elements.
-            page_content: Optionaler bereinigter HTML-Inhalt der Seite.
+            screenshot_b64: Base64-encoded screenshot.
+            description: Description of the element to find.
+            page_content: Optional cleaned HTML content of the page.
 
         Returns:
-            VisionAnalysisResult -- elements enthält Hinweise zum Finden.
+            VisionAnalysisResult -- elements contains hints for locating.
         """
         if not self.is_enabled:
             return VisionAnalysisResult(error="Vision nicht aktiviert")
@@ -152,14 +152,14 @@ class VisionAnalyzer:
         return result
 
     async def describe_page(self, screenshot_b64: str, page_content: str = "") -> str:
-        """Kurzbeschreibung einer Seite (oder leerer String wenn deaktiviert).
+        """Short page description (or empty string if disabled).
 
         Args:
-            screenshot_b64: Base64-kodierter Screenshot.
-            page_content: Optionaler bereinigter HTML-Inhalt der Seite.
+            screenshot_b64: Base64-encoded screenshot.
+            page_content: Optional cleaned HTML content of the page.
 
         Returns:
-            Kurze Seitenbeschreibung oder "".
+            Short page description or "".
         """
         if not self.is_enabled:
             return ""
@@ -179,7 +179,7 @@ class VisionAnalyzer:
             "total_duration_ms": self._total_duration_ms,
         }
 
-    # ── Internes ─────────────────────────────────────────────────────
+    # ── Internal ─────────────────────────────────────────────────────
 
     async def _send_vision_request(
         self,
@@ -187,7 +187,7 @@ class VisionAnalyzer:
         prompt: str,
         page_content: str = "",
     ) -> VisionAnalysisResult:
-        """Sendet einen Screenshot + Prompt an das Vision-LLM."""
+        """Sends a screenshot + prompt to the vision LLM."""
         start = time.monotonic()
         self._call_count += 1
 
@@ -205,7 +205,7 @@ class VisionAnalyzer:
                 temperature=self._config.analysis_temperature,
             )
 
-            # Response auswerten -- UnifiedLLMClient gibt Ollama-Format zurück
+            # Evaluate response -- UnifiedLLMClient returns Ollama format
             content = ""
             if isinstance(response, dict):
                 content = response.get("message", {}).get("content", "")

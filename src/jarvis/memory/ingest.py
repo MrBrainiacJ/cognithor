@@ -1,4 +1,4 @@
-"""Knowledge Ingest Pipeline: Automatisches Einlesen von Dokumenten ins RAG.
+"""Knowledge Ingest Pipeline: Automatic ingestion of documents into RAG.
 
 Überwacht ein Ingest-Verzeichnis (~/.jarvis/ingest/) und verarbeitet
 neue Dateien automatisch:
@@ -272,7 +272,7 @@ class IngestPipeline:
 
     @staticmethod
     def _file_hash(file_path: Path) -> str:
-        """Berechnet einen stabilen Hash für eine Datei."""
+        """Compute a stable hash for a file."""
         hasher = hashlib.sha256()
         hasher.update(file_path.name.encode())
         hasher.update(str(file_path.stat().st_size).encode())

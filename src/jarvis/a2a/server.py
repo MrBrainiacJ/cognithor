@@ -1,19 +1,19 @@
 """A2A Server -- RC v1.0 (Linux Foundation).
 
-JSON-RPC 2.0 Server für eingehende Agent-zu-Agent Tasks.
-Methoden nach RC v1.0:
-  - message/send:           Nachricht senden / Task erstellen
-  - message/stream:         Streaming-Nachricht (SSE-Events)
-  - tasks/get:              Task-Status abfragen
-  - tasks/list:             Tasks auflisten (mit Filtern)
-  - tasks/cancel:           Task abbrechen
-  - tasks/pushNotification/create:  Push-Config erstellen
-  - tasks/pushNotification/get:     Push-Config abrufen
-  - tasks/pushNotification/list:    Push-Configs auflisten
-  - tasks/pushNotification/delete:  Push-Config löschen
-  - agent/authenticatedExtendedCard: Authentifizierte Agent Card
+JSON-RPC 2.0 server for incoming agent-to-agent tasks.
+Methods per RC v1.0:
+  - message/send:           Send message / create task
+  - message/stream:         Streaming message (SSE events)
+  - tasks/get:              Query task status
+  - tasks/list:             List tasks (with filters)
+  - tasks/cancel:           Cancel task
+  - tasks/pushNotification/create:  Create push config
+  - tasks/pushNotification/get:     Retrieve push config
+  - tasks/pushNotification/list:    List push configs
+  - tasks/pushNotification/delete:  Delete push config
+  - agent/authenticatedExtendedCard: Authenticated agent card
 
-OPTIONAL: Nur aktiv wenn A2A-Server-Modus konfiguriert ist.
+OPTIONAL: Only active when A2A server mode is configured.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ class A2AServerConfig:
 
 
 class A2AServer:
-    """A2A-Server: Empfängt Tasks von Remote-Agenten (RC v1.0)."""
+    """A2A server: receives tasks from remote agents (RC v1.0)."""
 
     def __init__(self, config: A2AServerConfig | None = None) -> None:
         self._config = config or A2AServerConfig()
@@ -157,7 +157,7 @@ class A2AServer:
         auth_token: str | None = None,
         client_version: str = "",
     ) -> dict[str, Any]:
-        """HTTP-Request-Handler mit Version-Negotiation."""
+        """HTTP request handler with version negotiation."""
         # Auth
         if self._config.require_auth and (
             not auth_token or not hmac.compare_digest(auth_token, self._config.auth_token)
@@ -282,7 +282,7 @@ class A2AServer:
     # ── Method Handlers (RC v1.0) ────────────────────────────────
 
     async def _handle_message_send(self, params: dict[str, Any]) -> dict[str, Any]:
-        """message/send -- erstellt Task oder sendet Nachricht an bestehenden."""
+        """message/send -- creates task or sends message to existing one."""
         task_id = params.get("id")
         context_id = params.get("contextId", "")
         message_data = params.get("message", {})
@@ -344,7 +344,7 @@ class A2AServer:
         return result
 
     async def _handle_tasks_list(self, params: dict[str, Any]) -> dict[str, Any]:
-        """tasks/list -- Tasks auflisten mit optionalen Filtern (RC v1.0)."""
+        """tasks/list -- list tasks with optional filters (RC v1.0)."""
         context_id = params.get("contextId")
         state_filter = params.get("state")
         limit = params.get("limit", 50)
@@ -593,7 +593,7 @@ class A2AServer:
         log.info("a2a_server_started", host=self._config.host, port=self._config.port)
 
     async def _periodic_cleanup(self, interval: int = 300) -> None:
-        """Periodisch abgeschlossene Tasks aufräumen (alle 5 Minuten)."""
+        """Periodically clean up completed tasks (every 5 minutes)."""
         while self._running:
             await asyncio.sleep(interval)
             removed = self.cleanup_completed()

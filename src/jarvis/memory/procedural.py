@@ -1,7 +1,7 @@
-"""Procedural Memory · Tier 4 -- Gelernte Skills/Routinen. [B§4.5, B§6]
+"""Procedural Memory · Tier 4 -- Learned skills/routines. [B§4.5, B§6]
 
 Inspiration: Voyager Skill Library, SAGE Framework.
-Jede Prozedur ist eine Markdown-Datei mit YAML-Frontmatter.
+Each procedure is a Markdown file with YAML frontmatter.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
 
 class ProceduralMemory:
-    """Verwaltet gelernte Prozeduren unter ~/.jarvis/memory/procedures/.
+    """Manage learned procedures under ~/.jarvis/memory/procedures/.
 
     Dateiformat:
     ```
@@ -53,11 +53,11 @@ class ProceduralMemory:
 
     @property
     def directory(self) -> Path:
-        """Gibt das Prozeduren-Verzeichnis zurück."""
+        """Return the procedures directory."""
         return self._dir
 
     def ensure_directory(self) -> None:
-        """Erstellt das Procedures-Verzeichnis."""
+        """Create the procedures directory."""
         self._dir.mkdir(parents=True, exist_ok=True)
 
     # ── CRUD ─────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ class ProceduralMemory:
         body: str,
         metadata: ProcedureMetadata | None = None,
     ) -> Path:
-        """Speichert eine Prozedur als Markdown-Datei.
+        """Save a procedure as a Markdown file.
 
         Args:
             name: Prozedur-Name (wird als Dateiname verwendet).

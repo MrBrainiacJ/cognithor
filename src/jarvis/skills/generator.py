@@ -1,4 +1,4 @@
-"""Auto-Skill-Generator: Jarvis entwirft eigene Module.
+"""Auto-skill generator: Jarvis designs its own modules.
 
 Wenn der Planner oder Executor ein Tool nicht findet oder ein Skill
 fehlt, erkennt der SkillGenerator die Lücke und:
@@ -37,7 +37,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# Standard-Pakete fuer generierte Skills
+# Standard packages for generated skills
 DEFAULT_ALLOWED_PACKAGES = frozenset(
     {
         "json",
@@ -57,7 +57,7 @@ DEFAULT_ALLOWED_PACKAGES = frozenset(
     }
 )
 
-# Gap-Erkennung: Mindestanzahl Vorkommen bevor generiert wird
+# Gap detection: minimum occurrences before generation
 DEFAULT_GAP_THRESHOLD = 2
 
 __all__ = [
@@ -78,15 +78,15 @@ __all__ = [
 class SkillGapType(Enum):
     """Art der erkannten Skill-Lücke."""
 
-    UNKNOWN_TOOL = "unknown_tool"  # Tool-Call fehlgeschlagen
+    UNKNOWN_TOOL = "unknown_tool"  # Tool call failed
     NO_SKILL_MATCH = "no_skill_match"  # Kein Skill für die Aufgabe
-    LOW_SUCCESS_RATE = "low_success_rate"  # Bestehender Skill versagt oft
-    USER_REQUEST = "user_request"  # User bittet explizit um neues Tool
-    REPEATED_FAILURE = "repeated_failure"  # Wiederholtes Scheitern
+    LOW_SUCCESS_RATE = "low_success_rate"  # Existing skill fails often
+    USER_REQUEST = "user_request"  # User explicitly requests new tool
+    REPEATED_FAILURE = "repeated_failure"  # Repeated failure
 
 
 class GenerationStatus(Enum):
-    """Status eines Skill-Generierungsversuchs."""
+    """Status of a skill generation attempt."""
 
     PENDING = "pending"
     GENERATING = "generating"
@@ -149,23 +149,23 @@ class GeneratedSkill:
     test_code: str = ""
     skill_markdown: str = ""
 
-    # Metadaten
+    # Metadata
     gap: SkillGap | None = None
     description: str = ""
     tools_provided: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
 
-    # Test-Ergebnisse
+    # Test results
     test_output: str = ""
     test_passed: bool = False
     test_errors: list[str] = field(default_factory=list)
 
-    # Sicherheit
+    # Security
     requires_approval: bool = False
     approved_by: str = ""
     sandbox_network: str = "block"  # Default: kein Netzwerk
 
-    # Zeitstempel
+    # Timestamps
     created_at: str = field(
         default_factory=lambda: datetime.now(UTC).isoformat(),
     )
@@ -261,7 +261,7 @@ class GapDetector:
     """
 
     MAX_GAPS = 1000  # Maximale Anzahl Gaps im Speicher
-    MAX_CONTEXT_LENGTH = 5000  # Maximale Laenge eines Gap-Kontexts
+    MAX_CONTEXT_LENGTH = 5000  # Maximum length of a gap context
 
     def __init__(self) -> None:
         self._gaps: dict[str, SkillGap] = {}  # gap_id → SkillGap
@@ -272,7 +272,7 @@ class GapDetector:
         return len(self._gaps)
 
     def report_unknown_tool(self, tool_name: str, context: str = "") -> SkillGap:
-        """Meldet einen fehlgeschlagenen Tool-Call."""
+        """Report a failed tool call."""
         gap_id = f"tool:{tool_name}"
         return self._upsert_gap(
             gap_id,
@@ -283,8 +283,8 @@ class GapDetector:
         )
 
     def report_no_skill_match(self, query: str) -> SkillGap:
-        """Meldet dass kein Skill zur Anfrage passt."""
-        # Deterministischer ID aus Query-Hash
+        """Report that no skill matches the query."""
+        # Deterministic ID from query hash
         q_hash = hashlib.md5(query.lower().encode()).hexdigest()[:8]
         gap_id = f"skill:{q_hash}"
         return self._upsert_gap(
@@ -299,7 +299,7 @@ class GapDetector:
         skill_name: str,
         success_rate: float,
     ) -> SkillGap:
-        """Meldet einen Skill mit niedriger Erfolgsrate."""
+        """Report a skill with low success rate."""
         gap_id = f"low_success:{skill_name}"
         return self._upsert_gap(
             gap_id,
@@ -309,7 +309,7 @@ class GapDetector:
         )
 
     def report_user_request(self, description: str, context: str = "") -> SkillGap:
-        """User bittet explizit um ein neues Tool."""
+        """User explicitly requests a new tool."""
         gap_id = f"user:{hashlib.md5(description.encode()).hexdigest()[:8]}"
         return self._upsert_gap(
             gap_id,
@@ -323,7 +323,7 @@ class GapDetector:
         task: str,
         error: str,
     ) -> SkillGap:
-        """Meldet wiederholtes Scheitern bei einer Aufgabe."""
+        """Report repeated failure at a task."""
         t_hash = hashlib.md5(task.lower().encode()).hexdigest()[:8]
         gap_id = f"fail:{t_hash}"
         return self._upsert_gap(
@@ -334,10 +334,10 @@ class GapDetector:
         )
 
     def get_actionable_gaps(self) -> list[SkillGap]:
-        """Gibt Gaps zurück die häufig genug aufgetreten sind.
+        """Return gaps that have occurred frequently enough.
 
         Returns:
-            Priorisierte Liste von Gaps (höchste Priorität zuerst).
+            Prioritized list of gaps (highest priority first).
         """
         actionable = [
             gap
@@ -349,11 +349,11 @@ class GapDetector:
         return actionable
 
     def get_all_gaps(self) -> list[SkillGap]:
-        """Alle erkannten Gaps."""
+        """All detected gaps."""
         return sorted(self._gaps.values(), key=lambda g: g.priority, reverse=True)
 
     def clear_gap(self, gap_id: str) -> bool:
-        """Entfernt eine Gap (z.B. nach erfolgreicher Generierung)."""
+        """Remove a gap (e.g. after successful generation)."""
         return self._gaps.pop(gap_id, None) is not None
 
     def _upsert_gap(
@@ -364,8 +364,8 @@ class GapDetector:
         context: str = "",
         tool_name: str = "",
     ) -> SkillGap:
-        """Erstellt oder aktualisiert eine Gap."""
-        # Kontext begrenzen
+        """Create or update a gap."""
+        # Limit context
         context = context[: self.MAX_CONTEXT_LENGTH]
 
         if gap_id in self._gaps:
@@ -376,7 +376,7 @@ class GapDetector:
                 gap.context = context[: self.MAX_CONTEXT_LENGTH]
             log.debug("gap_updated", id=gap_id, frequency=gap.frequency)
         else:
-            # Eviction: bei Ueberlauf niedrigste Prioritaet entfernen
+            # Eviction: remove lowest priority on overflow
             if len(self._gaps) >= self.MAX_GAPS:
                 lowest = min(self._gaps.values(), key=lambda g: g.priority)
                 del self._gaps[lowest.id]
@@ -446,7 +446,7 @@ class SkillGenerator:
 
     @property
     def gap_detector(self) -> GapDetector:
-        """Zugriff auf den Gap-Detector."""
+        """Access to the gap detector."""
         return self._gap_detector
 
     @property
@@ -472,7 +472,7 @@ class SkillGenerator:
         Returns:
             GeneratedSkill mit generiertem Code.
         """
-        # Skill-Name aus Gap ableiten
+        # Derive skill name from gap
         name = self._derive_skill_name(gap)
 
         skill = GeneratedSkill(
@@ -483,7 +483,7 @@ class SkillGenerator:
             requires_approval=self._require_approval,
         )
 
-        # Versionierung: Wenn Skill mit gleichem Namen existiert
+        # Versioning: if skill with same name exists
         existing = self._generated.get(name)
         if existing:
             skill.version = existing.version + 1
@@ -496,11 +496,11 @@ class SkillGenerator:
         )
 
         if self._llm_fn is None:
-            # Ohne LLM: Stub generieren
+            # Without LLM: generate stub
             skill.code = self._generate_stub(gap)
             skill.test_code = self._generate_stub_test(name, skill.code)
         else:
-            # Mit LLM: Echten Code generieren
+            # With LLM: generate real code
             try:
                 prompt = SKILL_GENERATION_PROMPT.format(
                     description=gap.description,
@@ -510,7 +510,7 @@ class SkillGenerator:
                 skill.code = await self._llm_fn(prompt)
                 skill.code = self._extract_code_block(skill.code)
 
-                # Tests generieren
+                # Generate tests
                 test_prompt = SKILL_TEST_PROMPT.format(code=skill.code)
                 skill.test_code = await self._llm_fn(test_prompt)
                 skill.test_code = self._extract_code_block(skill.test_code)
@@ -520,7 +520,7 @@ class SkillGenerator:
                 skill.status = GenerationStatus.FAILED
                 skill.test_errors = [str(exc)]
 
-        # Skill-Markdown generieren
+        # Generate skill Markdown
         skill.skill_markdown = self._generate_skill_markdown(skill)
 
         self._generated[name] = skill
@@ -550,7 +550,7 @@ class SkillGenerator:
         log.info("skill_test_start", name=skill.name, test_dir=str(test_dir))
 
         if self._sandbox is None:
-            # Ohne Sandbox: Syntax-Check via compile()
+            # Without sandbox: syntax check via compile()
             try:
                 compile(skill.code, module_file.name, "exec")
                 skill.test_passed = True
@@ -618,7 +618,7 @@ class SkillGenerator:
             log.info("skill_awaiting_approval", name=skill.name)
             return False
 
-        # Alte Version archivieren
+        # Archive old version
         self._archive_if_exists(skill)
 
         # Code schreiben (reference only — NOT imported by the registry)
@@ -636,7 +636,7 @@ class SkillGenerator:
         skill.status = GenerationStatus.REGISTERED
         skill.registered_at = datetime.now(UTC).isoformat()
 
-        # Optional in SkillRegistry laden
+        # Optionally load into SkillRegistry
         if skill_registry is not None and hasattr(skill_registry, "load_from_directories"):
             try:
                 skill_registry.load_from_directories([self._skills_dir])
@@ -651,7 +651,7 @@ class SkillGenerator:
             path=str(code_file),
         )
 
-        # Optional als signiertes Paket verpacken
+        # Optionally package as signed package
         if self._package_builder is not None:
             try:
                 from jarvis.skills.package import SkillManifest
@@ -684,7 +684,7 @@ class SkillGenerator:
             except Exception as exc:
                 log.warning("skill_packaging_failed", name=skill.name, error=str(exc))
 
-        # Audit: Skill-Installation protokollieren
+        # Audit: log skill installation
         if self._audit_logger:
             self._audit_logger.log_skill_install(
                 f"{skill.name}@{skill.version}",
@@ -694,7 +694,7 @@ class SkillGenerator:
         return True
 
     def approve(self, name: str, approved_by: str = "user") -> bool:
-        """Genehmigt einen Skill der auf Approval wartet.
+        """Approve a skill awaiting approval.
 
         Args:
             name: Skill-Name.
@@ -731,7 +731,7 @@ class SkillGenerator:
             log.warning("rollback_impossible", name=name, reason="no_previous_version")
             return False
 
-        # Vorherige Version aus History laden
+        # Load previous version from history
         prev_version = skill.version - 1
         history_file = self._history_dir / f"auto_{name}_v{prev_version}.py"
 
@@ -739,7 +739,7 @@ class SkillGenerator:
             log.warning("rollback_impossible", name=name, reason="history_not_found")
             return False
 
-        # Aktuelle Version durch vorherige ersetzen
+        # Replace current version with previous
         code_file = self._skills_dir / f"auto_{name}.py"
         shutil.copy2(history_file, code_file)
 
@@ -786,7 +786,7 @@ class SkillGenerator:
                 break
 
             if attempt < max_retries:
-                # Re-generieren mit Fehler-Kontext (begrenzt)
+                # Re-generate with error context (limited)
                 log.info(
                     "skill_retry",
                     name=skill.name,
@@ -818,7 +818,7 @@ class SkillGenerator:
             skill = await self.process_gap(gap, skill_registry=skill_registry)
             results.append(skill)
 
-            # Gap entfernen wenn erfolgreich
+            # Remove gap if successful
             if skill.status == GenerationStatus.REGISTERED:
                 self._gap_detector.clear_gap(gap.id)
 
@@ -829,11 +829,11 @@ class SkillGenerator:
     # ========================================================================
 
     def _derive_skill_name(self, gap: SkillGap) -> str:
-        """Leitet einen Skill-Namen aus der Gap ab."""
+        """Derive a skill name from the gap."""
         if gap.tool_name:
             return gap.tool_name.replace("-", "_").replace(" ", "_").lower()
 
-        # Aus Beschreibung
+        # From description
         words = gap.description.lower().split()[:4]
         name = "_".join(w for w in words if w.isalnum())
         return name or f"skill_{hashlib.md5(gap.description.encode()).hexdigest()[:6]}"
@@ -886,7 +886,7 @@ class SkillGenerator:
         ''')
 
     def _generate_stub_test(self, name: str, code: str) -> str:
-        """Generiert einen einfachen Test-Stub."""
+        """Generate a simple test stub."""
         safe_name = self._escape_for_string(name)
         return textwrap.dedent(f'''\
             """Auto-generierte Tests fuer {safe_name}."""
@@ -908,7 +908,7 @@ class SkillGenerator:
         ''')
 
     def _generate_skill_markdown(self, skill: GeneratedSkill) -> str:
-        """Generiert Skill-Markdown mit Frontmatter."""
+        """Generate skill Markdown with frontmatter."""
         tools = ", ".join(skill.tools_provided) if skill.tools_provided else skill.name
         safe_desc = self._escape_for_string(skill.description[:200])
         safe_name = self._escape_for_string(skill.name)
@@ -933,10 +933,10 @@ class SkillGenerator:
         """)
 
     def _archive_if_exists(self, skill: GeneratedSkill) -> None:
-        """Archiviert die aktuelle Version eines Skills."""
+        """Archive the current version of a skill."""
         code_file = self._skills_dir / f"{skill.module_name}.py"
         if code_file.exists():
-            # Alte Version in History speichern
+            # Save old version to history
             prev_version = skill.version - 1 if skill.version > 1 else 1
             history_file = self._history_dir / f"{skill.module_name}_v{prev_version}.py"
             shutil.copy2(code_file, history_file)
@@ -949,20 +949,20 @@ class SkillGenerator:
 
     @staticmethod
     def _extract_code_block(text: str) -> str:
-        """Extrahiert Python-Code aus LLM-Antwort (mit/ohne Markdown-Fences)."""
-        # Suche nach ```python ... ``` Block
+        """Extract Python code from LLM response (with/without Markdown fences)."""
+        # Search for ```python ... ``` block
         import re
 
         match = re.search(r"```python\s*\n(.*?)```", text, re.DOTALL)
         if match:
             return match.group(1).strip()
 
-        # Suche nach ``` ... ``` Block
+        # Search for ``` ... ``` block
         match = re.search(r"```\s*\n(.*?)```", text, re.DOTALL)
         if match:
             return match.group(1).strip()
 
-        # Kein Markdown-Block → gesamten Text nehmen
+        # No Markdown block → gesamten Text nehmen
         return text.strip()
 
     # ========================================================================
@@ -970,7 +970,7 @@ class SkillGenerator:
     # ========================================================================
 
     def stats(self) -> dict[str, Any]:
-        """Generator-Statistiken."""
+        """Generator statistics."""
         by_status: dict[str, int] = {}
         for skill in self._generated.values():
             status = skill.status.value

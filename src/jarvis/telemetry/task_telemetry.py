@@ -1,4 +1,4 @@
-"""Task-Level Telemetrie mit Success-Rate und Tool-Latency-Profil."""
+"""Task-level telemetry with success rate and tool latency profile."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ log = get_logger(__name__)
 
 
 class TaskTelemetryCollector:
-    """Sammelt Task-Level-Telemetrie-Daten in SQLite."""
+    """Collects task-level telemetry data in SQLite."""
 
     def __init__(self, db_path: str | Path | None = None) -> None:
         self._db_path = str(db_path) if db_path else ":memory:"
@@ -65,7 +65,7 @@ class TaskTelemetryCollector:
         error_type: str = "",
         error_message: str = "",
     ) -> None:
-        """Speichert eine Task-Telemetrie-Messung."""
+        """Stores a task telemetry measurement."""
         conn = self._get_conn()
         conn.execute(
             """INSERT INTO task_telemetry
@@ -84,7 +84,7 @@ class TaskTelemetryCollector:
         conn.commit()
 
     def get_success_rate(self, window_hours: int = 24) -> float:
-        """Erfolgsrate ueber ein Zeitfenster."""
+        """Success rate over a time window."""
         conn = self._get_conn()
         from datetime import timedelta
 
@@ -131,7 +131,7 @@ class TaskTelemetryCollector:
         return result
 
     def get_hourly_stats(self, hours: int = 24) -> list[dict[str, Any]]:
-        """Zeitreihe fuer Dashboard (stuendliche Aggregation)."""
+        """Time series for dashboard (hourly aggregation)."""
         conn = self._get_conn()
         from datetime import timedelta
 
@@ -162,9 +162,9 @@ class TaskTelemetryCollector:
         ]
 
     def get_tool_stats(self) -> dict[str, dict[str, int]]:
-        """Tool-Statistiken: {tool_name: {total: N, errors: N}}.
+        """Tool statistics: {tool_name: {total: N, errors: N}}.
 
-        Aggregiert ueber alle aufgezeichneten Tasks.
+        Aggregated over all recorded tasks.
         """
         conn = self._get_conn()
         rows = conn.execute("SELECT tools_used, success FROM task_telemetry").fetchall()
@@ -182,11 +182,11 @@ class TaskTelemetryCollector:
         return stats
 
     def get_unused_tools(self, since: datetime | None = None) -> list[str]:
-        """Tools die seit einem Zeitpunkt nicht mehr genutzt wurden.
+        """Tools that have not been used since a given point in time.
 
-        Gibt Tool-Namen zurueck, die in get_tool_stats() vorkommen
-        aber seit 'since' 0 Aufrufe hatten. Wenn since=None, gibt
-        leere Liste zurueck (kein Referenzzeitraum).
+        Returns tool names that appear in get_tool_stats()
+        but had 0 calls since 'since'. If since=None, returns
+        empty list (no reference period).
         """
         if since is None:
             return []
@@ -194,14 +194,14 @@ class TaskTelemetryCollector:
         conn = self._get_conn()
         cutoff = since.isoformat()
 
-        # Alle Tools die jemals genutzt wurden
+        # All tools ever used
         all_rows = conn.execute("SELECT tools_used FROM task_telemetry").fetchall()
         all_tools: set[str] = set()
         for row in all_rows:
             for tool in json.loads(row["tools_used"]):
                 all_tools.add(tool)
 
-        # Tools die seit cutoff genutzt wurden
+        # Tools used since cutoff
         recent_rows = conn.execute(
             "SELECT tools_used FROM task_telemetry WHERE timestamp >= ?",
             (cutoff,),
@@ -214,7 +214,7 @@ class TaskTelemetryCollector:
         return sorted(all_tools - recent_tools)
 
     def get_total_tasks(self) -> int:
-        """Gesamtzahl aufgezeichneter Tasks."""
+        """Total number of recorded tasks."""
         conn = self._get_conn()
         row = conn.execute("SELECT COUNT(*) as cnt FROM task_telemetry").fetchone()
         return row["cnt"] if row else 0

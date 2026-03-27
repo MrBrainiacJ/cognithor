@@ -23,13 +23,13 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# HTTP-Timeout (Sekunden)
+# HTTP timeout (seconds)
 _HTTP_TIMEOUT_S = 30
 
 
 @dataclass
 class SyncResult:
-    """Ergebnis einer Registry-Synchronisation."""
+    """Result of a registry synchronization."""
 
     success: bool
     registry_skills: int = 0
@@ -40,7 +40,7 @@ class SyncResult:
 
 
 class RegistrySync:
-    """Periodische Synchronisation mit dem Community-Skill-Registry.
+    """Periodic synchronization with the community skill registry.
 
     Usage::
 
@@ -81,7 +81,7 @@ class RegistrySync:
     # ====================================================================
 
     async def sync_once(self) -> SyncResult:
-        """Fuehrt eine einzelne Synchronisation durch.
+        """Perform a single synchronization.
 
         1. registry.json herunterladen
         2. recalls/active.json herunterladen
@@ -95,18 +95,18 @@ class RegistrySync:
             return await self._sync_once_inner()
 
     async def _sync_once_inner(self) -> SyncResult:
-        """Innere Sync-Logik (Lock wird von sync_once gehalten)."""
+        """Inner sync logic (lock is held by sync_once)."""
         start = time.monotonic()
         result = SyncResult(success=False)
 
         try:
-            # 1. Registry herunterladen
+            # 1. Download registry
             registry_url = f"{self._registry_url}/registry.json"
             registry_data = await self._fetch_json(registry_url)
             skills = registry_data.get("skills", [])
             result.registry_skills = len(skills)
 
-            # 2. Recalls herunterladen
+            # 2. Download recalls
             recalls_url = f"{self._registry_url}/recalls/active.json"
             try:
                 recalls_data = await self._fetch_json(recalls_url)
@@ -115,7 +115,7 @@ class RegistrySync:
                 log.debug("recalls_fetch_failed", url=recalls_url, error=str(_recalls_exc))
                 active_recalls = []
 
-            # 3. Lokale installierte Skills pruefen
+            # 3. Check locally installed skills
             installed = self._get_installed_skills()
             recalled_names = {r.get("skill_name", "") for r in active_recalls}
 
@@ -123,11 +123,11 @@ class RegistrySync:
                 if skill_name in recalled_names:
                     result.new_recalls.append(skill_name)
 
-                    # Skill lokal deaktivieren
+                    # Deactivate skill locally
                     self._deactivate_skill(skill_name)
                     result.deactivated_skills.append(skill_name)
 
-                    # In MarketplaceStore persistieren
+                    # Persist in MarketplaceStore
                     if self._marketplace_store is not None:
                         recall_entry = next(
                             (r for r in active_recalls if r.get("skill_name") == skill_name),
@@ -135,7 +135,7 @@ class RegistrySync:
                         )
                         self._marketplace_store.save_remote_recall(recall_entry)
 
-            # 4. In SkillRegistry deaktivieren
+            # 4. Deactivate in SkillRegistry
             if self._skill_registry is not None:
                 for skill_name in result.deactivated_skills:
                     self._skill_registry.disable(skill_name)
@@ -164,7 +164,7 @@ class RegistrySync:
     # ====================================================================
 
     async def start_periodic(self) -> None:
-        """Startet die periodische Synchronisation im Hintergrund."""
+        """Start periodic synchronization in the background."""
         if self._running:
             return
 
@@ -176,7 +176,7 @@ class RegistrySync:
         )
 
     async def stop(self) -> None:
-        """Stoppt die periodische Synchronisation."""
+        """Stop periodic synchronization."""
         self._running = False
         if self._task is not None:
             self._task.cancel()
@@ -186,7 +186,7 @@ class RegistrySync:
         log.info("registry_sync_stopped")
 
     async def _periodic_loop(self) -> None:
-        """Hintergrund-Loop fuer periodische Syncs."""
+        """Background loop for periodic syncs."""
         while self._running:
             try:
                 await self.sync_once()
@@ -200,7 +200,7 @@ class RegistrySync:
     # ====================================================================
 
     def _get_installed_skills(self) -> list[str]:
-        """Gibt eine Liste installierter Community-Skill-Namen zurueck."""
+        """Return a list of installed community skill names."""
         if not self._community_dir.exists():
             return []
         return [
@@ -210,10 +210,10 @@ class RegistrySync:
         ]
 
     def _deactivate_skill(self, skill_name: str) -> None:
-        """Markiert einen Skill als deaktiviert (Recall-Marker-Datei).
+        """Mark a skill as deactivated (recall marker file).
 
         Erstellt eine ``.recalled``-Datei im Skill-Verzeichnis.
-        Die SkillRegistry laedt recalled Skills nicht.
+        The SkillRegistry does not load recalled skills.
         """
         skill_dir = (self._community_dir / skill_name).resolve()
         if not skill_dir.is_relative_to(self._community_dir.resolve()):
@@ -241,12 +241,12 @@ class RegistrySync:
 
     @property
     def last_sync(self) -> float:
-        """Zeitstempel des letzten Syncs (Unix timestamp)."""
+        """Timestamp of the last sync (Unix timestamp)."""
         return self._last_sync
 
     @property
     def is_running(self) -> bool:
-        """Ob die periodische Synchronisation laeuft."""
+        """Whether periodic synchronization is running."""
         return self._running
 
     # ====================================================================
@@ -254,12 +254,12 @@ class RegistrySync:
     # ====================================================================
 
     async def _fetch_json(self, url: str) -> dict[str, Any]:
-        """Laedt JSON von einer URL."""
+        """Load JSON from a URL."""
         text = await self._fetch_text(url)
         return json.loads(text)
 
     async def _fetch_text(self, url: str) -> str:
-        """Laedt Text von einer URL.
+        """Load text from a URL.
 
         Nutzt aiohttp wenn verfuegbar und funktional, sonst urllib-Fallback.
         """

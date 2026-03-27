@@ -1,15 +1,15 @@
 """Jarvis · MLOps Security Pipeline.
 
-Automatisierte Sicherheitstests bei jedem Update:
+Automated security tests on every update:
 
-  - SecurityPipeline:       Orchestriert alle Sicherheitsprüfungen
-  - AdversarialFuzzer:      Erweitertes Input-Fuzzing (Unicode, Encoding, Nesting)
-  - ModelInversionDetector: Erkennt Modell-Inversions-Versuche
-  - PipelineStage:          Einzelne Prüfstufe mit Pass/Fail + Findings
-  - PipelineRun:            Kompletter Durchlauf mit Report
-  - CIIntegration:          GitHub Actions / GitLab CI Hooks
+  - SecurityPipeline:       Orchestrates all security checks
+  - AdversarialFuzzer:      Extended input fuzzing (Unicode, encoding, nesting)
+  - ModelInversionDetector: Detects model inversion attempts
+  - PipelineStage:          Single check stage with pass/fail + findings
+  - PipelineRun:            Complete run with report
+  - CIIntegration:          GitHub Actions / GitLab CI hooks
 
-Architektur-Bibel: §11.6 (MLOps), §14.1 (DevSecOps)
+Architecture Bible: §11.6 (MLOps), §14.1 (DevSecOps)
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ class StageName(Enum):
 
 @dataclass
 class Finding:
-    """Einzelnes Security-Finding."""
+    """Single security finding."""
 
     finding_id: str
     stage: str
@@ -77,7 +77,7 @@ class Finding:
 
 @dataclass
 class StageReport:
-    """Ergebnis einer Pipeline-Stufe."""
+    """Result of a pipeline stage."""
 
     stage: StageName
     result: StageResult
@@ -103,20 +103,20 @@ class StageReport:
 
 
 # ============================================================================
-# Adversarial Fuzzer (Erweiterung über redteam.py hinaus)
+# Adversarial Fuzzer (extension beyond redteam.py)
 # ============================================================================
 
 
 class AdversarialFuzzer:
-    """Erweitertes Input-Fuzzing mit Unicode, Encoding und Nesting-Attacken.
+    """Extended input fuzzing with Unicode, encoding, and nesting attacks.
 
-    Geht über einfache Prompt-Injection hinaus:
-      - Unicode-Homoglyphen (visuell identisch, aber andere Codepoints)
-      - Base64/Hex-kodierte Payloads
-      - Tief verschachtelte JSON/XML-Strukturen
-      - Invisible Character Injection
-      - Right-to-Left Override
-      - Emoji-basierte Obfuskation
+    Goes beyond simple prompt injection:
+      - Unicode homoglyphs (visually identical but different codepoints)
+      - Base64/hex-encoded payloads
+      - Deeply nested JSON/XML structures
+      - Invisible character injection
+      - Right-to-left override
+      - Emoji-based obfuscation
     """
 
     UNICODE_PAYLOADS = [
@@ -147,7 +147,7 @@ class AdversarialFuzzer:
     ]
 
     DOS_PAYLOADS = [
-        "A" * 100_000,  # Überlanger Input
+        "A" * 100_000,  # Oversized input
         "\n" * 50_000,  # Newline-Flood
         "{{" * 5_000 + "}}" * 5_000,  # Template-Engine-DoS
         "{" * 10_000,  # Unbalanced Brackets
@@ -182,11 +182,11 @@ class AdversarialFuzzer:
         handler_fn: Callable[[str], dict[str, Any]],
         is_blocked_fn: Callable[[dict[str, Any]], bool],
     ) -> StageReport:
-        """Führt alle Fuzzing-Payloads gegen einen Handler aus.
+        """Runs all fuzzing payloads against a handler.
 
         Args:
-            handler_fn: Funktion die den Input verarbeitet → Result
-            is_blocked_fn: Prüft ob der Handler den Payload blockiert hat
+            handler_fn: Function that processes the input -> result
+            is_blocked_fn: Checks if the handler blocked the payload
         """
         start = time.monotonic()
         findings: list[Finding] = []
@@ -204,9 +204,9 @@ class AdversarialFuzzer:
                             stage=StageName.ADVERSARIAL_FUZZING.value,
                             severity="high" if category in ("unicode", "encoding") else "medium",
                             title=f"Unblocked {category} payload",
-                            description=f"Handler akzeptierte {category}-Payload ohne Blockade.",
+                            description=f"Handler accepted {category} payload without blocking.",
                             evidence=payload[:100],
-                            remediation=f"Input-Validierung für {category}-Angriffe verbessern.",
+                            remediation=f"Improve input validation for {category} attacks.",
                             cwe_id="CWE-20",
                         )
                     )
@@ -243,10 +243,10 @@ class AdversarialFuzzer:
 
 
 class ModelInversionDetector:
-    """Erkennt Modell-Inversions-Versuche.
+    """Detects model inversion attempts.
 
-    Model-Inversion: Angreifer versuchen, Trainingsdaten oder
-    System-Prompts durch gezielte Abfragen zu rekonstruieren.
+    Model inversion: Attackers attempt to reconstruct training data or
+    system prompts through targeted queries.
     """
 
     EXTRACTION_PATTERNS = [
@@ -274,7 +274,7 @@ class ModelInversionDetector:
         self._compiled_training = [re.compile(p) for p in self.TRAINING_DATA_PATTERNS]
 
     def analyze(self, text: str) -> StageReport:
-        """Analysiert einen Text auf Model-Inversion-Muster."""
+        """Analyzes a text for model inversion patterns."""
         start = time.monotonic()
         findings: list[Finding] = []
         tests_run = len(self._compiled_extraction) + len(self._compiled_training)
@@ -287,11 +287,9 @@ class ModelInversionDetector:
                         stage=StageName.MODEL_INVERSION.value,
                         severity="high",
                         title="System-Prompt Extraction Attempt",
-                        description=(
-                            "Versuch erkannt, System-Prompt oder Instruktionen zu extrahieren."
-                        ),
+                        description=("Attempt detected to extract system prompt or instructions."),
                         evidence=text[:200],
-                        remediation="Input-Filter für Prompt-Extraction-Muster einbauen.",
+                        remediation="Add input filters for prompt extraction patterns.",
                         cwe_id="CWE-200",
                     )
                 )
@@ -304,9 +302,9 @@ class ModelInversionDetector:
                         stage=StageName.MODEL_INVERSION.value,
                         severity="medium",
                         title="Training Data Extraction Attempt",
-                        description="Versuch erkannt, Trainingsdaten zu rekonstruieren.",
+                        description="Attempt detected to reconstruct training data.",
                         evidence=text[:200],
-                        remediation="Response-Filter für Training-Data-Leaks aktivieren.",
+                        remediation="Activate response filters for training data leaks.",
                         cwe_id="CWE-200",
                     )
                 )
@@ -330,7 +328,7 @@ class ModelInversionDetector:
 
 
 class DependencyScanner:
-    """Scannt Skill-Dependencies auf bekannte Schwachstellen."""
+    """Scans skill dependencies for known vulnerabilities."""
 
     KNOWN_VULNERABLE: dict[str, dict[str, str]] = {
         "requests<2.31.0": {"cve": "CVE-2023-32681", "severity": "medium"},
@@ -343,7 +341,7 @@ class DependencyScanner:
     }
 
     def scan(self, dependencies: list[str]) -> StageReport:
-        """Scannt eine Liste von Dependencies."""
+        """Scans a list of dependencies."""
         start = time.monotonic()
         findings: list[Finding] = []
 
@@ -372,9 +370,7 @@ class DependencyScanner:
                                 stage=StageName.DEPENDENCY_SCAN.value,
                                 severity=info["severity"],
                                 title=f"Vulnerable dependency: {dep}",
-                                description=(
-                                    f"{info['cve']}: {dep} hat eine bekannte Schwachstelle."
-                                ),
+                                description=(f"{info['cve']}: {dep} has a known vulnerability."),
                                 remediation=f"Update {vuln_name} auf >= {vuln_version}.",
                                 cwe_id="CWE-1104",
                             )
@@ -410,7 +406,7 @@ class DependencyScanner:
 
 @dataclass
 class PipelineRun:
-    """Kompletter Durchlauf der Security-Pipeline."""
+    """Complete run of the security pipeline."""
 
     run_id: str
     trigger: str  # "manual", "ci", "update", "scheduled"
@@ -450,10 +446,10 @@ class PipelineRun:
 
 
 class SecurityPipeline:
-    """MLOps Security Pipeline -- Orchestriert alle Sicherheitsprüfungen.
+    """MLOps Security Pipeline -- Orchestrates all security checks.
 
-    Wird automatisch bei jedem Skill-Update, Deploy oder
-    manuell via CI/CD ausgelöst.
+    Triggered automatically on every skill update, deploy, or
+    manually via CI/CD.
     """
 
     def __init__(self) -> None:
@@ -472,15 +468,15 @@ class SecurityPipeline:
         trigger: str = "manual",
         stages: set[StageName] | None = None,
     ) -> PipelineRun:
-        """Führt einen kompletten Pipeline-Durchlauf aus.
+        """Runs a complete pipeline execution.
 
         Args:
-            handler_fn: Handler für Fuzzing-Tests
-            is_blocked_fn: Prüft ob Payload blockiert wurde
-            test_inputs: Texte für Model-Inversion-Prüfung
-            dependencies: Dependencies für Vulnerability-Scan
-            trigger: Auslöser des Runs
-            stages: Welche Stages ausgeführt werden sollen (None = alle)
+            handler_fn: Handler for fuzzing tests
+            is_blocked_fn: Checks if payload was blocked
+            test_inputs: Texts for model inversion check
+            dependencies: Dependencies for vulnerability scan
+            trigger: Trigger for the run
+            stages: Which stages to execute (None = all)
         """
         run_id = hashlib.sha256(f"run:{time.time()}".encode()).hexdigest()[:12]
         run = PipelineRun(
@@ -576,7 +572,7 @@ class SecurityPipeline:
 
 @dataclass
 class CIConfig:
-    """Konfiguration für CI/CD-Integration."""
+    """Configuration for CI/CD integration."""
 
     block_on_critical: bool = True
     block_on_high: bool = False
@@ -596,7 +592,7 @@ class CIConfig:
 
 
 class CIIntegration:
-    """CI/CD-Integration für automatisierte Security-Checks.
+    """CI/CD integration for automated security checks.
 
     Generiert:
       - GitHub Actions YAML
@@ -613,13 +609,13 @@ class CIIntegration:
         return self._config
 
     def pre_deploy_gate(self, run: PipelineRun) -> dict[str, Any]:
-        """Entscheidet ob ein Deploy durchgeführt werden darf."""
+        """Decides whether a deploy may proceed."""
         blocked = False
         reasons: list[str] = []
 
         if self._config.block_on_critical and run.critical_findings > 0:
             blocked = True
-            reasons.append(f"{run.critical_findings} kritische Findings")
+            reasons.append(f"{run.critical_findings} critical findings")
 
         high_count = sum(1 for s in run.stages for f in s.findings if f.severity == "high")
         if self._config.block_on_high and high_count > 0:
@@ -641,7 +637,7 @@ class CIIntegration:
         }
 
     def generate_github_actions(self) -> str:
-        """Generiert eine GitHub Actions Workflow-Definition."""
+        """Generates a GitHub Actions workflow definition."""
         stages = ", ".join(s.value for s in self._config.enabled_stages)
         return f"""# Jarvis Security Pipeline -- GitHub Actions
 name: jarvis-security-scan
@@ -651,7 +647,7 @@ on:
   pull_request:
     types: [opened, synchronize]
   schedule:
-    - cron: '0 3 * * 1'  # Montags 03:00 UTC
+    - cron: '0 3 * * 1'  # Mondays 03:00 UTC
 
 jobs:
   security-scan:
@@ -679,7 +675,7 @@ jobs:
 """
 
     def generate_gitlab_ci(self) -> str:
-        """Generiert eine GitLab CI Pipeline-Definition."""
+        """Generates a GitLab CI pipeline definition."""
         return f"""# Jarvis Security Pipeline -- GitLab CI
 security-scan:
   stage: test

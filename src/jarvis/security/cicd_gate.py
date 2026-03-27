@@ -1,15 +1,15 @@
 """Jarvis · CI/CD Security Gate & Continuous Red-Team.
 
-Durchgängige Integration in CI/CD mit Security-Gates:
+End-to-end CI/CD integration with security gates:
 
-  - SecurityGate:          Pass/Fail-Entscheidung vor Deploy
-  - ContinuousRedTeam:     Automatisiertes Prompt-Fuzzing im laufenden Betrieb
-  - DeploymentBlocker:     Blockiert Deployments bei kritischen Findings
-  - WebhookNotifier:       Benachrichtigt Teams über Findings
-  - GatePolicy:            Konfigurierbare Gate-Regeln
-  - ScheduledScan:         Geplante Scans (cron-ähnlich)
+  - SecurityGate:          Pass/fail decision before deploy
+  - ContinuousRedTeam:     Automated prompt fuzzing in production
+  - DeploymentBlocker:     Blocks deployments on critical findings
+  - WebhookNotifier:       Notifies teams about findings
+  - GatePolicy:            Configurable gate rules
+  - ScheduledScan:         Scheduled scans (cron-like)
 
-Architektur-Bibel: §11.8 (CI/CD), §14.5 (Continuous Testing)
+Architecture Bible: §11.8 (CI/CD), §14.5 (Continuous Testing)
 """
 
 from __future__ import annotations
@@ -36,12 +36,12 @@ class GateVerdict(Enum):
     PASS = "pass"
     FAIL = "fail"
     WARN = "warn"
-    OVERRIDE = "override"  # Manuell überschrieben
+    OVERRIDE = "override"  # Manually overridden
 
 
 @dataclass
 class GatePolicy:
-    """Konfigurierbare Security-Gate-Regeln."""
+    """Configurable security gate rules."""
 
     policy_id: str = "default"
     block_on_critical: bool = True
@@ -75,7 +75,7 @@ class GatePolicy:
 
 @dataclass
 class GateResult:
-    """Ergebnis einer Security-Gate-Prüfung."""
+    """Result of a security gate evaluation."""
 
     gate_id: str
     verdict: GateVerdict
@@ -101,9 +101,9 @@ class GateResult:
 
 
 class SecurityGate:
-    """Security-Gate: Entscheidet ob ein Deploy durchgeführt werden darf.
+    """Security gate: Decides whether a deploy may proceed.
 
-    Wird automatisch am Ende jeder Pipeline ausgewertet.
+    Automatically evaluated at the end of each pipeline.
     """
 
     def __init__(self, policy: GatePolicy | None = None) -> None:
@@ -120,7 +120,7 @@ class SecurityGate:
         self._policy = value
 
     def evaluate(self, pipeline_result: dict[str, Any]) -> GateResult:
-        """Evaluiert ein Pipeline-Ergebnis gegen die Gate-Policy."""
+        """Evaluates a pipeline result against the gate policy."""
         gate_id = hashlib.sha256(f"gate:{time.time()}:{next(_gate_counter)}".encode()).hexdigest()[
             :12
         ]
@@ -137,9 +137,9 @@ class SecurityGate:
                 sev = finding.get("severity", "low")
                 findings[sev] = findings.get(sev, 0) + 1
 
-        # Prüfe Gate-Regeln
+        # Check gate rules
         if self._policy.block_on_critical and findings["critical"] > 0:
-            reasons.append(f"{findings['critical']} kritische Findings")
+            reasons.append(f"{findings['critical']} critical findings")
         if self._policy.block_on_high and findings["high"] > 0:
             reasons.append(f"{findings['high']} High-Severity Findings")
         if findings["medium"] > self._policy.max_medium_findings:
@@ -154,7 +154,7 @@ class SecurityGate:
         if self._policy.require_all_stages_pass:
             failed = [k for k, v in stages.items() if v == "failed"]
             if failed:
-                reasons.append(f"Stages fehlgeschlagen: {', '.join(failed)}")
+                reasons.append(f"Stages failed: {', '.join(failed)}")
 
         pass_rate = pipeline_result.get("pass_rate", 100)
         if pass_rate < self._policy.min_fuzzing_pass_rate:
@@ -179,19 +179,19 @@ class SecurityGate:
     AUTHORIZED_OVERRIDE_ROLES: set[str] = {"admin", "security-lead", "release-manager"}
 
     def override(self, gate_id: str, by: str, reason: str) -> GateResult | None:
-        """Manuelles Override eines Gate-Ergebnisses.
+        """Manual override of a gate result.
 
         Args:
-            gate_id: ID des Gate-Ergebnisses.
-            by: Rolle/Identity des Overriders (muss in AUTHORIZED_OVERRIDE_ROLES sein).
-            reason: Begruendung (mind. 10 Zeichen).
+            gate_id: ID of the gate result.
+            by: Role/identity of the overrider (must be in AUTHORIZED_OVERRIDE_ROLES).
+            reason: Justification (at least 10 characters).
 
         Returns:
-            Das ueberschriebene GateResult, oder None wenn gate_id unbekannt.
+            The overridden GateResult, or None if gate_id is unknown.
 
         Raises:
-            PermissionError: Wenn ``by`` keine autorisierte Rolle ist.
-            ValueError: Wenn ``reason`` zu kurz oder leer ist.
+            PermissionError: If ``by`` is not an authorized role.
+            ValueError: If ``reason`` is too short or empty.
         """
         if not by or by not in self.AUTHORIZED_OVERRIDE_ROLES:
             self._audit_log.append(
@@ -205,8 +205,8 @@ class SecurityGate:
                 }
             )
             raise PermissionError(
-                f"Override verweigert: Rolle '{by}' ist nicht autorisiert. "
-                f"Erlaubt: {sorted(self.AUTHORIZED_OVERRIDE_ROLES)}"
+                f"Override denied: role '{by}' is not authorized. "
+                f"Allowed: {sorted(self.AUTHORIZED_OVERRIDE_ROLES)}"
             )
         if not reason or len(reason.strip()) < 10:
             self._audit_log.append(
@@ -219,9 +219,7 @@ class SecurityGate:
                     "detail": "reason_too_short",
                 }
             )
-            raise ValueError(
-                "Override verweigert: Begruendung muss mindestens 10 Zeichen lang sein."
-            )
+            raise ValueError("Override denied: justification must be at least 10 characters long.")
         for r in self._history:
             if r.gate_id == gate_id:
                 previous_verdict = r.verdict.value
@@ -272,7 +270,7 @@ class SecurityGate:
 
 @dataclass
 class RedTeamProbe:
-    """Einzelner Red-Team-Test im laufenden Betrieb."""
+    """Single red-team test in production."""
 
     probe_id: str
     category: str  # "prompt_injection", "jailbreak", "exfiltration", "escalation"
@@ -293,9 +291,9 @@ class RedTeamProbe:
 
 
 class ContinuousRedTeam:
-    """Laufendes Red-Teaming: Testet das System im Betrieb.
+    """Continuous red-teaming: Tests the system in production.
 
-    Schickt periodisch adversarial Probes und misst die Erkennungsrate.
+    Periodically sends adversarial probes and measures the detection rate.
     """
 
     PROBE_CATEGORIES = {
@@ -336,7 +334,7 @@ class ContinuousRedTeam:
         is_blocked_fn: Callable[[dict[str, Any]], bool],
         categories: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Führt Red-Team-Probes aus."""
+        """Runs red-team probes."""
         cats = categories or list(self.PROBE_CATEGORIES.keys())
         results: dict[str, dict[str, int]] = {}
 
@@ -415,7 +413,7 @@ class ContinuousRedTeam:
 
 @dataclass
 class WebhookConfig:
-    """Webhook-Konfiguration für Benachrichtigungen."""
+    """Webhook configuration for notifications."""
 
     webhook_id: str
     url: str
@@ -433,7 +431,7 @@ class WebhookConfig:
 
 
 class WebhookNotifier:
-    """Benachrichtigt Teams über Security-Events."""
+    """Notifies teams about security events."""
 
     def __init__(self) -> None:
         self._webhooks: list[WebhookConfig] = []
@@ -443,9 +441,9 @@ class WebhookNotifier:
         self._webhooks.append(webhook)
 
     def notify(self, event: str, payload: dict[str, Any]) -> int:
-        """Sendet Benachrichtigungen an alle passenden Webhooks.
+        """Sends notifications to all matching webhooks.
 
-        Returns: Anzahl gesendeter Notifications (simuliert).
+        Returns: Number of sent notifications (simulated).
         """
         sent = 0
         for wh in self._webhooks:
@@ -486,11 +484,11 @@ class WebhookNotifier:
 
 @dataclass
 class ScanSchedule:
-    """Geplanter Security-Scan."""
+    """Scheduled security scan."""
 
     schedule_id: str
     name: str
-    cron_expression: str  # z.B. "0 3 * * 1" = Montags 3:00
+    cron_expression: str  # e.g. "0 3 * * 1" = Mondays 3:00
     enabled: bool = True
     last_run: str = ""
     next_run: str = ""
@@ -508,21 +506,21 @@ class ScanSchedule:
 
 
 class ScanScheduler:
-    """Verwaltet geplante Security-Scans."""
+    """Manages scheduled security scans."""
 
     DEFAULT_SCHEDULES = [
         ScanSchedule(
-            "sched-daily", "Täglicher Quick-Scan", "0 3 * * *", categories=["prompt_injection"]
+            "sched-daily", "Daily Quick-Scan", "0 3 * * *", categories=["prompt_injection"]
         ),
         ScanSchedule(
             "sched-weekly",
-            "Wöchentlicher Full-Scan",
+            "Weekly Full-Scan",
             "0 3 * * 1",
             categories=["prompt_injection", "jailbreak", "exfiltration", "escalation"],
         ),
         ScanSchedule(
             "sched-monthly",
-            "Monatlicher Penetrations-Test",
+            "Monthly Penetration-Test",
             "0 3 1 * *",
             categories=["prompt_injection", "jailbreak", "exfiltration", "escalation"],
         ),

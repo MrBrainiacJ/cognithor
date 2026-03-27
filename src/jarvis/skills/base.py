@@ -1,13 +1,13 @@
-"""Basisklasse fuer alle Jarvis-Skills.
+"""Base class for all Jarvis skills.
 
-Jeder Skill erbt von ``BaseSkill`` und implementiert ``execute()``.
-Der SkillScaffolder (``jarvis.tools.skill_cli``) generiert automatisch
-Code, der ``BaseSkill`` importiert und als Elternklasse verwendet.
+Every skill inherits from ``BaseSkill`` and implements ``execute()``.
+The SkillScaffolder (``jarvis.tools.skill_cli``) automatically generates
+code that imports ``BaseSkill`` and uses it as parent class.
 
-Beispiel:
-    class WetterSkill(BaseSkill):
-        NAME = "wetter_abfrage"
-        DESCRIPTION = "Aktuelle Wetterdaten abrufen"
+Example:
+    class WeatherSkill(BaseSkill):
+        NAME = "weather_query"
+        DESCRIPTION = "Fetch current weather data"
         VERSION = "0.1.0"
         REQUIRES_NETWORK = True
 
@@ -16,7 +16,7 @@ Beispiel:
             ...
             return {"status": "ok", "result": data}
 
-Bibel-Referenz: §6.2 (Prozedurale Skills), §4.6 (Working Memory Injection)
+Architecture reference: §6.2 (Procedural Skills), §4.6 (Working Memory Injection)
 """
 
 from __future__ import annotations
@@ -26,19 +26,19 @@ from typing import Any
 
 
 class SkillError(Exception):
-    """Fehler bei der Skill-Ausfuehrung."""
+    """Error during skill execution."""
 
 
 class BaseSkill(ABC):
-    """Abstrakte Basisklasse fuer alle Jarvis-Skills.
+    """Abstract base class for all Jarvis skills.
 
-    Klassen-Attribute:
-        NAME:              Eindeutiger Skill-Bezeichner (slug).
-        DESCRIPTION:       Kurzbeschreibung des Skills.
-        VERSION:           Semantische Version (z.B. ``0.1.0``).
-        REQUIRES_NETWORK:  ``True`` wenn der Skill Netzwerkzugriff benoetigt.
-        API_BASE:          Basis-URL fuer API-Skills (optional).
-        CRON:              Cron-Ausdruck fuer automatisierte Skills (optional).
+    Class attributes:
+        NAME:              Unique skill identifier (slug).
+        DESCRIPTION:       Short description of the skill.
+        VERSION:           Semantic version (e.g. ``0.1.0``).
+        REQUIRES_NETWORK:  ``True`` if the skill requires network access.
+        API_BASE:          Base URL for API skills (optional).
+        CRON:              Cron expression for automated skills (optional).
     """
 
     NAME: str = ""
@@ -50,16 +50,16 @@ class BaseSkill(ABC):
 
     @abstractmethod
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
-        """Fuehrt den Skill aus.
+        """Execute the skill.
 
         Args:
-            params: Parameter-Dictionary aus dem Planner/Executor.
+            params: Parameter dictionary from the Planner/Executor.
 
         Returns:
-            Ergebnis-Dictionary mit mindestens ``status`` (``ok`` oder ``error``).
+            Result dictionary with at least ``status`` (``ok`` or ``error``).
 
         Raises:
-            SkillError: Bei Ausfuehrungsfehlern.
+            SkillError: On execution errors.
         """
 
     @property
@@ -76,19 +76,19 @@ class BaseSkill(ABC):
 
     @property
     def is_automated(self) -> bool:
-        """True wenn der Skill einen Cron-Schedule hat."""
+        """True if the skill has a cron schedule."""
         return bool(self.CRON)
 
     @property
     def is_network_skill(self) -> bool:
-        """True wenn der Skill Netzwerkzugriff benoetigt."""
+        """True if the skill requires network access."""
         return self.REQUIRES_NETWORK
 
     def validate_params(self, params: dict[str, Any]) -> list[str]:
-        """Validiert Parameter. Ueberschreibbar fuer spezifische Pruefungen.
+        """Validate parameters. Override for specific checks.
 
         Returns:
-            Liste von Fehlermeldungen (leer = OK).
+            List of error messages (empty = OK).
         """
         return []
 

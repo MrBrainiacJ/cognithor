@@ -1,14 +1,14 @@
-"""Mutual TLS (mTLS) Zertifikatsverwaltung.
+"""Mutual TLS (mTLS) certificate management.
 
-Generiert und verwaltet CA-, Server- und Client-Zertifikate fuer die
-sichere Kommunikation zwischen Frontend und Backend. Zertifikate werden
-im Verzeichnis ~/.jarvis/certs/ gespeichert.
+Generates and manages CA, server, and client certificates for
+secure communication between frontend and backend. Certificates are
+stored in the ~/.jarvis/certs/ directory.
 
-Ablauf:
-  1. ensure_mtls_certs() prueft ob Zertifikate existieren
-  2. Wenn nicht: generiert CA → Server-Cert → Client-Cert
-  3. Uvicorn laeuft mit ssl_certfile/ssl_keyfile/ssl_ca_certs
-  4. Vite-Proxy nutzt Client-Cert fuer Requests an Backend
+Workflow:
+  1. ensure_mtls_certs() checks whether certificates exist
+  2. If not: generates CA -> Server-Cert -> Client-Cert
+  3. Uvicorn runs with ssl_certfile/ssl_keyfile/ssl_ca_certs
+  4. Vite proxy uses client cert for requests to the backend
 """
 
 from __future__ import annotations
@@ -30,12 +30,12 @@ _KEY_SIZE = 2048
 
 
 def _generate_key() -> rsa.RSAPrivateKey:
-    """Generiert einen RSA-2048 Private Key."""
+    """Generates an RSA-2048 private key."""
     return rsa.generate_private_key(public_exponent=65537, key_size=_KEY_SIZE)
 
 
 def _write_key(key: rsa.RSAPrivateKey, path: Path) -> None:
-    """Schreibt einen Private Key als PEM-Datei."""
+    """Writes a private key as a PEM file."""
     pem = key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
@@ -45,18 +45,18 @@ def _write_key(key: rsa.RSAPrivateKey, path: Path) -> None:
 
 
 def _write_cert(cert: x509.Certificate, path: Path) -> None:
-    """Schreibt ein Zertifikat als PEM-Datei."""
+    """Writes a certificate as a PEM file."""
     path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
 
 
 def generate_ca(certs_dir: Path) -> tuple[rsa.RSAPrivateKey, x509.Certificate]:
-    """Generiert ein selbstsigniertes CA-Zertifikat.
+    """Generates a self-signed CA certificate.
 
     Args:
-        certs_dir: Verzeichnis fuer ca.pem und ca-key.pem.
+        certs_dir: Directory for ca.pem and ca-key.pem.
 
     Returns:
-        Tuple aus (CA Private Key, CA Certificate).
+        Tuple of (CA Private Key, CA Certificate).
     """
     key = _generate_key()
     subject = issuer = x509.Name(
@@ -81,7 +81,7 @@ def generate_ca(certs_dir: Path) -> tuple[rsa.RSAPrivateKey, x509.Certificate]:
 
     _write_key(key, certs_dir / "ca-key.pem")
     _write_cert(cert, certs_dir / "ca.pem")
-    log.info("CA-Zertifikat generiert: %s", certs_dir / "ca.pem")
+    log.info("CA certificate generated: %s", certs_dir / "ca.pem")
     return key, cert
 
 
@@ -90,14 +90,14 @@ def generate_server_cert(
     ca_cert: x509.Certificate,
     certs_dir: Path,
 ) -> None:
-    """Generiert ein Server-Zertifikat, signiert von der CA.
+    """Generates a server certificate, signed by the CA.
 
-    Enthaelt SANs fuer localhost und 127.0.0.1.
+    Contains SANs for localhost and 127.0.0.1.
 
     Args:
         ca_key: CA Private Key.
         ca_cert: CA Certificate.
-        certs_dir: Verzeichnis fuer server.pem und server-key.pem.
+        certs_dir: Directory for server.pem and server-key.pem.
     """
     import ipaddress
 
@@ -136,7 +136,7 @@ def generate_server_cert(
 
     _write_key(key, certs_dir / "server-key.pem")
     _write_cert(cert, certs_dir / "server.pem")
-    log.info("Server-Zertifikat generiert: %s", certs_dir / "server.pem")
+    log.info("Server certificate generated: %s", certs_dir / "server.pem")
 
 
 def generate_client_cert(
@@ -144,12 +144,12 @@ def generate_client_cert(
     ca_cert: x509.Certificate,
     certs_dir: Path,
 ) -> None:
-    """Generiert ein Client-Zertifikat fuer das Frontend, signiert von der CA.
+    """Generates a client certificate for the frontend, signed by the CA.
 
     Args:
         ca_key: CA Private Key.
         ca_cert: CA Certificate.
-        certs_dir: Verzeichnis fuer client.pem und client-key.pem.
+        certs_dir: Directory for client.pem and client-key.pem.
     """
     key = _generate_key()
     subject = x509.Name(
@@ -174,25 +174,25 @@ def generate_client_cert(
 
     _write_key(key, certs_dir / "client-key.pem")
     _write_cert(cert, certs_dir / "client.pem")
-    log.info("Client-Zertifikat generiert: %s", certs_dir / "client.pem")
+    log.info("Client certificate generated: %s", certs_dir / "client.pem")
 
 
 def ensure_mtls_certs(config: Any = None) -> Path | None:
-    """Stellt sicher, dass mTLS-Zertifikate existieren. Generiert sie bei Bedarf.
+    """Ensures mTLS certificates exist. Generates them if needed.
 
     Args:
-        config: JarvisConfig-Instanz. Prueft config.security.mtls.enabled.
+        config: JarvisConfig instance. Checks config.security.mtls.enabled.
 
     Returns:
-        Pfad zum certs-Verzeichnis, oder None wenn mTLS deaktiviert.
+        Path to the certs directory, or None if mTLS is disabled.
     """
-    # Prüfe ob mTLS aktiviert ist
+    # Check if mTLS is enabled
     security = getattr(config, "security", None)
     mtls_cfg = getattr(security, "mtls", None)
     if mtls_cfg is None or not getattr(mtls_cfg, "enabled", False):
         return None
 
-    # Zertifikats-Verzeichnis bestimmen
+    # Determine certificates directory
     certs_dir_str = getattr(mtls_cfg, "certs_dir", "")
     if certs_dir_str:
         certs_dir = Path(certs_dir_str).expanduser().resolve()
@@ -202,7 +202,7 @@ def ensure_mtls_certs(config: Any = None) -> Path | None:
 
     certs_dir.mkdir(parents=True, exist_ok=True)
 
-    # Prüfe ob alle benötigten Dateien existieren
+    # Check if all required files exist
     required_files = [
         "ca.pem",
         "ca-key.pem",
@@ -214,18 +214,18 @@ def ensure_mtls_certs(config: Any = None) -> Path | None:
     all_exist = all((certs_dir / f).exists() for f in required_files)
 
     if all_exist:
-        log.info("mTLS-Zertifikate vorhanden: %s", certs_dir)
+        log.info("mTLS certificates present: %s", certs_dir)
         return certs_dir
 
     if not getattr(mtls_cfg, "auto_generate", True):
-        log.warning("mTLS aktiviert aber Zertifikate fehlen und auto_generate=False")
+        log.warning("mTLS enabled but certificates missing and auto_generate=False")
         return None
 
-    # Generiere alle Zertifikate
-    log.info("Generiere mTLS-Zertifikate in %s", certs_dir)
+    # Generate all certificates
+    log.info("Generating mTLS certificates in %s", certs_dir)
     ca_key, ca_cert = generate_ca(certs_dir)
     generate_server_cert(ca_key, ca_cert, certs_dir)
     generate_client_cert(ca_key, ca_cert, certs_dir)
 
-    log.info("mTLS-Zertifikate erfolgreich generiert")
+    log.info("mTLS certificates successfully generated")
     return certs_dir

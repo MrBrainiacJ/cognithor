@@ -1,4 +1,4 @@
-"""Tool-Capabilities-Matrix mit feingranularem Policy-Matching."""
+"""Tool capabilities matrix with fine-grained policy matching."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ log = get_logger(__name__)
 
 
 class SandboxProfile:
-    """Sandbox-Profil mit erlaubten/verbotenen Capabilities."""
+    """Sandbox profile with allowed/denied capabilities."""
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class SandboxProfile:
         self.max_timeout_seconds = max_timeout_seconds
 
     def is_capability_allowed(self, cap: ToolCapability) -> bool:
-        """Prueft ob eine Capability erlaubt ist."""
+        """Checks if a capability is allowed."""
         if cap in self.denied_capabilities:
             return False
         return not (self.allowed_capabilities and cap not in self.allowed_capabilities)
@@ -90,14 +90,14 @@ _DEFAULT_PROFILES: dict[str, SandboxProfile] = {
 
 
 class CapabilityMatrix:
-    """Registry aller Tool-Capability-Spezifikationen."""
+    """Registry of all tool capability specifications."""
 
     def __init__(self) -> None:
         self._specs: dict[str, ToolCapabilitySpec] = {}
         self._register_defaults()
 
     def _register_defaults(self) -> None:
-        """Registriert Default-Spezifikationen fuer bekannte Tools."""
+        """Registers default specifications for known tools."""
         defaults = [
             ToolCapabilitySpec(
                 tool_name="read_file",
@@ -174,16 +174,16 @@ class CapabilityMatrix:
             self._specs[spec.tool_name] = spec
 
     def register_tool(self, spec: ToolCapabilitySpec) -> None:
-        """Registriert eine Tool-Spezifikation."""
+        """Registers a tool specification."""
         self._specs[spec.tool_name] = spec
         log.debug("capability_registered", tool=spec.tool_name)
 
     def get_spec(self, tool_name: str) -> ToolCapabilitySpec | None:
-        """Holt die Spezifikation eines Tools."""
+        """Gets the specification of a tool."""
         return self._specs.get(tool_name)
 
     def check_allowed(self, tool_name: str, profile: SandboxProfile) -> bool:
-        """Prueft ob ein Tool im gegebenen Profil erlaubt ist."""
+        """Checks if a tool is allowed in the given profile."""
         spec = self._specs.get(tool_name)
         if spec is None:
             # Unknown tools are not allowed in restrictive profiles
@@ -192,7 +192,7 @@ class CapabilityMatrix:
         return all(profile.is_capability_allowed(cap) for cap in spec.capabilities)
 
     def get_violations(self, tool_name: str, profile: SandboxProfile) -> list[str]:
-        """Gibt Liste verletzter Capabilities zurueck."""
+        """Returns list of violated capabilities."""
         spec = self._specs.get(tool_name)
         if spec is None:
             return [f"Unknown tool: {tool_name}"]
@@ -221,18 +221,18 @@ class CapabilityMatrix:
 
 
 class PolicyEvaluator:
-    """Evaluiert Tool-Calls gegen ein SandboxProfile."""
+    """Evaluates tool calls against a SandboxProfile."""
 
     def __init__(self, matrix: CapabilityMatrix | None = None) -> None:
         self._matrix = matrix or CapabilityMatrix()
         self._profiles = dict(_DEFAULT_PROFILES)
 
     def register_profile(self, profile: SandboxProfile) -> None:
-        """Registriert ein zusaetzliches Profil."""
+        """Registers an additional profile."""
         self._profiles[profile.name] = profile
 
     def get_profile(self, name: str) -> SandboxProfile | None:
-        """Holt ein Profil nach Name."""
+        """Gets a profile by name."""
         return self._profiles.get(name)
 
     def evaluate(
@@ -241,7 +241,7 @@ class PolicyEvaluator:
         params: dict[str, Any] | None = None,
         profile_name: str = "standard",
     ) -> PolicyDecision:
-        """Evaluiert einen Tool-Call gegen ein Profil."""
+        """Evaluates a tool call against a profile."""
         profile = self._profiles.get(profile_name)
         if profile is None:
             return PolicyDecision(

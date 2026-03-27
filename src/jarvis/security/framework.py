@@ -1,15 +1,15 @@
 """Jarvis · AI Agent Security Framework.
 
-Enterprise-Security-Metriken und Team-Rollenverteilung:
+Enterprise security metrics and team role distribution:
 
-  - SecurityMetrics:       MTTD, MTTR, Incident-Rate, Posture-Score
-  - SecurityIncident:      Strukturierte Incident-Erfassung mit Lifecycle
-  - IncidentTracker:       Verwaltung aller Security-Incidents
-  - SecurityTeam:          Rollenverteilung (ML, Dev, Security, Compliance)
-  - PostureScorer:         Gesamt-Sicherheitsbewertung des Systems
-  - SecurityDashboardData: Aggregierte Daten für Echtzeit-Dashboard
+  - SecurityMetrics:       MTTD, MTTR, incident rate, posture score
+  - SecurityIncident:      Structured incident capture with lifecycle
+  - IncidentTracker:       Management of all security incidents
+  - SecurityTeam:          Role distribution (ML, Dev, Security, Compliance)
+  - PostureScorer:         Overall security posture assessment
+  - SecurityDashboardData: Aggregated data for real-time dashboard
 
-Architektur-Bibel: §11.7 (Security-Framework), §14.4 (Metriken)
+Architecture Bible: §11.7 (Security-Framework), §14.4 (Metrics)
 """
 
 from __future__ import annotations
@@ -58,7 +58,7 @@ class IncidentCategory(Enum):
 
 @dataclass
 class SecurityIncident:
-    """Ein strukturierter Security-Incident mit vollständigem Lifecycle."""
+    """A structured security incident with full lifecycle."""
 
     incident_id: str
     title: str
@@ -67,7 +67,7 @@ class SecurityIncident:
     status: IncidentStatus = IncidentStatus.OPEN
     description: str = ""
     agent_id: str = ""
-    source: str = ""  # Welches Modul hat erkannt
+    source: str = ""  # Which module detected it
     occurred_at: str = ""
     detected_at: str = ""
     contained_at: str = ""
@@ -82,7 +82,7 @@ class SecurityIncident:
 
     @property
     def time_to_detect_seconds(self) -> float | None:
-        """MTTD: Zeit von Auftreten bis Erkennung."""
+        """MTTD: Time from occurrence to detection."""
         if self.occurred_at and self.detected_at:
             try:
                 t1 = calendar.timegm(time.strptime(self.occurred_at, "%Y-%m-%dT%H:%M:%SZ"))
@@ -94,7 +94,7 @@ class SecurityIncident:
 
     @property
     def time_to_resolve_seconds(self) -> float | None:
-        """MTTR: Zeit von Erkennung bis Lösung."""
+        """MTTR: Time from detection to resolution."""
         if self.detected_at and self.resolved_at:
             try:
                 t1 = calendar.timegm(time.strptime(self.detected_at, "%Y-%m-%dT%H:%M:%SZ"))
@@ -126,7 +126,7 @@ class SecurityIncident:
 
 
 class IncidentTracker:
-    """Verwaltet alle Security-Incidents mit Lifecycle-Tracking."""
+    """Manages all security incidents with lifecycle tracking."""
 
     def __init__(self) -> None:
         self._incidents: dict[str, SecurityIncident] = {}
@@ -235,21 +235,21 @@ class IncidentTracker:
 
 
 class SecurityMetrics:
-    """Berechnet Enterprise-Security-KPIs aus Incident-Daten.
+    """Computes enterprise security KPIs from incident data.
 
-    Metriken:
-      - MTTD (Mean Time to Detect): Durchschnittliche Erkennungszeit
-      - MTTR (Mean Time to Resolve): Durchschnittliche Lösungszeit
-      - Incident Rate: Incidents pro Zeiteinheit
-      - Resolution Rate: % gelöster Incidents
-      - Severity Distribution: Verteilung nach Schweregrad
+    Metrics:
+      - MTTD (Mean Time to Detect): Average detection time
+      - MTTR (Mean Time to Resolve): Average resolution time
+      - Incident Rate: Incidents per time period
+      - Resolution Rate: % of resolved incidents
+      - Severity Distribution: Distribution by severity
     """
 
     def __init__(self, tracker: IncidentTracker) -> None:
         self._tracker = tracker
 
     def mttd(self) -> float:
-        """Mean Time to Detect (Sekunden). 0.0 wenn keine Daten."""
+        """Mean Time to Detect (seconds). 0.0 if no data."""
         times = [
             i.time_to_detect_seconds
             for i in self._tracker.all_incidents()
@@ -258,7 +258,7 @@ class SecurityMetrics:
         return statistics.mean(times) if times else 0.0
 
     def mttr(self) -> float:
-        """Mean Time to Resolve (Sekunden). 0.0 wenn keine Daten."""
+        """Mean Time to Resolve (seconds). 0.0 if no data."""
         times = [
             i.time_to_resolve_seconds
             for i in self._tracker.all_incidents()
@@ -267,7 +267,7 @@ class SecurityMetrics:
         return statistics.mean(times) if times else 0.0
 
     def resolution_rate(self) -> float:
-        """Prozentsatz gelöster Incidents."""
+        """Percentage of resolved incidents."""
         total = self._tracker.count
         if total == 0:
             return 100.0
@@ -279,7 +279,7 @@ class SecurityMetrics:
         return resolved / total * 100
 
     def incident_rate(self, period_hours: float = 24.0) -> float:
-        """Incidents pro Zeitperiode (Standard: 24h)."""
+        """Incidents per time period (default: 24h)."""
         if self._tracker.count == 0:
             return 0.0
         incidents = self._tracker.all_incidents()
@@ -339,7 +339,7 @@ class TeamRole(Enum):
 
 @dataclass
 class TeamMember:
-    """Mitglied des Security-Teams."""
+    """Member of the security team."""
 
     member_id: str
     name: str
@@ -358,7 +358,7 @@ class TeamMember:
         }
 
 
-# Automatische Zuweisungsregeln
+# Automatic assignment rules
 ROLE_ASSIGNMENT_RULES: dict[IncidentCategory, TeamRole] = {
     IncidentCategory.PROMPT_INJECTION: TeamRole.SECURITY_ANALYST,
     IncidentCategory.DATA_EXFILTRATION: TeamRole.SECURITY_ANALYST,
@@ -374,7 +374,7 @@ ROLE_ASSIGNMENT_RULES: dict[IncidentCategory, TeamRole] = {
 
 
 class SecurityTeam:
-    """Verwaltet Security-Team-Mitglieder und automatische Zuweisung."""
+    """Manages security team members and automatic assignment."""
 
     def __init__(self) -> None:
         self._members: dict[str, TeamMember] = {}
@@ -398,11 +398,11 @@ class SecurityTeam:
         return [m for m in self._members.values() if m.on_call]
 
     def auto_assign(self, incident: SecurityIncident) -> TeamMember | None:
-        """Weist automatisch den richtigen Experten zu."""
+        """Automatically assigns the right expert."""
         target_role = ROLE_ASSIGNMENT_RULES.get(incident.category)
         if not target_role:
             return None
-        # Bevorzuge On-Call-Mitglieder
+        # Prefer on-call members
         candidates = self.by_role(target_role)
         on_call = [m for m in candidates if m.on_call]
         chosen = on_call[0] if on_call else (candidates[0] if candidates else None)
@@ -434,14 +434,14 @@ class SecurityTeam:
 
 
 class PostureScorer:
-    """Berechnet einen Gesamt-Sicherheits-Posture-Score.
+    """Computes an overall security posture score.
 
-    Faktoren (gewichtet):
-      - Incident-Resolution-Rate (25%)
-      - MTTR < Schwellenwert (20%)
-      - Abdeckung Security-Team (15%)
-      - Pipeline-Pass-Rate (20%)
-      - Compliance-Score (20%)
+    Factors (weighted):
+      - Incident resolution rate (25%)
+      - MTTR < threshold (20%)
+      - Security team coverage (15%)
+      - Pipeline pass rate (20%)
+      - Compliance score (20%)
     """
 
     WEIGHTS = {
@@ -465,7 +465,7 @@ class PostureScorer:
         pipeline_pass_rate: float = 100.0,
         compliance_score: float = 100.0,
     ) -> dict[str, Any]:
-        # Normalisiere alle Faktoren auf 0-100
+        # Normalize all factors to 0-100
         f_resolution = min(100, resolution_rate)
         f_mttr = (
             100.0

@@ -1,7 +1,7 @@
-"""Performance-basierte Weight-Anpassung fuer HybridSearch.
+"""Performance-based weight adjustment for HybridSearch.
 
-Nutzt Exponential Moving Average (EMA) ueber Kanal-Nuetzlichkeit,
-gemessen an User-Zufriedenheit (Reflector-Score).
+Uses Exponential Moving Average (EMA) over channel usefulness,
+measured by user satisfaction (reflector score).
 
 EMA-Formel: w_new = alpha * observed + (1-alpha) * w_old
 Constraints: Jedes Gewicht min 0.05, Summe = 1.0
@@ -224,7 +224,7 @@ class SearchWeightOptimizer:
         }
 
     def close(self) -> None:
-        """Schliesst die DB-Verbindung."""
+        """Close the DB connection."""
         if self._conn:
             self._conn.close()
             self._conn = None

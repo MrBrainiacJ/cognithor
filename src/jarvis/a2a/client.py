@@ -1,7 +1,7 @@
 """A2A Client -- RC v1.0 (Linux Foundation).
 
-Sendet Tasks an Remote-Agenten über JSON-RPC 2.0 / HTTP.
-Unterstützt Discovery, contextId, streaming, version negotiation.
+Sends tasks to remote agents via JSON-RPC 2.0 / HTTP.
+Supports discovery, contextId, streaming, version negotiation.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ log = get_logger(__name__)
 
 
 class RemoteAgent:
-    """Ein bekannter Remote-Agent."""
+    """A known remote agent."""
 
     def __init__(
         self, endpoint: str, card: A2AAgentCard | None = None, auth_token: str = ""
@@ -78,7 +78,7 @@ class RemoteAgent:
 
 
 class A2AClient:
-    """A2A-Client: Sendet Tasks an Remote-Agenten (RC v1.0)."""
+    """A2A client: sends tasks to remote agents (RC v1.0)."""
 
     def __init__(self) -> None:
         self._remotes: dict[str, RemoteAgent] = {}
@@ -167,7 +167,7 @@ class A2AClient:
         context_id: str | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> Task | None:
-        """message/send -- Nachricht senden / Task erstellen (RC v1.0)."""
+        """message/send -- send message / create task (RC v1.0)."""
         endpoint = endpoint.rstrip("/")
         if message is None:
             message = Message(role=MessageRole.USER, parts=[TextPart(text=text)])
@@ -201,7 +201,7 @@ class A2AClient:
         state: str | None = None,
         limit: int = 50,
     ) -> list[Task]:
-        """tasks/list -- Tasks auflisten (RC v1.0)."""
+        """tasks/list -- list tasks (RC v1.0)."""
         params: dict[str, Any] = {"limit": limit}
         if context_id:
             params["contextId"] = context_id
@@ -224,7 +224,7 @@ class A2AClient:
         return self._parse_task_response(result) if result else None
 
     async def continue_task(self, endpoint: str, task_id: str, text: str) -> Task | None:
-        """Sendet Nachricht an bestehenden Task (Multi-Turn / INPUT_REQUIRED)."""
+        """Sends message to existing task (multi-turn / INPUT_REQUIRED)."""
         return await self.send_message(endpoint=endpoint, text=text, task_id=task_id)
 
     # ── Streaming (RC v1.0) ──────────────────────────────────────
@@ -236,7 +236,7 @@ class A2AClient:
         message: Message | None = None,
         context_id: str | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
-        """message/stream -- Streaming-Nachricht mit SSE-Events."""
+        """message/stream -- streaming message with SSE events."""
         endpoint = endpoint.rstrip("/")
         if message is None:
             message = Message(role=MessageRole.USER, parts=[TextPart(text=text)])

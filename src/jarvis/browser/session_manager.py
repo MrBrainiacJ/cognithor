@@ -1,12 +1,12 @@
-"""Session Manager -- Cookie/State-Persistierung für Browser-Use v17.
+"""Session Manager -- Cookie/state persistence for Browser-Use v17.
 
-Speichert und lädt:
-  - Cookies pro Domain
-  - Local Storage Snapshots
-  - Zuletzt besuchte URLs
-  - Formular-Daten (optional, verschlüsselt)
+Saves and loads:
+  - Cookies per domain
+  - Local storage snapshots
+  - Last visited URLs
+  - Form data (optional, encrypted)
 
-Persistierung in ~/.jarvis/browser/sessions/
+Persistence in ~/.jarvis/browser/sessions/
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ log = get_logger(__name__)
 
 @dataclass
 class SessionSnapshot:
-    """Snapshot einer Browser-Session."""
+    """Snapshot of a browser session."""
 
     session_id: str
     domain: str
@@ -44,7 +44,7 @@ class SessionSnapshot:
 
 
 class SessionManager:
-    """Verwaltet Browser-Sessions mit Cookie-Persistierung."""
+    """Manages browser sessions with cookie persistence."""
 
     def __init__(self, storage_dir: str | Path = "") -> None:
         if storage_dir:
@@ -64,13 +64,13 @@ class SessionManager:
     # ── CRUD ─────────────────────────────────────────────────────
 
     def get_session(self, session_id: str) -> SessionSnapshot | None:
-        """Lädt Session aus Cache oder Disk."""
+        """Loads session from cache or disk."""
         if session_id in self._sessions:
             return self._sessions[session_id]
         return self._load_from_disk(session_id)
 
     def save_session(self, snapshot: SessionSnapshot) -> bool:
-        """Speichert Session auf Disk."""
+        """Saves session to disk."""
         self._sessions[snapshot.session_id] = snapshot
         snapshot.updated_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         try:
@@ -94,7 +94,7 @@ class SessionManager:
             return False
 
     def delete_session(self, session_id: str) -> bool:
-        """Löscht eine Session."""
+        """Deletes a session."""
         self._sessions.pop(session_id, None)
         path = self._session_path(session_id)
         if path.exists():
@@ -103,14 +103,14 @@ class SessionManager:
         return False
 
     def list_sessions(self) -> list[SessionSnapshot]:
-        """Listet alle gespeicherten Sessions."""
+        """Lists all saved sessions."""
         self._load_all()
         return list(self._sessions.values())
 
     # ── Playwright Integration ───────────────────────────────────
 
     async def save_from_page(self, page: Any, session_id: str) -> SessionSnapshot:
-        """Extrahiert Cookies + Storage aus einer Playwright-Page."""
+        """Extracts cookies + storage from a Playwright page."""
         try:
             from urllib.parse import urlparse
 
@@ -174,7 +174,7 @@ class SessionManager:
         return snapshot
 
     async def restore_to_context(self, context: Any, session_id: str) -> bool:
-        """Stellt Cookies in einem Playwright-BrowserContext wieder her."""
+        """Restores cookies in a Playwright BrowserContext."""
         snapshot = self.get_session(session_id)
         if not snapshot or not snapshot.cookies:
             return False
@@ -188,7 +188,7 @@ class SessionManager:
             return False
 
     async def restore_local_storage(self, page: Any, session_id: str) -> bool:
-        """Stellt Local Storage auf einer Seite wieder her."""
+        """Restores local storage on a page."""
         snapshot = self.get_session(session_id)
         if not snapshot or not snapshot.local_storage:
             return False
@@ -241,7 +241,7 @@ class SessionManager:
                 self._load_from_disk(sid)
 
     def cleanup(self, max_age_days: int = 30) -> int:
-        """Löscht Sessions die älter als max_age_days sind."""
+        """Deletes sessions older than max_age_days."""
         self._load_all()
         import calendar
 

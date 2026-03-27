@@ -1,23 +1,23 @@
-"""Graph Engine -- Kern-Ausführungslogik für Graph Orchestrator v18.
+"""Graph Engine -- Core execution logic for Graph Orchestrator v18.
 
-Führt einen GraphDefinition aus:
-  - Traversiert Nodes entlang Edges
-  - Conditional Routing basierend auf Router-Output
-  - Parallele Ausführung von Branches
-  - Loop-Erkennung mit max_iterations
-  - Checkpoint-Erstellung vor/nach Nodes
-  - HITL-Pause/Resume
-  - Timeout und Retry pro Node
-  - Vollständiger Audit-Trail (ExecutionRecord)
+Executes a GraphDefinition:
+  - Traverses nodes along edges
+  - Conditional routing based on router output
+  - Parallel execution of branches
+  - Loop detection with max_iterations
+  - Checkpoint creation before/after nodes
+  - HITL pause/resume
+  - Timeout and retry per node
+  - Complete audit trail (ExecutionRecord)
 
-Execution-Flow:
-  1. Start mit initial GraphState
-  2. Entry-Node ausführen
-  3. Outgoing Edges evaluieren:
-     a. DIRECT → nächsten Node ausführen
-     b. CONDITIONAL → Router-Entscheidung folgen
-  4. HITL-Node → Pausieren, Checkpoint erstellen
-  5. END erreicht → Execution abgeschlossen
+Execution flow:
+  1. Start with initial GraphState
+  2. Execute entry node
+  3. Evaluate outgoing edges:
+     a. DIRECT -> execute next node
+     b. CONDITIONAL -> follow router decision
+  4. HITL node -> pause, create checkpoint
+  5. END reached -> execution completed
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ MAX_NODES_PER_EXECUTION = 200
 
 
 class GraphEngine:
-    """Führt Graph-Definitionen aus.
+    """Executes graph definitions.
 
     Usage:
         engine = GraphEngine()
@@ -80,17 +80,17 @@ class GraphEngine:
     async def run(
         self, graph: GraphDefinition, initial_state: GraphState, *, execution_id: str = ""
     ) -> ExecutionRecord:
-        """Führt einen Graphen vollständig aus.
+        """Executes a graph completely.
 
         Args:
-            graph: Graph-Definition
-            initial_state: Anfangszustand
-            execution_id: Optional, für Resume
+            graph: Graph definition
+            initial_state: Initial state
+            execution_id: Optional, for resume
 
         Returns:
-            ExecutionRecord mit allen Ergebnissen
+            ExecutionRecord with all results
         """
-        # Validierung
+        # Validation
         errors = graph.validate()
         if errors:
             record = ExecutionRecord(
@@ -100,7 +100,7 @@ class GraphEngine:
             )
             return record
 
-        # Execution-Record
+        # Execution record
         record = self._state_mgr.create_execution(graph.name, initial_state)
         if execution_id:
             record.execution_id = execution_id
@@ -114,7 +114,7 @@ class GraphEngine:
 
         try:
             while current_node and current_node != END:
-                # Loop-Protection
+                # Loop protection
                 visit_count[current_node] = visit_count.get(current_node, 0) + 1
                 if visit_count[current_node] > self._max_iterations:
                     record.status = ExecutionStatus.FAILED
@@ -146,7 +146,7 @@ class GraphEngine:
                         record.node_results,
                     )
 
-                # HITL: Pausieren
+                # HITL: pause
                 if node.node_type == NodeType.HITL:
                     cp = self._state_mgr.create_checkpoint(
                         record.execution_id,
@@ -159,7 +159,7 @@ class GraphEngine:
                     record.status = ExecutionStatus.PAUSED
                     record.checkpoints.append(cp.checkpoint_id)
 
-                    # Handler trotzdem ausführen (kann State modifizieren)
+                    # Execute handler anyway (kann State modifizieren)
                     if node.handler:
                         result = await self._execute_node(node, state)
                         record.node_results.append(result)
@@ -199,7 +199,7 @@ class GraphEngine:
                         current_node = END
                     continue
 
-                # Node ausführen
+                # Execute node
                 result = await self._execute_node(node, state)
                 record.node_results.append(result)
                 self._total_nodes_executed += 1
@@ -209,7 +209,7 @@ class GraphEngine:
                     record.error = f"Node '{current_node}' failed: {result.error}"
                     break
 
-                # State updaten
+                # Update state
                 if result.state_after:
                     state = result.state_after
 
@@ -223,10 +223,10 @@ class GraphEngine:
                         record.node_results,
                     )
 
-                # Nächsten Node bestimmen
+                # Determine next node
                 current_node = self._resolve_next_node(graph, current_node, result, state)
 
-            # Abschluss
+            # Completion
             if record.status == ExecutionStatus.RUNNING:
                 record.status = ExecutionStatus.COMPLETED
 
@@ -249,7 +249,7 @@ class GraphEngine:
     async def run_stream(
         self, graph: GraphDefinition, initial_state: GraphState
     ) -> AsyncIterator[NodeResult]:
-        """Führt Graph aus und yielded NodeResults in Echtzeit."""
+        """Executes graph and yields NodeResults in real-time."""
         errors = graph.validate()
         if errors:
             yield NodeResult(
@@ -335,15 +335,15 @@ class GraphEngine:
         execution_id: str = "",
         resume_input: dict[str, Any] | None = None,
     ) -> ExecutionRecord:
-        """Setzt eine pausierte Execution fort.
+        """Resumes a paused execution.
 
         Args:
-            graph: Gleiche Graph-Definition
-            checkpoint_id: Spezifischer Checkpoint oder ""
-            execution_id: Execution-ID (nutzt letzten Checkpoint)
-            resume_input: Optionaler Input der in den State gemergt wird
+            graph: Same graph definition
+            checkpoint_id: Specific checkpoint or ""
+            execution_id: Execution ID (uses latest checkpoint)
+            resume_input: Optional input to merge into state
         """
-        # Checkpoint laden
+        # Load checkpoint
         if checkpoint_id:
             state, current_node = self._state_mgr.restore_state(checkpoint_id)
         elif execution_id:
@@ -362,11 +362,11 @@ class GraphEngine:
                 error="Checkpoint not found",
             )
 
-        # Resume-Input einmergen
+        # Merge resume input
         if resume_input:
             state.update(resume_input)
 
-        # Nächsten Node nach HITL bestimmen
+        # Determine next node after HITL
         node = graph.get_node(current_node)
         if node and node.node_type == NodeType.HITL:
             next_node = self._resolve_next_node(
@@ -378,8 +378,8 @@ class GraphEngine:
             if next_node:
                 current_node = next_node
 
-        # Neuen mini-Graph ab current_node ausführen
-        # Kopie erstellen um shared GraphDefinition nicht zu mutieren
+        # Run new mini-graph from current_node
+        # Create copy to avoid mutating shared GraphDefinition
         local_graph = copy.copy(graph)
         local_graph.entry_point = current_node
 
@@ -462,14 +462,14 @@ class GraphEngine:
     # ── Parallel Execution ───────────────────────────────────────
 
     async def _execute_parallel(self, nodes: list[Node], state: GraphState) -> list[NodeResult]:
-        """Führt mehrere Nodes parallel aus."""
+        """Executes multiple nodes in parallel."""
         tasks = [self._execute_node(node, state.copy()) for node in nodes]
         return list(await asyncio.gather(*tasks))
 
     # ── Node Execution ───────────────────────────────────────────
 
     async def _execute_node(self, node: Node, state: GraphState) -> NodeResult:
-        """Führt einen einzelnen Node aus (mit Retry + Timeout)."""
+        """Executes a single node (with retry + timeout)."""
         start = time.monotonic()
         last_error = ""
 
@@ -497,7 +497,7 @@ class GraphEngine:
                     timeout=node.timeout_seconds,
                 )
 
-                # Router: Ergebnis ist ein String (Edge-Condition)
+                # Router: result is a string (edge condition)
                 if node.node_type == NodeType.ROUTER:
                     if isinstance(result_state, str):
                         return NodeResult(
@@ -509,7 +509,7 @@ class GraphEngine:
                             retry_attempts=attempt,
                         )
                     elif isinstance(result_state, GraphState):
-                        # Router kann auch State modifizieren und Decision im State hinterlegen
+                        # Router can also modify state and store decision in state
                         decision = result_state.get("__router_decision__", "")
                         return NodeResult(
                             node_name=node.name,
@@ -520,7 +520,7 @@ class GraphEngine:
                             retry_attempts=attempt,
                         )
 
-                # Normal: Ergebnis ist GraphState
+                # Normal: result is GraphState
                 if isinstance(result_state, GraphState):
                     return NodeResult(
                         node_name=node.name,
@@ -570,12 +570,12 @@ class GraphEngine:
     def _resolve_next_node(
         self, graph: GraphDefinition, current: str, result: NodeResult, state: GraphState
     ) -> str:
-        """Bestimmt den nächsten Node basierend auf Edges."""
+        """Determines the next node based on edges."""
         outgoing = graph.get_outgoing_edges(current)
         if not outgoing:
             return END
 
-        # Sortiert nach Priorität (höher zuerst)
+        # Sorted by priority (higher first)
         outgoing.sort(key=lambda e: e.priority, reverse=True)
 
         # Router-Decision
@@ -586,11 +586,11 @@ class GraphEngine:
                     and edge.condition == result.router_decision
                 ):
                     return edge.target
-            # Fallback: Default-Edge (ohne Condition)
+            # Fallback: default edge (without condition)
             for edge in outgoing:
                 if edge.edge_type == EdgeType.DIRECT:
                     return edge.target
-            # Kein Match → erster CONDITIONAL als Fallback
+            # No match -> first CONDITIONAL as fallback
             for edge in outgoing:
                 if edge.condition == "__default__" or edge.condition == "*":
                     return edge.target
@@ -606,7 +606,7 @@ class GraphEngine:
     # ── Execution Management ─────────────────────────────────────
 
     async def cancel(self, execution_id: str) -> bool:
-        """Bricht eine laufende Execution ab."""
+        """Cancels a running execution."""
         record = self._state_mgr.get_execution(execution_id)
         if record and record.status in (ExecutionStatus.RUNNING, ExecutionStatus.PAUSED):
             record.status = ExecutionStatus.CANCELED

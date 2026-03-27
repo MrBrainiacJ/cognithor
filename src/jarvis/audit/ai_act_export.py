@@ -1,16 +1,16 @@
-"""Jarvis · EU AI Act Compliance-Export.
+"""Jarvis · EU AI Act Compliance Export.
 
-Standardisierte Export-Funktionen für gesetzliche Vorgaben:
+Standardized export functions for legal requirements:
 
-  - RiskClassification:    AI-Act Risikoklassen (Unacceptable/High/Limited/Minimal)
-  - RiskAssessment:        Strukturierte Risikobewertung
-  - AIActReport:           Vollständiger Compliance-Bericht
-  - MitigationPlan:        Dokumentierte Gegenmaßnahmen
-  - TransparencyObligation: Transparenzpflichten
-  - ComplianceExporter:    Export als JSON/Markdown/HTML
-  - AuditTrailExporter:    Entscheidungs-Log für Behörden
+  - RiskClassification:    AI Act risk classes (Unacceptable/High/Limited/Minimal)
+  - RiskAssessment:        Structured risk assessment
+  - AIActReport:           Complete compliance report
+  - MitigationPlan:        Documented countermeasures
+  - TransparencyObligation: Transparency obligations
+  - ComplianceExporter:    Export as JSON/Markdown/HTML
+  - AuditTrailExporter:    Decision log for authorities
 
-Architektur-Bibel: §13.2 (Compliance), §16.3 (EU AI Act)
+Architecture Bible: §13.2 (Compliance), §16.3 (EU AI Act)
 """
 
 from __future__ import annotations
@@ -27,9 +27,9 @@ from typing import Any
 
 
 class RiskLevel(Enum):
-    UNACCEPTABLE = "unacceptable"  # Art. 5: Verboten
-    HIGH = "high"  # Art. 6: Strenge Auflagen
-    LIMITED = "limited"  # Art. 50: Transparenzpflichten
+    UNACCEPTABLE = "unacceptable"  # Art. 5: Prohibited
+    HIGH = "high"  # Art. 6: Strict obligations
+    LIMITED = "limited"  # Art. 50: Transparency obligations
     MINIMAL = "minimal"  # Keine Auflagen
 
 
@@ -50,7 +50,7 @@ class SystemCategory(Enum):
 
 @dataclass
 class RiskAssessment:
-    """Strukturierte Risikobewertung nach EU AI Act."""
+    """Structured risk assessment per EU AI Act."""
 
     assessment_id: str
     system_name: str
@@ -83,7 +83,7 @@ class RiskAssessment:
 
 
 class RiskClassifier:
-    """Klassifiziert AI-Systeme nach EU AI Act Risikoklassen."""
+    """Classifies AI systems by EU AI Act risk classes."""
 
     CATEGORY_RISK_MAP: dict[SystemCategory, RiskLevel] = {
         SystemCategory.BIOMETRIC: RiskLevel.UNACCEPTABLE,
@@ -167,7 +167,7 @@ class MitigationStatus(Enum):
 
 @dataclass
 class MitigationMeasure:
-    """Dokumentierte Gegenmaßnahme."""
+    """Documented countermeasure."""
 
     measure_id: str
     risk_factor: str
@@ -192,7 +192,7 @@ class MitigationMeasure:
 
 
 class MitigationTracker:
-    """Verfolgt und dokumentiert Gegenmaßnahmen."""
+    """Tracks and documents countermeasures."""
 
     def __init__(self) -> None:
         self._measures: list[MitigationMeasure] = []
@@ -269,7 +269,7 @@ class MitigationTracker:
 
 @dataclass
 class TransparencyObligation:
-    """Transparenzpflicht nach EU AI Act Art. 50."""
+    """Transparency obligation per EU AI Act Art. 50."""
 
     obligation_id: str
     article: str  # z.B. "Art. 50(1)"
@@ -289,7 +289,7 @@ class TransparencyObligation:
 
 
 class TransparencyChecker:
-    """Prüft ob Transparenzpflichten erfüllt sind."""
+    """Checks if transparency obligations are fulfilled."""
 
     DEFAULT_OBLIGATIONS = [
         TransparencyObligation(
@@ -356,7 +356,7 @@ class TransparencyChecker:
 
 @dataclass
 class AIActReport:
-    """Vollständiger Compliance-Bericht nach EU AI Act."""
+    """Complete compliance report per EU AI Act."""
 
     report_id: str
     system_name: str
@@ -392,7 +392,7 @@ class AIActReport:
 
 
 class ComplianceExporter:
-    """Exportiert Compliance-Berichte in verschiedenen Formaten."""
+    """Exports compliance reports in various formats."""
 
     def __init__(self) -> None:
         self._classifier = RiskClassifier()
@@ -421,12 +421,12 @@ class ComplianceExporter:
         ethics_summary: dict[str, Any] | None = None,
         audit_entries: int = 0,
     ) -> AIActReport:
-        """Generiert einen vollständigen Compliance-Bericht."""
+        """Generates a complete compliance report."""
         risk = self._classifier.latest()
         trans = self._transparency.check_all()
         mits = [m.to_dict() for m in self._mitigations.all_measures()]
 
-        # Compliance-Score berechnen
+        # Calculate compliance score
         scores = [trans.get("compliance_rate", 0), self._mitigations.completion_rate()]
         if risk:
             scores.append(100.0 if risk.risk_level != RiskLevel.UNACCEPTABLE else 0.0)

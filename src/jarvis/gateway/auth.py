@@ -1,15 +1,15 @@
-"""Auth-Gateway: Token-basierte Authentifizierung mit Per-Agent-Sessions.
+"""Auth gateway: Token-based authentication with per-agent sessions.
 
-Stellt bereit:
-  - AuthGateway: Zentraler Authentifizierungs-Service
-  - GatewayToken: JWT-ähnliche Token für Session-Identifizierung
-  - AgentSession: Isolierte Login-Sessions pro Agent
-  - TokenValidator: Validiert und erneuert Token
+Provides:
+  - AuthGateway: Central authentication service
+  - GatewayToken: JWT-like tokens for session identification
+  - AgentSession: Isolated login sessions per agent
+  - TokenValidator: Validates and renews tokens
 
-In Multi-Tenant-Szenarien erstellt das SSO-Gateway pro Agent
-separate Login-Sessions, die über Gateway-Token unterschieden werden.
+In multi-tenant scenarios the SSO gateway creates separate login
+sessions per agent, distinguished by gateway tokens.
 
-Bibel-Referenz: §14 (Security), §8 (Agent-Separation)
+Architecture reference: §14 (Security), §8 (Agent Separation)
 """
 
 from __future__ import annotations
@@ -27,26 +27,26 @@ log = get_logger(__name__)
 
 
 class AuthMethod(Enum):
-    """Unterstützte Authentifizierungs-Methoden."""
+    """Supported authentication methods."""
 
-    TOKEN = "token"  # Gateway-Token
-    API_KEY = "api_key"  # API-Schlüssel
-    SSO = "sso"  # Single-Sign-On
-    LOCAL = "local"  # Lokale Authentifizierung
+    TOKEN = "token"  # Gateway token
+    API_KEY = "api_key"  # API key
+    SSO = "sso"  # Single sign-on
+    LOCAL = "local"  # Local authentication
 
 
 @dataclass
 class GatewayToken:
-    """Token für Session-Identifizierung.
+    """Token for session identification.
 
-    Enthält User-ID, Agent-ID und Ablaufzeit.
-    Jeder Token ist eindeutig einem User+Agent zugeordnet.
+    Contains user ID, agent ID, and expiration time.
+    Each token is uniquely associated with a user+agent pair.
     """
 
     token_id: str
     user_id: str
     agent_id: str
-    token_hash: str  # SHA-256 Hash des Tokens (nicht das Token selbst)
+    token_hash: str  # SHA-256 hash of the token (not the token itself)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = None
     auth_method: AuthMethod = AuthMethod.TOKEN
@@ -82,13 +82,13 @@ class GatewayToken:
 
 @dataclass
 class AgentSession:
-    """Isolierte Login-Session für einen Agenten.
+    """Isolated login session for an agent.
 
-    Jeder Agent bekommt eine eigene Session mit:
-      - Eigenem Token
-      - Eigenen Scopes/Permissions
-      - Eigener Ablaufzeit
-      - Getrenntem Audit-Trail
+    Each agent gets its own session with:
+      - Its own token
+      - Its own scopes/permissions
+      - Its own expiration time
+      - Separate audit trail
     """
 
     session_id: str
@@ -105,7 +105,7 @@ class AgentSession:
         return f"{self.user_id}:{self.agent_id}:{self.session_id}"
 
     def touch(self) -> None:
-        """Aktualisiert den Zeitstempel der letzten Aktivität."""
+        """Updates the last activity timestamp."""
         self.last_activity = datetime.now(UTC)
 
     def to_dict(self) -> dict[str, Any]:
@@ -120,34 +120,34 @@ class AgentSession:
 
 
 class AuthGateway:
-    """Zentraler Authentifizierungs-Service.
+    """Central authentication service.
 
-    Verwaltet:
-      - Token-Erstellung und -Validierung
-      - Per-Agent-Sessions
-      - Berechtigungs-Prüfung
-      - Token-Revokation
-      - Audit-Trail
+    Manages:
+      - Token creation and validation
+      - Per-agent sessions
+      - Permission checking
+      - Token revocation
+      - Audit trail
 
-    SSO-Flow:
-      1. User authentifiziert sich (lokal oder SSO)
-      2. Gateway erstellt pro Agent ein Token
-      3. Token wird bei jedem Request mitgesendet
-      4. Gateway validiert Token und gibt Kontext zurück
+    SSO flow:
+      1. User authenticates (local or SSO)
+      2. Gateway creates a token per agent
+      3. Token is sent with every request
+      4. Gateway validates token and returns context
     """
 
-    DEFAULT_TOKEN_TTL = 86400  # 24 Stunden in Sekunden
+    DEFAULT_TOKEN_TTL = 86400  # 24 hours in seconds
 
     def __init__(self, *, token_ttl: int = DEFAULT_TOKEN_TTL) -> None:
-        self._tokens: dict[str, GatewayToken] = {}  # token_id → Token
+        self._tokens: dict[str, GatewayToken] = {}  # token_id → token
         self._token_hashes: dict[str, str] = {}  # hash → token_id
-        self._sessions: dict[str, AgentSession] = {}  # session_key → Session
+        self._sessions: dict[str, AgentSession] = {}  # session_key → session
         self._user_sessions: dict[str, list[str]] = {}  # user_id → [session_keys]
         self._token_ttl = token_ttl
         self._audit: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------
-    # Token-Erstellung
+    # Token creation
     # ------------------------------------------------------------------
 
     def create_token(
@@ -159,10 +159,10 @@ class AuthGateway:
         scopes: list[str] | None = None,
         ttl_seconds: int | None = None,
     ) -> tuple[str, GatewayToken]:
-        """Erstellt ein neues Gateway-Token.
+        """Creates a new gateway token.
 
         Returns:
-            (raw_token, token_object) - Raw-Token nur einmal zurückgegeben!
+            (raw_token, token_object) - Raw token only returned once!
         """
         raw_token = secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
@@ -192,7 +192,7 @@ class AuthGateway:
         return raw_token, token
 
     def validate_token(self, raw_token: str) -> GatewayToken | None:
-        """Validiert ein Token und gibt das Token-Objekt zurück."""
+        """Validates a token and returns the token object."""
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
         token_id = self._token_hashes.get(token_hash)
         if not token_id:
@@ -207,18 +207,18 @@ class AuthGateway:
         return token
 
     def revoke_token(self, token_id: str) -> bool:
-        """Widerruft ein Token und entfernt es aus dem Hash-Index."""
+        """Revokes a token and removes it from the hash index."""
         token = self._tokens.get(token_id)
         if not token:
             return False
         token.revoked = True
-        # Aus Hash-Index entfernen um Memory Leak zu verhindern
+        # Remove from hash index to prevent memory leak
         self._token_hashes = {h: tid for h, tid in self._token_hashes.items() if tid != token_id}
         self._audit_log("token_revoked", token.user_id, token.agent_id, token_id=token_id)
         return True
 
     def revoke_all_for_user(self, user_id: str) -> int:
-        """Widerruft alle Tokens eines Users."""
+        """Revokes all tokens for a user."""
         count = 0
         revoked_ids: list[str] = []
         for tid, token in self._tokens.items():
@@ -226,7 +226,7 @@ class AuthGateway:
                 token.revoked = True
                 revoked_ids.append(tid)
                 count += 1
-        # Hash-Index aufräumen um Memory Leak zu verhindern
+        # Clean up hash index to prevent memory leak
         if revoked_ids:
             revoked_set = set(revoked_ids)
             self._token_hashes = {
@@ -245,7 +245,7 @@ class AuthGateway:
         agent_id: str,
         token_id: str,
     ) -> AgentSession:
-        """Erstellt eine isolierte Agent-Session."""
+        """Creates an isolated agent session."""
         session_id = secrets.token_hex(8)
         session = AgentSession(
             session_id=session_id,
@@ -261,7 +261,7 @@ class AuthGateway:
         return session
 
     def get_session(self, user_id: str, agent_id: str) -> AgentSession | None:
-        """Gibt die aktive Session für User+Agent zurück."""
+        """Returns the active session for user+agent."""
         for key in self._user_sessions.get(user_id, []):
             session = self._sessions.get(key)
             if session and session.agent_id == agent_id and session.active:
@@ -269,12 +269,12 @@ class AuthGateway:
         return None
 
     def end_session(self, session_key: str) -> bool:
-        """Beendet eine Session und entfernt sie aus dem Speicher."""
+        """Ends a session and removes it from memory."""
         session = self._sessions.get(session_key)
         if not session:
             return False
         session.active = False
-        # Session aus _sessions entfernen um Memory Leak zu verhindern
+        # Remove session from _sessions to prevent memory leak
         del self._sessions[session_key]
         # Clean up _user_sessions
         user_keys = self._user_sessions.get(session.user_id)
@@ -284,19 +284,19 @@ class AuthGateway:
         return True
 
     def cleanup_expired(self) -> dict[str, int]:
-        """Entfernt abgelaufene/widerrufene Tokens und inaktive Sessions.
+        """Removes expired/revoked tokens and inactive sessions.
 
-        Sollte periodisch aufgerufen werden um Memory Leaks zu verhindern.
+        Should be called periodically to prevent memory leaks.
 
         Returns:
-            Dict mit Anzahl entfernter Tokens und Sessions.
+            Dict with counts of removed tokens and sessions.
         """
         from datetime import timedelta
 
         now = datetime.now(UTC)
         one_hour_ago = now - timedelta(hours=1)
 
-        # Revoked Tokens entfernen die älter als 1h sind
+        # Remove revoked tokens older than 1h
         expired_token_ids = [
             tid
             for tid, token in self._tokens.items()
@@ -308,7 +308,7 @@ class AuthGateway:
             if token:
                 self._token_hashes = {h: t for h, t in self._token_hashes.items() if t != tid}
 
-        # Inaktive Sessions entfernen
+        # Remove inactive sessions
         inactive_keys = [key for key, session in self._sessions.items() if not session.active]
         for key in inactive_keys:
             session = self._sessions.pop(key, None)
@@ -323,7 +323,7 @@ class AuthGateway:
         }
 
     def user_sessions(self, user_id: str) -> list[AgentSession]:
-        """Alle Sessions eines Users."""
+        """All sessions for a user."""
         return [
             self._sessions[key]
             for key in self._user_sessions.get(user_id, [])
@@ -331,7 +331,7 @@ class AuthGateway:
         ]
 
     def active_sessions(self, user_id: str) -> list[AgentSession]:
-        """Nur aktive Sessions eines Users."""
+        """Only active sessions for a user."""
         return [s for s in self.user_sessions(user_id) if s.active]
 
     # ------------------------------------------------------------------
@@ -345,10 +345,10 @@ class AuthGateway:
         *,
         auth_method: AuthMethod = AuthMethod.SSO,
     ) -> dict[str, tuple[str, AgentSession]]:
-        """SSO-Login: Erstellt pro Agent ein Token + Session.
+        """SSO login: Creates a token + session per agent.
 
         Returns:
-            Dict von agent_id → (raw_token, session)
+            Dict of agent_id → (raw_token, session)
         """
         result: dict[str, tuple[str, AgentSession]] = {}
         for agent_id in agent_ids:
@@ -364,34 +364,34 @@ class AuthGateway:
         return result
 
     def logout(self, user_id: str) -> int:
-        """Logout: Beendet alle Sessions und widerruft alle Tokens."""
+        """Logout: Ends all sessions and revokes all tokens."""
         revoked = self.revoke_all_for_user(user_id)
-        # Sessions aus _sessions entfernen um Memory Leak zu verhindern
+        # Remove sessions from _sessions to prevent memory leak
         for key in list(self._user_sessions.get(user_id, [])):
             session = self._sessions.pop(key, None)
             if session:
                 session.active = False
-        # _user_sessions-Eintrag komplett entfernen
+        # Remove _user_sessions entry completely
         self._user_sessions.pop(user_id, None)
         self._audit_log("logout", user_id, "")
         return revoked
 
     # ------------------------------------------------------------------
-    # Berechtigungen
+    # Permissions
     # ------------------------------------------------------------------
 
     def check_scope(self, token: GatewayToken, required_scope: str) -> bool:
-        """Prüft ob ein Token den erforderlichen Scope hat."""
+        """Checks whether a token has the required scope."""
         if not token.scopes:
-            return False  # Keine Scopes = kein Zugriff (deny-by-default)
+            return False  # No scopes = no access (deny-by-default)
         return required_scope in token.scopes or "*" in token.scopes
 
     # ------------------------------------------------------------------
-    # Statistiken
+    # Statistics
     # ------------------------------------------------------------------
 
     def stats(self) -> dict[str, Any]:
-        """Auth-Gateway-Statistiken."""
+        """Auth gateway statistics."""
         tokens = list(self._tokens.values())
         sessions = list(self._sessions.values())
         return {

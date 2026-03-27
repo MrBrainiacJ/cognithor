@@ -1,4 +1,4 @@
-"""Skill-Update-Mechanismus: Automatische Updates und Notfall-Rückzüge.
+"""Skill update mechanism: Automatic updates and emergency recalls.
 
 Stellt bereit:
   - SkillUpdater: Prüft und installiert Updates für Skills
@@ -22,29 +22,29 @@ log = get_logger(__name__)
 
 
 class UpdateStrategy(Enum):
-    """Update-Strategie."""
+    """Update strategy."""
 
-    MANUAL = "manual"  # Nur auf Anfrage
-    NOTIFY = "notify"  # Benachrichtigen, nicht installieren
-    AUTO_MINOR = "auto_minor"  # Minor/Patch automatisch, Major manuell
-    AUTO_ALL = "auto_all"  # Alles automatisch
+    MANUAL = "manual"  # On request only
+    NOTIFY = "notify"  # Notify, do not install
+    AUTO_MINOR = "auto_minor"  # Minor/patch automatic, major manual
+    AUTO_ALL = "auto_all"  # Everything automatic
 
 
 class UpdateSeverity(Enum):
-    """Dringlichkeit eines Updates."""
+    """Urgency of an update."""
 
     LOW = "low"
     NORMAL = "normal"
-    HIGH = "high"  # Sicherheitsfix
-    CRITICAL = "critical"  # Notfall-Update (erzwungen)
+    HIGH = "high"  # Securitysfix
+    CRITICAL = "critical"  # Emergency update (forced)
 
 
 @dataclass
 class UpdatePolicy:
-    """Konfigurierbare Update-Strategie."""
+    """Configurable update strategy."""
 
     strategy: UpdateStrategy = UpdateStrategy.NOTIFY
-    auto_security_updates: bool = True  # Security immer automatisch
+    auto_security_updates: bool = True  # Security always automatic
     check_interval_hours: int = 24
     require_signature: bool = True
     require_review: bool = False  # Review vor Installation
@@ -116,7 +116,7 @@ class SecurityRecall:
     recalled_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     recalled_by: str = ""
     force_uninstall: bool = False
-    replacement_id: str = ""  # Alternatives Paket
+    replacement_id: str = ""  # Alternative package
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -132,7 +132,7 @@ class SecurityRecall:
 
 @dataclass
 class UpdateResult:
-    """Ergebnis einer Update-Installation."""
+    """Result of an update installation."""
 
     package_id: str
     from_version: str
@@ -178,7 +178,7 @@ class SkillUpdater:
     # ------------------------------------------------------------------
 
     def register_installed(self, package_id: str, version: str) -> None:
-        """Registriert ein installiertes Paket."""
+        """Register an installed package."""
         self._installed[package_id] = version
 
     def installed_packages(self) -> dict[str, str]:
@@ -228,14 +228,14 @@ class SkillUpdater:
         return [c for c in self.pending_updates() if c.auto_installable]
 
     def _is_auto_installable(self, check: UpdateCheck) -> bool:
-        """Bestimmt ob ein Update automatisch installiert werden kann."""
+        """Determine if an update can be installed automatically."""
         policy = self._policy
 
-        # Geblockte Pakete nie automatisch
+        # Blocked packages never automatic
         if check.package_id in policy.blocked_packages:
             return False
 
-        # Signatur erforderlich?
+        # Signature required?
         if policy.require_signature and not check.signature_valid:
             return False
 
@@ -243,11 +243,11 @@ class SkillUpdater:
         if check.package_id in self._recalls:
             return False
 
-        # Security-Updates immer wenn konfiguriert
+        # Security updates always if configured
         if check.severity in (UpdateSeverity.HIGH, UpdateSeverity.CRITICAL):
             return policy.auto_security_updates
 
-        # Strategie
+        # Strategy
         if policy.strategy == UpdateStrategy.AUTO_ALL:
             return True
         if policy.strategy == UpdateStrategy.AUTO_MINOR:
@@ -336,7 +336,7 @@ class SkillUpdater:
         # Aus verfügbaren Updates entfernen
         self._available.pop(package_id, None)
 
-        # Bei force_uninstall: deinstallieren
+        # On force_uninstall: uninstall
         if force_uninstall and package_id in self._installed:
             del self._installed[package_id]
 

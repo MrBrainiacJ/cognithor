@@ -1,10 +1,10 @@
-"""REST API fuer den Skill Marketplace.
+"""REST API for the Skill Marketplace.
 
-Endpoints fuer Browse, Search, Install, Publish und Reviews.
-Integriert sich in den FastAPI Control Center auf Port 8741
-als APIRouter unter ``/api/v1/skills``.
+Endpoints for browse, search, install, publish, and reviews.
+Integrates into the FastAPI Control Center on port 8741
+as an APIRouter under ``/api/v1/skills``.
 
-Architektur-Bibel: SS14 (Skills & Ecosystem)
+Architecture reference: SS14 (Skills & Ecosystem)
 """
 
 import sqlite3
@@ -15,16 +15,16 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# Lazy-initialisierter Store -- wird beim ersten Request erzeugt.
+# Lazily initialized store -- created on first request.
 _store_holder: dict[str, Any] = {"store": None}
 
 
 def _get_store() -> Any:
-    """Gibt den globalen MarketplaceStore zurueck (Lazy-Init)."""
+    """Return the global MarketplaceStore (lazy init)."""
     if _store_holder["store"] is None:
         from jarvis.skills.persistence import MarketplaceStore
 
-        # Pfad aus Config lesen, Fallback auf Standard
+        # Read path from config, fall back to default
         try:
             from jarvis.config import load_config
 
@@ -42,26 +42,26 @@ def _get_store() -> Any:
 
 
 def set_store(store: Any) -> None:
-    """Setzt den Store manuell (fuer Tests)."""
+    """Set the store manually (for tests)."""
     _store_holder["store"] = store
 
 
 # ------------------------------------------------------------------
-# Request/Response Models (module-level fuer FastAPI-Kompatibilitaet)
+# Request/Response Models (module-level for FastAPI compatibility)
 # ------------------------------------------------------------------
 
 try:
     from pydantic import BaseModel as _BaseModel
 
     class ReviewRequest(_BaseModel):
-        """Payload fuer eine Review-Einreichung."""
+        """Payload for a review submission."""
 
         rating: int
         comment: str = ""
         reviewer_id: str = "anonymous"
 
     class InstallRequest(_BaseModel):
-        """Payload fuer eine Installation."""
+        """Payload for an installation."""
 
         user_id: str = "default"
         version: str = ""
@@ -72,11 +72,11 @@ except ImportError:
 
 
 def _build_router() -> Any:
-    """Erstellt den FastAPI APIRouter mit allen Marketplace-Endpoints."""
+    """Create the FastAPI APIRouter with all marketplace endpoints."""
     try:
         from fastapi import APIRouter, HTTPException, Query
     except ImportError:
-        # FastAPI nicht installiert -- leerer Platzhalter
+        # FastAPI not installed -- empty placeholder
         log.warning("fastapi_not_available_for_skills_api")
         return None
 
@@ -94,14 +94,14 @@ def _build_router() -> Any:
         min_rating: float = 0.0,
         limit: int = Query(default=20, ge=1, le=100),
     ) -> dict:
-        """Durchsucht den Skill-Marketplace.
+        """Search the skill marketplace.
 
-        Query-Parameter:
-          - query: Volltextsuche
-          - category: Kategorie-Filter
+        Query parameters:
+          - query: Full-text search
+          - category: Category filter
           - sort: relevance | newest | rating | installs | popularity
-          - min_rating: Mindestbewertung (0.0 - 5.0)
-          - limit: Max Ergebnisse (1-100)
+          - min_rating: Minimum rating (0.0 - 5.0)
+          - limit: Max results (1-100)
         """
         store = _get_store()
         results = store.search_listings(
@@ -117,7 +117,7 @@ def _build_router() -> Any:
     async def get_featured(
         limit: int = Query(default=10, ge=1, le=50),
     ) -> dict:
-        """Kuratierte Featured-Skills."""
+        """Curated featured skills."""
         store = _get_store()
         return {"featured": store.get_featured(limit=limit)}
 
@@ -126,13 +126,13 @@ def _build_router() -> Any:
         days: int = Query(default=7, ge=1, le=90),
         limit: int = Query(default=10, ge=1, le=50),
     ) -> dict:
-        """Trending-Skills der letzten N Tage."""
+        """Trending skills of the last N days."""
         store = _get_store()
         return {"trending": store.get_trending(days=days, limit=limit)}
 
     @router.get("/categories")
     async def get_categories() -> dict:
-        """Alle verfuegbaren Kategorien mit Metadaten."""
+        """All available categories with metadata."""
         from jarvis.skills.marketplace import CATEGORY_INFOS
 
         categories = []
@@ -152,14 +152,14 @@ def _build_router() -> Any:
         user_id: str = "default",
         limit: int = Query(default=50, ge=1, le=200),
     ) -> dict:
-        """Liste der installierten Skills eines Users."""
+        """List of installed skills for a user."""
         store = _get_store()
         history = store.get_install_history(user_id=user_id, limit=limit)
         return {"installed": history, "count": len(history)}
 
     @router.get("/stats")
     async def get_marketplace_stats() -> dict:
-        """Aggregierte Marketplace-Statistiken."""
+        """Aggregated marketplace statistics."""
         store = _get_store()
         return store.get_stats()
 
@@ -169,11 +169,11 @@ def _build_router() -> Any:
 
     @router.get("/{package_id}")
     async def get_skill_detail(package_id: str) -> dict:
-        """Detail-Ansicht eines einzelnen Skills."""
+        """Detail view of a single skill."""
         store = _get_store()
         listing = store.get_listing(package_id)
         if listing is None:
-            raise HTTPException(status_code=404, detail="Skill nicht gefunden")
+            raise HTTPException(status_code=404, detail="Skill not found")
         return listing
 
     # ------------------------------------------------------------------
@@ -185,11 +185,11 @@ def _build_router() -> Any:
         package_id: str,
         body: InstallRequest | None = None,
     ) -> dict:
-        """Installiert einen Skill (zeichnet Installation auf)."""
+        """Install a skill (records installation)."""
         store = _get_store()
         listing = store.get_listing(package_id)
         if listing is None:
-            raise HTTPException(status_code=404, detail="Skill nicht gefunden")
+            raise HTTPException(status_code=404, detail="Skill not found")
 
         user_id = body.user_id if body else "default"
         version = body.version if body else listing.get("version", "")
@@ -210,12 +210,12 @@ def _build_router() -> Any:
 
     @router.delete("/{package_id}")
     async def uninstall_skill(package_id: str) -> dict:
-        """Deinstalliert einen Skill (markiert als recalled)."""
+        """Uninstall a skill (marks as recalled)."""
         store = _get_store()
         listing = store.get_listing(package_id)
         if listing is None:
-            raise HTTPException(status_code=404, detail="Skill nicht gefunden")
-        # Recall-Mechanismus fuer Uninstall
+            raise HTTPException(status_code=404, detail="Skill not found")
+        # Recall mechanism for uninstall
         store.recall_listing(package_id, reason="user_uninstall")
         return {"status": "uninstalled", "package_id": package_id}
 
@@ -228,7 +228,7 @@ def _build_router() -> Any:
         package_id: str,
         limit: int = Query(default=20, ge=1, le=100),
     ) -> dict:
-        """Reviews fuer einen Skill."""
+        """Reviews for a skill."""
         store = _get_store()
         reviews = store.get_reviews(package_id, limit=limit)
         avg = store.get_average_rating(package_id)
@@ -239,11 +239,11 @@ def _build_router() -> Any:
         package_id: str,
         body: ReviewRequest,
     ) -> dict:
-        """Review fuer einen Skill einreichen."""
+        """Submit a review for a skill."""
         store = _get_store()
         listing = store.get_listing(package_id)
         if listing is None:
-            raise HTTPException(status_code=404, detail="Skill nicht gefunden")
+            raise HTTPException(status_code=404, detail="Skill not found")
 
         try:
             review_id = store.save_review(
@@ -257,7 +257,7 @@ def _build_router() -> Any:
         except sqlite3.IntegrityError as exc:
             raise HTTPException(
                 status_code=409,
-                detail="Du hast diesen Skill bereits bewertet",
+                detail="You have already reviewed this skill",
             ) from exc
 
         return {
@@ -270,7 +270,7 @@ def _build_router() -> Any:
 
 
 def _build_community_router() -> Any:
-    """Erstellt den FastAPI APIRouter fuer Community-Marketplace-Endpoints."""
+    """Create the FastAPI APIRouter for community marketplace endpoints."""
     try:
         from fastapi import APIRouter, HTTPException, Query
     except ImportError:
@@ -280,12 +280,12 @@ def _build_community_router() -> Any:
     from pydantic import BaseModel as _BaseModel
 
     class CommunityInstallRequest(_BaseModel):
-        """Payload fuer Community-Skill-Installation."""
+        """Payload for community skill installation."""
 
         user_id: str = "default"
 
     class ReportRequest(_BaseModel):
-        """Payload fuer Abuse-Report."""
+        """Payload for abuse report."""
 
         reporter: str = "anonymous"
         category: str = "other"
@@ -293,7 +293,7 @@ def _build_community_router() -> Any:
         evidence: str = ""
 
     class CommunityReviewRequest(_BaseModel):
-        """Payload fuer Community-Skill-Review."""
+        """Payload for community skill review."""
 
         rating: int
         comment: str = ""
@@ -301,7 +301,7 @@ def _build_community_router() -> Any:
 
     cr = APIRouter(prefix="/api/v1/skills/community", tags=["community-skills"])
 
-    # Lazy-initialisierter CommunityRegistryClient
+    # Lazily initialized CommunityRegistryClient
     _client_holder: dict[str, Any] = {"client": None}
 
     def _get_client() -> Any:
@@ -326,7 +326,7 @@ def _build_community_router() -> Any:
         return _client_holder["client"]
 
     # ------------------------------------------------------------------
-    # Search (statische Route — muss VOR /{name} stehen)
+    # Search (static route — must come BEFORE /{name})
     # ------------------------------------------------------------------
 
     @cr.get("/search")
@@ -335,13 +335,13 @@ def _build_community_router() -> Any:
         category: str = "",
         limit: int = Query(default=20, ge=1, le=100),
     ) -> dict:
-        """Durchsucht das Community-Skill-Registry."""
+        """Search the community skill registry."""
         try:
             client = _get_client()
             results = await client.search(query=query, category=category, limit=limit)
         except Exception as exc:
             log.error("community_search_failed", error=str(exc))
-            raise HTTPException(status_code=502, detail="Registry-Suche fehlgeschlagen") from exc
+            raise HTTPException(status_code=502, detail="Registry search failed") from exc
         return {
             "results": [
                 {
@@ -358,42 +358,40 @@ def _build_community_router() -> Any:
         }
 
     # ------------------------------------------------------------------
-    # Recalls (statische Route — muss VOR /{name} stehen)
+    # Recalls (static route — must come BEFORE /{name})
     # ------------------------------------------------------------------
 
     @cr.get("/recalls")
     async def get_community_recalls() -> dict:
-        """Aktive Remote-Recalls."""
+        """Active remote recalls."""
         try:
             store = _get_store()
             recalls = store.get_remote_recalls()
         except Exception as exc:
             log.error("community_recalls_fetch_failed", error=str(exc))
-            raise HTTPException(
-                status_code=500, detail="Recalls konnten nicht geladen werden"
-            ) from exc
+            raise HTTPException(status_code=500, detail="Could not load recalls") from exc
         return {"recalls": recalls, "count": len(recalls)}
 
     # ------------------------------------------------------------------
-    # Publishers (statische Route — muss VOR /{name} stehen)
+    # Publishers (static route — must come BEFORE /{name})
     # ------------------------------------------------------------------
 
     @cr.get("/publishers/{github}")
     async def get_publisher_profile(github: str) -> dict:
-        """Publisher-Profil anhand des GitHub-Usernamens."""
+        """Publisher profile by GitHub username."""
         store = _get_store()
         publisher = store.get_publisher(github)
         if publisher is None:
-            raise HTTPException(status_code=404, detail="Publisher nicht gefunden")
+            raise HTTPException(status_code=404, detail="Publisher not found")
         return publisher
 
     # ------------------------------------------------------------------
-    # Sync (statische Route — muss VOR /{name} stehen)
+    # Sync (static route — must come BEFORE /{name})
     # ------------------------------------------------------------------
 
     @cr.post("/sync")
     async def sync_registry() -> dict:
-        """Registry manuell synchronisieren."""
+        """Manually synchronize registry."""
         try:
             from jarvis.skills.community.sync import RegistrySync
 
@@ -401,7 +399,7 @@ def _build_community_router() -> Any:
             result = await sync.sync_once()
         except Exception as exc:
             log.error("community_sync_failed", error=str(exc))
-            raise HTTPException(status_code=502, detail="Registry-Sync fehlgeschlagen") from exc
+            raise HTTPException(status_code=502, detail="Registry sync failed") from exc
         return {
             "success": result.success,
             "registry_skills": result.registry_skills,
@@ -412,20 +410,20 @@ def _build_community_router() -> Any:
         }
 
     # ------------------------------------------------------------------
-    # Detail (catch-all /{name} — NACH allen statischen Routen)
+    # Detail (catch-all /{name} — AFTER all static routes)
     # ------------------------------------------------------------------
 
     @cr.get("/{name}")
     async def get_community_skill(name: str) -> dict:
-        """Detail-Ansicht eines Community-Skills."""
+        """Detail view of a community skill."""
         try:
             client = _get_client()
             entry = await client.get_entry(name)
         except Exception as exc:
             log.error("community_skill_detail_failed", skill=name, error=str(exc))
-            raise HTTPException(status_code=502, detail="Registry nicht erreichbar") from exc
+            raise HTTPException(status_code=502, detail="Registry unreachable") from exc
         if entry is None:
-            raise HTTPException(status_code=404, detail="Community-Skill nicht gefunden")
+            raise HTTPException(status_code=404, detail="Community skill not found")
         return {
             "name": entry.name,
             "version": entry.version,
@@ -446,13 +444,13 @@ def _build_community_router() -> Any:
         name: str,
         body: CommunityInstallRequest | None = None,
     ) -> dict:
-        """Installiert einen Community-Skill."""
+        """Install a community skill."""
         try:
             client = _get_client()
             result = await client.install(name)
         except Exception as exc:
             log.error("community_install_failed", skill=name, error=str(exc))
-            raise HTTPException(status_code=502, detail="Installation fehlgeschlagen") from exc
+            raise HTTPException(status_code=502, detail="Installation failed") from exc
 
         if not result.success:
             import json as _json
@@ -468,7 +466,7 @@ def _build_community_router() -> Any:
                 ),
             )
 
-        # In MarketplaceStore tracken
+        # Track in MarketplaceStore
         try:
             store = _get_store()
             user_id = body.user_id if body else "default"
@@ -487,11 +485,11 @@ def _build_community_router() -> Any:
 
     @cr.delete("/{name}")
     async def uninstall_community_skill(name: str) -> dict:
-        """Deinstalliert einen Community-Skill."""
+        """Uninstall a community skill."""
         client = _get_client()
         removed = await client.uninstall(name)
         if not removed:
-            raise HTTPException(status_code=404, detail="Skill nicht installiert")
+            raise HTTPException(status_code=404, detail="Skill not installed")
         return {"status": "uninstalled", "skill_name": name}
 
     # ------------------------------------------------------------------
@@ -500,9 +498,9 @@ def _build_community_router() -> Any:
 
     @cr.post("/{name}/report")
     async def report_community_skill(name: str, body: ReportRequest) -> dict:
-        """Meldet einen Community-Skill als missbraeuchlich."""
+        """Report a community skill as abusive."""
         store = _get_store()
-        # Abuse im lokalen Store tracken
+        # Track abuse in local store
         comment_parts = [f"[ABUSE-REPORT:{body.category}] {body.description}"]
         if body.evidence:
             comment_parts.append(f"[EVIDENCE] {body.evidence}")
@@ -530,7 +528,7 @@ def _build_community_router() -> Any:
         name: str,
         body: CommunityReviewRequest,
     ) -> dict:
-        """Review fuer einen Community-Skill abgeben."""
+        """Submit a review for a community skill."""
         store = _get_store()
         try:
             review_id = store.save_review(
@@ -542,13 +540,13 @@ def _build_community_router() -> Any:
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         except sqlite3.IntegrityError as exc:
-            raise HTTPException(status_code=409, detail="Bereits bewertet") from exc
+            raise HTTPException(status_code=409, detail="Already reviewed") from exc
 
         return {"status": "created", "review_id": review_id}
 
     return cr
 
 
-# Erstelle die Router beim Import (None falls FastAPI fehlt)
+# Create routers on import (None if FastAPI is missing)
 router = _build_router()
 community_router = _build_community_router()

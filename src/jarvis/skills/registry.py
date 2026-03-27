@@ -1,4 +1,4 @@
-"""Skill Registry: Laden, Matchen & Injizieren von Skills in den Agent-Loop.
+"""Skill Registry: Loading, matching & injecting skills into the agent loop.
 
 Skills sind Markdown-Dateien mit YAML-Frontmatter die beschreiben,
 WANN und WIE Jarvis bestimmte Aufgaben ausführt. Die Registry:
@@ -110,7 +110,7 @@ class Skill:
 
     @property
     def success_rate(self) -> float:
-        """Erfolgsrate (0.0-1.0)."""
+        """Success rate (0.0-1.0)."""
         total = self.success_count + self.failure_count
         if total == 0:
             return 0.5  # Neutral für ungetestete Skills
@@ -158,9 +158,9 @@ class SkillRegistry:
     # ========================================================================
 
     def load_from_directories(self, directories: list[Path]) -> int:
-        """Lädt Skills aus mehreren Verzeichnissen.
+        """Load skills from multiple directories.
 
-        Spätere Verzeichnisse überschreiben frühere (User > Default).
+        Later directories override earlier ones (user > default).
         Unterstützt sowohl flache .md-Dateien als auch P2P-installierte
         Skills in Unterverzeichnissen (mit skill.md).
 
@@ -208,10 +208,10 @@ class SkillRegistry:
         return count
 
     def _parse_skill_file(self, path: Path) -> Skill | None:
-        """Parst eine Skill-Markdown-Datei mit YAML-Frontmatter."""
+        """Parse a skill Markdown file with YAML frontmatter."""
         content = path.read_text(encoding="utf-8")
 
-        # Frontmatter extrahieren
+        # Extract frontmatter
         frontmatter = {}
         body = content
 
@@ -232,7 +232,7 @@ class SkillRegistry:
         else:
             slug = path.stem
 
-        # Trigger-Keywords normalisieren
+        # Normalize trigger keywords
         triggers = frontmatter.get("trigger_keywords", [])
         if isinstance(triggers, str):
             triggers = [t.strip() for t in triggers.split(",")]
@@ -258,7 +258,7 @@ class SkillRegistry:
         )
 
     def _load_community_skills(self, directories: list[Path]) -> int:
-        """Laedt Community-Skills aus ~/.jarvis/skills/community/.
+        """Load community skills from ~/.jarvis/skills/community/.
 
         Community-Skills haben:
           - source="community"
@@ -296,7 +296,7 @@ class SkillRegistry:
                     if skill is None:
                         continue
 
-                    # Community-Marker setzen
+                    # Set community marker
                     skill.source = "community"
 
                     # manifest.json laden (optional)
@@ -350,14 +350,14 @@ class SkillRegistry:
 
     @staticmethod
     def _parse_simple_frontmatter(text: str) -> dict[str, Any]:
-        """Fallback-Parser für einfaches Key-Value Frontmatter."""
+        """Fallback parser for simple key-value frontmatter."""
         result: dict[str, Any] = {}
         for line in text.strip().splitlines():
             if ":" in line:
                 key, _, value = line.partition(":")
                 key = key.strip()
                 value = value.strip()
-                # Listen erkennen [a, b, c]
+                # Detect lists [a, b, c]
                 if value.startswith("[") and value.endswith("]"):
                     items = value[1:-1].split(",")
                     result[key] = [i.strip().strip("'\"") for i in items if i.strip()]
@@ -366,12 +366,12 @@ class SkillRegistry:
         return result
 
     def _register(self, skill: Skill) -> None:
-        """Registriert einen Skill in der Registry."""
+        """Register a skill in the registry."""
         with self._lock:
             self._skills[skill.slug] = skill
 
     def _rebuild_index(self) -> None:
-        """Baut den Keyword-Index und Kategorie-Index neu auf."""
+        """Rebuild the keyword index and category index."""
         with self._lock:
             self._keyword_index.clear()
             self._categories.clear()
@@ -380,13 +380,13 @@ class SkillRegistry:
                 if not skill.enabled:
                     continue
 
-                # Keyword-Index
+                # Keyword index
                 for keyword in skill.trigger_keywords:
                     kw_lower = keyword.lower().strip()
                     if kw_lower:
                         self._keyword_index.setdefault(kw_lower, []).append(slug)
 
-                # Kategorie-Index
+                # Category index
                 self._categories.setdefault(skill.category, []).append(slug)
 
     # ========================================================================
@@ -401,7 +401,7 @@ class SkillRegistry:
         min_score: float = DEFAULT_MIN_SCORE,
         available_tools: list[str] | None = None,
     ) -> list[SkillMatch]:
-        """Matched eine User-Nachricht gegen registrierte Skills.
+        """Match a user message against registered skills.
 
         Scoring:
           - Exakter Keyword-Match: 1.0
@@ -508,7 +508,7 @@ class SkillRegistry:
         query: str,
         **kwargs: Any,
     ) -> SkillMatch | None:
-        """Gibt den besten Match zurück, oder None."""
+        """Return the best match, or None."""
         results = self.match(query, **kwargs)
         return results[0] if results else None
 
@@ -517,28 +517,28 @@ class SkillRegistry:
     # ========================================================================
 
     def get(self, slug: str) -> Skill | None:
-        """Gibt einen Skill per Slug zurück."""
+        """Return a skill by slug."""
         return self._skills.get(slug)
 
     def list_all(self) -> list[Skill]:
-        """Alle registrierten Skills (auch deaktivierte)."""
+        """All registered skills (including disabled)."""
         return list(self._skills.values())
 
     def list_enabled(self) -> list[Skill]:
-        """Nur aktive Skills."""
+        """Only active skills."""
         return [s for s in self._skills.values() if s.enabled]
 
     def list_by_category(self, category: str) -> list[Skill]:
-        """Skills einer Kategorie."""
+        """Skills in a category."""
         slugs = self._categories.get(category, [])
         return [self._skills[s] for s in slugs if s in self._skills]
 
     def list_by_agent(self, agent_name: str) -> list[Skill]:
-        """Skills die einem bestimmten Agenten zugeordnet sind."""
+        """Skills assigned to a specific agent."""
         return [s for s in self._skills.values() if s.agent == agent_name and s.enabled]
 
     def enable(self, slug: str) -> bool:
-        """Aktiviert einen Skill."""
+        """Enable a skill."""
         skill = self._skills.get(slug)
         if skill:
             skill.enabled = True
@@ -547,7 +547,7 @@ class SkillRegistry:
         return False
 
     def disable(self, slug: str) -> bool:
-        """Deaktiviert einen Skill."""
+        """Disable a skill."""
         skill = self._skills.get(slug)
         if skill:
             skill.enabled = False
@@ -556,7 +556,7 @@ class SkillRegistry:
         return False
 
     def record_usage(self, slug: str, success: bool, score: float = 0.0) -> None:
-        """Trackt Nutzung eines Skills."""
+        """Track usage of a skill."""
         with self._lock:
             skill = self._skills.get(slug)
             if not skill:
@@ -608,7 +608,7 @@ class SkillRegistry:
         *,
         available_tools: list[str] | None = None,
     ) -> SkillMatch | None:
-        """Matched und injiziert den besten Skill in die Working Memory.
+        """Match and inject the best skill into working memory.
 
         Dies ist die Hauptintegration mit dem Agent-Loop.
 

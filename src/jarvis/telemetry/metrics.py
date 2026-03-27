@@ -1,9 +1,9 @@
 """Metrics Provider -- Counter, Histogram, Gauge (v19).
 
-OTLP-kompatible Metriken für Jarvis:
-  - Counter:   Monoton steigende Zähler (Requests, Errors, Tokens)
-  - Histogram: Verteilungen (Latenz, Token-Counts)
-  - Gauge:     Aktuelle Werte (aktive Connections, Queue-Größe)
+OTLP-compatible metrics for Jarvis:
+  - Counter:   Monotonically increasing counters (requests, errors, tokens)
+  - Histogram: Distributions (latency, token counts)
+  - Gauge:     Current values (active connections, queue size)
 
 Usage:
     metrics = MetricsProvider(service_name="jarvis")
@@ -31,7 +31,7 @@ log = get_logger(__name__)
 
 
 class MetricsProvider:
-    """Zentrale Instanz für Metriken-Erfassung."""
+    """Central instance for metrics collection."""
 
     def __init__(self, service_name: str = "jarvis", max_points_per_metric: int = 500) -> None:
         self._service_name = service_name
@@ -47,7 +47,7 @@ class MetricsProvider:
     # ── Counter ──────────────────────────────────────────────────
 
     def counter(self, name: str, value: float = 1.0, **labels: str) -> None:
-        """Inkrementiert einen Counter."""
+        """Increments a counter."""
         key = self._make_key(name, labels)
         with self._lock:
             self._counters[key] += value
@@ -60,7 +60,7 @@ class MetricsProvider:
     # ── Gauge ────────────────────────────────────────────────────
 
     def gauge(self, name: str, value: float, **labels: str) -> None:
-        """Setzt einen Gauge-Wert."""
+        """Sets a gauge value."""
         key = self._make_key(name, labels)
         with self._lock:
             self._gauges[key] = value
@@ -73,7 +73,7 @@ class MetricsProvider:
     # ── Histogram ────────────────────────────────────────────────
 
     def histogram(self, name: str, value: float, **labels: str) -> None:
-        """Zeichnet einen Wert in ein Histogram auf."""
+        """Records a value in a histogram."""
         key = self._make_key(name, labels)
         with self._lock:
             if key not in self._histograms:
@@ -88,7 +88,7 @@ class MetricsProvider:
     # ── Description & Units ──────────────────────────────────────
 
     def describe(self, name: str, description: str, unit: str = "") -> None:
-        """Setzt Beschreibung und Einheit einer Metrik."""
+        """Sets description and unit of a metric."""
         self._descriptions[name] = description
         if unit:
             self._units[name] = unit
@@ -96,7 +96,7 @@ class MetricsProvider:
     # ── Time Series ──────────────────────────────────────────────
 
     def get_history(self, name: str, last_n: int = 60, **labels: str) -> list[dict[str, Any]]:
-        """Gibt Zeitreihe einer Metrik zurück."""
+        """Returns time series of a metric."""
         key = self._make_key(name, labels)
         points = self._time_series.get(key, deque())
         return [p.to_dict() for p in list(points)[-last_n:]]
@@ -104,7 +104,7 @@ class MetricsProvider:
     # ── Snapshot & Export ────────────────────────────────────────
 
     def snapshot(self) -> dict[str, Any]:
-        """Vollständiger Snapshot aller Metriken."""
+        """Complete snapshot of all metrics."""
         with self._lock:
             result: dict[str, Any] = {
                 "service": self._service_name,
@@ -116,7 +116,7 @@ class MetricsProvider:
         return result
 
     def get_all_metrics(self) -> list[MetricDefinition]:
-        """Gibt alle Metriken als MetricDefinition zurück."""
+        """Returns all metrics as MetricDefinition."""
         metrics: list[MetricDefinition] = []
 
         for key, value in self._counters.items():
@@ -158,7 +158,7 @@ class MetricsProvider:
         return metrics
 
     def to_otlp(self) -> dict[str, Any]:
-        """Exportiert Metriken im OTLP-Format."""
+        """Exports metrics in OTLP format."""
         scope_metrics: list[dict] = []
 
         for metric in self.get_all_metrics():
@@ -243,7 +243,7 @@ class MetricsProvider:
         self._time_series[key].append(MetricDataPoint(value=value, attributes=labels))
 
     def reset(self) -> None:
-        """Setzt alle Metriken zurück."""
+        """Resets all metrics."""
         with self._lock:
             self._counters.clear()
             self._gauges.clear()

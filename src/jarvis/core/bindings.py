@@ -1,30 +1,29 @@
-"""Deterministic Message Bindings: Regelbasiertes Agent-Routing.
+"""Deterministic Message Bindings: Rule-based agent routing.
 
-Im Gegensatz zum probabilistischen Keyword-Matching liefert das
-Bindings-System deterministische Routing-Entscheidungen. Bindings
-werden in Prioritätsreihenfolge ausgewertet -- die erste passende
-Regel gewinnt. Erst wenn kein Binding greift, fällt das System
-auf das bestehende Keyword-/Pattern-Matching zurück.
+Unlike probabilistic keyword matching, the bindings system provides
+deterministic routing decisions. Bindings are evaluated in priority
+order -- the first matching rule wins. Only when no binding matches
+does the system fall back to keyword/pattern matching.
 
-Inspiriert von OpenClaws Bindings-System, das Nachrichten über
-Channel-Filter, Regex-Patterns und User-Zuordnungen verteilt.
+Inspired by OpenClaw's bindings system, which distributes messages
+via channel filters, regex patterns and user assignments.
 
-Architektur:
-  IncomingMessage → MessageContext extrahieren
-                  → BindingEngine.evaluate(context)
-                  → Erste passende Regel → Agent
-                  → Kein Match → Keyword-Routing (Fallback)
+Architecture:
+  IncomingMessage -> extract MessageContext
+                  -> BindingEngine.evaluate(context)
+                  -> First matching rule -> Agent
+                  -> No match -> Keyword routing (fallback)
 
-Binding-Typen (alle AND-verknüpft innerhalb einer Regel):
-  - Channel-Filter:    Nur bestimmte Kanäle (telegram, cli, api, ...)
-  - User-Filter:       Nur bestimmte User-IDs
-  - Command-Prefixes:  Slash-Commands (/code, /research, /hilfe)
-  - Regex-Patterns:    Beliebige Muster auf den Nachrichtentext
-  - Metadata-Match:    Key-Value-Bedingungen auf msg.metadata
-  - Zeitfenster:       Nur in bestimmten Tageszeiten/Wochentagen
-  - Negation:          Invertierte Bedingungen (NOT-Logik)
+Binding types (all AND-linked within a rule):
+  - Channel filter:    Only specific channels (telegram, cli, api, ...)
+  - User filter:       Only specific user IDs
+  - Command prefixes:  Slash commands (/code, /research, /hilfe)
+  - Regex patterns:    Arbitrary patterns on the message text
+  - Metadata match:    Key-value conditions on msg.metadata
+  - Time windows:      Only during certain times/weekdays
+  - Negation:          Inverted conditions (NOT logic)
 
-Bibel-Referenz: §9.2 (Multi-Agent-Routing -- Bindings-Erweiterung)
+Reference: §9.2 (Multi-Agent Routing -- Bindings Extension)
 """
 
 from __future__ import annotations
@@ -49,7 +48,7 @@ log = get_logger(__name__)
 
 
 class BindingMatchResult(Enum):
-    """Ergebnis der Binding-Auswertung."""
+    """Result of binding evaluation."""
 
     MATCH = "match"
     NO_MATCH = "no_match"
@@ -58,7 +57,7 @@ class BindingMatchResult(Enum):
 
 
 class Weekday(Enum):
-    """ISO-Wochentage (Montag=1 ... Sonntag=7)."""
+    """ISO weekdays (Monday=1 ... Sunday=7)."""
 
     MONDAY = 1
     TUESDAY = 2
@@ -69,7 +68,7 @@ class Weekday(Enum):
     SUNDAY = 7
 
 
-# Abkürzungen für YAML-Konfiguration
+# Abbreviations for YAML configuration
 WEEKDAY_ALIASES: dict[str, Weekday] = {
     "mo": Weekday.MONDAY,
     "mon": Weekday.MONDAY,
@@ -96,38 +95,38 @@ WEEKDAY_ALIASES: dict[str, Weekday] = {
 
 
 # ============================================================================
-# Datenmodelle
+# Data models
 # ============================================================================
 
 
 @dataclass
 class TimeWindow:
-    """Zeitfenster-Bedingung.
+    """Time window condition.
 
-    Definiert wann ein Binding aktiv ist:
-      - Tageszeit (start_time bis end_time)
-      - Wochentage (z.B. nur Mo-Fr)
-      - Timezone (Default: Europe/Berlin)
+    Defines when a binding is active:
+      - Time of day (start_time to end_time)
+      - Weekdays (e.g. Mon-Fri only)
+      - Timezone (default: Europe/Berlin)
 
-    Beispiele:
-      Geschäftszeiten: TimeWindow(start="08:00", end="18:00", weekdays=[mo-fr])
-      Wochenende:      TimeWindow(weekdays=[sa, so])
-      Nachts:          TimeWindow(start="22:00", end="06:00")
+    Examples:
+      Business hours: TimeWindow(start="08:00", end="18:00", weekdays=[mo-fr])
+      Weekend:        TimeWindow(weekdays=[sa, so])
+      Night:          TimeWindow(start="22:00", end="06:00")
     """
 
     start_time: time | None = None  # None = 00:00
     end_time: time | None = None  # None = 23:59
-    weekdays: list[Weekday] = field(default_factory=list)  # Leer = alle Tage
+    weekdays: list[Weekday] = field(default_factory=list)  # Empty = all days
     timezone: str = "Europe/Berlin"
 
     def matches(self, now: datetime | None = None) -> bool:
-        """Prüft ob der aktuelle Zeitpunkt im Fenster liegt.
+        """Check whether the current time falls within the window.
 
         Args:
-            now: Aktueller Zeitpunkt (für Tests). Default: jetzt.
+            now: Current time (for tests). Default: now.
 
         Returns:
-            True wenn im Zeitfenster.
+            True if within the time window.
         """
         if now is None:
             try:
@@ -137,32 +136,32 @@ class TimeWindow:
             except Exception:
                 now = datetime.now()
 
-        # Wochentag prüfen
+        # Check weekday
         if self.weekdays:
-            # Python: Monday=0 ... Sunday=6 → ISO: Monday=1 ... Sunday=7
+            # Python: Monday=0 ... Sunday=6 -> ISO: Monday=1 ... Sunday=7
             iso_weekday = now.isoweekday()
             if not any(wd.value == iso_weekday for wd in self.weekdays):
                 return False
 
-        # Tageszeit prüfen
+        # Check time of day
         current_time = now.time()
         start = self.start_time or time(0, 0)
         end = self.end_time or time(23, 59, 59)
 
         if start <= end:
-            # Normales Fenster (z.B. 08:00 - 18:00)
+            # Normal window (e.g. 08:00 - 18:00)
             return start <= current_time <= end
         else:
-            # Über Mitternacht (z.B. 22:00 - 06:00)
+            # Across midnight (e.g. 22:00 - 06:00)
             return current_time >= start or current_time <= end
 
 
 @dataclass
 class MessageContext:
-    """Vollständiger Kontext einer eingehenden Nachricht für Binding-Auswertung.
+    """Full context of an incoming message for binding evaluation.
 
-    Wird aus IncomingMessage extrahiert und enthält alle routing-relevanten
-    Informationen. Trennt die Binding-Logik von der Message-Struktur.
+    Extracted from IncomingMessage and contains all routing-relevant
+    information. Separates binding logic from the message structure.
     """
 
     text: str
@@ -171,12 +170,12 @@ class MessageContext:
     metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime | None = None
 
-    # Abgeleitete Felder (werden beim Erstellen berechnet)
-    command: str = ""  # Erster Slash-Command (z.B. "/code")
-    text_without_command: str = ""  # Text nach dem Command
+    # Derived fields (computed on creation)
+    command: str = ""  # First slash command (e.g. "/code")
+    text_without_command: str = ""  # Text after the command
 
     def __post_init__(self) -> None:
-        """Extrahiert Command-Prefix aus dem Text."""
+        """Extract command prefix from the text."""
         stripped = self.text.strip()
         if stripped.startswith("/"):
             parts = stripped.split(maxsplit=1)
@@ -188,13 +187,13 @@ class MessageContext:
 
     @classmethod
     def from_incoming(cls, msg: Any) -> MessageContext:
-        """Erstellt MessageContext aus einer IncomingMessage.
+        """Create MessageContext from an IncomingMessage.
 
         Args:
-            msg: IncomingMessage-Instanz.
+            msg: IncomingMessage instance.
 
         Returns:
-            MessageContext mit allen extrahierten Feldern.
+            MessageContext with all extracted fields.
         """
         return cls(
             text=getattr(msg, "text", ""),
@@ -207,64 +206,64 @@ class MessageContext:
 
 @dataclass
 class MessageBinding:
-    """Deterministische Routing-Regel.
+    """Deterministic routing rule.
 
-    Alle Bedingungen sind AND-verknüpft: Nur wenn ALLE gesetzten
-    Bedingungen zutreffen, matcht das Binding. Nicht gesetzte
-    Bedingungen (None/leer) werden ignoriert.
+    All conditions are AND-linked: only when ALL set conditions
+    are met does the binding match. Unset conditions (None/empty)
+    are ignored.
 
     Attributes:
-        name: Eindeutiger Name des Bindings.
-        target_agent: Name des Ziel-Agenten.
-        priority: Höher = wird zuerst ausgewertet (Default: 100).
-        description: Menschenlesbare Beschreibung.
+        name: Unique name of the binding.
+        target_agent: Name of the target agent.
+        priority: Higher = evaluated first (default: 100).
+        description: Human-readable description.
 
-        channels: Erlaubte Kanäle (None = alle).
-        user_ids: Erlaubte User-IDs (None = alle).
-        command_prefixes: Slash-Commands die matchen (z.B. ["/code"]).
-        message_patterns: Regex-Patterns auf den Text.
-        metadata_conditions: Key-Value-Bedingungen auf Metadata.
-        time_windows: Zeitfenster in denen das Binding aktiv ist.
+        channels: Allowed channels (None = all).
+        user_ids: Allowed user IDs (None = all).
+        command_prefixes: Slash commands that match (e.g. ["/code"]).
+        message_patterns: Regex patterns on the text.
+        metadata_conditions: Key-value conditions on metadata.
+        time_windows: Time windows during which the binding is active.
 
-        negate: Invertiert das Ergebnis (NOT-Logik).
-        stop_processing: Bei Match keine weiteren Bindings prüfen (Default: True).
-        enabled: Binding aktiv/inaktiv.
+        negate: Invert the result (NOT logic).
+        stop_processing: On match, skip remaining bindings (default: True).
+        enabled: Binding active/inactive.
     """
 
     name: str
     target_agent: str
     priority: int = 100
 
-    # Beschreibung
+    # Description
     description: str = ""
 
-    # --- Bedingungen (alle AND-verknüpft) ---
+    # --- Conditions (all AND-linked) ---
 
-    # Channel-Filter
+    # Channel filter
     channels: list[str] | None = None
 
-    # User-Filter
+    # User filter
     user_ids: list[str] | None = None
 
-    # Command-Prefix-Filter
+    # Command prefix filter
     command_prefixes: list[str] | None = None
 
-    # Regex-Pattern-Filter (auf Nachrichtentext)
+    # Regex pattern filter (on message text)
     message_patterns: list[str] | None = None
 
-    # Metadata-Bedingungen (Key muss existieren und Wert matchen)
+    # Metadata conditions (key must exist and value must match)
     metadata_conditions: dict[str, str] | None = None
 
-    # Zeitfenster
+    # Time windows
     time_windows: list[TimeWindow] | None = None
 
-    # --- Verhalten ---
+    # --- Behavior ---
 
-    negate: bool = False  # Invertiert Ergebnis
-    stop_processing: bool = True  # Bei Match keine weiteren Bindings
+    negate: bool = False  # Invert result
+    stop_processing: bool = True  # On match, skip remaining bindings
     enabled: bool = True
 
-    # --- Kompilierte Patterns (intern) ---
+    # --- Compiled patterns (internal) ---
     _compiled_patterns: list[re.Pattern] = field(
         default_factory=list,
         repr=False,
@@ -272,11 +271,11 @@ class MessageBinding:
     )
 
     def __post_init__(self) -> None:
-        """Kompiliert Regex-Patterns beim Erstellen."""
+        """Compile regex patterns on creation."""
         self._compile()
 
     def _compile(self) -> None:
-        """Kompiliert die Message-Patterns zu Regex-Objekten."""
+        """Compile message patterns to regex objects."""
         self._compiled_patterns = []
         if self.message_patterns:
             for pattern_str in self.message_patterns:
@@ -293,16 +292,16 @@ class MessageBinding:
                     )
 
     def evaluate(self, ctx: MessageContext) -> BindingMatchResult:
-        """Wertet das Binding gegen einen MessageContext aus.
+        """Evaluate the binding against a MessageContext.
 
-        Alle gesetzten Bedingungen müssen zutreffen (AND).
-        Nicht gesetzte Bedingungen werden ignoriert.
+        All set conditions must be met (AND).
+        Unset conditions are ignored.
 
         Args:
-            ctx: Nachrichtenkontext.
+            ctx: Message context.
 
         Returns:
-            BindingMatchResult.MATCH oder NO_MATCH.
+            BindingMatchResult.MATCH or NO_MATCH.
         """
         if not self.enabled:
             return BindingMatchResult.DISABLED
@@ -317,17 +316,17 @@ class MessageBinding:
             )
             return BindingMatchResult.ERROR
 
-        # Negation anwenden
+        # Apply negation
         if self.negate:
             raw_match = not raw_match
 
         return BindingMatchResult.MATCH if raw_match else BindingMatchResult.NO_MATCH
 
     def _evaluate_conditions(self, ctx: MessageContext) -> bool:
-        """Interne Auswertung aller Bedingungen.
+        """Internal evaluation of all conditions.
 
         Returns:
-            True wenn alle gesetzten Bedingungen matchen.
+            True if all set conditions match.
         """
         # 1. Channel-Filter
         if self.channels is not None and ctx.channel not in self.channels:
@@ -352,7 +351,7 @@ class MessageBinding:
             if not any(p.search(text) for p in self._compiled_patterns):
                 return False
 
-        # 5. Metadata-Bedingungen (alle müssen matchen)
+        # 5. Metadata conditions (all must match)
         if self.metadata_conditions is not None:
             for key, expected_value in self.metadata_conditions.items():
                 actual = ctx.metadata.get(key)
@@ -367,13 +366,13 @@ class MessageBinding:
         ):
             return False
 
-        # Alle Bedingungen erfüllt
+        # All conditions met
         return True
 
 
 @dataclass
 class BindingMatchInfo:
-    """Detailliertes Ergebnis einer Binding-Auswertung."""
+    """Detailed result of a binding evaluation."""
 
     binding: MessageBinding
     result: BindingMatchResult
@@ -390,17 +389,17 @@ class BindingMatchInfo:
 
 
 class BindingEngine:
-    """Wertet Bindings in Prioritätsreihenfolge aus.
+    """Evaluate bindings in priority order.
 
-    Die Engine ist das Herzstück des deterministischen Routings.
-    Sie evaluiert alle aktiven Bindings gegen den MessageContext
-    und gibt die erste passende Regel zurück.
+    The engine is the core of deterministic routing.
+    It evaluates all active bindings against the MessageContext
+    and returns the first matching rule.
 
-    Reihenfolge:
-      1. Bindings nach Priorität sortiert (höchste zuerst)
-      2. Bei gleicher Priorität: alphabetisch nach Name
-      3. Erste passende Regel gewinnt (deterministic)
-      4. Kein Match → None (Fallback auf Keyword-Routing)
+    Order:
+      1. Bindings sorted by priority (highest first)
+      2. On equal priority: alphabetically by name
+      3. First matching rule wins (deterministic)
+      4. No match -> None (fallback to keyword routing)
 
     Usage:
         engine = BindingEngine()
@@ -421,23 +420,23 @@ class BindingEngine:
 
     @property
     def binding_count(self) -> int:
-        """Anzahl registrierter Bindings."""
+        """Number of registered bindings."""
         return len(self._bindings)
 
     @property
     def active_count(self) -> int:
-        """Anzahl aktiver Bindings."""
+        """Number of active bindings."""
         return sum(1 for b in self._bindings.values() if b.enabled)
 
     # ========================================================================
-    # Binding-Verwaltung
+    # Binding management
     # ========================================================================
 
     def add_binding(self, binding: MessageBinding) -> None:
-        """Registriert ein neues Binding (oder überschreibt bestehendes).
+        """Register a new binding (or overwrite an existing one).
 
         Args:
-            binding: Das zu registrierende Binding.
+            binding: The binding to register.
         """
         self._bindings[binding.name] = binding
         self._resort()
@@ -449,10 +448,10 @@ class BindingEngine:
         )
 
     def add_bindings(self, bindings: list[MessageBinding]) -> None:
-        """Registriert mehrere Bindings auf einmal.
+        """Register multiple bindings at once.
 
         Args:
-            bindings: Liste von Bindings.
+            bindings: List of bindings.
         """
         for binding in bindings:
             self._bindings[binding.name] = binding
@@ -460,13 +459,13 @@ class BindingEngine:
         log.info("bindings_bulk_added", count=len(bindings))
 
     def remove_binding(self, name: str) -> bool:
-        """Entfernt ein Binding.
+        """Remove a binding.
 
         Args:
-            name: Name des zu entfernenden Bindings.
+            name: Name of the binding to remove.
 
         Returns:
-            True wenn das Binding existierte und entfernt wurde.
+            True if the binding existed and was removed.
         """
         if name in self._bindings:
             del self._bindings[name]
@@ -476,15 +475,15 @@ class BindingEngine:
         return False
 
     def get_binding(self, name: str) -> MessageBinding | None:
-        """Gibt ein Binding per Name zurück."""
+        """Return a binding by name."""
         return self._bindings.get(name)
 
     def list_bindings(self) -> list[MessageBinding]:
-        """Alle Bindings in Prioritätsreihenfolge."""
+        """All bindings in priority order."""
         return list(self._sorted_bindings)
 
     def enable_binding(self, name: str) -> bool:
-        """Aktiviert ein Binding."""
+        """Enable a binding."""
         binding = self._bindings.get(name)
         if binding:
             binding.enabled = True
@@ -492,7 +491,7 @@ class BindingEngine:
         return False
 
     def disable_binding(self, name: str) -> bool:
-        """Deaktiviert ein Binding."""
+        """Disable a binding."""
         binding = self._bindings.get(name)
         if binding:
             binding.enabled = False
@@ -500,33 +499,33 @@ class BindingEngine:
         return False
 
     def clear(self) -> None:
-        """Entfernt alle Bindings."""
+        """Remove all bindings."""
         self._bindings.clear()
         self._sorted_bindings.clear()
 
     def _resort(self) -> None:
-        """Sortiert Bindings nach Priorität (absteigend), dann Name."""
+        """Sort bindings by priority (descending), then name."""
         self._sorted_bindings = sorted(
             self._bindings.values(),
             key=lambda b: (-b.priority, b.name),
         )
 
     # ========================================================================
-    # Auswertung
+    # Evaluation
     # ========================================================================
 
     def evaluate(self, ctx: MessageContext) -> BindingMatchInfo | None:
-        """Wertet alle Bindings gegen den MessageContext aus.
+        """Evaluate all bindings against the MessageContext.
 
-        First-Match-Wins: Die erste passende Regel (nach Priorität)
-        bestimmt den Ziel-Agenten. Deterministic -- gleiches Input
-        ergibt immer gleiches Output.
+        First-match-wins: the first matching rule (by priority)
+        determines the target agent. Deterministic -- same input
+        always yields same output.
 
         Args:
-            ctx: Nachrichtenkontext.
+            ctx: Message context.
 
         Returns:
-            BindingMatchInfo bei Match, None wenn kein Binding passt.
+            BindingMatchInfo on match, None if no binding matches.
         """
         for binding in self._sorted_bindings:
             result = binding.evaluate(ctx)
@@ -555,16 +554,16 @@ class BindingEngine:
         return None
 
     def evaluate_all(self, ctx: MessageContext) -> list[BindingMatchInfo]:
-        """Wertet ALLE Bindings aus (für Debugging/Monitoring).
+        """Evaluate ALL bindings (for debugging/monitoring).
 
-        Im Gegensatz zu evaluate() stoppt diese Methode nicht beim
-        ersten Match, sondern gibt alle Ergebnisse zurück.
+        Unlike evaluate(), this method does not stop at the
+        first match but returns all results.
 
         Args:
-            ctx: Nachrichtenkontext.
+            ctx: Message context.
 
         Returns:
-            Liste aller Binding-Ergebnisse.
+            List of all binding results.
         """
         results = []
         for binding in self._sorted_bindings:
@@ -583,10 +582,10 @@ class BindingEngine:
     # ========================================================================
 
     def save_yaml(self, path: Path) -> None:
-        """Speichert alle Bindings als YAML.
+        """Save all bindings as YAML.
 
         Args:
-            path: Pfad zur YAML-Datei.
+            path: Path to the YAML file.
         """
         import yaml
 
@@ -646,9 +645,9 @@ class BindingEngine:
 
     @classmethod
     def from_yaml(cls, path: Path) -> BindingEngine:
-        """Lädt Bindings aus einer YAML-Datei.
+        """Load bindings from a YAML file.
 
-        Erwartetes Format:
+        Expected format:
             bindings:
               - name: telegram_coding
                 target_agent: coder
@@ -665,10 +664,10 @@ class BindingEngine:
                     weekdays: [mo, di, mi, do, fr]
 
         Args:
-            path: Pfad zur YAML-Datei.
+            path: Path to the YAML file.
 
         Returns:
-            Konfigurierte BindingEngine.
+            Configured BindingEngine.
         """
         import yaml
 
@@ -701,11 +700,11 @@ class BindingEngine:
         return engine
 
     # ========================================================================
-    # Statistiken
+    # Statistics
     # ========================================================================
 
     def stats(self) -> dict[str, Any]:
-        """Engine-Statistiken."""
+        """Engine statistics."""
         agent_distribution: dict[str, int] = {}
         for b in self._bindings.values():
             agent_distribution[b.target_agent] = agent_distribution.get(b.target_agent, 0) + 1
@@ -732,31 +731,31 @@ class BindingEngine:
 
 
 def _parse_time(s: str) -> time:
-    """Parst einen Zeit-String (HH:MM oder HH:MM:SS)."""
+    """Parse a time string (HH:MM or HH:MM:SS)."""
     parts = s.strip().split(":")
     if len(parts) == 2:
         return time(int(parts[0]), int(parts[1]))
     if len(parts) == 3:
         return time(int(parts[0]), int(parts[1]), int(parts[2]))
-    msg = f"Ungültiges Zeitformat: '{s}' (erwartet HH:MM oder HH:MM:SS)"
+    msg = f"Invalid time format: '{s}' (expected HH:MM or HH:MM:SS)"
     raise ValueError(msg)
 
 
 def _parse_weekday(s: str) -> Weekday:
-    """Parst einen Wochentag-String."""
+    """Parse a weekday string."""
     key = s.strip().lower()
     if key in WEEKDAY_ALIASES:
         return WEEKDAY_ALIASES[key]
-    # Versuche direkt als Enum-Name
+    # Try directly as enum name
     try:
         return Weekday[key.upper()]
     except KeyError:
-        msg = f"Unbekannter Wochentag: '{s}'"
+        msg = f"Unknown weekday: '{s}'"
         raise ValueError(msg) from None
 
 
 def _parse_time_window(data: dict[str, Any]) -> TimeWindow:
-    """Parst ein TimeWindow aus einem YAML-Dict."""
+    """Parse a TimeWindow from a YAML dict."""
     start = _parse_time(data["start"]) if "start" in data else None
     end = _parse_time(data["end"]) if "end" in data else None
     weekdays = [_parse_weekday(d) for d in data.get("weekdays", [])]
@@ -771,12 +770,12 @@ def _parse_time_window(data: dict[str, Any]) -> TimeWindow:
 
 
 def _parse_binding_entry(entry: dict[str, Any]) -> MessageBinding:
-    """Parst ein einzelnes Binding aus einem YAML-Dict."""
+    """Parse a single binding from a YAML dict."""
     name = entry["name"]
     target = entry["target_agent"]
     priority = entry.get("priority", 100)
 
-    # Zeitfenster parsen
+    # Parse time windows
     time_windows = None
     if "time_windows" in entry:
         time_windows = [_parse_time_window(tw) for tw in entry["time_windows"]]
@@ -799,7 +798,7 @@ def _parse_binding_entry(entry: dict[str, Any]) -> MessageBinding:
 
 
 # ============================================================================
-# Factory-Funktionen für häufige Binding-Patterns
+# Factory functions for common binding patterns
 # ============================================================================
 
 
@@ -810,15 +809,15 @@ def channel_binding(
     *,
     priority: int = 100,
 ) -> MessageBinding:
-    """Erstellt ein Channel-basiertes Binding.
+    """Create a channel-based binding.
 
-    Beispiel: Alle Telegram-Nachrichten an den Organizer.
+    Example: All Telegram messages to the organizer.
 
     Args:
-        name: Binding-Name.
-        target_agent: Ziel-Agent.
-        channels: Liste der Kanäle.
-        priority: Priorität.
+        name: Binding name.
+        target_agent: Target agent.
+        channels: List of channels.
+        priority: Priority.
     """
     return MessageBinding(
         name=name,
@@ -836,17 +835,17 @@ def command_binding(
     *,
     priority: int = 200,
 ) -> MessageBinding:
-    """Erstellt ein Command-basiertes Binding.
+    """Create a command-based binding.
 
-    Beispiel: /code → Coding-Agent
+    Example: /code -> Coding agent
 
     Args:
-        name: Binding-Name.
-        target_agent: Ziel-Agent.
-        commands: Slash-Commands (z.B. ["/code", "/shell"]).
-        priority: Priorität (default 200, höher als Channel-Bindings).
+        name: Binding name.
+        target_agent: Target agent.
+        commands: Slash commands (e.g. ["/code", "/shell"]).
+        priority: Priority (default 200, higher than channel bindings).
     """
-    # Normalisiere Commands
+    # Normalize commands
     normalized = [c.lower() if c.startswith("/") else f"/{c.lower()}" for c in commands]
 
     return MessageBinding(
@@ -866,16 +865,16 @@ def user_binding(
     priority: int = 150,
     channels: list[str] | None = None,
 ) -> MessageBinding:
-    """Erstellt ein User-basiertes Binding.
+    """Create a user-based binding.
 
-    Beispiel: Bestimmte User immer an einen Premium-Agenten.
+    Example: Certain users always to a premium agent.
 
     Args:
-        name: Binding-Name.
-        target_agent: Ziel-Agent.
-        user_ids: Liste der User-IDs.
-        priority: Priorität.
-        channels: Optional Channel-Filter.
+        name: Binding name.
+        target_agent: Target agent.
+        user_ids: List of user IDs.
+        priority: Priority.
+        channels: Optional channel filter.
     """
     return MessageBinding(
         name=name,
@@ -894,15 +893,15 @@ def regex_binding(
     *,
     priority: int = 180,
 ) -> MessageBinding:
-    """Erstellt ein Regex-basiertes Binding.
+    """Create a regex-based binding.
 
-    Beispiel: Alle Nachrichten mit "BU-Tarif" oder "Berufsunfähigkeit" → Versicherungs-Agent.
+    Example: All messages with "BU-Tarif" or "Berufsunfaehigkeit" -> insurance agent.
 
     Args:
-        name: Binding-Name.
-        target_agent: Ziel-Agent.
-        patterns: Regex-Patterns.
-        priority: Priorität.
+        name: Binding name.
+        target_agent: Target agent.
+        patterns: Regex patterns.
+        priority: Priority.
     """
     return MessageBinding(
         name=name,
@@ -922,17 +921,17 @@ def schedule_binding(
     weekdays: list[str] | None = None,
     priority: int = 50,
 ) -> MessageBinding:
-    """Erstellt ein zeitgesteuertes Binding.
+    """Create a time-based binding.
 
-    Beispiel: Während Geschäftszeiten → Support-Agent.
+    Example: During business hours -> support agent.
 
     Args:
-        name: Binding-Name.
-        target_agent: Ziel-Agent.
-        start: Startzeit (HH:MM).
-        end: Endzeit (HH:MM).
-        weekdays: Wochentage (z.B. ["mo", "di", "mi", "do", "fr"]).
-        priority: Priorität (default 50, niedrig da meist als Fallback).
+        name: Binding name.
+        target_agent: Target agent.
+        start: Start time (HH:MM).
+        end: End time (HH:MM).
+        weekdays: Weekdays (e.g. ["mo", "di", "mi", "do", "fr"]).
+        priority: Priority (default 50, low as usually a fallback).
     """
     wds = [_parse_weekday(d) for d in weekdays] if weekdays else []
 

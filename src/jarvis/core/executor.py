@@ -68,7 +68,7 @@ class Executor:
       Sandbox -> network/limits).
     """
 
-    # Retryable Error-Typen (transiente Fehler, die sich lohnen zu wiederholen)
+    # Retryable error types (transient errors worth retrying)
     RETRYABLE_ERRORS = frozenset(
         {
             "TimeoutError",
@@ -80,7 +80,7 @@ class Executor:
         }
     )
 
-    # Tools die working_dir akzeptieren und Agent-Workspace nutzen sollen
+    # Tools that accept working_dir and should use agent workspace
     WORKSPACE_TOOLS = frozenset(
         {
             "exec_command",
@@ -103,7 +103,7 @@ class Executor:
         task_telemetry: Any = None,
         error_clusterer: Any = None,
     ) -> None:
-        """Initialisiert den Executor mit Konfiguration und MCP-Client."""
+        """Initialize the executor with configuration and MCP client."""
         self._config = config
         self._mcp_client = mcp_client
         self._gap_detector = gap_detector
@@ -112,14 +112,14 @@ class Executor:
         self._task_profiler = task_profiler
         self._task_telemetry = task_telemetry
         self._error_clusterer = error_clusterer
-        # Executor-Limits aus Config lesen (mit sicheren Defaults)
+        # Read executor limits from config (with safe defaults)
         _exec = getattr(config, "executor", None)
         self._default_timeout: int = getattr(_exec, "default_timeout_seconds", 30)
         self._max_retries: int = getattr(_exec, "max_retries", 3)
         self._base_delay: float = getattr(_exec, "backoff_base_delay_seconds", 1.0)
         self._max_output: int = getattr(_exec, "max_output_chars", 10000)
         self._max_parallel: int = getattr(_exec, "max_parallel_tools", 4)
-        # Längere Timeouts für Tools, die große Modelle laden (z.B. Vision 20 GB+)
+        # Longer timeouts for tools that load large models (e.g. Vision 20 GB+)
         self._tool_timeouts: dict[str, int] = {
             "media_analyze_image": getattr(_exec, "media_analyze_image_timeout", 180),
             "media_transcribe_audio": getattr(_exec, "media_transcribe_audio_timeout", 120),
@@ -133,9 +133,9 @@ class Executor:
         self._status_callback: Any = None
 
     def reload_config(self, config: JarvisConfig) -> None:
-        """Aktualisiert Executor-Limits aus neuer Config (Live-Reload).
+        """Update executor limits from new config (live reload).
 
-        Wird vom Gateway aufgerufen wenn der User Einstellungen im UI ändert.
+        Called by the gateway when the user changes settings in the UI.
         """
         self._config = config
         _exec = getattr(config, "executor", None)
@@ -154,11 +154,11 @@ class Executor:
         log.info("executor_config_reloaded")
 
     def set_mcp_client(self, client: JarvisMCPClient) -> None:
-        """Setzt den MCP-Client (kann nach Initialisierung gesetzt werden)."""
+        """Set the MCP client (can be set after initialization)."""
         self._mcp_client = client
 
     def set_status_callback(self, callback: Any) -> None:
-        """Setzt den Status-Callback für Fortschrittsmeldungen."""
+        """Set the status callback for progress messages."""
         self._status_callback = callback
 
     def set_agent_context(
@@ -168,19 +168,19 @@ class Executor:
         agent_name: str = "",
         session_id: str = "",
     ) -> None:
-        """Setzt den Agent-Kontext für die nächste Ausführung.
+        """Set the agent context for the next execution.
 
-        Wird vom Gateway pro Request gesetzt, basierend auf dem
-        gerouteten Agenten.
+        Set by the gateway per request, based on the
+        routed agent.
 
         Args:
-            workspace_dir: Agent-spezifisches Workspace-Verzeichnis.
-            sandbox_overrides: Sandbox-Config des Agenten
+            workspace_dir: Agent-specific workspace directory.
+            sandbox_overrides: Agent sandbox config
                 (network, max_memory_mb, timeout, etc.)
-            agent_name: Name des aktiven Agenten (für Audit/Monitor).
-            session_id: Session-ID für Profiling/Telemetry.
+            agent_name: Name of the active agent (for audit/monitor).
+            session_id: Session ID for profiling/telemetry.
         """
-        # Alte Tokens zurücksetzen, bevor neue gesetzt werden
+        # Reset old tokens before setting new ones
         self.clear_agent_context()
         self._ctx_tokens = [
             _agent_workspace_var.set(workspace_dir),
@@ -190,16 +190,15 @@ class Executor:
         ]
 
     def set_fact_question_context(self, is_fact: bool) -> None:
-        """Markiert den aktuellen Request als Faktenfrage.
+        """Mark the current request as a factual question.
 
-        Wenn True, wird bei ``search_and_read``-Aufrufen automatisch
-        ``cross_check=True`` injiziert, damit mehrere Quellen verglichen
-        werden.
+        When True, ``cross_check=True`` is automatically injected into
+        ``search_and_read`` calls so multiple sources are compared.
         """
         self._ctx_tokens.append(_fact_question_var.set(is_fact))
 
     def clear_agent_context(self) -> None:
-        """Löscht den Agent-Kontext nach der Ausführung."""
+        """Clear the agent context after execution."""
         for token in self._ctx_tokens:
             with contextlib.suppress(ValueError):
                 token.var.reset(token)
@@ -212,20 +211,20 @@ class Executor:
         *,
         max_parallel: int | None = None,
     ) -> list[ToolResult]:
-        """Führt genehmigte Aktionen DAG-basiert parallel aus.
+        """Execute approved actions in parallel using DAG-based scheduling.
 
-        Baut einen PlanGraph aus den Actions, respektiert Dependencies
-        und führt unabhängige Aktionen parallel in Wellen aus.
-        Nur ALLOW, INFORM und MASK Aktionen werden ausgeführt.
-        BLOCK und ungenehmigte Aktionen werden übersprungen.
+        Builds a PlanGraph from the actions, respects dependencies
+        and executes independent actions in parallel waves.
+        Only ALLOW, INFORM and MASK actions are executed.
+        BLOCK and unapproved actions are skipped.
 
         Args:
-            actions: Liste der geplanten Aktionen
-            decisions: Korrespondierende Gatekeeper-Entscheidungen
-            max_parallel: Maximale Anzahl parallel laufender Tools
+            actions: List of planned actions.
+            decisions: Corresponding gatekeeper decisions.
+            max_parallel: Maximum number of parallel running tools.
 
         Returns:
-            Liste von ToolResults (ein Ergebnis pro Aktion).
+            List of ToolResults (one result per action).
         """
         if len(actions) != len(decisions):
             raise ExecutionError(
@@ -342,24 +341,24 @@ class Executor:
         tool_name: str,
         params: dict[str, Any],
     ) -> ToolResult:
-        """Führt ein einzelnes Tool aus mit Retry, Backoff und Timeout.
+        """Execute a single tool with retry, backoff and timeout.
 
-        Agent-Kontext-Injection:
-          - Für WORKSPACE_TOOLS: Injiziert working_dir aus Agent-Workspace
-          - Für exec_command: Injiziert Sandbox-Overrides (_sandbox_network, _sandbox_timeout)
+        Agent context injection:
+          - For WORKSPACE_TOOLS: injects working_dir from agent workspace
+          - For exec_command: injects sandbox overrides (_sandbox_network, _sandbox_timeout)
 
-        Retry-Strategie:
-          - Maximal 3 Versuche (konfigurierbar)
-          - Exponentieller Backoff: 1s → 2s → 4s
-          - Nur bei transienten Fehlern (Timeout, Connection, Ollama)
-          - Kein Retry bei logischen Fehlern (Permission, NotFound)
+        Retry strategy:
+          - Maximum 3 attempts (configurable)
+          - Exponential backoff: 1s -> 2s -> 4s
+          - Only for transient errors (Timeout, Connection, Ollama)
+          - No retry for logical errors (Permission, NotFound)
 
         Args:
-            tool_name: Name des MCP-Tools
-            params: Tool-Parameter
+            tool_name: Name of the MCP tool.
+            params: Tool parameters.
 
         Returns:
-            ToolResult mit Erfolg oder Fehler.
+            ToolResult with success or error.
         """
         if self._mcp_client is None:
             return ToolResult(
@@ -378,7 +377,7 @@ class Executor:
         except (TypeError, ValueError):
             timeout = self._default_timeout
 
-        # --- Agent-Kontext in Tool-Params injizieren ---
+        # --- Inject agent context into tool params ---
         if (
             _agent_workspace_var.get()
             and tool_name in self.WORKSPACE_TOOLS
@@ -386,7 +385,7 @@ class Executor:
         ):
             params["working_dir"] = _agent_workspace_var.get()
 
-        # --- Faktenfrage: cross_check fuer search_and_read injizieren ---
+        # --- Fact question: inject cross_check for search_and_read ---
         if (
             _fact_question_var.get()
             and tool_name == "search_and_read"
@@ -396,7 +395,7 @@ class Executor:
             log.debug("fact_question_cross_check_injected", tool=tool_name)
 
         if _agent_sandbox_var.get() and tool_name == "exec_command":
-            # Sandbox-Overrides als interne Params durchreichen
+            # Pass sandbox overrides as internal params
             overrides = _agent_sandbox_var.get()
             if "_sandbox_network" not in params and "network" in overrides:
                 params["_sandbox_network"] = overrides["network"]
@@ -411,7 +410,7 @@ class Executor:
         last_error_type: str = ""
         total_start = time.monotonic()
 
-        # --- Runtime Monitor: Sicherheitscheck VOR Ausführung ---
+        # --- Runtime Monitor: security check BEFORE execution ---
         if self._runtime_monitor:
             security_event = self._runtime_monitor.check_tool_call(
                 tool_name,
@@ -445,7 +444,7 @@ class Executor:
 
                 duration_ms = int((time.monotonic() - start) * 1000)
 
-                # Output kürzen wenn zu lang
+                # Truncate output if too long
                 content = result.content if hasattr(result, "content") else str(result)
                 truncated = False
                 if len(content) > self._max_output:
@@ -469,7 +468,7 @@ class Executor:
                     duration_ms=duration_ms,
                     truncated=truncated,
                 )
-                # Profiler: Tool-Call aufzeichnen
+                # Profiler: record tool call
                 if self._task_profiler:
                     try:
                         self._task_profiler.record_tool_call(
@@ -480,7 +479,7 @@ class Executor:
                         )
                     except Exception as exc:
                         log.debug("profiler_record_error", error=str(exc))
-                # Audit: Erfolgreiche Tool-Ausführung protokollieren
+                # Audit: log successful tool execution
                 if self._audit_logger:
                     self._audit_logger.log_tool_call(
                         tool_name,
@@ -493,7 +492,7 @@ class Executor:
                 return tool_result
 
             except TimeoutError:
-                last_error = f"Timeout nach {timeout} Sekunden"
+                last_error = f"Timeout after {timeout} seconds"
                 last_error_type = "TimeoutError"
 
             except Exception as exc:
@@ -502,7 +501,7 @@ class Executor:
 
             duration_ms = int((time.monotonic() - start) * 1000)
 
-            # Profiler: fehlgeschlagenen Tool-Call aufzeichnen
+            # Profiler: record failed tool call
             if self._task_profiler:
                 try:
                     self._task_profiler.record_tool_call(
@@ -526,7 +525,7 @@ class Executor:
                 except Exception as exc:
                     log.debug("error_clusterer_error", error=str(exc))
 
-            # Retry-Entscheidung
+            # Retry decision
             if last_error_type not in self.RETRYABLE_ERRORS:
                 log.error(
                     "executor_error_no_retry",

@@ -98,7 +98,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def _check_python_version() -> None:
-    """Sicherstellen, dass Python >= 3.12 läuft."""
+    """Ensure Python >= 3.12 is running."""
     if sys.version_info < (3, 12):
         print(
             f"[FAIL] Python >= 3.12 required, found {sys.version}.\n"
@@ -161,11 +161,11 @@ async def _run_mcp_server_mode(config: Any) -> None:
 
 
 def main() -> None:
-    """Haupteintrittspunkt für Jarvis."""
+    """Main entry point for Jarvis."""
     _check_python_version()
 
-    # Windows: stdout/stderr auf UTF-8 umstellen, damit Umlaute in cmd.exe
-    # (ohne chcp 65001) nicht zu Encoding-Crashes fuehren.
+    # Windows: switch stdout/stderr to UTF-8 so that umlauts in cmd.exe
+    # (without chcp 65001) do not cause encoding crashes.
     if sys.platform == "win32":
         for stream in (sys.stdout, sys.stderr):
             if hasattr(stream, "reconfigure"):
@@ -174,17 +174,17 @@ def main() -> None:
 
     args = parse_args()
 
-    # 0. .env-Datei laden (Secrets aus ~/.jarvis/.env oder Projekt-Root)
+    # 0. Load .env file (secrets from ~/.jarvis/.env or project root)
     try:
         from dotenv import load_dotenv
 
-        # Zuerst Projekt-.env, dann User-.env (User überschreibt)
+        # First project .env, then user .env (user overrides)
         load_dotenv(Path(".env"), override=False)
         load_dotenv(Path.home() / ".jarvis" / ".env", override=True)
     except ImportError:
         pass  # python-dotenv optional
 
-    # 1. Konfiguration laden
+    # 1. Load configuration
     from jarvis.config import ensure_directory_structure, load_config
 
     config = load_config(args.config)
@@ -197,7 +197,7 @@ def main() -> None:
     )
     set_locale(_lang)
 
-    # 1.5 Lite-Modus: kleinere Modelle fuer niedrigen VRAM-Verbrauch
+    # 1.5 Lite mode: smaller models for low VRAM usage
     if args.lite:
         config.models.planner.name = "qwen3:8b"
         config.models.coder.name = "qwen2.5-coder:7b"
@@ -229,9 +229,9 @@ def main() -> None:
 
     log = get_logger("jarvis")
 
-    # 3.5 Init-only: Nur Verzeichnisstruktur erstellen, dann sofort beenden.
-    # WICHTIG: Muss VOR dem StartupChecker stehen, da dieser Model-Pulls
-    # (bis 30 Min Timeout) und pip-Installs (bis 5 Min) ausloest.
+    # 3.5 Init-only: create directory structure only, then exit immediately.
+    # IMPORTANT: Must come BEFORE the StartupChecker, as it triggers model pulls
+    # (up to 30 min timeout) and pip installs (up to 5 min).
     if args.init_only:
         if created:
             for path in created:
@@ -246,7 +246,7 @@ def main() -> None:
         )
         return
 
-    # 3.6 Startup-Check: Fehlende Abhängigkeiten automatisch laden
+    # 3.6 Startup check: automatically load missing dependencies
     from jarvis.core.startup_check import StartupChecker
 
     checker = StartupChecker(config, auto_install=getattr(args, "auto_install", False))
@@ -256,14 +256,14 @@ def main() -> None:
     if report.errors:
         log.warning("startup_check_errors", errors=report.errors)
 
-    # 3.7 MCP-Server-Modus: Nur MCP-Server auf stdio starten, kein CLI/WebUI
+    # 3.7 MCP server mode: start only MCP server on stdio, no CLI/WebUI
     if args.mcp_server:
         import asyncio
 
         asyncio.run(_run_mcp_server_mode(config))
         return
 
-    # 4. Startup-Info
+    # 4. Startup info
     log.info(
         "jarvis_starting",
         version=__version__,
@@ -287,11 +287,11 @@ def main() -> None:
         executor_model=config.models.executor.name,
     )
 
-    # Phase 1: Gateway + CLI starten
+    # Phase 1: Start gateway + CLI
     import asyncio
 
     async def run() -> None:
-        """Startet den Gateway und CLI-Channel als asynchrone Hauptschleife."""
+        """Starts the gateway and CLI channel as asynchronous main loop."""
         from jarvis.channels.cli import CliChannel
         from jarvis.gateway.gateway import Gateway
 
@@ -300,7 +300,7 @@ def main() -> None:
         _bg_tasks: set[asyncio.Task[Any]] = set()
 
         try:
-            # Alle Subsysteme initialisieren
+            # Initialize all subsystems
             await gateway.initialize()
 
             # LLM-Erreichbarkeit pruefen und prominent warnen
@@ -333,14 +333,14 @@ def main() -> None:
                 print("!" * 60)
                 print()
 
-            # SessionStore-Referenz für Channel-Persistenz
+            # SessionStore reference for channel persistence
             _session_store = getattr(gateway, "_session_store", None)
 
-            # SSL-Config für TLS-fähige Channels
+            # SSL config for TLS-capable channels
             _ssl_cert = config.security.ssl_certfile
             _ssl_key = config.security.ssl_keyfile
 
-            # Control Center API-Server starten (immer, Port 8741)
+            # Start Control Center API server (always, port 8741)
             try:
                 import uvicorn
                 from fastapi import FastAPI
@@ -362,7 +362,7 @@ def main() -> None:
                 # Expose to frontend via /api/v1/bootstrap (see below)
                 _internal_api_token = api_token
 
-                # CORS: Wenn API-Token gesetzt, Origins einschränken
+                # CORS: if API token set, restrict origins
                 if os.environ.get("JARVIS_API_TOKEN"):
                     cors_raw = os.environ.get("JARVIS_API_CORS_ORIGINS", "")
                     cors_origins = (
@@ -371,7 +371,7 @@ def main() -> None:
                 else:
                     cors_origins = ["*"]
 
-                # allow_credentials nur wenn Origins explizit eingeschränkt
+                # allow_credentials only when origins are explicitly restricted
                 _allow_creds = cors_origins != ["*"]
 
                 api_app = FastAPI(
@@ -1188,7 +1188,7 @@ def main() -> None:
                     log.info("voice_hash_verified", voice=voice)
 
                 async def _download_piper_voice(voice: str, dest: Path) -> None:
-                    """Lädt ein Piper-Voicemodell von HuggingFace herunter."""
+                    """Downloads a Piper voice model from HuggingFace."""
                     import hashlib
                     import urllib.request
 
@@ -1360,7 +1360,7 @@ def main() -> None:
                     if not token:
                         return {"error": "Token fehlt", "code": "MISSING_FIELD"}
 
-                    # Registrierung in DB speichern
+                    # Save registration in DB
                     push_db = Path(config.jarvis_home) / "push_subscriptions.json"
                     import json as _pj
 
@@ -1491,12 +1491,12 @@ def main() -> None:
             except Exception as exc:
                 log.warning("control_center_api_failed", error=str(exc))
 
-            # CLI-Channel registrieren und starten
+            # Register and start CLI channel
             if config.channels.cli_enabled and not args.no_cli:
                 cli = CliChannel(version=__version__)
                 gateway.register_channel(cli)
 
-            # Telegram-Channel (auto-detect: token in env → start)
+            # Telegram channel (auto-detect: token in env -> start)
             telegram_token = os.environ.get("JARVIS_TELEGRAM_TOKEN")
             if telegram_token:
                 from jarvis.channels.telegram import TelegramChannel
@@ -1526,7 +1526,7 @@ def main() -> None:
                 _tg_mode = "webhook" if (_tg_use_webhook and _tg_webhook_url) else "polling"
                 log.info("telegram_channel_registered", allowed_users=len(allowed), mode=_tg_mode)
 
-            # Slack-Channel (auto-detect: token + channel in env → start)
+            # Slack channel (auto-detect: token + channel in env -> start)
             slack_token = os.environ.get("JARVIS_SLACK_TOKEN")
             if slack_token:
                 from jarvis.channels.slack import SlackChannel
@@ -1546,7 +1546,7 @@ def main() -> None:
                 else:
                     log.warning("slack_token_found_but_no_channel")
 
-            # Discord-Channel (auto-detect: token + channel_id → start)
+            # Discord channel (auto-detect: token + channel_id -> start)
             discord_token = os.environ.get("JARVIS_DISCORD_TOKEN")
             if discord_token:
                 from jarvis.channels.discord import DiscordChannel
@@ -1569,7 +1569,7 @@ def main() -> None:
                 else:
                     log.warning("discord_token_found_but_no_channel_id")
 
-            # WhatsApp-Channel (auto-detect: token + phone_number_id → start)
+            # WhatsApp channel (auto-detect: token + phone_number_id -> start)
             wa_token = os.environ.get("JARVIS_WHATSAPP_TOKEN")
             if wa_token:
                 from jarvis.channels.whatsapp import WhatsAppChannel
@@ -1597,7 +1597,7 @@ def main() -> None:
                 else:
                     log.warning("whatsapp_token_found_but_no_phone_number_id")
 
-            # Signal-Channel (auto-detect: token + default_user → start)
+            # Signal channel (auto-detect: token + default_user -> start)
             signal_token = os.environ.get("JARVIS_SIGNAL_TOKEN")
             if signal_token:
                 from jarvis.channels.signal import SignalChannel
@@ -1612,7 +1612,7 @@ def main() -> None:
                 else:
                     log.warning("signal_token_found_but_no_default_user")
 
-            # Matrix-Channel (auto-detect: token + homeserver + user_id → start)
+            # Matrix channel (auto-detect: token + homeserver + user_id -> start)
             matrix_token = os.environ.get("JARVIS_MATRIX_TOKEN")
             if matrix_token:
                 from jarvis.channels.matrix import MatrixChannel
@@ -1630,7 +1630,7 @@ def main() -> None:
                 else:
                     log.warning("matrix_token_found_but_no_homeserver_or_user_id")
 
-            # Teams-Channel (auto-detect: app_id + app_password → start)
+            # Teams channel (auto-detect: app_id + app_password -> start)
             teams_app_id = os.environ.get("JARVIS_TEAMS_APP_ID", "")
             teams_app_pw = os.environ.get("JARVIS_TEAMS_TOKEN") or os.environ.get(
                 "JARVIS_TEAMS_APP_PASSWORD", ""
@@ -1662,7 +1662,7 @@ def main() -> None:
                 # iMessage hat keine Token; device_id ist optional
                 gateway.register_channel(IMessageChannel(device_id=device_id))
 
-            # Start Dashboard falls aktiviert
+            # Start dashboard if enabled
             if config.dashboard.enabled:
                 dashboard_port = config.dashboard.port or 9090
                 if dashboard_port != args.api_port and api_app is not None:
@@ -1716,7 +1716,7 @@ def main() -> None:
             await gateway.start()
 
             # Headless-Modus: wenn keine interaktiven Channels laufen,
-            # halte den Prozess am Leben für die API
+            # keep the process alive for the API
             if args.no_cli and api_server and not api_server.should_exit:
                 log.info("jarvis_headless_mode", port=args.api_port)
                 while not api_server.should_exit:

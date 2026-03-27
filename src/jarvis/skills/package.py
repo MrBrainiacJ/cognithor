@@ -1,4 +1,4 @@
-"""Skill Package: Offizielles Paketformat für Jarvis-Skills.
+"""Skill Package: Official package format for Jarvis skills.
 
 Definiert das standardisierte Format für Skill-Pakete, die über
 P2P-Netzwerke oder lokale Verzeichnisse verteilt werden können.
@@ -53,7 +53,7 @@ MAX_MANIFEST_MEMORY_MB = 1024
 MAX_MANIFEST_TIMEOUT_SECONDS = 300
 MAX_DESCRIPTION_LENGTH = 200
 
-# Paket-Member-Groessenlimit (Bytes)
+# Package member size limit (bytes)
 MAX_PACKAGE_MEMBER_SIZE = 2_097_152  # 2 MB
 
 __all__ = [
@@ -78,32 +78,32 @@ __all__ = [
 
 
 class TrustLevel(Enum):
-    """Vertrauensstufe eines Paket-Herausgebers."""
+    """Trust level of a package publisher."""
 
-    UNKNOWN = "unknown"  # Unbekannter Herausgeber
-    COMMUNITY = "community"  # Community-validiert (Reputation > Schwellwert)
-    VERIFIED = "verified"  # Manuell verifizierter Herausgeber
-    OFFICIAL = "official"  # Offizielles Jarvis-Team
+    UNKNOWN = "unknown"  # Unknown publisher
+    COMMUNITY = "community"  # Community-validated (reputation > threshold)
+    VERIFIED = "verified"  # Manually verified publisher
+    OFFICIAL = "official"  # Official Jarvis team
 
 
 class AnalysisVerdict(Enum):
-    """Ergebnis der Code-Analyse."""
+    """Result of code analysis."""
 
     SAFE = "safe"  # Keine Auffälligkeiten
-    SUSPICIOUS = "suspicious"  # Warnung, aber installierbar
-    DANGEROUS = "dangerous"  # Blockiert -- nicht installieren
+    SUSPICIOUS = "suspicious"  # Warning, but installable
+    DANGEROUS = "dangerous"  # Blocked -- do not install
 
 
 class SandboxPermission(Enum):
     """Granulare Sandbox-Rechte für Skills."""
 
-    FILE_READ = "file_read"  # Dateien lesen (Workspace)
-    FILE_WRITE = "file_write"  # Dateien schreiben (Workspace)
-    NETWORK = "network"  # Netzwerkzugriff
-    EXEC = "exec"  # Subprozesse starten
-    MEMORY_ACCESS = "memory_access"  # Jarvis Memory lesen
-    MEMORY_WRITE = "memory_write"  # Jarvis Memory schreiben
-    LLM_CALL = "llm_call"  # LLM-API aufrufen
+    FILE_READ = "file_read"  # Read files (workspace)
+    FILE_WRITE = "file_write"  # Write files (workspace)
+    NETWORK = "network"  # Network access
+    EXEC = "exec"  # Start subprocesses
+    MEMORY_ACCESS = "memory_access"  # Read Jarvis memory
+    MEMORY_WRITE = "memory_write"  # Write Jarvis memory
+    LLM_CALL = "llm_call"  # Call LLM API
 
 
 # ============================================================================
@@ -155,7 +155,7 @@ class SkillManifest:
 
     @property
     def parsed_permissions(self) -> list[SandboxPermission]:
-        """Parsed permissions zu Enum-Werten."""
+        """Parse permissions to enum values."""
         result = []
         for p in self.permissions:
             with contextlib.suppress(ValueError):
@@ -163,7 +163,7 @@ class SkillManifest:
         return result
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialisiert Manifest als Dict."""
+        """Serialize manifest as dict."""
         return {
             "name": self.name,
             "version": self.version,
@@ -185,7 +185,7 @@ class SkillManifest:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> SkillManifest:
-        """Deserialisiert ein Manifest."""
+        """Deserialize a manifest."""
         return cls(
             name=data["name"],
             version=data["version"],
@@ -206,7 +206,7 @@ class SkillManifest:
         )
 
     def validate(self) -> list[str]:
-        """Validiert das Manifest. Gibt Fehlermeldungen zurück."""
+        """Validate the manifest. Return error messages."""
         errors: list[str] = []
         if not re.match(r"^[a-z][a-z0-9_]{2,49}$", self.name):
             errors.append(
@@ -233,7 +233,7 @@ class SkillManifest:
 
 @dataclass
 class PackageSignature:
-    """Digitale Signatur eines Skill-Pakets."""
+    """Digital signature of a skill package."""
 
     signer_id: str  # Öffentlicher Schlüssel oder ID
     signature: str  # Hex-encodierte Signatur
@@ -286,7 +286,7 @@ class PackageSigner:
 
     @classmethod
     def from_ed25519_private(cls, private_key_hex: str, signer_id: str = "") -> PackageSigner:
-        """Erstellt einen Signer aus einem bestehenden Ed25519-Private-Key (Hex)."""
+        """Create a signer from an existing Ed25519 private key (hex)."""
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
         raw = bytes.fromhex(private_key_hex)
@@ -307,7 +307,7 @@ class PackageSigner:
 
     @classmethod
     def verifier(cls, public_key_hex: str, signer_id: str = "") -> PackageSigner:
-        """Erstellt einen reinen Verifizierer (kein Signieren möglich)."""
+        """Create a verification-only signer (signing not possible)."""
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
         raw = bytes.fromhex(public_key_hex)
@@ -331,7 +331,7 @@ class PackageSigner:
 
     @property
     def public_key_hex(self) -> str:
-        """Gibt den öffentlichen Schlüssel als Hex-String zurück (nur Ed25519)."""
+        """Return the public key as hex string (Ed25519 only)."""
         if self._ed25519_public is None:
             return ""
         from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
@@ -382,7 +382,7 @@ class PackageSigner:
         """
         if signature.algorithm == "ed25519":
             if self._ed25519_public is None:
-                logger.warning("Ed25519-Verifikation angefragt, aber kein Public Key vorhanden")
+                logger.warning("Ed25519 verification requested, but no public key available")
                 return False
             try:
                 sig_bytes = bytes.fromhex(signature.signature)
@@ -393,7 +393,7 @@ class PackageSigner:
 
         if signature.algorithm == "hmac-sha256":
             if not self._hmac_key:
-                logger.warning("HMAC-Verifikation angefragt, aber kein HMAC-Key vorhanden")
+                logger.warning("HMAC verification requested, but no HMAC key available")
                 return False
             import hmac as hmac_mod
 
@@ -415,7 +415,7 @@ class PackageSigner:
 
 @dataclass
 class AnalysisReport:
-    """Ergebnis der statischen Code-Analyse."""
+    """Result of static code analysis."""
 
     verdict: AnalysisVerdict
     findings: list[str] = field(default_factory=list)
@@ -425,7 +425,7 @@ class AnalysisReport:
 
     @property
     def is_installable(self) -> bool:
-        """Paket darf installiert werden (SAFE oder SUSPICIOUS)."""
+        """Package may be installed (SAFE or SUSPICIOUS)."""
         return self.verdict != AnalysisVerdict.DANGEROUS
 
 
@@ -503,7 +503,7 @@ class CodeAnalyzer:
         if lines > self._max_lines:
             suspicious.append(f"Code hat {lines} Zeilen (>{self._max_lines} -- ungewöhnlich lang)")
 
-        # Kommentare und Strings entfernen für zuverlässigere Analyse
+        # Comments und Strings entfernen für zuverlässigere Analyse
         clean_code = self._strip_comments_and_strings(code)
 
         # Gefährliche Patterns
@@ -576,14 +576,14 @@ class CodeAnalyzer:
 
     @staticmethod
     def _strip_comments_and_strings(code: str) -> str:
-        """Entfernt Kommentare und String-Literale für sichere Pattern-Analyse."""
+        """Remove comments and string literals for safe pattern analysis."""
         # Multiline-Strings
         code = re.sub(r'""".*?"""', '""', code, flags=re.DOTALL)
         code = re.sub(r"'''.*?'''", "''", code, flags=re.DOTALL)
         # Single-line Strings -- bounded repetition to prevent ReDoS
         code = re.sub(r'"[^"\\]{0,10000}(?:\\.[^"\\]{0,10000}){0,100}"', '""', code)
         code = re.sub(r"'[^'\\]{0,10000}(?:\\.[^'\\]{0,10000}){0,100}'", "''", code)
-        # Kommentare
+        # Comments
         code = re.sub(r"#.*$", "", code, flags=re.MULTILINE)
         return code
 
@@ -688,10 +688,10 @@ class SkillPackage:
                     )
                     continue
                 if ".." in member.name or member.name.startswith("/"):
-                    raise ValueError(f"Pfad-Traversal erkannt im Paket: {member.name}")
+                    raise ValueError(f"Path traversal detected in package: {member.name}")
                 if member.size > max_member_size:
                     raise ValueError(
-                        f"Paket-Mitglied zu gross: {member.name} "
+                        f"Package member too large: {member.name} "
                         f"({member.size:,} > {max_member_size:,} Bytes)"
                     )
                 f = tar.extractfile(member)
@@ -699,14 +699,14 @@ class SkillPackage:
                     files[member.name] = f.read().decode()
 
         if "manifest.json" not in files:
-            raise ValueError("Paket enthält kein manifest.json")
+            raise ValueError("Package contains no manifest.json")
         if "skill.py" not in files:
-            raise ValueError("Paket enthält kein skill.py")
+            raise ValueError("Package contains no skill.py")
 
         try:
             manifest = SkillManifest.from_dict(json.loads(files["manifest.json"]))
         except (json.JSONDecodeError, KeyError) as exc:
-            raise ValueError(f"Ungültiges manifest.json: {exc}") from exc
+            raise ValueError(f"Invalid manifest.json: {exc}") from exc
 
         signature = None
         if "signature.json" in files:
@@ -719,7 +719,7 @@ class SkillPackage:
                     timestamp=sig_data.get("timestamp", ""),
                 )
             except (json.JSONDecodeError, KeyError) as exc:
-                logger.warning("Ungültige signature.json: %s", exc)
+                logger.warning("Invalid signature.json: %s", exc)
 
         return cls(
             manifest=manifest,
@@ -745,7 +745,7 @@ class SkillPackage:
 
 
 class PackageBuilder:
-    """Erstellt signierte Skill-Pakete.
+    """Create signed skill packages.
 
     Usage:
         builder = PackageBuilder(signer=PackageSigner(key, "author"))
@@ -771,7 +771,7 @@ class PackageBuilder:
         *,
         skip_analysis: bool = False,
     ) -> SkillPackage:
-        """Erstellt ein neues Skill-Paket.
+        """Create a new skill package.
 
         1. Manifest validieren
         2. Code analysieren
@@ -822,7 +822,7 @@ class PackageBuilder:
             package.signature = self._signer.sign(signable)
 
         logger.info(
-            "Paket erstellt: %s (hash=%s, signiert=%s)",
+            "Package created: %s (hash=%s, signed=%s)",
             package.package_id,
             content_hash[:8],
             package.is_signed,
@@ -837,7 +837,7 @@ class PackageBuilder:
 
 @dataclass
 class InstallResult:
-    """Ergebnis einer Paket-Installation."""
+    """Result of a package installation."""
 
     success: bool
     package_id: str = ""
@@ -889,7 +889,7 @@ class PackageInstaller:
         return list(self._installed.values())
 
     def install(self, package: SkillPackage) -> InstallResult:
-        """Installiert ein Skill-Paket.
+        """Install a skill package.
 
         Args:
             package: Zu installierendes Paket.
@@ -905,7 +905,7 @@ class PackageInstaller:
                 return InstallResult(
                     success=False,
                     package_id=pkg_id,
-                    message="Paket ist nicht signiert (require_signature=True)",
+                    message="Package is not signed (require_signature=True)",
                 )
 
             if (
@@ -916,7 +916,7 @@ class PackageInstaller:
                 return InstallResult(
                     success=False,
                     package_id=pkg_id,
-                    message=(f"Herausgeber '{package.signature.signer_id}' nicht vertrauenswürdig"),
+                    message=(f"Publisher '{package.signature.signer_id}' is not trusted"),
                 )
 
         # 2. Signatur-Integrität
@@ -928,7 +928,7 @@ class PackageInstaller:
                 return InstallResult(
                     success=False,
                     package_id=pkg_id,
-                    message="Signatur-Verifikation fehlgeschlagen",
+                    message="Signature verification failed",
                 )
 
         # 3. Code analysieren
@@ -947,7 +947,7 @@ class PackageInstaller:
             return InstallResult(
                 success=False,
                 package_id=pkg_id,
-                message="Content-Hash stimmt nicht überein (Manipulation?)",
+                message="Content hash mismatch (tampering?)",
             )
 
         # 5. Dateien schreiben
@@ -970,14 +970,14 @@ class PackageInstaller:
         self._installed[package.manifest.name] = package
 
         logger.info(
-            "Paket installiert: %s → %s",
+            "Package installed: %s → %s",
             pkg_id,
             skill_dir,
         )
         return InstallResult(
             success=True,
             package_id=pkg_id,
-            message=f"Erfolgreich installiert in {skill_dir}",
+            message=f"Successfully installed in {skill_dir}",
             analysis_report=report,
             installed_path=str(skill_dir),
         )
@@ -1001,7 +1001,7 @@ class PackageInstaller:
 
             shutil.rmtree(skill_dir)
 
-        logger.info("Paket deinstalliert: %s", name)
+        logger.info("Package uninstalled: %s", name)
         return True
 
     def sandbox_config_for(self, name: str) -> dict[str, Any]:

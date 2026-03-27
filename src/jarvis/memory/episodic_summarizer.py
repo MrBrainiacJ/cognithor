@@ -1,4 +1,4 @@
-"""LLM-gestuetzte Zusammenfassung von Episoden."""
+"""LLM-assisted summarization of episodes."""
 
 from __future__ import annotations
 
@@ -14,14 +14,14 @@ log = get_logger(__name__)
 
 
 class EpisodicSummarizer:
-    """Erstellt Zusammenfassungen ueber Zeitraeume."""
+    """Create summaries over time periods."""
 
     def __init__(self, store: EpisodicStore, llm: Any = None) -> None:
         self._store = store
         self._llm = llm
 
     async def summarize_day(self, target_date: date) -> str:
-        """Erstellt eine Tageszusammenfassung."""
+        """Create a daily summary."""
         start = target_date.isoformat()
         end = (target_date + timedelta(days=1)).isoformat()
 
@@ -78,7 +78,7 @@ class EpisodicSummarizer:
         return summary
 
     async def summarize_week(self, week_start: date) -> str:
-        """Erstellt eine Wochenzusammenfassung aus Tageszusammenfassungen."""
+        """Create a weekly summary from daily summaries."""
         week_end = week_start + timedelta(days=7)
 
         # Get daily summaries for this week

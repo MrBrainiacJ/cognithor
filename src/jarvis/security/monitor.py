@@ -1,19 +1,19 @@
-"""Runtime Monitor: Echtzeit-Sicherheitsüberwachung.
+"""Runtime monitor: Real-time security monitoring.
 
-Überwacht JEDE Tool-Ausführung und blockiert verdächtige Aktionen
-BEVOR sie ausgeführt werden. Ergänzt die statische Code-Analyse
-des PackageInstallers um dynamische Laufzeitprüfung.
+Monitors EVERY tool execution and blocks suspicious actions
+BEFORE they are executed. Supplements the static code analysis
+of the PackageInstaller with dynamic runtime checking.
 
-Prüfketten:
-  1. Policy-Checks: Erlaubte/verbotene Tool-Parameter prüfen
-  2. Rate-Limiting: Zu viele Aufrufe pro Zeitfenster blockieren
-  3. Resource-Limits: Dateigrößen, Speicher, CPU-Zeit überwachen
-  4. Anomaly-Detection: Ungewöhnliche Muster erkennen
+Check chains:
+  1. Policy checks: Check allowed/forbidden tool parameters
+  2. Rate limiting: Block too many calls per time window
+  3. Resource limits: Monitor file sizes, memory, CPU time
+  4. Anomaly detection: Detect unusual patterns
 
-Jede Verletzung wird als SecurityEvent im AuditLog protokolliert
-und kann den Executor anweisen, die Aktion zu blockieren.
+Each violation is logged as a SecurityEvent in the AuditLog
+and can instruct the executor to block the action.
 
-Bibel-Referenz: §3.4 (Runtime Security)
+Bible reference: §3.4 (Runtime Security)
 """
 
 from __future__ import annotations
@@ -35,26 +35,26 @@ logger = logging.getLogger("jarvis.security.monitor")
 
 
 class Severity(Enum):
-    """Schweregrad eines Sicherheitsereignisses."""
+    """Severity of a security event."""
 
-    INFO = "info"  # Normaler Vorgang
-    WARNING = "warning"  # Auffällig, aber nicht blockiert
-    CRITICAL = "critical"  # Blockiert
-    ALERT = "alert"  # Sofortige Benachrichtigung
+    INFO = "info"  # Normal operation
+    WARNING = "warning"  # Suspicious but not blocked
+    CRITICAL = "critical"  # Blocked
+    ALERT = "alert"  # Immediate notification
 
 
 class Verdict(Enum):
-    """Entscheidung des Runtime Monitors."""
+    """Decision of the runtime monitor."""
 
-    ALLOW = "allow"  # Aktion erlauben
-    WARN = "warn"  # Erlauben + Warnung loggen
-    BLOCK = "block"  # Aktion blockieren
-    THROTTLE = "throttle"  # Aktion verlangsamen
+    ALLOW = "allow"  # Allow action
+    WARN = "warn"  # Allow + log warning
+    BLOCK = "block"  # Block action
+    THROTTLE = "throttle"  # Throttle action
 
 
 @dataclass
 class SecurityEvent:
-    """Ein einzelnes Sicherheitsereignis."""
+    """A single security event."""
 
     event_id: str
     timestamp: str = field(
@@ -67,7 +67,7 @@ class SecurityEvent:
     agent_name: str = ""
     description: str = ""
     parameters: dict[str, Any] = field(default_factory=dict)
-    rule_id: str = ""  # Welche Regel hat ausgelöst
+    rule_id: str = ""  # Which rule triggered
 
     @property
     def is_blocked(self) -> bool:
@@ -81,11 +81,11 @@ class SecurityEvent:
 
 @dataclass
 class PolicyRule:
-    """Eine Sicherheitsregel für den Runtime Monitor.
+    """A security rule for the runtime monitor.
 
-    Definiert Bedingungen und Aktionen:
-      - match: Welches Tool/Welcher Agent
-      - condition: Parameter-Check
+    Defines conditions and actions:
+      - match: Which tool/which agent
+      - condition: Parameter check
       - action: ALLOW/WARN/BLOCK
     """
 
@@ -97,22 +97,22 @@ class PolicyRule:
     tool_pattern: str = "*"  # Glob-Pattern oder exakter Name
     agent_pattern: str = "*"
 
-    # Bedingung (Parameter-Checks)
+    # Condition (parameter checks)
     forbidden_params: dict[str, list[str]] = field(default_factory=dict)
     # z.B. {"path": ["/etc", "/proc", "/sys"]}
     required_params: list[str] = field(default_factory=list)
     max_param_length: int = 0  # 0 = unbegrenzt
 
-    # Aktion
+    # Action
     verdict: Verdict = Verdict.BLOCK
     severity: Severity = Severity.CRITICAL
 
 
-# Default-Regeln
+# Default rules
 _DEFAULT_RULES: list[PolicyRule] = [
     PolicyRule(
         rule_id="no_system_dirs",
-        description="Zugriff auf System-Verzeichnisse blockieren",
+        description="Block access to system directories",
         tool_pattern="*",
         forbidden_params={
             "path": ["/etc", "/proc", "/sys", "/boot", "/root"],
@@ -124,7 +124,7 @@ _DEFAULT_RULES: list[PolicyRule] = [
     ),
     PolicyRule(
         rule_id="no_credential_leak",
-        description="Credentials in Parametern blockieren",
+        description="Block credentials in parameters",
         tool_pattern="*",
         forbidden_params={
             "content": ["password", "api_key", "secret", "token"],
@@ -134,7 +134,7 @@ _DEFAULT_RULES: list[PolicyRule] = [
     ),
     PolicyRule(
         rule_id="param_length_limit",
-        description="Überlange Parameter blockieren (Injection-Schutz)",
+        description="Block oversized parameters (injection protection)",
         tool_pattern="*",
         max_param_length=50000,  # 50KB
         verdict=Verdict.BLOCK,
@@ -150,18 +150,18 @@ _DEFAULT_RULES: list[PolicyRule] = [
 
 @dataclass
 class RateLimit:
-    """Rate-Limit-Konfiguration."""
+    """Rate limit configuration."""
 
     name: str
-    max_calls: int  # Maximale Aufrufe
-    window_seconds: int  # Zeitfenster
+    max_calls: int  # Maximum calls
+    window_seconds: int  # Time window
     scope: str = "global"  # global, per_agent, per_tool
 
 
 class RateLimiter:
-    """Token-Bucket-basierter Rate-Limiter.
+    """Token-bucket-based rate limiter.
 
-    Tracks Tool-Aufrufe pro Scope und blockiert bei Überschreitung.
+    Tracks tool calls per scope and blocks on exceeding limits.
     """
 
     def __init__(self) -> None:
@@ -176,15 +176,15 @@ class RateLimiter:
         tool_name: str,
         agent_name: str = "",
     ) -> tuple[bool, str]:
-        """Prüft ob ein Aufruf erlaubt ist.
+        """Checks if a call is allowed.
 
         Returns:
-            (erlaubt, begründung)
+            (allowed, reason)
         """
         now = time.monotonic()
 
         for limit in self._limits:
-            # Scope-Key bestimmen
+            # Determine scope key
             if limit.scope == "global":
                 key = f"global:{limit.name}"
             elif limit.scope == "per_agent":
@@ -196,20 +196,19 @@ class RateLimiter:
 
             bucket = self._buckets[key]
 
-            # Alte Einträge entfernen
+            # Remove old entries
             while bucket and now - bucket[0] > limit.window_seconds:
                 bucket.popleft()
 
             if len(bucket) >= limit.max_calls:
                 return False, (
-                    f"Rate-Limit '{limit.name}' überschritten: "
-                    f"{limit.max_calls}/{limit.window_seconds}s"
+                    f"Rate limit '{limit.name}' exceeded: {limit.max_calls}/{limit.window_seconds}s"
                 )
 
         return True, ""
 
     def record(self, tool_name: str, agent_name: str = "") -> None:
-        """Zeichnet einen Aufruf auf."""
+        """Records a call."""
         now = time.monotonic()
         for limit in self._limits:
             if limit.scope == "global":
@@ -229,7 +228,7 @@ class RateLimiter:
 
 
 class RuntimeMonitor:
-    """Echtzeit-Sicherheitsüberwachung für Tool-Ausführungen.
+    """Real-time security monitoring for tool executions.
 
     Usage:
         monitor = RuntimeMonitor()
@@ -261,14 +260,14 @@ class RuntimeMonitor:
                 RateLimit("per_tool_limit", max_calls=30, window_seconds=60, scope="per_tool"),
             )
 
-    # ── Konfiguration ────────────────────────────────────────────
+    # ── Configuration ────────────────────────────────────────────
 
     def add_rule(self, rule: PolicyRule) -> None:
-        """Fügt eine neue Sicherheitsregel hinzu."""
+        """Adds a new security rule."""
         self._rules.append(rule)
 
     def remove_rule(self, rule_id: str) -> bool:
-        """Entfernt eine Regel."""
+        """Removes a rule."""
         before = len(self._rules)
         self._rules = [r for r in self._rules if r.rule_id != rule_id]
         return len(self._rules) < before
@@ -285,22 +284,22 @@ class RuntimeMonitor:
         *,
         agent_name: str = "",
     ) -> SecurityEvent:
-        """Prüft einen Tool-Call BEVOR er ausgeführt wird.
+        """Checks a tool call BEFORE it is executed.
 
-        Durchläuft alle Regeln und Rate-Limits.
+        Runs through all rules and rate limits.
 
         Args:
-            tool_name: Name des aufzurufenden Tools.
-            parameters: Tool-Parameter.
-            agent_name: Name des aufrufenden Agenten.
+            tool_name: Name of the tool to call.
+            parameters: Tool parameters.
+            agent_name: Name of the calling agent.
 
         Returns:
-            SecurityEvent mit Verdict (ALLOW/WARN/BLOCK).
+            SecurityEvent with verdict (ALLOW/WARN/BLOCK).
         """
         self._total_checks += 1
         params = parameters or {}
 
-        # 1. Policy-Regeln prüfen
+        # 1. Check policy rules
         for rule in self._rules:
             if not rule.enabled:
                 continue
@@ -343,7 +342,7 @@ class RuntimeMonitor:
             self._total_blocks += 1
             return event
 
-        # 3. Alles OK
+        # 3. All OK
         self._rate_limiter.record(tool_name, agent_name)
         return self._create_event(
             severity=Severity.INFO,
@@ -351,7 +350,7 @@ class RuntimeMonitor:
             category="check",
             tool_name=tool_name,
             agent_name=agent_name,
-            description="Tool-Call erlaubt",
+            description="Tool call allowed",
         )
 
     def record_execution(
@@ -362,14 +361,14 @@ class RuntimeMonitor:
         success: bool = True,
         duration_ms: float = 0,
     ) -> None:
-        """Zeichnet eine ausgeführte Tool-Aktion auf."""
+        """Records an executed tool action."""
         self._create_event(
             severity=Severity.INFO,
             verdict=Verdict.ALLOW,
             category="execution",
             tool_name=tool_name,
             agent_name=agent_name,
-            description=f"{'Erfolg' if success else 'Fehler'} ({duration_ms:.0f}ms)",
+            description=f"{'Success' if success else 'Error'} ({duration_ms:.0f}ms)",
         )
 
     # ── Rule-Checking ────────────────────────────────────────────
@@ -379,10 +378,10 @@ class RuntimeMonitor:
         rule: PolicyRule,
         params: dict[str, Any],
     ) -> str:
-        """Prüft eine einzelne Regel gegen Parameter.
+        """Checks a single rule against parameters.
 
         Returns:
-            Leerer String wenn OK, Fehlerbeschreibung wenn Verletzung.
+            Empty string if OK, error description if violation.
         """
         # Forbidden-Params
         for param_name, forbidden_values in rule.forbidden_params.items():
@@ -393,14 +392,14 @@ class RuntimeMonitor:
             for forbidden in forbidden_values:
                 if forbidden.lower() in value_lower:
                     return (
-                        f"Regel '{rule.rule_id}': Parameter '{param_name}' "
-                        f"enthält verbotenen Wert '{forbidden}'"
+                        f"Rule '{rule.rule_id}': parameter '{param_name}' "
+                        f"contains forbidden value '{forbidden}'"
                     )
 
         # Required-Params
         for required in rule.required_params:
             if required not in params:
-                return f"Regel '{rule.rule_id}': Pflicht-Parameter '{required}' fehlt"
+                return f"Rule '{rule.rule_id}': required parameter '{required}' is missing"
 
         # Max-Param-Length
         if rule.max_param_length > 0:
@@ -408,22 +407,22 @@ class RuntimeMonitor:
                 str_value = str(value)
                 if len(str_value) > rule.max_param_length:
                     return (
-                        f"Regel '{rule.rule_id}': Parameter '{param_name}' "
-                        f"zu lang ({len(str_value)} > {rule.max_param_length})"
+                        f"Rule '{rule.rule_id}': parameter '{param_name}' "
+                        f"too long ({len(str_value)} > {rule.max_param_length})"
                     )
 
         return ""
 
     @staticmethod
     def _matches_pattern(value: str, pattern: str) -> bool:
-        """Einfaches Glob-Matching: '*' matcht alles."""
+        """Simple glob matching: '*' matches everything."""
         if pattern == "*":
             return True
         if pattern.endswith("*"):
             return value.startswith(pattern[:-1])
         return value == pattern
 
-    # ── Event-Verwaltung ─────────────────────────────────────────
+    # ── Event management ─────────────────────────────────────────
 
     def _create_event(self, **kwargs: Any) -> SecurityEvent:
         self._event_counter += 1
@@ -453,7 +452,7 @@ class RuntimeMonitor:
         category: str = "",
         limit: int = 100,
     ) -> list[SecurityEvent]:
-        """Gibt gefilterte Security-Events zurück."""
+        """Returns filtered security events."""
         events = list(self._events)
 
         if severity:
@@ -465,7 +464,7 @@ class RuntimeMonitor:
         return events[:limit]
 
     def get_blocked_events(self, limit: int = 50) -> list[SecurityEvent]:
-        """Alle blockierten Aktionen."""
+        """All blocked actions."""
         return [e for e in list(self._events) if e.is_blocked][-limit:]
 
     # ── Stats ────────────────────────────────────────────────────

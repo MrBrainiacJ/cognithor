@@ -1,4 +1,4 @@
-"""SkillValidator: 5-stufige Sicherheitspruefung fuer Community-Skills.
+"""SkillValidator: 5-stage security validation for community skills.
 
 Fuehrt dieselben 5 Checks durch, die auch in der GitHub Actions CI laufen:
 
@@ -27,7 +27,7 @@ log = get_logger(__name__)
 
 
 # ============================================================================
-# Bekannte Malware-Domains (Content-Safety-Check)
+# Known malware domains (content safety check)
 # ============================================================================
 
 _MALWARE_DOMAINS: frozenset[str] = frozenset(
@@ -42,7 +42,7 @@ _MALWARE_DOMAINS: frozenset[str] = frozenset(
 
 
 # ============================================================================
-# Bekannte MCP-Tools (51 Tools ueber 10 Module)
+# Known MCP tools (51 tools across 10 modules)
 # ============================================================================
 
 KNOWN_MCP_TOOLS: frozenset[str] = frozenset(
@@ -109,7 +109,7 @@ KNOWN_MCP_TOOLS: frozenset[str] = frozenset(
     }
 )
 
-# RED-Tools die in Community-Skills NIEMALS erlaubt sind
+# RED tools that are NEVER allowed in community skills
 RED_TOOLS: frozenset[str] = frozenset(
     {
         "email_send",
@@ -117,7 +117,7 @@ RED_TOOLS: frozenset[str] = frozenset(
     }
 )
 
-# Tools die in Skill-Bodies als Referenz erkannt werden
+# Tools recognized as references in skill bodies
 _TOOL_MENTION_PATTERN = re.compile(
     r"\b(" + "|".join(re.escape(t) for t in sorted(KNOWN_MCP_TOOLS)) + r")\b"
 )
@@ -171,7 +171,7 @@ _SKILL_INJECTION_PATTERNS: list[InjectionPattern] = [
 
 @dataclass
 class CheckResult:
-    """Ergebnis eines einzelnen Checks."""
+    """Result of a single check."""
 
     check_name: str
     passed: bool
@@ -181,7 +181,7 @@ class CheckResult:
 
 @dataclass
 class ValidationResult:
-    """Gesamtergebnis aller 5 Checks."""
+    """Overall result of all 5 checks."""
 
     valid: bool
     checks: list[CheckResult] = field(default_factory=list)
@@ -189,7 +189,7 @@ class ValidationResult:
 
     @property
     def errors(self) -> list[str]:
-        """Alle Fehler aller Checks."""
+        """All errors across all checks."""
         result: list[str] = []
         for c in self.checks:
             result.extend(f"[{c.check_name}] {e}" for e in c.errors)
@@ -197,7 +197,7 @@ class ValidationResult:
 
     @property
     def warnings(self) -> list[str]:
-        """Alle Warnungen aller Checks."""
+        """All warnings across all checks."""
         result: list[str] = []
         for c in self.checks:
             result.extend(f"[{c.check_name}] {w}" for w in c.warnings)
@@ -210,7 +210,7 @@ class ValidationResult:
 
 
 class SkillValidator:
-    """5-stufige Sicherheitspruefung fuer Community-Skills.
+    """5-stage security validation for community skills.
 
     Usage::
 
@@ -221,7 +221,7 @@ class SkillValidator:
                 print(f"FEHLER: {err}")
     """
 
-    # Pflichtfelder im YAML-Frontmatter
+    # Required fields in YAML frontmatter
     REQUIRED_FRONTMATTER_FIELDS: list[str] = [
         "name",
         "description",
@@ -229,7 +229,7 @@ class SkillValidator:
         "tools_required",
     ]
 
-    # Pflichtfelder im Manifest
+    # Required fields in manifest
     REQUIRED_MANIFEST_FIELDS: list[str] = [
         "name",
         "version",
@@ -239,7 +239,7 @@ class SkillValidator:
         "content_hash",
     ]
 
-    # Name-Format: lowercase, Bindestriche erlaubt
+    # Name format: lowercase, hyphens allowed
     NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{2,63}$")
 
     # SemVer-Pattern (ReDoS-safe: pre-release segments use atomic-style matching)
@@ -268,7 +268,7 @@ class SkillValidator:
         *,
         existing_names: set[str] | None = None,
     ) -> ValidationResult:
-        """Fuehrt alle 5 Checks durch.
+        """Run all 5 checks.
 
         Args:
             skill_md: Inhalt der skill.md-Datei.
@@ -278,7 +278,7 @@ class SkillValidator:
         Returns:
             ValidationResult mit allen Check-Ergebnissen.
         """
-        # Frontmatter + Body parsen
+        # Parse frontmatter + body
         frontmatter, body = self._parse_frontmatter(skill_md)
         skill_name = frontmatter.get("name", "<unbekannt>")
 
@@ -340,14 +340,14 @@ class SkillValidator:
         errors: list[str] = []
         warnings: list[str] = []
 
-        # Pflichtfelder pruefen
+        # Check required fields
         for field_name in self.REQUIRED_FRONTMATTER_FIELDS:
             if field_name not in frontmatter:
                 errors.append(f"Pflichtfeld '{field_name}' fehlt")
             elif not frontmatter[field_name]:
                 errors.append(f"Pflichtfeld '{field_name}' ist leer")
 
-        # Name-Format
+        # Name format
         name = frontmatter.get("name", "")
         if name and not self.NAME_PATTERN.match(name):
             errors.append(
@@ -355,7 +355,7 @@ class SkillValidator:
                 f"(lowercase, 3-64 Zeichen, nur a-z, 0-9, -, _)"
             )
 
-        # tools_required gegen bekannte Tools pruefen
+        # Check tools_required against known tools
         tools = frontmatter.get("tools_required", [])
         if isinstance(tools, list):
             for tool in tools:
@@ -366,12 +366,12 @@ class SkillValidator:
         elif tools:
             errors.append("tools_required muss eine Liste sein")
 
-        # trigger_keywords Typ pruefen
+        # Check trigger_keywords type
         triggers = frontmatter.get("trigger_keywords", [])
         if triggers and not isinstance(triggers, list):
             errors.append("trigger_keywords muss eine Liste sein")
 
-        # Description Laenge
+        # Description length
         desc = frontmatter.get("description", "")
         if isinstance(desc, str) and len(desc) > 200:
             warnings.append(f"description ist {len(desc)} Zeichen lang (max 200 empfohlen)")
@@ -435,7 +435,7 @@ class SkillValidator:
                 warnings=["Leerer Body — keine Tool-Referenzen"],
             )
 
-        # Alle im Body erwaehnten Tools finden
+        # Find all tools mentioned in body
         mentioned_tools = set(_TOOL_MENTION_PATTERN.findall(body))
         declared_tools = set(tools_required) if tools_required else set()
 
@@ -488,7 +488,7 @@ class SkillValidator:
         errors: list[str] = []
         warnings: list[str] = []
 
-        # FraudDetector (wenn verfuegbar)
+        # FraudDetector (if available)
         if self._fraud_detector is not None:
             try:
                 signals = self._fraud_detector.scan(
@@ -510,13 +510,13 @@ class SkillValidator:
             except Exception as exc:
                 warnings.append(f"FraudDetector-Fehler: {exc}")
 
-        # Manuelle Checks: Bekannte Malware-Domains
+        # Manual checks: known malware domains
         full_text = body + " " + str(frontmatter)
         for domain in _MALWARE_DOMAINS:
             if domain in full_text.lower():
                 errors.append(f"Bekannte Malware-Domain erkannt: {domain}")
 
-        # Kodierte Payloads (Base64-Bloecke > 100 Zeichen)
+        # Encoded payloads (Base64 blocks > 100 chars)
         b64_blocks = re.findall(r"[A-Za-z0-9+/]{100,}={0,2}", body)
         if b64_blocks:
             warnings.append(f"{len(b64_blocks)} verdaechtige(r) Base64-Block(s) im Body")
@@ -541,12 +541,12 @@ class SkillValidator:
         errors: list[str] = []
         warnings: list[str] = []
 
-        # Pflichtfelder
+        # Required fields
         for field_name in self.REQUIRED_MANIFEST_FIELDS:
             if field_name not in manifest:
                 errors.append(f"Manifest: Pflichtfeld '{field_name}' fehlt")
 
-        # content_hash verifizieren (SHA-256 von skill.md)
+        # Verify content_hash (SHA-256 of skill.md)
         expected_hash = hashlib.sha256(skill_md.encode("utf-8")).hexdigest()
         actual_hash = manifest.get("content_hash", "")
         if actual_hash and actual_hash != expected_hash:
@@ -556,17 +556,17 @@ class SkillValidator:
                 f"gefunden {actual_hash[:16]}..."
             )
 
-        # SemVer pruefen
+        # Check SemVer
         version = manifest.get("version", "")
         if version and not self.SEMVER_PATTERN.match(version):
             errors.append(f"Version '{version}' ist kein gueltiges SemVer")
 
-        # Duplikat-Check
+        # Duplicate check
         name = manifest.get("name", "")
         if name and name in existing_names:
             errors.append(f"Skill-Name '{name}' ist bereits registriert")
 
-        # Name-Format
+        # Name format
         if name and not self.NAME_PATTERN.match(name):
             errors.append(f"Manifest-Name '{name}' entspricht nicht dem Format")
 
@@ -583,7 +583,7 @@ class SkillValidator:
 
     @staticmethod
     def _parse_frontmatter(content: str) -> tuple[dict[str, Any], str]:
-        """Parst YAML-Frontmatter und Body aus Markdown."""
+        """Parse YAML frontmatter and body from Markdown."""
         frontmatter: dict[str, Any] = {}
         body = content
 
@@ -600,5 +600,5 @@ class SkillValidator:
 
     @staticmethod
     def compute_content_hash(skill_md: str) -> str:
-        """Berechnet den SHA-256-Hash einer skill.md-Datei."""
+        """Compute the SHA-256 hash of a skill.md file."""
         return hashlib.sha256(skill_md.encode("utf-8")).hexdigest()

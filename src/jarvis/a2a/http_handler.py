@@ -1,13 +1,13 @@
-"""A2A HTTP Handler -- FastAPI-Routes für A2A Protocol RC v1.0.
+"""A2A HTTP Handler -- FastAPI routes for A2A Protocol RC v1.0.
 
-Stellt die HTTP-Endpoints bereit:
+Provides the HTTP endpoints:
   GET  /.well-known/agent.json  -- Agent Card Discovery
   POST /a2a                     -- JSON-RPC 2.0 Dispatch
   POST /a2a/stream              -- SSE Streaming (message/stream)
   GET  /a2a/health              -- Health Check
 
-OPTIONAL: Wird nur registriert wenn A2A-Adapter aktiv ist.
-Import-sicher: FastAPI ist Optional-Dependency.
+OPTIONAL: Only registered when the A2A adapter is active.
+Import-safe: FastAPI is an optional dependency.
 """
 
 from __future__ import annotations
@@ -25,10 +25,10 @@ log = get_logger(__name__)
 
 
 class A2AHTTPHandler:
-    """HTTP-Transport-Layer für den A2A-Adapter.
+    """HTTP transport layer for the A2A adapter.
 
-    Kann entweder als Standalone-Server (aiohttp/FastAPI) laufen
-    oder sich in die bestehende Gateway-FastAPI-App einklinken.
+    Can either run as a standalone server (aiohttp/FastAPI)
+    or hook into the existing gateway FastAPI app.
     """
 
     def __init__(self, adapter: Any) -> None:
@@ -38,14 +38,14 @@ class A2AHTTPHandler:
     # ── Response Helpers ─────────────────────────────────────────
 
     def _response_headers(self) -> dict[str, str]:
-        """Standard-Response-Headers für A2A-Antworten."""
+        """Standard response headers for A2A responses."""
         return {
             "Content-Type": A2A_CONTENT_TYPE,
             A2A_VERSION_HEADER: A2A_PROTOCOL_VERSION,
         }
 
     def _extract_token(self, auth_header: str) -> str | None:
-        """Extrahiert Bearer-Token aus Authorization-Header."""
+        """Extracts bearer token from Authorization header."""
         if auth_header and auth_header.startswith("Bearer "):
             return auth_header[7:]
         return None
@@ -82,10 +82,10 @@ class A2AHTTPHandler:
     # ── FastAPI Registration ─────────────────────────────────────
 
     def register_routes(self, app: Any) -> None:
-        """Registriert A2A-Routes in einer FastAPI-App.
+        """Registers A2A routes in a FastAPI app.
 
         Args:
-            app: FastAPI-Instanz (oder APIRouter)
+            app: FastAPI instance (or APIRouter)
         """
         try:
             from starlette.responses import JSONResponse, StreamingResponse
@@ -93,7 +93,7 @@ class A2AHTTPHandler:
             log.warning("a2a_http_starlette_not_available")
             return
 
-        handler = self  # Closure-Referenz
+        handler = self  # Closure reference
 
         @app.get("/.well-known/agent.json")
         async def well_known_agent_card() -> JSONResponse:
@@ -192,16 +192,16 @@ class A2AHTTPHandler:
     # ── Standalone Server ────────────────────────────────────────
 
     async def start_standalone(self, host: str = "127.0.0.1", port: int = 3002) -> None:
-        """Startet einen eigenständigen A2A HTTP-Server.
+        """Starts a standalone A2A HTTP server.
 
-        Wird verwendet wenn Jarvis keinen Gateway-HTTP-Server hat
-        aber trotzdem A2A-Requests empfangen soll.
+        Used when Jarvis has no gateway HTTP server
+        but still needs to receive A2A requests.
         """
         try:
             from aiohttp import web
         except ImportError:
             log.warning("a2a_aiohttp_not_installed_using_fallback")
-            # Fallback: Einfacher asyncio-basierter Server
+            # Fallback: simple asyncio-based server
             await self._start_minimal_server(host, port)
             return
 
@@ -266,7 +266,7 @@ class A2AHTTPHandler:
         log.info("a2a_standalone_server_started", host=host, port=port)
 
     async def _start_minimal_server(self, host: str, port: int) -> None:
-        """Minimaler asyncio-basierter HTTP-Server als Fallback."""
+        """Minimal asyncio-based HTTP server as fallback."""
         import asyncio
         import json
 
@@ -282,7 +282,7 @@ class A2AHTTPHandler:
                     card = await self.handle_agent_card()
                     body = json.dumps(card)
                 elif method == "POST" and path == "/a2a":
-                    # JSON-RPC body aus HTTP-Request extrahieren
+                    # Extract JSON-RPC body from HTTP request
                     header_end = data.find(b"\r\n\r\n")
                     rpc_body = data[header_end + 4 :] if header_end != -1 else b""
                     try:

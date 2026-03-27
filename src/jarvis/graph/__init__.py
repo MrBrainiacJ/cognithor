@@ -1,13 +1,13 @@
-"""Jarvis Graph Orchestrator v18 -- DAG-basierte Workflow-Engine.
+"""Jarvis Graph Orchestrator v18 -- DAG-based workflow engine.
 
-LangGraph-inspirierte State-Graph-Engine mit:
-  - Conditional Edges + Router-Nodes
-  - Parallel Branches
-  - Loop-Support mit Cycle-Protection
-  - Checkpoint/Resume (HITL)
+LangGraph-inspired state graph engine with:
+  - Conditional edges + router nodes
+  - Parallel branches
+  - Loop support with cycle protection
+  - Checkpoint/resume (HITL)
   - Fluent GraphBuilder API
-  - Built-in Node-Handlers
-  - Mermaid-Diagramm-Export
+  - Built-in node handlers
+  - Mermaid diagram export
 
 Usage:
     from jarvis.graph import GraphBuilder, GraphEngine, GraphState, END, NodeType

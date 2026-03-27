@@ -1,7 +1,7 @@
-"""Prometheus-kompatibler Metrics-Export für Jarvis.
+"""Prometheus-compatible metrics export for Jarvis.
 
-Exportiert Metriken im Prometheus Text Exposition Format
-ohne externe Abhängigkeiten (kein prometheus_client nötig).
+Exports metrics in Prometheus Text Exposition Format
+without external dependencies (no prometheus_client needed).
 
 Format-Spezifikation: https://prometheus.io/docs/instrumenting/exposition_formats/
 
@@ -132,12 +132,12 @@ def _format_value(value: float) -> str:
 
 
 class PrometheusExporter:
-    """Exportiert Jarvis-Metriken im Prometheus-Textformat.
+    """Exports Jarvis metrics in Prometheus text format.
 
-    Arbeitet mit dem bestehenden MetricsProvider (telemetry/metrics.py)
-    und dem MetricCollector (gateway/monitoring.py) zusammen.
+    Works with the existing MetricsProvider (telemetry/metrics.py)
+    and the MetricCollector (gateway/monitoring.py).
 
-    Kein prometheus_client nötig -- reiner Text-Export.
+    No prometheus_client needed -- pure text export.
 
     Usage:
         exporter = PrometheusExporter(metrics_provider=my_provider)
@@ -165,10 +165,10 @@ class PrometheusExporter:
         self._prefix = prefix
 
     def export(self) -> str:
-        """Generiert Prometheus Text Exposition Format.
+        """Generates Prometheus Text Exposition Format.
 
         Returns:
-            String im Prometheus text exposition format, bereit für /metrics.
+            String in Prometheus text exposition format, ready for /metrics.
         """
         lines: list[str] = []
 

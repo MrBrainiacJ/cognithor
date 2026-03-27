@@ -1,16 +1,16 @@
 """Jarvis · A2A Protocol -- RC v1.0 (Linux Foundation).
 
-Agent-zu-Agent-Kommunikation nach offenem Standard.
-Ersetzt proprietäres JAIP-Protokoll durch Linux-Foundation-konformes A2A.
+Agent-to-agent communication following open standard.
+Replaces proprietary JAIP protocol with Linux Foundation-compliant A2A.
 
-Module:
-  types        -- Datentypen (Task, Message, AgentCard, Parts, Events)
-  server       -- JSON-RPC 2.0 Server (empfängt Remote-Tasks)
-  client       -- JSON-RPC 2.0 Client (sendet Tasks an Remote-Agenten)
-  adapter      -- Brücke JAIP↔A2A + Gateway-Integration
-  http_handler -- HTTP-Transport (FastAPI-Routes)
+Modules:
+  types        -- Data types (Task, Message, AgentCard, Parts, Events)
+  server       -- JSON-RPC 2.0 server (receives remote tasks)
+  client       -- JSON-RPC 2.0 client (sends tasks to remote agents)
+  adapter      -- Bridge JAIP<->A2A + gateway integration
+  http_handler -- HTTP transport (FastAPI routes)
 
-OPTIONAL: Nur aktiv wenn in config aktiviert. Kein Import-Fehler wenn deaktiviert.
+OPTIONAL: Only active when enabled in config. No import error when disabled.
 """
 
 from __future__ import annotations

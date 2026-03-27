@@ -1,15 +1,15 @@
 """Jarvis · Per-Agent Vault & Session-Isolation.
 
-Vollständige Daten- und Session-Separation pro Agent:
+Complete data and session separation per agent:
 
-  - AgentSecret:            Ein Geheimnis mit Rotation und Ablauf
-  - AgentVault:             Isolierter Tresor pro Agent
-  - VaultRotator:           Automatische Credential-Rotation
-  - IsolatedSessionStore:   Getrennte Session-Stores pro Agent
-  - SessionFirewall:        Cross-Session-Zugriffskontrolle
-  - AgentVaultManager:      Zentrale Verwaltung aller Agent-Tresore
+  - AgentSecret:            A secret with rotation and expiration
+  - AgentVault:             Isolated vault per agent
+  - VaultRotator:           Automatic credential rotation
+  - IsolatedSessionStore:   Separate session stores per agent
+  - SessionFirewall:        Cross-session access control
+  - AgentVaultManager:      Central management of all agent vaults
 
-Architektur-Bibel: §14.5 (Secrets-Management), §17.3 (Multi-Tenant-Isolation)
+Architecture Bible: §14.5 (Secrets-Management), §17.3 (Multi-Tenant-Isolation)
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ class SecretStatus(Enum):
 
 @dataclass
 class AgentSecret:
-    """Ein Geheimnis mit Lifecycle-Management."""
+    """A secret with lifecycle management."""
 
     secret_id: str
     agent_id: str
@@ -65,7 +65,7 @@ class AgentSecret:
     expires_at: str = ""
     last_rotated: str = ""
     rotation_count: int = 0
-    # Der eigentliche Wert wird nur verschlüsselt gespeichert
+    # The actual value is only stored encrypted
     _encrypted_value: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -92,21 +92,20 @@ class AgentSecret:
 
 
 # ============================================================================
-# Agent Vault (isolierter Tresor pro Agent)
+# Agent Vault (isolated vault per agent)
 # ============================================================================
 
 
 class AgentVault:
-    """Isolierter Geheimnis-Tresor für einen einzelnen Agenten.
+    """Isolated secret vault for a single agent.
 
-    Jeder Agent hat seinen eigenen Vault mit eigenem Namespace.
-    Cross-Agent-Zugriff ist nicht möglich.
+    Each agent has its own vault with its own namespace.
+    Cross-agent access is not possible.
 
-    Der Encryption-Key wird deterministisch aus ``agent_id`` **plus**
-    einem externen ``master_secret`` abgeleitet.  Gleiche Eingaben
-    erzeugen denselben Key, sodass verschluesselte Secrets Prozess-
-    Neustarts ueberleben.  Ohne Kenntnis des ``master_secret`` kann
-    der Key nicht rekonstruiert werden.
+    The encryption key is derived deterministically from ``agent_id`` **plus**
+    an external ``master_secret``.  Identical inputs produce the same key,
+    so encrypted secrets survive process restarts.  Without knowledge of
+    the ``master_secret`` the key cannot be reconstructed.
     """
 
     def __init__(self, agent_id: str, *, master_secret: bytes = b"") -> None:
@@ -141,7 +140,7 @@ class AgentVault:
         *,
         ttl_hours: int = 0,
     ) -> AgentSecret:
-        """Speichert ein neues Geheimnis im Tresor."""
+        """Stores a new secret in the vault."""
         self._counter += 1
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         expires = ""
@@ -163,7 +162,7 @@ class AgentVault:
         return secret
 
     def retrieve(self, secret_id: str) -> str | None:
-        """Ruft ein Geheimnis ab (nur für den eigenen Agenten)."""
+        """Retrieves a secret (only for the owning agent)."""
         secret = self._secrets.get(secret_id)
         if not secret or not secret.is_active:
             self._log("retrieve_failed", secret_id)
@@ -172,7 +171,7 @@ class AgentVault:
         return self._decrypt(secret._encrypted_value)
 
     def rotate(self, secret_id: str, new_value: str) -> AgentSecret | None:
-        """Rotiert ein Geheimnis (neuer Wert, alte ID)."""
+        """Rotates a secret (new value, same ID)."""
         secret = self._secrets.get(secret_id)
         if not secret:
             return None
@@ -183,19 +182,19 @@ class AgentVault:
         return secret
 
     def revoke(self, secret_id: str) -> bool:
-        """Widerruft ein Geheimnis und entfernt es aus dem Tresor."""
+        """Revokes a secret and removes it from the vault."""
         secret = self._secrets.get(secret_id)
         if not secret:
             return False
         secret.status = SecretStatus.REVOKED
         secret._encrypted_value = ""
         self._log("revoke", secret_id)
-        # Revoked secrets aus dem Tresor entfernen (kein Grund sie zu behalten)
+        # Remove revoked secrets from the vault (no reason to keep them)
         del self._secrets[secret_id]
         return True
 
     def expire_check(self) -> list[AgentSecret]:
-        """Prüft und markiert abgelaufene Geheimnisse."""
+        """Checks and marks expired secrets."""
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         expired = []
         for secret in self._secrets.values():
@@ -267,14 +266,14 @@ class AgentVault:
 
 @dataclass
 class RotationPolicy:
-    """Rotationsrichtlinie für Credentials."""
+    """Rotation policy for credentials."""
 
     policy_id: str
     secret_type: SecretType
-    rotation_interval_hours: int = 720  # 30 Tage
-    max_age_hours: int = 2160  # 90 Tage
+    rotation_interval_hours: int = 720  # 30 days
+    max_age_hours: int = 2160  # 90 days
     auto_rotate: bool = True
-    notify_before_hours: int = 168  # 7 Tage vor Ablauf
+    notify_before_hours: int = 168  # 7 days before expiration
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -287,7 +286,7 @@ class RotationPolicy:
 
 
 class VaultRotator:
-    """Automatische Credential-Rotation über alle Agent-Vaults."""
+    """Automatic credential rotation across all agent vaults."""
 
     DEFAULT_POLICIES = [
         RotationPolicy("ROT-API", SecretType.API_KEY, 720, 2160),
@@ -313,14 +312,14 @@ class VaultRotator:
         )
 
     def check_rotation_needed(self, vault: AgentVault) -> list[AgentSecret]:
-        """Prüft welche Secrets rotiert werden müssen."""
+        """Checks which secrets need rotation."""
         needs_rotation = []
         now_ts = time.time()
         for secret in vault.active_secrets():
             policy = self.get_policy(secret.secret_type)
             if not policy or not policy.auto_rotate:
                 continue
-            # Prüfe Alter
+            # Check age
             last_change = secret.last_rotated or secret.created_at
             if last_change:
                 try:
@@ -335,13 +334,13 @@ class VaultRotator:
         return needs_rotation
 
     def auto_rotate(self, vault: AgentVault) -> list[str]:
-        """Führt automatische Rotation durch."""
+        """Performs automatic rotation."""
         rotated_ids = []
         for secret in vault.active_secrets():
             policy = self.get_policy(secret.secret_type)
             if not policy or not policy.auto_rotate:
                 continue
-            # Generiere neuen Wert
+            # Generate new value
             new_value = secrets.token_urlsafe(32)
             vault.rotate(secret.secret_id, new_value)
             rotated_ids.append(secret.secret_id)
@@ -374,7 +373,7 @@ class VaultRotator:
 
 @dataclass
 class AgentSession:
-    """Eine isolierte Session für einen Agenten."""
+    """An isolated session for an agent."""
 
     session_id: str
     agent_id: str
@@ -396,10 +395,10 @@ class AgentSession:
 
 
 class IsolatedSessionStore:
-    """Vollständig getrennte Session-Stores pro Agent.
+    """Fully separated session stores per agent.
 
-    Jeder Agent hat seinen eigenen Namespace. Cross-Agent-Zugriff
-    wird durch die SessionFirewall verhindert.
+    Each agent has its own namespace. Cross-agent access
+    is prevented by the SessionFirewall.
     """
 
     def __init__(self) -> None:
@@ -409,7 +408,7 @@ class IsolatedSessionStore:
     def create_session(
         self, agent_id: str, tenant_id: str = "", data: dict[str, Any] | None = None
     ) -> AgentSession:
-        """Erstellt eine neue Session für einen Agenten."""
+        """Creates a new session for an agent."""
         self._counter += 1
         session = AgentSession(
             session_id=f"SESS-{agent_id[:6]}-{self._counter:04d}",
@@ -425,7 +424,7 @@ class IsolatedSessionStore:
         return session
 
     def get_session(self, agent_id: str, session_id: str) -> AgentSession | None:
-        """Holt eine Session -- nur aus dem eigenen Store."""
+        """Gets a session -- only from the owning store."""
         store = self._stores.get(agent_id)
         if not store:
             return None
@@ -458,7 +457,7 @@ class IsolatedSessionStore:
         return [s for s in self.agent_sessions(agent_id) if s.is_active]
 
     def purge_agent(self, agent_id: str) -> int:
-        """Löscht alle Sessions eines Agenten (bei Kompromittierung)."""
+        """Deletes all sessions for an agent (on compromise)."""
         store = self._stores.pop(agent_id, {})
         return len(store)
 
@@ -491,14 +490,14 @@ class IsolatedSessionStore:
 
 
 class SessionFirewall:
-    """Verhindert Cross-Agent-Session-Zugriff."""
+    """Prevents cross-agent session access."""
 
     def __init__(self, session_store: IsolatedSessionStore) -> None:
         self._store = session_store
         self._violations: list[dict[str, Any]] = []
 
     def authorize(self, requesting_agent: str, target_agent: str, session_id: str) -> bool:
-        """Prüft ob ein Zugriff erlaubt ist."""
+        """Checks if access is allowed."""
         if requesting_agent != target_agent:
             self._violations.append(
                 {
@@ -527,16 +526,16 @@ class SessionFirewall:
 
 
 # ============================================================================
-# Agent Vault Manager (Zentrale Verwaltung)
+# Agent Vault Manager (Central Management)
 # ============================================================================
 
 
 def _load_or_create_master_secret(path: str | None = None) -> bytes:
-    """Laedt oder generiert das Vault-Master-Secret.
+    """Loads or generates the vault master secret.
 
-    Das Secret wird in ``~/.jarvis/vault_master.key`` gespeichert
-    (oder im uebergebenen ``path``).  Es hat 32 Byte Entropie und
-    wird nur einmal generiert.
+    The secret is stored in ``~/.jarvis/vault_master.key``
+    (or in the provided ``path``).  It has 32 bytes of entropy and
+    is generated only once.
     """
     from pathlib import Path
 
@@ -577,10 +576,10 @@ def _load_or_create_master_secret(path: str | None = None) -> bytes:
 
 
 class AgentVaultManager:
-    """Zentrale Verwaltung aller Agent-Vaults + Sessions.
+    """Central management of all agent vaults + sessions.
 
-    Beim Start wird ein Master-Secret geladen (oder generiert),
-    das in die Key-Derivation jedes ``AgentVault`` einfliesst.
+    On startup a master secret is loaded (or generated),
+    which flows into the key derivation of each ``AgentVault``.
     """
 
     def __init__(self, *, master_secret_path: str | None = None) -> None:
@@ -611,20 +610,20 @@ class AgentVaultManager:
         return self._vaults.get(agent_id)
 
     def destroy_vault(self, agent_id: str) -> bool:
-        """Zerstört Vault + alle Sessions eines Agenten."""
+        """Destroys vault + all sessions for an agent."""
         if agent_id in self._vaults:
-            # Alle Secrets revoking
+            # Revoke all secrets
             vault = self._vaults[agent_id]
             for secret in vault.all_secrets():
                 vault.revoke(secret.secret_id)
             del self._vaults[agent_id]
-            # Sessions purgen
+            # Purge sessions
             self._sessions.purge_agent(agent_id)
             return True
         return False
 
     def rotate_all(self) -> dict[str, list[str]]:
-        """Rotiert Credentials in allen Vaults."""
+        """Rotates credentials in all vaults."""
         results = {}
         for agent_id, vault in self._vaults.items():
             rotated = self._rotator.auto_rotate(vault)

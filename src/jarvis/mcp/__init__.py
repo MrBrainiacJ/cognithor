@@ -17,17 +17,17 @@ from jarvis.mcp.server import (
 )
 
 __all__ = [
-    # Discovery (v15 neu)
+    # Discovery (v15 new)
     "AgentCard",
     "DiscoveryManager",
-    # Client (bestehend)
+    # Client (existing)
     "JarvisMCPClient",
-    # Server (v15 neu)
+    # Server (v15 new)
     "JarvisMCPServer",
     "JarvisPromptProvider",
-    # Providers (v15 neu)
+    # Providers (v15 new)
     "JarvisResourceProvider",
-    # Bridge (v15 neu)
+    # Bridge (v15 new)
     "MCPBridge",
     "MCPPrompt",
     "MCPPromptArgument",

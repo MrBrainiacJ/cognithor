@@ -1,22 +1,21 @@
-"""Input-Sanitizer: Schutz gegen Prompt-Injection und Path-Traversal.
+"""Input sanitizer: Protection against prompt injection and path traversal.
 
-Prüft und bereinigt alle externen Inhalte, bevor sie dem Planner
-(LLM) vorgelegt werden. Externe Inhalte werden in
-<external_content>-Tags gewrappt, bekannte Injection-Patterns
-werden entfernt oder neutralisiert.
+Checks and sanitizes all external content before it is presented to the
+planner (LLM). External content is wrapped in <external_content> tags,
+known injection patterns are removed or neutralized.
 
-Zusätzlich: Validierung von Voice-/Modellnamen gegen Path-Traversal
-(CWE-22) — verhindert das Einschleusen von ../../-Sequenzen in
-Dateinamen, die als Pfade verwendet werden (z.B. Piper TTS Modelle).
+Additionally: Validation of voice/model names against path traversal
+(CWE-22) -- prevents injection of ../../ sequences into filenames
+that are used as paths (e.g. Piper TTS models).
 
-Sicherheitsgarantien:
-  - Externe Inhalte sind IMMER markiert
-  - Bekannte Injection-Patterns werden neutralisiert
-  - Instruction-Hierarchie wird durchgesetzt
-  - System-Prompts sind nicht überschreibbar
-  - Voice-/Modellnamen sind gegen Path-Traversal validiert
+Security guarantees:
+  - External content is ALWAYS marked
+  - Known injection patterns are neutralized
+  - Instruction hierarchy is enforced
+  - System prompts cannot be overridden
+  - Voice/model names are validated against path traversal
 
-Bibel-Referenz: §11.3 (Input-Sanitization)
+Bible reference: §11.3 (Input-Sanitization)
 """
 
 from __future__ import annotations
@@ -133,14 +132,14 @@ def validate_model_path_containment(
 
 @dataclass(frozen=True)
 class InjectionPattern:
-    """Ein erkanntes Prompt-Injection-Pattern."""
+    """A recognized prompt injection pattern."""
 
     name: str
     pattern: re.Pattern[str]
     severity: str = "high"  # high | medium | low
 
 
-# Bekannte Prompt-Injection-Patterns
+# Known prompt injection patterns
 _INJECTION_PATTERNS: list[InjectionPattern] = [
     # Direkte Instruction-Override
     InjectionPattern(
@@ -239,11 +238,11 @@ _INJECTION_PATTERNS: list[InjectionPattern] = [
 
 
 class InputSanitizer:
-    """Sanitizer für externe Inhalte. [B§11.3]
+    """Sanitizer for external content. [B§11.3]
 
-    Prüft Text auf bekannte Prompt-Injection-Patterns und
-    neutralisiert sie. Externe Inhalte werden in sichere
-    Tags gewrappt.
+    Checks text for known prompt injection patterns and
+    neutralizes them. External content is wrapped in safe
+    tags.
     """
 
     def __init__(
@@ -252,11 +251,11 @@ class InputSanitizer:
         extra_patterns: list[InjectionPattern] | None = None,
         strict: bool = True,
     ) -> None:
-        """Initialisiert den Sanitizer.
+        """Initializes the sanitizer.
 
         Args:
-            extra_patterns: Zusätzliche Injection-Patterns.
-            strict: Bei 'high' Severity blocken statt neutralisieren.
+            extra_patterns: Additional injection patterns.
+            strict: Block instead of neutralize on 'high' severity.
         """
         self._patterns = list(_INJECTION_PATTERNS)
         if extra_patterns:
@@ -265,18 +264,18 @@ class InputSanitizer:
         self._stats = _SanitizerStats()
 
     def sanitize_external(self, text: str, source: str = "unknown") -> SanitizeResult:
-        """Sanitisiert externen Content und wrappt ihn.
+        """Sanitizes external content and wraps it.
 
-        Externe Inhalte (Web-Scraping, Tool-Output, Datei-Inhalt)
-        werden in <external_content>-Tags gewrappt und auf
-        Injection-Patterns geprüft.
+        External content (web scraping, tool output, file content)
+        is wrapped in <external_content> tags and checked for
+        injection patterns.
 
         Args:
-            text: Der externe Text.
-            source: Herkunft des Textes (z.B. 'web', 'file', 'tool').
+            text: The external text.
+            source: Origin of the text (e.g. 'web', 'file', 'tool').
 
         Returns:
-            SanitizeResult mit bereinigtem Text.
+            SanitizeResult with sanitized text.
         """
         if not text:
             return SanitizeResult(
@@ -302,7 +301,7 @@ class InputSanitizer:
             .replace("\u00ad", "")
         )
 
-        # 1. Injection-Patterns prüfen
+        # 1. Check injection patterns
         for ip in self._patterns:
             matches = ip.pattern.findall(sanitized)
             if matches:
@@ -310,16 +309,16 @@ class InputSanitizer:
                 self._stats.patterns_detected += 1
 
                 if ip.severity == "high" and self._strict:
-                    # High-Severity: Match komplett entfernen
+                    # High severity: remove match completely
                     sanitized = ip.pattern.sub("[BLOCKED_INJECTION]", sanitized)
                 else:
-                    # Medium/Low: In Kommentar neutralisieren
+                    # Medium/Low: neutralize in comment
                     sanitized = ip.pattern.sub(
                         lambda m, _ip=ip: f"[NEUTRALIZED: {_ip.name}]",  # type: ignore[misc]
                         sanitized,
                     )
 
-        # 2. XML-Tags neutralisieren (außer erlaubte)
+        # 2. Neutralize XML tags (except allowed ones)
         sanitized = self._neutralize_xml_tags(sanitized)
 
         # 3. In external_content-Tag wrappen
@@ -347,14 +346,14 @@ class InputSanitizer:
         )
 
     def sanitize_user_input(self, text: str) -> SanitizeResult:
-        """Sanitisiert User-Input (weniger strikt).
+        """Sanitizes user input (less strict).
 
-        User-Input wird NICHT gewrappt (ist vertrauenswürdig),
-        aber auf XML-Tag-Injection geprüft, die die
-        Instruction-Hierarchie brechen könnte.
+        User input is NOT wrapped (it is trusted),
+        but checked for XML tag injection that could
+        break the instruction hierarchy.
 
         Args:
-            text: Der User-Input.
+            text: The user input.
 
         Returns:
             SanitizeResult.
@@ -370,7 +369,7 @@ class InputSanitizer:
         found_patterns: list[str] = []
         sanitized = text
 
-        # Nur XML-Tag-Injection prüfen (User darf sonst alles)
+        # Only check for XML tag injection (user is allowed everything else)
         xml_pattern = next((p for p in self._patterns if p.name == "xml_injection"), None)
         if xml_pattern and xml_pattern.pattern.search(sanitized):
             found_patterns.append("xml_injection(high)")
@@ -390,13 +389,13 @@ class InputSanitizer:
         )
 
     def scan_only(self, text: str) -> list[str]:
-        """Scannt Text auf Injection-Patterns ohne Modifikation.
+        """Scans text for injection patterns without modification.
 
         Args:
-            text: Zu scannender Text.
+            text: Text to scan.
 
         Returns:
-            Liste gefundener Pattern-Namen.
+            List of found pattern names.
         """
         if not text:
             return []
@@ -408,7 +407,7 @@ class InputSanitizer:
 
     @property
     def stats(self) -> dict[str, int]:
-        """Statistiken des Sanitizers."""
+        """Statistics of the sanitizer."""
         return {
             "texts_processed": self._stats.texts_processed,
             "texts_modified": self._stats.texts_modified,
@@ -416,11 +415,11 @@ class InputSanitizer:
         }
 
     def _neutralize_xml_tags(self, text: str) -> str:
-        """Neutralisiert gefährliche XML-Tags.
+        """Neutralizes dangerous XML tags.
 
-        Erlaubt: <b>, <i>, <code>, <pre>, <br>, <p>, <ul>, <li>, <ol>
-        Blockiert: <system>, <assistant>, <user>, <instruction>,
-                   <tool_result>, <prompt>
+        Allowed: <b>, <i>, <code>, <pre>, <br>, <p>, <ul>, <li>, <ol>
+        Blocked: <system>, <assistant>, <user>, <instruction>,
+                 <tool_result>, <prompt>
         """
         dangerous = re.compile(
             r"<\s*/?(?:system|assistant|user|instruction|prompt|"
@@ -436,7 +435,7 @@ class InputSanitizer:
 
 @dataclass
 class _SanitizerStats:
-    """Interne Statistiken."""
+    """Internal statistics."""
 
     texts_processed: int = 0
     texts_modified: int = 0

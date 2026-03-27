@@ -1,15 +1,15 @@
-"""Jarvis · AI Impact Assessment & Partizipative Governance.
+"""Jarvis · AI Impact Assessment & Participatory Governance.
 
-Datenschutz-Folgenabschätzung (DPIA) für KI-Systeme:
+Data protection impact assessment (DPIA) for AI systems:
 
-  - ImpactDimension:       Bewertungsdimensionen (Grundrechte, Umwelt, Gesellschaft...)
-  - ImpactAssessment:      Strukturierte Folgenabschätzung nach EU-AI-Act Art. 9
-  - StakeholderRegistry:   Betroffene Parteien registrieren und einbinden
-  - EthicsBoard:           Ethik-Gremium mit Abstimmungen und Veto-Recht
-  - MitigationTracker:     Maßnahmen zur Risikominderung verfolgen
-  - ImpactAssessor:        Hauptklasse
+  - ImpactDimension:       Assessment dimensions (fundamental rights, environment, society...)
+  - ImpactAssessment:      Structured impact assessment per EU AI Act Art. 9
+  - StakeholderRegistry:   Register and involve affected parties
+  - EthicsBoard:           Ethics board with voting and veto rights
+  - MitigationTracker:     Track risk mitigation measures
+  - ImpactAssessor:        Main class
 
-Architektur-Bibel: §16.5 (Impact Assessment), §16.6 (Partizipative Governance)
+Architecture Bible: §16.5 (Impact Assessment), §16.6 (Participatory Governance)
 """
 
 from __future__ import annotations
@@ -60,7 +60,7 @@ class ImpactLikelihood(Enum):
 
 @dataclass
 class DimensionScore:
-    """Bewertung einer einzelnen Impact-Dimension."""
+    """Assessment of a single impact dimension."""
 
     dimension: ImpactDimension
     severity: ImpactSeverity
@@ -72,7 +72,7 @@ class DimensionScore:
 
     @property
     def risk_score(self) -> int:
-        """Risiko-Matrix: Severity × Likelihood → 1-25."""
+        """Risk matrix: Severity x Likelihood -> 1-25."""
         s_map = {"negligible": 1, "low": 2, "moderate": 3, "high": 4, "critical": 5}
         l_map = {"rare": 1, "unlikely": 2, "possible": 3, "likely": 4, "almost_certain": 5}
         return s_map.get(self.severity.value, 1) * l_map.get(self.likelihood.value, 1)
@@ -90,7 +90,7 @@ class DimensionScore:
 
 @dataclass
 class ImpactAssessment:
-    """Vollständige Folgenabschätzung für ein KI-System."""
+    """Complete impact assessment for an AI system."""
 
     assessment_id: str
     system_name: str
@@ -106,7 +106,7 @@ class ImpactAssessment:
 
     @property
     def overall_risk(self) -> int:
-        """Höchster Einzelrisiko-Score."""
+        """Highest individual risk score."""
         return max((s.risk_score for s in self.scores), default=0)
 
     @property
@@ -150,7 +150,7 @@ class StakeholderRole(Enum):
     DATA_SUBJECT = "data_subject"  # Datensubjekte
     OPERATOR = "operator"  # Betreiber
     DEVELOPER = "developer"  # Entwickler
-    REGULATOR = "regulator"  # Aufsichtsbehörde
+    REGULATOR = "regulator"  # Supervisory authority
     CIVIL_SOCIETY = "civil_society"  # Zivilgesellschaft
     ETHICS_EXPERT = "ethics_expert"  # Ethik-Expert:in
     DOMAIN_EXPERT = "domain_expert"  # Fachexpert:in
@@ -310,8 +310,8 @@ class BoardDecision:
 class EthicsBoard:
     """Ethik-Gremium mit Abstimmungen und Veto-Recht.
 
-    Entscheidungen über Hochrisiko-KI werden demokratisch getroffen.
-    Mindestens 3 Board-Mitglieder müssen abstimmen.
+    Decisions on high-risk AI are made democratically.
+    At least 3 board members must vote.
     """
 
     def __init__(self) -> None:
@@ -350,7 +350,7 @@ class EthicsBoard:
         decision = next((d for d in self._decisions if d.decision_id == decision_id), None)
         if not decision:
             return False
-        # Keine Doppelabstimmung
+        # No double voting
         if any(v.voter_id == voter_id for v in decision.votes):
             return False
         decision.votes.append(
@@ -366,7 +366,7 @@ class EthicsBoard:
         return True
 
     def finalize(self, decision_id: str) -> BoardDecision | None:
-        """Finalisiert eine Abstimmung."""
+        """Finalizes a vote."""
         decision = next((d for d in self._decisions if d.decision_id == decision_id), None)
         if not decision:
             return None
@@ -430,7 +430,7 @@ class MitigationStatus(Enum):
 
 @dataclass
 class Mitigation:
-    """Eine Risikominderungsmaßnahme."""
+    """A risk mitigation measure."""
 
     mitigation_id: str
     assessment_id: str
@@ -453,7 +453,7 @@ class Mitigation:
 
 
 class MitigationTracker:
-    """Verfolgt Maßnahmen zur Risikominderung."""
+    """Tracks risk mitigation measures."""
 
     def __init__(self) -> None:
         self._mitigations: dict[str, Mitigation] = {}
@@ -578,7 +578,7 @@ class ImpactAssessor:
         return assessment
 
     def assess_jarvis_insurance(self) -> ImpactAssessment:
-        """Vordefinierte Folgenabschätzung für Jarvis im Versicherungskontext."""
+        """Predefined impact assessment for Jarvis in the insurance context."""
         scores = [
             DimensionScore(
                 ImpactDimension.FUNDAMENTAL_RIGHTS,

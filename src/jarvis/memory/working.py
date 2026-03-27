@@ -1,7 +1,7 @@
-"""Working Memory · Tier 5 -- Session-Kontext & Context-Budget. [B§4.6]
+"""Working Memory · Tier 5 -- Session context & context budget. [B§4.6]
 
-RAM-only (außer Pre-Compaction Flush).
-Verwaltet das Token-Budget und entscheidet wann komprimiert wird.
+RAM-only (except pre-compaction flush).
+Manages the token budget and decides when to compress.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
-"""SQLite Index-Management · FTS5 + Entitäten + Relationen + Vektoren. [B§4.7]
+"""SQLite index management · FTS5 + entities + relations + vectors. [B§4.7]
 
-Zentrale Datenbank für alle Memory-Indizes.
-Alles ableitbar aus den Markdown Source-of-Truth Dateien.
+Central database for all memory indexes.
+Everything derivable from the Markdown source-of-truth files.
 
 Thread-Safety:
 SQLite im WAL-Modus unterstützt gleichzeitige Reads, aber nur einen
@@ -58,12 +58,12 @@ class MemoryIndex:
 
     @property
     def db_path(self) -> Path:
-        """Gibt den Pfad zur SQLite-Datenbank zurück."""
+        """Return the path to the SQLite database."""
         return self._db_path
 
     @property
     def conn(self) -> sqlite3.Connection:
-        """Lazy connection. Erstellt DB beim ersten Zugriff.
+        """Lazy connection. Create DB on first access.
 
         Thread-safe: Connection-Erstellung ist über das Write-Lock geschützt,
         da _init_schema() Schreiboperationen ausführt.
@@ -83,7 +83,7 @@ class MemoryIndex:
         return self._conn
 
     def _init_schema(self) -> None:
-        """Erstellt alle Tabellen und Indizes."""
+        """Create all tables and indexes."""
         c = self.conn
         c.executescript(
             """
@@ -401,7 +401,7 @@ class MemoryIndex:
         vector: list[float],
         model_name: str = "qwen3-embedding:0.6b",
     ) -> None:
-        """Speichert ein Embedding. Thread-safe."""
+        """Save an embedding. Thread-safe."""
         now = datetime.now().timestamp()
         with self._write_lock:
             self.conn.execute(
@@ -460,7 +460,7 @@ class MemoryIndex:
         return result
 
     def get_embedding_hashes(self) -> set[str]:
-        """Gibt alle content_hashes zurück die ein Embedding haben (ohne Vektoren zu laden)."""
+        """Return all content_hashes that have an embedding (without loading vectors)."""
         rows = self.conn.execute("SELECT content_hash FROM embeddings").fetchall()
         return {r["content_hash"] for r in rows}
 

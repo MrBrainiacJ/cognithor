@@ -1,19 +1,19 @@
-"""Browser MCP Tools -- Registriert Browser-Use als MCP-Tools (v17).
+"""Browser MCP Tools -- Registers Browser-Use as MCP tools (v17).
 
-Stellt dem LLM folgende High-Level-Tools bereit:
-  - browser_navigate:      Seite laden + analysieren
-  - browser_click:         Element anklicken (CSS oder Beschreibung)
-  - browser_fill:          Formularfeld ausfüllen
-  - browser_fill_form:     Ganzes Formular ausfüllen
-  - browser_screenshot:    Screenshot erstellen
-  - browser_extract:       Text/Tabellen/Links extrahieren
-  - browser_analyze:       Seitenstruktur analysieren
-  - browser_execute_js:    JavaScript ausführen
-  - browser_tab:           Tab-Management
-  - browser_workflow:      Multi-Step-Workflow ausführen
+Provides the LLM with the following high-level tools:
+  - browser_navigate:      Load page + analyze
+  - browser_click:         Click element (CSS or description)
+  - browser_fill:          Fill form field
+  - browser_fill_form:     Fill entire form
+  - browser_screenshot:    Take screenshot
+  - browser_extract:       Extract text/tables/links
+  - browser_analyze:       Analyze page structure
+  - browser_execute_js:    Execute JavaScript
+  - browser_tab:           Tab management
+  - browser_workflow:      Execute multi-step workflow
 
-Jedes Tool gibt ein strukturiertes Ergebnis zurück das
-der LLM für Folge-Aktionen nutzen kann.
+Each tool returns a structured result that the LLM can
+use for follow-up actions.
 """
 
 from __future__ import annotations
@@ -37,15 +37,15 @@ def register_browser_use_tools(
     config: BrowserConfig | None = None,
     vision_analyzer: Any | None = None,
 ) -> BrowserAgent:
-    """Registriert alle Browser-Use-Tools im MCP-Client.
+    """Registers all Browser-Use tools in the MCP client.
 
     Args:
-        mcp_client: MCP-Client für Tool-Registrierung.
-        config: Optionale BrowserConfig.
-        vision_analyzer: Optionaler VisionAnalyzer für Vision-Tools.
+        mcp_client: MCP client for tool registration.
+        config: Optional BrowserConfig.
+        vision_analyzer: Optional VisionAnalyzer for vision tools.
 
     Returns:
-        BrowserAgent-Instanz (muss mit await agent.start() gestartet werden)
+        BrowserAgent instance (must be started with await agent.start())
     """
     agent = BrowserAgent(config=config, vision_analyzer=vision_analyzer)
 

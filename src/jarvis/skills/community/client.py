@@ -30,7 +30,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# HTTP-Timeout (Sekunden) fuer alle Fetch-Operationen
+# HTTP timeout (seconds) for all fetch operations
 _HTTP_TIMEOUT_S = 30
 
 
@@ -41,7 +41,7 @@ _HTTP_TIMEOUT_S = 30
 
 @dataclass
 class InstallResult:
-    """Ergebnis einer Skill-Installation."""
+    """Result of a skill installation."""
 
     success: bool
     skill_name: str
@@ -54,7 +54,7 @@ class InstallResult:
 
 @dataclass
 class RegistryEntry:
-    """Ein Eintrag aus der registry.json."""
+    """An entry from the registry.json."""
 
     name: str
     version: str = ""
@@ -72,7 +72,7 @@ class RegistryEntry:
 
 
 class CommunityRegistryClient:
-    """Client fuer das Community-Skill-Registry auf GitHub.
+    """Client for the community skill registry on GitHub.
 
     Usage::
 
@@ -111,7 +111,7 @@ class CommunityRegistryClient:
     # ====================================================================
 
     async def fetch_registry(self) -> dict[str, RegistryEntry]:
-        """Laedt die registry.json vom GitHub-Repository.
+        """Load the registry.json from the GitHub repository.
 
         Returns:
             Dict von Skill-Name → RegistryEntry.
@@ -146,7 +146,7 @@ class CommunityRegistryClient:
         category: str = "",
         limit: int = 20,
     ) -> list[RegistryEntry]:
-        """Durchsucht die Registry.
+        """Search the registry.
 
         Args:
             query: Suchbegriff (Name, Beschreibung).
@@ -181,7 +181,7 @@ class CommunityRegistryClient:
         return results[:limit]
 
     async def get_entry(self, skill_name: str) -> RegistryEntry | None:
-        """Gibt einen einzelnen Registry-Eintrag zurueck (laedt Registry bei Bedarf).
+        """Return a single registry entry (loads registry if needed).
 
         Returns:
             RegistryEntry oder None wenn nicht gefunden.
@@ -196,7 +196,7 @@ class CommunityRegistryClient:
     # ====================================================================
 
     async def install(self, skill_name: str) -> InstallResult:
-        """Installiert einen Community-Skill.
+        """Install a community skill.
 
         Fuehrt die vollstaendige Sicherheitskette durch:
         1. Recall-Check
@@ -333,7 +333,7 @@ class CommunityRegistryClient:
     # ====================================================================
 
     async def uninstall(self, skill_name: str) -> bool:
-        """Deinstalliert einen Community-Skill.
+        """Uninstall a community skill.
 
         Entfernt das Skill-Verzeichnis aus ~/.jarvis/skills/community/.
 
@@ -362,7 +362,7 @@ class CommunityRegistryClient:
     # ====================================================================
 
     def list_installed(self) -> list[str]:
-        """Gibt eine Liste installierter Community-Skill-Namen zurueck."""
+        """Return a list of installed community skill names."""
         if not self._community_dir.exists():
             return []
         return [
@@ -376,12 +376,12 @@ class CommunityRegistryClient:
     # ====================================================================
 
     async def _fetch_json(self, url: str) -> dict[str, Any]:
-        """Laedt JSON von einer URL."""
+        """Load JSON from a URL."""
         text = await self._fetch_text(url)
         return json.loads(text)
 
     async def _fetch_text(self, url: str) -> str:
-        """Laedt Text von einer URL.
+        """Load text from a URL.
 
         Nutzt aiohttp wenn verfuegbar und funktional, sonst urllib-Fallback.
         """

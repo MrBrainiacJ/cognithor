@@ -1,15 +1,15 @@
-"""Jarvis Browser-Use v17 -- Autonome Browser-Automatisierung.
+"""Jarvis Browser-Use v17 -- Autonomous browser automation.
 
-Ermöglicht dem Agent das selbstständige Navigieren, Lesen und
-Interagieren mit Webseiten. Headless Chromium über Playwright.
+Enables the agent to autonomously navigate, read and interact with
+web pages. Headless Chromium via Playwright.
 
 OPTIONAL: pip install playwright && playwright install chromium
 
-Kern-Komponenten:
-  - BrowserAgent:     Autonomer Browser-Controller
-  - PageAnalyzer:     Seiten-Analyse (Formulare, Links, Tabellen)
-  - SessionManager:   Cookie/State-Persistierung
-  - register_browser_use_tools(): MCP-Tool-Integration
+Core components:
+  - BrowserAgent:     Autonomous browser controller
+  - PageAnalyzer:     Page analysis (forms, links, tables)
+  - SessionManager:   Cookie/state persistence
+  - register_browser_use_tools(): MCP tool integration
 """
 
 from jarvis.browser.agent import BrowserAgent

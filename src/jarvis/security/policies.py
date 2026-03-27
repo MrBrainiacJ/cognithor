@@ -1,12 +1,12 @@
-"""Erweiterte Policy-Engine: Regeln für Sub-Agents und Parallel-Execution.
+"""Extended policy engine: Rules for sub-agents and parallel execution.
 
-Erweitert das bestehende Policy-System des Gatekeepers um:
-  - Sub-Agent Permission-Restrictions
-  - Parallel-Execution-Limits
-  - Resource-Quotas pro Session
-  - Tool-Allowlists für Agent-Typen
+Extends the existing gatekeeper policy system with:
+  - Sub-agent permission restrictions
+  - Parallel execution limits
+  - Resource quotas per session
+  - Tool allowlists for agent types
 
-Bibel-Referenz: §11.1 (Sicherheitsarchitektur), §7.4 (Agent-Limits)
+Bible reference: §11.1 (Security Architecture), §7.4 (Agent Limits)
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ log = get_logger(__name__)
 
 @dataclass(frozen=True)
 class AgentPermissions:
-    """Berechtigungen für einen Agent-Typ. [B§7.4]"""
+    """Permissions for an agent type. [B§7.4]"""
 
     allowed_tools: frozenset[str]
     sandbox_level: SandboxLevel
@@ -42,7 +42,7 @@ class AgentPermissions:
     sandbox_profile: str = "STANDARD"  # RESTRICTIVE | STANDARD | PERMISSIVE
 
 
-# Default-Permissions pro Agent-Typ
+# Default permissions per agent type
 _DEFAULT_PERMISSIONS: dict[AgentType, AgentPermissions] = {
     AgentType.PLANNER: AgentPermissions(
         allowed_tools=frozenset(
@@ -121,16 +121,16 @@ _DEFAULT_PERMISSIONS: dict[AgentType, AgentPermissions] = {
 
 @dataclass
 class ResourceQuota:
-    """Resource-Quota für eine Session. [B§7.4]"""
+    """Resource quota for a session. [B§7.4]"""
 
     max_sub_agents: int = 4
     max_parallel: int = 3
     max_total_iterations: int = 50
     max_total_tool_calls: int = 100
     max_session_duration_seconds: int = 3600
-    max_depth: int = 3  # Maximale Spawn-Tiefe (0=top, 3=deepest allowed)
+    max_depth: int = 3  # Maximum spawn depth (0=top, 3=deepest allowed)
 
-    # Aktuelle Nutzung
+    # Current usage
     current_sub_agents: int = 0
     current_parallel: int = 0
     total_iterations: int = 0
@@ -139,7 +139,7 @@ class ResourceQuota:
 
 @dataclass
 class PolicyViolation:
-    """Eine Policy-Verletzung."""
+    """A policy violation."""
 
     rule: str
     details: str
@@ -147,10 +147,10 @@ class PolicyViolation:
 
 
 class PolicyEngine:
-    """Erweiterte Policy-Engine mit Agent-Permissions. [B§11.1]
+    """Extended policy engine with agent permissions. [B§11.1]
 
-    Kombiniert die bestehenden Gatekeeper-Policies mit neuen
-    Regeln für Sub-Agent-Management und Resource-Quotas.
+    Combines existing gatekeeper policies with new
+    rules for sub-agent management and resource quotas.
     """
 
     def __init__(
@@ -166,21 +166,21 @@ class PolicyEngine:
         self._session_quotas: dict[str, ResourceQuota] = {}
 
     def get_permissions(self, agent_type: AgentType) -> AgentPermissions:
-        """Gibt die Permissions für einen Agent-Typ zurück."""
+        """Returns the permissions for an agent type."""
         return self._permissions.get(
             agent_type,
             self._permissions[AgentType.WORKER],
         )
 
     def check_tool_allowed(self, agent_type: AgentType, tool_name: str) -> PolicyViolation | None:
-        """Prüft ob ein Tool für einen Agent-Typ erlaubt ist.
+        """Checks if a tool is allowed for an agent type.
 
         Args:
-            agent_type: Typ des Agents.
-            tool_name: Name des Tools.
+            agent_type: Type of the agent.
+            tool_name: Name of the tool.
 
         Returns:
-            PolicyViolation wenn nicht erlaubt, sonst None.
+            PolicyViolation if not allowed, otherwise None.
         """
         perms = self.get_permissions(agent_type)
         if tool_name not in perms.allowed_tools:
@@ -200,15 +200,15 @@ class PolicyEngine:
         parent_type: AgentType,
         current_depth: int = 0,
     ) -> PolicyViolation | None:
-        """Prüft ob ein Agent Sub-Agents spawnen darf.
+        """Checks if an agent is allowed to spawn sub-agents.
 
         Args:
-            session_id: Session-ID.
-            parent_type: Typ des Parent-Agents.
-            current_depth: Aktuelle Tiefe des Parent-Agents (0 = top-level).
+            session_id: Session ID.
+            parent_type: Type of the parent agent.
+            current_depth: Current depth of the parent agent (0 = top-level).
 
         Returns:
-            PolicyViolation wenn nicht erlaubt.
+            PolicyViolation if not allowed.
         """
         perms = self.get_permissions(parent_type)
         if not perms.can_spawn_sub_agents:
@@ -245,14 +245,14 @@ class PolicyEngine:
         return None
 
     def check_depth_allowed(self, session_id: str, current_depth: int) -> PolicyViolation | None:
-        """Prüft ob die aktuelle Tiefe noch Spawns erlaubt.
+        """Checks if the current depth still allows spawns.
 
         Args:
-            session_id: Session-ID.
-            current_depth: Aktuelle Tiefe.
+            session_id: Session ID.
+            current_depth: Current depth.
 
         Returns:
-            PolicyViolation wenn max_depth erreicht.
+            PolicyViolation if max_depth reached.
         """
         quota = self._get_quota(session_id)
         if current_depth >= quota.max_depth:
@@ -263,7 +263,7 @@ class PolicyEngine:
         return None
 
     def check_iteration_limit(self, session_id: str) -> PolicyViolation | None:
-        """Prüft ob die Gesamt-Iterationen das Limit erreicht haben."""
+        """Checks if total iterations have reached the limit."""
         quota = self._get_quota(session_id)
         if quota.total_iterations >= quota.max_total_iterations:
             return PolicyViolation(
@@ -276,7 +276,7 @@ class PolicyEngine:
         return None
 
     def check_tool_call_limit(self, session_id: str) -> PolicyViolation | None:
-        """Prüft ob die Tool-Calls das Limit erreicht haben."""
+        """Checks if tool calls have reached the limit."""
         quota = self._get_quota(session_id)
         if quota.total_tool_calls >= quota.max_total_tool_calls:
             return PolicyViolation(
@@ -286,32 +286,32 @@ class PolicyEngine:
         return None
 
     def record_spawn(self, session_id: str) -> None:
-        """Registriert einen Sub-Agent-Spawn."""
+        """Records a sub-agent spawn."""
         quota = self._get_quota(session_id)
         quota.current_sub_agents += 1
         quota.current_parallel += 1
 
     def record_agent_done(self, session_id: str) -> None:
-        """Registriert Beendigung eines Sub-Agents."""
+        """Records completion of a sub-agent."""
         quota = self._get_quota(session_id)
         quota.current_parallel = max(0, quota.current_parallel - 1)
 
     def record_iteration(self, session_id: str) -> None:
-        """Registriert eine Iteration."""
+        """Records an iteration."""
         quota = self._get_quota(session_id)
         quota.total_iterations += 1
 
     def record_tool_call(self, session_id: str) -> None:
-        """Registriert einen Tool-Call."""
+        """Records a tool call."""
         quota = self._get_quota(session_id)
         quota.total_tool_calls += 1
 
     def get_quota(self, session_id: str) -> ResourceQuota:
-        """Gibt die aktuelle Quota für eine Session zurück (public)."""
+        """Returns the current quota for a session (public)."""
         return self._get_quota(session_id)
 
     def reset_session(self, session_id: str) -> None:
-        """Setzt die Quota einer Session zurück."""
+        """Resets the quota for a session."""
         if session_id in self._session_quotas:
             del self._session_quotas[session_id]
 
@@ -321,15 +321,15 @@ class PolicyEngine:
         action: PlannedAction,
         session_id: str,
     ) -> list[PolicyViolation]:
-        """Vollständige Policy-Prüfung für eine Agent-Aktion.
+        """Full policy check for an agent action.
 
         Args:
-            agent_type: Typ des ausführenden Agents.
-            action: Die geplante Aktion.
-            session_id: Session-ID.
+            agent_type: Type of the executing agent.
+            action: The planned action.
+            session_id: Session ID.
 
         Returns:
-            Liste von PolicyViolations (leer = OK).
+            List of PolicyViolations (empty = OK).
         """
         violations: list[PolicyViolation] = []
 
@@ -359,7 +359,7 @@ class PolicyEngine:
         return violations
 
     def _get_quota(self, session_id: str) -> ResourceQuota:
-        """Gibt oder erstellt eine Session-Quota."""
+        """Gets or creates a session quota."""
         if session_id not in self._session_quotas:
             self._session_quotas[session_id] = ResourceQuota(
                 max_sub_agents=self._default_quota.max_sub_agents,

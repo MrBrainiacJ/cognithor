@@ -1,4 +1,4 @@
-"""Langfristige Episodische Speicherung mit SQLite FTS5."""
+"""Long-term episodic storage with SQLite FTS5."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ log = get_logger(__name__)
 
 
 class EpisodicStore:
-    """SQLite-gestuetzte episodische Datenbank mit FTS5-Volltext-Suche."""
+    """SQLite-backed episodic database with FTS5 full-text search."""
 
     def __init__(self, db_path: str | Path | None = None) -> None:
         self._db_path = str(db_path) if db_path else ":memory:"
@@ -96,7 +96,7 @@ class EpisodicStore:
         tags: list[str] | None = None,
         episode_id: str | None = None,
     ) -> str:
-        """Speichert eine Episode."""
+        """Store an episode."""
         from jarvis.models import _new_id
 
         eid = episode_id or _new_id()
@@ -153,7 +153,7 @@ class EpisodicStore:
         min_score: float = 0.0,
         date_range: tuple[str, str] | None = None,
     ) -> list[EpisodicEntry]:
-        """FTS5-Volltext-Suche ueber Episoden."""
+        """FTS5 full-text search across episodes."""
         # Sanitize FTS5 query: strip operators/special chars to prevent query injection
         import re
 
@@ -201,7 +201,7 @@ class EpisodicStore:
         tool_sequence: list[str],
         limit: int = 5,
     ) -> list[EpisodicEntry]:
-        """Findet Episoden mit aehnlicher Tool-Sequenz."""
+        """Find episodes with similar tool sequences."""
         with self._write_lock:
             conn = self._get_conn()
             rows = conn.execute(
@@ -228,7 +228,7 @@ class EpisodicStore:
         return [self._row_to_entry(r) for _, r in scored[:limit]]
 
     def get_session_episodes(self, session_id: str) -> list[EpisodicEntry]:
-        """Alle Episoden einer Session."""
+        """All episodes of a session."""
         with self._write_lock:
             conn = self._get_conn()
             rows = conn.execute(
@@ -238,7 +238,7 @@ class EpisodicStore:
         return [self._row_to_entry(r) for r in rows]
 
     def get_episode_count(self) -> int:
-        """Gesamtzahl der Episoden."""
+        """Total number of episodes."""
         with self._write_lock:
             conn = self._get_conn()
             row = conn.execute("SELECT COUNT(*) as cnt FROM episodes").fetchone()
@@ -252,7 +252,7 @@ class EpisodicStore:
         summary: str,
         key_learnings: list[str] | None = None,
     ) -> str:
-        """Speichert eine Zusammenfassung."""
+        """Store a summary."""
         from jarvis.models import _new_id
 
         sid = _new_id()
@@ -269,7 +269,7 @@ class EpisodicStore:
         return sid
 
     def get_summaries(self, period: str | None = None) -> list[dict[str, Any]]:
-        """Holt Zusammenfassungen, optional gefiltert nach Periode."""
+        """Get summaries, optionally filtered by period."""
         with self._write_lock:
             conn = self._get_conn()
             if period:
@@ -295,7 +295,7 @@ class EpisodicStore:
         ]
 
     def _row_to_entry(self, row: sqlite3.Row) -> EpisodicEntry:
-        """Konvertiert eine DB-Zeile in ein EpisodicEntry."""
+        """Convert a DB row to an EpisodicEntry."""
         return EpisodicEntry(
             id=row["id"],
             session_id=row["session_id"],

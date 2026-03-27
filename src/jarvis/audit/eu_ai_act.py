@@ -1,16 +1,16 @@
-"""Jarvis · EU-AI-Act Compliance & Audit-Berichte.
+"""Jarvis · EU AI Act Compliance & Audit Reports.
 
-Standardisierte Compliance-Dokumentation:
+Standardized compliance documentation:
 
-  - RiskClassifier:        Klassifiziert Systeme nach EU-AI-Act Risikolevels
-  - ComplianceDocument:    Strukturierte Pflichtdokumentation
-  - ComplianceReport:      Audit-Berichte generieren
-  - TechnicalDocumentation: Technische Dokumentation nach Art. 11
-  - TransparencyRegister:  Transparenzregister nach Art. 52
-  - TrainingMaterial:      Schulungsmaterial für Sicherheitsteams
-  - EUAIActGovernor:       Hauptklasse
+  - RiskClassifier:        Classifies systems by EU AI Act risk levels
+  - ComplianceDocument:    Structured mandatory documentation
+  - ComplianceReport:      Generate audit reports
+  - TechnicalDocumentation: Technical documentation per Art. 11
+  - TransparencyRegister:  Transparency register per Art. 52
+  - TrainingMaterial:      Training materials for security teams
+  - EUAIActGovernor:       Main class
 
-Architektur-Bibel: §16.1 (Regulierung), §16.4 (EU-AI-Act)
+Architecture Bible: §16.1 (Regulation), §16.4 (EU AI Act)
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from jarvis.audit.compliance import RiskLevel
 
 
 class SystemCategory(Enum):
-    """Kategorien nach Annex III."""
+    """Categories per Annex III."""
 
     BIOMETRIC = "biometric_identification"
     CRITICAL_INFRASTRUCTURE = "critical_infrastructure"
@@ -44,7 +44,7 @@ class SystemCategory(Enum):
 
 @dataclass
 class RiskAssessment:
-    """Ergebnis einer Risikobewertung."""
+    """Result of a risk assessment."""
 
     assessment_id: str
     system_name: str
@@ -70,9 +70,9 @@ class RiskAssessment:
 
 
 class RiskClassifier:
-    """Klassifiziert KI-Systeme nach EU-AI-Act Risikolevels."""
+    """Classifies AI systems by EU AI Act risk levels."""
 
-    # Pflichten pro Risikolevel
+    # Obligations per risk level
     OBLIGATIONS: dict[RiskLevel, list[str]] = {
         RiskLevel.UNACCEPTABLE: [
             "System darf NICHT in der EU betrieben werden (Art. 5)",
@@ -109,10 +109,10 @@ class RiskClassifier:
         description: str = "",
         assessed_by: str = "system",
     ) -> RiskAssessment:
-        """Klassifiziert ein System basierend auf seiner Kategorie."""
+        """Classifies a system based on its category."""
         self._counter += 1
 
-        # Risikolevel bestimmen
+        # Determine risk level
         if category in (SystemCategory.BIOMETRIC, SystemCategory.LAW_ENFORCEMENT) or category in (
             SystemCategory.CRITICAL_INFRASTRUCTURE,
             SystemCategory.EMPLOYMENT,
@@ -195,7 +195,7 @@ class RiskClassifier:
             assessed_by="skill_classifier",
         )
 
-        # Zusätzliche Mitigationsmaßnahmen
+        # Additional mitigation measures
         if accesses_pii:
             assessment.mitigation_measures.append("DSGVO-Konformität sicherstellen")
             assessment.mitigation_measures.append("Datenminimierung anwenden")
@@ -226,7 +226,7 @@ class DocumentType(Enum):
 
 @dataclass
 class ComplianceDocument:
-    """Strukturierte Pflichtdokumentation."""
+    """Structured mandatory documentation."""
 
     doc_id: str
     doc_type: DocumentType
@@ -253,7 +253,7 @@ class ComplianceDocument:
 
 
 class ComplianceDocManager:
-    """Verwaltet alle Compliance-Dokumente."""
+    """Manages all compliance documents."""
 
     def __init__(self) -> None:
         self._documents: dict[str, ComplianceDocument] = {}
@@ -281,7 +281,7 @@ class ComplianceDocManager:
     def generate_technical_doc(
         self, system_name: str, system_info: dict[str, Any]
     ) -> ComplianceDocument:
-        """Generiert technische Dokumentation nach Art. 11."""
+        """Generates technical documentation per Art. 11."""
         content = {
             "1_system_description": {
                 "name": system_name,
@@ -325,7 +325,7 @@ class ComplianceDocManager:
     def generate_incident_report(
         self, system_name: str, incident: dict[str, Any]
     ) -> ComplianceDocument:
-        """Generiert einen Incident-Report nach Art. 62."""
+        """Generates an incident report per Art. 62."""
         content = {
             "incident_id": incident.get("id", ""),
             "severity": incident.get("severity", ""),
@@ -380,7 +380,7 @@ class ComplianceDocManager:
 
 @dataclass
 class TransparencyEntry:
-    """Eintrag im Transparenzregister."""
+    """Entry in the transparency register."""
 
     entry_id: str
     system_name: str
@@ -401,7 +401,7 @@ class TransparencyEntry:
 
 
 class TransparencyRegister:
-    """Verwaltet Transparenzpflichten nach Art. 52."""
+    """Manages transparency obligations per Art. 52."""
 
     def __init__(self) -> None:
         self._entries: dict[str, TransparencyEntry] = {}
@@ -440,7 +440,7 @@ class TransparencyRegister:
 
 
 # ============================================================================
-# Training Material (Punkt 6: Sicherheitsteam-Schulung)
+# Training Material (Point 6: Security team training)
 # ============================================================================
 
 
@@ -458,7 +458,7 @@ class TrainingTopic(Enum):
 
 @dataclass
 class TrainingModule:
-    """Ein Schulungsmodul für das Sicherheitsteam."""
+    """A training module for the security team."""
 
     module_id: str
     topic: TrainingTopic
@@ -483,7 +483,7 @@ class TrainingModule:
 
 
 class TrainingCatalog:
-    """Katalog von Schulungsmodulen für Agent-Security."""
+    """Catalog of training modules for agent security."""
 
     BUILT_IN_MODULES = [
         TrainingModule(
@@ -603,7 +603,7 @@ class TrainingCatalog:
 
 
 class EUAIActGovernor:
-    """Hauptklasse: Orchestriert EU-AI-Act Compliance."""
+    """Main class: Orchestrates EU AI Act compliance."""
 
     def __init__(self) -> None:
         self._classifier = RiskClassifier()
@@ -628,7 +628,7 @@ class EUAIActGovernor:
         return self._training
 
     def classify_jarvis(self) -> RiskAssessment:
-        """Klassifiziert das Jarvis-System selbst."""
+        """Classifies the Jarvis system itself."""
         return self._classifier.classify(
             "Jarvis AI Agent",
             SystemCategory.INSURANCE_ADVISORY,
@@ -637,7 +637,7 @@ class EUAIActGovernor:
         )
 
     def compliance_status(self) -> dict[str, Any]:
-        """Gesamtstatus der EU-AI-Act Compliance."""
+        """Overall status of EU AI Act compliance."""
         assessments = self._classifier.all_assessments()
         high_risk = [a for a in assessments if a.risk_level == RiskLevel.HIGH]
         docs = self._documents.all_documents()
@@ -659,10 +659,10 @@ class EUAIActGovernor:
         docs: list[ComplianceDocument],
         approved: list[ComplianceDocument],
     ) -> float:
-        """Berechnet einen Compliance-Score (0-100)."""
+        """Calculates a compliance score (0-100)."""
         if not high_risk:
             return 100.0
-        # Jedes High-Risk-System braucht Tech-Doc + Risk-Assessment
+        # Each high-risk system needs tech doc + risk assessment
         needed = len(high_risk) * 2
         have = sum(
             1

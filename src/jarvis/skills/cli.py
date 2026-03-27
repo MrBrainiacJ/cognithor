@@ -1,19 +1,19 @@
-"""CLI für das Skills-Management.
+"""CLI for skills management.
 
-Dieses Modul erlaubt das Auflisten und Erstellen von Skills direkt
-über die Kommandozeile. Skills sind zusätzliche Prozeduren, die im
-Plugins-Verzeichnis gespeichert werden. Bei Aufruf ohne Subcommand
-wird eine kurze Hilfe ausgegeben.
+This module allows listing and creating skills directly
+via the command line. Skills are additional procedures stored in the
+plugins directory. When called without a subcommand,
+a short help message is displayed.
 
-Beispiele:
+Examples:
 
 .. code-block:: bash
 
-    # Skills auflisten
+    # List skills
     python -m jarvis.skills.cli list
 
-    # Neuen Skill erstellen
-    python -m jarvis.skills.cli create "Blog-Artikel recherchieren" --triggers recherche blog
+    # Create a new skill
+    python -m jarvis.skills.cli create "Research blog article" --triggers research blog
 
 """
 
@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> None:
 
     args = parser.parse_args(argv)
 
-    # Lade Konfiguration, um das Skills-Verzeichnis zu bestimmen
+    # Load configuration to determine the skills directory
     config = load_config()
     skills_path = config.jarvis_home / config.plugins.skills_dir
 

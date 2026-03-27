@@ -1,18 +1,18 @@
-"""Built-in Node Handlers -- Vorgefertigte Nodes für Graph Orchestrator v18.
+"""Built-in Node Handlers -- Pre-built nodes for Graph Orchestrator v18.
 
-Stellt wiederverwendbare Handler bereit:
-  - llm_node:       LLM-Aufruf mit Prompt-Template
-  - tool_node:      MCP-Tool-Aufruf
-  - transform_node: State-Transformation (map/filter/merge)
-  - condition_node: Bedingungsprüfung (Router)
-  - delay_node:     Wartezeit
-  - log_node:       Logging/Debug
-  - accumulate_node: Sammelt Ergebnisse aus parallelen Branches
-  - gate_node:      Prüft ob Bedingung erfüllt ist (Gating)
-  - retry_wrapper:  Wrapper für Retry-Logic
+Provides reusable handlers:
+  - llm_node:       LLM call with prompt template
+  - tool_node:      MCP tool call
+  - transform_node: State transformation (map/filter/merge)
+  - condition_node: Condition check (router)
+  - delay_node:     Wait time
+  - log_node:       Logging/debug
+  - accumulate_node: Collects results from parallel branches
+  - gate_node:      Checks if condition is met (gating)
+  - retry_wrapper:  Wrapper for retry logic
 
-Alle Handlers haben die Signatur: async (GraphState) -> GraphState
-Router-Handlers geben: async (GraphState) -> str
+All handlers have signature: async (GraphState) -> GraphState
+Router handlers return: async (GraphState) -> str
 """
 
 from __future__ import annotations
@@ -42,18 +42,18 @@ def llm_node(
     model: str = "",
     llm_handler: Callable | None = None,
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Erstellt einen LLM-Aufruf-Handler.
+    """Creates an LLM call handler.
 
     Args:
-        prompt_template: Template mit {variable}-Platzhaltern
-        input_key: State-Key für Input
-        output_key: State-Key für Output
-        model: LLM-Modell (optional)
-        llm_handler: Custom LLM-Aufruf-Funktion
+        prompt_template: Template with {variable} placeholders
+        input_key: State key for input
+        output_key: State key for output
+        model: LLM model (optional)
+        llm_handler: Custom LLM call function
     """
 
     async def handler(state: GraphState) -> GraphState:
-        # Template rendern
+        # Render template
         prompt = prompt_template
         for key in state:
             placeholder = "{" + key + "}"
@@ -63,7 +63,7 @@ def llm_node(
         if llm_handler:
             response = await llm_handler(prompt, model=model)
         else:
-            # Fallback: Prompt als Response (für Tests ohne LLM)
+            # Fallback: prompt as response (for tests without LLM)
             response = f"[LLM would process: {prompt[:200]}]"
 
         state[output_key] = response
@@ -82,13 +82,13 @@ def tool_node(
     result_key: str = "tool_result",
     tool_executor: Callable | None = None,
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Erstellt einen MCP-Tool-Aufruf-Handler.
+    """Creates an MCP tool call handler.
 
     Args:
-        tool_name: Name des Tools
-        params_key: State-Key für Tool-Parameter
-        result_key: State-Key für Tool-Ergebnis
-        tool_executor: Custom Tool-Executor
+        tool_name: Name of the tool
+        params_key: State key for tool parameters
+        result_key: State key for tool result
+        tool_executor: Custom tool executor
     """
 
     async def handler(state: GraphState) -> GraphState:
@@ -111,10 +111,10 @@ def tool_node(
 def transform_node(
     transform_fn: Callable[[dict[str, Any]], dict[str, Any]],
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Erstellt einen State-Transformations-Handler.
+    """Creates a state transformation handler.
 
     Args:
-        transform_fn: Sync-Funktion die dict→dict transformiert
+        transform_fn: Sync function that transforms dict->dict
     """
 
     async def handler(state: GraphState) -> GraphState:
@@ -132,10 +132,10 @@ def transform_node(
 def condition_node(
     condition_fn: Callable[[dict[str, Any]], str],
 ) -> Callable[[GraphState], Awaitable[str]]:
-    """Erstellt einen Bedingungs-Router.
+    """Creates a condition router.
 
     Args:
-        condition_fn: Funktion die dict→str (Edge-Name) zurückgibt
+        condition_fn: Function that returns dict->str (edge name)
     """
 
     async def handler(state: GraphState) -> str:
@@ -151,7 +151,7 @@ def threshold_router(
     above: str = "above",
     below: str = "below",
 ) -> Callable[[GraphState], Awaitable[str]]:
-    """Router der basierend auf einem Schwellenwert entscheidet."""
+    """Router that decides based on a threshold value."""
 
     async def handler(state: GraphState) -> str:
         value = state.get(key, 0)
@@ -169,12 +169,12 @@ def key_router(
     *,
     default: str = "__default__",
 ) -> Callable[[GraphState], Awaitable[str]]:
-    """Router der basierend auf einem State-Wert routet.
+    """Router that routes based on a state value.
 
     Args:
-        key: State-Key dessen Wert geprüft wird
-        mapping: Optionales Mapping {value: edge_name}
-        default: Fallback wenn kein Match
+        key: State key whose value is checked
+        mapping: Optional mapping {value: edge_name}
+        default: Fallback when no match
     """
 
     async def handler(state: GraphState) -> str:
@@ -190,7 +190,7 @@ def key_router(
 
 
 def delay_node(seconds: float) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Wartet eine bestimmte Zeit."""
+    """Waits for a specified time."""
 
     async def handler(state: GraphState) -> GraphState:
         await asyncio.sleep(seconds)
@@ -208,7 +208,7 @@ def log_node(
     log_keys: list[str] | None = None,
     state_key: str = "__log__",
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Loggt State-Informationen."""
+    """Logs state information."""
 
     async def handler(state: GraphState) -> GraphState:
         info: dict[str, Any] = {"timestamp": time.strftime("%H:%M:%S", time.gmtime())}
@@ -220,7 +220,7 @@ def log_node(
         else:
             info["state_keys"] = list(state.keys())
 
-        # Log-History im State aufbauen
+        # Build log history in state
         history = state.get(state_key, [])
         if not isinstance(history, list):
             history = []
@@ -240,7 +240,7 @@ def accumulate_node(
     source_keys: list[str],
     target_key: str = "accumulated",
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Sammelt Werte aus mehreren State-Keys in einer Liste."""
+    """Collects values from multiple state keys into a list."""
 
     async def handler(state: GraphState) -> GraphState:
         accumulated = []
@@ -262,7 +262,7 @@ def gate_node(
     *,
     error_message: str = "Gate check failed",
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Prüft eine Bedingung und wirft Exception wenn nicht erfüllt."""
+    """Checks a condition and raises exception if not met."""
 
     async def handler(state: GraphState) -> GraphState:
         data = state.to_dict()
@@ -280,7 +280,7 @@ def counter_node(
     key: str = "iteration",
     increment: int = 1,
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Inkrementiert einen Zähler im State."""
+    """Increments a counter in the state."""
 
     async def handler(state: GraphState) -> GraphState:
         current = state.get(key, 0)
@@ -294,7 +294,7 @@ def counter_node(
 
 
 def set_value_node(**values: Any) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Setzt fixe Werte im State."""
+    """Sets fixed values in the state."""
 
     async def handler(state: GraphState) -> GraphState:
         for k, v in values.items():
@@ -310,9 +310,9 @@ def set_value_node(**values: Any) -> Callable[[GraphState], Awaitable[GraphState
 def merge_node(
     merge_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
-    """Merge-Punkt für parallele Branches.
+    """Merge point for parallel branches.
 
-    Kann optional eine Merge-Funktion anwenden.
+    Can optionally apply a merge function.
     """
 
     async def handler(state: GraphState) -> GraphState:

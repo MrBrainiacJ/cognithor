@@ -34,7 +34,7 @@ def _utc_now() -> datetime:
 
 
 def _new_id() -> str:
-    """Neue UUID als String. Für alle IDs im System."""
+    """New UUID as string. For all IDs in the system."""
     return uuid.uuid4().hex
 
 
@@ -356,17 +356,17 @@ class SessionContext(BaseModel):
         object.__setattr__(self, "_blocked_tools", {})
 
     def touch(self) -> None:
-        """Aktualisiert Zeitstempel und Zähler."""
+        """Updates timestamp and counters."""
         self.last_activity = _utc_now()
         self.message_count += 1
 
     def reset_iteration(self) -> None:
-        """Setzt den Iterations-Zähler zurück (neue Anfrage)."""
+        """Resets the iteration counter (new request)."""
         self.iteration_count = 0
         object.__setattr__(self, "_blocked_tools", {})
 
     def record_block(self, tool: str) -> int:
-        """Zählt einen Block für ein Tool und gibt den neuen Zählerstand zurück."""
+        """Counts a block for a tool and returns the new counter value."""
         blocked = self._blocked_tools
         blocked[tool] = blocked.get(tool, 0) + 1
         return blocked[tool]
@@ -514,21 +514,21 @@ class WorkingMemory(BaseModel):
         return base + extra + 4  # +4 for role/message overhead
 
     def add_message(self, msg: Message) -> None:
-        """Fügt eine Nachricht zum Session-Kontext hinzu und aktualisiert token_count."""
+        """Adds a message to the session context and updates token_count."""
         self.chat_history.append(msg)
         self.token_count += self._estimate_msg_tokens(msg.content or "")
 
     def add_tool_result(self, result: ToolResult) -> None:
-        """Fügt ein Tool-Ergebnis zum Session-Kontext hinzu."""
+        """Adds a tool result to the session context."""
         self.tool_results.append(result)
 
     def clear_for_compaction(self, keep_last_n: int = 4) -> list[Message]:
-        """Entfernt alte Messages, gibt entfernte zurück.
+        """Removes old messages, returns removed ones.
 
-        System-Messages bleiben immer. Behält die letzten N nicht-System-Messages.
+        System messages always remain. Keeps the last N non-system messages.
 
         Returns:
-            Entfernte Messages (für Zusammenfassung durch Reflector).
+            Removed messages (for summarization by reflector).
         """
         if len(self.chat_history) <= keep_last_n:
             return []
@@ -550,9 +550,9 @@ class WorkingMemory(BaseModel):
         return removed
 
     def clear_for_new_request(self) -> None:
-        """Räumt Working Memory für eine neue Anfrage auf.
+        """Cleans up working memory for a new request.
 
-        Behält Chat-History und Core-Memory, löscht temporäre Daten.
+        Keeps chat history and core memory, deletes temporary data.
         """
         self.tool_results = []
         self.active_plan = None

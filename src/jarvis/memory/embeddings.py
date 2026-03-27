@@ -1,7 +1,7 @@
-"""Embedding-Client mit Provider-Strategie und Cache. [B§4.7, B§12]
+"""Embedding client with provider strategy and cache. [B§4.7, B§12]
 
-Generiert Embeddings via konfigurierbarem Provider (Ollama, OpenAI, Gemini, etc.).
-Nutzt Content-Hash als Cache-Key → gleicher Text = kein neuer API-Call.
+Generates embeddings via configurable provider (Ollama, OpenAI, Gemini, etc.).
+Uses content hash as cache key → same text = no new API call.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ DEFAULT_DIMENSIONS = 1024
 
 @dataclass
 class EmbeddingResult:
-    """Ergebnis einer Embedding-Berechnung."""
+    """Result of an embedding computation."""
 
     vector: list[float]
     model: str
@@ -48,7 +48,7 @@ class EmbeddingStats:
 
     @property
     def cache_hit_rate(self) -> float:
-        """Berechnet die Cache-Hit-Rate (0.0--1.0)."""
+        """Compute the cache-hit rate (0.0--1.0)."""
         if self.total_requests == 0:
             return 0.0
         return self.cache_hits / self.total_requests
@@ -63,12 +63,12 @@ class EmbeddingProvider(ABC):
     """Abstrakte Basisklasse für Embedding-Provider.
 
     Kapselt die HTTP-Logik für verschiedene Embedding-APIs.
-    Cache, LRU und Stats bleiben in EmbeddingClient.
+    Cache, LRU, and stats remain in EmbeddingClient.
     """
 
     @abstractmethod
     async def embed_single(self, model: str, text: str) -> list[float]:
-        """Erzeugt einen einzelnen Embedding-Vektor."""
+        """Generate a single embedding vector."""
         ...
 
     @abstractmethod
@@ -270,7 +270,7 @@ _NO_EMBEDDING_BACKENDS = {
 
 
 def _get_api_key_and_url(config: JarvisConfig, backend: str) -> tuple[str, str]:
-    """Gibt (api_key, base_url) für einen Backend-Typ zurück."""
+    """Return (api_key, base_url) for a backend type."""
     from jarvis.config import _PROVIDER_BASE_URLS
 
     key_map: dict[str, str] = {
@@ -299,7 +299,7 @@ def _get_api_key_and_url(config: JarvisConfig, backend: str) -> tuple[str, str]:
 
 
 def create_embedding_provider(config: JarvisConfig) -> EmbeddingProvider:
-    """Factory: Erstellt den passenden EmbeddingProvider basierend auf der Config.
+    """Factory: Create the appropriate EmbeddingProvider based on the config.
 
     Returns:
         Konfigurierter EmbeddingProvider für das aktive Backend.
@@ -324,7 +324,7 @@ def create_embedding_provider(config: JarvisConfig) -> EmbeddingProvider:
             base_url=base_url,
         )
 
-    # Backends ohne Embedding-API: Fallback auf OpenAI wenn Key vorhanden
+    # Backends without embedding API: fall back to OpenAI if key available
     if backend in _NO_EMBEDDING_BACKENDS:
         if config.openai_api_key:
             logger.info(
@@ -342,7 +342,7 @@ def create_embedding_provider(config: JarvisConfig) -> EmbeddingProvider:
         )
         return NullEmbeddingProvider(backend_name=backend)
 
-    # Unbekanntes Backend → Ollama-Fallback
+    # Unknown backend → Ollama-Fallback
     logger.warning("Unbekanntes Backend '%s', nutze Ollama-Embedding-Provider", backend)
     return OllamaEmbeddingProvider(
         base_url=config.ollama.base_url,
@@ -396,7 +396,7 @@ class EmbeddingClient:
 
     @property
     def model(self) -> str:
-        """Name des Embedding-Modells."""
+        """Name of the embedding model."""
         return self._model
 
     @property
@@ -406,7 +406,7 @@ class EmbeddingClient:
 
     @property
     def stats(self) -> EmbeddingStats:
-        """Gibt die aktuellen Cache-Statistiken zurück."""
+        """Return the current cache statistics."""
         return self._stats
 
     def _cache_put(self, key: str, vector: list[float]) -> None:
@@ -447,7 +447,7 @@ class EmbeddingClient:
         """Generiert ein Embedding für einen Text.
 
         Args:
-            text: Der zu embedende Text.
+            text: The text to embed.
             content_hash: Optional Cache-Key.
 
         Returns:
@@ -471,7 +471,7 @@ class EmbeddingClient:
         try:
             vector = await self._provider.embed_single(self._model, text)
 
-            # Cache speichern (bounded LRU)
+            # Save to cache (bounded LRU)
             if content_hash:
                 self._cache_put(content_hash, vector)
 
@@ -574,10 +574,10 @@ class EmbeddingClient:
 
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:
-    """Berechnet die Kosinus-Ähnlichkeit zweier Vektoren.
+    """Compute the cosine similarity of two vectors.
 
     Returns:
-        Wert zwischen -1.0 und 1.0. Höher = ähnlicher.
+        Value between -1.0 and 1.0. Higher = more similar.
     """
     if len(a) != len(b):
         return 0.0

@@ -1,9 +1,9 @@
 """Jarvis · Red-Team-Testing Framework (Deprecation-Shim).
 
-Dieses Modul existiert nur noch für Rückwärtskompatibilität.
-Alle Klassen und Funktionen leben jetzt in ``jarvis.security.red_team``.
+This module exists only for backward compatibility.
+All classes and functions now live in ``jarvis.security.red_team``.
 
-Beim Import wird eine ``DeprecationWarning`` ausgegeben.
+A ``DeprecationWarning`` is issued on import.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 import warnings as _warnings
 
 _warnings.warn(
-    "jarvis.security.redteam ist veraltet -- bitte jarvis.security.red_team verwenden.",
+    "jarvis.security.redteam is deprecated -- please use jarvis.security.red_team.",
     DeprecationWarning,
     stacklevel=2,
 )

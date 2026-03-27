@@ -1,7 +1,7 @@
-"""Sliding-Window Chunker mit Markdown-Awareness. [B§4.8]
+"""Sliding-window chunker with Markdown awareness. [B§4.8]
 
 Teilt Markdown-Dateien in überlappende Chunks auf.
-Bricht nie mitten in einer Zeile.
+Never breaks in the middle of a line.
 Bevorzugt Markdown-Überschriften am Chunk-Anfang.
 """
 
@@ -84,7 +84,7 @@ def _content_hash(text: str) -> str:
 
 
 def _extract_date_from_path(path: str) -> datetime | None:
-    """Extrahiert Datum aus Dateipfad (z.B. episodes/2026-02-21.md)."""
+    """Extract date from file path (z.B. episodes/2026-02-21.md)."""
     match = _DATE_RE.search(path)
     if match:
         try:
@@ -100,7 +100,7 @@ def _find_header_positions(lines: list[str]) -> set[int]:
 
 
 def _detect_tier(source_path: str) -> MemoryTier:
-    """Erkennt den Memory-Tier anhand des Dateipfads."""
+    """Detect the memory tier based on the file path."""
     path_lower = source_path.lower().replace("\\", "/")
     if "core.md" in path_lower or "/core" in path_lower:
         return MemoryTier.CORE
@@ -124,14 +124,14 @@ def chunk_text(
     """Teilt Text in überlappende Chunks auf.
 
     Args:
-        text: Der zu teilende Text.
-        source_path: Quell-Dateipfad.
+        text: The text to split.
+        source_path: Source file path.
         chunk_size_tokens: Maximale Chunk-Größe in Tokens.
         chunk_overlap_tokens: Überlappung zwischen Chunks in Tokens.
-        tier: Expliziter Memory-Tier (wird sonst aus Pfad abgeleitet).
+        tier: Explicit memory tier (otherwise derived from path).
 
     Returns:
-        Liste von Chunk-Objekten.
+        List of Chunk objects.
     """
     if not text or not text.strip():
         return []
@@ -155,7 +155,7 @@ def chunk_text(
     chunk_start_line = 0
 
     def _flush(end_line: int) -> None:
-        """Aktuellen Buffer als Chunk speichern."""
+        """Save current buffer as chunk."""
         nonlocal current_lines, current_chars, chunk_start_line
         if not current_lines:
             return
@@ -229,18 +229,18 @@ def chunk_file(
     config: MemoryConfig | None = None,
     tier: MemoryTier | None = None,
 ) -> list[Chunk]:
-    """Liest eine Datei und teilt sie in Chunks auf.
+    """Read a file and split it into chunks.
 
     Args:
-        source_path: Pfad zur Markdown-Datei.
-        config: Memory-Konfiguration (optional).
+        source_path: Path to the Markdown file.
+        config: Memory configuration (optional).
         tier: Expliziter Memory-Tier.
 
     Returns:
-        Liste von Chunk-Objekten.
+        List of Chunk objects.
 
     Raises:
-        FileNotFoundError: Wenn die Datei nicht existiert.
+        FileNotFoundError: If the file does not exist.
     """
     with open(source_path, encoding="utf-8") as f:
         text = f.read()

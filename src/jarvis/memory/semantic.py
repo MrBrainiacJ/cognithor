@@ -1,7 +1,7 @@
-"""Semantic Memory · Tier 3 -- Wissens-Graph. [B§4.4]
+"""Semantic Memory · Tier 3 -- Knowledge graph. [B§4.4]
 
-Entitäten (Personen, Firmen, Produkte, Projekte) und ihre Beziehungen.
-Gespeichert in SQLite (Index) + Markdown (Source of Truth).
+Entities (people, companies, products, projects) and their relationships.
+Stored in SQLite (index) + Markdown (source of truth).
 """
 
 from __future__ import annotations

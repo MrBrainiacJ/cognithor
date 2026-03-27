@@ -1,15 +1,15 @@
-"""API Integration Hub fuer Jarvis -- Persistente API-Verbindungen.
+"""API Integration Hub for Jarvis -- Persistent API connections.
 
-Ermoeglicht dem Agenten externe APIs zu konfigurieren und aufzurufen:
-  - api_list: Konfigurierte Integrationen auflisten
-  - api_connect: API-Integration einrichten
-  - api_call: Authentifizierte API-Aufrufe machen
-  - api_disconnect: Integration entfernen
+Enables the agent to configure and call external APIs:
+  - api_list: List configured integrations
+  - api_connect: Set up an API integration
+  - api_call: Make authenticated API calls
+  - api_disconnect: Remove an integration
 
-Credentials werden NIE gespeichert -- nur der Name der Umgebungsvariable.
-Konfiguration liegt in ~/.jarvis/integrations.json (optional Fernet-verschluesselt).
+Credentials are NEVER stored -- only the environment variable name.
+Configuration resides in ~/.jarvis/integrations.json (optionally Fernet-encrypted).
 
-Bibel-Referenz: §5.3 (MCP Tools)
+Reference: §5.3 (MCP Tools)
 """
 
 from __future__ import annotations
@@ -39,14 +39,14 @@ __all__ = [
     "register_api_hub_tools",
 ]
 
-# ── Konstanten ─────────────────────────────────────────────────────────────
+# ── Constants ──────────────────────────────────────────────────────────────
 
 _MAX_RESPONSE_CHARS = 50_000
-_DEFAULT_TIMEOUT = 30  # Sekunden pro Request
-_DEFAULT_RATE_LIMIT = 60  # Requests pro Minute
+_DEFAULT_TIMEOUT = 30  # seconds per request
+_DEFAULT_RATE_LIMIT = 60  # requests per minute
 _ALLOWED_METHODS = frozenset({"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"})
 
-# Fernet-Verschluesselung (optional)
+# Fernet encryption (optional)
 _fernet: Any = None
 _fernet_key_path: Path | None = None
 
@@ -115,7 +115,7 @@ API_TEMPLATES: dict[str, dict[str, Any]] = {
 
 
 class APIHubError(Exception):
-    """Fehler bei API-Hub-Operationen."""
+    """Error during API hub operations."""
 
 
 class _RateLimiter:

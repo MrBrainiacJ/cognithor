@@ -1,15 +1,15 @@
-"""Jarvis · Konfigurations-Manager.
+"""Jarvis · Configuration Manager.
 
-Stellt eine sichere API für Lesen, Ändern und Speichern der
-JarvisConfig bereit. Unterstützt:
+Provides a secure API for reading, modifying and saving the
+JarvisConfig. Supports:
 
-  - Lesen der gesamten Konfiguration (ohne Secrets)
-  - Partielles Update einzelner Sektionen
-  - Validierung via Pydantic vor dem Speichern
-  - Persistierung in config.yaml
-  - Live-Reload-Callback
+  - Reading the entire configuration (without secrets)
+  - Partial update of individual sections
+  - Validation via Pydantic before saving
+  - Persistence in config.yaml
+  - Live reload callback
 
-Architektur-Bibel: §12
+Architecture Bible: §12
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ def _is_secret_field(field_name: str) -> bool:
     return any(pat in lower for pat in _SECRET_PATTERNS)
 
 
-# Felder die NIEMALS via API zurückgegeben werden
+# Fields that are NEVER returned via API
 _SECRET_FIELDS = frozenset(
     {
         "openai_api_key",
@@ -80,7 +80,7 @@ _SECRET_PATTERN_EXCLUSIONS = (
     "max_tokens",  # anthropic_max_tokens
 )
 
-# Sektionen die über die API editierbar sind
+# Sections that are editable via API
 _EDITABLE_SECTIONS = frozenset(
     {
         "ollama",
@@ -112,7 +112,7 @@ _EDITABLE_SECTIONS = frozenset(
     }
 )
 
-# Top-Level-Felder die editierbar sind
+# Top-level fields that are editable
 _EDITABLE_TOP_LEVEL = frozenset(
     {
         "owner_name",
@@ -148,9 +148,9 @@ _EDITABLE_TOP_LEVEL = frozenset(
 
 
 class ConfigManager:
-    """Verwaltet die Jarvis-Konfiguration mit sicherem Read/Write.
+    """Manages the Jarvis configuration with secure read/write.
 
-    Verwendung::
+    Usage::
 
         mgr = ConfigManager()
         config_dict = mgr.read()
@@ -174,25 +174,25 @@ class ConfigManager:
 
     @property
     def config(self) -> JarvisConfig:
-        """Aktuelle Konfiguration (read-only Zugriff)."""
+        """Current configuration (read-only access)."""
         return self._config
 
     # ------------------------------------------------------------------
-    # Lesen
+    # Read
     # ------------------------------------------------------------------
 
     def read(self, *, include_secrets: bool = False) -> dict[str, Any]:
-        """Gibt die Konfiguration als Dictionary zurück.
+        """Returns the configuration as a dictionary.
 
         Args:
-            include_secrets: Wenn False, werden API-Keys maskiert.
+            include_secrets: If False, API keys are masked.
 
         Returns:
-            Vollständiges Config-Dict (serialisierbar).
+            Complete config dict (serializable).
         """
         data = self._config.model_dump(mode="json")
 
-        # Version immer aus dem Package — nie aus config.yaml
+        # Version always from the package -- never from config.yaml
         from jarvis import __version__
 
         data["version"] = __version__
@@ -200,7 +200,7 @@ class ConfigManager:
         if not include_secrets:
             self._mask_secrets(data)
 
-        # Path-Objekte → Strings
+        # Path objects -> strings
         for key in ("jarvis_home",):
             if key in data:
                 data[key] = str(data[key])
@@ -208,19 +208,19 @@ class ConfigManager:
         return data
 
     def read_section(self, section: str) -> dict[str, Any] | None:
-        """Gibt eine einzelne Sektion zurück.
+        """Returns a single section.
 
         Args:
-            section: Name der Sektion (z.B. "planner", "memory").
+            section: Name of the section (e.g. "planner", "memory").
 
         Returns:
-            Dict der Sektion oder None wenn nicht vorhanden.
+            Dict of the section or None if not found.
         """
         full = self.read()
         return full.get(section)
 
     # ------------------------------------------------------------------
-    # Schreiben
+    # Write
     # ------------------------------------------------------------------
 
     def update_section(self, section: str, values: dict[str, Any]) -> JarvisConfig:
@@ -321,15 +321,15 @@ class ConfigManager:
         return new_config
 
     # ------------------------------------------------------------------
-    # Persistieren
+    # Persist
     # ------------------------------------------------------------------
 
     def save(self, path: Path | None = None) -> Path:
-        """Speichert die Konfiguration in config.yaml.
+        """Saves the configuration to config.yaml.
 
-        Schreibt atomar: erst in eine temporäre Datei, dann rename.
-        So kann ein Absturz während des Schreibens die bestehende
-        config.yaml nicht korrumpieren.
+        Writes atomically: first to a temporary file, then rename.
+        This way a crash during writing cannot corrupt the existing
+        config.yaml.
 
         Args:
             path: Ziel-Pfad. Default: config_path oder config.config_file.
@@ -342,18 +342,18 @@ class ConfigManager:
 
         target = path or self._config_path or self._config.config_file
 
-        # Serialisieren
+        # Serialize
         data = self._config.model_dump(mode="json")
 
-        # Pfade serialisieren
+        # Serialize paths
         for key in ("jarvis_home",):
             if key in data:
                 data[key] = str(data[key])
 
-        # Version nicht in config.yaml speichern — wird immer aus dem Package gelesen
+        # Do not save version in config.yaml -- always read from the package
         data.pop("version", None)
 
-        # Secrets nicht im Klartext speichern wenn sie "***" sind
+        # Do not save secrets in plaintext when they are "***"
         self._strip_masked_secrets(data)
 
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -383,17 +383,17 @@ class ConfigManager:
 
         log.info("config_saved", path=str(target))
 
-        # Callback auslösen
+        # Trigger callback
         if self._on_reload:
             self._on_reload(self._config)
 
         return target
 
     def reload(self) -> JarvisConfig:
-        """Lädt die Konfiguration neu aus der Datei.
+        """Reloads the configuration from the file.
 
         Returns:
-            Neu geladene JarvisConfig.
+            Newly loaded JarvisConfig.
         """
         self._config = load_config(self._config_path)
         log.info("config_reloaded")
@@ -404,7 +404,7 @@ class ConfigManager:
         return self._config
 
     # ------------------------------------------------------------------
-    # Hilfsmethoden
+    # Helper methods
     # ------------------------------------------------------------------
 
     @staticmethod
@@ -443,10 +443,10 @@ class ConfigManager:
 
     @staticmethod
     def editable_sections() -> list[str]:
-        """Liste der editierbaren Sektionen."""
+        """List of editable sections."""
         return sorted(_EDITABLE_SECTIONS)
 
     @staticmethod
     def editable_top_level_fields() -> list[str]:
-        """Liste der editierbaren Top-Level-Felder."""
+        """List of editable top-level fields."""
         return sorted(_EDITABLE_TOP_LEVEL)

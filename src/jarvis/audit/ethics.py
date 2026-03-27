@@ -1,15 +1,15 @@
-"""Jarvis · Ethik- und Wirtschaftsgovernance.
+"""Jarvis · Ethics and economic governance.
 
-Budget-Limits, Bias-Checks und Fairness-Audits:
+Budget limits, bias checks, and fairness audits:
 
-  - BudgetManager:     Budget-Limits pro Agent, Team, Gesamt
-  - CostTracker:       Echtzeit-Kostenerfassung pro API-Call
-  - BiasDetector:      Erkennt systematische Verzerrungen in Agent-Outputs
-  - FairnessAuditor:   Auditiert Entscheidungen auf Fairness-Kriterien
-  - EthicsPolicy:      Konfigurierbare Ethik-Regeln
-  - EconomicGovernor:  Hauptklasse, orchestriert alles
+  - BudgetManager:     Budget limits per agent, team, system
+  - CostTracker:       Real-time cost tracking per API call
+  - BiasDetector:      Detects systematic biases in agent outputs
+  - FairnessAuditor:   Audits decisions on fairness criteria
+  - EthicsPolicy:      Configurable ethics rules
+  - EconomicGovernor:  Main class, orchestrates everything
 
-Architektur-Bibel: §13.1 (Governance), §15.1 (Wirtschaftlichkeit)
+Architecture Bible: §13.1 (Governance), §15.1 (Economic Efficiency)
 """
 
 from __future__ import annotations
@@ -26,13 +26,13 @@ from typing import Any
 
 @dataclass
 class BudgetLimit:
-    """Budget-Limit für eine Entität (Agent, Team, System)."""
+    """Budget limit for an entity (agent, team, system)."""
 
     entity_id: str
     entity_type: str  # "agent", "team", "system"
-    daily_limit: float = 50.0  # EUR pro Tag
-    monthly_limit: float = 1000.0  # EUR pro Monat
-    per_request_limit: float = 5.0  # EUR pro Einzelanfrage
+    daily_limit: float = 50.0  # EUR per day
+    monthly_limit: float = 1000.0  # EUR per month
+    per_request_limit: float = 5.0  # EUR per single request
     spent_today: float = 0.0
     spent_this_month: float = 0.0
     last_reset_day: str = ""
@@ -66,7 +66,7 @@ class BudgetLimit:
 
 
 class BudgetManager:
-    """Verwaltet Budget-Limits und prüft Ausgaben."""
+    """Manages budget limits and checks spending."""
 
     def __init__(self) -> None:
         self._limits: dict[str, BudgetLimit] = {}
@@ -94,34 +94,34 @@ class BudgetManager:
         return self._limits.get(entity_id)
 
     def can_spend(self, entity_id: str, amount: float) -> dict[str, Any]:
-        """Prüft ob eine Ausgabe erlaubt ist."""
+        """Checks if a spend is allowed."""
         limit = self._limits.get(entity_id)
         if not limit:
-            return {"allowed": True, "reason": "Kein Limit konfiguriert"}
+            return {"allowed": True, "reason": "No limit configured"}
 
         if amount > limit.per_request_limit:
             return {
                 "allowed": False,
-                "reason": f"Einzelanfrage {amount:.2f}€ > Limit {limit.per_request_limit:.2f}€",
+                "reason": f"Single request {amount:.2f}€ > limit {limit.per_request_limit:.2f}€",
             }
         if limit.spent_today + amount > limit.daily_limit:
             return {
                 "allowed": False,
-                "reason": f"Tagesbudget erschöpft ({limit.daily_remaining:.2f}€ übrig)",
+                "reason": f"Daily budget exhausted ({limit.daily_remaining:.2f}€ remaining)",
             }
         if limit.spent_this_month + amount > limit.monthly_limit:
             return {
                 "allowed": False,
-                "reason": f"Monatsbudget erschöpft ({limit.monthly_remaining:.2f}€ übrig)",
+                "reason": f"Monthly budget exhausted ({limit.monthly_remaining:.2f}€ remaining)",
             }
 
         return {"allowed": True, "reason": "OK"}
 
     def record_spend(self, entity_id: str, amount: float) -> bool:
-        """Bucht eine Ausgabe."""
+        """Books a spend."""
         limit = self._limits.get(entity_id)
         if not limit:
-            return True  # Kein Limit = immer erlaubt
+            return True  # No limit = always allowed
         limit.spent_today += amount
         limit.spent_this_month += amount
         return True
@@ -162,7 +162,7 @@ class BudgetManager:
 
 @dataclass
 class CostEntry:
-    """Einzelner Kosteneintrag."""
+    """Single cost entry."""
 
     entry_id: str
     agent_id: str
@@ -184,7 +184,7 @@ class CostEntry:
         }
 
 
-# Standard-Preise pro 1K Tokens (EUR, gerundet)
+# Standard prices per 1K tokens (EUR, rounded)
 MODEL_PRICING: dict[str, dict[str, float]] = {
     "gpt-4o": {"input": 0.0023, "output": 0.0092},
     "gpt-4o-mini": {"input": 0.00014, "output": 0.00055},
@@ -196,7 +196,7 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
 
 
 class CostTracker:
-    """Echtzeit-Kostenerfassung pro API-Call."""
+    """Real-time cost tracking per API call."""
 
     def __init__(self, budget_manager: BudgetManager | None = None) -> None:
         self._budget = budget_manager or BudgetManager()
@@ -208,7 +208,7 @@ class CostTracker:
         return self._budget
 
     def calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
-        """Berechnet die Kosten für einen API-Call."""
+        """Calculates the cost for an API call."""
         pricing = MODEL_PRICING.get(model, {"input": 0.003, "output": 0.015})
         return (input_tokens / 1000 * pricing["input"]) + (output_tokens / 1000 * pricing["output"])
 
@@ -220,7 +220,7 @@ class CostTracker:
         output_tokens: int,
         task_type: str = "",
     ) -> CostEntry:
-        """Erfasst einen API-Call und bucht die Kosten."""
+        """Records an API call and books the costs."""
         self._counter += 1
         cost = self.calculate_cost(model, input_tokens, output_tokens)
 
@@ -284,7 +284,7 @@ class BiasCategory(Enum):
 
 @dataclass
 class BiasReport:
-    """Ergebnis einer Bias-Prüfung."""
+    """Result of a bias check."""
 
     report_id: str
     category: BiasCategory
@@ -304,15 +304,15 @@ class BiasReport:
 
 
 class BiasDetector:
-    """Erkennt systematische Verzerrungen in Agent-Outputs.
+    """Detects systematic biases in agent outputs.
 
-    Prüft:
-      - Stereotypen in generierten Texten
-      - Ungleiche Behandlung verschiedener Gruppen
-      - Sprachliche Verzerrungen
+    Checks:
+      - Stereotypes in generated texts
+      - Unequal treatment of different groups
+      - Linguistic biases
     """
 
-    # Einfache Keyword-basierte Bias-Indikatoren (Produktionsversion → ML-Modell)
+    # Simple keyword-based bias indicators (production version -> ML model)
     GENDER_INDICATORS = {
         "positive_male": ["er ist kompetent", "er ist der experte", "der chef"],
         "positive_female": ["sie ist kompetent", "sie ist die expertin", "die chefin"],
@@ -333,7 +333,7 @@ class BiasDetector:
         self._counter = 0
 
     def check(self, text: str, context: str = "") -> list[BiasReport]:
-        """Prüft einen Text auf Bias-Indikatoren."""
+        """Checks a text for bias indicators."""
         text_lower = text.lower()
         findings: list[BiasReport] = []
 
@@ -423,7 +423,7 @@ class FairnessMetric(Enum):
 
 @dataclass
 class FairnessAuditResult:
-    """Ergebnis eines Fairness-Audits."""
+    """Result of a fairness audit."""
 
     audit_id: str
     metric: FairnessMetric
@@ -445,7 +445,7 @@ class FairnessAuditResult:
 
 
 class FairnessAuditor:
-    """Auditiert Agent-Entscheidungen auf Fairness-Kriterien."""
+    """Audits agent decisions on fairness criteria."""
 
     DEFAULT_THRESHOLD = 80.0  # Minimum-Score für "Fair"
 
@@ -455,7 +455,7 @@ class FairnessAuditor:
         self._counter = 0
 
     def audit_response_times(self, times_by_group: dict[str, list[float]]) -> FairnessAuditResult:
-        """Prüft ob Antwortzeiten zwischen Gruppen fair verteilt sind."""
+        """Checks if response times are fairly distributed between groups."""
         self._counter += 1
         if not times_by_group:
             return self._create_result(FairnessMetric.LATENCY_PARITY, 100.0, {})
@@ -471,7 +471,7 @@ class FairnessAuditor:
         return self._create_result(FairnessMetric.LATENCY_PARITY, ratio, averages)
 
     def audit_error_rates(self, errors_by_group: dict[str, tuple[int, int]]) -> FairnessAuditResult:
-        """Prüft ob Fehlerraten zwischen Gruppen fair verteilt sind.
+        """Checks if error rates are fairly distributed between groups.
 
         Args:
             errors_by_group: {group: (errors, total)}
@@ -496,7 +496,7 @@ class FairnessAuditor:
         return self._create_result(FairnessMetric.ERROR_RATE_PARITY, score, rates)
 
     def audit_allocation(self, allocated_by_group: dict[str, float]) -> FairnessAuditResult:
-        """Prüft ob Ressourcen-Allokation proportional fair ist."""
+        """Checks if resource allocation is proportionally fair."""
         self._counter += 1
         if not allocated_by_group:
             return self._create_result(FairnessMetric.PROPORTIONAL_ALLOCATION, 100.0, {})
@@ -574,7 +574,7 @@ class EthicsViolationType(Enum):
 
 @dataclass
 class EthicsViolation:
-    """Eine Ethik-Verletzung."""
+    """An ethics violation."""
 
     violation_id: str
     violation_type: EthicsViolationType
@@ -594,7 +594,7 @@ class EthicsViolation:
 
 
 class EthicsPolicy:
-    """Konfigurierbare Ethik-Regeln."""
+    """Configurable ethics rules."""
 
     def __init__(
         self,
@@ -674,7 +674,7 @@ class EthicsPolicy:
 
 
 class EconomicGovernor:
-    """Hauptklasse: Orchestriert Ethik- und Wirtschaftsgovernance."""
+    """Main class: Orchestrates ethics and economic governance."""
 
     def __init__(self) -> None:
         self._budget = BudgetManager()
@@ -704,7 +704,7 @@ class EconomicGovernor:
         return self._ethics
 
     def pre_flight_check(self, agent_id: str, estimated_cost: float) -> dict[str, Any]:
-        """Vorab-Prüfung vor einer Agent-Aktion."""
+        """Pre-flight check before an agent action."""
         budget_check = self._budget.can_spend(agent_id, estimated_cost)
         bias_count = sum(1 for r in self._bias.all_reports() if r.severity in ("medium", "high"))
         ethics_check = self._ethics.check_bias(bias_count, agent_id)

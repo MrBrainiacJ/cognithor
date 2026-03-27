@@ -1,18 +1,18 @@
 """Jarvis · Encrypted Agent Vaults & Isolated Session Stores.
 
-Vollständige Kapselung pro Agent:
+Complete encapsulation per agent:
 
-  - EncryptedVault:       Verschlüsselter Token-Vault pro Agent (Fernet)
-  - IsolatedSessionStore: Getrennte Session-Stores pro Agent
-  - VaultManager:         Orchestriert alle Agent-Vaults
-  - SessionIsolationGuard: Erzwingt Session-Trennung
+  - EncryptedVault:       Encrypted token vault per agent (Fernet)
+  - IsolatedSessionStore: Separate session stores per agent
+  - VaultManager:         Orchestrates all agent vaults
+  - SessionIsolationGuard: Enforces session separation
 
-Architektur-Bibel: §11.4 (Credential-Isolation), §14.3 (Multi-Tenant)
+Architecture Bible: §11.4 (Credential-Isolation), §14.3 (Multi-Tenant)
 
-Problemstellung:
-  Der bestehende Agent-OS trennt Workspaces und setzt Quotas,
-  speichert aber Sessions und Credentials zentral. Getrennte
-  verschlüsselte Stores pro Agent erhöhen die Multi-User-Tauglichkeit.
+Problem statement:
+  The existing Agent OS separates workspaces and sets quotas,
+  but stores sessions and credentials centrally. Separate
+  encrypted stores per agent improve multi-user suitability.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ _vault_log = logging.getLogger(__name__)
 
 
 # ============================================================================
-# Encryption Layer (Fernet-kompatibel, Zero-Dependency)
+# Encryption Layer (Fernet-compatible, Zero-Dependency)
 # ============================================================================
 
 
@@ -118,15 +118,15 @@ class _SimpleEncryptor:
         try:
             raw = base64.b64decode(token)
         except Exception as exc:
-            raise ValueError(f"Ungültiges Token-Format (Base64-Fehler): {exc}") from exc
-        if len(raw) < 33:  # mindestens 16 (IV) + 16 (MAC) + 1 (Cipher)
-            raise ValueError("Token zu kurz für Legacy-Entschlüsselung")
+            raise ValueError(f"Invalid token format (Base64 error): {exc}") from exc
+        if len(raw) < 33:  # at least 16 (IV) + 16 (MAC) + 1 (cipher)
+            raise ValueError("Token too short for legacy decryption")
         iv = raw[:16]
         mac_stored = raw[16:32]
         cipher = raw[32:]
         mac_computed = hmac.new(raw_key, iv + cipher, hashlib.sha256).digest()[:16]
         if not hmac.compare_digest(mac_stored, mac_computed):
-            raise ValueError("Integrity check failed: Token wurde manipuliert.")
+            raise ValueError("Integrity check failed: token was tampered with.")
         # Derive legacy XOR key stream
         stream = b""
         counter = 0
@@ -146,7 +146,7 @@ class _SimpleEncryptor:
 
 @dataclass
 class VaultEntry:
-    """Ein verschlüsselter Eintrag im Vault."""
+    """An encrypted entry in the vault."""
 
     service: str
     key: str
@@ -166,10 +166,10 @@ class VaultEntry:
 
 
 class EncryptedVault:
-    """Verschlüsselter Credential-Vault für einen einzelnen Agenten.
+    """Encrypted credential vault for a single agent.
 
-    Jeder Agent bekommt seinen eigenen Vault mit eigenem
-    Verschlüsselungs-Key. Credentials werden at-rest verschlüsselt.
+    Each agent gets its own vault with its own
+    encryption key. Credentials are encrypted at rest.
     """
 
     def __init__(self, agent_id: str, master_key: bytes | None = None) -> None:
@@ -195,7 +195,7 @@ class EncryptedVault:
         return len(self._entries)
 
     def store(self, service: str, key: str, value: str) -> VaultEntry:
-        """Speichert ein Credential verschlüsselt."""
+        """Stores a credential encrypted."""
         encrypted = self._encryptor.encrypt(value)
         entry = VaultEntry(
             service=service,
@@ -207,7 +207,7 @@ class EncryptedVault:
         return entry
 
     def retrieve(self, service: str, key: str) -> str | None:
-        """Holt und entschlüsselt ein Credential.
+        """Retrieves and decrypts a credential.
 
         Auto-migrates legacy XOR-HMAC entries to Fernet on read.
         """
@@ -228,7 +228,7 @@ class EncryptedVault:
         return plaintext
 
     def delete(self, service: str, key: str) -> bool:
-        """Löscht ein Credential."""
+        """Deletes a credential."""
         composite = f"{service}:{key}"
         if composite in self._entries:
             del self._entries[composite]
@@ -236,14 +236,14 @@ class EncryptedVault:
         return False
 
     def list_entries(self) -> list[dict[str, Any]]:
-        """Listet alle Einträge (ohne Werte)."""
+        """Lists all entries (without values)."""
         return [e.to_dict() for e in self._entries.values()]
 
     def has(self, service: str, key: str) -> bool:
         return f"{service}:{key}" in self._entries
 
     def clear(self) -> int:
-        """Löscht alle Einträge. Gibt Anzahl gelöschter zurück."""
+        """Deletes all entries. Returns number deleted."""
         count = len(self._entries)
         self._entries.clear()
         return count
@@ -257,15 +257,15 @@ class EncryptedVault:
 
 
 # ============================================================================
-# Vault-Manager: Orchestriert alle Agent-Vaults
+# Vault Manager: Orchestrates all agent vaults
 # ============================================================================
 
 
 class VaultManager:
-    """Verwaltet verschlüsselte Vaults für alle Agenten.
+    """Manages encrypted vaults for all agents.
 
-    Jeder Agent bekommt einen eigenen EncryptedVault mit eigenem Key.
-    Cross-Agent-Zugriff wird strikt verhindert.
+    Each agent gets its own EncryptedVault with its own key.
+    Cross-agent access is strictly prevented.
     """
 
     def __init__(self, master_key: bytes | None = None) -> None:
@@ -273,17 +273,17 @@ class VaultManager:
         self._vaults: dict[str, EncryptedVault] = {}
 
     def get_vault(self, agent_id: str) -> EncryptedVault:
-        """Holt (oder erstellt) den Vault für einen Agenten."""
+        """Gets (or creates) the vault for an agent."""
         if agent_id not in self._vaults:
             self._vaults[agent_id] = EncryptedVault(agent_id, self._master_key)
         return self._vaults[agent_id]
 
     def store(self, agent_id: str, service: str, key: str, value: str) -> VaultEntry:
-        """Speichert ein Credential für einen Agenten."""
+        """Stores a credential for an agent."""
         return self.get_vault(agent_id).store(service, key, value)
 
     def retrieve(self, agent_id: str, service: str, key: str) -> str | None:
-        """Holt ein Credential -- nur aus dem eigenen Vault."""
+        """Gets a credential -- only from the owning vault."""
         vault = self._vaults.get(agent_id)
         if not vault:
             return None
@@ -292,7 +292,7 @@ class VaultManager:
     def cross_agent_attempt(
         self, requesting_agent: str, target_agent: str, service: str, key: str
     ) -> str | None:
-        """Cross-Agent-Zugriff. Blockiert und loggt fremde Zugriffe."""
+        """Cross-agent access. Blocks and logs foreign access attempts."""
         if requesting_agent != target_agent:
             _vault_log.warning(
                 "cross_agent_access_blocked: agent=%s versuchte "
@@ -324,7 +324,7 @@ class VaultManager:
 
 @dataclass
 class AgentSession:
-    """Eine isolierte Session für einen Agenten."""
+    """An isolated session for an agent."""
 
     session_id: str
     agent_id: str
@@ -346,10 +346,10 @@ class AgentSession:
 
 
 class IsolatedSessionStore:
-    """Getrennte Session-Stores pro Agent.
+    """Separate session stores per agent.
 
-    Jeder Agent hat seinen eigenen Session-Namespace.
-    Sessions können nicht über Agent-Grenzen hinweg gelesen werden.
+    Each agent has its own session namespace.
+    Sessions cannot be read across agent boundaries.
     """
 
     def __init__(self) -> None:
@@ -363,7 +363,7 @@ class IsolatedSessionStore:
         token: str = "",
         **metadata: Any,
     ) -> AgentSession:
-        """Erstellt eine neue isolierte Session."""
+        """Creates a new isolated session."""
         if not token:
             token = hashlib.sha256(os.urandom(32)).hexdigest()
 
@@ -385,19 +385,19 @@ class IsolatedSessionStore:
         return session
 
     def get_session(self, agent_id: str, session_id: str) -> AgentSession | None:
-        """Holt eine Session -- nur aus dem eigenen Store."""
+        """Gets a session -- only from the owning store."""
         store = self._stores.get(agent_id, {})
         return store.get(session_id)
 
     def get_by_token(self, token: str) -> AgentSession | None:
-        """Holt eine Session anhand des Tokens."""
+        """Gets a session by its token."""
         ref = self._token_index.get(token)
         if not ref:
             return None
         return self.get_session(ref[0], ref[1])
 
     def revoke_session(self, agent_id: str, session_id: str) -> bool:
-        """Widerruft eine Session."""
+        """Revokes a session."""
         session = self.get_session(agent_id, session_id)
         if session:
             session.active = False
@@ -407,14 +407,14 @@ class IsolatedSessionStore:
         return False
 
     def agent_sessions(self, agent_id: str) -> list[AgentSession]:
-        """Alle aktiven Sessions eines Agenten."""
+        """All active sessions for an agent."""
         store = self._stores.get(agent_id, {})
         return [s for s in store.values() if s.active]
 
     def cross_agent_attempt(
         self, requesting_agent: str, target_agent: str, session_id: str
     ) -> AgentSession | None:
-        """Cross-Agent-Session-Zugriff. Wird immer blockiert."""
+        """Cross-agent session access. Always blocked."""
         if requesting_agent != target_agent:
             return None
         return self.get_session(requesting_agent, session_id)
@@ -445,10 +445,10 @@ class IsolatedSessionStore:
 
 
 class SessionIsolationGuard:
-    """Erzwingt strikte Session-Trennung.
+    """Enforces strict session separation.
 
-    Überprüft jeden Zugriff auf Credentials und Sessions
-    und loggt Violations.
+    Checks every access to credentials and sessions
+    and logs violations.
     """
 
     def __init__(
@@ -467,7 +467,7 @@ class SessionIsolationGuard:
         service: str,
         key: str,
     ) -> str | None:
-        """Prüft Credential-Zugriff. Blockiert Cross-Agent."""
+        """Checks credential access. Blocks cross-agent."""
         if requesting_agent != target_agent:
             self._violations.append(
                 {
@@ -488,7 +488,7 @@ class SessionIsolationGuard:
         target_agent: str,
         session_id: str,
     ) -> AgentSession | None:
-        """Prüft Session-Zugriff. Blockiert Cross-Agent."""
+        """Checks session access. Blocks cross-agent."""
         if requesting_agent != target_agent:
             self._violations.append(
                 {

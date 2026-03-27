@@ -1,15 +1,15 @@
-"""Jarvis · Automatisierte Code-Analyse für Skills.
+"""Jarvis · Automated code analysis for skills.
 
-Statische Analyse zur Erkennung von Sicherheitsrisiken in Skills:
+Static analysis for detecting security risks in skills:
 
-  - CodePattern:           Erkennbare Muster (gefährliche Aufrufe, Exfiltration...)
-  - PatternScanner:        AST-basierte Mustererkennung
-  - PermissionAnalyzer:    Analysiert benötigte Berechtigungen
-  - DependencyAuditor:     Prüft Abhängigkeiten auf bekannte Schwachstellen
-  - SkillSecurityReport:   Zusammenfassung aller Findings
-  - CodeAuditor:           Hauptklasse
+  - CodePattern:           Recognizable patterns (dangerous calls, exfiltration...)
+  - PatternScanner:        AST-based pattern recognition
+  - PermissionAnalyzer:    Analyzes required permissions
+  - DependencyAuditor:     Checks dependencies for known vulnerabilities
+  - SkillSecurityReport:   Summary of all findings
+  - CodeAuditor:           Main class
 
-Architektur-Bibel: §15.3 (Supply-Chain-Security), §14.6 (Code-Audit)
+Architecture Bible: §15.3 (Supply-Chain-Security), §14.6 (Code-Audit)
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ class PatternCategory(Enum):
 
 @dataclass
 class CodePattern:
-    """Ein erkennbares Sicherheitsmuster im Code."""
+    """A recognizable security pattern in code."""
 
     pattern_id: str
     name: str
@@ -70,7 +70,7 @@ class CodePattern:
 
 @dataclass
 class CodeFinding:
-    """Ein konkreter Fund in einer Code-Datei."""
+    """A concrete finding in a code file."""
 
     finding_id: str
     pattern: CodePattern
@@ -98,133 +98,133 @@ class CodeFinding:
 
 
 class PatternScanner:
-    """AST- und Regex-basierte Mustererkennung in Python-Code."""
+    """AST and regex-based pattern recognition in Python code."""
 
     BUILT_IN_PATTERNS = [
-        # Kritisch: Code-Ausführung
+        # Critical: Code execution
         CodePattern(
             "CP-001",
-            "eval() Aufruf",
+            "eval() call",
             PatternCategory.CODE_EXECUTION,
             PatternSeverity.CRITICAL,
-            "eval() erlaubt beliebige Code-Ausführung",
+            "eval() allows arbitrary code execution",
             "ast",
             "eval",
-            "Ersetze eval() durch ast.literal_eval() oder sichere Alternative",
+            "Replace eval() with ast.literal_eval() or a safe alternative",
         ),
         CodePattern(
             "CP-002",
-            "exec() Aufruf",
+            "exec() call",
             PatternCategory.CODE_EXECUTION,
             PatternSeverity.CRITICAL,
-            "exec() erlaubt beliebige Code-Ausführung",
+            "exec() allows arbitrary code execution",
             "ast",
             "exec",
-            "Entferne exec() und nutze sichere Alternativen",
+            "Remove exec() and use safe alternatives",
         ),
         CodePattern(
             "CP-003",
             "subprocess Shell=True",
             PatternCategory.CODE_EXECUTION,
             PatternSeverity.CRITICAL,
-            "Shell-Injection möglich bei shell=True",
+            "Shell injection possible with shell=True",
             "regex",
             r"subprocess\.\w+\(.*shell\s*=\s*True",
-            "Verwende shell=False + Argument-Liste",
+            "Use shell=False + argument list",
         ),
         CodePattern(
             "CP-004",
             "os.system() Aufruf",
             PatternCategory.CODE_EXECUTION,
             PatternSeverity.HIGH,
-            "Direkte Shell-Ausführung",
+            "Direct shell execution",
             "regex",
             r"os\.system\(",
-            "Verwende subprocess.run() mit shell=False",
+            "Use subprocess.run() with shell=False",
         ),
-        # Hoch: Netzwerk/Exfiltration
+        # High: Network/Exfiltration
         CodePattern(
             "CP-005",
-            "HTTP-Request an externe URL",
+            "HTTP request to external URL",
             PatternCategory.NETWORK_ACCESS,
             PatternSeverity.HIGH,
-            "Skill macht HTTP-Requests nach außen",
+            "Skill makes external HTTP requests",
             "regex",
             r"requests\.\w+\(|urllib\.request|httpx\.\w+\(",
-            "Netzwerkzugriff muss genehmigt werden",
+            "Network access must be approved",
         ),
         CodePattern(
             "CP-006",
-            "Socket-Nutzung",
+            "Socket usage",
             PatternCategory.NETWORK_ACCESS,
             PatternSeverity.HIGH,
-            "Direkter Socket-Zugriff",
+            "Direct socket access",
             "regex",
             r"socket\.socket\(|socket\.connect",
-            "Verwende genehmigte HTTP-Bibliotheken",
+            "Use approved HTTP libraries",
         ),
         CodePattern(
             "CP-007",
-            "DNS-Exfiltration",
+            "DNS exfiltration",
             PatternCategory.DATA_EXFILTRATION,
             PatternSeverity.CRITICAL,
-            "DNS-Anfragen können zur Datenexfiltration genutzt werden",
+            "DNS queries can be used for data exfiltration",
             "regex",
             r"dns\.resolver|socket\.getaddrinfo.*encode",
-            "DNS-Zugriff einschränken",
+            "Restrict DNS access",
         ),
-        # Mittel: Dateisystem
+        # Medium: File system
         CodePattern(
             "CP-008",
-            "Sensible Pfade lesen",
+            "Reading sensitive paths",
             PatternCategory.FILE_SYSTEM,
             PatternSeverity.MEDIUM,
-            "Zugriff auf sensible Dateipfade",
+            "Access to sensitive file paths",
             "regex",
             r"/etc/passwd|/etc/shadow|\.ssh/|\.env|\.aws/credentials",
-            "Dateizugriff auf Sandbox beschränken",
+            "Restrict file access to sandbox",
         ),
         CodePattern(
             "CP-009",
-            "Temporäre Datei mit Secrets",
+            "Temporary file with secrets",
             PatternCategory.CREDENTIAL_ACCESS,
             PatternSeverity.MEDIUM,
-            "Credentials in temporäre Dateien geschrieben",
+            "Credentials written to temporary files",
             "regex",
             r"(tempfile|/tmp).*(?:key|secret|password|token)",
-            "Secrets nur im Vault speichern",
+            "Store secrets only in the vault",
         ),
-        # Obfuskation
+        # Obfuscation
         CodePattern(
             "CP-010",
-            "Base64-Kodierung",
+            "Base64 encoding",
             PatternCategory.OBFUSCATION,
             PatternSeverity.LOW,
-            "Base64-Kodierung kann bösartigen Code verstecken",
+            "Base64 encoding can hide malicious code",
             "regex",
             r"base64\.\w*decode\(",
-            "Prüfe was dekodiert wird",
+            "Check what is being decoded",
         ),
         CodePattern(
             "CP-011",
             "Compile/Marshal",
             PatternCategory.OBFUSCATION,
             PatternSeverity.HIGH,
-            "Dynamische Code-Kompilierung",
+            "Dynamic code compilation",
             "regex",
             r"compile\(|marshal\.loads\(|pickle\.loads\(",
-            "Keine dynamische Code-Kompilierung erlaubt",
+            "No dynamic code compilation allowed",
         ),
         # Injection
         CodePattern(
             "CP-012",
-            "SQL-Injection-Risiko",
+            "SQL injection risk",
             PatternCategory.INJECTION_RISK,
             PatternSeverity.HIGH,
-            "String-Formatierung in SQL-Queries",
+            "String formatting in SQL queries",
             "regex",
             r"(execute|cursor)\(.*(%s|\.format\(|f['\"])",
-            "Verwende parametrisierte Queries",
+            "Use parameterized queries",
         ),
     ]
 
@@ -239,7 +239,7 @@ class PatternScanner:
         self._patterns.append(pattern)
 
     def scan_code(self, code: str, file_path: str = "<stdin>") -> list[CodeFinding]:
-        """Scannt Python-Code auf alle registrierten Muster."""
+        """Scans Python code for all registered patterns."""
         findings: list[CodeFinding] = []
 
         for pattern in self._patterns:
@@ -338,7 +338,7 @@ class RequiredPermission(Enum):
 
 
 class PermissionAnalyzer:
-    """Analysiert welche Berechtigungen ein Skill benötigt."""
+    """Analyzes which permissions a skill requires."""
 
     PERMISSION_INDICATORS: dict[RequiredPermission, list[str]] = {
         RequiredPermission.FILE_READ: ["open(", "Path(", "os.path", "read()", "readlines()"],
@@ -352,7 +352,7 @@ class PermissionAnalyzer:
     }
 
     def analyze(self, code: str) -> dict[RequiredPermission, list[str]]:
-        """Analysiert benötigte Berechtigungen."""
+        """Analyzes required permissions."""
         required: dict[RequiredPermission, list[str]] = {}
         for perm, indicators in self.PERMISSION_INDICATORS.items():
             evidence = []
@@ -364,7 +364,7 @@ class PermissionAnalyzer:
         return required
 
     def risk_assessment(self, permissions: dict[RequiredPermission, list[str]]) -> dict[str, Any]:
-        """Bewertet das Risiko basierend auf benötigten Berechtigungen."""
+        """Assesses risk based on required permissions."""
         high_risk = {
             RequiredPermission.SHELL_EXEC,
             RequiredPermission.NETWORK,
@@ -401,7 +401,7 @@ class PermissionAnalyzer:
 
 @dataclass
 class SkillSecurityReport:
-    """Zusammenfassender Sicherheitsbericht für einen Skill."""
+    """Summary security report for a skill."""
 
     report_id: str
     skill_name: str
@@ -432,12 +432,12 @@ class SkillSecurityReport:
 
 
 # ============================================================================
-# Code Auditor (Hauptklasse)
+# Code Auditor (Main Class)
 # ============================================================================
 
 
 class CodeAuditor:
-    """Hauptklasse: Automatisierte Code-Analyse für Skills."""
+    """Main class: Automated code analysis for skills."""
 
     def __init__(self) -> None:
         self._scanner = PatternScanner()
@@ -454,17 +454,17 @@ class CodeAuditor:
         return self._perm_analyzer
 
     def audit_skill(self, skill_name: str, code: str, file_path: str = "") -> SkillSecurityReport:
-        """Vollständiger Sicherheits-Audit eines Skills."""
+        """Full security audit of a skill."""
         self._counter += 1
 
         # 1. Pattern-Scan
         findings = self._scanner.scan_code(code, file_path or f"{skill_name}.py")
 
-        # 2. Berechtigungs-Analyse
+        # 2. Permission analysis
         perms = self._perm_analyzer.analyze(code)
         perm_risk = self._perm_analyzer.risk_assessment(perms)
 
-        # 3. Gesamt-Risiko
+        # 3. Overall risk
         critical_count = sum(1 for f in findings if f.pattern.severity == PatternSeverity.CRITICAL)
         high_count = sum(1 for f in findings if f.pattern.severity == PatternSeverity.HIGH)
 
@@ -479,12 +479,14 @@ class CodeAuditor:
 
         passed = critical_count == 0 and high_count <= 2
 
-        # 4. Empfehlungen
+        # 4. Recommendations
         recommendations = []
         if critical_count > 0:
-            recommendations.append(f"❌ {critical_count} kritische Findings beheben (Pflicht)")
+            recommendations.append(
+                f"❌ {critical_count} critical findings must be fixed (mandatory)"
+            )
         if high_count > 0:
-            recommendations.append(f"⚠️ {high_count} High-Findings prüfen")
+            recommendations.append(f"⚠️ {high_count} high findings to review")
         for f in findings:
             if f.pattern.recommendation and f.pattern.recommendation not in recommendations:
                 recommendations.append(f.pattern.recommendation)

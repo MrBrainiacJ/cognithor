@@ -1,4 +1,4 @@
-"""Automatisches Error-Clustering basierend auf Levenshtein-Aehnlichkeit."""
+"""Automatic error clustering based on Levenshtein similarity."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ log = get_logger(__name__)
 
 
 def _levenshtein_ratio(s1: str, s2: str) -> float:
-    """Berechnet Levenshtein-Aehnlichkeit (0-1). 1 = identisch."""
+    """Calculates Levenshtein similarity (0-1). 1 = identical."""
     if not s1 and not s2:
         return 1.0
     if not s1 or not s2:
@@ -50,7 +50,7 @@ def _levenshtein_ratio(s1: str, s2: str) -> float:
 
 
 class _ErrorEntry:
-    """Interner Error-Eintrag."""
+    """Internal error entry."""
 
     __slots__ = ("context", "error_type", "message", "timestamp")
 
@@ -62,7 +62,7 @@ class _ErrorEntry:
 
 
 class ErrorClusterer:
-    """Gruppiert aehnliche Fehler fuer Pattern-Erkennung."""
+    """Groups similar errors for pattern detection."""
 
     def __init__(self, similarity_threshold: float = 0.6, max_entries: int = 10000) -> None:
         self._threshold = similarity_threshold
@@ -75,7 +75,7 @@ class ErrorClusterer:
         message: str,
         context: str = "",
     ) -> None:
-        """Nimmt einen Fehler auf."""
+        """Records an error."""
         entry = _ErrorEntry(
             error_type=error_type,
             message=message,
@@ -88,7 +88,7 @@ class ErrorClusterer:
             self._errors = self._errors[-self._max_entries :]
 
     def get_clusters(self) -> list[dict[str, Any]]:
-        """Gruppiert aehnliche Fehler (pre-bucketed by error_type)."""
+        """Groups similar errors (pre-bucketed by error_type)."""
         if not self._errors:
             return []
 
@@ -144,7 +144,7 @@ class ErrorClusterer:
         return clusters
 
     def get_top_errors(self, n: int = 5) -> list[dict[str, Any]]:
-        """Die haeufigsten Fehler-Muster."""
+        """The most frequent error patterns."""
         return self.get_clusters()[:n]
 
     @property

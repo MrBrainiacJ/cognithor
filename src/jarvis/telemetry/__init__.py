@@ -1,9 +1,9 @@
 """Jarvis OpenTelemetry v19 -- Distributed Tracing & Metrics.
 
-OTLP-kompatibles Observability-Framework:
+OTLP-compatible observability framework:
   - Distributed Tracing (W3C Trace Context)
   - Metrics (Counter, Histogram, Gauge)
-  - Auto-Instrumentierung (Gateway, Graph, A2A, Browser, LLM)
+  - Auto-instrumentation (gateway, graph, A2A, browser, LLM)
   - Sampling (AlwaysOn, Probabilistic, RateBased)
   - Export (OTLP-JSON, Console, InMemory)
 

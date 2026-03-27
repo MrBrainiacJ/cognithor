@@ -1,7 +1,7 @@
-"""Cost Tracking fuer LLM-API-Aufrufe.
+"""Cost tracking for LLM API calls.
 
-Trackt Kosten pro Session und global mit SQLite-Persistenz.
-Budget-Enforcement mit taeglichen und monatlichen Limits.
+Tracks costs per session and globally with SQLite persistence.
+Budget enforcement with daily and monthly limits.
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ log = get_logger(__name__)
 
 
 class CostTracker:
-    """Trackt LLM-API-Kosten pro Session und global."""
+    """Tracks LLM API costs per session and globally."""
 
-    # Preistabelle (USD pro 1M Tokens, Stand 2025)
+    # Pricing table (USD per 1M tokens, as of 2025)
     DEFAULT_PRICING: dict[str, dict[str, float]] = {
         "gpt-4o": {"input": 2.50, "output": 10.00},
         "gpt-4o-mini": {"input": 0.15, "output": 0.60},
@@ -32,7 +32,7 @@ class CostTracker:
         "claude-3-opus": {"input": 15.00, "output": 75.00},
     }
 
-    # Fallback-Preis fuer unbekannte Modelle
+    # Fallback price for unknown models
     FALLBACK_PRICING: dict[str, float] = {"input": 5.00, "output": 15.00}
 
     def __init__(
@@ -70,14 +70,14 @@ class CostTracker:
         self._conn.commit()
 
     def _get_pricing(self, model: str) -> dict[str, float]:
-        """Findet Preis fuer ein Modell. Ollama-Modelle sind kostenlos."""
-        # Ollama / lokale Modelle
+        """Finds price for a model. Ollama models are free."""
+        # Ollama / local models
         if "/" not in model and ":" in model:
             return {"input": 0.0, "output": 0.0}
-        # Exakter Match
+        # Exact match
         if model in self.DEFAULT_PRICING:
             return self.DEFAULT_PRICING[model]
-        # Prefix-Match (z.B. "gpt-4o-2024-11-20" → "gpt-4o")
+        # Prefix match (e.g. "gpt-4o-2024-11-20" -> "gpt-4o")
         for known_model, pricing in self.DEFAULT_PRICING.items():
             if model.startswith(known_model):
                 return pricing
@@ -90,7 +90,7 @@ class CostTracker:
         output_tokens: int,
         session_id: str = "",
     ) -> CostRecord:
-        """Zeichnet einen LLM-Call auf und berechnet Kosten."""
+        """Records an LLM call and calculates costs."""
         pricing = self._get_pricing(model)
         cost = (
             input_tokens * pricing["input"] / 1_000_000
@@ -124,7 +124,7 @@ class CostTracker:
         return record
 
     def get_session_cost(self, session_id: str) -> float:
-        """Gesamtkosten einer Session."""
+        """Total costs of a session."""
         row = self._conn.execute(
             "SELECT COALESCE(SUM(cost_usd), 0) FROM llm_costs WHERE session_id = ?",
             (session_id,),
@@ -132,7 +132,7 @@ class CostTracker:
         return float(row[0]) if row else 0.0
 
     def get_daily_cost(self, day: date | None = None) -> float:
-        """Tageskosten."""
+        """Daily costs."""
         day = day or datetime.now(UTC).date()
         day_str = day.isoformat()
         row = self._conn.execute(
@@ -142,7 +142,7 @@ class CostTracker:
         return float(row[0]) if row else 0.0
 
     def get_monthly_cost(self, year: int, month: int) -> float:
-        """Monatskosten."""
+        """Monthly costs."""
         prefix = f"{year:04d}-{month:02d}"
         row = self._conn.execute(
             "SELECT COALESCE(SUM(cost_usd), 0) FROM llm_costs WHERE timestamp LIKE ?",
@@ -151,7 +151,7 @@ class CostTracker:
         return float(row[0]) if row else 0.0
 
     def check_budget(self) -> BudgetStatus:
-        """Prueft ob Budget ueberschritten."""
+        """Checks if budget is exceeded."""
         today = datetime.now(UTC).date()
         daily_cost = self.get_daily_cost(today)
         monthly_cost = self.get_monthly_cost(today.year, today.month)
@@ -188,11 +188,11 @@ class CostTracker:
         )
 
     def get_budget_info(self) -> dict[str, float] | None:
-        """Budget-Info fuer GovernanceAgent: {limit, used}.
+        """Budget info for GovernanceAgent: {limit, used}.
 
-        Gibt None zurueck wenn kein Budget-Limit konfiguriert ist.
+        Returns None if no budget limit is configured.
         """
-        # Effektives Limit: bevorzuge Monatslimit, dann Tageslimit
+        # Effective limit: prefer monthly limit, then daily limit
         limit = self._monthly_budget if self._monthly_budget > 0 else self._daily_budget
         if limit <= 0:
             return None
@@ -206,7 +206,7 @@ class CostTracker:
         return {"limit": limit, "used": used}
 
     def get_cost_report(self, days: int = 30) -> CostReport:
-        """Aggregierter Kosten-Report ueber die letzten N Tage."""
+        """Aggregated cost report over the last N days."""
         from datetime import timedelta
 
         cutoff = (datetime.now(UTC) - timedelta(days=days)).isoformat()
@@ -239,5 +239,5 @@ class CostTracker:
         )
 
     def close(self) -> None:
-        """Schliesst die Datenbank-Verbindung."""
+        """Closes the database connection."""
         self._conn.close()

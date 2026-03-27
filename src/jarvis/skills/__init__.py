@@ -1,13 +1,13 @@
-"""Jarvis Skills-Paket.
+"""Jarvis Skills package.
 
-Dieses Paket enthält Hilfsfunktionen zur Verwaltung zusätzlicher
-Prozeduren („Skills"). Skills sind Markdown-Dateien mit
-Frontmatter, die Trigger-Schlüsselwörter, Voraussetzungen und Schritt-für-
-Schritt-Anleitungen definieren. Sie werden im ``skills``-Verzeichnis
-innerhalb des Jarvis-Home abgelegt und beim Start automatisch geladen.
+This package contains utility functions for managing additional
+procedures ("Skills"). Skills are Markdown files with
+frontmatter that define trigger keywords, prerequisites, and step-by-step
+instructions. They are stored in the ``skills`` directory
+within the Jarvis home and automatically loaded at startup.
 
-Über das CLI-Modul ``jarvis.skills.cli`` können Skills gelistet,
-erstellt oder installiert werden.
+The CLI module ``jarvis.skills.cli`` can be used to list,
+create, or install skills.
 """
 
 from .base import BaseSkill, SkillError

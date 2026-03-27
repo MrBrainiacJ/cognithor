@@ -1,4 +1,4 @@
-"""Jarvis · Memory-Integrität & erweiterte Explainability.
+"""Jarvis · Memory integrity & extended explainability.
 
 Prüft die Integrität des Knowledge-Speichers:
 

@@ -1,16 +1,16 @@
-"""Audit-Trail: Unveränderliches Protokoll aller Aktionen.
+"""Audit trail: Immutable log of all actions.
 
-Jede Gatekeeper-Entscheidung, jede Tool-Ausführung, jeder
-Sub-Agent-Spawn wird protokolliert. Append-only, tamper-evident
-via SHA-256-Chain.
+Every gatekeeper decision, every tool execution, every
+sub-agent spawn is logged. Append-only, tamper-evident
+via SHA-256 chain.
 
-Sicherheitsgarantien:
-  - Einträge können nur hinzugefügt, nie gelöscht werden
-  - Jeder Eintrag enthält den Hash des vorherigen → Kette
-  - JSONL-Format für einfache Analyse
-  - Credential-Werte werden VOR dem Logging maskiert
+Security guarantees:
+  - Entries can only be added, never deleted
+  - Each entry contains the hash of the previous one -> chain
+  - JSONL format for easy analysis
+  - Credential values are masked BEFORE logging
 
-Bibel-Referenz: §3.2 (Audit-Log), §11.5 (Audit Trail)
+Bible reference: §3.2 (Audit-Log), §11.5 (Audit Trail)
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-# Standard-Patterns für Credential-Maskierung im Audit-Log
+# Standard patterns for credential masking in the audit log
 _CREDENTIAL_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"(sk-[a-zA-Z0-9]{4})[a-zA-Z0-9]{16,}"),
     re.compile(r"(token_[a-zA-Z0-9]{4})[a-zA-Z0-9]+"),
@@ -54,10 +54,10 @@ _CREDENTIAL_PATTERNS: list[re.Pattern[str]] = [
 
 
 def mask_credentials(text: str) -> str:
-    """Maskiert Credentials in einem Text.
+    """Masks credentials in a text.
 
-    Ersetzt erkannte Patterns durch teilmaskierte Versionen.
-    z.B. 'sk-abc123456789' → 'sk-abc1***'
+    Replaces recognized patterns with partially masked versions.
+    e.g. 'sk-abc123456789' -> 'sk-abc1***'
     """
     if not text:
         return text
@@ -68,14 +68,14 @@ def mask_credentials(text: str) -> str:
 
 
 def mask_dict(data: dict[str, Any], depth: int = 0) -> dict[str, Any]:
-    """Maskiert Credentials in einem verschachtelten Dict rekursiv.
+    """Masks credentials in a nested dict recursively.
 
     Args:
-        data: Dict mit potentiellen Credentials.
-        depth: Aktuelle Verschachtelungstiefe (max 10).
+        data: Dict with potential credentials.
+        depth: Current nesting depth (max 10).
 
     Returns:
-        Kopie des Dicts mit maskierten Werten.
+        Copy of the dict with masked values.
     """
     if depth > 10:
         return data
@@ -100,15 +100,15 @@ def mask_dict(data: dict[str, Any], depth: int = 0) -> dict[str, Any]:
 
 
 def _compute_hash(data: str, prev_hash: str) -> str:
-    """Berechnet SHA-256-Hash für Chain-Integrität."""
+    """Computes SHA-256 hash for chain integrity."""
     return hashlib.sha256(f"{prev_hash}|{data}".encode()).hexdigest()
 
 
 class AuditTrail:
-    """Unveränderliches, append-only Audit-Protokoll. [B§11.5]
+    """Immutable, append-only audit log. [B§11.5]
 
-    Schreibt JSONL-Dateien mit Hash-Chain für Tamper-Evidence.
-    Credentials werden automatisch maskiert.
+    Writes JSONL files with hash chain for tamper evidence.
+    Credentials are automatically masked.
     """
 
     def __init__(
@@ -131,11 +131,11 @@ class AuditTrail:
         self._hmac_key = hmac_key
         self._ed25519_key = ed25519_key
 
-        # Chain vom letzten Eintrag fortsetzen
+        # Resume chain from the last entry
         self._restore_chain()
 
     def _restore_chain(self) -> None:
-        """Stellt den letzten Hash aus dem Log wieder her."""
+        """Restores the last hash from the log."""
         if not self._log_path.exists():
             return
         try:
@@ -157,14 +157,14 @@ class AuditTrail:
         *,
         mask: bool = True,
     ) -> str:
-        """Protokolliert einen Audit-Eintrag.
+        """Records an audit entry.
 
         Args:
-            entry: Der AuditEntry (flache Struktur).
-            mask: Credentials im execution_result maskieren (default: True).
+            entry: The AuditEntry (flat structure).
+            mask: Mask credentials in execution_result (default: True).
 
         Returns:
-            Hash des Eintrags.
+            Hash of the entry.
         """
         record = self._entry_to_dict(entry, mask=mask)
         data_str = json.dumps(record, ensure_ascii=False, sort_keys=True)
@@ -216,15 +216,15 @@ class AuditTrail:
         event_type: str,
         details: dict[str, Any] | None = None,
     ) -> str:
-        """Protokolliert ein freies Event (z.B. Agent-Spawn, Login).
+        """Records a free-form event (e.g. agent spawn, login).
 
         Args:
-            session_id: Session-ID.
-            event_type: Typ des Events (z.B. 'agent_spawn', 'auth_success').
-            details: Zusätzliche Details.
+            session_id: Session ID.
+            event_type: Type of event (e.g. 'agent_spawn', 'auth_success').
+            details: Additional details.
 
         Returns:
-            Hash des Eintrags.
+            Hash of the entry.
         """
         now = datetime.now(UTC)
         safe_details = mask_dict(details or {})
@@ -272,11 +272,11 @@ class AuditTrail:
         return entry_hash
 
     def verify_chain(self) -> tuple[bool, int, int]:
-        """Prüft die Integrität der Hash-Chain.
+        """Verifies the integrity of the hash chain.
 
         Returns:
-            Tuple von (valid, total_entries, broken_at).
-            broken_at ist -1 wenn die Chain intakt ist.
+            Tuple of (valid, total_entries, broken_at).
+            broken_at is -1 if the chain is intact.
         """
         if not self._log_path.exists():
             return (True, 0, -1)
@@ -348,17 +348,17 @@ class AuditTrail:
         since: datetime | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        """Durchsucht das Audit-Log mit Filtern.
+        """Searches the audit log with filters.
 
         Args:
-            session_id: Filter nach Session-ID.
-            tool: Filter nach Tool-Name.
-            status: Filter nach Gatekeeper-Status.
-            since: Nur Einträge nach diesem Zeitpunkt.
-            limit: Maximale Anzahl Ergebnisse.
+            session_id: Filter by session ID.
+            tool: Filter by tool name.
+            status: Filter by gatekeeper status.
+            since: Only entries after this point in time.
+            limit: Maximum number of results.
 
         Returns:
-            Liste passender Audit-Einträge.
+            List of matching audit entries.
         """
         if not self._log_path.exists():
             return []
@@ -372,7 +372,7 @@ class AuditTrail:
                         continue
                     entry = json.loads(line)
 
-                    # Events haben kein action_tool
+                    # Events do not have action_tool
                     if entry.get("event_type"):
                         if tool or status:
                             continue
@@ -428,21 +428,21 @@ class AuditTrail:
 
     @property
     def entry_count(self) -> int:
-        """Anzahl der protokollierten Einträge."""
+        """Number of recorded entries."""
         return self._entry_count
 
     @property
     def last_hash(self) -> str:
-        """Letzter Hash in der Chain."""
+        """Last hash in the chain."""
         return self._last_hash
 
     @property
     def log_path(self) -> Path:
-        """Pfad zur Audit-Log-Datei."""
+        """Path to the audit log file."""
         return self._log_path
 
     def _entry_to_dict(self, entry: AuditEntry, *, mask: bool = True) -> dict[str, Any]:
-        """Konvertiert flache AuditEntry in ein serialisierbares Dict."""
+        """Converts a flat AuditEntry into a serializable dict."""
         result: dict[str, Any] = {
             "timestamp": entry.timestamp.isoformat(),
             "session_id": entry.session_id,

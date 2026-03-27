@@ -1,4 +1,4 @@
-"""PublisherIdentity: GitHub-basierte Identitaet fuer Community-Skill-Autoren.
+"""PublisherIdentity: GitHub-based identity for community skill authors.
 
 Trust-Level-System:
   - UNTRUSTED: Score < 20
@@ -29,7 +29,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# HTTP-Timeout (Sekunden)
+# HTTP timeout (seconds)
 _HTTP_TIMEOUT_S = 15
 
 
@@ -39,7 +39,7 @@ _HTTP_TIMEOUT_S = 15
 
 
 class TrustLevel(Enum):
-    """Vertrauensstufen fuer Publisher."""
+    """Trust levels for publishers."""
 
     UNTRUSTED = "untrusted"
     LOW = "low"
@@ -49,7 +49,7 @@ class TrustLevel(Enum):
 
     @classmethod
     def from_score(cls, score: float) -> TrustLevel:
-        """Bestimmt TrustLevel aus dem Reputation-Score."""
+        """Determine TrustLevel from the reputation score."""
         if score >= 80:
             return cls.VERIFIED
         if score >= 60:
@@ -68,7 +68,7 @@ class TrustLevel(Enum):
 
 @dataclass
 class PublisherIdentity:
-    """GitHub-basierte Publisher-Identitaet."""
+    """GitHub-based publisher identity."""
 
     github_username: str
     github_id: int = 0
@@ -80,17 +80,17 @@ class PublisherIdentity:
     abuse_reports: int = 0
     recalls: int = 0
 
-    # GitHub-Profildetails (aus API)
+    # GitHub profile details (from API)
     account_age_days: int = 0
     public_repos: int = 0
     email_verified: bool = False
     two_factor_enabled: bool = False
 
     def update_trust_level(self) -> None:
-        """Aktualisiert den TrustLevel basierend auf Score und Profil."""
+        """Update the TrustLevel based on score and profile."""
         base_level = TrustLevel.from_score(self.reputation_score)
 
-        # Downgrade wenn Bedingungen nicht erfuellt
+        # Downgrade if conditions not met
         if base_level == TrustLevel.VERIFIED and (
             self.skills_published < 3 or self.recalls > 0 or self.account_age_days < 90
         ):
@@ -106,16 +106,16 @@ class PublisherIdentity:
 
     @property
     def is_blocked(self) -> bool:
-        """Ob der Publisher automatisch geblockt ist."""
+        """Whether the publisher is automatically blocked."""
         return self.reputation_score < 10
 
     @property
     def is_flagged(self) -> bool:
-        """Ob der Publisher geflaggt ist (3+ Abuse Reports)."""
+        """Whether the publisher is flagged (3+ abuse reports)."""
         return self.abuse_reports >= 3
 
     def to_dict(self) -> dict[str, Any]:
-        """Konvertiert in ein serialisierbares Dict."""
+        """Convert to a serializable dict."""
         return {
             "github_username": self.github_username,
             "github_id": self.github_id,
@@ -137,7 +137,7 @@ class PublisherIdentity:
 
 
 class PublisherVerifier:
-    """Verifiziert GitHub-basierte Publisher-Identitaeten.
+    """Verify GitHub-based publisher identities.
 
     Nutzt die GitHub API (oder publisher.json aus dem Registry-Repo)
     um Publisher-Profile zu laden und Trust-Level zu berechnen.
@@ -164,7 +164,7 @@ class PublisherVerifier:
         self._lock = asyncio.Lock()
 
     async def verify(self, github_username: str) -> PublisherIdentity:
-        """Verifiziert einen Publisher anhand seines GitHub-Usernamens.
+        """Verify a publisher by their GitHub username.
 
         1. Publisher-Profil aus Registry-Repo laden
         2. Optionaler GitHub-API-Check
@@ -174,7 +174,7 @@ class PublisherVerifier:
             PublisherIdentity mit aktuellem Trust-Level.
         """
         async with self._lock:
-            # Cache pruefen (innerhalb des Locks um TOCTOU zu vermeiden)
+            # Check cache (inside lock to avoid TOCTOU)
             if github_username in self._cache:
                 return self._cache[github_username]
 
@@ -201,7 +201,7 @@ class PublisherVerifier:
             if self._marketplace_store is not None:
                 local = self._marketplace_store.get_publisher(github_username)
                 if local:
-                    # Lokale Reputation hat Vorrang (aktueller)
+                    # Local reputation takes precedence (more current)
                     identity.reputation_score = local.get(
                         "reputation_score",
                         identity.reputation_score,
@@ -228,7 +228,7 @@ class PublisherVerifier:
             return identity
 
     def invalidate_cache(self, github_username: str = "") -> None:
-        """Invalidiert den Publisher-Cache."""
+        """Invalidate the publisher cache."""
         if github_username:
             self._cache.pop(github_username, None)
         else:
@@ -238,7 +238,7 @@ class PublisherVerifier:
         self,
         github_username: str,
     ) -> dict[str, Any] | None:
-        """Laedt ein Publisher-Profil aus dem Registry-Repo."""
+        """Load a publisher profile from the registry repo."""
         import json
 
         url = f"{self._registry_url}/publishers/{github_username}.json"
@@ -250,7 +250,7 @@ class PublisherVerifier:
             return None
 
     async def _fetch_text(self, url: str) -> str:
-        """Laedt Text von einer URL.
+        """Load text from a URL.
 
         Nutzt aiohttp wenn verfuegbar und funktional, sonst urllib-Fallback.
         """

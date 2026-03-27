@@ -519,13 +519,13 @@ class MemoryConfig(BaseModel):
     budget_response_reserve: int = Field(default=3000, ge=500, le=15000)
 
     # Episodic Memory: Wie viele Tage an Tageslogs sollen behalten werden?
-    # Ältere Dateien werden beim Initialisieren des Memory-Systems gelöscht.
+    # Older files are deleted when initializing the memory system.
     episodic_retention_days: int = Field(default=365, ge=1, le=3650)
 
     # Dynamische Gewichtung der Hybrid-Suche.
     # Wenn aktiviert, passt Jarvis die Gewichtungsfaktoren (Vektor/BM25/Graph)
     # zur Laufzeit basierend auf Eigenschaften der Suchanfrage an.
-    # Bei kurzen Anfragen werden lexikalische und Graph-Treffer stärker gewichtet,
+    # For short queries, lexical and graph hits are weighted more heavily,
     # bei langen oder komplexen Anfragen erhalten semantische (Vektor-)Treffer
     # mehr Gewicht. Ist diese Option deaktiviert, werden die statischen
     # Gewichtungen (weight_vector, weight_bm25, weight_graph) aus der
@@ -754,7 +754,7 @@ class ModelOverrideConfig(BaseModel):
 # Wenn ein Nutzer auf ein anderes LLM-Backend wechselt (z.B. OpenAI oder
 # Anthropic), werden die Ollama-Modellnamen (qwen3:32b etc.) automatisch
 # durch passende Modelle des jeweiligen Providers ersetzt -- aber nur, wenn
-# der Nutzer die Modellnamen nicht explizit überschrieben hat.
+# the user has not explicitly overridden the model names.
 
 _OLLAMA_DEFAULT_MODEL_NAMES = {
     "qwen3:32b",
@@ -765,7 +765,7 @@ _OLLAMA_DEFAULT_MODEL_NAMES = {
     "qwen3-embedding:0.6b",
     "llava:13b",
     "openbmb/minicpm-v4.5",
-    # Legacy-Erkennung für Upgrades von älteren Versionen
+    # Legacy detection for upgrades from older versions
     "gpt-4o",
     "gpt-4o-mini",
     "claude-sonnet-4-20250514",
@@ -1387,7 +1387,7 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
     },
 }
 
-# Base-URLs für OpenAI-kompatible Provider
+# Base URLs for OpenAI-compatible providers
 _PROVIDER_BASE_URLS: dict[str, str] = {
     "groq": "https://api.groq.com/openai/v1",
     "deepseek": "https://api.deepseek.com/v1",
@@ -1447,7 +1447,7 @@ class ChannelConfig(BaseModel):
     webui_port: int = Field(default=8080, ge=1024, le=65535)
     voice_enabled: bool = False
 
-    # Zusätzliche Chat-Kanäle
+    # Additional chat channels
     slack_enabled: bool = False
     slack_default_channel: str = ""
     discord_enabled: bool = False
@@ -1459,7 +1459,7 @@ class ChannelConfig(BaseModel):
         """Accept int (e.g. 0) from YAML and coerce to str."""
         return str(v) if v is not None else ""
 
-    # Erweiterte Messaging-Kanäle
+    # Extended messaging channels
     whatsapp_enabled: bool = False
     whatsapp_default_chat: str = ""
     whatsapp_phone_number_id: str = ""
@@ -1532,7 +1532,7 @@ class SecurityConfig(BaseModel):
 
     # Maximale Agent-Loop Iterationen pro Anfrage
     max_iterations: int = Field(default=25, ge=1, le=50)
-    # Erlaubte Dateipfade (Gatekeeper prüft dagegen)
+    # Allowed file paths (gatekeeper checks against these)
     # Projekt-Verzeichnis wird automatisch in gatekeeper.initialize() hinzugefuegt
     allowed_paths: list[str] = Field(
         default_factory=lambda: [
@@ -1544,7 +1544,7 @@ class SecurityConfig(BaseModel):
     # zu allowed_paths hinzugefuegt, damit Cognithor in seine eigene Codebase
     # schreiben kann (z.B. Skripte erstellen, Code integrieren).
     allow_project_dir: bool = True
-    # Regex-Patterns für destruktive Shell-Befehle [B§3.2]
+    # Regex patterns for destructive shell commands [B§3.2]
     blocked_commands: list[str] = Field(
         default_factory=lambda: [
             r"rm\s+-rf\s+/",
@@ -1557,7 +1557,7 @@ class SecurityConfig(BaseModel):
             r"\breboot\b",
         ]
     )
-    # Regex-Patterns für Credential-Erkennung [B§11]
+    # Regex patterns for credential detection [B§11]
     credential_patterns: list[str] = Field(
         default_factory=lambda: [
             r"sk-[a-zA-Z0-9]{20,}",
@@ -1567,18 +1567,18 @@ class SecurityConfig(BaseModel):
             r"api_key\s*[:=]\s*\S+",
         ]
     )
-    # Maximale Rekursionstiefe für Sub-Agent-Delegationen
+    # Maximum recursion depth for sub-agent delegations
     max_sub_agent_depth: int = Field(default=3, ge=1, le=10)
     """Maximale Verschachtelungstiefe für Sub-Agent-Aufrufe via handle_message."""
 
-    # TLS-Konfiguration für Webhook-Server und API
+    # TLS configuration for webhook server and API
     ssl_certfile: str = Field(default="", description="Pfad zum SSL-Zertifikat (PEM)")
     ssl_keyfile: str = Field(default="", description="Pfad zum SSL-Privat-Key (PEM)")
 
     # Mutual TLS fuer WebUI-API
     mtls: MtlsConfig = Field(default_factory=MtlsConfig)
 
-    # TTLDict-Defaults für Channel-Dicts
+    # TTLDict defaults for channel dicts
     channel_dict_ttl_seconds: int = Field(default=86400, ge=300, le=604800)
     channel_dict_max_size: int = Field(default=10000, ge=100, le=100000)
 
@@ -1956,7 +1956,7 @@ class JarvisConfig(BaseModel):
     # Die HeartbeatConfig steuert einen periodischen Check (Heartbeat), der
     # Aufgaben aus einer Checklist-Datei liest und als Systemnachricht
     # an den Gateway-Handler sendet. Die PluginsConfig definiert, in
-    # welchem Verzeichnis zusätzliche Skills (Prozeduren) installiert
+    # which directory additional skills (procedures) are installed in
     # werden und ob automatische Updates erlaubt sind.
     heartbeat: HeartbeatConfig = Field(default_factory=lambda: HeartbeatConfig())
     plugins: PluginsConfig = Field(default_factory=lambda: PluginsConfig())
@@ -2014,7 +2014,7 @@ class JarvisConfig(BaseModel):
     # ---- Auto-Adaptation: Modelle an LLM-Backend anpassen ----
 
     def model_post_init(self, __context: Any) -> None:
-        """Passt Modellnamen automatisch an das gewählte LLM-Backend an.
+        """Automatically adjusts model names to the chosen LLM backend.
 
         Wenn der Nutzer ein anderes Backend als Ollama wählt (z.B. durch
         Setzen von llm_backend_type oder Eingabe eines API-Keys), werden
@@ -2028,7 +2028,7 @@ class JarvisConfig(BaseModel):
         if backend == "ollama" and self.operation_mode != "offline":
             # Auto-Detection: Wenn ein API-Key vorhanden ist aber der
             # Backend-Typ noch auf "ollama" steht, Backend automatisch setzen
-            # Priorität: anthropic > openai > gemini > groq > deepseek > mistral > together
+            # Priority: anthropic > openai > gemini > groq > deepseek > mistral > together
             # NICHT wenn operation_mode="offline" — dann bleibt Ollama.
             if self.anthropic_api_key:
                 backend = "anthropic"
@@ -2115,7 +2115,7 @@ class JarvisConfig(BaseModel):
 
         provider_defaults = _PROVIDER_MODEL_DEFAULTS[backend]
 
-        # Jede Modell-Rolle prüfen und ggf. anpassen
+        # Check each model role and adjust if necessary
         for role in ("planner", "executor", "coder", "coder_fast", "embedding"):
             current_model: ModelConfig = getattr(self.models, role)
             if current_model.name in _OLLAMA_DEFAULT_MODEL_NAMES:
@@ -2148,11 +2148,11 @@ class JarvisConfig(BaseModel):
         self._cross_validate_timeouts()
 
     def _cross_validate_timeouts(self) -> None:
-        """Prüft Timeout-Konsistenz zwischen Subsystemen."""
+        """Checks timeout consistency between subsystems."""
         base = self.executor.default_timeout_seconds
         issues: list[str] = []
 
-        # Tool-spezifische Timeouts müssen >= default_timeout sein
+        # Tool-specific timeouts must be >= default_timeout
         for field_name in (
             "media_analyze_image_timeout",
             "media_transcribe_audio_timeout",
@@ -2166,7 +2166,7 @@ class JarvisConfig(BaseModel):
                     f"executor.{field_name} ({val}s) < executor.default_timeout_seconds ({base}s)"
                 )
 
-        # Shell-Timeout sollte nicht größer als Executor-Timeout sein
+        # Shell timeout should not be larger than executor timeout
         shell_timeout = self.shell.default_timeout_seconds
         if shell_timeout > base * 10:
             issues.append(
@@ -2198,12 +2198,12 @@ class JarvisConfig(BaseModel):
 
     @property
     def log_level(self) -> str:
-        """Shortcut für logging.level."""
+        """Shortcut for logging.level."""
         return self.logging.level
 
     @property
     def core_memory_path(self) -> Path:
-        """Alias für core_memory_file."""
+        """Alias for core_memory_file."""
         return self.core_memory_file
 
     # ---- Abgeleitete Pfade (per Property, nicht manuell konfigurierbar) ----
@@ -2215,7 +2215,7 @@ class JarvisConfig(BaseModel):
 
     @property
     def policies_dir(self) -> Path:
-        """Verzeichnis für Sicherheits-Policies."""
+        """Directory for security policies."""
         return self.jarvis_home / self.gatekeeper.policies_dir
 
     @property
@@ -2230,27 +2230,27 @@ class JarvisConfig(BaseModel):
 
     @property
     def episodes_dir(self) -> Path:
-        """Verzeichnis für episodische Tageslog-Dateien."""
+        """Directory for episodic daily log files."""
         return self.memory_dir / "episodes"
 
     @property
     def knowledge_dir(self) -> Path:
-        """Verzeichnis für semantisches Wissen."""
+        """Directory for semantic knowledge."""
         return self.memory_dir / "knowledge"
 
     @property
     def procedures_dir(self) -> Path:
-        """Verzeichnis für prozedurale Skills."""
+        """Directory for procedural skills."""
         return self.memory_dir / "procedures"
 
     @property
     def sessions_dir(self) -> Path:
-        """Verzeichnis für Session-Daten."""
+        """Directory for session data."""
         return self.memory_dir / "sessions"
 
     @property
     def index_dir(self) -> Path:
-        """Verzeichnis für BM25/FTS-Indexdateien."""
+        """Directory for BM25/FTS index files."""
         return self.jarvis_home / "index"
 
     @property
@@ -2265,12 +2265,12 @@ class JarvisConfig(BaseModel):
 
     @property
     def workspace_dir(self) -> Path:
-        """Arbeitsverzeichnis für temporäre Dateien."""
+        """Working directory for temporary files."""
         return self.jarvis_home / "workspace"
 
     @property
     def logs_dir(self) -> Path:
-        """Verzeichnis für Log-Dateien."""
+        """Directory for log files."""
         return self.jarvis_home / "logs"
 
     @property
@@ -2292,7 +2292,7 @@ class JarvisConfig(BaseModel):
     def ensure_default_files(self) -> list[str]:
         """Alias -- ensure_directories() erstellt auch Default-Dateien."""
         # ensure_directory_structure erstellt bereits Dirs + Files
-        # Hier nur noch prüfen ob Default-Dateien fehlen
+        # Only check here if default files are missing
         return ensure_directory_structure(self)
 
 
@@ -2352,9 +2352,9 @@ def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_config(config_path: Path | None = None) -> JarvisConfig:
-    """Lädt die Konfiguration.
+    """Loads the configuration.
 
-    Reihenfolge (spätere überschreiben frühere):
+    Order (later overrides earlier):
       1. Defaults (in den Pydantic-Modellen)
       2. config.yaml (wenn vorhanden)
       3. JARVIS_* Umgebungsvariablen
@@ -2363,7 +2363,7 @@ def load_config(config_path: Path | None = None) -> JarvisConfig:
         config_path: Expliziter Pfad zur config.yaml. Wenn None: ~/.jarvis/config.yaml
 
     Returns:
-        Vollständig validierte JarvisConfig.
+        Fully validated JarvisConfig.
     """
     data: dict[str, Any] = {}
 
@@ -2400,7 +2400,7 @@ def load_config(config_path: Path | None = None) -> JarvisConfig:
             if isinstance(val, str):
                 data["models"][role] = {"name": val}
 
-    # 5. Pydantic validiert und füllt Defaults
+    # 5. Pydantic validates and fills defaults
     return JarvisConfig(**data)
 
 
@@ -2732,10 +2732,10 @@ Wenn keine relevanten Punkte gefunden werden, antwortet Jarvis mit
 
 
 def ensure_directory_structure(config: JarvisConfig) -> list[str]:
-    """Erstellt die vollständige ~/.jarvis/ Verzeichnisstruktur. [B§4.9]
+    """Creates the complete ~/.jarvis/ directory structure. [B§4.9]
 
     Idempotent -- kann beliebig oft aufgerufen werden.
-    Erstellt nur was fehlt, überschreibt nie vorhandene Dateien.
+    Creates only what is missing, never overwrites existing files.
 
     Raises:
         PermissionError: Wenn Verzeichnisse/Dateien nicht erstellt werden
@@ -2745,7 +2745,7 @@ def ensure_directory_structure(config: JarvisConfig) -> list[str]:
             Dateisystem-Problem vorliegt.
 
     Returns:
-        Liste der neu erstellten Pfade (für Logging).
+        List of newly created paths (for logging).
     """
     created: list[str] = []
 
@@ -2769,7 +2769,7 @@ def ensure_directory_structure(config: JarvisConfig) -> list[str]:
         config.jarvis_home / "mcp" / "servers",
         config.jarvis_home / "cron",
         config.jarvis_home / "locks",
-        # Verzeichnis für Plugins/Skills
+        # Directory for plugins/skills
         config.jarvis_home / config.plugins.skills_dir,
     ]
 

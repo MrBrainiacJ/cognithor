@@ -1,4 +1,4 @@
-"""Jarvis · Memory-Hygiene-Framework.
+"""Jarvis · Memory hygiene framework.
 
 Schutz des RAG-Gedächtnisses vor Manipulation:
 
@@ -480,11 +480,11 @@ class MemoryHygieneEngine:
         return report
 
     def quarantine(self) -> list[dict[str, Any]]:
-        """Gibt quarantänierte Einträge zurück."""
+        """Return quarantined entries."""
         return list(self._quarantine)
 
     def release_from_quarantine(self, entry_id: str) -> bool:
-        """Gibt einen Eintrag aus der Quarantäne frei."""
+        """Release an entry from quarantine."""
         for i, entry in enumerate(self._quarantine):
             if entry.get("id") == entry_id:
                 self._quarantine.pop(i)
@@ -547,7 +547,7 @@ class MemoryVersionControl:
         self._counter = 0
 
     def snapshot(self, entries: list[dict[str, Any]]) -> MemorySnapshot:
-        """Erstellt einen Snapshot des aktuellen Zustands."""
+        """Create a snapshot of the current state."""
         self._counter += 1
         import json
 

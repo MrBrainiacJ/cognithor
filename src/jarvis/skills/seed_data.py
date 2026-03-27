@@ -1,10 +1,10 @@
-"""Seed-Daten fuer den Skill Marketplace.
+"""Seed data for the Skill Marketplace.
 
 Populiert die Marketplace-Datenbank mit den eingebauten Prozeduren
 aus ``data/procedures/``. Wird beim ersten Start oder bei leerem
 Marketplace automatisch ausgefuehrt.
 
-Architektur-Bibel: SS14 (Skills & Ecosystem)
+Architecture reference: SS14 (Skills & Ecosystem)
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-# Mapping von Prozedur-Kategorien auf Marketplace-Kategorien
+# Mapping of procedure categories to marketplace categories
 _CATEGORY_MAP: dict[str, str] = {
     "productivity": "produktivitaet",
     "research": "daten",
@@ -111,11 +111,11 @@ def _parse_procedure_to_listing(
     if not name:
         return None
 
-    # Kategorie mappen
+    # Map category
     raw_category = frontmatter.get("category", "general")
     category = _CATEGORY_MAP.get(raw_category, raw_category)
 
-    # Trigger-Keywords als Tags verwenden
+    # Use trigger keywords as tags
     triggers = frontmatter.get("trigger_keywords", [])
     if isinstance(triggers, str):
         triggers = [t.strip() for t in triggers.split(",")]
@@ -130,7 +130,7 @@ def _parse_procedure_to_listing(
     if not description:
         description = name
 
-    # Icon basierend auf Kategorie
+    # Icon based on category
     _CATEGORY_ICONS: dict[str, str] = {
         "produktivitaet": "⚡",
         "daten": "📊",

@@ -1,14 +1,14 @@
-"""Page Analyzer -- Intelligente Seiten-Analyse für Browser-Use v17.
+"""Page Analyzer -- Intelligent page analysis for Browser-Use v17.
 
-Extrahiert aus einer geladenen Seite:
-  - Interaktive Elemente (Buttons, Links, Inputs)
-  - Formulare mit Feld-Erkennung
-  - Tabellen als strukturierte Daten
-  - Seitenstruktur und Navigation
-  - Cookie-Banner-Erkennung
+Extracts from a loaded page:
+  - Interactive elements (buttons, links, inputs)
+  - Forms with field detection
+  - Tables as structured data
+  - Page structure and navigation
+  - Cookie banner detection
 
-Arbeitet über JavaScript-Injection -- kein Parsing von HTML nötig.
-Funktioniert mit jedem Playwright-Page-Objekt.
+Works via JavaScript injection -- no HTML parsing needed.
+Compatible with any Playwright Page object.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from jarvis.utils.logging import get_logger
 log = get_logger(__name__)
 
 
-# ── JavaScript Snippets für Element-Extraktion ───────────────────
+# ── JavaScript snippets for element extraction ───────────────────
 
 JS_EXTRACT_LINKS = """
 () => {
@@ -185,7 +185,7 @@ JS_DETECT_COOKIE_BANNER = """
 
 
 class PageAnalyzer:
-    """Analysiert den aktuellen Zustand einer Browser-Seite."""
+    """Analyzes the current state of a browser page."""
 
     def __init__(self) -> None:
         self._analysis_count = 0
@@ -193,7 +193,7 @@ class PageAnalyzer:
     async def analyze(
         self, page: Any, *, extract_text: bool = True, max_text_length: int = 5000
     ) -> PageState:
-        """Vollständige Seiten-Analyse."""
+        """Full page analysis."""
         import time as _time
 
         start = _time.monotonic()
@@ -204,7 +204,7 @@ class PageAnalyzer:
             state.title = await page.title()
             state.is_loaded = True
 
-            # Text-Content
+            # Text content
             if extract_text:
                 try:
                     text = await page.evaluate("() => document.body?.innerText || ''")
@@ -212,13 +212,13 @@ class PageAnalyzer:
                 except Exception:
                     state.text_content = ""
 
-            # HTML-Länge
+            # HTML length
             with contextlib.suppress(Exception):
                 state.html_length = await page.evaluate(
                     "() => document.documentElement.outerHTML.length"
                 )
 
-            # Interaktive Elemente
+            # Interactive elements
             state.links = await self._extract_links(page)
             state.buttons = await self._extract_buttons(page)
             state.inputs = await self._extract_inputs(page)
@@ -235,16 +235,16 @@ class PageAnalyzer:
         return state
 
     async def detect_cookie_banner(self, page: Any) -> dict[str, Any]:
-        """Erkennt Cookie-Banner und gibt Accept-Selector zurück."""
+        """Detects cookie banner and returns accept selector."""
         try:
             return await page.evaluate(JS_DETECT_COOKIE_BANNER)
         except Exception:
             return {"found": False}
 
     async def find_element(self, page: Any, description: str) -> ElementInfo | None:
-        """Findet ein Element anhand einer natürlichsprachlichen Beschreibung.
+        """Finds an element by natural language description.
 
-        Sucht nach: Text-Match, aria-label, placeholder, name-Attribut.
+        Searches by: text match, aria-label, placeholder, name attribute.
         """
         desc_lower = description.lower().strip()
 
@@ -269,7 +269,7 @@ class PageAnalyzer:
         return None
 
     def _fuzzy_match(self, query: str, *candidates: str) -> bool:
-        """Einfacher Fuzzy-Match: Query muss in einem Kandidaten enthalten sein."""
+        """Simple fuzzy match: query must be contained in a candidate."""
         for c in candidates:
             if c and query in c.lower():
                 return True

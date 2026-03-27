@@ -1,12 +1,12 @@
-"""SecureTokenStore: Verschlüsselte Runtime-Token-Verwaltung.
+"""SecureTokenStore: Encrypted runtime token management.
 
-Leichtgewichtiger In-Memory-Store, der Tokens mit einem ephemeren
-Fernet-Key verschlüsselt. Schützt Secrets im RAM vor Memory-Dumps.
+Lightweight in-memory store that encrypts tokens with an ephemeral
+Fernet key. Protects secrets in RAM from memory dumps.
 
-Kein Disk-I/O, kein PBKDF2 -- rein für Runtime-Schutz.
-Fallback: Base64-Obfuskation wenn cryptography nicht installiert.
+No disk I/O, no PBKDF2 -- purely for runtime protection.
+Fallback: Base64 obfuscation when cryptography is not installed.
 
-Bibel-Referenz: §11.2 (Credential-Management)
+Bible reference: §11.2 (Credential-Management)
 """
 
 from __future__ import annotations
@@ -30,12 +30,12 @@ except ImportError:
 
 
 class SecureTokenStore:
-    """Ephemerer In-Memory-Token-Store mit Fernet-Verschlüsselung.
+    """Ephemeral in-memory token store with Fernet encryption.
 
-    Generiert beim Start einen zufälligen Fernet-Key und verschlüsselt
-    alle gespeicherten Tokens damit. Der Key existiert nur im RAM.
+    Generates a random Fernet key on startup and encrypts
+    all stored tokens with it. The key exists only in RAM.
 
-    Ohne cryptography-Paket: Fallback auf Base64-Obfuskation mit Warning.
+    Without cryptography package: Falls back to Base64 obfuscation with warning.
     """
 
     def __init__(self) -> None:
@@ -44,20 +44,20 @@ class SecureTokenStore:
         else:
             self._fernet = None
             logger.error(
-                "SECURITY DEGRADATION: cryptography nicht installiert -- "
-                "Token-Store nutzt Base64-Fallback (NICHT verschlüsselt!). "
-                "Tokens sind im RAM als Klartext les­bar. "
+                "SECURITY DEGRADATION: cryptography not installed -- "
+                "Token store uses Base64 fallback (NOT encrypted!). "
+                "Tokens are readable in RAM as plaintext. "
                 "Installiere mit: pip install cryptography"
             )
         self._tokens: dict[str, bytes] = {}  # name → ciphertext/encoded
         self._lock = threading.Lock()
 
     def store(self, name: str, value: str) -> None:
-        """Speichert einen Token verschlüsselt.
+        """Stores a token encrypted.
 
         Args:
-            name: Eindeutiger Name (z.B. 'telegram_bot_token').
-            value: Klartext-Token.
+            name: Unique name (e.g. 'telegram_bot_token').
+            value: Plaintext token.
         """
         data = value.encode("utf-8")
         if self._fernet is not None:
@@ -73,16 +73,16 @@ class SecureTokenStore:
             self._tokens[name] = encrypted
 
     def retrieve(self, name: str) -> str:
-        """Entschlüsselt und gibt einen Token zurück.
+        """Decrypts and returns a token.
 
         Args:
-            name: Token-Name.
+            name: Token name.
 
         Returns:
-            Klartext-Token.
+            Plaintext token.
 
         Raises:
-            KeyError: Wenn der Token nicht existiert.
+            KeyError: If the token does not exist.
         """
         with self._lock:
             encrypted = self._tokens[name]  # KeyError wenn nicht vorhanden
@@ -91,7 +91,7 @@ class SecureTokenStore:
         return base64.b85decode(encrypted).decode("utf-8")
 
     def clear(self) -> None:
-        """Löscht alle gespeicherten Tokens."""
+        """Clears all stored tokens."""
         with self._lock:
             self._tokens.clear()
 
@@ -109,7 +109,7 @@ _instance_lock = threading.Lock()
 
 
 def get_token_store() -> SecureTokenStore:
-    """Gibt die globale SecureTokenStore-Instanz zurück (Singleton)."""
+    """Returns the global SecureTokenStore instance (singleton)."""
     global _instance
     if _instance is None:
         with _instance_lock:
@@ -124,14 +124,14 @@ def get_token_store() -> SecureTokenStore:
 
 
 def create_ssl_context(certfile: str, keyfile: str) -> ssl.SSLContext | None:
-    """Erstellt einen SSLContext wenn Zertifikat und Key vorhanden sind.
+    """Creates an SSLContext if certificate and key are present.
 
     Args:
-        certfile: Pfad zum SSL-Zertifikat (PEM).
-        keyfile: Pfad zum SSL-Privat-Key (PEM).
+        certfile: Path to the SSL certificate (PEM).
+        keyfile: Path to the SSL private key (PEM).
 
     Returns:
-        Konfigurierter SSLContext oder None wenn Dateien fehlen.
+        Configured SSLContext or None if files are missing.
     """
     if not certfile or not keyfile:
         return None
@@ -141,7 +141,7 @@ def create_ssl_context(certfile: str, keyfile: str) -> ssl.SSLContext | None:
 
     if not cert_path.is_file() or not key_path.is_file():
         logger.warning(
-            "TLS-Zertifikate nicht gefunden: cert=%s, key=%s",
+            "TLS certificates not found: cert=%s, key=%s",
             certfile,
             keyfile,
         )
@@ -150,10 +150,10 @@ def create_ssl_context(certfile: str, keyfile: str) -> ssl.SSLContext | None:
     try:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ctx.load_cert_chain(str(cert_path), str(key_path))
-        # Sichere Defaults
+        # Secure defaults
         ctx.minimum_version = ssl.TLSVersion.TLSv1_2
-        logger.info("TLS-Kontext erstellt: %s", certfile)
+        logger.info("TLS context created: %s", certfile)
         return ctx
     except Exception:
-        logger.exception("Fehler beim Erstellen des TLS-Kontexts")
+        logger.exception("Error creating TLS context")
         return None

@@ -1,10 +1,9 @@
-"""Verwaltung für externe Skills (Prozeduren).
+"""Management for external skills (procedures).
 
-Skills werden als Markdown-Dateien mit Frontmatter definiert und im
-``skills``-Verzeichnis innerhalb des Jarvis-Home gespeichert. Dieser
-Manager bietet Funktionen zum Auflisten vorhandener Skills und zum
-Erstellen neuer Vorlagen. Ein automatisches Installieren aus Remote-
-Quellen kann später ergänzt werden.
+Skills are defined as Markdown files with frontmatter and stored in the
+``skills`` directory within the Jarvis home. This manager provides
+functions for listing existing skills and creating new templates.
+Automatic installation from remote sources can be added later.
 """
 
 from __future__ import annotations
@@ -18,13 +17,13 @@ if TYPE_CHECKING:
 
 
 def list_skills(skills_dir: Path) -> list[str]:
-    """Listet alle verfügbaren Skills.
+    """List all available skills.
 
     Args:
-        skills_dir: Verzeichnis in dem die Skill-Dateien liegen.
+        skills_dir: Directory where skill files are located.
 
     Returns:
-        Liste der Skill-Dateinamen (ohne Pfad).
+        List of skill file names (without path).
     """
     if not skills_dir.exists():
         return []
@@ -32,10 +31,10 @@ def list_skills(skills_dir: Path) -> list[str]:
 
 
 def _slugify(name: str) -> str:
-    """Erstellt einen Dateinamen-Slug aus einem beliebigen Namen.
+    """Create a filename slug from an arbitrary name.
 
-    Konvertiert zu Kleinbuchstaben, ersetzt Leerzeichen durch Bindestriche
-    und entfernt alle Zeichen außer Buchstaben, Zahlen und Bindestrichen.
+    Converts to lowercase, replaces spaces with hyphens,
+    and removes all characters except letters, numbers, and hyphens.
     """
     slug = name.lower().strip()
     slug = re.sub(r"\s+", "-", slug)
@@ -46,16 +45,16 @@ def _slugify(name: str) -> str:
 def create_skill(
     skills_dir: Path, name: str, trigger_keywords: Iterable[str] | None = None
 ) -> Path:
-    """Erstellt eine neue Skill-Datei mit einer minimalen Vorlage.
+    """Create a new skill file with a minimal template.
 
     Args:
-        skills_dir: Speicherort der Skills.
-        name: Klarname des neuen Skills. Wird in den Frontmatter-Titel
-            übernommen und als Dateiname gesluggified.
-        trigger_keywords: Schlüsselwörter, die diesen Skill auslösen.
+        skills_dir: Storage location for skills.
+        name: Display name of the new skill. Used in the frontmatter title
+            and slugified as the filename.
+        trigger_keywords: Keywords that trigger this skill.
 
     Returns:
-        Pfad zur neu angelegten Skill-Datei.
+        Path to the newly created skill file.
     """
     if trigger_keywords is None:
         trigger_keywords = []
@@ -64,7 +63,7 @@ def create_skill(
     path = skills_dir / filename
     if path.exists():
         raise FileExistsError(f"Skill '{name}' existiert bereits: {path}")
-    # Frontmatter für eine Prozedur
+    # Frontmatter for a procedure
     triggers = ", ".join(trigger_keywords)
     content = (
         "---\n"
@@ -85,29 +84,28 @@ def create_skill(
 
 
 def search_remote_skills(query: str, limit: int = 10) -> list[str]:
-    """Durchsucht lokale "Remote"-Skill-Repos nach passenden Skills.
+    """Search local "remote" skill repos for matching skills.
 
-    In Abwesenheit eines echten Marktplatzes durchsucht diese Funktion
-    die bereitgestellten Beispiel-Prozeduren im Repository, um ähnlich
-    wie eine Remote-Suche zu funktionieren. Es werden sowohl die Namen
-    der Dateien als auch deren Inhaltsfrontmatter betrachtet. Das
-    Ergebnis ist eine Liste von Skill-Dateinamen (ohne Erweiterung),
-    sortiert nach einfacher Übereinstimmung.
+    In the absence of a real marketplace, this function searches the
+    provided example procedures in the repository to simulate a remote
+    search. Both file names and their frontmatter content are examined.
+    The result is a list of skill file names (without extension),
+    sorted by simple match.
 
     Args:
-        query: Suchbegriff für Skills (Groß-/Kleinschreibung wird ignoriert).
-        limit: Maximale Anzahl an Ergebnissen.
+        query: Search term for skills (case-insensitive).
+        limit: Maximum number of results.
 
     Returns:
-        Liste der Skill-Basenamen (ohne ``.md``), die zur Suchanfrage passen.
+        List of skill base names (without ``.md``) matching the query.
     """
     query_lower = query.lower().strip()
     results: list[str] = []
 
-    # Bestimme potenzielle "Remote"-Verzeichnisse relativ zu diesem Modul
+    # Determine potential "remote" directories relative to this module
     here = Path(__file__).resolve()
-    # Die Struktur ist: project/src/jarvis/skills/manager.py → parents[4] = project
-    # Wir berücksichtigen zwei Orte als Quelle für "Remote"-Skills:
+    # Structure: project/src/jarvis/skills/manager.py → parents[4] = project
+    # We consider two locations as sources for "remote" skills:
     #  1. <repo_root>/project/data/procedures
     #  2. <repo_root>/data/procedures
     # parents[4] -> <repo_root>/project, parents[5] -> <repo_root>
@@ -128,32 +126,32 @@ def search_remote_skills(query: str, limit: int = 10) -> list[str]:
             except Exception:
                 continue
             name = file_path.stem
-            # Untersuche Frontmatter (erste ca. 20 Zeilen) nach name und trigger_keywords
+            # Examine frontmatter (first ~20 lines) for name and trigger_keywords
             fm_name: str | None = None
             fm_triggers: list[str] = []
             try:
                 lines = content.splitlines()
                 for line in lines[:20]:
-                    # Name-Zeile
+                    # Name line
                     if line.lower().startswith("name:"):
                         fm_name = line.split("name:", 1)[1].strip()
                     elif line.lower().startswith("trigger_keywords"):
-                        # Extrahiere Liste zwischen eckigen Klammern
+                        # Extract list between square brackets
                         after = line.split("[", 1)
                         if len(after) > 1:
                             inside = after[1].split("]", 1)[0]
-                            # Spalten nach Kommas
+                            # Split by commas
                             for kw in inside.split(","):
                                 kw = kw.strip().strip("'\"")
                                 if kw:
                                     fm_triggers.append(kw)
-                    # Stoppe, wenn Frontmatter endet (erster Abschnitt nach "---")
+                    # Stop when frontmatter ends (first section after "---")
                     if line.strip() == "---":
                         break
             except Exception:
                 pass  # Cleanup — frontmatter parsing failure is non-critical
 
-            # Prüfe, ob Query im Dateinamen, Frontmatter-Name, Triggern oder Inhalt vorkommt
+            # Check if query appears in filename, frontmatter name, triggers, or content
             match_found = False
             if (
                 query_lower in name.lower()
@@ -172,36 +170,34 @@ def search_remote_skills(query: str, limit: int = 10) -> list[str]:
 
 
 def install_remote_skill(skills_dir: Path, name: str, repo_url: str | None = None) -> Path:
-    """Installiert einen Skill aus einem lokalen "Remote"-Repository.
+    """Install a skill from a local "remote" repository.
 
-    Diese Funktion versucht, eine vorhandene Prozedur (Skill) aus den
-    Beispiel-Prozeduren des Repositories zu kopieren und unter dem
-    angegebenen Namen im Plugins-Verzeichnis abzulegen. Wenn der Skill
-    bereits installiert ist, wird der bestehende Pfad zurückgegeben.
-    Falls kein passender Skill gefunden wird, wird eine leere
-    Vorlage erstellt.
+    This function attempts to copy an existing procedure (skill) from the
+    example procedures in the repository and place it under the
+    given name in the plugins directory. If the skill is already
+    installed, the existing path is returned. If no matching skill
+    is found, an empty template is created.
 
     Args:
-        skills_dir: Zielverzeichnis für den Skill.
-        name: Name des zu installierenden Skills. Kann sowohl der
-            Dateiname ohne Erweiterung als auch der sichtbare
-            Frontmatter-Name sein.
-        repo_url: Optionaler Verweis auf ein Remote-Repository (wird in
-            dieser Offline-Variante ignoriert).
+        skills_dir: Target directory for the skill.
+        name: Name of the skill to install. Can be either the
+            filename without extension or the visible frontmatter name.
+        repo_url: Optional reference to a remote repository (ignored
+            in this offline variant).
 
     Returns:
-        Pfad zur installierten oder erstellten Skill-Datei.
+        Path to the installed or created skill file.
     """
-    # Normalisiere den Dateinamen
+    # Normalize the filename
     slug = _slugify(name)
     target_filename = f"{slug}.md"
     target_path = skills_dir / target_filename
 
-    # Falls bereits installiert, gib den Pfad zurück
+    # If already installed, return the path
     if target_path.exists():
         return target_path
 
-    # Bestimme "Remote"-Quellverzeichnisse
+    # Determine "remote" source directories
     here = Path(__file__).resolve()
     # parents[4] -> <repo_root>/project, parents[5] -> <repo_root>
     project_dir = here.parents[4]
@@ -211,7 +207,7 @@ def install_remote_skill(skills_dir: Path, name: str, repo_url: str | None = Non
         repo_root / "data" / "procedures",
     ]
 
-    # Suche nach einer passenden Quelldatei
+    # Search for a matching source file
     source_file: Path | None = None
     for directory in source_dirs:
         if not directory.exists():
@@ -223,7 +219,7 @@ def install_remote_skill(skills_dir: Path, name: str, repo_url: str | None = Non
         if source_file:
             break
 
-    # Wenn gefunden, kopiere den Inhalt in das Ziel
+    # If found, copy the content to the target
     if source_file is not None and source_file.exists():
         try:
             content = source_file.read_text(encoding="utf-8")
@@ -233,7 +229,7 @@ def install_remote_skill(skills_dir: Path, name: str, repo_url: str | None = Non
         target_path.write_text(content, encoding="utf-8")
         return target_path
 
-    # Andernfalls erstelle eine leere Vorlage wie zuvor
+    # Otherwise create an empty template as before
     content = (
         f"name: {name}\n"
         f"trigger_keywords: []\n"

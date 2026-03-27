@@ -1,6 +1,6 @@
-"""Graph Builder -- Fluent API zum Erstellen von Graph-Definitionen (v18).
+"""Graph Builder -- Fluent API for creating graph definitions (v18).
 
-Ermöglicht deklarativen Graphenbau:
+Enables declarative graph construction:
 
     graph = (
         GraphBuilder("customer_support")
@@ -18,7 +18,7 @@ Ermöglicht deklarativen Graphenbau:
         .build()
     )
 
-Alternativ: Kompakt-Syntax:
+Alternative: compact syntax:
 
     graph = (
         GraphBuilder("pipeline")
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 class GraphBuilder:
-    """Fluent Builder für GraphDefinitions."""
+    """Fluent builder for GraphDefinitions."""
 
     def __init__(self, name: str = "", description: str = "") -> None:
         self._graph = GraphDefinition(name=name, description=description)
@@ -67,7 +67,7 @@ class GraphBuilder:
         checkpoint_after: bool = False,
         config: dict[str, Any] | None = None,
     ) -> GraphBuilder:
-        """Fügt einen Node hinzu."""
+        """Adds a node."""
         node = Node(
             name=name,
             node_type=node_type,
@@ -91,7 +91,7 @@ class GraphBuilder:
         description: str = "",
         timeout: float = 60.0,
     ) -> GraphBuilder:
-        """Fügt einen Router-Node hinzu (Shortcut)."""
+        """Adds a router node (shortcut)."""
         return self.add_node(
             name,
             handler,
@@ -107,7 +107,7 @@ class GraphBuilder:
         *,
         description: str = "",
     ) -> GraphBuilder:
-        """Fügt einen Human-in-the-Loop-Node hinzu."""
+        """Adds a human-in-the-loop node."""
         return self.add_node(
             name,
             handler,
@@ -117,7 +117,7 @@ class GraphBuilder:
         )
 
     def add_passthrough(self, name: str) -> GraphBuilder:
-        """Fügt einen No-Op-Node hinzu (für Merge-Punkte)."""
+        """Adds a no-op node (for merge points)."""
         return self.add_node(name, node_type=NodeType.PASSTHROUGH)
 
     # ── Edge Methods ─────────────────────────────────────────────
@@ -130,7 +130,7 @@ class GraphBuilder:
         condition: str = "",
         priority: int = 0,
     ) -> GraphBuilder:
-        """Fügt eine Kante hinzu."""
+        """Adds an edge."""
         edge_type = EdgeType.CONDITIONAL if condition else EdgeType.DIRECT
         edge = Edge(
             source=source,
@@ -149,12 +149,12 @@ class GraphBuilder:
         *,
         default: str = "",
     ) -> GraphBuilder:
-        """Fügt mehrere konditionale Kanten auf einmal hinzu.
+        """Adds multiple conditional edges at once.
 
         Args:
-            source: Router-Node
+            source: Router node
             mapping: {condition_value: target_node}
-            default: Fallback-Target
+            default: Fallback target
         """
         for condition, target in mapping.items():
             self.add_edge(source, target, condition=condition)
@@ -165,10 +165,10 @@ class GraphBuilder:
     # ── Convenience Methods ──────────────────────────────────────
 
     def chain(self, *node_names: str) -> GraphBuilder:
-        """Verkettet Nodes linear (A → B → C → ...).
+        """Chains nodes linearly (A -> B -> C -> ...).
 
-        Nodes müssen vorher mit add_node() hinzugefügt worden sein,
-        oder werden als Passthrough-Nodes erstellt.
+        Nodes must have been added with add_node() beforehand,
+        or will be created as passthrough nodes.
         """
         for name in node_names:
             if name not in self._graph.nodes and name != END:
@@ -183,27 +183,27 @@ class GraphBuilder:
         return self
 
     def set_entry(self, node_name: str) -> GraphBuilder:
-        """Setzt den Entry-Point des Graphen."""
+        """Sets the entry point of the graph."""
         self._graph.entry_point = node_name
         return self
 
     def set_metadata(self, key: str, value: Any) -> GraphBuilder:
-        """Setzt Metadaten am Graphen."""
+        """Sets metadata on the graph."""
         self._graph.metadata[key] = value
         return self
 
     # ── Build ────────────────────────────────────────────────────
 
     def build(self) -> GraphDefinition:
-        """Erstellt und validiert die GraphDefinition.
+        """Creates and validates the GraphDefinition.
 
         Raises:
-            ValueError: Wenn der Graph ungültig ist
+            ValueError: If the graph is invalid
         """
         if self._built:
             raise ValueError("GraphBuilder already built -- create a new builder")
 
-        # Auto-Entry: Erster hinzugefügter Node
+        # Auto-entry: first added node
         if not self._graph.entry_point and self._graph.nodes:
             self._graph.entry_point = next(iter(self._graph.nodes))
 
@@ -215,7 +215,7 @@ class GraphBuilder:
         return self._graph
 
     def build_unchecked(self) -> GraphDefinition:
-        """Erstellt GraphDefinition ohne Validierung (für Tests)."""
+        """Creates GraphDefinition without validation (for tests)."""
         if not self._graph.entry_point and self._graph.nodes:
             self._graph.entry_point = next(iter(self._graph.nodes))
         self._built = True
@@ -232,15 +232,15 @@ class GraphBuilder:
         return len(self._graph.edges)
 
 
-# ── Prebuilt Graph Templates ────────────────────────────────────
+# ── Prebuilt graph templates ────────────────────────────────────
 
 
 def linear_graph(name: str, steps: list[tuple[str, Callable]]) -> GraphDefinition:
-    """Erstellt einen linearen Graphen (A → B → C → END).
+    """Creates a linear graph (A -> B -> C -> END).
 
     Args:
-        name: Graph-Name
-        steps: Liste von (node_name, handler) Paaren
+        name: Graph name
+        steps: List of (node_name, handler) pairs
     """
     builder = GraphBuilder(name)
     for node_name, handler in steps:
@@ -260,15 +260,15 @@ def branch_graph(
     merge_node: str = "",
     merge_handler: Callable | None = None,
 ) -> GraphDefinition:
-    """Erstellt einen Branching-Graphen (Router → Branches → Optional Merge → END).
+    """Creates a branching graph (Router -> Branches -> Optional Merge -> END).
 
     Args:
-        name: Graph-Name
-        router_name: Name des Router-Nodes
-        router_handler: Router-Handler (gibt Branch-Name zurück)
+        name: Graph name
+        router_name: Name of the router node
+        router_handler: Router handler (returns branch name)
         branches: {branch_name: handler}
-        merge_node: Optionaler Merge-Point
-        merge_handler: Handler für Merge-Node
+        merge_node: Optional merge point
+        merge_handler: Handler for merge node
     """
     builder = GraphBuilder(name)
     builder.add_router(router_name, router_handler)
@@ -300,14 +300,14 @@ def loop_graph(
     continue_condition: str = "continue",
     exit_condition: str = "exit",
 ) -> GraphDefinition:
-    """Erstellt einen Loop-Graphen (Body → Condition → Body oder END).
+    """Creates a loop graph (Body -> Condition -> Body or END).
 
     Args:
-        name: Graph-Name
-        body_name: Loop-Body-Node
-        body_handler: Body-Handler
-        condition_name: Condition-Check-Node (Router)
-        condition_handler: Router der 'continue' oder 'exit' zurückgibt
+        name: Graph name
+        body_name: Loop body node
+        body_handler: Body handler
+        condition_name: Condition check node (router)
+        condition_handler: Router that returns 'continue' or 'exit'
     """
     builder = GraphBuilder(name)
     builder.add_node(body_name, body_handler)

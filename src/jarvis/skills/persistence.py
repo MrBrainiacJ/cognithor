@@ -1,10 +1,10 @@
-"""SQLite-Persistenz fuer den Skill Marketplace.
+"""SQLite persistence for the Skill Marketplace.
 
 Speichert Marketplace-Listings, Reviews, Reputation und Install-History
 in einer lokalen SQLite-Datenbank. Verwendet WAL-Mode und busy_timeout
 analog zu session_store.py.
 
-Architektur-Bibel: SS14 (Skills & Ecosystem)
+Architecture reference: SS14 (Skills & Ecosystem)
 """
 
 from __future__ import annotations
@@ -109,13 +109,13 @@ CREATE INDEX IF NOT EXISTS idx_listings_recalled
 """
 
 _MIGRATION_COMMUNITY = """\
--- source-Spalte fuer Listings (builtin vs community)
+-- source column for listings (builtin vs community)
 ALTER TABLE listings ADD COLUMN source TEXT NOT NULL DEFAULT 'builtin';
 
 CREATE INDEX IF NOT EXISTS idx_listings_source
     ON listings(source) WHERE source IS NOT NULL;
 
--- Publisher-Tabelle fuer Community-Marketplace
+-- Publisher table for community marketplace
 CREATE TABLE IF NOT EXISTS publishers (
     github_username TEXT PRIMARY KEY,
     github_id       INTEGER NOT NULL DEFAULT 0,
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS publishers (
     updated_at      REAL NOT NULL
 );
 
--- Remote-Recalls fuer Community-Skills
+-- Remote recalls for community skills
 CREATE TABLE IF NOT EXISTS recalls_remote (
     recall_id       TEXT PRIMARY KEY,
     skill_name      TEXT NOT NULL,
@@ -161,10 +161,10 @@ def _iso(ts: float) -> str:
 
 
 class MarketplaceStore:
-    """SQLite-basierter Marketplace-Speicher.
+    """SQLite-based marketplace store.
 
-    Thread-safe durch SQLite WAL mode und check_same_thread=False.
-    Lazy-initialisiert die Verbindung beim ersten Zugriff.
+    Thread-safe via SQLite WAL mode and check_same_thread=False.
+    Lazily initializes the connection on first access.
     """
 
     def __init__(self, db_path: Path | str) -> None:
@@ -174,7 +174,7 @@ class MarketplaceStore:
 
     @property
     def conn(self) -> sqlite3.Connection:
-        """Lazy-initialisiert die DB-Verbindung und Schema."""
+        """Lazily initialize the DB connection and schema."""
         if self._conn is None:
             self._conn = sqlite3.connect(
                 str(self._db_path),
@@ -190,7 +190,7 @@ class MarketplaceStore:
         return self._conn
 
     def close(self) -> None:
-        """Schliesst die DB-Verbindung."""
+        """Close the DB connection."""
         if self._conn is not None:
             self._conn.close()
             self._conn = None
@@ -200,7 +200,7 @@ class MarketplaceStore:
     # ------------------------------------------------------------------
 
     def save_listing(self, listing: dict) -> str:
-        """Speichert oder aktualisiert ein Listing.
+        """Save or update a listing.
 
         Args:
             listing: Dict mit mindestens ``package_id`` und ``name``.
@@ -260,7 +260,7 @@ class MarketplaceStore:
         return package_id
 
     def get_listing(self, package_id: str) -> dict | None:
-        """Laedt ein einzelnes Listing."""
+        """Load a single listing."""
         row = self.conn.execute(
             "SELECT * FROM listings WHERE package_id = ? AND recalled = 0",
             (package_id,),
@@ -277,7 +277,7 @@ class MarketplaceStore:
         sort: str = "relevance",
         limit: int = 20,
     ) -> list[dict]:
-        """Durchsucht Listings mit optionalen Filtern.
+        """Search listings with optional filters.
 
         Args:
             query: Volltextsuche in Name, Beschreibung, Tags.
@@ -312,7 +312,7 @@ class MarketplaceStore:
 
         where = " AND ".join(conditions)
 
-        # Sortierung
+        # Sorting
         order_map = {
             "relevance": "install_count DESC, updated_at DESC",
             "newest": "created_at DESC",
@@ -331,7 +331,7 @@ class MarketplaceStore:
         return [self._row_to_listing(r) for r in rows]
 
     def get_featured(self, limit: int = 10) -> list[dict]:
-        """Gibt Featured-Listings zurueck."""
+        """Return featured listings."""
         rows = self.conn.execute(
             """
             SELECT * FROM listings
@@ -362,7 +362,7 @@ class MarketplaceStore:
         return [self._row_to_listing(r) for r in rows]
 
     def increment_install_count(self, package_id: str) -> None:
-        """Erhoeht den Installations-Zaehler um 1."""
+        """Increment the installation counter by 1."""
         self.conn.execute(
             "UPDATE listings SET install_count = install_count + 1, "
             "updated_at = ? WHERE package_id = ?",
@@ -381,7 +381,7 @@ class MarketplaceStore:
         rating: int,
         comment: str = "",
     ) -> str:
-        """Speichert eine Review. Duplikate (gleicher reviewer_id + package_id)
+        """Save a review. Duplikate (gleicher reviewer_id + package_id)
         werden per UNIQUE-Index abgelehnt.
 
         Returns:
@@ -392,7 +392,7 @@ class MarketplaceStore:
             ValueError: Bei ungueltiger Rating-Zahl.
         """
         if rating < 1 or rating > 5:
-            msg = f"Rating muss zwischen 1 und 5 liegen, ist aber {rating}"
+            msg = f"Rating must be between 1 and 5, got {rating}"
             raise ValueError(msg)
 
         review_id = f"review_{uuid.uuid4().hex[:12]}"
@@ -406,7 +406,7 @@ class MarketplaceStore:
             (review_id, package_id, reviewer_id, rating, comment, now),
         )
 
-        # Listing-Statistiken aktualisieren
+        # Update listing statistics
         self.conn.execute(
             """
             UPDATE listings
@@ -422,7 +422,7 @@ class MarketplaceStore:
         return review_id
 
     def get_reviews(self, package_id: str, limit: int = 20) -> list[dict]:
-        """Laedt Reviews fuer ein Paket."""
+        """Load reviews for a package."""
         rows = self.conn.execute(
             """
             SELECT * FROM reviews
@@ -445,7 +445,7 @@ class MarketplaceStore:
         ]
 
     def get_average_rating(self, package_id: str) -> float:
-        """Berechnet die Durchschnittsbewertung eines Pakets."""
+        """Calculate the average rating of a package."""
         row = self.conn.execute(
             "SELECT rating_sum, rating_count FROM listings WHERE package_id = ?",
             (package_id,),
@@ -464,7 +464,7 @@ class MarketplaceStore:
         delta: float,
         reason: str = "",
     ) -> float:
-        """Aktualisiert den Reputation-Score eines Peers.
+        """Update the reputation score of a peer.
 
         Args:
             peer_id: Peer-Identifikator.
@@ -476,7 +476,7 @@ class MarketplaceStore:
         """
         now = _now()
 
-        # Reputation-Eintrag anlegen oder aktualisieren
+        # Create or update reputation entry
         self.conn.execute(
             """
             INSERT INTO reputation (peer_id, score, updated_at)
@@ -488,7 +488,7 @@ class MarketplaceStore:
             (peer_id, delta, now, delta, now),
         )
 
-        # Log-Eintrag
+        # Log entry
         self.conn.execute(
             """
             INSERT INTO reputation_log (peer_id, delta, reason, created_at)
@@ -501,7 +501,7 @@ class MarketplaceStore:
         return self.get_reputation(peer_id)
 
     def get_reputation(self, peer_id: str) -> float:
-        """Gibt den aktuellen Reputation-Score zurueck."""
+        """Return the current reputation score."""
         row = self.conn.execute(
             "SELECT score FROM reputation WHERE peer_id = ?",
             (peer_id,),
@@ -518,7 +518,7 @@ class MarketplaceStore:
         version: str = "",
         user_id: str = "",
     ) -> None:
-        """Zeichnet eine Installation auf."""
+        """Record an installation."""
         self.conn.execute(
             """
             INSERT INTO install_history (package_id, version, user_id, installed_at)
@@ -533,7 +533,7 @@ class MarketplaceStore:
         user_id: str,
         limit: int = 50,
     ) -> list[dict]:
-        """Gibt die Installations-Historie eines Users zurueck."""
+        """Return the installation history of a user."""
         rows = self.conn.execute(
             """
             SELECT ih.*, l.name AS listing_name
@@ -561,7 +561,7 @@ class MarketplaceStore:
     # ------------------------------------------------------------------
 
     def recall_listing(self, package_id: str, reason: str = "") -> None:
-        """Markiert ein Listing als zurueckgerufen (Recall)."""
+        """Mark a listing as recalled."""
         self.conn.execute(
             """
             UPDATE listings
@@ -574,7 +574,7 @@ class MarketplaceStore:
         log.warning("listing_recalled", package_id=package_id, reason=reason)
 
     def get_recalled(self) -> list[dict]:
-        """Gibt alle zurueckgerufenen Listings zurueck."""
+        """Return all recalled listings."""
         rows = self.conn.execute(
             "SELECT * FROM listings WHERE recalled = 1 ORDER BY updated_at DESC",
         ).fetchall()
@@ -585,7 +585,7 @@ class MarketplaceStore:
     # ------------------------------------------------------------------
 
     def get_stats(self) -> dict:
-        """Gibt aggregierte Marktplatz-Statistiken zurueck."""
+        """Return aggregated marketplace statistics."""
         c = self.conn
 
         total = c.execute(
@@ -634,11 +634,11 @@ class MarketplaceStore:
     # ------------------------------------------------------------------
 
     def _migrate_community(self) -> None:
-        """Fuehrt Community-Marketplace-Migrationen durch (idempotent)."""
+        """Apply community marketplace migrations (idempotent)."""
         assert self._conn is not None
         c = self._conn
 
-        # source-Spalte hinzufuegen (idempotent check)
+        # Add source column (idempotent check)
         cols = {r[1] for r in c.execute("PRAGMA table_info(listings)").fetchall()}
         if "source" not in cols:
             try:
@@ -649,7 +649,7 @@ class MarketplaceStore:
                 if "already exists" not in str(exc) and "duplicate column" not in str(exc):
                     log.warning("community_migration_warning", error=str(exc))
         else:
-            # Sicherstellen dass publishers + recalls_remote existieren
+            # Ensure publishers + recalls_remote exist
             with contextlib.suppress(sqlite3.OperationalError):
                 c.executescript(
                     _MIGRATION_COMMUNITY.split("ALTER TABLE")[0]
@@ -685,7 +685,7 @@ class MarketplaceStore:
     # ------------------------------------------------------------------
 
     def save_publisher(self, publisher: dict) -> str:
-        """Speichert oder aktualisiert einen Publisher.
+        """Save or update a publisher.
 
         Returns:
             github_username des Publishers.
@@ -728,7 +728,7 @@ class MarketplaceStore:
         return username
 
     def get_publisher(self, github_username: str) -> dict | None:
-        """Laedt einen Publisher."""
+        """Load a publisher."""
         row = self.conn.execute(
             "SELECT * FROM publishers WHERE github_username = ?",
             (github_username,),
@@ -754,7 +754,7 @@ class MarketplaceStore:
     # ------------------------------------------------------------------
 
     def save_remote_recall(self, recall: dict) -> None:
-        """Speichert einen Remote-Recall."""
+        """Save a remote recall."""
         self.conn.execute(
             """
             INSERT OR REPLACE INTO recalls_remote
@@ -773,7 +773,7 @@ class MarketplaceStore:
         self.conn.commit()
 
     def get_remote_recalls(self) -> list[dict]:
-        """Gibt alle Remote-Recalls zurueck."""
+        """Return all remote recalls."""
         rows = self.conn.execute(
             "SELECT * FROM recalls_remote ORDER BY issued_at DESC",
         ).fetchall()
@@ -790,7 +790,7 @@ class MarketplaceStore:
         ]
 
     def is_skill_recalled_remote(self, skill_name: str) -> bool:
-        """Prueft ob ein Skill remote recalled ist."""
+        """Check if a skill is remotely recalled."""
         row = self.conn.execute(
             "SELECT 1 FROM recalls_remote WHERE skill_name = ? LIMIT 1",
             (skill_name,),
@@ -799,7 +799,7 @@ class MarketplaceStore:
 
     @staticmethod
     def _row_to_listing(row: sqlite3.Row) -> dict:
-        """Konvertiert eine DB-Row in ein Listing-Dict."""
+        """Convert a DB row to a listing dict."""
         tags_raw = row["tags"]
         try:
             tags = json.loads(tags_raw) if tags_raw else []

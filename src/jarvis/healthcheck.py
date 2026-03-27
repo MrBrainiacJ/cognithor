@@ -1,10 +1,10 @@
-"""Healthcheck-Endpoint für Monitoring und Deployment.
+"""Healthcheck endpoint for monitoring and deployment.
 
-Bietet einen einfachen HTTP-Endpoint (GET /health) der den
-Systemzustand in JSON zurückgibt. Kann von systemd, Docker,
-oder Monitoring-Tools verwendet werden.
+Provides a simple HTTP endpoint (GET /health) that returns the
+system state in JSON. Can be used by systemd, Docker,
+or monitoring tools.
 
-Bibel-Referenz: §15.5 (systemd + Healthcheck)
+Bible reference: §15.5 (systemd + healthcheck)
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# Start-Zeitpunkt
+# Start time
 _start_time = time.monotonic()
 _start_datetime = datetime.now(UTC)
 
@@ -34,7 +34,7 @@ def health_status(
     # Rückwärtskompatibilität
     ollama_available: bool | None = None,
 ) -> dict[str, Any]:
-    """Erstellt einen Health-Status-Report.
+    """Creates a health status report.
 
     Returns:
         Dict mit dem aktuellen Systemzustand:
@@ -52,14 +52,14 @@ def health_status(
             "errors": [],
         }
     """
-    # Rückwärtskompatibilität: ollama_available als Alias für llm_available
+    # Backward compatibility: ollama_available as alias for llm_available
     if ollama_available is not None and not llm_available:
         llm_available = ollama_available
 
     uptime = int(time.monotonic() - _start_time)
     error_list = list(errors) if errors else []
 
-    # Status bestimmen
+    # Determine status
     if not llm_available:
         status = "degraded"
         error_list.append(f"LLM-Backend '{llm_backend}' nicht erreichbar")

@@ -1,4 +1,4 @@
-"""Jarvis · Ecosystem-Kontrolle & Security-Training.
+"""Jarvis · Ecosystem control & security training.
 
 Strenge Kuration und Notfall-Updates für das Skill-Ökosystem:
 
@@ -46,7 +46,7 @@ class ReviewCriteria(Enum):
 
 @dataclass
 class CurationReview:
-    """Ergebnis einer Skill-Kuration."""
+    """Result of a skill curation."""
 
     review_id: str
     skill_id: str
@@ -74,7 +74,7 @@ class CurationReview:
 
 
 class SkillCurator:
-    """Manuelle und automatische Skill-Kuration."""
+    """Manual and automatic skill curation."""
 
     REQUIRED_CRITERIA = [
         ReviewCriteria.SECURITY_SCAN,
@@ -420,12 +420,12 @@ class FraudDetector:
 
     @staticmethod
     def _similar_name(a: str, b: str) -> bool:
-        """Erkennt Name-Squatting durch Typo-Varianten (echte Levenshtein-Distanz)."""
+        """Detect name squatting via typo variants (real Levenshtein distance)."""
         a_clean = a.replace("-", "").replace("_", "").lower()
         b_clean = b.replace("-", "").replace("_", "").lower()
         if a_clean == b_clean:
             return True
-        # Echte Levenshtein-Distanz (DP)
+        # Real Levenshtein distance (DP)
         if abs(len(a_clean) - len(b_clean)) > 2:
             return False
         m, n = len(a_clean), len(b_clean)
@@ -497,7 +497,7 @@ class TrainingModule:
 
 @dataclass
 class TrainingProgress:
-    """Fortschritt eines Team-Mitglieds."""
+    """Progress of a team member."""
 
     user_id: str
     completed_modules: list[str] = field(default_factory=list)
@@ -627,7 +627,7 @@ class TrustLevel(Enum):
 
 @dataclass
 class TrustBoundary:
-    """Vertrauensgrenze zwischen zwei Agenten."""
+    """Trust boundary between two agents."""
 
     boundary_id: str
     local_agent: str
@@ -686,13 +686,13 @@ class TrustBoundaryManager:
         boundary = self._boundaries.get(boundary_id)
 
         if not boundary:
-            return {"allowed": False, "reason": "Keine Vertrauensgrenze definiert"}
+            return {"allowed": False, "reason": "No trust boundary defined"}
 
         if boundary.trust_level == TrustLevel.UNTRUSTED:
-            return {"allowed": False, "reason": "Agent ist untrusted"}
+            return {"allowed": False, "reason": "Agent is untrusted"}
 
         if operation not in boundary.allowed_operations and "*" not in boundary.allowed_operations:
-            return {"allowed": False, "reason": f"Operation '{operation}' nicht erlaubt"}
+            return {"allowed": False, "reason": f"Operation '{operation}' not allowed"}
 
         return {
             "allowed": True,
@@ -725,7 +725,7 @@ class TrustBoundaryManager:
 
 
 class EcosystemController:
-    """Orchestriert alle Ecosystem-Kontrollen."""
+    """Orchestrate all ecosystem controls."""
 
     def __init__(self) -> None:
         self._curator = SkillCurator()

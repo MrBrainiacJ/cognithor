@@ -1,15 +1,15 @@
-"""Jarvis · Zentrales Kurations-Board & Erweiterte Governance.
+"""Jarvis - Central Curation Board & Extended Governance.
 
-Strengere Ecosystem-Kontrolle und erweiterte Transparenz:
+Stricter ecosystem control and extended transparency:
 
-  - SkillReview:           Pull-Request-basiertes Skill-Review
-  - CurationBoard:         Zentrales Kurations-Board mit Audit-Trail
-  - DiversityAuditor:      Diversity-Audits für Agent-Entscheidungen
-  - CrossAgentBudget:      Finanzflüsse zwischen föderierten Agenten
-  - DecisionExplainer:     Zeigt Alternativen und Risiken für Entscheidungen
-  - GovernanceHub:         Hauptklasse
+  - SkillReview:           Pull-request-based skill review
+  - CurationBoard:         Central curation board with audit trail
+  - DiversityAuditor:      Diversity audits for agent decisions
+  - CrossAgentBudget:      Financial flows between federated agents
+  - DecisionExplainer:     Shows alternatives and risks for decisions
+  - GovernanceHub:         Main class
 
-Architektur-Bibel: §15.2 (Ecosystem-Governance), §16.3 (Transparency)
+Architecture reference: §15.2 (Ecosystem Governance), §16.3 (Transparency)
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from enum import Enum
 from typing import Any
 
 # ============================================================================
-# Skill Review (PR-basiert)
+# Skill Review (PR-based)
 # ============================================================================
 
 
@@ -45,7 +45,7 @@ class ReviewFlag(Enum):
 
 @dataclass
 class ReviewComment:
-    """Ein Kommentar in einem Skill-Review."""
+    """A comment in a skill review."""
 
     author: str
     text: str
@@ -55,7 +55,7 @@ class ReviewComment:
 
 @dataclass
 class SkillReview:
-    """Ein PR-basiertes Review für einen Skill."""
+    """A PR-based review for a skill."""
 
     review_id: str
     skill_id: str
@@ -94,13 +94,13 @@ class SkillReview:
 
 
 class CurationBoard:
-    """Zentrales Kurations-Board für das Skill-Ecosystem.
+    """Central curation board for the skill ecosystem.
 
-    Jeder neue Skill durchläuft:
-    1. Automatischen Security-Scan
-    2. Lizenz-Prüfung
-    3. Manuelles Review durch Board-Mitglieder
-    4. Freigabe oder Ablehnung
+    Every new skill goes through:
+    1. Automatic security scan
+    2. License check
+    3. Manual review by board members
+    4. Approval or rejection
     """
 
     def __init__(self) -> None:
@@ -116,7 +116,7 @@ class CurationBoard:
         *,
         auto_scan_result: bool = False,
     ) -> SkillReview:
-        """Reicht einen neuen Skill zur Prüfung ein."""
+        """Submit a new skill for review."""
         self._counter += 1
         review = SkillReview(
             review_id=f"REV-{self._counter:04d}",
@@ -171,7 +171,7 @@ class CurationBoard:
         if not review:
             return False
         if review.blocking_comments:
-            return False  # Kann nicht freigegeben werden mit blockierenden Kommentaren
+            return False  # Cannot approve with blocking comments
         review.status = ReviewStatus.APPROVED
         review.decided_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         review.decision_by = approved_by
@@ -265,11 +265,11 @@ class DiversityDimension(Enum):
 
 @dataclass
 class DiversityAuditResult:
-    """Ergebnis eines Diversity-Audits."""
+    """Result of a diversity audit."""
 
     audit_id: str
     dimension: DiversityDimension
-    score: float  # 0-100 (100 = perfekte Gleichbehandlung)
+    score: float  # 0-100 (100 = perfect equal treatment)
     findings: list[str] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
     sample_size: int = 0
@@ -291,10 +291,10 @@ class DiversityAuditResult:
 
 
 class DiversityAuditor:
-    """Prüft Agent-Entscheidungen auf Gleichbehandlung.
+    """Check agent decisions for equal treatment.
 
-    Geht über einfache Bias-Detektion hinaus: prüft ob verschiedene
-    demografische Gruppen gleich behandelt werden.
+    Goes beyond simple bias detection: checks whether different
+    demographic groups are treated equally.
     """
 
     def __init__(self) -> None:
@@ -310,7 +310,7 @@ class DiversityAuditor:
         label_a: str = "Gruppe A",
         label_b: str = "Gruppe B",
     ) -> DiversityAuditResult:
-        """Vergleicht Antwortqualität zwischen zwei Gruppen."""
+        """Compare response quality between two groups."""
         self._counter += 1
 
         if not group_a_scores or not group_b_scores:
@@ -318,7 +318,7 @@ class DiversityAuditor:
                 audit_id=f"DIV-{self._counter:04d}",
                 dimension=dimension,
                 score=0,
-                findings=["Keine Daten für Vergleich"],
+                findings=["No data for comparison"],
                 sample_size=0,
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             )
@@ -328,21 +328,21 @@ class DiversityAuditor:
         max_avg = max(avg_a, avg_b)
         diff = abs(avg_a - avg_b)
 
-        # Score: 100 = identisch, 0 = komplett unterschiedlich
+        # Score: 100 = identical, 0 = completely different
         score = max(0, 100 - (diff / max_avg * 100)) if max_avg > 0 else 100
 
         findings = []
         recommendations = []
-        if diff > 0.2 * max_avg:  # > 20% Differenz
+        if diff > 0.2 * max_avg:  # > 20% difference
             findings.append(
-                f"Signifikante Differenz: {label_a} ({avg_a:.2f}) vs {label_b} ({avg_b:.2f})"
+                f"Significant difference: {label_a} ({avg_a:.2f}) vs {label_b} ({avg_b:.2f})"
             )
             recommendations.append(
-                f"Ursachenanalyse für {dimension.value}-Ungleichbehandlung durchführen"
+                f"Conduct root cause analysis for {dimension.value} unequal treatment"
             )
         if diff > 0.4 * max_avg:
-            findings.append("Schwerwiegende Ungleichbehandlung erkannt")
-            recommendations.append("Sofortige Korrekturmaßnahmen erforderlich")
+            findings.append("Severe unequal treatment detected")
+            recommendations.append("Immediate corrective action required")
 
         result = DiversityAuditResult(
             audit_id=f"DIV-{self._counter:04d}",
@@ -388,13 +388,13 @@ class DiversityAuditor:
 
 
 # ============================================================================
-# Cross-Agent Budget (Finanzflüsse)
+# Cross-Agent Budget (financial flows)
 # ============================================================================
 
 
 @dataclass
 class BudgetTransfer:
-    """Ein Finanztransfer zwischen Agenten."""
+    """A financial transfer between agents."""
 
     transfer_id: str
     from_agent: str
@@ -417,7 +417,7 @@ class BudgetTransfer:
 
 
 class CrossAgentBudget:
-    """Verwaltet Finanzflüsse zwischen föderierten Agenten."""
+    """Manage financial flows between federated agents."""
 
     def __init__(self, max_single_transfer: float = 50.0, daily_limit: float = 200.0) -> None:
         self._max_single = max_single_transfer
@@ -432,7 +432,7 @@ class CrossAgentBudget:
         amount_eur: float,
         reason: str,
     ) -> BudgetTransfer:
-        """Fordert einen Transfer an."""
+        """Request a transfer."""
         self._counter += 1
         transfer = BudgetTransfer(
             transfer_id=f"TRF-{self._counter:04d}",
@@ -443,7 +443,7 @@ class CrossAgentBudget:
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         )
 
-        # Auto-Approve wenn unter Limit
+        # Auto-approve if under limit
         if amount_eur <= self._max_single:
             daily_spent = self._daily_spent(from_agent)
             if daily_spent + amount_eur <= self._daily_limit:
@@ -492,13 +492,13 @@ class CrossAgentBudget:
 
 
 # ============================================================================
-# Decision Explainer (Punkt 9: Alternativen + Risiken)
+# Decision Explainer (Point 9: Alternatives + Risks)
 # ============================================================================
 
 
 @dataclass
 class DecisionAlternative:
-    """Eine alternative Entscheidungsoption."""
+    """An alternative decision option."""
 
     option_id: str
     description: str
@@ -522,7 +522,7 @@ class DecisionAlternative:
 
 @dataclass
 class DecisionExplanation:
-    """Vollständige Erklärung einer Agent-Entscheidung."""
+    """Complete explanation of an agent decision."""
 
     decision_id: str
     question: str
@@ -546,7 +546,7 @@ class DecisionExplanation:
 
 
 class DecisionExplainer:
-    """Macht Agent-Entscheidungen transparent mit Alternativen und Risiken."""
+    """Make agent decisions transparent with alternatives and risks."""
 
     def __init__(self) -> None:
         self._explanations: list[DecisionExplanation] = []
@@ -561,7 +561,7 @@ class DecisionExplainer:
         reasoning: str = "",
         sources: list[str] | None = None,
     ) -> DecisionExplanation:
-        """Erstellt eine Entscheidungserklärung."""
+        """Create a decision explanation."""
         self._counter += 1
         explanation = DecisionExplanation(
             decision_id=f"DEC-{self._counter:04d}",
@@ -597,12 +597,12 @@ class DecisionExplainer:
 
 
 # ============================================================================
-# Governance Hub (Hauptklasse)
+# Governance Hub (main class)
 # ============================================================================
 
 
 class GovernanceHub:
-    """Hauptklasse: Kurations-Board + Diversity + Budget + Explainability."""
+    """Main class: Curation board + Diversity + Budget + Explainability."""
 
     def __init__(self) -> None:
         self._curation = CurationBoard()
@@ -627,7 +627,7 @@ class GovernanceHub:
         return self._explainer
 
     def ecosystem_health(self) -> dict[str, Any]:
-        """Gesamt-Gesundheit des Ecosystems."""
+        """Overall ecosystem health."""
         curation = self._curation.stats()
         diversity = self._diversity.stats()
         budget = self._budget.stats()

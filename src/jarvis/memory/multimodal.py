@@ -1,4 +1,4 @@
-"""Multimodal Memory: Medien-Embeddings für Bilder, Audio und Dokumente.
+"""Multimodal Memory: Media embeddings for images, audio, and documents.
 
 Erweitert das Memory-System um multimodale Suche:
   - Bilder → Beschreibung → Text-Embedding → durchsuchbar
@@ -69,7 +69,7 @@ class MediaAsset:
     # Verknüpfung zu Memory-Chunks
     chunk_ids: list[str] = field(default_factory=list)
 
-    # Metadaten
+    # Metadata
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: str = field(
         default_factory=lambda: datetime.now(UTC).isoformat(),
@@ -106,7 +106,7 @@ def detect_media_type(file_path: str | Path) -> MediaType | None:
 
 
 def file_hash(file_path: str | Path) -> str:
-    """Berechnet SHA-256 Hash einer Datei."""
+    """Compute SHA-256 hash of a file."""
     h = hashlib.sha256()
     path = Path(file_path)
     if not path.exists():
@@ -123,7 +123,7 @@ def file_hash(file_path: str | Path) -> str:
 
 
 class MultimodalMemory:
-    """Verwaltet multimodale Medien-Assets im Memory-System.
+    """Manage multimodal media assets in the memory system.
 
     Workflow:
       1. Media-Datei empfangen
@@ -200,7 +200,7 @@ class MultimodalMemory:
             logger.warning("unsupported_media_type: %s", path.suffix)
             return None
 
-        # Duplikat-Check via File-Hash
+        # Duplicate check via File-Hash
         fhash = file_hash(path)
         if fhash in self._file_hash_map:
             existing = self._assets.get(self._file_hash_map[fhash])
@@ -422,7 +422,7 @@ class MultimodalMemory:
     # ========================================================================
 
     def remove_asset(self, asset_id: str) -> bool:
-        """Entfernt ein Media-Asset und seine Chunks.
+        """Remove a media asset and its chunks.
 
         Args:
             asset_id: Asset-ID.

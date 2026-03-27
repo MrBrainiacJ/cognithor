@@ -1,7 +1,7 @@
 """A2A Protocol Types -- RC v1.0 (Linux Foundation).
 
-Standardisierte Datentypen für Agent-zu-Agent-Kommunikation.
-Neu in RC v1.0: contextId, messageId, AgentInterface, streaming events,
+Standardized data types for agent-to-agent communication.
+New in RC v1.0: contextId, messageId, AgentInterface, streaming events,
 push notification CRUD, A2A-Version header, application/a2a+json.
 """
 

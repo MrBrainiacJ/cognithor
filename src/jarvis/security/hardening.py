@@ -1,15 +1,15 @@
-"""Jarvis · Security-Hardening & CI/CD-Integration.
+"""Jarvis · Security hardening & CI/CD integration.
 
-Durchgängige CI/CD-Security-Gates und Container-Isolation:
+End-to-end CI/CD security gates and container isolation:
 
-  - SecurityGate:          Pre-Deploy-Gate mit konfigurierbaren Schwellwerten
-  - PreCommitHook:         Git-Pre-Commit-Integration für Security-Checks
-  - ContainerIsolation:    Per-Agent-Container mit eigenen Secrets
-  - WebhookNotifier:       Benachrichtigungen bei Security-Events
-  - SecurityScanScheduler: Zeitgesteuerte, wiederkehrende Scans
-  - HardeningConfig:       Zentrale Härtungskonfiguration
+  - SecurityGate:          Pre-deploy gate with configurable thresholds
+  - PreCommitHook:         Git pre-commit integration for security checks
+  - ContainerIsolation:    Per-agent containers with own secrets
+  - WebhookNotifier:       Notifications on security events
+  - SecurityScanScheduler: Scheduled, recurring scans
+  - HardeningConfig:       Central hardening configuration
 
-Architektur-Bibel: §11.8 (DevSecOps), §14.5 (Container-Security)
+Architecture Bible: §11.8 (DevSecOps), §14.5 (Container-Security)
 """
 
 from __future__ import annotations
@@ -39,16 +39,16 @@ class GateDecision(Enum):
 
 @dataclass
 class GatePolicy:
-    """Konfigurierbare Schwellwerte für das Security-Gate."""
+    """Configurable thresholds for the security gate."""
 
-    max_critical_findings: int = 0  # 0 = kein Critical erlaubt
+    max_critical_findings: int = 0  # 0 = no critical allowed
     max_high_findings: int = 3
     max_total_findings: int = 20
     min_pass_rate: float = 80.0  # Pipeline-Pass-Rate
     require_dependency_scan: bool = True
     require_fuzzing: bool = True
     require_inversion_check: bool = True
-    block_on_unscanned: bool = True  # Block wenn Scan fehlt
+    block_on_unscanned: bool = True  # Block if scan is missing
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -64,7 +64,7 @@ class GatePolicy:
 
 @dataclass
 class GateResult:
-    """Ergebnis einer Security-Gate-Prüfung."""
+    """Result of a security gate evaluation."""
 
     decision: GateDecision
     reasons: list[str] = field(default_factory=list)
@@ -89,7 +89,7 @@ class GateResult:
 
 
 class SecurityGate:
-    """Pre-Deploy-Gate: Blockiert Deployments bei Sicherheitsrisiken."""
+    """Pre-deploy gate: Blocks deployments on security risks."""
 
     def __init__(self, policy: GatePolicy | None = None) -> None:
         self._policy = policy or GatePolicy()
@@ -110,7 +110,7 @@ class SecurityGate:
         stages_run: list[str] | None = None,
         pipeline_run_id: str = "",
     ) -> GateResult:
-        """Prüft ob ein Deployment erlaubt ist."""
+        """Checks if a deployment is allowed."""
         total = critical_findings + high_findings + medium_findings + low_findings
         reasons: list[str] = []
         decision = GateDecision.ALLOW
@@ -119,8 +119,7 @@ class SecurityGate:
         if critical_findings > self._policy.max_critical_findings:
             decision = GateDecision.BLOCK
             reasons.append(
-                f"{critical_findings} kritische Findings "
-                f"(max: {self._policy.max_critical_findings})"
+                f"{critical_findings} critical findings (max: {self._policy.max_critical_findings})"
             )
 
         # High Findings
@@ -132,7 +131,7 @@ class SecurityGate:
         # Total
         if total > self._policy.max_total_findings:
             decision = GateDecision.BLOCK
-            reasons.append(f"{total} Gesamt-Findings (max: {self._policy.max_total_findings})")
+            reasons.append(f"{total} total findings (max: {self._policy.max_total_findings})")
 
         # Pass-Rate
         if pass_rate < self._policy.min_pass_rate:
@@ -147,12 +146,12 @@ class SecurityGate:
             else:
                 if decision == GateDecision.ALLOW:
                     decision = GateDecision.WARN
-            reasons.append("Adversarial-Fuzzing nicht durchgeführt")
+            reasons.append("Adversarial fuzzing not performed")
 
         if self._policy.require_dependency_scan and "dependency_scan" not in stages:
             if self._policy.block_on_unscanned:
                 decision = GateDecision.BLOCK
-            reasons.append("Dependency-Scan nicht durchgeführt")
+            reasons.append("Dependency scan not performed")
 
         # Warnung bei medium Findings
         if medium_findings > 5 and decision == GateDecision.ALLOW:
@@ -160,7 +159,7 @@ class SecurityGate:
             reasons.append(f"{medium_findings} Medium-Findings (Warnung)")
 
         if not reasons:
-            reasons.append("Alle Prüfungen bestanden")
+            reasons.append("All checks passed")
 
         result = GateResult(
             decision=decision,
@@ -202,7 +201,7 @@ class SecurityGate:
 
 
 class PreCommitHook:
-    """Generiert Git-Pre-Commit-Hooks für Security-Checks."""
+    """Generates git pre-commit hooks for security checks."""
 
     @staticmethod
     def generate_bash() -> str:
@@ -236,7 +235,7 @@ exit 0
 
     @staticmethod
     def generate_yaml() -> str:
-        """Pre-Commit YAML Konfiguration."""
+        """Pre-commit YAML configuration."""
         return """# .pre-commit-config.yaml
 repos:
   - repo: local
@@ -266,21 +265,21 @@ repos:
 
 class IsolationLevel(Enum):
     NONE = "none"
-    PROCESS = "process"  # Eigener Prozess
+    PROCESS = "process"  # Own process
     NAMESPACE = "namespace"  # Linux-Namespaces
     CONTAINER = "container"  # Docker/Podman
-    VM = "vm"  # Volle VM-Isolation
+    VM = "vm"  # Full VM isolation
 
 
 @dataclass
 class AgentContainer:
-    """Container-Konfiguration für einen isolierten Agenten."""
+    """Container configuration for an isolated agent."""
 
     agent_id: str
     isolation_level: IsolationLevel = IsolationLevel.NAMESPACE
     memory_limit_mb: int = 512
     cpu_limit_cores: float = 1.0
-    network_enabled: bool = False  # Default: kein Netzwerk
+    network_enabled: bool = False  # Default: no network
     allowed_domains: list[str] = field(default_factory=list)
     filesystem_readonly: bool = True
     has_own_secrets: bool = True
@@ -301,7 +300,7 @@ class AgentContainer:
         }
 
     def to_docker_args(self) -> list[str]:
-        """Generiert Docker-Run-Argumente."""
+        """Generates Docker run arguments."""
         args = [
             f"--memory={self.memory_limit_mb}m",
             f"--cpus={self.cpu_limit_cores}",
@@ -318,7 +317,7 @@ class AgentContainer:
 
 
 class ContainerIsolation:
-    """Verwaltet Container-Isolation pro Agent."""
+    """Manages container isolation per agent."""
 
     def __init__(self) -> None:
         self._containers: dict[str, AgentContainer] = {}
@@ -360,7 +359,7 @@ class ContainerIsolation:
         return len(self._containers)
 
     def generate_compose(self) -> str:
-        """Generiert Docker-Compose für alle Agenten."""
+        """Generates Docker Compose for all agents."""
         services: list[str] = []
         for c in self._containers.values():
             svc = f"""  {c.agent_id}:
@@ -401,7 +400,7 @@ class ContainerIsolation:
 
 
 class CredentialScanner:
-    """Scannt Code auf versehentlich eingebettete Credentials."""
+    """Scans code for accidentally embedded credentials."""
 
     PATTERNS = [
         (r"api[_-]?key\s*=\s*['\"][^'\"]{8,}", "API-Key"),
@@ -415,7 +414,7 @@ class CredentialScanner:
     ]
 
     def scan_text(self, text: str) -> list[dict[str, str]]:
-        """Scannt einen Text auf Credential-Patterns."""
+        """Scans a text for credential patterns."""
         import re
 
         findings = []
@@ -425,7 +424,7 @@ class CredentialScanner:
         return findings
 
     def scan_files(self, file_contents: dict[str, str]) -> dict[str, list[dict[str, str]]]:
-        """Scannt mehrere Dateien."""
+        """Scans multiple files."""
         results = {}
         for path, content in file_contents.items():
             findings = self.scan_text(content)
@@ -441,7 +440,7 @@ class CredentialScanner:
 
 @dataclass
 class WebhookConfig:
-    """Webhook-Konfiguration für Security-Events."""
+    """Webhook configuration for security events."""
 
     url: str
     events: list[str] = field(
@@ -460,7 +459,7 @@ class WebhookConfig:
 
 
 class WebhookNotifier:
-    """Sendet Benachrichtigungen bei Security-Events."""
+    """Sends notifications on security events."""
 
     def __init__(self) -> None:
         self._webhooks: list[WebhookConfig] = []
@@ -475,10 +474,10 @@ class WebhookNotifier:
         return len(self._webhooks) < before
 
     def notify(self, event: str, payload: dict[str, Any]) -> int:
-        """Benachrichtigt alle registrierten Webhooks via HTTP POST.
+        """Notifies all registered webhooks via HTTP POST.
 
         Returns:
-            Anzahl erfolgreich gesendeter Nachrichten.
+            Number of successfully sent messages.
         """
         sent = 0
         for webhook in self._webhooks:
@@ -520,7 +519,7 @@ class WebhookNotifier:
                     notification["success"] = 200 <= resp.status_code < 300
             except ImportError:
                 logger.warning(
-                    "webhook_httpx_not_installed: pip install httpx fuer echte Webhook-Zustellung"
+                    "webhook_httpx_not_installed: pip install httpx for real webhook delivery"
                 )
                 notification["success"] = False
                 notification["error"] = "httpx_not_installed"
@@ -557,11 +556,11 @@ class WebhookNotifier:
 
 @dataclass
 class ScheduledScan:
-    """Geplanter Security-Scan."""
+    """Scheduled security scan."""
 
     scan_id: str
     name: str
-    cron: str  # z.B. "0 3 * * 1" (Montags 3 Uhr)
+    cron: str  # e.g. "0 3 * * 1" (Mondays 3 AM)
     stages: list[str] = field(default_factory=list)
     enabled: bool = True
     last_run: str = ""
@@ -579,18 +578,18 @@ class ScheduledScan:
 
 
 class ScanScheduler:
-    """Verwaltet zeitgesteuerte Security-Scans."""
+    """Manages scheduled security scans."""
 
     DEFAULT_SCHEDULES = [
         ScheduledScan(
             "daily-quick",
-            "Täglicher Quick-Scan",
+            "Daily Quick-Scan",
             "0 2 * * *",
             ["prompt_injection", "model_inversion"],
         ),
         ScheduledScan(
             "weekly-full",
-            "Wöchentlicher Full-Scan",
+            "Weekly Full-Scan",
             "0 3 * * 1",
             [
                 "adversarial_fuzzing",
@@ -602,7 +601,7 @@ class ScanScheduler:
         ),
         ScheduledScan(
             "monthly-pentest",
-            "Monatlicher Penetration-Test",
+            "Monthly Penetration-Test",
             "0 4 1 * *",
             [
                 "adversarial_fuzzing",

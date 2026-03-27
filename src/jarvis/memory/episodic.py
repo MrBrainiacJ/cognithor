@@ -1,7 +1,7 @@
-"""Episodic Memory · Tier 2 -- Tageslog. [B§4.3]
+"""Episodic Memory · Tier 2 -- Daily log. [B§4.3]
 
-Was ist wann passiert? Zeitlich geordnete Einträge.
-Append-only: Einträge werden nie geändert, nur hinzugefügt.
+What happened when? Chronologically ordered entries.
+Append-only: entries are never modified, only added.
 """
 
 from __future__ import annotations
@@ -11,27 +11,27 @@ from pathlib import Path
 
 
 class EpisodicMemory:
-    """Verwaltet Tageslog-Dateien unter ~/.jarvis/memory/episodes/.
+    """Manage daily log files under ~/.jarvis/memory/episodes/.
 
     Format: episodes/YYYY-MM-DD.md
     Einträge: ## HH:MM · Thema
     """
 
     def __init__(self, episodes_dir: str | Path) -> None:
-        """Initialisiert EpisodicMemory mit dem Episoden-Verzeichnis."""
+        """Initialize EpisodicMemory with the episodes directory."""
         self._dir = Path(episodes_dir)
 
     @property
     def directory(self) -> Path:
-        """Gibt das Episoden-Verzeichnis zurück."""
+        """Return the episodes directory."""
         return self._dir
 
     def _file_for_date(self, d: date) -> Path:
-        """Gibt den Pfad zur Tageslog-Datei zurück."""
+        """Return the path to the daily log file."""
         return self._dir / f"{d.isoformat()}.md"
 
     def ensure_directory(self) -> None:
-        """Erstellt das Episodes-Verzeichnis wenn nötig."""
+        """Create the episodes directory if needed."""
         self._dir.mkdir(parents=True, exist_ok=True)
 
     def append_entry(
@@ -44,12 +44,12 @@ class EpisodicMemory:
         """Fügt einen Eintrag zum Tageslog hinzu. Append-only.
 
         Args:
-            topic: Kurzer Titel des Eintrags.
-            content: Detailtext (kann mehrzeilig sein).
-            timestamp: Zeitpunkt (default: jetzt).
+            topic: Short title of the entry.
+            content: Detail text (can be multiline).
+            timestamp: Timestamp (default: now).
 
         Returns:
-            Der geschriebene Eintrag als String.
+            The written entry as string.
         """
         if timestamp is None:
             timestamp = datetime.now()
@@ -61,7 +61,7 @@ class EpisodicMemory:
 
         entry = f"\n## {time_str} · {topic}\n{content}\n"
 
-        # Datei erstellen falls nicht vorhanden (mit Tages-Header)
+        # Create file if not present (with daily header)
         if not file_path.exists():
             header = f"# {timestamp.date().isoformat()}\n"
             file_path.write_text(header + entry, encoding="utf-8")
@@ -72,17 +72,17 @@ class EpisodicMemory:
         return entry.strip()
 
     def get_today(self) -> str:
-        """Gibt den heutigen Tageslog zurück."""
+        """Return today's daily log."""
         return self.get_date(date.today())
 
     def get_date(self, d: date) -> str:
-        """Gibt den Tageslog für ein bestimmtes Datum zurück.
+        """Return the daily log for a specific date.
 
         Args:
             d: Das gewünschte Datum.
 
         Returns:
-            Dateiinhalt oder leerer String.
+            File content or empty string.
         """
         file_path = self._file_for_date(d)
         if not file_path.exists():
@@ -90,13 +90,13 @@ class EpisodicMemory:
         return file_path.read_text(encoding="utf-8")
 
     def get_recent(self, days: int = 2) -> list[tuple[date, str]]:
-        """Gibt die letzten N Tage zurück.
+        """Return the last N days.
 
         Args:
-            days: Anzahl Tage (default: 2 = heute + gestern).
+            days: Number of days (default: 2 = today + yesterday).
 
         Returns:
-            Liste von (datum, inhalt) Tupeln, neueste zuerst.
+            List of (date, content) tuples, most recent first.
         """
         results: list[tuple[date, str]] = []
         today = date.today()
@@ -110,10 +110,10 @@ class EpisodicMemory:
         return results
 
     def list_dates(self) -> list[date]:
-        """Listet alle verfügbaren Tageslog-Daten.
+        """List all available daily log dates.
 
         Returns:
-            Sortierte Liste von Daten (neueste zuerst).
+            Sorted list of dates (most recent first).
         """
         if not self._dir.exists():
             return []
@@ -136,7 +136,7 @@ class EpisodicMemory:
     # Der MemoryManager ruft diese Methode beim Initialisieren auf.
     # Alte Dateien werden gelöscht, wenn sie älter als ``retention_days`` sind.
     def prune_old(self, retention_days: int) -> int:
-        """Löscht Episoden-Dateien, die älter als ``retention_days`` sind.
+        """Delete episode files older than ``retention_days``.
 
         Args:
             retention_days: Maximales Alter in Tagen. Dateien, die älter

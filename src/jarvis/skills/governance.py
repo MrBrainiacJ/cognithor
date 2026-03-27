@@ -1,4 +1,4 @@
-"""Jarvis · Marketplace-Governance.
+"""Jarvis · Marketplace governance.
 
 Strengeres Bewertungs-/Reputationssystem für das Skill-Ecosystem:
 
@@ -74,9 +74,9 @@ class ReputationScore:
 
 
 class ReputationEngine:
-    """Berechnet und verwaltet Trust-Scores."""
+    """Compute and manage trust scores."""
 
-    # Score-Auswirkungen
+    # Score impacts
     POSITIVE_REVIEW = +2.0
     NEGATIVE_REVIEW = -3.0
     ABUSE_REPORT = -10.0
@@ -297,7 +297,7 @@ class SkillRecallManager:
         description: str,
         severity: str = "high",
     ) -> RecallNotice:
-        """Gibt einen Rückruf für einen Skill heraus."""
+        """Issue a recall for a skill."""
         recall_id = hashlib.sha256(f"recall:{skill_id}:{time.time()}".encode()).hexdigest()[:12]
         notice = RecallNotice(
             recall_id=recall_id,
@@ -364,7 +364,7 @@ class SkillRecallManager:
 
 @dataclass
 class AbuseReport:
-    """Missbrauchs-Meldung."""
+    """Abuse report."""
 
     report_id: str
     skill_id: str
@@ -414,7 +414,7 @@ class AbuseReporter:
         self._reports.append(report)
         self._reputation.report_abuse(skill_id)
 
-        # Auto-Investigate bei wiederholten Meldungen
+        # Auto-investigate on repeated reports
         skill_reports = [r for r in self._reports if r.skill_id == skill_id and r.status == "open"]
         if len(skill_reports) >= self.AUTO_INVESTIGATE_THRESHOLD:
             for r in skill_reports:
@@ -457,7 +457,7 @@ class AbuseReporter:
 
 @dataclass
 class GovernanceRule:
-    """Automatische Governance-Regel."""
+    """Automatic governance rule."""
 
     rule_id: str
     name: str

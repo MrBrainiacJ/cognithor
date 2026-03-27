@@ -1,4 +1,4 @@
-"""Skill-Marketplace: Kuratierter Marktplatz für Jarvis-Skills.
+"""Skill marketplace: Curated marketplace for Jarvis skills.
 
 Erweitert das P2P-Ökosystem um:
   - SkillMarketplace: Zentrale Anlaufstelle für Suche, Browse, Install
@@ -45,7 +45,7 @@ class SkillCategory(Enum):
 
 @dataclass
 class SkillListing:
-    """Ein Skill-Eintrag im Marketplace."""
+    """A skill listing in the marketplace."""
 
     package_id: str
     name: str
@@ -83,7 +83,7 @@ class SkillListing:
 
     @property
     def popularity_score(self) -> float:
-        """Gewichteter Score aus Installs, Rating und Aktualität."""
+        """Weighted score from installs, rating, and recency."""
         age_days = max(1, (datetime.now(UTC) - self.created_at).days)
         recency_boost = 1.0 / (1.0 + age_days / 30.0)
         install_score = min(self.install_count / 10.0, 10.0)
@@ -112,7 +112,7 @@ class SkillListing:
 
 @dataclass
 class SkillReview:
-    """Eine Nutzer-Bewertung eines Skills."""
+    """A user review of a skill."""
 
     review_id: str
     package_id: str
@@ -137,7 +137,7 @@ class SkillReview:
 
 @dataclass
 class CategoryInfo:
-    """Informationen über eine Skill-Kategorie."""
+    """Information about a skill category."""
 
     category: SkillCategory
     display_name: str
@@ -217,7 +217,7 @@ CATEGORY_INFOS: dict[SkillCategory, CategoryInfo] = {
 
 
 class SkillMarketplace:
-    """Kuratierter Skill-Marktplatz.
+    """Curated skill marketplace.
 
     Bietet:
     - Suche (Volltext + Filter)
@@ -239,7 +239,7 @@ class SkillMarketplace:
     # --- Listings CRUD ---
 
     def publish(self, listing: SkillListing) -> SkillListing:
-        """Publiziert oder aktualisiert einen Skill im Marketplace."""
+        """Publish or update a skill in the marketplace."""
         if listing.publisher_id in self._banned_publishers:
             msg = f"Publisher '{listing.publisher_id}' is banned"
             raise ValueError(msg)
@@ -274,7 +274,7 @@ class SkillMarketplace:
         sort_by: str = "relevance",  # relevance, popularity, rating, newest
         max_results: int = 20,
     ) -> list[SkillListing]:
-        """Durchsucht den Marketplace."""
+        """Search the marketplace."""
         results = list(self._listings.values())
 
         # Filter: Kategorie
@@ -304,7 +304,7 @@ class SkillMarketplace:
                 or any(q_lower in t.lower() for t in r.tags)
             ]
 
-        # Sortierung
+        # Sorting
         if sort_by == "popularity":
             results.sort(key=lambda r: r.popularity_score, reverse=True)
         elif sort_by == "rating":
@@ -321,7 +321,7 @@ class SkillMarketplace:
     # --- Kategorien ---
 
     def categories(self) -> list[CategoryInfo]:
-        """Gibt alle Kategorien mit Skill-Anzahl zurück."""
+        """Return all categories with skill count."""
         counts: dict[SkillCategory, int] = defaultdict(int)
         for listing in self._listings.values():
             counts[listing.category] += 1
@@ -339,13 +339,13 @@ class SkillMarketplace:
         return infos
 
     def by_category(self, category: SkillCategory) -> list[SkillListing]:
-        """Alle Skills einer Kategorie, nach Popularität sortiert."""
+        """All skills in a category, sorted by popularity."""
         return self.search(category=category, sort_by="popularity")
 
     # --- Featured & Trending ---
 
     def featured(self, max_results: int = 10) -> list[SkillListing]:
-        """Kuratierte Empfehlungen."""
+        """Curated recommendations."""
         featured = [listing for listing in self._listings.values() if listing.is_featured]
         featured.sort(key=lambda r: r.popularity_score, reverse=True)
         return featured[:max_results]
@@ -357,11 +357,11 @@ class SkillMarketplace:
         return all_listings[:max_results]
 
     def newest(self, max_results: int = 10) -> list[SkillListing]:
-        """Neueste Skills."""
+        """Newest skills."""
         return self.search(sort_by="newest", max_results=max_results)
 
     def top_rated(self, max_results: int = 10) -> list[SkillListing]:
-        """Bestbewertete Skills (min 2 Reviews)."""
+        """Top-rated skills (min 2 reviews)."""
         rated = [listing for listing in self._listings.values() if listing.rating_count >= 2]
         rated.sort(key=lambda r: r.average_rating, reverse=True)
         return rated[:max_results]
@@ -376,7 +376,7 @@ class SkillMarketplace:
         comment: str = "",
         reviewer_name: str = "",
     ) -> SkillReview | None:
-        """Fügt eine Bewertung hinzu. 1-5 Sterne."""
+        """Add a review. 1-5 stars."""
         listing = self._listings.get(package_id)
         if not listing:
             return None
@@ -384,10 +384,10 @@ class SkillMarketplace:
         if rating < 1 or rating > 5:
             return None
 
-        # Duplikat-Check
+        # Duplicate check
         existing = [r for r in self._reviews[package_id] if r.reviewer_id == reviewer_id]
         if existing:
-            return None  # Schon bewertet
+            return None  # Already reviewed
 
         self._review_counter += 1
         review = SkillReview(
@@ -400,7 +400,7 @@ class SkillMarketplace:
         )
         self._reviews[package_id].append(review)
 
-        # Listing-Statistiken aktualisieren
+        # Update listing statistics
         listing.rating_sum += rating
         listing.rating_count += 1
         listing.review_count += 1
@@ -413,7 +413,7 @@ class SkillMarketplace:
     # --- Installation ---
 
     def record_install(self, package_id: str, user_id: str) -> bool:
-        """Registriert eine Installation."""
+        """Register an installation."""
         listing = self._listings.get(package_id)
         if not listing:
             return False
@@ -422,13 +422,13 @@ class SkillMarketplace:
             listing.install_count += 1
             self._installed[user_id].add(package_id)
             return True
-        return False  # Schon installiert
+        return False  # Already installed
 
     def is_installed(self, package_id: str, user_id: str) -> bool:
         return package_id in self._installed.get(user_id, set())
 
     def user_installed(self, user_id: str) -> list[SkillListing]:
-        """Alle installierten Skills eines Users."""
+        """All installed skills of a user."""
         pkg_ids = self._installed.get(user_id, set())
         return [self._listings[pid] for pid in pkg_ids if pid in self._listings]
 
@@ -440,7 +440,7 @@ class SkillMarketplace:
         featured: bool = True,
         reason: str = "",
     ) -> bool:
-        """Markiert einen Skill als featured."""
+        """Mark a skill as featured."""
         listing = self._listings.get(package_id)
         if not listing:
             return False
@@ -449,7 +449,7 @@ class SkillMarketplace:
         return True
 
     def set_verified(self, package_id: str, verified: bool = True) -> bool:
-        """Markiert einen Skill als verifiziert."""
+        """Mark a skill as verified."""
         listing = self._listings.get(package_id)
         if not listing:
             return False
@@ -475,7 +475,7 @@ class SkillMarketplace:
     # ------------------------------------------------------------------
 
     def verify_publisher(self, publisher_id: str, *, verified: bool = True) -> int:
-        """Markiert alle Skills eines Publishers als verifiziert/unverifiziert.
+        """Mark all skills of a publisher as verified/unverified.
 
         Returns:
             Anzahl betroffener Skills.
@@ -505,7 +505,7 @@ class SkillMarketplace:
         *,
         ban_publisher: bool = False,
     ) -> dict[str, Any]:
-        """Zieht einen Skill aus dem Marktplatz zurück (Emergency Recall).
+        """Withdraw a skill from the marketplace (emergency recall).
 
         Returns:
             Recall-Report mit Betroffenen.
@@ -559,7 +559,7 @@ class SkillMarketplace:
         package_id: str,
         permissions: list[str],
     ) -> bool:
-        """Setzt die benötigten Berechtigungen eines Skills.
+        """Set the required permissions of a skill.
 
         Args:
             package_id: Skill-ID
@@ -572,7 +572,7 @@ class SkillMarketplace:
         return True
 
     def get_permissions(self, package_id: str) -> list[str]:
-        """Gibt die benötigten Berechtigungen eines Skills zurück."""
+        """Return the required permissions of a skill."""
         listing = self._listings.get(package_id)
         if not listing:
             return []
@@ -589,7 +589,7 @@ class SkillMarketplace:
         passed: bool,
         scan_report: dict[str, Any] | None = None,
     ) -> bool:
-        """Speichert das Ergebnis eines Security-Scans."""
+        """Save the result of a security scan."""
         listing = self._listings.get(package_id)
         if not listing:
             return False
@@ -598,7 +598,7 @@ class SkillMarketplace:
         return True
 
     def needs_scan(self, package_id: str) -> bool:
-        """Prüft ob ein Skill einen Security-Scan benötigt."""
+        """Check if a skill needs a security scan."""
         listing = self._listings.get(package_id)
         if not listing:
             return False

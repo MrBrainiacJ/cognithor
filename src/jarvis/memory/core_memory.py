@@ -1,8 +1,8 @@
-"""Core Memory · Tier 1 -- Identität, Regeln, Präferenzen. [B§4.2]
+"""Core Memory · Tier 1 -- Identity, rules, preferences. [B§4.2]
 
-Wird IMMER geladen. In jeder Session. Komplett.
-Änderungen nur durch User oder expliziten Befehl.
-Kein Recency-Decay.
+ALWAYS loaded. In every session. Completely.
+Changes only by user or explicit command.
+No recency decay.
 """
 
 from __future__ import annotations
@@ -12,37 +12,37 @@ from pathlib import Path
 
 
 class CoreMemory:
-    """Verwaltet die CORE.md Datei -- Jarvis' Identität.
+    """Manage the CORE.md file -- Jarvis' identity.
 
     Source of Truth: ~/.jarvis/memory/CORE.md
     """
 
     def __init__(self, core_file: str | Path) -> None:
-        """Initialisiert CoreMemory mit dem Pfad zur CORE.md."""
+        """Initialize CoreMemory with the path to CORE.md."""
         self._path = Path(core_file)
         self._content: str = ""
         self._sections: dict[str, str] = {}
 
     @property
     def path(self) -> Path:
-        """Gibt den Pfad zur CORE.md zurück."""
+        """Return the path to CORE.md."""
         return self._path
 
     @property
     def content(self) -> str:
-        """Kompletter CORE.md Inhalt."""
+        """Complete CORE.md content."""
         return self._content
 
     @property
     def sections(self) -> dict[str, str]:
-        """Geparste Sektionen als {header: content}."""
+        """Parsed sections as {header: content}."""
         return dict(self._sections)
 
     def load(self) -> str:
-        """Lädt CORE.md von Disk. Erstellt Default wenn nicht vorhanden.
+        """Load CORE.md from disk. Create default if not found.
 
         Returns:
-            Kompletter Inhalt als String.
+            Complete content as string.
         """
         if not self._path.exists():
             self._content = ""
@@ -54,13 +54,13 @@ class CoreMemory:
         return self._content
 
     def get_section(self, name: str) -> str:
-        """Gibt den Inhalt einer Sektion zurück.
+        """Return the content of a section.
 
         Args:
-            name: Sektionsname (case-insensitive, ohne '#').
+            name: Section name (case-insensitive, without '#').
 
         Returns:
-            Sektionsinhalt oder leerer String.
+            Section content or empty string.
         """
         name_lower = name.lower().strip()
         for key, value in self._sections.items():
@@ -69,10 +69,10 @@ class CoreMemory:
         return ""
 
     def save(self, content: str | None = None) -> None:
-        """Speichert CORE.md auf Disk.
+        """Save CORE.md to disk.
 
         Args:
-            content: Neuer Inhalt. Wenn None, wird aktueller Inhalt gespeichert.
+            content: New content. If None, current content is saved.
         """
         if content is not None:
             self._content = content
@@ -82,7 +82,7 @@ class CoreMemory:
         self._path.write_text(self._content, encoding="utf-8")
 
     def create_default(self) -> str:
-        """Erstellt eine Standard-CORE.md und gibt den Inhalt zurück."""
+        """Create a default CORE.md and return its content."""
         default = (
             "# Identität\n"
             "Ich bin Jarvis, ein lokaler AI-Assistent.\n\n"
@@ -99,10 +99,10 @@ class CoreMemory:
 
     @staticmethod
     def _parse_sections(text: str) -> dict[str, str]:
-        """Parst Markdown in Sektionen anhand von H1/H2 Headers.
+        """Parse Markdown into sections based on H1/H2 headers.
 
         Returns:
-            Dict mit {header_name: content_text}.
+            Dict of {header_name: content_text}.
         """
         sections: dict[str, str] = {}
         current_header: str | None = None
@@ -111,7 +111,7 @@ class CoreMemory:
         for line in text.split("\n"):
             match = re.match(r"^(#{1,2})\s+(.+)$", line)
             if match:
-                # Vorherige Sektion speichern
+                # Save previous section
                 if current_header is not None:
                     sections[current_header] = "\n".join(current_lines).strip()
                 current_header = match.group(2).strip()
@@ -119,7 +119,7 @@ class CoreMemory:
             else:
                 current_lines.append(line)
 
-        # Letzte Sektion
+        # Last section
         if current_header is not None:
             sections[current_header] = "\n".join(current_lines).strip()
 

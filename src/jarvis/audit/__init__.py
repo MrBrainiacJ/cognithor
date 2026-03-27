@@ -1,26 +1,26 @@
-"""Audit Logger: Lückenlose Protokollierung aller Jarvis-Aktionen.
+"""Audit logger: Complete logging of all Jarvis actions.
 
-Jede Aktion wird protokolliert:
-  - Tool-Calls (Name, Parameter, Ergebnis, Dauer)
-  - Datei-Zugriffe (Lesen, Schreiben, Löschen)
-  - Netzwerk-Zugriffe (URL, Methode, Statuscode)
-  - Agenten-Delegation (Von, An, Aufgabe)
-  - Skill-Installationen (Paket, Herkunft, Analyse)
-  - Gatekeeper-Entscheidungen (Erlaubt/Blockiert)
-  - Memory-Operationen (Indexierung, Suche, Löschung)
-  - Security-Events (Blockierungen, Warnungen)
+Every action is logged:
+  - Tool calls (name, parameters, result, duration)
+  - File accesses (read, write, delete)
+  - Network accesses (URL, method, status code)
+  - Agent delegation (from, to, task)
+  - Skill installations (package, source, analysis)
+  - Gatekeeper decisions (allowed/blocked)
+  - Memory operations (indexing, search, deletion)
+  - Security events (blocks, warnings)
 
-Transparenz:
-  - User kann jederzeit das Audit-Log einsehen
-  - Zusammenfassungen und Berichte generierbar
-  - Export als JSON/CSV für Compliance
+Transparency:
+  - User can inspect the audit log at any time
+  - Summaries and reports can be generated
+  - Export as JSON/CSV for compliance
 
-DSGVO-Konformität:
-  - Personenbezogene Daten werden markiert
-  - Löschung nach konfigurierbarer Retention
-  - Keine Speicherung von Klartext-Credentials
+GDPR compliance:
+  - Personal data is marked
+  - Deletion after configurable retention
+  - No storage of plaintext credentials
 
-Bibel-Referenz: §3.5 (Audit & Compliance)
+Bible reference: §3.5 (Audit & Compliance)
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ logger = logging.getLogger("jarvis.audit")
 
 
 class AuditCategory(Enum):
-    """Kategorien von Audit-Einträgen."""
+    """Categories of audit entries."""
 
     TOOL_CALL = "tool_call"
     FILE_ACCESS = "file_access"
@@ -60,7 +60,7 @@ class AuditCategory(Enum):
 
 
 class AuditSeverity(Enum):
-    """Schweregrad eines Audit-Eintrags."""
+    """Severity of an audit entry."""
 
     DEBUG = "debug"
     INFO = "info"
@@ -76,9 +76,9 @@ class AuditSeverity(Enum):
 
 @dataclass
 class AuditEntry:
-    """Ein einzelner Audit-Eintrag.
+    """A single audit entry.
 
-    Unveränderlich nach Erstellung (Append-Only Log).
+    Immutable after creation (append-only log).
     """
 
     entry_id: str
@@ -87,15 +87,15 @@ class AuditEntry:
     )
     category: AuditCategory = AuditCategory.SYSTEM
     severity: AuditSeverity = AuditSeverity.INFO
-    action: str = ""  # z.B. "tool_call", "file_write", "gate_block"
-    agent_name: str = ""  # Welcher Agent
-    tool_name: str = ""  # Welches Tool
-    description: str = ""  # Menschenlesbare Beschreibung
+    action: str = ""  # e.g. "tool_call", "file_write", "gate_block"
+    agent_name: str = ""  # Which agent
+    tool_name: str = ""  # Which tool
+    description: str = ""  # Human-readable description
     parameters: dict[str, Any] = field(default_factory=dict)
-    result: str = ""  # Kurzfassung des Ergebnisses
+    result: str = ""  # Brief summary of the result
     success: bool = True
     duration_ms: float = 0.0
-    contains_pii: bool = False  # Personenbezogene Daten
+    contains_pii: bool = False  # Contains personal data
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -122,7 +122,7 @@ class AuditEntry:
 
 @dataclass
 class AuditSummary:
-    """Zusammenfassung des Audit-Logs für einen Zeitraum."""
+    """Summary of the audit log for a time period."""
 
     period_start: str
     period_end: str
@@ -165,7 +165,7 @@ class AuditSummary:
 
 
 class AuditLogger:
-    """Lückenlose Protokollierung aller Jarvis-Aktionen.
+    """Complete logging of all Jarvis actions.
 
     Usage:
         audit = AuditLogger(log_dir=Path("~/.jarvis/audit"))
@@ -207,8 +207,8 @@ class AuditLogger:
         success: bool = True,
         duration_ms: float = 0.0,
     ) -> AuditEntry:
-        """Protokolliert einen Tool-Call."""
-        # Parameter-Sanitizing (keine Credentials loggen)
+        """Logs a tool call."""
+        # Parameter sanitizing (do not log credentials)
         safe_params = self._sanitize_params(parameters or {})
 
         return self._log(
@@ -217,9 +217,9 @@ class AuditLogger:
             action=f"tool:{tool_name}",
             agent_name=agent_name,
             tool_name=tool_name,
-            description=f"Tool '{tool_name}' aufgerufen",
+            description=f"Tool '{tool_name}' called",
             parameters=safe_params,
-            result=result[:500],  # Ergebnis kürzen
+            result=result[:500],  # Truncate result
             success=success,
             duration_ms=duration_ms,
         )
@@ -232,13 +232,13 @@ class AuditLogger:
         agent_name: str = "",
         success: bool = True,
     ) -> AuditEntry:
-        """Protokolliert einen Datei-Zugriff."""
+        """Logs a file access."""
         return self._log(
             category=AuditCategory.FILE_ACCESS,
             severity=AuditSeverity.INFO,
             action=f"file:{operation}",
             agent_name=agent_name,
-            description=f"Datei {operation}: {path}",
+            description=f"File {operation}: {path}",
             parameters={"path": path, "operation": operation},
             success=success,
         )
@@ -252,7 +252,7 @@ class AuditLogger:
         status_code: int = 0,
         success: bool = True,
     ) -> AuditEntry:
-        """Protokolliert einen Netzwerk-Zugriff."""
+        """Logs a network access."""
         return self._log(
             category=AuditCategory.NETWORK,
             severity=AuditSeverity.INFO if success else AuditSeverity.WARNING,
@@ -269,7 +269,7 @@ class AuditLogger:
         to_agent: str,
         task: str = "",
     ) -> AuditEntry:
-        """Protokolliert eine Agent-zu-Agent Delegation."""
+        """Logs an agent-to-agent delegation."""
         return self._log(
             category=AuditCategory.AGENT_DELEGATION,
             severity=AuditSeverity.INFO,
@@ -287,7 +287,7 @@ class AuditLogger:
         success: bool = True,
         analysis_verdict: str = "",
     ) -> AuditEntry:
-        """Protokolliert eine Skill-Installation."""
+        """Logs a skill installation."""
         return self._log(
             category=AuditCategory.SKILL_INSTALL,
             severity=AuditSeverity.WARNING if not success else AuditSeverity.INFO,
@@ -309,7 +309,7 @@ class AuditLogger:
         tool_name: str = "",
         agent_name: str = "",
     ) -> AuditEntry:
-        """Protokolliert eine Gatekeeper-Entscheidung."""
+        """Logs a gatekeeper decision."""
         is_block = decision.upper() in ("BLOCK", "DENY")
         return self._log(
             category=AuditCategory.GATEKEEPER,
@@ -329,7 +329,7 @@ class AuditLogger:
         details: str = "",
         agent_name: str = "",
     ) -> AuditEntry:
-        """Protokolliert eine Memory-Operation."""
+        """Logs a memory operation."""
         return self._log(
             category=AuditCategory.MEMORY_OP,
             severity=AuditSeverity.DEBUG,
@@ -347,7 +347,7 @@ class AuditLogger:
         agent_name: str = "",
         blocked: bool = False,
     ) -> AuditEntry:
-        """Protokolliert ein Security-Event."""
+        """Logs a security event."""
         return self._log(
             category=AuditCategory.SECURITY,
             severity=severity,
@@ -365,7 +365,7 @@ class AuditLogger:
         *,
         agent_name: str = "",
     ) -> AuditEntry:
-        """Protokolliert eine eingehende Benutzer-Nachricht."""
+        """Logs an incoming user message."""
         return self._log(
             category=AuditCategory.USER_INPUT,
             severity=AuditSeverity.INFO,
@@ -382,7 +382,7 @@ class AuditLogger:
         description: str = "",
         severity: AuditSeverity = AuditSeverity.INFO,
     ) -> AuditEntry:
-        """Protokolliert ein System-Event (Start, Stop, Config-Änderung)."""
+        """Logs a system event (start, stop, config change)."""
         return self._log(
             category=AuditCategory.SYSTEM,
             severity=severity,
@@ -391,7 +391,7 @@ class AuditLogger:
             success=True,
         )
 
-    # ── Abfragen ─────────────────────────────────────────────────
+    # ── Queries ─────────────────────────────────────────────────
 
     def query(
         self,
@@ -405,9 +405,9 @@ class AuditLogger:
         until: datetime | None = None,
         limit: int = 100,
     ) -> list[AuditEntry]:
-        """Flexible Abfrage des Audit-Logs.
+        """Flexible query of the audit log.
 
-        Alle Filter sind optional und werden kombiniert (AND).
+        All filters are optional and combined (AND).
         """
         results: list[AuditEntry] = []
 
@@ -444,7 +444,7 @@ class AuditLogger:
         return results
 
     def get_blocked_actions(self, limit: int = 50) -> list[AuditEntry]:
-        """Alle blockierten Aktionen."""
+        """All blocked actions."""
         return self.query(
             category=AuditCategory.GATEKEEPER,
             success=False,
@@ -455,16 +455,16 @@ class AuditLogger:
             limit=limit,
         )
 
-    # ── Zusammenfassung ──────────────────────────────────────────
+    # ── Summary ──────────────────────────────────────────
 
     def summarize(self, *, hours: int = 24) -> AuditSummary:
-        """Erstellt eine Zusammenfassung des Audit-Logs.
+        """Creates a summary of the audit log.
 
         Args:
-            hours: Zeitraum in Stunden (rückwärts ab jetzt).
+            hours: Time period in hours (backwards from now).
 
         Returns:
-            AuditSummary mit Statistiken.
+            AuditSummary with statistics.
         """
         now = datetime.now(UTC)
         since = now - timedelta(hours=hours)
@@ -563,14 +563,14 @@ class AuditLogger:
     # ── Export ────────────────────────────────────────────────────
 
     def export_json(self, path: Path, *, hours: int = 24) -> int:
-        """Exportiert das Audit-Log als JSON.
+        """Exports the audit log as JSON.
 
         Args:
-            path: Ziel-Datei.
-            hours: Zeitraum.
+            path: Target file.
+            hours: Time period.
 
         Returns:
-            Anzahl exportierter Einträge.
+            Number of exported entries.
         """
         now = datetime.now(UTC)
         since = now - timedelta(hours=hours)
@@ -588,7 +588,7 @@ class AuditLogger:
         return len(entries)
 
     def export_csv(self, path: Path, *, hours: int = 24) -> int:
-        """Exportiert als CSV für Compliance-Berichte."""
+        """Exports as CSV for compliance reports."""
         now = datetime.now(UTC)
         since = now - timedelta(hours=hours)
         entries = self.query(since=since, limit=50000)
@@ -611,10 +611,10 @@ class AuditLogger:
     # ── Retention ────────────────────────────────────────────────
 
     def cleanup_old_entries(self) -> int:
-        """Entfernt Einträge älter als retention_days.
+        """Removes entries older than retention_days.
 
         Returns:
-            Anzahl entfernter Einträge.
+            Number of removed entries.
         """
         cutoff = datetime.now(UTC) - timedelta(days=self._retention_days)
         before = len(self._entries)
@@ -627,17 +627,17 @@ class AuditLogger:
         removed = before - len(self._entries)
         if removed:
             logger.info(
-                "Audit-Log: %d alte Einträge entfernt (Retention=%dd)",
+                "Audit log: %d old entries removed (retention=%dd)",
                 removed,
                 self._retention_days,
             )
         return removed
 
     def delete_pii_entries(self) -> int:
-        """Löscht alle Einträge mit personenbezogenen Daten (DSGVO).
+        """Deletes all entries with personal data (GDPR).
 
         Returns:
-            Anzahl gelöschter Einträge.
+            Number of deleted entries.
         """
         before = len(self._entries)
         self._entries = deque(
@@ -646,33 +646,33 @@ class AuditLogger:
         )
         return before - len(self._entries)
 
-    # ── Intern ───────────────────────────────────────────────────
+    # ── Internal ───────────────────────────────────────────────────
 
     def _log(self, **kwargs: Any) -> AuditEntry:
-        """Erstellt und speichert einen Audit-Eintrag."""
+        """Creates and stores an audit entry."""
         self._counter += 1
         entry = AuditEntry(entry_id=f"audit_{self._counter}", **kwargs)
         self._entries.append(entry)
 
-        # Persistenz (wenn log_dir gesetzt)
+        # Persistence (if log_dir is set)
         if self._log_dir:
             self._persist_entry(entry)
 
         return entry
 
     def _persist_entry(self, entry: AuditEntry) -> None:
-        """Schreibt einen Eintrag in die Audit-Datei."""
+        """Writes an entry to the audit file."""
         try:
             date_str = entry.timestamp[:10]  # YYYY-MM-DD
             log_file = self._log_dir / f"audit_{date_str}.jsonl"
             with log_file.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(entry.to_dict(), ensure_ascii=False) + "\n")
         except Exception as exc:
-            logger.error("Audit-Persistierung fehlgeschlagen: %s", exc)
+            logger.error("Audit persistence failed: %s", exc)
 
     @staticmethod
     def _sanitize_params(params: dict[str, Any]) -> dict[str, Any]:
-        """Entfernt Credentials aus Parametern."""
+        """Removes credentials from parameters."""
         sensitive_keys = {
             "password",
             "token",
@@ -746,7 +746,7 @@ from jarvis.audit.eu_ai_act import (
     TransparencyRegister,
 )
 
-# Alias damit beide RiskClassifier erreichbar sind
+# Alias so both RiskClassifier variants are accessible
 AIActExportRiskClassifier = ExportRiskClassifier
 from jarvis.audit.impact_assessment import (
     EthicsBoard,

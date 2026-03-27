@@ -1,7 +1,7 @@
 """Browser-Use Types -- v17.
 
-Datenmodelle für autonome Browser-Automatisierung.
-Trennung von Low-Level (Playwright) und High-Level (Agent-Steuerung).
+Data models for autonomous browser automation.
+Separation of low-level (Playwright) and high-level (agent control).
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Any
 
 
 class ActionType(str, Enum):
-    """Browser-Aktionen die der Agent ausführen kann."""
+    """Browser actions the agent can perform."""
 
     NAVIGATE = "navigate"
     CLICK = "click"
@@ -45,7 +45,7 @@ class ActionType(str, Enum):
 
 
 class ElementType(str, Enum):
-    """Interaktive Element-Typen auf einer Seite."""
+    """Interactive element types on a page."""
 
     LINK = "link"
     BUTTON = "button"
@@ -64,15 +64,15 @@ class ElementType(str, Enum):
 
 
 class ExtractionMode(str, Enum):
-    """Wie Inhalte extrahiert werden."""
+    """How content is extracted."""
 
-    TEXT = "text"  # Nur sichtbarer Text
-    HTML = "html"  # Rohes HTML
-    MARKDOWN = "markdown"  # Strukturiertes Markdown
-    TABLES = "tables"  # Tabellen als JSON
-    LINKS = "links"  # Alle Links
-    FORMS = "forms"  # Formular-Felder
-    STRUCTURED = "structured"  # Intelligente Struktur-Erkennung
+    TEXT = "text"  # Visible text only
+    HTML = "html"  # Raw HTML
+    MARKDOWN = "markdown"  # Structured Markdown
+    TABLES = "tables"  # Tables as JSON
+    LINKS = "links"  # All links
+    FORMS = "forms"  # Form fields
+    STRUCTURED = "structured"  # Intelligent structure detection
 
 
 # ── Element Info ─────────────────────────────────────────────────
@@ -80,7 +80,7 @@ class ExtractionMode(str, Enum):
 
 @dataclass
 class ElementInfo:
-    """Beschreibt ein interaktives Element auf der Seite."""
+    """Describes an interactive element on the page."""
 
     selector: str
     element_type: ElementType
@@ -113,7 +113,7 @@ class ElementInfo:
 
     @property
     def label(self) -> str:
-        """Menschenlesbare Beschreibung des Elements."""
+        """Human-readable description of the element."""
         parts = []
         if self.text:
             parts.append(self.text[:80])
@@ -133,7 +133,7 @@ class ElementInfo:
 
 @dataclass
 class FormField:
-    """Ein Feld innerhalb eines Formulars."""
+    """A field within a form."""
 
     name: str
     field_type: str  # text, email, password, number, date, select, etc.
@@ -141,7 +141,7 @@ class FormField:
     value: str = ""
     placeholder: str = ""
     required: bool = False
-    options: list[str] = field(default_factory=list)  # für select
+    options: list[str] = field(default_factory=list)  # for select
     selector: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -162,7 +162,7 @@ class FormField:
 
 @dataclass
 class FormInfo:
-    """Beschreibt ein erkanntes Formular."""
+    """Describes a detected form."""
 
     action: str = ""
     method: str = "GET"
@@ -186,7 +186,7 @@ class FormInfo:
 
 @dataclass
 class PageState:
-    """Snapshot des aktuellen Seiten-Zustands."""
+    """Snapshot of the current page state."""
 
     url: str = ""
     title: str = ""
@@ -197,7 +197,7 @@ class PageState:
     is_loaded: bool = False
     has_dialog: bool = False
     dialog_message: str = ""
-    # Interaktive Elemente
+    # Interactive elements
     links: list[ElementInfo] = field(default_factory=list)
     buttons: list[ElementInfo] = field(default_factory=list)
     inputs: list[ElementInfo] = field(default_factory=list)
@@ -236,7 +236,7 @@ class PageState:
         }
 
     def to_summary(self, max_text: int = 2000) -> str:
-        """Kompakte Zusammenfassung für LLM-Kontext."""
+        """Compact summary for LLM context."""
         parts = [
             f"URL: {self.url}",
             f"Title: {self.title}",
@@ -270,11 +270,11 @@ class PageState:
 
 @dataclass
 class BrowserAction:
-    """Eine einzelne Browser-Aktion."""
+    """A single browser action."""
 
     action_type: ActionType
     params: dict[str, Any] = field(default_factory=dict)
-    description: str = ""  # Menschenlesbare Beschreibung
+    description: str = ""  # Human-readable description
     action_id: str = ""
 
     def __post_init__(self) -> None:
@@ -292,7 +292,7 @@ class BrowserAction:
 
 @dataclass
 class ActionResult:
-    """Ergebnis einer ausgeführten Browser-Aktion."""
+    """Result of an executed browser action."""
 
     action_id: str
     success: bool
@@ -333,7 +333,7 @@ class WorkflowStatus(str, Enum):
 
 @dataclass
 class BrowserWorkflow:
-    """Multi-Step Browser-Automatisierung."""
+    """Multi-step browser automation."""
 
     workflow_id: str = ""
     name: str = ""
@@ -383,7 +383,7 @@ class BrowserWorkflow:
 
 @dataclass
 class BrowserConfig:
-    """Konfiguration für Browser-Sessions."""
+    """Configuration for browser sessions."""
 
     headless: bool = True
     viewport_width: int = 1280
@@ -401,7 +401,7 @@ class BrowserConfig:
     proxy: str = ""
     # Vision-Integration
     vision_enabled: bool = False
-    vision_model: str = ""  # z.B. "gpt-4o", "claude-sonnet-4-20250514", "llava:13b"
+    vision_model: str = ""  # e.g. "gpt-4o", "claude-sonnet-4-20250514", "llava:13b"
     vision_backend: str = "ollama"
 
     def to_dict(self) -> dict[str, Any]:

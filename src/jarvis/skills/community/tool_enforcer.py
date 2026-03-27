@@ -1,4 +1,4 @@
-"""ToolEnforcer: Runtime-Tool-Allowlist fuer Community-Skills.
+"""ToolEnforcer: Runtime tool allowlist for community skills.
 
 Kern der architektonischen Sicherheit: Community-Skills duerfen NUR
 die in ``tools_required`` deklarierten Tools nutzen.  Alle anderen
@@ -32,7 +32,7 @@ log = get_logger(__name__)
 
 @dataclass(frozen=True)
 class ToolEnforcementResult:
-    """Ergebnis einer ToolEnforcer-Pruefung."""
+    """Result of a ToolEnforcer check."""
 
     allowed: bool
     tool: str
@@ -47,7 +47,7 @@ class ToolEnforcementResult:
 
 
 class ToolEnforcer:
-    """Runtime-Enforcement der Tool-Allowlist fuer Community-Skills.
+    """Runtime enforcement of the tool allowlist for community skills.
 
     Garantie: Ein Community-Skill kann NUR die Tools nutzen, die er
     in ``tools_required`` deklariert hat.  Alles andere wird geblockt.
@@ -64,7 +64,7 @@ class ToolEnforcer:
     """
 
     def __init__(self, *, max_tool_calls: int = 0) -> None:
-        """Initialisiert den ToolEnforcer.
+        """Initialize the ToolEnforcer.
 
         Args:
             max_tool_calls: Globaler Default fuer max Tool-Calls pro
@@ -87,7 +87,7 @@ class ToolEnforcer:
         action: PlannedAction,
         skill: Skill | None,
     ) -> ToolEnforcementResult:
-        """Prueft ob ein Tool-Call fuer den aktiven Skill erlaubt ist.
+        """Check if a tool call is allowed for the active skill.
 
         Args:
             action: Die geplante Aktion mit Tool-Name.
@@ -104,7 +104,7 @@ class ToolEnforcer:
                 allowed=True,
                 tool=action.tool,
                 skill_name="<none>",
-                reason="Kein Skill aktiv",
+                reason="No skill active",
             )
 
         # Builtin-Skills → kein Enforcement
@@ -115,7 +115,7 @@ class ToolEnforcer:
                 tool=action.tool,
                 skill_name=skill.name,
                 declared_tools=skill.tools_required,
-                reason="Builtin-Skill, kein Community-Enforcement",
+                reason="Builtin skill, no community enforcement",
             )
 
         # Community-Skill → tools_required enforcement
@@ -127,14 +127,14 @@ class ToolEnforcer:
                 "tool_enforcer_block",
                 tool=action.tool,
                 skill=skill.name,
-                reason="Community-Skill ohne tools_required",
+                reason="Community skill without tools_required",
             )
             return ToolEnforcementResult(
                 allowed=False,
                 tool=action.tool,
                 skill_name=skill.name,
                 declared_tools=[],
-                reason="Community-Skill hat keine tools_required deklariert — alle Tools geblockt",
+                reason="Community skill has no tools_required declared — alle Tools geblockt",
             )
 
         if action.tool not in declared:
@@ -182,15 +182,15 @@ class ToolEnforcer:
         )
 
     def reset_call_count(self, skill_slug: str) -> None:
-        """Setzt den Call-Counter fuer einen Skill zurueck.
+        """Reset the call counter for a skill.
 
-        Wird am Ende eines Skill-Aufrufs aufgerufen.
+        Called at the end of a skill invocation.
         """
         self._call_counts.pop(skill_slug, None)
 
     @property
     def stats(self) -> dict[str, int]:
-        """Enforcement-Statistiken."""
+        """Enforcement statistics."""
         return {
             "total_checks": self._stats.total_checks,
             "allowed": self._stats.allowed,
@@ -200,7 +200,7 @@ class ToolEnforcer:
 
 @dataclass
 class _EnforcerStats:
-    """Interne Statistiken."""
+    """Internal statistics."""
 
     total_checks: int = 0
     allowed: int = 0

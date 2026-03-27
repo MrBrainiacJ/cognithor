@@ -1,24 +1,24 @@
-"""Multi-Agent Router: Spezialisierte Agenten mit Intent-basiertem Routing.
+"""Multi-Agent Router: Specialized agents with intent-based routing.
 
-Architektur:
-  User-Nachricht → AgentRouter.route() → bester Agent
-                 → Agent.system_prompt + Tool-Filter
-                 → Planner arbeitet im Agenten-Kontext
+Architecture:
+  User message -> AgentRouter.route() -> best agent
+               -> Agent.system_prompt + tool filter
+               -> Planner operates in agent context
 
-Agenten sind konfigurierte Persona-Profile mit:
-  - Eigenem System-Prompt (Persönlichkeit + Expertise)
-  - Tool-Whitelist (nur erlaubte Tools)
-  - Skill-Zuordnung (bestimmte Skills gehören zu bestimmten Agenten)
-  - Modell-Präferenz (z.B. starkes Modell für Coding-Agent)
-  - Trigger-Patterns für automatisches Routing
+Agents are configured persona profiles with:
+  - Own system prompt (personality + expertise)
+  - Tool whitelist (only allowed tools)
+  - Skill assignment (certain skills belong to certain agents)
+  - Model preference (e.g. strong model for coding agent)
+  - Trigger patterns for automatic routing
 
-Eingebaute Agenten:
-  - jarvis (default): Generalist, kann alles
-  - researcher: Web-Recherche, Zusammenfassungen
-  - coder: Programmierung, Shell-Befehle, Dateien
-  - organizer: Kalender, Todos, E-Mails, Briefings
+Built-in agents:
+  - jarvis (default): Generalist, can do everything
+  - researcher: Web research, summaries
+  - coder: Programming, shell commands, files
+  - organizer: Calendar, todos, emails, briefings
 
-Bibel-Referenz: §9.2 (Multi-Agent-Routing)
+Reference: §9.2 (Multi-Agent Routing)
 """
 
 from __future__ import annotations
@@ -40,20 +40,20 @@ log = get_logger(__name__)
 
 
 # ============================================================================
-# Datenmodelle
+# Data models
 # ============================================================================
 
 
 @dataclass
 class AgentProfile:
-    """Definition eines spezialisierten Agenten.
+    """Definition of a specialized agent.
 
-    Jeder Agent hat:
-      - Eigenes Workspace-Verzeichnis (isoliert von anderen Agenten)
-      - Eigene Sandbox-Konfiguration (Netzwerk, Memory-Limits)
-      - Eigene Tool-Rechte (Whitelist/Blacklist)
-      - Delegations-Fähigkeit (kann andere Agenten beauftragen)
-      - Rolle (orchestrator, worker, monitor)
+    Each agent has:
+      - Own workspace directory (isolated from other agents)
+      - Own sandbox configuration (network, memory limits)
+      - Own tool permissions (whitelist/blacklist)
+      - Delegation capability (can assign tasks to other agents)
+      - Role (orchestrator, worker, monitor)
     """
 
     name: str
@@ -65,49 +65,49 @@ class AgentProfile:
 
     # Persona
     system_prompt: str = ""
-    language: str = "de"  # Antwortsprache
+    language: str = "de"  # Response language
 
     # Routing
     trigger_patterns: list[str] = field(default_factory=list)
     trigger_keywords: list[str] = field(default_factory=list)
-    priority: int = 0  # Höher = bevorzugt bei Gleichstand
+    priority: int = 0  # Higher = preferred on tie
 
-    # Tool-Zugriff
-    allowed_tools: list[str] | None = None  # None = alle Tools erlaubt
+    # Tool access
+    allowed_tools: list[str] | None = None  # None = all tools allowed
     blocked_tools: list[str] = field(default_factory=list)
 
-    # Modell-Präferenz
-    preferred_model: str = ""  # Leer = Default des ModelRouters
-    temperature: float | None = None  # Leer = Default
-    top_p: float | None = None  # None = Default des Modells
+    # Model preference
+    preferred_model: str = ""  # Empty = ModelRouter default
+    temperature: float | None = None  # Empty = default
+    top_p: float | None = None  # None = model default
 
-    # --- NEU: Workspace-Isolation ---
-    workspace_subdir: str = ""  # Unterverzeichnis in ~/.jarvis/workspace/
-    # Leer = eigenes Verzeichnis basierend auf Agent-Name
-    # Isoliert Dateien, Outputs und temporäre Daten pro Agent
-    shared_workspace: bool = False  # True = teilt Workspace mit Default-Agent
+    # --- Workspace isolation ---
+    workspace_subdir: str = ""  # Subdirectory in ~/.jarvis/workspace/
+    # Empty = own directory based on agent name
+    # Isolates files, outputs and temporary data per agent
+    shared_workspace: bool = False  # True = shares workspace with default agent
 
-    # --- NEU: Per-Agent Sandbox ---
-    sandbox_network: str = "allow"  # "allow" oder "block"
+    # --- Per-agent sandbox ---
+    sandbox_network: str = "allow"  # "allow" or "block"
     sandbox_max_memory_mb: int = 512
     sandbox_max_processes: int = 64
     sandbox_timeout: int = 30
 
-    # --- NEU: Delegation ---
+    # --- Delegation ---
     can_delegate_to: list[str] = field(default_factory=list)
-    # Liste von Agent-Namen an die delegiert werden darf
-    # Leer = kann nicht delegieren
-    max_delegation_depth: int = 2  # Maximale Delegationstiefe
+    # List of agent names that can be delegated to
+    # Empty = cannot delegate
+    max_delegation_depth: int = 2  # Maximum delegation depth
 
-    # --- NEU: Per-Agent Credentials ---
+    # --- Per-agent credentials ---
     credential_scope: str = ""
-    # Scope-Name für Credential-Isolation.
-    # Leer = Zugriff nur auf globale Credentials.
-    # Gesetzt = Zugriff auf agent-spezifische + globale Credentials.
-    # Beispiel: "coder" → kann auf "coder/github:token" zugreifen
+    # Scope name for credential isolation.
+    # Empty = access only to global credentials.
+    # Set = access to agent-specific + global credentials.
+    # Example: "coder" -> can access "coder/github:token"
     credential_mappings: dict[str, str] = field(default_factory=dict)
-    # Mapping: param_name → "service:key" für automatische Injection
-    # Beispiel: {"api_key": "openai:api_key"}
+    # Mapping: param_name -> "service:key" for automatic injection
+    # Example: {"api_key": "openai:api_key"}
 
     # --- Identity Layer (Immortal Mind Protocol) ---
     identity_enabled: bool = True  # Does this agent have a personality?
@@ -122,23 +122,23 @@ class AgentProfile:
 
     @property
     def effective_workspace_subdir(self) -> str:
-        """Effektives Workspace-Unterverzeichnis.
+        """Effective workspace subdirectory.
 
-        Wenn shared_workspace=True, wird "" zurückgegeben (gemeinsamer Workspace).
-        Sonst workspace_subdir oder Agent-Name als Fallback.
+        If shared_workspace=True, returns "" (shared workspace).
+        Otherwise workspace_subdir or agent name as fallback.
         """
         if self.shared_workspace:
             return ""
         return self.workspace_subdir or self.name
 
     def resolve_workspace(self, base_workspace: Path) -> Path:
-        """Löst das Agent-spezifische Workspace-Verzeichnis auf.
+        """Resolve the agent-specific workspace directory.
 
         Args:
-            base_workspace: Basis-Workspace (z.B. ~/.jarvis/workspace/)
+            base_workspace: Base workspace (e.g. ~/.jarvis/workspace/)
 
         Returns:
-            Isoliertes Verzeichnis für diesen Agenten.
+            Isolated directory for this agent.
         """
         subdir = self.effective_workspace_subdir
         if not subdir:
@@ -149,7 +149,7 @@ class AgentProfile:
         return agent_workspace
 
     def get_sandbox_config(self) -> dict[str, Any]:
-        """Gibt Sandbox-Konfiguration für diesen Agenten zurück."""
+        """Return sandbox configuration for this agent."""
         return {
             "network": self.sandbox_network,
             "max_memory_mb": self.sandbox_max_memory_mb,
@@ -158,13 +158,13 @@ class AgentProfile:
         }
 
     def filter_tools(self, all_tools: dict[str, Any]) -> dict[str, Any]:
-        """Filtert Tool-Schemas basierend auf Agent-Rechten.
+        """Filter tool schemas based on agent permissions.
 
         Args:
-            all_tools: Alle verfügbaren Tool-Schemas.
+            all_tools: All available tool schemas.
 
         Returns:
-            Gefilterte Tool-Schemas die dieser Agent nutzen darf.
+            Filtered tool schemas that this agent is allowed to use.
         """
         if not self.has_tool_restrictions:
             return all_tools
@@ -182,7 +182,7 @@ class AgentProfile:
 
 @dataclass
 class RouteDecision:
-    """Ergebnis des Agent-Routings."""
+    """Result of agent routing."""
 
     agent: AgentProfile
     confidence: float  # 0.0-1.0
@@ -192,35 +192,35 @@ class RouteDecision:
 
 @dataclass
 class DelegationRequest:
-    """Anfrage eines Agenten, eine Teilaufgabe an einen anderen zu delegieren.
+    """Request from an agent to delegate a subtask to another agent.
 
-    Ermöglicht Agent-zu-Agent-Kommunikation:
-      Jarvis: "Recherchiere die aktuellen BU-Tarife"
-        → DelegationRequest(from=jarvis, to=researcher, task="BU-Tarife")
-        → Researcher führt aus, gibt Ergebnis an Jarvis zurück
+    Enables agent-to-agent communication:
+      Jarvis: "Research current disability insurance rates"
+        -> DelegationRequest(from=jarvis, to=researcher, task="rates")
+        -> Researcher executes, returns result to Jarvis
     """
 
     from_agent: str
     to_agent: str
     task: str
-    depth: int = 1  # Aktuelle Delegationstiefe
+    depth: int = 1  # Current delegation depth
     target_profile: AgentProfile | None = None
-    result: str | None = None  # Wird nach Ausführung gesetzt
+    result: str | None = None  # Set after execution
     success: bool | None = None
 
 
 # ============================================================================
-# Eingebaute Agenten
+# Built-in agents
 # ============================================================================
 
 
 def _default_agents() -> list[AgentProfile]:
-    """Erstellt nur den minimalen Default-Agenten.
+    """Create only the minimal default agent.
 
-    Alle spezialisierten Agenten werden vom Nutzer definiert
-    (via ~/.jarvis/config/agents.yaml oder Onboarding).
-    Jarvis ist ein universelles Agent-OS -- keine hardcodierten
-    Branchen- oder Rollen-Agenten.
+    All specialized agents are defined by the user
+    (via ~/.jarvis/config/agents.yaml or onboarding).
+    Jarvis is a universal agent OS -- no hardcoded
+    industry or role agents.
     """
     return [
         AgentProfile(
@@ -245,16 +245,16 @@ def _default_agents() -> list[AgentProfile]:
 
 
 class AgentRouter:
-    """Routet Nachrichten zum passendsten spezialisierten Agenten.
+    """Route messages to the best matching specialized agent.
 
     Usage:
         router = AgentRouter()
-        router.initialize()  # Lädt eingebaute + konfigurierte Agenten
+        router.initialize()  # Load built-in + configured agents
 
-        decision = router.route("Recherchiere zum Thema KI-Sicherheit")
-        # → RouteDecision(agent=researcher, confidence=0.85)
+        decision = router.route("Research the topic of AI safety")
+        # -> RouteDecision(agent=researcher, confidence=0.85)
 
-        # Tool-Schemas für den Agenten filtern:
+        # Filter tool schemas for the agent:
         filtered_tools = decision.agent.filter_tools(all_tool_schemas)
     """
 
@@ -267,25 +267,25 @@ class AgentRouter:
 
     @property
     def bindings(self) -> BindingEngine:
-        """Zugriff auf die Binding-Engine für deterministische Routing-Regeln."""
+        """Access the binding engine for deterministic routing rules."""
         return self._binding_engine
 
     def initialize(self, custom_agents: list[AgentProfile] | None = None) -> None:
-        """Initialisiert den Router mit eingebauten + optionalen Custom-Agenten.
+        """Initialize the router with built-in + optional custom agents.
 
         Args:
-            custom_agents: Zusätzliche Agenten die die Defaults ergänzen/überschreiben.
+            custom_agents: Additional agents that supplement/override defaults.
         """
-        # Eingebaute Agenten laden
+        # Load built-in agents
         for agent in _default_agents():
             self._agents[agent.name] = agent
 
-        # Custom-Agenten überschreiben/ergänzen
+        # Custom agents override/supplement
         if custom_agents:
             for agent in custom_agents:
                 self._agents[agent.name] = agent
 
-        # Regex-Patterns kompilieren
+        # Compile regex patterns
         self._compile_patterns()
 
         log.info(
@@ -295,7 +295,7 @@ class AgentRouter:
         )
 
     def _compile_patterns(self) -> None:
-        """Kompiliert Trigger-Patterns für schnelles Matching."""
+        """Compile trigger patterns for fast matching."""
         self._compiled_patterns.clear()
         for name, agent in self._agents.items():
             patterns = []
@@ -321,26 +321,26 @@ class AgentRouter:
         *,
         context: MessageContext | None = None,
     ) -> RouteDecision:
-        """Routet eine User-Nachricht zum besten Agenten.
+        """Route a user message to the best agent.
 
-        Routing-Kaskade (deterministic → probabilistic):
-          1. Bindings (deterministisch, First-Match-Wins)
-          2. Regex-Pattern-Match: 0.9
-          3. Exakter Keyword im Query: 0.7
-          4. Teilwort-Match: 0.4
-          5. Priority-Bonus: +0.05 * priority
+        Routing cascade (deterministic -> probabilistic):
+          1. Bindings (deterministic, first-match-wins)
+          2. Regex pattern match: 0.9
+          3. Exact keyword in query: 0.7
+          4. Partial word match: 0.4
+          5. Priority bonus: +0.05 * priority
           6. Default (Jarvis): 0.3
 
         Args:
-            query: User-Nachricht.
-            context: Optionaler MessageContext für Binding-Auswertung.
-                     Wenn None, wird ein minimaler Kontext aus query erstellt.
+            query: User message.
+            context: Optional MessageContext for binding evaluation.
+                     If None, a minimal context is created from query.
 
         Returns:
-            RouteDecision mit Agent und Confidence.
+            RouteDecision with agent and confidence.
         """
         if not query.strip():
-            return self._default_decision("Leere Nachricht")
+            return self._default_decision("Empty message")
 
         # --- Phase 1: Deterministische Bindings ---
         if self._binding_engine.binding_count > 0:
@@ -375,7 +375,7 @@ class AgentRouter:
             score = 0.0
             matched: list[str] = []
 
-            # 1. Regex-Pattern-Matches (stärkster Indikator)
+            # 1. Regex pattern matches (strongest indicator)
             for pattern in self._compiled_patterns.get(name, []):
                 if pattern.search(query_lower):
                     score = max(score, 0.9)
@@ -399,16 +399,16 @@ class AgentRouter:
 
             scores[name] = (score, matched)
 
-        # Bester Agent auswählen
+        # Select best agent
         if not scores:
-            return self._default_decision("Keine Agenten aktiv")
+            return self._default_decision("No agents active")
 
         best_name = max(scores, key=lambda n: scores[n][0])
         best_score, best_matched = scores[best_name]
 
-        # Minimum-Confidence: Wenn kein Agent gut matcht, Fallback
+        # Minimum confidence: if no agent matches well, fallback
         if best_score < 0.3:
-            return self._default_decision("Kein Agent passt gut genug")
+            return self._default_decision("No agent matches well enough")
 
         agent = self._agents[best_name]
 
@@ -429,10 +429,10 @@ class AgentRouter:
         return decision
 
     def _default_decision(self, reason: str) -> RouteDecision:
-        """Erstellt eine Default-Routing-Entscheidung (Jarvis)."""
+        """Create a default routing decision (Jarvis)."""
         default = self._agents.get(self._default_agent)
         if not default:
-            # Absoluter Fallback
+            # Absolute fallback
             default = AgentProfile(name="jarvis", display_name="Jarvis")
 
         return RouteDecision(
@@ -442,23 +442,23 @@ class AgentRouter:
         )
 
     # ========================================================================
-    # Zugriff & Verwaltung
+    # Access & management
     # ========================================================================
 
     def get_agent(self, name: str) -> AgentProfile | None:
-        """Gibt einen Agenten per Name zurück."""
+        """Return an agent by name."""
         return self._agents.get(name)
 
     def list_agents(self) -> list[AgentProfile]:
-        """Alle registrierten Agenten."""
+        """All registered agents."""
         return list(self._agents.values())
 
     def list_enabled(self) -> list[AgentProfile]:
-        """Nur aktive Agenten."""
+        """Only active agents."""
         return [a for a in self._agents.values() if a.enabled]
 
     def add_agent(self, agent: AgentProfile) -> None:
-        """Registriert einen neuen Agenten (oder überschreibt bestehenden)."""
+        """Register a new agent (or overwrite an existing one)."""
         self._agents[agent.name] = agent
         self._compile_patterns()
         log.info("agent_added", name=agent.name)
@@ -475,24 +475,24 @@ class AgentRouter:
         can_delegate_to: list[str] | None = None,
         persist_path: Path | None = None,
     ) -> AgentProfile:
-        """Erstellt dynamisch einen neuen Agenten zur Laufzeit.
+        """Dynamically create a new agent at runtime.
 
-        Jarvis kann diese Methode selbst aufrufen, wenn es erkennt dass
-        ein Spezialist gebraucht wird. Der Agent wird sofort aktiv und
-        optional in agents.yaml persistiert.
+        Jarvis can call this method itself when it recognizes that
+        a specialist is needed. The agent becomes active immediately and
+        is optionally persisted in agents.yaml.
 
         Args:
-            name: Eindeutiger Agent-Name (z.B. "tarif_berater").
-            description: Kurzbeschreibung der Rolle.
-            trigger_keywords: Keywords für automatisches Routing.
-            system_prompt: System-Prompt für den Agenten.
-            allowed_tools: Tool-Whitelist (None = alle).
-            sandbox_network: "allow" oder "block".
-            can_delegate_to: Liste von Agent-Namen für Delegation.
-            persist_path: Wenn gesetzt, wird agents.yaml aktualisiert.
+            name: Unique agent name (e.g. "tarif_berater").
+            description: Short description of the role.
+            trigger_keywords: Keywords for automatic routing.
+            system_prompt: System prompt for the agent.
+            allowed_tools: Tool whitelist (None = all).
+            sandbox_network: "allow" or "block".
+            can_delegate_to: List of agent names for delegation.
+            persist_path: If set, agents.yaml is updated.
 
         Returns:
-            Das erstellte AgentProfile.
+            The created AgentProfile.
         """
         agent = AgentProfile(
             name=name,
@@ -514,23 +514,23 @@ class AgentRouter:
             keywords=trigger_keywords,
         )
 
-        # Optional persistieren
+        # Optionally persist
         if persist_path:
             self.save_agents_yaml(persist_path)
 
         return agent
 
     def save_agents_yaml(self, path: Path) -> None:
-        """Speichert die aktuelle Agent-Konfiguration als YAML.
+        """Save the current agent configuration as YAML.
 
-        Ermöglicht Persistenz von dynamisch erstellten Agenten.
+        Enables persistence of dynamically created agents.
         """
         import yaml
 
         agents_data = []
         for agent in self._agents.values():
             if agent.name == "jarvis":
-                continue  # Default nicht speichern
+                continue  # Don't save default
 
             data: dict[str, Any] = {
                 "name": agent.name,
@@ -612,9 +612,9 @@ class AgentRouter:
         return len(custom_agents)
 
     def remove_agent(self, name: str) -> bool:
-        """Entfernt einen Agenten."""
+        """Remove an agent."""
         if name == self._default_agent:
-            return False  # Default kann nicht entfernt werden
+            return False  # Default cannot be removed
         if name in self._agents:
             del self._agents[name]
             self._compiled_patterns.pop(name, None)
@@ -627,9 +627,9 @@ class AgentRouter:
         config_path: str | Path,
         audit_logger: AuditLogger | None = None,
     ) -> AgentRouter:
-        """Lädt Agenten- und Binding-Konfiguration aus YAML-Datei(en).
+        """Load agent and binding configuration from YAML file(s).
 
-        Erwartetes Format (agents.yaml):
+        Expected format (agents.yaml):
             agents:
               - name: insurance_expert
                 display_name: Versicherungs-Experte
@@ -637,8 +637,8 @@ class AgentRouter:
                 trigger_keywords: [versicherung, police, tarif]
                 allowed_tools: [web_search, read_file]
 
-        Bindings werden aus bindings.yaml im selben Verzeichnis geladen
-        (falls vorhanden).
+        Bindings are loaded from bindings.yaml in the same directory
+        (if present).
         """
         path = Path(config_path)
         router = cls(audit_logger=audit_logger)
@@ -654,7 +654,7 @@ class AgentRouter:
 
         router.initialize(custom_agents)
 
-        # Bindings aus separater Datei laden (falls vorhanden)
+        # Load bindings from separate file (if present)
         bindings_path = path.parent / "bindings.yaml"
         if bindings_path.exists():
             router._binding_engine = BindingEngine.from_yaml(bindings_path)
@@ -667,11 +667,11 @@ class AgentRouter:
         return router
 
     # ========================================================================
-    # Agent-Delegation
+    # Agent delegation
     # ========================================================================
 
     def can_delegate(self, from_agent: str, to_agent: str) -> bool:
-        """Prüft ob ein Agent an einen anderen delegieren darf."""
+        """Check whether an agent is allowed to delegate to another."""
         source = self._agents.get(from_agent)
         target = self._agents.get(to_agent)
 
@@ -689,16 +689,16 @@ class AgentRouter:
         *,
         depth: int = 0,
     ) -> DelegationRequest | None:
-        """Erstellt eine Delegationsanfrage.
+        """Create a delegation request.
 
         Args:
-            from_agent: Name des delegierenden Agenten.
-            to_agent: Name des Ziel-Agenten.
-            task: Aufgabenbeschreibung.
-            depth: Aktuelle Delegationstiefe (für Rekursionsschutz).
+            from_agent: Name of the delegating agent.
+            to_agent: Name of the target agent.
+            task: Task description.
+            depth: Current delegation depth (for recursion protection).
 
         Returns:
-            DelegationRequest oder None wenn nicht erlaubt.
+            DelegationRequest or None if not allowed.
         """
         source = self._agents.get(from_agent)
         target = self._agents.get(to_agent)
@@ -734,7 +734,7 @@ class AgentRouter:
             target_profile=target,
         )
 
-        # Audit: Delegation protokollieren
+        # Audit: log delegation
         if self._audit_logger:
             self._audit_logger.log_agent_delegation(from_agent, to_agent, task)
 
@@ -749,7 +749,7 @@ class AgentRouter:
         return request
 
     def get_delegation_targets(self, agent_name: str) -> list[AgentProfile]:
-        """Gibt die Agenten zurück, an die delegiert werden darf."""
+        """Return the agents that can be delegated to."""
         source = self._agents.get(agent_name)
         if not source:
             return []
@@ -762,7 +762,7 @@ class AgentRouter:
         return targets
 
     # ========================================================================
-    # Workspace-Verwaltung
+    # Workspace management
     # ========================================================================
 
     def resolve_agent_workspace(
@@ -770,14 +770,14 @@ class AgentRouter:
         agent_name: str,
         base_workspace: Path,
     ) -> Path:
-        """Löst das Workspace-Verzeichnis für einen Agenten auf.
+        """Resolve the workspace directory for an agent.
 
         Args:
-            agent_name: Name des Agenten.
-            base_workspace: Basis-Workspace.
+            agent_name: Name of the agent.
+            base_workspace: Base workspace.
 
         Returns:
-            Isoliertes Verzeichnis oder Basis bei shared_workspace.
+            Isolated directory or base for shared_workspace.
         """
         agent = self._agents.get(agent_name)
         if not agent:
@@ -786,7 +786,7 @@ class AgentRouter:
         return agent.resolve_workspace(base_workspace)
 
     def stats(self) -> dict[str, Any]:
-        """Router-Statistiken."""
+        """Router statistics."""
         return {
             "total_agents": len(self._agents),
             "enabled": len(self.list_enabled()),

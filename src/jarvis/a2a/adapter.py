@@ -1,13 +1,13 @@
-"""A2A Adapter: Brücke zwischen Jarvis-Interop (JAIP) und A2A RC v1.0.
+"""A2A Adapter: Bridge between Jarvis Interop (JAIP) and A2A RC v1.0.
 
-Verbindet InteropProtocol mit dem standardisierten A2A-Protokoll.
-Verantwortlich für:
-  1. JAIP-Capabilities → A2A-Skills
-  2. JAIP-AgentIdentity → A2A-AgentCard
-  3. Eingehende A2A-Tasks → Jarvis Message-Handler
-  4. Gateway-Integration (Boot/Shutdown)
+Connects InteropProtocol with the standardized A2A protocol.
+Responsible for:
+  1. JAIP Capabilities -> A2A Skills
+  2. JAIP AgentIdentity -> A2A AgentCard
+  3. Incoming A2A Tasks -> Jarvis message handler
+  4. Gateway integration (boot/shutdown)
 
-OPTIONAL: Aktiviert sich nur wenn A2A in Config eingeschaltet ist.
+OPTIONAL: Only activates when A2A is enabled in config.
 """
 
 from __future__ import annotations
@@ -91,7 +91,7 @@ def capabilities_to_skills(capabilities: list[AgentCapability]) -> list[A2ASkill
 
 
 class A2AAdapter:
-    """Zentrale Brücke zwischen JAIP und A2A RC v1.0."""
+    """Central bridge between JAIP and A2A RC v1.0."""
 
     def __init__(self, config: JarvisConfig) -> None:
         self._config = config
@@ -324,7 +324,7 @@ class A2AAdapter:
         )
 
     async def handle_stream_request(self, body: dict[str, Any], auth_token: str | None = None):
-        """Streaming-Endpoint: Leitet an Server weiter."""
+        """Streaming endpoint: forwards to server."""
         if self._server is None:
             yield 'event: error\ndata: {"code": -32000, "message": "A2A Server not running"}\n\n'
             return

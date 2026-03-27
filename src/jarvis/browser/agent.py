@@ -1,18 +1,18 @@
-"""Browser Agent -- Autonome Browser-Steuerung v17.
+"""Browser Agent -- Autonomous browser control v17.
 
-Orchestriert:
-  - Playwright Browser-Instanz (headless)
-  - PageAnalyzer für Seiten-Verständnis
-  - SessionManager für Cookie-Persistierung
-  - Multi-Tab-Management
-  - Workflow-Execution (Schritt-für-Schritt)
-  - Automatische Cookie-Banner-Erkennung
-  - Screenshot auf Fehler
-  - Content-Extraktion
+Orchestrates:
+  - Playwright browser instance (headless)
+  - PageAnalyzer for page understanding
+  - SessionManager for cookie persistence
+  - Multi-tab management
+  - Workflow execution (step-by-step)
+  - Automatic cookie banner detection
+  - Screenshot on error
+  - Content extraction
 
-Benötigt: pip install playwright && playwright install chromium
+Requires: pip install playwright && playwright install chromium
 
-OPTIONAL: Graceful degradation wenn Playwright nicht installiert.
+OPTIONAL: Graceful degradation when Playwright is not installed.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-# Playwright-Verfügbarkeit prüfen
+# Check Playwright availability
 _HAS_PLAYWRIGHT = False
 try:
     from playwright.async_api import Browser, BrowserContext, Page, async_playwright  # noqa: F401
@@ -50,7 +50,7 @@ except ImportError:
 
 
 class BrowserAgent:
-    """Autonomer Browser-Agent -- steuert Webseiten über Playwright.
+    """Autonomous browser agent -- controls web pages via Playwright.
 
     Usage:
         agent = BrowserAgent()
@@ -94,7 +94,7 @@ class BrowserAgent:
 
     @property
     def page(self) -> Any:
-        """Aktive Seite."""
+        """Active page."""
         if self._pages and 0 <= self._active_page_idx < len(self._pages):
             return self._pages[self._active_page_idx]
         return None
@@ -106,7 +106,7 @@ class BrowserAgent:
     # ── Lifecycle ────────────────────────────────────────────────
 
     async def start(self, session_id: str = "") -> bool:
-        """Startet Browser-Instanz."""
+        """Starts browser instance."""
         if not _HAS_PLAYWRIGHT:
             log.warning("browser_playwright_not_installed")
             return False
@@ -137,17 +137,17 @@ class BrowserAgent:
 
             self._context = await self._browser.new_context(**context_opts)
 
-            # Session wiederherstellen
+            # Restore session
             if session_id and self._config.persist_cookies:
                 await self._session_mgr.restore_to_context(self._context, session_id)
 
-            # Console-Messages sammeln
+            # Collect console messages
             self._context.on(
                 "console",
                 lambda msg: self._console_messages.append(f"[{msg.type}] {msg.text}"[:200]),
             )
 
-            # Erste Seite
+            # First page
             page = await self._context.new_page()
             self._pages.append(page)
             self._active_page_idx = 0
@@ -163,11 +163,11 @@ class BrowserAgent:
             return False
 
     async def stop(self, session_id: str = "") -> None:
-        """Stoppt Browser und speichert Session."""
+        """Stops browser and saves session."""
         if not self._running:
             return
 
-        # Session speichern
+        # Save session
         if session_id and self._config.persist_cookies and self.page:
             try:
                 await self._session_mgr.save_from_page(self.page, session_id)
@@ -198,7 +198,7 @@ class BrowserAgent:
     async def navigate(
         self, url: str, *, wait_until: str = "domcontentloaded", auto_dismiss_cookies: bool = True
     ) -> PageState:
-        """Navigiert zu URL und analysiert die Seite."""
+        """Navigates to URL and analyzes the page."""
         self._ensure_running()
         start = time.monotonic()
 
@@ -212,7 +212,7 @@ class BrowserAgent:
         except Exception as exc:
             return PageState(url=url, errors=[str(exc)])
 
-        # Cookie-Banner automatisch schließen
+        # Automatically dismiss cookie banner
         if auto_dismiss_cookies:
             await self._try_dismiss_cookies()
 
@@ -226,7 +226,7 @@ class BrowserAgent:
         return state
 
     async def click(self, selector: str, *, timeout: int = 0) -> ActionResult:
-        """Klickt auf ein Element."""
+        """Clicks on an element."""
         self._ensure_running()
         start = time.monotonic()
         old_url = self.page.url
@@ -257,7 +257,7 @@ class BrowserAgent:
         )
 
     async def fill(self, selector: str, value: str, *, clear: bool = True) -> ActionResult:
-        """Füllt ein Formularfeld aus."""
+        """Fills a form field."""
         self._ensure_running()
         start = time.monotonic()
 
@@ -280,7 +280,7 @@ class BrowserAgent:
         )
 
     async def select(self, selector: str, value: str) -> ActionResult:
-        """Wählt eine Option in einem Select-Element."""
+        """Selects an option in a select element."""
         self._ensure_running()
         start = time.monotonic()
 
@@ -301,7 +301,7 @@ class BrowserAgent:
         )
 
     async def hover(self, selector: str) -> ActionResult:
-        """Fährt mit der Maus über ein Element."""
+        """Hovers the mouse over an element."""
         self._ensure_running()
         start = time.monotonic()
         try:
@@ -320,7 +320,7 @@ class BrowserAgent:
             )
 
     async def press_key(self, key: str) -> ActionResult:
-        """Drückt eine Taste (Enter, Tab, Escape, etc.)."""
+        """Presses a key (Enter, Tab, Escape, etc.)."""
         self._ensure_running()
         start = time.monotonic()
         try:
@@ -339,7 +339,7 @@ class BrowserAgent:
             )
 
     async def scroll(self, direction: str = "down", amount: int = 500) -> ActionResult:
-        """Scrollt die Seite."""
+        """Scrolls the page."""
         self._ensure_running()
         dy = amount if direction == "down" else -amount
         try:
@@ -353,7 +353,7 @@ class BrowserAgent:
     async def wait_for(
         self, selector: str, *, timeout: int = 0, state: str = "visible"
     ) -> ActionResult:
-        """Wartet auf ein Element."""
+        """Waits for an element."""
         self._ensure_running()
         start = time.monotonic()
         try:
@@ -374,7 +374,7 @@ class BrowserAgent:
             )
 
     async def execute_js(self, script: str) -> ActionResult:
-        """Führt JavaScript auf der Seite aus."""
+        """Executes JavaScript on the page."""
         self._ensure_running()
         start = time.monotonic()
         try:
@@ -398,7 +398,7 @@ class BrowserAgent:
     # ── Screenshots ──────────────────────────────────────────────
 
     async def screenshot(self, *, full_page: bool = False, path: str = "") -> ActionResult:
-        """Erstellt Screenshot (gibt Base64 zurück)."""
+        """Takes screenshot (returns Base64)."""
         self._ensure_running()
         start = time.monotonic()
         try:
@@ -426,7 +426,7 @@ class BrowserAgent:
     # ── Tab Management ───────────────────────────────────────────
 
     async def new_tab(self, url: str = "") -> ActionResult:
-        """Öffnet neuen Tab."""
+        """Opens a new tab."""
         self._ensure_running()
         if len(self._pages) >= self._config.max_pages:
             return ActionResult(
@@ -447,7 +447,7 @@ class BrowserAgent:
             return ActionResult(action_id="", success=False, error=str(exc))
 
     async def close_tab(self, index: int = -1) -> ActionResult:
-        """Schließt einen Tab."""
+        """Closes a tab."""
         self._ensure_running()
         if len(self._pages) <= 1:
             return ActionResult(action_id="", success=False, error="Cannot close last tab")
@@ -465,7 +465,7 @@ class BrowserAgent:
             return ActionResult(action_id="", success=False, error=str(exc))
 
     def switch_tab(self, index: int) -> ActionResult:
-        """Wechselt den aktiven Tab."""
+        """Switches the active tab."""
         if 0 <= index < len(self._pages):
             self._active_page_idx = index
             return ActionResult(action_id="", success=True)
@@ -474,7 +474,7 @@ class BrowserAgent:
     # ── Content Extraction ───────────────────────────────────────
 
     async def analyze_page(self) -> PageState:
-        """Analysiert die aktuelle Seite."""
+        """Analyzes the current page."""
         self._ensure_running()
         state = await self._analyzer.analyze(self.page)
         state.tab_index = self._active_page_idx
@@ -483,7 +483,7 @@ class BrowserAgent:
         return state
 
     async def extract_text(self, selector: str = "body") -> str:
-        """Extrahiert Text aus einem Element."""
+        """Extracts text from an element."""
         self._ensure_running()
         try:
             # Use parameterized evaluate to prevent CSS selector injection
@@ -498,19 +498,19 @@ class BrowserAgent:
             return ""
 
     async def extract_tables(self) -> list[dict[str, Any]]:
-        """Extrahiert alle Tabellen der Seite."""
+        """Extracts all tables from the page."""
         self._ensure_running()
         state = await self._analyzer.analyze(self.page, extract_text=False)
         return state.tables
 
     async def extract_links(self) -> list[dict[str, str]]:
-        """Extrahiert alle Links."""
+        """Extracts all links."""
         self._ensure_running()
         state = await self._analyzer.analyze(self.page, extract_text=False)
         return [{"text": link.text, "href": link.href} for link in state.links if link.href]
 
     async def find_and_click(self, description: str) -> ActionResult:
-        """Findet ein Element anhand Beschreibung und klickt darauf."""
+        """Finds an element by description and clicks on it."""
         self._ensure_running()
         element = await self._analyzer.find_element(self.page, description)
         if element is None:
@@ -522,11 +522,11 @@ class BrowserAgent:
     # ── Form Automation ──────────────────────────────────────────
 
     async def fill_form(self, data: dict[str, str], *, submit: bool = False) -> list[ActionResult]:
-        """Füllt ein Formular mit den gegebenen Daten aus.
+        """Fills a form with the given data.
 
         Args:
-            data: Mapping von Feldname/Label → Wert
-            submit: Formular nach dem Ausfüllen absenden?
+            data: Mapping of field name/label to value
+            submit: Submit the form after filling?
         """
         self._ensure_running()
         state = await self._analyzer.analyze(self.page, extract_text=False)
@@ -546,14 +546,14 @@ class BrowserAgent:
 
             if submit and form.submit_selector:
                 results.append(await self.click(form.submit_selector))
-            break  # Erstes Formular
+            break  # First form
 
         return results
 
     # ── Workflow Execution ───────────────────────────────────────
 
     async def execute_workflow(self, workflow: BrowserWorkflow) -> BrowserWorkflow:
-        """Führt einen Multi-Step-Workflow aus."""
+        """Executes a multi-step workflow."""
         self._ensure_running()
         workflow.status = WorkflowStatus.RUNNING
         self._workflows[workflow.workflow_id] = workflow
@@ -595,7 +595,7 @@ class BrowserAgent:
         return workflow
 
     async def _execute_action(self, action: BrowserAction) -> ActionResult:
-        """Führt eine einzelne BrowserAction aus."""
+        """Executes a single BrowserAction."""
         start = time.monotonic()
         params = action.params
 
@@ -674,7 +674,7 @@ class BrowserAgent:
     # ── Cookie Banner ────────────────────────────────────────────
 
     async def _try_dismiss_cookies(self) -> bool:
-        """Versucht Cookie-Banner automatisch zu schließen."""
+        """Attempts to automatically dismiss cookie banner."""
         try:
             banner = await self._analyzer.detect_cookie_banner(self.page)
             if banner.get("found") and banner.get("acceptSelector"):
@@ -689,7 +689,7 @@ class BrowserAgent:
     # ── Vision-Integration ──────────────────────────────────────
 
     async def _extract_page_content(self, max_chars: int = 15_000) -> str:
-        """Extrahiert bereinigtes HTML (ohne script/style/noscript/svg)."""
+        """Extracts cleaned HTML (without script/style/noscript/svg)."""
         try:
             js = """(() => {
                 const c = document.body.cloneNode(true);
@@ -703,21 +703,21 @@ class BrowserAgent:
             return ""
 
     async def analyze_page_with_vision(self, prompt: str = "") -> dict[str, Any]:
-        """Analysiert die aktuelle Seite mit DOM + optionalem Vision-LLM.
+        """Analyzes the current page with DOM + optional Vision LLM.
 
         Args:
-            prompt: Optionaler Custom-Prompt für die Vision-Analyse.
+            prompt: Optional custom prompt for the vision analysis.
 
         Returns:
-            Dict mit "dom" (PageState-Summary), "vision" (str) und "combined" (str).
+            Dict with "dom" (PageState summary), "vision" (str) and "combined" (str).
         """
         self._ensure_running()
 
-        # DOM-Analyse (immer verfügbar)
+        # DOM analysis (always available)
         state = await self.analyze_page()
         dom_summary = state.to_summary(max_text=2000)
 
-        # Vision-Analyse (optional)
+        # Vision analysis (optional)
         vision_text = ""
         if self._vision is not None and getattr(self._vision, "is_enabled", False):
             try:
@@ -743,22 +743,22 @@ class BrowserAgent:
         }
 
     async def find_and_click_with_vision(self, description: str) -> ActionResult:
-        """Findet und klickt ein Element per Text-Match, mit Vision-Fallback.
+        """Finds and clicks an element by text match, with vision fallback.
 
         Args:
-            description: Beschreibung des gesuchten Elements.
+            description: Description of the element to find.
 
         Returns:
-            ActionResult -- bei Vision-Fallback enthält data["vision_hint"] den Hinweis.
+            ActionResult -- with vision fallback, data["vision_hint"] contains the hint.
         """
         self._ensure_running()
 
-        # Text-basiertes Fuzzy-Matching zuerst (schnell)
+        # Text-based fuzzy matching first (fast)
         result = await self.find_and_click(description)
         if result.success:
             return result
 
-        # Vision-Fallback wenn Text-Match fehlschlägt
+        # Vision fallback when text match fails
         if self._vision is not None and getattr(self._vision, "is_enabled", False):
             try:
                 ss_result = await self.screenshot()

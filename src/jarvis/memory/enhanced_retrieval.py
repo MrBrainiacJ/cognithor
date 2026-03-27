@@ -1,4 +1,4 @@
-"""Enhanced Retrieval: Fortgeschrittene RAG-Techniken über der Hybrid-Suche.
+"""Enhanced Retrieval: Advanced RAG techniques on top of hybrid search.
 
 Baut auf der bestehenden HybridSearch (BM25+Vektor+Graph) auf und
 ergänzt fünf wesentliche Fähigkeiten:
@@ -403,7 +403,7 @@ _TRAILING_PUNCT_RE = re.compile(r'[.,;:!?\"\'"()]+$')
 
 
 def _clean_word(word: str) -> str:
-    """Entfernt angehängte Satzzeichen von einem Wort.
+    """Remove trailing punctuation from a word.
 
     'Berlin.' -> 'Berlin', 'Allianz,' -> 'Allianz'
     """
@@ -807,7 +807,7 @@ class CorrectiveRAG:
         words = original_query.split()
         alternatives: list[str] = []
 
-        # Strategie 1: Nur Schlüsselwörter (Stoppwörter entfernen)
+        # Strategy 1: Nur Schlüsselwörter (Stoppwörter entfernen)
         stopwords = {
             "der",
             "die",
@@ -866,11 +866,11 @@ class CorrectiveRAG:
         if keywords and len(keywords) < len(words):
             alternatives.append(" ".join(keywords))
 
-        # Strategie 2: Erste N Wörter (wenn Query lang)
+        # Strategy 2: Erste N Wörter (wenn Query lang)
         if len(words) > 6:
             alternatives.append(" ".join(words[:4]))
 
-        # Strategie 3: Letzte N Wörter (oft der eigentliche Kern)
+        # Strategy 3: Letzte N Wörter (oft der eigentliche Kern)
         if len(words) > 4:
             alternatives.append(" ".join(words[-3:]))
 
@@ -916,7 +916,7 @@ class FrequencyTracker:
         return self._access_counts.get(chunk_id, 0)
 
     def boost_factor(self, chunk_id: str) -> float:
-        """Berechnet den Frequency-Boost für einen Chunk.
+        """Calculate the frequency boost for a chunk.
 
         Returns:
             Boost-Faktor >= 1.0 (1.0 = kein Boost).

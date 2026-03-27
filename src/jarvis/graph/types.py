@@ -1,15 +1,15 @@
 """Graph Orchestrator Types -- v18.
 
-DAG-basierte Workflow-Engine nach LangGraph-Vorbild.
-Unterstützt Conditional Edges, Parallel Branches, Loops,
-Checkpoints und Human-in-the-Loop.
+DAG-based workflow engine inspired by LangGraph.
+Supports conditional edges, parallel branches, loops,
+checkpoints and human-in-the-loop.
 
-Kern-Konzepte:
-  - GraphState:  Typisierter Zustand der durch den Graphen fließt
-  - Node:        Verarbeitungseinheit (Funktion, LLM, Tool, HITL, Router)
-  - Edge:        Verbindung zwischen Nodes (direkt oder konditional)
-  - Checkpoint:  Serialisierbarer Snapshot für Pause/Resume
-  - Graph:       Container für Nodes + Edges mit Validierung
+Core concepts:
+  - GraphState:  Typed state flowing through the graph
+  - Node:        Processing unit (function, LLM, tool, HITL, router)
+  - Edge:        Connection between nodes (direct or conditional)
+  - Checkpoint:  Serializable snapshot for pause/resume
+  - Graph:       Container for nodes + edges with validation
 """
 
 from __future__ import annotations
@@ -38,33 +38,33 @@ GRAPH_VERSION = "1.0"
 
 
 class NodeType(str, Enum):
-    """Typ eines Graph-Knotens."""
+    """Type of a graph node."""
 
-    FUNCTION = "function"  # Sync/Async Python-Funktion
-    LLM = "llm"  # LLM-Aufruf
-    TOOL = "tool"  # MCP-Tool-Aufruf
+    FUNCTION = "function"  # Sync/async Python function
+    LLM = "llm"  # LLM call
+    TOOL = "tool"  # MCP tool call
     ROUTER = "router"  # Conditional Branching
     HITL = "hitl"  # Human-in-the-Loop (Pause/Resume)
     PARALLEL = "parallel"  # Parallele Ausführung
-    SUBGRAPH = "subgraph"  # Verschachtelter Graph
-    CHECKPOINT = "checkpoint"  # Expliziter Checkpoint
-    PASSTHROUGH = "passthrough"  # State durchreichen (No-Op)
+    SUBGRAPH = "subgraph"  # Nested graph
+    CHECKPOINT = "checkpoint"  # Explicit checkpoint
+    PASSTHROUGH = "passthrough"  # Pass state through (no-op)
 
 
 class EdgeType(str, Enum):
-    """Typ einer Graph-Kante."""
+    """Type of a graph edge."""
 
-    DIRECT = "direct"  # Immer folgen
-    CONDITIONAL = "conditional"  # Basierend auf Router-Ergebnis
+    DIRECT = "direct"  # Always follow
+    CONDITIONAL = "conditional"  # Based on router result
 
 
 class ExecutionStatus(str, Enum):
-    """Status einer Graph-Ausführung."""
+    """Status of a graph execution."""
 
     PENDING = "pending"
     RUNNING = "running"
-    PAUSED = "paused"  # HITL oder expliziter Pause
-    WAITING = "waiting"  # Wartet auf externe Eingabe
+    PAUSED = "paused"  # HITL or explicit pause
+    WAITING = "waiting"  # Waiting for external input
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELED = "canceled"
@@ -72,7 +72,7 @@ class ExecutionStatus(str, Enum):
 
 
 class NodeStatus(str, Enum):
-    """Status eines einzelnen Knotens."""
+    """Status of a single node."""
 
     PENDING = "pending"
     RUNNING = "running"
@@ -83,8 +83,8 @@ class NodeStatus(str, Enum):
 
 # ── Node Handler Type ────────────────────────────────────────────
 
-# Ein Node-Handler nimmt GraphState und gibt (modifizierten) GraphState zurück.
-# Für Router: gibt den Namen der nächsten Edge zurück.
+# A node handler takes GraphState and returns (modified) GraphState.
+# For routers: returns the name of the next edge.
 NodeHandler = Callable[["GraphState"], Awaitable["GraphState"]]
 RouterHandler = Callable[["GraphState"], Awaitable[str]]
 
@@ -93,12 +93,12 @@ RouterHandler = Callable[["GraphState"], Awaitable[str]]
 
 
 class GraphState:
-    """Typisierter Zustand der durch den Graphen fließt.
+    """Typed state flowing through the graph.
 
-    Verhält sich wie ein dict mit Attribut-Zugriff.
-    Jede Node-Funktion bekommt den State, modifiziert ihn und gibt ihn zurück.
+    Behaves like a dict with attribute access.
+    Each node function receives the state, modifies it and returns it.
 
-    Beispiel:
+    Example:
         state = GraphState(messages=[], step=0)
         state["messages"].append("Hello")
         state.step = 1
@@ -181,7 +181,7 @@ class GraphState:
 
 @dataclass
 class Node:
-    """Ein Knoten im Execution-Graph."""
+    """A node in the execution graph."""
 
     name: str
     node_type: NodeType = NodeType.FUNCTION
@@ -212,13 +212,13 @@ class Node:
 
 @dataclass
 class Edge:
-    """Eine Kante zwischen zwei Nodes."""
+    """An edge between two nodes."""
 
     source: str
     target: str
     edge_type: EdgeType = EdgeType.DIRECT
-    condition: str = ""  # Für CONDITIONAL: Wert der mit Router-Output verglichen wird
-    priority: int = 0  # Höhere Priorität wird zuerst geprüft
+    condition: str = ""  # For CONDITIONAL: value compared against router output
+    priority: int = 0  # Higher priority is checked first
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -237,7 +237,7 @@ class Edge:
 
 @dataclass
 class NodeResult:
-    """Ergebnis der Ausführung eines einzelnen Knotens."""
+    """Result of executing a single node."""
 
     node_name: str
     status: NodeStatus
@@ -273,7 +273,7 @@ class NodeResult:
 
 @dataclass
 class Checkpoint:
-    """Serialisierbarer Snapshot einer Graph-Ausführung."""
+    """Serializable snapshot of a graph execution."""
 
     checkpoint_id: str = ""
     execution_id: str = ""
@@ -331,7 +331,7 @@ class Checkpoint:
 
 @dataclass
 class ExecutionRecord:
-    """Vollständiger Record einer Graph-Ausführung."""
+    """Complete record of a graph execution."""
 
     execution_id: str = ""
     graph_name: str = ""
@@ -418,7 +418,7 @@ class GraphDefinition:
     # ── Validation ───────────────────────────────────────────────
 
     def validate(self) -> list[str]:
-        """Validiert den Graphen und gibt Fehler zurück."""
+        """Validates the graph and returns errors."""
         errors: list[str] = []
 
         if not self.nodes:
@@ -431,21 +431,21 @@ class GraphDefinition:
         elif self.entry_point not in self.nodes:
             errors.append(f"Entry point '{self.entry_point}' not found in nodes")
 
-        # Edge-Referenzen prüfen
+        # Check edge references
         for edge in self.edges:
             if edge.source != START and edge.source not in self.nodes:
                 errors.append(f"Edge source '{edge.source}' not found")
             if edge.target != END and edge.target not in self.nodes:
                 errors.append(f"Edge target '{edge.target}' not found")
 
-        # Erreichbarkeit: Jeder Node muss von entry erreichbar sein
+        # Reachability: every node must be reachable from entry
         if self.entry_point and self.entry_point in self.nodes:
             reachable = self._find_reachable(self.entry_point)
             for name in self.nodes:
                 if name not in reachable and name != self.entry_point:
                     errors.append(f"Node '{name}' not reachable from entry point")
 
-        # Router-Nodes müssen conditional edges haben
+        # Router nodes must have conditional edges
         for name, node in self.nodes.items():
             if node.node_type == NodeType.ROUTER:
                 cond_edges = [
@@ -457,7 +457,7 @@ class GraphDefinition:
         return errors
 
     def _find_reachable(self, start: str) -> set[str]:
-        """BFS um erreichbare Nodes zu finden."""
+        """BFS to find reachable nodes."""
         visited: set[str] = set()
         queue = [start]
         while queue:
@@ -471,7 +471,7 @@ class GraphDefinition:
         return visited
 
     def detect_cycles(self) -> list[list[str]]:
-        """Erkennt Zyklen im Graphen (erlaubt für Loops, aber gezählt)."""
+        """Detects cycles in the graph (allowed for loops, but counted)."""
         cycles: list[list[str]] = []
         visited: set[str] = set()
         rec_stack: set[str] = set()
@@ -501,7 +501,7 @@ class GraphDefinition:
         return cycles
 
     def topological_sort(self) -> list[str] | None:
-        """Topologische Sortierung (None wenn Zyklen vorhanden)."""
+        """Topological sort (None if cycles exist)."""
         in_degree: dict[str, int] = {name: 0 for name in self.nodes}
         for edge in self.edges:
             if edge.target in in_degree:
@@ -520,7 +520,7 @@ class GraphDefinition:
                         queue.append(successor)
 
         if len(result) != len(self.nodes):
-            return None  # Zyklen vorhanden
+            return None  # Cycles present
         return result
 
     def to_dict(self) -> dict[str, Any]:
@@ -536,7 +536,7 @@ class GraphDefinition:
         }
 
     def to_mermaid(self) -> str:
-        """Generiert Mermaid-Diagramm des Graphen."""
+        """Generates Mermaid diagram of the graph."""
         lines = ["graph TD"]
         for name, node in self.nodes.items():
             shape = {
