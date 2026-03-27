@@ -486,6 +486,27 @@ class Gateway:
             log.debug("system_detector_failed", exc_info=True)
             self._system_profile = None
 
+        # Evolution Engine (idle-time autonomous learning)
+        self._idle_detector = None
+        self._evolution_loop = None
+        if getattr(self._config, "evolution", None) and self._config.evolution.enabled:
+            try:
+                from jarvis.evolution.idle_detector import IdleDetector
+                from jarvis.evolution.loop import EvolutionLoop
+
+                idle_minutes = getattr(self._config.evolution, "idle_minutes", 5)
+                self._idle_detector = IdleDetector(idle_threshold_seconds=idle_minutes * 60)
+                self._evolution_loop = EvolutionLoop(
+                    idle_detector=self._idle_detector,
+                    curiosity_engine=getattr(self, "_curiosity_engine", None),
+                    skill_generator=getattr(self, "_skill_generator", None),
+                    memory_manager=getattr(self, "_memory_manager", None),
+                    config=self._config.evolution,
+                )
+                log.info("evolution_engine_initialized", idle_minutes=idle_minutes)
+            except Exception:
+                log.debug("evolution_engine_init_failed", exc_info=True)
+
         log.info(
             "gateway_init_complete",
             llm_available=llm_ok,
@@ -975,6 +996,17 @@ class Gateway:
             except Exception:
                 log.debug("breach_detector_start_failed", exc_info=True)
 
+        # Start Evolution Loop (idle-time learning)
+        if hasattr(self, "_evolution_loop") and self._evolution_loop:
+            try:
+                await self._evolution_loop.start()
+                if self._evolution_loop._task:
+                    self._background_tasks.add(self._evolution_loop._task)
+                    self._evolution_loop._task.add_done_callback(self._background_tasks.discard)
+                log.info("evolution_loop_started")
+            except Exception:
+                log.debug("evolution_loop_start_failed", exc_info=True)
+
         # Channels starten
         tasks = []
         for channel in self._channels.values():
@@ -1036,6 +1068,9 @@ class Gateway:
         # Stop background process monitor
         if hasattr(self, "_process_monitor") and self._process_monitor:
             await self._process_monitor.stop()
+
+        if hasattr(self, "_evolution_loop") and self._evolution_loop:
+            self._evolution_loop.stop()
 
         # Audit log BEFORE closing resources
         if self._audit_logger:
@@ -1875,6 +1910,9 @@ class Gateway:
         # Notify active learner of user activity (resets idle timer)
         if self._active_learner is not None:
             self._active_learner.notify_activity()
+
+        if hasattr(self, "_idle_detector") and self._idle_detector:
+            self._idle_detector.notify_activity()
 
         return OutgoingMessage(
             channel=msg.channel,
