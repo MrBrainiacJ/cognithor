@@ -23,10 +23,12 @@ __all__ = ["EvolutionLoop", "EvolutionCycleResult"]
 
 @dataclass
 class _LearningGoal:
-    """Simple wrapper for user-defined learning goals."""
+    """Wrapper for learning goals from any source."""
 
     query: str = ""
     question: str = ""
+    source: str = "user"  # "user" | "self_analysis" | "curiosity"
+    target_skill: str = ""  # Skill slug if this is a skill improvement task
 
     def __post_init__(self) -> None:
         if not self.question:
@@ -47,6 +49,7 @@ class EvolutionCycleResult:
     research_topic: str = ""
     skill_created: str = ""
     duration_ms: int = 0
+    source: str = ""  # "curiosity" | "user" | "self_analysis"
     steps_completed: list[str] = field(default_factory=list)
 
 
@@ -70,6 +73,8 @@ class EvolutionLoop:
         operation_mode: str = "offline",
         mcp_client: Any = None,
         llm_fn: Any = None,
+        skill_registry: Any = None,
+        session_analyzer: Any = None,
     ) -> None:
         self._idle = idle_detector
         self._curiosity = curiosity_engine
@@ -82,6 +87,8 @@ class EvolutionLoop:
         self._operation_mode = operation_mode
         self._mcp_client = mcp_client
         self._llm_fn = llm_fn
+        self._skill_registry = skill_registry
+        self._session_analyzer = session_analyzer
         self._current_checkpoint: EvolutionCheckpoint | None = None
         self._running = False
         self._task: asyncio.Task | None = None
@@ -163,6 +170,7 @@ class EvolutionLoop:
         # Step 2: Research — investigate the top gap
         top_gap = gaps[0]
         result.research_topic = getattr(top_gap, "question", str(top_gap))[:100]
+        result.source = getattr(top_gap, "source", "curiosity")
         research_text = await self._research(top_gap)
         result.steps_completed.append("research")
 
@@ -256,8 +264,15 @@ class EvolutionLoop:
     # -- Internal steps --------------------------------------------------
 
     async def _scout(self) -> list[Any]:
-        """Find knowledge gaps via CuriosityEngine or user-defined learning goals."""
-        # Try CuriosityEngine first
+        """Find knowledge gaps — 3-tier priority.
+
+        1. CuriosityEngine (detected gaps from conversations)
+        2. User-defined learning goals
+        3. Self-analysis (skill weaknesses, failure patterns, code quality)
+        """
+        import random
+
+        # --- Tier 1: CuriosityEngine ---
         if self._curiosity:
             try:
                 if self._memory and hasattr(self._memory, "semantic"):
@@ -270,30 +285,125 @@ class EvolutionLoop:
             except Exception:
                 log.debug("evolution_scout_curiosity_failed", exc_info=True)
 
-        # Fallback: user-defined learning goals
-        goals = []
+        # --- Tier 2: User learning goals ---
+        goals: list[str] = []
         if self._config and hasattr(self._config, "learning_goals"):
             goals = self._config.learning_goals or []
-        if not goals:
-            log.info("evolution_scout_no_goals", hint="Add learning_goals in Evolution config")
-            return []
 
-        # Pick goals that haven't been researched recently
-        import random
-        researched = {
-            r.research_topic
-            for r in self._results[-20:]
-            if r.research_topic
-        }
-        available = [g for g in goals if g not in researched]
-        if not available:
-            available = list(goals)  # All researched, cycle through again
+        if goals:
+            researched = {
+                r.research_topic for r in self._results[-20:] if r.research_topic
+            }
+            available = [g for g in goals if g not in researched]
+            if available:
+                selected = available[:3]
+                random.shuffle(selected)
+                log.info("evolution_scout_using_goals", count=len(selected), goals=selected)
+                return [_LearningGoal(query=g, source="user") for g in selected]
 
-        # Return as simple goal objects
-        selected = available[:3] if len(available) >= 3 else available
-        random.shuffle(selected)
-        log.info("evolution_scout_using_goals", count=len(selected), goals=selected[:3])
-        return [_LearningGoal(query=g) for g in selected]
+        # --- Tier 3: Self-analysis ---
+        self_tasks = self._self_analyze()
+        if self_tasks:
+            log.info(
+                "evolution_scout_self_analysis",
+                count=len(self_tasks),
+                tasks=[t.query[:60] for t in self_tasks[:3]],
+            )
+            return self_tasks
+
+        log.info("evolution_scout_nothing_found", hint="Add learning_goals or use the system more")
+        return []
+
+    def _self_analyze(self) -> list[_LearningGoal]:
+        """Analyze own codebase/skills for improvement opportunities.
+
+        Checks:
+        1. Skills with low success rate (needs_review)
+        2. Failure clusters from session analysis
+        3. Procedures that need review
+        4. Skills with zero usage (untested)
+        """
+        tasks: list[_LearningGoal] = []
+
+        # 1. Skills with low success rate
+        if self._skill_registry:
+            try:
+                all_skills = []
+                if hasattr(self._skill_registry, "list_all"):
+                    all_skills = self._skill_registry.list_all()
+                elif hasattr(self._skill_registry, "list_enabled"):
+                    all_skills = self._skill_registry.list_enabled()
+
+                for skill in all_skills:
+                    # needs_review: high failure rate
+                    sr = getattr(skill, "success_rate", 1.0)
+                    uses = getattr(skill, "total_uses", 0)
+                    failures = getattr(skill, "failure_count", 0)
+                    name = getattr(skill, "name", getattr(skill, "slug", ""))
+
+                    if uses >= 5 and sr < 0.5:
+                        tasks.append(_LearningGoal(
+                            query=f"Optimize skill '{name}': {sr:.0%} success rate, "
+                                  f"{failures} failures — analyze failure patterns and improve",
+                            source="self_analysis",
+                            target_skill=getattr(skill, "slug", name),
+                        ))
+                    elif uses == 0 and getattr(skill, "source", "") != "builtin":
+                        tasks.append(_LearningGoal(
+                            query=f"Test skill '{name}': never used — validate with sample queries",
+                            source="self_analysis",
+                            target_skill=getattr(skill, "slug", name),
+                        ))
+            except Exception:
+                log.debug("evolution_self_analyze_skills_failed", exc_info=True)
+
+        # 2. Failure clusters from session analysis
+        if self._session_analyzer:
+            try:
+                clusters = []
+                if hasattr(self._session_analyzer, "failure_clusters"):
+                    clusters = self._session_analyzer.failure_clusters
+                elif hasattr(self._session_analyzer, "get_failure_clusters"):
+                    clusters = self._session_analyzer.get_failure_clusters()
+
+                for cluster in clusters[:5]:
+                    resolved = getattr(cluster, "is_resolved", False)
+                    if resolved:
+                        continue
+                    category = getattr(cluster, "error_category", "unknown")
+                    occurrences = getattr(cluster, "occurrences", 0)
+                    pattern = getattr(cluster, "pattern_id", str(cluster))[:80]
+                    if occurrences >= 2:
+                        tasks.append(_LearningGoal(
+                            query=f"Fix recurring {category} error ({occurrences}x): {pattern}",
+                            source="self_analysis",
+                        ))
+            except Exception:
+                log.debug("evolution_self_analyze_failures_failed", exc_info=True)
+
+        # 3. Procedures that need review
+        if self._memory and hasattr(self._memory, "procedures"):
+            try:
+                procs = self._memory.procedures
+                if hasattr(procs, "list_all"):
+                    for proc in procs.list_all():
+                        if hasattr(proc, "needs_review") and proc.needs_review:
+                            name = getattr(proc, "name", str(proc))
+                            tasks.append(_LearningGoal(
+                                query=f"Review procedure '{name}': low success rate, "
+                                      f"find and fix failure patterns",
+                                source="self_analysis",
+                            ))
+            except Exception:
+                log.debug("evolution_self_analyze_procedures_failed", exc_info=True)
+
+        # Deduplicate by recently researched topics
+        researched = {r.research_topic for r in self._results[-20:] if r.research_topic}
+        tasks = [t for t in tasks if t.query not in researched]
+
+        # Prioritize: failures first, then untested skills
+        tasks.sort(key=lambda t: (0 if "Fix" in t.query else 1 if "Optimize" in t.query else 2))
+        return tasks[:3]
 
     async def _research(self, gap: Any) -> str:
         """Research a knowledge gap. Strategy depends on operation_mode.
@@ -494,6 +604,7 @@ class EvolutionLoop:
                     "skipped": r.skipped,
                     "reason": r.reason,
                     "topic": r.research_topic[:50],
+                    "source": r.source,
                     "skill": r.skill_created,
                     "steps": r.steps_completed,
                     "duration_ms": r.duration_ms,

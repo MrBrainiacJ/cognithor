@@ -533,6 +533,8 @@ class Gateway:
                     operation_mode=op_mode,
                     mcp_client=getattr(self, "_mcp_client", None),
                     llm_fn=getattr(self, "_llm_call", None),
+                    skill_registry=getattr(self, "_skill_registry", None),
+                    session_analyzer=getattr(self, "_session_analyzer", None),
                 )
                 log.info("evolution_engine_initialized", idle_minutes=idle_minutes)
             except Exception:
