@@ -154,6 +154,7 @@ class Gateway:
         self._context_pipeline = None
         self._message_queue: DurableMessageQueue | None = None
         self._background_tasks: set[asyncio.Task[Any]] = set()
+        self._pattern_record_timestamps: list[float] = []
 
         # Declare all subsystem attributes via phase modules
         apply_phase(self, declare_core_attrs(self._config))
@@ -1006,6 +1007,14 @@ class Gateway:
         log.info("gateway_shutdown_start")
         self._running = False
 
+        # Cancel all background tasks
+        for task in list(self._background_tasks):
+            task.cancel()
+        if self._background_tasks:
+            with contextlib.suppress(Exception):
+                await asyncio.gather(*self._background_tasks, return_exceptions=True)
+        self._background_tasks.clear()
+
         # Stop background process monitor
         if hasattr(self, "_process_monitor") and self._process_monitor:
             await self._process_monitor.stop()
@@ -1369,7 +1378,8 @@ class Gateway:
             )
 
         self._conversation_tree.set_active_leaf(conversation_id, leaf_id)
-        self._working_memories[session.session_id] = wm
+        with self._session_lock:
+            self._working_memories[session.session_id] = wm
 
         log.info(
             "branch_switched",
@@ -2235,6 +2245,7 @@ class Gateway:
                         await _status_cb("thinking", f"{_msg} ({_elapsed}s)")
 
             _keepalive_task = asyncio.create_task(_thinking_keepalive())
+            self._background_tasks.add(_keepalive_task)
 
             # Identity: enrich context before planning (first iteration only)
             if session.iteration_count == 1 and _identity is not None:
@@ -2278,6 +2289,7 @@ class Gateway:
             _keepalive_task.cancel()
             with contextlib.suppress(BaseException):
                 await _keepalive_task
+            self._background_tasks.discard(_keepalive_task)
 
             all_plans.append(plan)
             await _pipeline_cb(
@@ -2297,6 +2309,7 @@ class Gateway:
                 and len(plan.steps) >= getattr(_recovery_cfg, "pre_flight_min_steps", 2)
             ):
                 _timeout = getattr(_recovery_cfg, "pre_flight_timeout_seconds", 3)
+                _timeout = min(_timeout, 30)  # Hard upper bound
                 _steps_summary = [
                     {"tool": s.tool, "rationale": (s.rationale or "")[:80]} for s in plan.steps[:5]
                 ]
@@ -3088,7 +3101,6 @@ class Gateway:
     # ── Pattern Documentation ────────────────────────────────────
 
     # Rate limiter for pattern recordings: max 5 per hour
-    _pattern_record_timestamps: ClassVar[list[float]] = []
     _PATTERN_MAX_PER_HOUR: ClassVar[int] = 5
 
     def _maybe_record_pattern(
@@ -3197,7 +3209,7 @@ class Gateway:
                                 )
                                 return
                         except Exception:
-                            pass  # search_procedures may not exist or fail
+                            log.debug("procedural_search_failed", exc_info=True)
 
                     # Store new pattern as procedure with human-readable name
                     pattern_body = (
@@ -3421,6 +3433,7 @@ class Gateway:
             workspace_dir=str(target_workspace),
             sandbox_overrides=target.get_sandbox_config(),
             agent_name=target.name,
+            session_id=session.session_id,
         )
 
         try:
@@ -3858,6 +3871,8 @@ class Gateway:
 
         Nutzt den unified LLM-Client (funktioniert mit jedem Backend).
         """
+        if not self._llm:
+            return ""
         system = (
             "You are a fact assistant. You answer questions EXCLUSIVELY "
             "based on the provided search results.\n\n"

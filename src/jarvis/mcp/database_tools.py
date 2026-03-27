@@ -279,7 +279,8 @@ class DatabaseTools:
                         current_type = obj_type
                     # Get row count
                     try:
-                        cnt = conn.execute(f"SELECT COUNT(*) FROM [{name}]").fetchone()[0]
+                        _cnt_row = conn.execute(f"SELECT COUNT(*) FROM [{name}]").fetchone()
+                        cnt = _cnt_row[0] if _cnt_row else "?"
                     except Exception:
                         cnt = "?"
                     lines.append(f"  - {name} ({cnt} rows)")
@@ -331,13 +332,12 @@ class DatabaseTools:
 
         conn = self._sqlite_connect(db_path, read_only=True)
         try:
-            version = conn.execute("SELECT sqlite_version()").fetchone()[0]
-            table_count = conn.execute(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
-            ).fetchone()[0]
-            view_count = conn.execute(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type='view'"
-            ).fetchone()[0]
+            row = conn.execute("SELECT sqlite_version()").fetchone()
+            version = row[0] if row else "unknown"
+            row = conn.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").fetchone()
+            table_count = row[0] if row else "unknown"
+            row = conn.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='view'").fetchone()
+            view_count = row[0] if row else "unknown"
         finally:
             conn.close()
 
@@ -683,15 +683,19 @@ class DatabaseTools:
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT version()")
-            version = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            version = row[0] if row else "unknown"
             cursor.execute(
                 "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
             )
-            table_count = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            table_count = row[0] if row else "unknown"
             cursor.execute("SELECT current_database()")
-            db_name = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            db_name = row[0] if row else "unknown"
             cursor.execute("SELECT pg_size_pretty(pg_database_size(current_database()))")
-            db_size = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            db_size = row[0] if row else "unknown"
             lines = [
                 "Datenbankverbindung erfolgreich.",
                 "",

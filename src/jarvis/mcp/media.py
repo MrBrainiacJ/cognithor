@@ -324,7 +324,9 @@ class MediaPipeline:
                             error=f"OpenAI HTTP {resp.status_code}: {resp.text[:300]}",
                         )
                     data = resp.json()
-                    description = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    description = (
+                        (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+                    )
                 else:
                     # Ollama /api/chat mit images-Array
                     resp = await client.post(

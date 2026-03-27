@@ -441,7 +441,7 @@ class OpenAIBackend(LLMBackend):
             duration_ms = int((time.monotonic() - start) * 1000)
             log.debug("openai_chat", model=model, duration_ms=duration_ms)
 
-            choice = data.get("choices", [{}])[0]
+            choice = (data.get("choices") or [{}])[0]
             msg = choice.get("message", {})
             tool_calls_raw = msg.get("tool_calls")
 
@@ -511,7 +511,7 @@ class OpenAIBackend(LLMBackend):
                 if data_str.strip() == "[DONE]":
                     break
                 chunk = _json.loads(data_str)
-                delta = chunk.get("choices", [{}])[0].get("delta", {})
+                delta = (chunk.get("choices") or [{}])[0].get("delta", {})
                 token = delta.get("content", "")
                 if token:
                     yield token
