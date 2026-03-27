@@ -1689,6 +1689,38 @@ class RecoveryConfig(BaseModel):
 
 
 # ============================================================================
+# Autonomous Evolution Engine
+# ============================================================================
+
+
+class EvolutionConfig(BaseModel):
+    """Autonomous Evolution Engine configuration."""
+
+    enabled: bool = Field(
+        default=False,
+        description="Enable autonomous evolution during idle time",
+    )
+    idle_minutes: int = Field(
+        default=5,
+        ge=1,
+        le=60,
+        description="Minutes of inactivity before evolution starts",
+    )
+    max_cycles_per_day: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Maximum evolution cycles per day",
+    )
+    cycle_cooldown_seconds: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        description="Cooldown between cycles in seconds",
+    )
+
+
+# ============================================================================
 # Datenbank-Konfiguration
 # ============================================================================
 
@@ -1951,6 +1983,7 @@ class JarvisConfig(BaseModel):
     gepa: GEPAConfig = Field(default_factory=GEPAConfig)
     hashline: HashlineGuardConfig = Field(default_factory=HashlineGuardConfig)
     session: SessionConfig = Field(default_factory=SessionConfig)
+    evolution: EvolutionConfig = Field(default_factory=EvolutionConfig)
 
     # Heartbeat- und Plugin-Konfigurationen
     # Die HeartbeatConfig steuert einen periodischen Check (Heartbeat), der
