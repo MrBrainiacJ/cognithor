@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:jarvis_ui/providers/config_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
@@ -113,6 +114,8 @@ class _EvolutionPageState extends State<EvolutionPage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _buildConfigCard(),
+          const SizedBox(height: 16),
           _buildStatusHeader(),
           const SizedBox(height: 16),
           _buildStepIndicator(),
@@ -125,6 +128,130 @@ class _EvolutionPageState extends State<EvolutionPage> {
           const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+
+  // -- Config Card (Enable/Disable + Settings) --------------------------------
+
+  Widget _buildConfigCard() {
+    return Consumer<ConfigProvider>(
+      builder: (context, cfg, _) {
+        final evo =
+            (cfg.cfg['evolution'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+        final enabled = evo['enabled'] == true;
+        final idleMinutes = (evo['idle_minutes'] as num?)?.toInt() ?? 5;
+        final maxCycles = (evo['max_cycles_per_day'] as num?)?.toInt() ?? 10;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.settings, size: 20, color: JarvisTheme.accent),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Configuration',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Evolution Engine'),
+                  subtitle: Text(
+                    enabled
+                        ? 'Active — learns autonomously during idle time'
+                        : 'Disabled — enable to start autonomous learning',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: JarvisTheme.textSecondary,
+                    ),
+                  ),
+                  value: enabled,
+                  activeColor: JarvisTheme.green,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (v) => cfg.set('evolution.enabled', v),
+                ),
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Idle threshold',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: JarvisTheme.textSecondary),
+                          ),
+                          const SizedBox(height: 4),
+                          DropdownButton<int>(
+                            value: idleMinutes,
+                            isExpanded: true,
+                            isDense: true,
+                            items: [1, 2, 3, 5, 10, 15, 30, 60]
+                                .map((m) => DropdownMenuItem(
+                                      value: m,
+                                      child: Text('$m min'),
+                                    ))
+                                .toList(),
+                            onChanged: enabled
+                                ? (v) {
+                                    if (v != null) {
+                                      cfg.set('evolution.idle_minutes', v);
+                                    }
+                                  }
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Max cycles/day',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: JarvisTheme.textSecondary),
+                          ),
+                          const SizedBox(height: 4),
+                          DropdownButton<int>(
+                            value: maxCycles,
+                            isExpanded: true,
+                            isDense: true,
+                            items: [1, 3, 5, 10, 20, 50, 100]
+                                .map((m) => DropdownMenuItem(
+                                      value: m,
+                                      child: Text('$m'),
+                                    ))
+                                .toList(),
+                            onChanged: enabled
+                                ? (v) {
+                                    if (v != null) {
+                                      cfg.set(
+                                          'evolution.max_cycles_per_day', v);
+                                    }
+                                  }
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
