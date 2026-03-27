@@ -12,7 +12,14 @@ color 0F
 ::  React UI is deprecated since v0.42.0.
 :: ============================================================
 
+:: Start companion services (Tailscale + AltServer)
+call :start_services
+
 call :main
+
+:: Stop companion services on exit
+call :stop_services
+
 echo.
 echo   ============================================================
 echo   Press any key to close this window...
@@ -194,7 +201,7 @@ echo   Starting in CLI mode...
 echo   ============================================================
 echo.
 cd /d "%REPO_ROOT%"
-%PYTHON_CMD% -m jarvis
+%PYTHON_CMD% -m jarvis --api-host 0.0.0.0
 echo.
 echo   Cognithor stopped.
 goto :eof
@@ -232,5 +239,54 @@ if "!HAS_FLUTTER!"=="0" (
         cmd /c C:\flutter\bin\flutter.bat --version >nul 2>&1
         if not errorlevel 1 set "HAS_FLUTTER=1"
     )
+)
+goto :eof
+
+:start_services
+:: Start Tailscale (VPN for mobile access)
+tasklist /FI "IMAGENAME eq tailscale-ipn.exe" 2>nul | find /i "tailscale-ipn.exe" >nul
+if errorlevel 1 (
+    if exist "C:\Program Files\Tailscale\tailscale-ipn.exe" (
+        echo   [INFO] Starting Tailscale...
+        start "" "C:\Program Files\Tailscale\tailscale-ipn.exe"
+        echo   [OK] Tailscale started.
+    ) else (
+        echo   [SKIP] Tailscale not installed.
+    )
+) else (
+    echo   [OK] Tailscale already running.
+)
+
+:: Start AltServer (iOS sideloading)
+tasklist /FI "IMAGENAME eq AltServer.exe" 2>nul | find /i "AltServer.exe" >nul
+if errorlevel 1 (
+    if exist "C:\Program Files (x86)\AltServer\AltServer.exe" (
+        echo   [INFO] Starting AltServer...
+        start "" "C:\Program Files (x86)\AltServer\AltServer.exe"
+        echo   [OK] AltServer started.
+    ) else (
+        echo   [SKIP] AltServer not installed.
+    )
+) else (
+    echo   [OK] AltServer already running.
+)
+goto :eof
+
+:stop_services
+echo.
+echo   [INFO] Stopping companion services...
+
+:: Stop AltServer
+tasklist /FI "IMAGENAME eq AltServer.exe" 2>nul | find /i "AltServer.exe" >nul
+if not errorlevel 1 (
+    taskkill /IM AltServer.exe /F >nul 2>&1
+    echo   [OK] AltServer stopped.
+)
+
+:: Stop Tailscale GUI (not the system service)
+tasklist /FI "IMAGENAME eq tailscale-ipn.exe" 2>nul | find /i "tailscale-ipn.exe" >nul
+if not errorlevel 1 (
+    taskkill /IM tailscale-ipn.exe /F >nul 2>&1
+    echo   [OK] Tailscale GUI stopped.
 )
 goto :eof

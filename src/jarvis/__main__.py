@@ -276,7 +276,7 @@ def main() -> None:
             log.info("created_path", path=path)
 
     # 5. System-Check -- startup banner (intentional CLI output)
-    _api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
+    _api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "0.0.0.0")
     _print_banner(config, api_host=_api_host, api_port=args.api_port, lite=args.lite)
 
     # Phase 0 Checkpoint: Setup OK
@@ -349,7 +349,7 @@ def main() -> None:
                 from jarvis.channels.config_routes import create_config_routes
                 from jarvis.config_manager import ConfigManager
 
-                api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
+                api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "0.0.0.0")
 
                 # ── Internal session token ────────────────────────────────
                 # Always generate a per-session token.  An explicit env var
