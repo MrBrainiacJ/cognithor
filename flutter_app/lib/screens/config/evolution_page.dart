@@ -15,11 +15,13 @@ class EvolutionPage extends StatefulWidget {
 
 class _EvolutionPageState extends State<EvolutionPage> {
   Map<String, dynamic>? _data;
+  List<String> _goals = [];
   bool _loading = true;
   bool _resuming = false;
   String? _error;
   String? _resumeResult;
   Timer? _refreshTimer;
+  final _goalController = TextEditingController();
 
   static const _steps = ['scout', 'research', 'build', 'reflect'];
 
@@ -32,6 +34,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _goalController.dispose();
     super.dispose();
   }
 
@@ -39,9 +42,17 @@ class _EvolutionPageState extends State<EvolutionPage> {
     setState(() { _loading = true; _error = null; });
     try {
       final api = context.read<ConnectionProvider>().api;
-      final data = await api.get('evolution/stats');
+      final results = await Future.wait([
+        api.get('evolution/stats'),
+        api.get('evolution/goals'),
+      ]);
       if (!mounted) return;
-      setState(() { _data = data; _loading = false; });
+      final goalsData = (results[1]['goals'] as List<dynamic>?) ?? [];
+      setState(() {
+        _data = results[0];
+        _goals = goalsData.map((g) => g.toString()).toList();
+        _loading = false;
+      });
       _refreshTimer?.cancel();
       _refreshTimer = Timer.periodic(
         const Duration(seconds: 15),
@@ -115,6 +126,8 @@ class _EvolutionPageState extends State<EvolutionPage> {
         padding: const EdgeInsets.all(16),
         children: [
           _buildConfigCard(),
+          const SizedBox(height: 16),
+          _buildGoalsCard(),
           const SizedBox(height: 16),
           _buildStatusHeader(),
           const SizedBox(height: 16),
@@ -252,6 +265,140 @@ class _EvolutionPageState extends State<EvolutionPage> {
           ),
         );
       },
+    );
+  }
+
+  // -- Learning Goals Card ---------------------------------------------------
+
+  Future<void> _saveGoals() async {
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      await api.put('evolution/goals', {'goals': _goals});
+    } catch (_) {}
+  }
+
+  void _addGoal() {
+    final text = _goalController.text.trim();
+    if (text.isEmpty) return;
+    setState(() {
+      _goals.add(text);
+      _goalController.clear();
+    });
+    _saveGoals();
+  }
+
+  void _removeGoal(int index) {
+    setState(() { _goals.removeAt(index); });
+    _saveGoals();
+  }
+
+  Widget _buildGoalsCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.school, size: 20, color: JarvisTheme.accent),
+                const SizedBox(width: 8),
+                const Text(
+                  'Learning Goals',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                Text(
+                  '${_goals.length} topics',
+                  style: TextStyle(
+                      fontSize: 12, color: JarvisTheme.textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Define what Cognithor should learn during idle time. '
+              'The Evolution Engine will research these topics autonomously.',
+              style: TextStyle(
+                  fontSize: 12, color: JarvisTheme.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            // Input row
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _goalController,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Python async patterns',
+                      hintStyle: TextStyle(
+                          fontSize: 13, color: JarvisTheme.textTertiary),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    style: const TextStyle(fontSize: 13),
+                    onSubmitted: (_) => _addGoal(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.add_circle, color: JarvisTheme.green),
+                  onPressed: _addGoal,
+                  tooltip: 'Add goal',
+                ),
+              ],
+            ),
+            if (_goals.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              ..._goals.asMap().entries.map((e) {
+                final idx = e.key;
+                final goal = e.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.circle, size: 6,
+                          color: JarvisTheme.accent),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(goal,
+                            style: const TextStyle(fontSize: 13)),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, size: 16,
+                            color: JarvisTheme.red),
+                        onPressed: () => _removeGoal(idx),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                            minWidth: 24, minHeight: 24),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ] else ...[
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  'No learning goals defined yet.\n'
+                  'Add topics above to start autonomous evolution.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: JarvisTheme.textTertiary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 

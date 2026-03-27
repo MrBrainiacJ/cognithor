@@ -1722,6 +1722,10 @@ class EvolutionConfig(BaseModel):
         default_factory=dict,
         description="Per-agent daily budget in USD, e.g. {'scout': 0.50, 'skill_builder': 0.30}",
     )
+    learning_goals: list[str] = Field(
+        default_factory=list,
+        description="User-defined learning topics, e.g. ['Python async patterns', 'Kubernetes deployment']",
+    )
 
 
 # ============================================================================

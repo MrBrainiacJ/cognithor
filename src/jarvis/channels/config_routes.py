@@ -3150,6 +3150,32 @@ def _register_ui_routes(
         except Exception as exc:
             return {"error": str(exc), "resumed": False}
 
+    @app.get("/api/v1/evolution/goals", dependencies=deps)
+    async def get_evolution_goals() -> dict[str, Any]:
+        """Get user-defined learning goals."""
+        evo = getattr(config_manager.config, "evolution", None)
+        goals = getattr(evo, "learning_goals", []) if evo else []
+        return {"goals": goals}
+
+    @app.put("/api/v1/evolution/goals", dependencies=deps)
+    async def set_evolution_goals(request: Request) -> dict[str, Any]:
+        """Set user-defined learning goals."""
+        try:
+            body = await request.json()
+            goals = body.get("goals", [])
+            if not isinstance(goals, list):
+                return {"error": "goals must be a list of strings"}
+            goals = [str(g).strip() for g in goals if str(g).strip()]
+            config_manager.update_section("evolution", {"learning_goals": goals})
+            config_manager.save()
+            # Live-update the running evolution loop
+            loop = getattr(gateway, "_evolution_loop", None)
+            if loop and loop._config:
+                loop._config.learning_goals = goals
+            return {"goals": goals, "count": len(goals)}
+        except Exception as exc:
+            return {"error": str(exc)}
+
     # -- 3.4: POST /agents/{name} ----------------------------------------
 
     @app.post("/api/v1/agents/{name}", dependencies=deps)

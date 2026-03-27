@@ -22,6 +22,21 @@ __all__ = ["EvolutionLoop", "EvolutionCycleResult"]
 
 
 @dataclass
+class _LearningGoal:
+    """Simple wrapper for user-defined learning goals."""
+
+    query: str = ""
+    question: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.question:
+            self.question = self.query
+
+    def __str__(self) -> str:
+        return self.query
+
+
+@dataclass
 class EvolutionCycleResult:
     """Result of one evolution cycle."""
 
@@ -241,18 +256,44 @@ class EvolutionLoop:
     # -- Internal steps --------------------------------------------------
 
     async def _scout(self) -> list[Any]:
-        """Find knowledge gaps via CuriosityEngine."""
-        if not self._curiosity:
+        """Find knowledge gaps via CuriosityEngine or user-defined learning goals."""
+        # Try CuriosityEngine first
+        if self._curiosity:
+            try:
+                if self._memory and hasattr(self._memory, "semantic"):
+                    entities = self._memory.semantic.list_entities(limit=50)
+                    await self._curiosity.detect_gaps("", entities)
+                tasks = self._curiosity.propose_exploration(max_tasks=3)
+                if tasks:
+                    log.info("evolution_scout_found_gaps", count=len(tasks), source="curiosity")
+                    return tasks
+            except Exception:
+                log.debug("evolution_scout_curiosity_failed", exc_info=True)
+
+        # Fallback: user-defined learning goals
+        goals = []
+        if self._config and hasattr(self._config, "learning_goals"):
+            goals = self._config.learning_goals or []
+        if not goals:
+            log.info("evolution_scout_no_goals", hint="Add learning_goals in Evolution config")
             return []
-        try:
-            if self._memory and hasattr(self._memory, "semantic"):
-                entities = self._memory.semantic.list_entities(limit=50)
-                await self._curiosity.detect_gaps("", entities)
-            tasks = self._curiosity.propose_exploration(max_tasks=3)
-            return tasks
-        except Exception:
-            log.debug("evolution_scout_failed", exc_info=True)
-            return []
+
+        # Pick goals that haven't been researched recently
+        import random
+        researched = {
+            r.research_topic
+            for r in self._results[-20:]
+            if r.research_topic
+        }
+        available = [g for g in goals if g not in researched]
+        if not available:
+            available = list(goals)  # All researched, cycle through again
+
+        # Return as simple goal objects
+        selected = available[:3] if len(available) >= 3 else available
+        random.shuffle(selected)
+        log.info("evolution_scout_using_goals", count=len(selected), goals=selected[:3])
+        return [_LearningGoal(query=g) for g in selected]
 
     async def _research(self, gap: Any) -> str:
         """Research a knowledge gap. Strategy depends on operation_mode.
@@ -394,9 +435,16 @@ class EvolutionLoop:
         while self._running:
             try:
                 if self._idle.is_idle and self._can_run_cycle():
+                    log.info("evolution_cycle_starting", cycle=self._total_cycles + 1)
                     result = await self.run_cycle()
                     self._cycles_today += 1
                     self._results.append(result)
+                    if result.skipped:
+                        log.info(
+                            "evolution_cycle_skipped",
+                            cycle=result.cycle_id,
+                            reason=result.reason,
+                        )
                     if len(self._results) > 100:
                         self._results = self._results[-50:]
                     # Longer pause if skipped due to resources
