@@ -455,6 +455,18 @@ class Gateway:
             log.debug("correction_memory_init_failed", exc_info=True)
             self._correction_memory = None
 
+        # Conversation Tree (Chat Branching)
+        try:
+            from jarvis.core.conversation_tree import ConversationTree
+
+            self._conversation_tree = ConversationTree(
+                db_path=self._config.jarvis_home / "conversations.db"
+            )
+            log.info("conversation_tree_initialized")
+        except Exception:
+            log.debug("conversation_tree_init_failed", exc_info=True)
+            self._conversation_tree = None
+
         log.info(
             "gateway_init_complete",
             llm_available=llm_ok,
@@ -1327,6 +1339,45 @@ class Gateway:
             reloaded.append("config")
         log.info("gateway_components_reloaded", components=reloaded)
         return {"reloaded": reloaded}
+
+    async def switch_branch(
+        self, conversation_id: str, leaf_id: str, session: SessionContext
+    ) -> WorkingMemory:
+        """Switch to a different branch by replaying its message history."""
+        if not self._conversation_tree:
+            raise RuntimeError("ConversationTree not initialized")
+
+        messages = self._conversation_tree.get_messages_for_replay(conversation_id, leaf_id)
+
+        wm = WorkingMemory(
+            session_id=session.session_id,
+            max_tokens=getattr(self._config.planner, "context_window", 32768),
+        )
+
+        core_path = getattr(self._config, "core_memory_path", None)
+        if core_path and hasattr(core_path, "exists") and core_path.exists():
+            wm.core_memory_text = core_path.read_text(encoding="utf-8")
+
+        for msg_data in messages:
+            role = MessageRole.USER if msg_data["role"] == "user" else MessageRole.ASSISTANT
+            wm.add_message(
+                Message(
+                    role=role,
+                    content=msg_data["text"],
+                    channel="webui",
+                )
+            )
+
+        self._conversation_tree.set_active_leaf(conversation_id, leaf_id)
+        self._working_memories[session.session_id] = wm
+
+        log.info(
+            "branch_switched",
+            conversation=conversation_id[:12],
+            leaf=leaf_id[:12],
+            messages=len(messages),
+        )
+        return wm
 
     async def handle_message(
         self,
