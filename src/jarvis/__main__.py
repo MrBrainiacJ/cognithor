@@ -833,6 +833,34 @@ def main() -> None:
                                     )
                                 continue
 
+                            if msg_type == "branch_switch":
+                                conv_id = msg.get("conversation_id", "")
+                                leaf_id = msg.get("leaf_id", "")
+                                if conv_id and leaf_id and gateway:
+                                    try:
+                                        session = gateway._get_or_create_session(
+                                            "webui", "default", "jarvis"
+                                        )
+                                        wm = await gateway.switch_branch(conv_id, leaf_id, session)
+                                        await _ws_safe_send(
+                                            websocket,
+                                            {
+                                                "type": "branch_switched",
+                                                "conversation_id": conv_id,
+                                                "leaf_id": leaf_id,
+                                                "message_count": len(wm.chat_history),
+                                            },
+                                        )
+                                    except Exception as exc:
+                                        await _ws_safe_send(
+                                            websocket,
+                                            {
+                                                "type": "error",
+                                                "text": f"Branch switch failed: {exc}",
+                                            },
+                                        )
+                                continue
+
                             if not await _ws_safe_send(
                                 websocket,
                                 {"type": "error", "error": f"Unbekannter Typ: {msg_type}"},

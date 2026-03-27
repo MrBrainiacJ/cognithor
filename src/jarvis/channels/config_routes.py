@@ -4897,3 +4897,41 @@ def _register_feedback_routes(
         if not feedback_store:
             return {"entries": []}
         return {"entries": feedback_store.get_recent(limit=limit)}
+
+    # ── Chat Tree / Branching ────────────────────────────────────────
+
+    @app.get("/api/v1/chat/tree/{conversation_id}", dependencies=deps)
+    async def get_chat_tree(conversation_id: str) -> dict[str, Any]:
+        """Get full conversation tree structure."""
+        tree = getattr(gateway, "_conversation_tree", None)
+        if not tree:
+            return {"error": "Conversation tree not available"}
+        return tree.get_tree_structure(conversation_id)
+
+    @app.get("/api/v1/chat/path/{conversation_id}/{leaf_id}", dependencies=deps)
+    async def get_chat_path(conversation_id: str, leaf_id: str) -> dict[str, Any]:
+        """Get path from root to a specific leaf."""
+        tree = getattr(gateway, "_conversation_tree", None)
+        if not tree:
+            return {"error": "Conversation tree not available"}
+        path = tree.get_path_to_root(leaf_id)
+        return {"path": path, "count": len(path)}
+
+    @app.post("/api/v1/chat/branch", dependencies=deps)
+    async def create_chat_branch(request: Request) -> dict[str, Any]:
+        """Create a branch at a specific node."""
+        body = await request.json()
+        tree = getattr(gateway, "_conversation_tree", None)
+        if not tree:
+            return {"error": "Conversation tree not available"}
+        conv_id = body.get("conversation_id", "")
+        parent_id = body.get("parent_id", "")
+        text = body.get("text", "")
+        role = body.get("role", "user")
+        if not conv_id or not text:
+            return {"error": "conversation_id and text required"}
+        node_id = tree.add_node(conv_id, role=role, text=text, parent_id=parent_id or None)
+        return {
+            "node_id": node_id,
+            "branch_index": tree.get_branch_index(node_id),
+        }
