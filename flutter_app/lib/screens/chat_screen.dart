@@ -7,6 +7,7 @@ import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/providers/hacker_mode_provider.dart';
 import 'package:jarvis_ui/providers/pip_provider.dart';
 import 'package:jarvis_ui/providers/sessions_provider.dart';
+import 'package:jarvis_ui/providers/tree_provider.dart';
 import 'package:jarvis_ui/providers/voice_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
 import 'package:jarvis_ui/widgets/approval_dialog.dart';
@@ -21,6 +22,8 @@ import 'package:jarvis_ui/widgets/chat/chat_history_drawer.dart';
 import 'package:jarvis_ui/widgets/chat/pre_flight_card.dart';
 import 'package:jarvis_ui/widgets/chat/feedback_buttons.dart';
 import 'package:jarvis_ui/widgets/chat/message_actions.dart';
+import 'package:jarvis_ui/widgets/chat/branch_navigator.dart';
+import 'package:jarvis_ui/widgets/chat/tree_sidebar.dart';
 import 'package:jarvis_ui/widgets/chat/version_navigator.dart';
 import 'package:jarvis_ui/widgets/observe/observe_panel.dart';
 import 'package:jarvis_ui/widgets/pipeline_indicator.dart';
@@ -43,6 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _inputController = TextEditingController();
   final _inputFocusNode = FocusNode();
   bool _showObserve = false;
+  bool _showTreeSidebar = false;
   bool _pipListenerAttached = false;
   bool _sessionsInitialized = false;
 
@@ -161,6 +165,9 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         body: Row(
           children: [
+            // Tree sidebar (when toggled)
+            if (_showTreeSidebar) const TreeSidebar(),
+
             // Main chat area
             Expanded(
               child: Column(
@@ -325,6 +332,29 @@ class _ChatScreenState extends State<ChatScreen> {
                                             chat.switchVersion(index, msg.activeVersion + 1),
                                       ),
                                     if (msg.hasVersions) const SizedBox(width: 8),
+                                    // Tree-based branch navigation (when tree is active)
+                                    Consumer<TreeProvider>(
+                                      builder: (context, tree, _) {
+                                        if (!tree.hasTree) return const SizedBox.shrink();
+                                        final nodeId = (index < tree.activePath.length)
+                                            ? tree.activePath[index]
+                                            : msg.treeNodeId;
+                                        if (nodeId == null || !tree.isForkPoint(nodeId)) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: BranchNavigator(
+                                            currentIndex: tree.getActiveChildIndex(nodeId),
+                                            totalBranches: tree.getChildCount(nodeId),
+                                            onPrevious: () => tree.switchBranch(
+                                                nodeId, tree.getActiveChildIndex(nodeId) - 1),
+                                            onNext: () => tree.switchBranch(
+                                                nodeId, tree.getActiveChildIndex(nodeId) + 1),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                     MessageActionButtons(
                                       text: msg.text,
                                       isUser: true,
@@ -636,6 +666,17 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         tooltip: l.observe,
         onPressed: () => setState(() => _showObserve = !_showObserve),
+      ),
+      spacer,
+      // Conversation tree sidebar toggle
+      IconButton(
+        icon: Icon(
+          Icons.account_tree,
+          size: 20,
+          color: _showTreeSidebar ? JarvisTheme.accent : null,
+        ),
+        tooltip: 'Conversation Tree',
+        onPressed: () => setState(() => _showTreeSidebar = !_showTreeSidebar),
       ),
       spacer,
       // Canvas toggle

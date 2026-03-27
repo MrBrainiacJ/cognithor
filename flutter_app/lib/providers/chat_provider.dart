@@ -38,6 +38,9 @@ class ChatMessage {
   /// Current version index (0-based). -1 = no versioning.
   int activeVersion = -1;
 
+  /// Tree node ID when conversation tree is active.
+  String? treeNodeId;
+
   bool get hasVersions => versions.length > 1;
   int get versionCount => versions.length;
 }
@@ -352,6 +355,13 @@ class ChatProvider extends ChangeNotifier {
   void dismissPlan() {
     planDetail = null;
     notifyListeners();
+  }
+
+  /// Get a tree-compatible node ID for a message at index.
+  /// Returns null if tree is not active.
+  String? getTreeNodeId(int messageIndex) {
+    if (messageIndex < 0 || messageIndex >= messages.length) return null;
+    return messages[messageIndex].treeNodeId;
   }
 
   // ---------------------------------------------------------------------------
