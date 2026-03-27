@@ -461,7 +461,7 @@ class TestBudgetManager:
         bm.set_limit("agent-1", per_request=2.0)
         result = bm.can_spend("agent-1", 5.0)
         assert result["allowed"] is False
-        assert "Einzelanfrage" in result["reason"]
+        assert "Single request" in result["reason"]
 
     def test_can_spend_over_daily(self) -> None:
         bm = BudgetManager()
