@@ -1329,5 +1329,13 @@
   "toolsSectionDesktop": "Desktop & Automation",
   "@toolsSectionDesktop": {},
   "toolsWarning": "These tools give Jarvis access to your desktop. Enable only when needed.",
-  "@toolsWarning": {}
+  "@toolsWarning": {},
+  "configPageSystemProfile": "Hardware",
+  "@configPageSystemProfile": {},
+  "systemTier": "System Tier",
+  "@systemTier": {},
+  "systemRecommendedMode": "Recommended Mode",
+  "@systemRecommendedMode": {},
+  "systemRescan": "Rescan Hardware",
+  "@systemRescan": {}
 }

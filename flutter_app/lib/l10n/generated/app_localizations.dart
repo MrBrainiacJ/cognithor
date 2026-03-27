@@ -4541,6 +4541,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'These tools give Jarvis access to your desktop. Enable only when needed.'**
   String get toolsWarning;
+
+  /// No description provided for @configPageSystemProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware'**
+  String get configPageSystemProfile;
+
+  /// No description provided for @systemTier.
+  ///
+  /// In en, this message translates to:
+  /// **'System Tier'**
+  String get systemTier;
+
+  /// No description provided for @systemRecommendedMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended Mode'**
+  String get systemRecommendedMode;
+
+  /// No description provided for @systemRescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan Hardware'**
+  String get systemRescan;
 }
 
 class _AppLocalizationsDelegate

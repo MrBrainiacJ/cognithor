@@ -2294,4 +2294,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get toolsWarning =>
       'These tools give Jarvis access to your desktop. Enable only when needed.';
+
+  @override
+  String get configPageSystemProfile => 'Hardware';
+
+  @override
+  String get systemTier => 'System Tier';
+
+  @override
+  String get systemRecommendedMode => 'Recommended Mode';
+
+  @override
+  String get systemRescan => 'Rescan Hardware';
 }
