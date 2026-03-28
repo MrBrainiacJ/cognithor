@@ -126,6 +126,18 @@ class Executor:
             "media_extract_text": getattr(_exec, "media_extract_text_timeout", 120),
             "media_tts": getattr(_exec, "media_tts_timeout", 120),
             "run_python": getattr(_exec, "run_python_timeout", 120),
+            # Synthesis tools need longer — they process large entity sets via LLM
+            "knowledge_contradictions": 120,
+            "knowledge_synthesize": 120,
+            "knowledge_gaps": 120,
+            "knowledge_timeline": 90,
+            # Deep research can take multiple rounds
+            "deep_research": 180,
+            "search_and_read": 60,
+            # OSINT investigations run multiple collectors
+            "investigate_person": 120,
+            "investigate_project": 120,
+            "investigate_org": 120,
         }
         # Agent context tokens (for contextvar reset)
         self._ctx_tokens: list[contextvars.Token] = []
@@ -149,6 +161,15 @@ class Executor:
             "media_transcribe_audio": getattr(_exec, "media_transcribe_audio_timeout", 120),
             "media_extract_text": getattr(_exec, "media_extract_text_timeout", 120),
             "media_tts": getattr(_exec, "media_tts_timeout", 120),
+            "knowledge_contradictions": 120,
+            "knowledge_synthesize": 120,
+            "knowledge_gaps": 120,
+            "knowledge_timeline": 90,
+            "deep_research": 180,
+            "search_and_read": 60,
+            "investigate_person": 120,
+            "investigate_project": 120,
+            "investigate_org": 120,
             "run_python": getattr(_exec, "run_python_timeout", 120),
         }
         log.info("executor_config_reloaded")
