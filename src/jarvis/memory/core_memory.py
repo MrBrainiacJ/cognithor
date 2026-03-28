@@ -10,6 +10,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+try:
+    from jarvis.security.encrypted_file import efile as _efile
+except ImportError:  # encryption module not available
+    _efile = None  # type: ignore[assignment]
+
 
 class CoreMemory:
     """Manage the CORE.md file -- Jarvis' identity.
@@ -49,7 +54,10 @@ class CoreMemory:
             self._sections = {}
             return ""
 
-        self._content = self._path.read_text(encoding="utf-8")
+        if _efile is not None:
+            self._content = _efile.read(self._path)
+        else:
+            self._content = self._path.read_text(encoding="utf-8")
         self._sections = self._parse_sections(self._content)
         return self._content
 
@@ -79,7 +87,10 @@ class CoreMemory:
             self._sections = self._parse_sections(content)
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.write_text(self._content, encoding="utf-8")
+        if _efile is not None:
+            _efile.write(self._path, self._content)
+        else:
+            self._path.write_text(self._content, encoding="utf-8")
 
     def create_default(self) -> str:
         """Create a default CORE.md and return its content."""

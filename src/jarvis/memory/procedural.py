@@ -16,6 +16,11 @@ import yaml
 
 from jarvis.models import ProcedureMetadata
 
+try:
+    from jarvis.security.encrypted_file import efile as _efile
+except ImportError:  # encryption module not available
+    _efile = None  # type: ignore[assignment]
+
 logger = logging.getLogger("jarvis.memory.procedural")
 
 # YAML Frontmatter Pattern
@@ -91,7 +96,10 @@ class ProceduralMemory:
         front = yaml.dump(frontmatter, default_flow_style=False, allow_unicode=True)
         content = f"---\n{front}---\n{body}"
 
-        file_path.write_text(content, encoding="utf-8")
+        if _efile is not None:
+            _efile.write(file_path, content)
+        else:
+            file_path.write_text(content, encoding="utf-8")
         logger.info("Prozedur gespeichert: %s → %s", name, file_path)
         return file_path
 
@@ -372,8 +380,11 @@ class ProceduralMemory:
     def _parse_file(self, path: Path) -> tuple[ProcedureMetadata, str] | None:
         """Parst eine Prozedur-Datei in Metadata + Body."""
         try:
-            content = path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as e:
+            if _efile is not None:
+                content = _efile.read(path)
+            else:
+                content = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError, RuntimeError) as e:
             logger.warning("Kann %s nicht lesen: %s", path, e)
             return None
 

@@ -9,6 +9,11 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+try:
+    from jarvis.security.encrypted_file import efile as _efile
+except ImportError:  # encryption module not available
+    _efile = None  # type: ignore[assignment]
+
 
 class EpisodicMemory:
     """Manage daily log files under ~/.jarvis/memory/episodes/.
@@ -64,10 +69,19 @@ class EpisodicMemory:
         # Create file if not present (with daily header)
         if not file_path.exists():
             header = f"# {timestamp.date().isoformat()}\n"
-            file_path.write_text(header + entry, encoding="utf-8")
+            full_content = header + entry
+            if _efile is not None:
+                _efile.write(file_path, full_content)
+            else:
+                file_path.write_text(full_content, encoding="utf-8")
         else:
-            with open(file_path, "a", encoding="utf-8") as f:
-                f.write(entry)
+            # Append: efile doesn't support append, so read + append + write
+            if _efile is not None:
+                existing = _efile.read(file_path)
+                _efile.write(file_path, existing + entry)
+            else:
+                with open(file_path, "a", encoding="utf-8") as f:
+                    f.write(entry)
 
         return entry.strip()
 
@@ -87,6 +101,8 @@ class EpisodicMemory:
         file_path = self._file_for_date(d)
         if not file_path.exists():
             return ""
+        if _efile is not None:
+            return _efile.read(file_path)
         return file_path.read_text(encoding="utf-8")
 
     def get_recent(self, days: int = 2) -> list[tuple[date, str]]:

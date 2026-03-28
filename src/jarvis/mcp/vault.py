@@ -27,6 +27,11 @@ import yaml
 
 from jarvis.utils.logging import get_logger
 
+try:
+    from jarvis.security.encrypted_file import efile as _efile
+except ImportError:  # encryption module not available
+    _efile = None  # type: ignore[assignment]
+
 if TYPE_CHECKING:
     from jarvis.config import JarvisConfig
 
@@ -132,6 +137,8 @@ class VaultTools:
     def _read_index(self) -> dict[str, Any]:
         """Liest den _index.json."""
         try:
+            if _efile is not None:
+                return json.loads(_efile.read(self._index_path))
             return json.loads(self._index_path.read_text(encoding="utf-8"))
         except Exception:
             log.debug("vault_index_read_failed", path=str(self._index_path), exc_info=True)
@@ -139,10 +146,11 @@ class VaultTools:
 
     def _write_index(self, index: dict[str, Any]) -> None:
         """Schreibt den _index.json."""
-        self._index_path.write_text(
-            json.dumps(index, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        content = json.dumps(index, ensure_ascii=False, indent=2)
+        if _efile is not None:
+            _efile.write(self._index_path, content)
+        else:
+            self._index_path.write_text(content, encoding="utf-8")
 
     def _update_index(
         self,
@@ -261,7 +269,11 @@ class VaultTools:
             for link in link_list:
                 body_parts.append(f"- [[{link}]]")
 
-        file_path.write_text("\n".join(body_parts) + "\n", encoding="utf-8")
+        full_content = "\n".join(body_parts) + "\n"
+        if _efile is not None:
+            _efile.write(file_path, full_content)
+        else:
+            file_path.write_text(full_content, encoding="utf-8")
 
         # Update index
         rel_path = str(file_path.relative_to(self._vault_root))
@@ -310,7 +322,10 @@ class VaultTools:
                     continue
 
             try:
-                content = md_file.read_text(encoding="utf-8")
+                if _efile is not None:
+                    content = _efile.read(md_file)
+                else:
+                    content = md_file.read_text(encoding="utf-8")
             except Exception:
                 continue
 
@@ -413,10 +428,15 @@ class VaultTools:
         if not identifier.strip():
             return "Fehler: Kein Identifier angegeben."
 
+        def _read_note(p: Path) -> str:
+            if _efile is not None:
+                return _efile.read(p)
+            return p.read_text(encoding="utf-8")
+
         # 1. Try as direct path (with path-traversal protection)
         direct_path = self._validate_vault_path(self._vault_root / identifier)
         if direct_path and direct_path.exists() and direct_path.is_file():
-            return direct_path.read_text(encoding="utf-8")
+            return _read_note(direct_path)
 
         # 2. Search index by title
         index = self._read_index()
@@ -424,13 +444,13 @@ class VaultTools:
             if title.lower() == identifier.lower():
                 note_path = self._validate_vault_path(self._vault_root / meta["path"])
                 if note_path and note_path.exists():
-                    return note_path.read_text(encoding="utf-8")
+                    return _read_note(note_path)
 
         # 3. Search by slug
         slug = _slugify(identifier)
         for md_file in self._vault_root.rglob("*.md"):
             if md_file.stem == slug:
-                return md_file.read_text(encoding="utf-8")
+                return _read_note(md_file)
 
         return f"Notiz nicht gefunden: {identifier}"
 
@@ -460,7 +480,10 @@ class VaultTools:
         if note_path is None:
             return f"Notiz nicht gefunden: {identifier}"
 
-        content = note_path.read_text(encoding="utf-8")
+        if _efile is not None:
+            content = _efile.read(note_path)
+        else:
+            content = note_path.read_text(encoding="utf-8")
 
         # Add tags
         if add_tags.strip():
@@ -488,7 +511,10 @@ class VaultTools:
         if append_content.strip():
             content = content.rstrip("\n") + "\n\n" + append_content.strip() + "\n"
 
-        note_path.write_text(content, encoding="utf-8")
+        if _efile is not None:
+            _efile.write(note_path, content)
+        else:
+            note_path.write_text(content, encoding="utf-8")
 
         log.info("vault_note_updated", path=str(note_path))
         return f"Notiz aktualisiert: {note_path.relative_to(self._vault_root)}"
@@ -514,37 +540,48 @@ class VaultTools:
         if target_path is None:
             return f"Ziel-Notiz nicht gefunden: {target_note}"
 
+        def _read_note(p: Path) -> str:
+            if _efile is not None:
+                return _efile.read(p)
+            return p.read_text(encoding="utf-8")
+
+        def _write_note(p: Path, text: str) -> None:
+            if _efile is not None:
+                _efile.write(p, text)
+            else:
+                p.write_text(text, encoding="utf-8")
+
         source_title = (
             self._extract_frontmatter_field(
-                source_path.read_text(encoding="utf-8"),
+                _read_note(source_path),
                 "title",
             )
             or source_path.stem
         )
         target_title = (
             self._extract_frontmatter_field(
-                target_path.read_text(encoding="utf-8"),
+                _read_note(target_path),
                 "title",
             )
             or target_path.stem
         )
 
         # Insert [[backlink]] in source note
-        source_content = source_path.read_text(encoding="utf-8")
+        source_content = _read_note(source_path)
         backlink_marker = f"[[{target_title}]]"
         if backlink_marker not in source_content:
             # Update linked_notes in frontmatter
             source_content = self._add_linked_note(source_content, target_title)
             source_content = self._replace_frontmatter_field(source_content, "updated", _now_iso())
-            source_path.write_text(source_content, encoding="utf-8")
+            _write_note(source_path, source_content)
 
         # Insert [[backlink]] in target note
-        target_content = target_path.read_text(encoding="utf-8")
+        target_content = _read_note(target_path)
         backlink_marker = f"[[{source_title}]]"
         if backlink_marker not in target_content:
             target_content = self._add_linked_note(target_content, source_title)
             target_content = self._replace_frontmatter_field(target_content, "updated", _now_iso())
-            target_path.write_text(target_content, encoding="utf-8")
+            _write_note(target_path, target_content)
 
         log.info("vault_notes_linked", source=source_title, target=target_title)
         return f"Verknüpfung erstellt: [[{source_title}]] ↔ [[{target_title}]]"
@@ -572,9 +609,11 @@ class VaultTools:
             return f"Pfad ist keine Datei: {path}"
 
         # Remove from index
-        title = self._extract_frontmatter_field(
-            full.read_text(encoding="utf-8"), "title"
-        ) or full.stem
+        if _efile is not None:
+            _full_content = _efile.read(full)
+        else:
+            _full_content = full.read_text(encoding="utf-8")
+        title = self._extract_frontmatter_field(_full_content, "title") or full.stem
         index = self._read_index()
         # Remove by title match or path match
         keys_to_remove = [

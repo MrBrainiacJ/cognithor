@@ -5,6 +5,11 @@ import json
 import os
 import re
 import uuid
+
+try:
+    from jarvis.security.encrypted_file import efile as _efile
+except ImportError:  # encryption module not available
+    _efile = None  # type: ignore[assignment]
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -317,16 +322,24 @@ class LearningPlan:
             os.makedirs(os.path.join(plan_dir, subdir), exist_ok=True)
         self.updated_at = _now_iso()
         plan_path = os.path.join(plan_dir, "plan.json")
-        with open(plan_path, "w", encoding="utf-8") as f:
-            json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
+        content = json.dumps(self.to_dict(), indent=2, ensure_ascii=False)
+        if _efile is not None:
+            _efile.write(plan_path, content)
+        else:
+            with open(plan_path, "w", encoding="utf-8") as f:
+                f.write(content)
         return plan_dir
 
     @classmethod
     def load(cls, plan_dir: str) -> LearningPlan:
         """Load a plan from {plan_dir}/plan.json."""
         plan_path = os.path.join(plan_dir, "plan.json")
-        with open(plan_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        if _efile is not None:
+            raw = _efile.read(plan_path)
+            data = json.loads(raw)
+        else:
+            with open(plan_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
         return cls.from_dict(data)
 
     @classmethod
