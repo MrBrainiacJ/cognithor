@@ -646,6 +646,8 @@ class Gatekeeper:
             "browse_execute_js",
             # Vault (destructive)
             "vault_delete",
+            # OSINT (privacy-sensitive investigations)
+            "investigate_person", "investigate_project", "investigate_org",
         }
         if tool in orange_tools:
             return RiskLevel.ORANGE

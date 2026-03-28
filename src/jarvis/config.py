@@ -456,6 +456,16 @@ class VaultConfig(BaseModel):
     """Mapping von logischen Ordnernamen zu Verzeichnisnamen im Vault."""
 
 
+class OsintConfig(BaseModel):
+    """OSINT / Human Investigation Module configuration."""
+    enabled: bool = True
+    github_token: str = ""
+    default_depth: str = "standard"
+    collector_timeout: int = Field(default=30, ge=5, le=120)
+    report_ttl_days: int = Field(default=30, ge=1, le=365)
+    vault_folder: str = "recherchen/osint"
+
+
 class ContextPipelineConfig(BaseModel):
     """Adaptive Context Pipeline — automatische Kontext-Anreicherung vor dem Planner."""
 
@@ -2005,6 +2015,7 @@ class JarvisConfig(BaseModel):
     code: CodeConfig = Field(default_factory=CodeConfig)
     executor: ExecutorConfig = Field(default_factory=ExecutorConfig)
     vault: VaultConfig = Field(default_factory=VaultConfig)
+    osint: OsintConfig = Field(default_factory=OsintConfig)
     personality: PersonalityConfig = Field(default_factory=PersonalityConfig)
     identity: IdentityConfig = Field(default_factory=IdentityConfig)
     context_pipeline: ContextPipelineConfig = Field(default_factory=ContextPipelineConfig)

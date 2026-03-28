@@ -248,6 +248,14 @@ async def init_tools(
         log.warning("vault_tools_not_registered")
     result["vault_tools"] = vault_tools
 
+    # OSINT / Human Investigation Module (optional)
+    try:
+        from jarvis.mcp.osint_tools import register_osint_tools
+
+        register_osint_tools(mcp_client, config)
+    except Exception:
+        log.debug("osint_tools_not_registered", exc_info=True)
+
     # LLM + Vault in MediaPipeline injizieren (fuer analyze_document)
     if media_pipeline is not None and hasattr(media_pipeline, "_set_llm_fn"):
         try:
