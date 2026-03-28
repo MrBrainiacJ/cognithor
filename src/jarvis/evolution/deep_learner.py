@@ -64,6 +64,24 @@ class DeepLearner:
         )
         self._schedule_manager = ScheduleManager(cron_engine=cron_engine)
 
+        # Knowledge validation — cross-reference claims, track confidence
+        self._knowledge_validator = None
+        try:
+            from jarvis.evolution.knowledge_validator import KnowledgeValidator
+
+            jarvis_home = getattr(config, "jarvis_home", None) if config else None
+            if not jarvis_home and plans_dir:
+                jarvis_home = Path(plans_dir).parent.parent
+            if jarvis_home:
+                db_path = Path(jarvis_home) / "index" / "knowledge_claims.db"
+                db_path.parent.mkdir(parents=True, exist_ok=True)
+                self._knowledge_validator = KnowledgeValidator(
+                    db_path=db_path, llm_fn=llm_fn, mcp_client=mcp_client,
+                )
+                log.info("knowledge_validator_initialized", db=str(db_path))
+        except Exception:
+            log.debug("knowledge_validator_init_failed", exc_info=True)
+
         self._llm_fn = llm_fn
         self._mcp_client = mcp_client
         self._memory_manager = memory_manager
@@ -205,6 +223,7 @@ class DeepLearner:
             mcp_client=self._mcp_client,
             llm_fn=self._llm_fn,
             goal_slug=plan.goal_slug,
+            knowledge_validator=self._knowledge_validator,
         )
 
         fetched_urls: set[str] = set()
@@ -250,6 +269,24 @@ class DeepLearner:
             subgoal.status = "failed"
             log.info("deep_learner_subgoal_quality_failed", subgoal=subgoal.title[:40],
                      failed=quality.get("failed_questions", []))
+
+        # Challenge weak claims — cross-reference low-confidence facts
+        if self._knowledge_validator:
+            try:
+                challenged = await self._knowledge_validator.challenge_weak_claims(
+                    goal_slug=plan.goal_slug, max_challenges=3,
+                )
+                if challenged:
+                    summary = self._knowledge_validator.get_claims_summary(plan.goal_slug)
+                    log.info(
+                        "deep_learner_claims_validated",
+                        total=summary["total_claims"],
+                        verified=summary["verified"],
+                        disputed=summary["disputed"],
+                        avg_confidence=summary["avg_confidence"],
+                    )
+            except Exception:
+                log.debug("deep_learner_claims_challenge_failed", exc_info=True)
 
         # Update plan totals
         plan.total_chunks_indexed += subgoal.chunks_created

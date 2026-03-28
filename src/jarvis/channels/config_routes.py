@@ -3242,6 +3242,20 @@ def _register_ui_routes(
         except Exception as exc:
             return {"error": str(exc)}
 
+    @app.get("/api/v1/evolution/claims", dependencies=deps)
+    async def get_evolution_claims() -> dict[str, Any]:
+        """Get knowledge claims table with confidence scores."""
+        dl = getattr(gateway, "_deep_learner", None)
+        if not dl or not dl._knowledge_validator:
+            return {"claims": [], "summary": {}, "message": "KnowledgeValidator not available"}
+        goal_slug = request_args.get("goal_slug", "") if "request_args" in dir() else ""
+        summary = dl._knowledge_validator.get_claims_summary()
+        claims = dl._knowledge_validator.get_claims(limit=100)
+        return {
+            "summary": summary,
+            "claims": [c.to_dict() for c in claims],
+        }
+
     # -- 3.4: POST /agents/{name} ----------------------------------------
 
     @app.post("/api/v1/agents/{name}", dependencies=deps)

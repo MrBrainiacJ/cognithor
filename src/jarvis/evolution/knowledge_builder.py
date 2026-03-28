@@ -30,6 +30,7 @@ class BuildResult:
     chunks_created: int = 0
     entities_created: int = 0
     relations_created: int = 0
+    claims_extracted: int = 0
     errors: List[str] = field(default_factory=list)
 
 
@@ -70,10 +71,12 @@ class KnowledgeBuilder:
         mcp_client: Any,
         llm_fn: Optional[Callable] = None,
         goal_slug: str = "",
+        knowledge_validator: Any = None,
     ) -> None:
         self._mcp = mcp_client
         self._llm_fn = llm_fn
         self._goal_slug = goal_slug
+        self._validator = knowledge_validator
 
     # ------------------------------------------------------------------
     # Public API
@@ -155,6 +158,23 @@ class KnowledgeBuilder:
                     result.relations_created += 1
                 except Exception as exc:
                     result.errors.append(f"add_relation failed: {exc}")
+
+        # 4. Claims: extract and track factual claims for validation
+        if self._validator:
+            try:
+                claims = await self._validator.extract_claims(
+                    text=fetch_result.text[:3000],
+                    source_url=fetch_result.url,
+                    goal_slug=self._goal_slug,
+                )
+                result.claims_extracted = len(claims)
+                log.info(
+                    "knowledge_claims_tracked",
+                    url=fetch_result.url[:50],
+                    claims=len(claims),
+                )
+            except Exception:
+                log.debug("knowledge_claims_extraction_failed", exc_info=True)
 
         return result
 
