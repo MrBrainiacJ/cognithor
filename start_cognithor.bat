@@ -258,6 +258,26 @@ if errorlevel 1 (
 )
 
 :: Start SearXNG (local meta search engine for Evolution Engine)
+where docker >nul 2>&1
+if errorlevel 1 (
+    echo   [SKIP] Docker not installed - SearXNG unavailable.
+    goto :searxng_done
+)
+:: Ensure Docker daemon is running
+docker info >nul 2>&1
+if errorlevel 1 (
+    echo   [INFO] Starting Docker Desktop...
+    start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe" 2>nul
+    :: Wait up to 30 seconds for daemon
+    for /L %%i in (1,1,15) do (
+        timeout /t 2 /nobreak >nul
+        docker info >nul 2>&1
+        if not errorlevel 1 goto :docker_ready
+    )
+    echo   [SKIP] Docker Desktop did not start in time.
+    goto :searxng_done
+)
+:docker_ready
 docker ps -q -f "name=cognithor-searxng" 2>nul | find /v "" >nul
 if errorlevel 1 (
     docker ps -aq -f "name=cognithor-searxng" 2>nul | find /v "" >nul
@@ -266,22 +286,18 @@ if errorlevel 1 (
         docker start cognithor-searxng >nul 2>&1
         echo   [OK] SearXNG started.
     ) else (
-        where docker >nul 2>&1
+        echo   [INFO] Creating SearXNG container...
+        docker run -d --name cognithor-searxng -p 8888:8080 --restart unless-stopped searxng/searxng >nul 2>&1
         if not errorlevel 1 (
-            echo   [INFO] Creating SearXNG container...
-            docker run -d --name cognithor-searxng -p 8888:8080 --restart unless-stopped searxng/searxng >nul 2>&1
-            if not errorlevel 1 (
-                echo   [OK] SearXNG created and started on port 8888.
-            ) else (
-                echo   [SKIP] SearXNG container creation failed.
-            )
+            echo   [OK] SearXNG created and started on port 8888.
         ) else (
-            echo   [SKIP] Docker not installed - SearXNG unavailable.
+            echo   [SKIP] SearXNG container creation failed.
         )
     )
 ) else (
     echo   [OK] SearXNG already running.
 )
+:searxng_done
 
 :: Start AltServer (iOS sideloading)
 tasklist /FI "IMAGENAME eq AltServer.exe" 2>nul | find /i "AltServer.exe" >nul
