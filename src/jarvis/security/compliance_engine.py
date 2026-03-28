@@ -29,13 +29,18 @@ class ComplianceEngine:
     4. Legitimate interest bypasses consent (security monitoring, audit)
     """
 
+    # System-internal channels exempt from user consent (use LEGITIMATE_INTEREST)
+    _SYSTEM_CHANNELS = {"cron", "sub_agent", "system", "evolution", "heartbeat"}
+
     def __init__(
         self,
         consent_manager: ConsentManager | None = None,
         enabled: bool = True,
+        consent_required: bool = True,
     ) -> None:
         self._consent = consent_manager
         self._enabled = enabled
+        self._consent_required = consent_required
         self._privacy_mode = False
 
     def set_privacy_mode(self, enabled: bool) -> None:
@@ -68,24 +73,37 @@ class ComplianceEngine:
                 f"Privacy mode active — {purpose.value} processing blocked"
             )
 
-        # Rule 2: Consent-based processing requires actual consent
-        if legal_basis == ProcessingBasis.CONSENT:
-            if self._consent and not self._consent.has_consent(user_id, channel):
+        # Rule 2: System-internal channels use LEGITIMATE_INTEREST, not consent
+        if channel in self._SYSTEM_CHANNELS:
+            if legal_basis != ProcessingBasis.LEGITIMATE_INTEREST:
+                legal_basis = ProcessingBasis.LEGITIMATE_INTEREST
+            # System channels are exempt from user consent
+            return
+
+        # Rule 3: Consent-based processing requires actual consent (FAIL-CLOSED)
+        if legal_basis == ProcessingBasis.CONSENT and self._consent_required:
+            if self._consent is None:
+                # No consent store available — fail CLOSED, not open
+                raise ComplianceViolation(
+                    "Consent store unavailable — cannot verify consent. Processing blocked."
+                )
+            if not self._consent.has_consent(user_id, channel):
                 raise ComplianceViolation(
                     f"No consent for {purpose.value} on channel {channel}. "
                     f"User {user_id[:8]} must accept the privacy notice first."
                 )
 
-        # Rule 3: OSINT requires explicit OSINT consent (above and beyond data_processing)
+        # Rule 4: OSINT requires explicit OSINT consent (above and beyond data_processing)
         if purpose == DataPurpose.OSINT:
-            if self._consent and not self._consent.has_consent(user_id, channel, "osint"):
+            if self._consent is None:
+                raise ComplianceViolation("Consent store unavailable for OSINT check.")
+            if not self._consent.has_consent(user_id, channel, "osint"):
                 raise ComplianceViolation(
                     f"OSINT investigation requires explicit osint consent from user {user_id[:8]}"
                 )
 
-        # Rule 4: Legitimate interest is allowed without consent
+        # Rule 5: Legitimate interest is allowed without consent
         # (security monitoring, audit trails, fraud detection)
-        # No check needed — this is the bypass
 
         log.debug(
             "compliance_check_passed",

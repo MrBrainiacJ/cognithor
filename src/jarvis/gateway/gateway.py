@@ -415,9 +415,12 @@ class Gateway:
                 self._compliance_engine.set_privacy_mode(True)
             log.info("gdpr_compliance_engine_initialized")
         except Exception:
+            log.error("gdpr_compliance_engine_init_failed", exc_info=True)
+            # Fail-closed: engine without consent store blocks all consent-based processing
             self._consent_manager = None
-            self._compliance_engine = None
-            log.debug("gdpr_compliance_engine_init_skipped", exc_info=True)
+            self._compliance_engine = ComplianceEngine(
+                consent_manager=None, enabled=True, consent_required=True,
+            )
 
         # Governance-Cron-Job registrieren (taeglich um 02:00)
         if self._cron_engine and hasattr(self, "_governance_agent") and self._governance_agent:
@@ -1596,10 +1599,19 @@ class Gateway:
             try:
                 from jarvis.security.gdpr import ProcessingBasis, DataPurpose
 
+                _channel = msg.channel or "unknown"
+                _user = msg.user_id or msg.session_id or "unknown"
+                # System-internal channels use legitimate interest, not consent
+                _system_channels = {"cron", "sub_agent", "system", "evolution", "heartbeat"}
+                _basis = (
+                    ProcessingBasis.LEGITIMATE_INTEREST
+                    if _channel in _system_channels
+                    else ProcessingBasis.CONSENT
+                )
                 self._compliance_engine.check(
-                    user_id=msg.user_id or msg.session_id or "unknown",
-                    channel=msg.channel or "unknown",
-                    legal_basis=ProcessingBasis.CONSENT,
+                    user_id=_user,
+                    channel=_channel,
+                    legal_basis=_basis,
                     purpose=DataPurpose.CONVERSATION,
                 )
             except ComplianceViolation as e:

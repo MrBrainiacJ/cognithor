@@ -574,6 +574,20 @@ class TelegramChannel(Channel):
         if self.allowed_users and user_id not in self.allowed_users:
             return
 
+        # GDPR consent check for voice messages
+        consent_mgr = None
+        try:
+            if hasattr(self, "_handler") and hasattr(self._handler, "__self__"):
+                consent_mgr = getattr(self._handler.__self__, "consent_manager", None)
+        except Exception:
+            pass
+        if consent_mgr and consent_mgr.requires_consent(str(user_id), "telegram"):
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="Bitte sende zuerst eine Textnachricht und akzeptiere den Datenschutzhinweis.",
+            )
+            return
+
         voice = update.effective_message.voice or update.effective_message.audio
         if voice is None:
             return
@@ -623,6 +637,21 @@ class TelegramChannel(Channel):
         chat_id = update.effective_chat.id
 
         if self.allowed_users and user_id not in self.allowed_users:
+            return
+
+        # GDPR consent check for photo messages
+        consent_mgr = None
+        try:
+            if hasattr(self, "_handler") and hasattr(self._handler, "__self__"):
+                consent_mgr = getattr(self._handler.__self__, "consent_manager", None)
+        except Exception:
+            pass
+        if consent_mgr and consent_mgr.requires_consent(str(user_id), "telegram"):
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="Datenschutzhinweis: Bitte sende zuerst eine Textnachricht "
+                     "und akzeptiere den Datenschutzhinweis bevor du Bilder sendest.",
+            )
             return
 
         photos = update.effective_message.photo
@@ -712,6 +741,20 @@ class TelegramChannel(Channel):
         chat_id = update.effective_chat.id
 
         if self.allowed_users and user_id not in self.allowed_users:
+            return
+
+        # GDPR consent check for document messages
+        consent_mgr = None
+        try:
+            if hasattr(self, "_handler") and hasattr(self._handler, "__self__"):
+                consent_mgr = getattr(self._handler.__self__, "consent_manager", None)
+        except Exception:
+            pass
+        if consent_mgr and consent_mgr.requires_consent(str(user_id), "telegram"):
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="Bitte sende zuerst eine Textnachricht und akzeptiere den Datenschutzhinweis.",
+            )
             return
 
         doc = update.effective_message.document

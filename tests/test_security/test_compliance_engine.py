@@ -102,3 +102,40 @@ def test_disabled_engine_allows_everything(consent_mgr):
         legal_basis=ProcessingBasis.CONSENT,
         purpose=DataPurpose.CONVERSATION,
     )
+
+
+def test_fail_closed_when_consent_manager_none():
+    """C3: Engine MUST block when consent store is unavailable."""
+    engine = ComplianceEngine(consent_manager=None, enabled=True)
+    with pytest.raises(ComplianceViolation, match="[Cc]onsent store unavailable"):
+        engine.check(
+            user_id="user1",
+            channel="telegram",
+            legal_basis=ProcessingBasis.CONSENT,
+            purpose=DataPurpose.CONVERSATION,
+        )
+
+
+def test_system_channel_exempt_from_consent():
+    """I1/I2: Cron jobs and sub-agents use legitimate interest, not consent."""
+    engine = ComplianceEngine(consent_manager=None, enabled=True)
+    # Should NOT raise — system channels are exempt
+    for channel in ("cron", "sub_agent", "system", "evolution", "heartbeat"):
+        engine.check(
+            user_id="system",
+            channel=channel,
+            legal_basis=ProcessingBasis.LEGITIMATE_INTEREST,
+            purpose=DataPurpose.SECURITY,
+        )
+
+
+def test_consent_required_false_skips_check():
+    """C5: consent_required=False disables consent checks."""
+    engine = ComplianceEngine(consent_manager=None, enabled=True, consent_required=False)
+    # Should not raise even without consent manager
+    engine.check(
+        user_id="user1",
+        channel="telegram",
+        legal_basis=ProcessingBasis.CONSENT,
+        purpose=DataPurpose.CONVERSATION,
+    )
