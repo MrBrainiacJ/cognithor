@@ -609,6 +609,22 @@ install_jarvis() {
         pip install -e ".[identity]" --quiet 2>/dev/null || echo "  [WARNING] Identity install failed"
     fi
 
+    # Install pysqlcipher3 for GDPR encryption at rest
+    if python3 -c "import pysqlcipher3" 2>/dev/null; then
+        success "pysqlcipher3 available (GDPR encryption)"
+    else
+        echo "  [INFO] Installing pysqlcipher3 for GDPR encryption at rest..."
+        # System library required first
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y libsqlcipher-dev 2>/dev/null || true
+        elif command -v brew &>/dev/null; then
+            brew install sqlcipher 2>/dev/null || true
+        fi
+        pip install pysqlcipher3 --quiet 2>/dev/null && \
+            success "pysqlcipher3 installed" || \
+            warn "pysqlcipher3 install failed -- database encryption unavailable. Install libsqlcipher-dev (Ubuntu) or sqlcipher (macOS) and retry."
+    fi
+
     # Verify installation
     if python3 -c "import jarvis; print(f'Cognithor v{jarvis.__version__}')" 2>/dev/null; then
         success "Cognithor installed successfully"

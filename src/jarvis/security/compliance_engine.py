@@ -37,10 +37,12 @@ class ComplianceEngine:
         consent_manager: ConsentManager | None = None,
         enabled: bool = True,
         consent_required: bool = True,
+        policy_version: str = "1.0",
     ) -> None:
         self._consent = consent_manager
         self._enabled = enabled
         self._consent_required = consent_required
+        self._policy_version = policy_version
         self._privacy_mode = False
 
     def set_privacy_mode(self, enabled: bool) -> None:
@@ -87,7 +89,7 @@ class ComplianceEngine:
                 raise ComplianceViolation(
                     "Consent store unavailable — cannot verify consent. Processing blocked."
                 )
-            if not self._consent.has_consent(user_id, channel):
+            if not self._consent.has_consent(user_id, channel, policy_version=self._policy_version):
                 raise ComplianceViolation(
                     f"No consent for {purpose.value} on channel {channel}. "
                     f"User {user_id[:8]} must accept the privacy notice first."

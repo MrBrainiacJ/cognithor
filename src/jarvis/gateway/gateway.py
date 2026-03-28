@@ -401,6 +401,11 @@ class Gateway:
             self._consent_manager = ConsentManager(
                 db_path=str(Path(self._config.jarvis_home) / "index" / "consent.db")
             )
+            policy_ver = getattr(
+                getattr(self._config, "compliance", None),
+                "privacy_notice_version",
+                "1.0",
+            )
             self._compliance_engine = ComplianceEngine(
                 consent_manager=self._consent_manager,
                 enabled=getattr(
@@ -408,6 +413,7 @@ class Gateway:
                     "compliance_engine_enabled",
                     True,
                 ),
+                policy_version=policy_ver,
             )
             if getattr(
                 getattr(self._config, "compliance", None), "privacy_mode", False
@@ -427,6 +433,29 @@ class Gateway:
             )
             self._gdpr_manager = None
             self._gdpr_compliance_manager = None
+
+        # Register erasure handlers for all data tiers
+        if hasattr(self, "_gdpr_manager") and self._gdpr_manager:
+            erasure = self._gdpr_manager.erasure
+
+            # Memory tier: delete user's episodic/semantic/procedural memories
+            if hasattr(self, "_memory_manager") and self._memory_manager:
+                mm = self._memory_manager
+                def _erase_memory(uid):
+                    count = 0
+                    try:
+                        if hasattr(mm, "episodic") and hasattr(mm.episodic, "prune_old"):
+                            mm.episodic.prune_old(retention_days=0)
+                            count += 1
+                    except Exception:
+                        pass
+                    return count
+                erasure.register_handler(_erase_memory)
+
+            # Session tier
+            session_store = getattr(self, "_session_store", None)
+            if session_store and hasattr(session_store, "delete_user_sessions"):
+                erasure.register_handler(lambda uid: session_store.delete_user_sessions(uid))
 
         # Governance-Cron-Job registrieren (taeglich um 02:00)
         if self._cron_engine and hasattr(self, "_governance_agent") and self._governance_agent:
@@ -1613,6 +1642,21 @@ class Gateway:
                 is_final=True,
             )
 
+        # Handle consent responses (works for all channels including WebUI)
+        if msg.text and msg.text.strip().lower() in ("akzeptieren", "accept", "ja", "yes"):
+            if hasattr(self, "_consent_manager") and self._consent_manager:
+                _uid = msg.user_id or msg.session_id or "unknown"
+                _ch = msg.channel or "unknown"
+                if self._consent_manager.requires_consent(_uid, _ch):
+                    self._consent_manager.grant_consent(_uid, _ch, "data_processing",
+                                                         context=msg.session_id or "")
+                    return OutgoingMessage(
+                        channel=msg.channel,
+                        text="Datenschutz-Einwilligung erteilt. Ich bin jetzt bereit!",
+                        session_id=msg.session_id,
+                        is_final=True,
+                    )
+
         # GDPR compliance gate — check consent before processing
         if hasattr(self, "_compliance_engine") and self._compliance_engine:
             try:
@@ -1635,9 +1679,17 @@ class Gateway:
                 )
             except ComplianceViolation as e:
                 log.info("compliance_blocked", reason=str(e)[:100])
+                # Return a user-friendly consent prompt
+                consent_text = str(e)
+                if "consent" in consent_text.lower():
+                    consent_text = (
+                        "Datenschutzhinweis: Ich speichere Nachrichten und Erinnerungen. "
+                        "Details: cognithor.dev/privacy\n\n"
+                        "Sende 'akzeptieren' um fortzufahren."
+                    )
                 return OutgoingMessage(
                     channel=msg.channel,
-                    text=str(e),
+                    text=consent_text,
                     session_id=msg.session_id,
                     is_final=True,
                 )

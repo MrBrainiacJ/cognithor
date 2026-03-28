@@ -2380,24 +2380,53 @@ def _register_security_routes(
         """GDPR Art. 15/20: Export all personal data for a user."""
         if not user_id:
             return {"error": "user_id query parameter required"}
-        gdpr_mgr = getattr(gateway, "_gdpr_manager", None)
-        consent_mgr = getattr(gateway, "_consent_manager", None)
+
         export: dict[str, Any] = {
+            "export_version": "1.0",
             "user_id": user_id,
-            "gdpr_article": "Art. 15/20 DSGVO — Auskunftsrecht / Datenportabilitaet",
+            "gdpr_article": "Art. 15/20 DSGVO",
         }
+
         # Processing logs
+        gdpr_mgr = getattr(gateway, "_gdpr_manager", None)
         if gdpr_mgr:
             try:
                 export["processing_log"] = gdpr_mgr.user_report(user_id)
             except Exception:
-                export["processing_log"] = []
+                export["processing_log"] = {"error": "unavailable"}
+
         # Consent records
+        consent_mgr = getattr(gateway, "_consent_manager", None)
         if consent_mgr:
             try:
                 export["consents"] = consent_mgr.get_user_consents(user_id)
             except Exception:
                 export["consents"] = []
+
+        # Memory data
+        memory_mgr = getattr(gateway, "_memory_manager", None)
+        if memory_mgr:
+            try:
+                # Search for user-related memories
+                results = memory_mgr.search_memory_sync(query=user_id, top_k=50)
+                export["memories"] = [
+                    {"text": getattr(r, "text", str(r))[:500], "source": getattr(r, "source", "")}
+                    for r in (results or [])
+                ]
+            except Exception:
+                export["memories"] = []
+
+            # Entities
+            try:
+                if hasattr(memory_mgr, "semantic") and hasattr(memory_mgr.semantic, "list_entities"):
+                    entities = memory_mgr.semantic.list_entities(limit=200)
+                    export["entities"] = [
+                        {"name": getattr(e, "name", ""), "type": getattr(e, "entity_type", "")}
+                        for e in (entities or [])
+                    ]
+            except Exception:
+                export["entities"] = []
+
         return export
 
     # -- Security Pipeline (Phase 19) ------------------------------------

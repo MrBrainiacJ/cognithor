@@ -299,6 +299,22 @@ if errorlevel 1 (
 )
 :searxng_done
 
+:: Check/install pysqlcipher3 (GDPR encryption at rest)
+python -c "import pysqlcipher3" >nul 2>&1
+if errorlevel 1 (
+    echo   [INFO] Installing pysqlcipher3 for GDPR encryption...
+    pip install pysqlcipher3 >nul 2>&1
+    if errorlevel 1 (
+        echo   [WARN] pysqlcipher3 installation failed. Database encryption unavailable.
+        echo          Install manually: pip install pysqlcipher3
+        echo          Or set JARVIS_DB_KEY env var for key management.
+    ) else (
+        echo   [OK] pysqlcipher3 installed.
+    )
+) else (
+    echo   [OK] pysqlcipher3 available.
+)
+
 :: Start AltServer (iOS sideloading)
 tasklist /FI "IMAGENAME eq AltServer.exe" 2>nul | find /i "AltServer.exe" >nul
 if errorlevel 1 (
