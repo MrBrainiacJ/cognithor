@@ -2429,6 +2429,63 @@ def _register_security_routes(
             except Exception:
                 export["memories"] = []
 
+        # Episodic memories (daily logs)
+        if memory_mgr and hasattr(memory_mgr, "episodic"):
+            try:
+                ep = memory_mgr.episodic
+                episodes = []
+                if hasattr(ep, "_base_path"):
+                    from pathlib import Path
+                    ep_dir = Path(ep._base_path) if hasattr(ep, "_base_path") else None
+                    if not ep_dir:
+                        ep_dir = Path(getattr(ep, "_dir", ""))
+                    if ep_dir and ep_dir.exists():
+                        for md_file in sorted(ep_dir.glob("*.md"))[-30:]:  # Last 30 days
+                            try:
+                                # Try encrypted read first
+                                try:
+                                    from jarvis.security.encrypted_file import efile
+                                    content = efile.read(md_file)
+                                except Exception:
+                                    content = md_file.read_text(encoding="utf-8")
+                                episodes.append({
+                                    "date": md_file.stem,
+                                    "content": content[:2000],
+                                })
+                            except Exception:
+                                pass
+                export["episodic_memories"] = episodes
+            except Exception:
+                export["episodic_memories"] = []
+
+        # Procedures (learned behaviors)
+        if memory_mgr and hasattr(memory_mgr, "procedures"):
+            try:
+                procs = memory_mgr.procedures
+                procedures = []
+                if hasattr(procs, "list_all"):
+                    for proc in procs.list_all()[:50]:
+                        procedures.append({
+                            "name": getattr(proc, "name", str(proc)),
+                            "content": getattr(proc, "content", "")[:1000],
+                        })
+                export["procedures"] = procedures
+            except Exception:
+                export["procedures"] = []
+
+        # Core memory (CORE.md)
+        if memory_mgr and hasattr(memory_mgr, "core"):
+            try:
+                core = memory_mgr.core
+                if hasattr(core, "content"):
+                    export["core_memory"] = core.content[:5000]
+                elif hasattr(core, "load"):
+                    export["core_memory"] = str(core.load())[:5000]
+                else:
+                    export["core_memory"] = ""
+            except Exception:
+                export["core_memory"] = ""
+
             # Entities
             try:
                 if hasattr(memory_mgr, "semantic") and hasattr(memory_mgr.semantic, "list_entities"):
@@ -2440,6 +2497,23 @@ def _register_security_routes(
                     ]
             except Exception:
                 export["entities"] = []
+
+        # Relations
+        try:
+            if hasattr(memory_mgr, "semantic") and hasattr(memory_mgr.semantic, "_indexer"):
+                indexer = memory_mgr.semantic._indexer
+                if hasattr(indexer, "_conn"):
+                    rows = indexer._conn.execute(
+                        "SELECT source_entity, relation_type, target_entity FROM relations LIMIT 1000"
+                    ).fetchall()
+                    export["relations"] = [
+                        {"source": r[0] if isinstance(r, tuple) else r["source_entity"],
+                         "relation": r[1] if isinstance(r, tuple) else r["relation_type"],
+                         "target": r[2] if isinstance(r, tuple) else r["target_entity"]}
+                        for r in rows
+                    ]
+        except Exception:
+            export["relations"] = []
 
         # User preferences
         pref_store = getattr(gateway, "_user_pref_store", None)
@@ -2467,6 +2541,7 @@ def _register_security_routes(
                 notes = vault._backend.list_notes(limit=200)
                 export["vault_notes"] = [
                     {"path": n.path, "title": n.title, "tags": n.tags, "folder": n.folder,
+                     "content": (n.content or "")[:5000],
                      "created_at": n.created_at, "updated_at": n.updated_at}
                     for n in notes
                 ]
@@ -2657,6 +2732,26 @@ def _register_security_routes(
                     except Exception:
                         pass
             counts["entities"] = imported
+
+        # Import relations
+        relations = body.get("relations", [])
+        if relations:
+            imported = 0
+            memory_mgr = getattr(gateway, "_memory_manager", None)
+            if memory_mgr and hasattr(memory_mgr, "semantic"):
+                indexer = getattr(memory_mgr.semantic, "_indexer", None)
+                if indexer and hasattr(indexer, "_conn"):
+                    for rel in relations:
+                        try:
+                            indexer._conn.execute(
+                                "INSERT OR IGNORE INTO relations (source_entity, relation_type, target_entity) VALUES (?, ?, ?)",
+                                (rel.get("source", ""), rel.get("relation", ""), rel.get("target", ""))
+                            )
+                            imported += 1
+                        except Exception:
+                            pass
+                    indexer._conn.commit()
+            counts["relations"] = imported
 
         # Import user preferences
         prefs = body.get("user_preferences", [])
