@@ -241,11 +241,8 @@ class QualityAssessor:
         passed = valid_test and quality_score >= self._quality_threshold
 
         logger.info(
-            "quality_test_result",
-            total_questions=len(questions),
-            answered=len(answered),
-            quality_score=round(quality_score, 2),
-            passed=passed,
+            "quality_test_result total=%d answered=%d score=%.2f passed=%s",
+            len(questions), len(answered), quality_score, passed,
         )
 
         return {
