@@ -32,6 +32,7 @@ import 'package:jarvis_ui/screens/config/budget_page.dart';
 import 'package:jarvis_ui/screens/config/evolution_page.dart';
 import 'package:jarvis_ui/screens/config/tools_page.dart';
 import 'package:jarvis_ui/screens/config/audit_page.dart';
+import 'package:jarvis_ui/screens/config/vault_page.dart';
 
 // ── Category definition ──────────────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ final _categories = [
     'channels',
   ]),
   _Category((l) => l.catKnowledge, Icons.storage, [
-    'memory', 'agents', 'bindings', 'web',
+    'memory', 'agents', 'bindings', 'web', 'vault',
   ]),
   _Category((l) => l.catSecurity, Icons.shield, [
     'security', 'tools', 'audit', 'database',
@@ -114,6 +115,8 @@ final _pageRegistry = <String, _SubPageDef>{
       (l) => l.configPageBudget, () => const BudgetPage()),
   'evolution': _SubPageDef(Icons.auto_awesome,
       (l) => l.configPageEvolution, () => const EvolutionPage()),
+  'vault': _SubPageDef(
+      Icons.lock_outlined, (l) => 'Vault', () => const VaultPage()),
   'system': _SubPageDef(
       Icons.build, (l) => l.configPageSystem, () => const SystemConfigPage()),
 };

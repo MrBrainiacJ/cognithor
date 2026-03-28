@@ -163,6 +163,12 @@ class ConfigProvider extends ChangeNotifier {
       'episodic_retention_days': 365,
       'dynamic_weighting': false,
     },
+    'vault': {
+      'enabled': true,
+      'path': '~/.jarvis/vault',
+      'auto_save_research': false,
+      'encrypt_files': false,
+    },
     'channels': {
       'cli_enabled': true,
       'webui_enabled': true,
@@ -454,7 +460,7 @@ class ConfigProvider extends ChangeNotifier {
         'model_overrides', 'web', 'database', 'executor', 'tools', 'audit',
         'improvement', 'prompt_evolution',
         'browser', 'calendar', 'email', 'identity', 'personality', 'recovery',
-        'evolution',
+        'evolution', 'vault',
       ]) {
         if (_cfg.containsKey(section)) {
           futures.add(_api!.patch('config/$section', _cfg[section] as Map<String, dynamic>)
