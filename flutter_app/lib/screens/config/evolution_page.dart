@@ -16,12 +16,15 @@ class EvolutionPage extends StatefulWidget {
 class _EvolutionPageState extends State<EvolutionPage> {
   Map<String, dynamic>? _data;
   List<String> _goals = [];
+  List<dynamic> _plans = [];
   bool _loading = true;
   bool _resuming = false;
+  bool _creatingPlan = false;
   String? _error;
   String? _resumeResult;
   Timer? _refreshTimer;
   final _goalController = TextEditingController();
+  final _planGoalController = TextEditingController();
 
   static const _steps = ['scout', 'research', 'build', 'reflect'];
 
@@ -35,6 +38,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
   void dispose() {
     _refreshTimer?.cancel();
     _goalController.dispose();
+    _planGoalController.dispose();
     super.dispose();
   }
 
@@ -45,12 +49,14 @@ class _EvolutionPageState extends State<EvolutionPage> {
       final results = await Future.wait([
         api.get('evolution/stats'),
         api.get('evolution/goals'),
+        api.get('evolution/plans'),
       ]);
       if (!mounted) return;
       final goalsData = (results[1]['goals'] as List<dynamic>?) ?? [];
       setState(() {
         _data = results[0];
         _goals = goalsData.map((g) => g.toString()).toList();
+        _plans = (results[2]['plans'] as List<dynamic>?) ?? [];
         _loading = false;
       });
       _refreshTimer?.cancel();
@@ -128,6 +134,8 @@ class _EvolutionPageState extends State<EvolutionPage> {
           _buildConfigCard(),
           const SizedBox(height: 16),
           _buildGoalsCard(),
+          const SizedBox(height: 16),
+          _buildPlansCard(),
           const SizedBox(height: 16),
           _buildStatusHeader(),
           const SizedBox(height: 16),
@@ -400,6 +408,246 @@ class _EvolutionPageState extends State<EvolutionPage> {
         ),
       ),
     );
+  }
+
+  // -- Learning Plans Card --------------------------------------------------
+
+  Widget _buildPlansCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Icon(Icons.school, size: 20, color: JarvisTheme.accent),
+              const SizedBox(width: 8),
+              const Text('Learning Plans',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              Text('${_plans.length} plans',
+                  style: TextStyle(
+                      fontSize: 12, color: JarvisTheme.textSecondary)),
+            ]),
+            const SizedBox(height: 12),
+            _buildCreatePlanRow(),
+            if (_plans.isEmpty) ...[
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  'No deep learning plans yet.\n'
+                  'Complex goals are automatically promoted to plans.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: JarvisTheme.textTertiary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+            ..._plans
+                .map((p) => _buildPlanTile(p as Map<String, dynamic>)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCreatePlanRow() {
+    return Row(children: [
+      Expanded(
+        child: TextField(
+          controller: _planGoalController,
+          decoration: InputDecoration(
+            hintText: 'e.g. Become an expert in German insurance law',
+            hintStyle:
+                TextStyle(fontSize: 12, color: JarvisTheme.textTertiary),
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          style: const TextStyle(fontSize: 13),
+          onSubmitted: (_) => _createPlan(),
+        ),
+      ),
+      const SizedBox(width: 8),
+      _creatingPlan
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2))
+          : IconButton(
+              icon: Icon(Icons.rocket_launch, color: JarvisTheme.accent),
+              onPressed: _createPlan,
+              tooltip: 'Create Learning Plan',
+            ),
+    ]);
+  }
+
+  Future<void> _createPlan() async {
+    final goal = _planGoalController.text.trim();
+    if (goal.isEmpty) return;
+    setState(() {
+      _creatingPlan = true;
+    });
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      await api.post('evolution/plans', {'goal': goal});
+      _planGoalController.clear();
+      await _load();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _creatingPlan = false;
+    });
+  }
+
+  Widget _buildPlanTile(Map<String, dynamic> plan) {
+    final goal = (plan['goal'] as String?) ?? '';
+    final status = (plan['status'] as String?) ?? 'planning';
+    final sgTotal = (plan['sub_goals_total'] as int?) ?? 0;
+    final sgDone = (plan['sub_goals_done'] as int?) ?? 0;
+    final coverage = ((plan['coverage_score'] as num?) ?? 0.0).toDouble();
+    final quality = ((plan['quality_score'] as num?) ?? 0.0).toDouble();
+    final chunks = (plan['total_chunks_indexed'] as int?) ?? 0;
+    final entities = (plan['total_entities_created'] as int?) ?? 0;
+    final planId = (plan['id'] as String?) ?? '';
+
+    final statusColor = switch (status) {
+      'active' => JarvisTheme.green,
+      'paused' => JarvisTheme.orange,
+      'completed' => JarvisTheme.accent,
+      'error' => JarvisTheme.red,
+      _ => JarvisTheme.textSecondary,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+          color: statusColor.withValues(alpha: 0.05),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title + status + actions
+            Row(children: [
+              Expanded(
+                child: Text(goal,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w600),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(status.toUpperCase(),
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor)),
+              ),
+              if (status == 'active')
+                IconButton(
+                  icon:
+                      Icon(Icons.pause, size: 18, color: JarvisTheme.orange),
+                  onPressed: () => _updatePlan(planId, 'pause'),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 30, minHeight: 30),
+                ),
+              if (status == 'paused')
+                IconButton(
+                  icon: Icon(Icons.play_arrow,
+                      size: 18, color: JarvisTheme.green),
+                  onPressed: () => _updatePlan(planId, 'resume'),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 30, minHeight: 30),
+                ),
+              IconButton(
+                icon: Icon(Icons.delete_outline,
+                    size: 18, color: JarvisTheme.red),
+                onPressed: () => _updatePlan(planId, 'delete'),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints:
+                    const BoxConstraints(minWidth: 30, minHeight: 30),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            // Progress bar
+            Row(children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: sgTotal > 0 ? sgDone / sgTotal : 0,
+                    backgroundColor:
+                        JarvisTheme.textTertiary.withValues(alpha: 0.2),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(statusColor),
+                    minHeight: 6,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('$sgDone/$sgTotal',
+                  style: TextStyle(
+                      fontSize: 11, color: JarvisTheme.textSecondary)),
+            ]),
+            const SizedBox(height: 6),
+            // Stats row
+            Row(children: [
+              _planStat(
+                  Icons.analytics, '${(coverage * 100).toInt()}%', 'Coverage'),
+              _planStat(
+                  Icons.quiz, '${(quality * 100).toInt()}%', 'Quality'),
+              _planStat(Icons.description, '$chunks', 'Chunks'),
+              _planStat(Icons.hub, '$entities', 'Entities'),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _planStat(IconData icon, String value, String label) {
+    return Expanded(
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 12, color: JarvisTheme.textTertiary),
+        const SizedBox(width: 3),
+        Text(value,
+            style:
+                const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        const SizedBox(width: 2),
+        Text(label,
+            style:
+                TextStyle(fontSize: 10, color: JarvisTheme.textTertiary)),
+      ]),
+    );
+  }
+
+  Future<void> _updatePlan(String planId, String action) async {
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      await api.patch('evolution/plans/$planId', {'action': action});
+      await _load();
+    } catch (_) {}
   }
 
   // -- Status Header Card ---------------------------------------------------
