@@ -13,11 +13,11 @@ Tools:
   - vault_delete: Notiz loeschen (GDPR erasure)
 
 Format: Obsidian-kompatibles Markdown mit YAML-Frontmatter.
+Storage: Delegates to pluggable backend (FileBackend or DBBackend).
 """
 
 from __future__ import annotations
 
-import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,12 +25,9 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from jarvis.mcp.vault_backend import parse_tags as _parse_tags
+from jarvis.mcp.vault_backend import slugify as _ext_slugify
 from jarvis.utils.logging import get_logger
-
-try:
-    from jarvis.security.encrypted_file import efile as _efile
-except ImportError:  # encryption module not available
-    _efile = None  # type: ignore[assignment]
 
 if TYPE_CHECKING:
     from jarvis.config import JarvisConfig
@@ -41,6 +38,9 @@ __all__ = [
     "VaultTools",
     "register_vault_tools",
 ]
+
+
+# ── Legacy module-level helpers (kept for backward compatibility) ─────────
 
 
 def _slugify(text: str) -> str:
@@ -61,34 +61,92 @@ def _now_iso() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
 
 
-def _parse_tags(tags: str | list[str]) -> list[str]:
-    """Normalisiert Tags zu einer einheitlichen Liste."""
-    if isinstance(tags, list):
-        return [t.strip().lower() for t in tags if t.strip()]
-    return [t.strip().lower() for t in tags.split(",") if t.strip()]
-
-
 class VaultTools:
     """Knowledge Vault: Obsidian-kompatibles Markdown-Notizen-System.
 
-    Verzeichnisstruktur:
-        ~/.jarvis/vault/
-        ├── recherchen/     # Web-Recherche-Ergebnisse
-        ├── meetings/       # Meeting-Notizen
-        ├── wissen/         # Wissensartikel
-        ├── projekte/       # Projektnotizen
-        ├── daily/          # Tagesnotizen
-        └── _index.json     # Schnell-Lookup (Titel → Pfad, Tags, Datum)
+    Delegates all storage operations to a pluggable backend:
+    - VaultFileBackend (default): Obsidian-compatible .md files
+    - VaultDBBackend: SQLCipher-encrypted SQLite with FTS5
+
+    Backend is selected based on config.vault.encrypt_files.
+    Auto-migration runs on mode change.
     """
 
+    def __init__(self, config: JarvisConfig | None = None) -> None:
+        vault_cfg = getattr(config, "vault", None)
+
+        if vault_cfg and getattr(vault_cfg, "path", ""):
+            self._vault_root = Path(vault_cfg.path).expanduser().resolve()
+        else:
+            self._vault_root = Path.home() / ".jarvis" / "vault"
+
+        self._vault_root.mkdir(parents=True, exist_ok=True)
+
+        _raw_encrypt = getattr(vault_cfg, "encrypt_files", False) if vault_cfg else False
+        # Guard against MagicMock or other non-bool truthy values: only True/1/"true" count
+        if isinstance(_raw_encrypt, bool):
+            encrypt = _raw_encrypt
+        elif isinstance(_raw_encrypt, (int, float)):
+            encrypt = bool(_raw_encrypt)
+        elif isinstance(_raw_encrypt, str):
+            encrypt = _raw_encrypt.lower() in ("true", "1", "yes")
+        else:
+            encrypt = False
+        default_folders = dict(getattr(vault_cfg, "default_folders", {})) if vault_cfg else None
+
+        # Select backend
+        if encrypt:
+            from jarvis.mcp.vault_db_backend import VaultDBBackend
+            self._backend = VaultDBBackend(self._vault_root)
+        else:
+            from jarvis.mcp.vault_file_backend import VaultFileBackend
+            self._backend = VaultFileBackend(
+                self._vault_root, encrypt_files=False, default_folders=default_folders,
+            )
+
+        # Auto-migrate on mode change
+        current_mode = "db" if encrypt else "file"
+        from jarvis.mcp.vault_migration import (
+            detect_mode_change,
+            migrate_db_to_files,
+            migrate_files_to_db,
+        )
+        if detect_mode_change(self._vault_root, current_mode):
+            try:
+                if current_mode == "db":
+                    from jarvis.mcp.vault_file_backend import VaultFileBackend as FB
+                    old = FB(self._vault_root, default_folders=default_folders)
+                    migrate_files_to_db(old, self._backend)
+                else:
+                    from jarvis.mcp.vault_db_backend import VaultDBBackend as DB
+                    old = DB(self._vault_root)
+                    migrate_db_to_files(old, self._backend)
+                log.info("vault_mode_migrated", mode=current_mode)
+            except Exception:
+                log.error("vault_migration_failed", exc_info=True)
+
+    # ── Backward-compatible property accessors ───────────────────────────
+    # These delegate to the backend for tests that access internal state.
+
+    @property
+    def _default_folders(self) -> dict[str, str]:
+        return getattr(self._backend, "_default_folders", {
+            "research": "recherchen", "meetings": "meetings",
+            "knowledge": "wissen", "projects": "projekte", "daily": "daily",
+        })
+
+    @property
+    def _index_path(self) -> Path:
+        return getattr(self._backend, "_index_path", self._vault_root / "_index.json")
+
+    @property
+    def _encrypt_files(self) -> bool:
+        return getattr(self._backend, "_encrypt", False)
+
+    # ── Backward-compatible private methods (delegate to backend) ────────
+
     def _validate_vault_path(self, path: Path) -> Path | None:
-        """Validiert, dass ein Pfad innerhalb des Vault-Roots liegt.
-
-        Verhindert Path-Traversal-Angriffe (../../etc/passwd).
-
-        Returns:
-            Aufgeloester Pfad wenn gueltig, sonst None.
-        """
+        """Validiert, dass ein Pfad innerhalb des Vault-Roots liegt."""
         try:
             resolved = path.resolve()
             resolved.relative_to(self._vault_root.resolve())
@@ -101,81 +159,26 @@ class VaultTools:
             )
             return None
 
-    def __init__(self, config: JarvisConfig | None = None) -> None:
-        vault_cfg = getattr(config, "vault", None)
-
-        if vault_cfg and getattr(vault_cfg, "path", ""):
-            self._vault_root = Path(vault_cfg.path).expanduser().resolve()
-        else:
-            self._vault_root = Path.home() / ".jarvis" / "vault"
-
-        if vault_cfg:
-            self._default_folders = dict(getattr(vault_cfg, "default_folders", {}))
-        else:
-            self._default_folders = {
-                "research": "recherchen",
-                "meetings": "meetings",
-                "knowledge": "wissen",
-                "projects": "projekte",
-                "daily": "daily",
-            }
-
-        # File encryption: opt-in via config (default: off for Obsidian compatibility)
-        self._encrypt_files = bool(
-            getattr(vault_cfg, "encrypt_files", False) if vault_cfg else False
-        )
-
-        self._index_path = self._vault_root / "_index.json"
-        self._ensure_structure()
-
     def _ensure_structure(self) -> None:
         """Erstellt Vault-Verzeichnisstruktur falls nicht vorhanden."""
-        self._vault_root.mkdir(parents=True, exist_ok=True)
-        for folder_name in self._default_folders.values():
-            (self._vault_root / folder_name).mkdir(parents=True, exist_ok=True)
-        if not self._index_path.exists():
-            self._write_index({})
-        log.info("vault_structure_ensured", path=str(self._vault_root))
-
-    # ── Index management ─────────────────────────────────────────────────
+        if hasattr(self._backend, "_ensure_structure"):
+            self._backend._ensure_structure()
 
     def _read_index(self) -> dict[str, Any]:
         """Liest den _index.json."""
-        try:
-            if _efile is not None and self._encrypt_files:
-                return json.loads(_efile.read(self._index_path))
-            return json.loads(self._index_path.read_text(encoding="utf-8"))
-        except Exception:
-            log.debug("vault_index_read_failed", path=str(self._index_path), exc_info=True)
-            return {}
+        if hasattr(self._backend, "_read_index"):
+            return self._backend._read_index()
+        return {}
 
     def _write_index(self, index: dict[str, Any]) -> None:
         """Schreibt den _index.json."""
-        content = json.dumps(index, ensure_ascii=False, indent=2)
-        if _efile is not None and self._encrypt_files:
-            _efile.write(self._index_path, content)
-        else:
-            self._index_path.write_text(content, encoding="utf-8")
+        if hasattr(self._backend, "_write_index"):
+            self._backend._write_index(index)
 
-    def _update_index(
-        self,
-        title: str,
-        path: str,
-        tags: list[str],
-        folder: str,
-    ) -> None:
+    def _update_index(self, title: str, path: str, tags: list[str], folder: str) -> None:
         """Aktualisiert einen Eintrag im Index."""
-        index = self._read_index()
-        index[title] = {
-            "path": path,
-            "tags": tags,
-            "folder": folder,
-            "created": index.get(title, {}).get("created", _now_iso()),
-            "updated": _now_iso(),
-        }
-        self._write_index(index)
-
-    # ── Frontmatter generation ──────────────────────────────────────────
+        if hasattr(self._backend, "_update_index"):
+            self._backend._update_index(title, path, tags, folder)
 
     def _build_frontmatter(
         self,
@@ -185,6 +188,9 @@ class VaultTools:
         linked_notes: list[str] | None = None,
     ) -> str:
         """Generiert Obsidian-kompatibles YAML-Frontmatter."""
+        if hasattr(self._backend, "_build_frontmatter"):
+            return self._backend._build_frontmatter(title, tags, sources, linked_notes)
+        # Fallback
         now = _now_iso()
         lines = [
             "---",
@@ -204,462 +210,28 @@ class VaultTools:
 
     def _resolve_folder(self, folder: str) -> str:
         """Loest einen logischen Ordnernamen zu einem Pfad auf."""
-        # Direct mapping: logical name → directory name
-        if folder in self._default_folders:
-            return self._default_folders[folder]
-        # Check if it is a direct directory name
-        if folder in self._default_folders.values():
+        if hasattr(self._backend, "_resolve_folder"):
+            return self._backend._resolve_folder(folder)
+        folders = self._default_folders
+        if folder in folders:
+            return folders[folder]
+        if folder in folders.values():
             return folder
-        # Fallback: wissen
-        return self._default_folders.get("knowledge", "wissen")
-
-    # ── Tool: vault_save ─────────────────────────────────────────────────
-
-    async def vault_save(
-        self,
-        title: str,
-        content: str,
-        tags: str = "",
-        folder: str = "knowledge",
-        sources: str = "",
-        linked_notes: str = "",
-    ) -> str:
-        """Erstellt eine neue Notiz im Vault.
-
-        Args:
-            title: Titel der Notiz.
-            content: Markdown-Inhalt.
-            tags: Kommagetrennte Tags (z.B. 'finanzen, tesla').
-            folder: Ordner (research/meetings/knowledge/projects/daily).
-            sources: Kommagetrennte Quell-URLs.
-            linked_notes: Kommagetrennte Titel verknuepfter Notizen.
-        """
-        if not title.strip():
-            return "Fehler: Kein Titel angegeben."
-        if not content.strip():
-            return "Fehler: Kein Inhalt angegeben."
-
-        tag_list = _parse_tags(tags)
-        source_list = [s.strip() for s in sources.split(",") if s.strip()] if sources else []
-        link_list = (
-            [n.strip() for n in linked_notes.split(",") if n.strip()] if linked_notes else []
-        )
-
-        folder_name = self._resolve_folder(folder)
-        slug = _slugify(title)
-        target_dir = self._vault_root / folder_name
-        target_dir.mkdir(parents=True, exist_ok=True)
-        file_path = target_dir / f"{slug}.md"
-
-        # Duplicate avoidance
-        if file_path.exists():
-            counter = 1
-            while file_path.exists():
-                file_path = target_dir / f"{slug}-{counter}.md"
-                counter += 1
-
-        # Assemble frontmatter + content
-        frontmatter = self._build_frontmatter(title, tag_list, source_list, link_list)
-        body_parts = [frontmatter, "", f"# {title}", "", content]
-
-        # Sources section
-        if source_list:
-            body_parts.extend(["", "## Quellen"])
-            for src in source_list:
-                body_parts.append(f"- [{src}]({src})")
-
-        # Linked notes
-        if link_list:
-            body_parts.extend(["", "## Verknüpfte Notizen"])
-            for link in link_list:
-                body_parts.append(f"- [[{link}]]")
-
-        full_content = "\n".join(body_parts) + "\n"
-        if _efile is not None and self._encrypt_files:
-            _efile.write(file_path, full_content)
-        else:
-            file_path.write_text(full_content, encoding="utf-8")
-
-        # Update index
-        rel_path = str(file_path.relative_to(self._vault_root))
-        self._update_index(title, rel_path, tag_list, folder_name)
-
-        log.info("vault_note_saved", title=title, path=rel_path)
-        return f"Notiz gespeichert: {rel_path}"
-
-    # ── Tool: vault_search ───────────────────────────────────────────────
-
-    async def vault_search(
-        self,
-        query: str,
-        folder: str = "",
-        tags: str = "",
-        limit: int = 10,
-    ) -> str:
-        """Durchsucht das Vault nach Notizen.
-
-        Args:
-            query: Suchbegriff (durchsucht Titel und Inhalt).
-            folder: Optional: Nur in diesem Ordner suchen.
-            tags: Optional: Nur Notizen mit diesen Tags (kommagetrennt).
-            limit: Maximale Anzahl Ergebnisse.
-        """
-        if not query.strip():
-            return "Fehler: Kein Suchbegriff angegeben."
-
-        query_lower = query.lower()
-        tag_filter = _parse_tags(tags) if tags else []
-        folder_filter = self._resolve_folder(folder) if folder else ""
-
-        results: list[dict[str, Any]] = []
-
-        for md_file in self._vault_root.rglob("*.md"):
-            if md_file.name.startswith("_"):
-                continue
-
-            # Folder filter
-            if folder_filter:
-                try:
-                    rel = md_file.relative_to(self._vault_root)
-                    if rel.parts[0] != folder_filter:
-                        continue
-                except (ValueError, IndexError):
-                    continue
-
-            try:
-                if _efile is not None and self._encrypt_files:
-                    content = _efile.read(md_file)
-                else:
-                    content = md_file.read_text(encoding="utf-8")
-            except Exception:
-                continue
-
-            # Tag filter (from frontmatter)
-            if tag_filter:
-                fm_tags = self._extract_frontmatter_tags(content)
-                if not any(t in fm_tags for t in tag_filter):
-                    continue
-
-            # Full-text search
-            if query_lower in content.lower():
-                fm_title = self._extract_frontmatter_field(content, "title") or md_file.stem
-                rel_path = str(md_file.relative_to(self._vault_root))
-                # Extract context snippet
-                snippet = self._extract_snippet(content, query_lower)
-                results.append(
-                    {
-                        "title": fm_title,
-                        "path": rel_path,
-                        "snippet": snippet,
-                    }
-                )
-
-            if len(results) >= limit:
-                break
-
-        if not results:
-            return f"Keine Notizen gefunden für: {query}"
-
-        lines = [f"Vault-Suche: {query} ({len(results)} Treffer)\n"]
-        for i, r in enumerate(results, 1):
-            lines.append(f"[{i}] {r['title']}")
-            lines.append(f"    Pfad: {r['path']}")
-            if r["snippet"]:
-                lines.append(f"    ...{r['snippet']}...")
-            lines.append("")
-        return "\n".join(lines)
-
-    # ── Tool: vault_list ─────────────────────────────────────────────────
-
-    async def vault_list(
-        self,
-        folder: str = "",
-        tags: str = "",
-        sort_by: str = "updated",
-        limit: int = 20,
-    ) -> str:
-        """Listet Notizen im Vault auf.
-
-        Args:
-            folder: Optional: Nur Notizen aus diesem Ordner.
-            tags: Optional: Nur Notizen mit diesen Tags.
-            sort_by: Sortierung: 'updated', 'created', 'title'.
-            limit: Maximale Anzahl.
-        """
-        index = self._read_index()
-        tag_filter = _parse_tags(tags) if tags else []
-        folder_filter = self._resolve_folder(folder) if folder else ""
-
-        entries: list[dict[str, Any]] = []
-        for title, meta in index.items():
-            if folder_filter and meta.get("folder", "") != folder_filter:
-                continue
-            if tag_filter and not any(t in meta.get("tags", []) for t in tag_filter):
-                continue
-            entries.append({"title": title, **meta})
-
-        # Sorting
-        if sort_by == "title":
-            entries.sort(key=lambda e: e.get("title", "").lower())
-        elif sort_by == "created":
-            entries.sort(key=lambda e: e.get("created", ""), reverse=True)
-        else:
-            entries.sort(key=lambda e: e.get("updated", ""), reverse=True)
-
-        entries = entries[:limit]
-
-        if not entries:
-            return "Keine Notizen im Vault gefunden."
-
-        lines = [f"Vault-Inhalt ({len(entries)} Notizen):\n"]
-        for i, e in enumerate(entries, 1):
-            tags_str = ", ".join(e.get("tags", []))
-            lines.append(f"[{i}] {e['title']}")
-            lines.append(f"    Pfad: {e.get('path', '?')}")
-            if tags_str:
-                lines.append(f"    Tags: {tags_str}")
-            lines.append(f"    Aktualisiert: {e.get('updated', '?')}")
-            lines.append("")
-        return "\n".join(lines)
-
-    # ── Tool: vault_read ─────────────────────────────────────────────────
-
-    async def vault_read(self, identifier: str) -> str:
-        """Liest eine einzelne Notiz aus dem Vault.
-
-        Args:
-            identifier: Titel, Pfad (relativ zum Vault) oder Slug der Notiz.
-        """
-        if not identifier.strip():
-            return "Fehler: Kein Identifier angegeben."
-
-        def _read_note(p: Path) -> str:
-            if _efile is not None and self._encrypt_files:
-                return _efile.read(p)
-            return p.read_text(encoding="utf-8")
-
-        # 1. Try as direct path (with path-traversal protection)
-        direct_path = self._validate_vault_path(self._vault_root / identifier)
-        if direct_path and direct_path.exists() and direct_path.is_file():
-            return _read_note(direct_path)
-
-        # 2. Search index by title
-        index = self._read_index()
-        for title, meta in index.items():
-            if title.lower() == identifier.lower():
-                note_path = self._validate_vault_path(self._vault_root / meta["path"])
-                if note_path and note_path.exists():
-                    return _read_note(note_path)
-
-        # 3. Search by slug
-        slug = _slugify(identifier)
-        for md_file in self._vault_root.rglob("*.md"):
-            if md_file.stem == slug:
-                return _read_note(md_file)
-
-        return f"Notiz nicht gefunden: {identifier}"
-
-    # ── Tool: vault_update ───────────────────────────────────────────────
-
-    async def vault_update(
-        self,
-        identifier: str,
-        append_content: str = "",
-        add_tags: str = "",
-    ) -> str:
-        """Aktualisiert eine bestehende Notiz.
-
-        Args:
-            identifier: Titel, Pfad oder Slug der Notiz.
-            append_content: Text der an die Notiz angehaengt wird.
-            add_tags: Neue Tags (kommagetrennt) die ergaenzt werden.
-        """
-        if not identifier.strip():
-            return "Fehler: Kein Identifier angegeben."
-
-        if not append_content.strip() and not add_tags.strip():
-            return "Fehler: Weder Inhalt noch Tags zum Aktualisieren angegeben."
-
-        # Find note
-        note_path = self._find_note(identifier)
-        if note_path is None:
-            return f"Notiz nicht gefunden: {identifier}"
-
-        if _efile is not None and self._encrypt_files:
-            content = _efile.read(note_path)
-        else:
-            content = note_path.read_text(encoding="utf-8")
-
-        # Add tags
-        if add_tags.strip():
-            new_tags = _parse_tags(add_tags)
-            existing_tags = self._extract_frontmatter_tags(content)
-            all_tags = list(
-                dict.fromkeys(existing_tags + new_tags)
-            )  # dedupliziert, Reihenfolge erhalten
-            content = self._replace_frontmatter_field(content, "tags", f"[{', '.join(all_tags)}]")
-
-            # Update index
-            title = self._extract_frontmatter_field(content, "title") or note_path.stem
-            rel_path = str(note_path.relative_to(self._vault_root))
-            folder = (
-                note_path.relative_to(self._vault_root).parts[0]
-                if len(note_path.relative_to(self._vault_root).parts) > 1
-                else ""
-            )
-            self._update_index(title, rel_path, all_tags, folder)
-
-        # Update the updated-timestamp
-        content = self._replace_frontmatter_field(content, "updated", _now_iso())
-
-        # Append content
-        if append_content.strip():
-            content = content.rstrip("\n") + "\n\n" + append_content.strip() + "\n"
-
-        if _efile is not None and self._encrypt_files:
-            _efile.write(note_path, content)
-        else:
-            note_path.write_text(content, encoding="utf-8")
-
-        log.info("vault_note_updated", path=str(note_path))
-        return f"Notiz aktualisiert: {note_path.relative_to(self._vault_root)}"
-
-    # ── Tool: vault_link ─────────────────────────────────────────────────
-
-    async def vault_link(
-        self,
-        source_note: str,
-        target_note: str,
-    ) -> str:
-        """Erstellt eine bidirektionale Verknuepfung zwischen zwei Notizen.
-
-        Args:
-            source_note: Titel/Pfad/Slug der Quell-Notiz.
-            target_note: Titel/Pfad/Slug der Ziel-Notiz.
-        """
-        source_path = self._find_note(source_note)
-        target_path = self._find_note(target_note)
-
-        if source_path is None:
-            return f"Quell-Notiz nicht gefunden: {source_note}"
-        if target_path is None:
-            return f"Ziel-Notiz nicht gefunden: {target_note}"
-
-        def _read_note(p: Path) -> str:
-            if _efile is not None and self._encrypt_files:
-                return _efile.read(p)
-            return p.read_text(encoding="utf-8")
-
-        def _write_note(p: Path, text: str) -> None:
-            if _efile is not None and self._encrypt_files:
-                _efile.write(p, text)
-            else:
-                p.write_text(text, encoding="utf-8")
-
-        source_title = (
-            self._extract_frontmatter_field(
-                _read_note(source_path),
-                "title",
-            )
-            or source_path.stem
-        )
-        target_title = (
-            self._extract_frontmatter_field(
-                _read_note(target_path),
-                "title",
-            )
-            or target_path.stem
-        )
-
-        # Insert [[backlink]] in source note
-        source_content = _read_note(source_path)
-        backlink_marker = f"[[{target_title}]]"
-        if backlink_marker not in source_content:
-            # Update linked_notes in frontmatter
-            source_content = self._add_linked_note(source_content, target_title)
-            source_content = self._replace_frontmatter_field(source_content, "updated", _now_iso())
-            _write_note(source_path, source_content)
-
-        # Insert [[backlink]] in target note
-        target_content = _read_note(target_path)
-        backlink_marker = f"[[{source_title}]]"
-        if backlink_marker not in target_content:
-            target_content = self._add_linked_note(target_content, source_title)
-            target_content = self._replace_frontmatter_field(target_content, "updated", _now_iso())
-            _write_note(target_path, target_content)
-
-        log.info("vault_notes_linked", source=source_title, target=target_title)
-        return f"Verknüpfung erstellt: [[{source_title}]] ↔ [[{target_title}]]"
-
-    # ── Tool: vault_delete ──────────────────────────────────────────────
-
-    async def vault_delete(self, path: str) -> str:
-        """Loescht eine Notiz aus dem Vault (GDPR erasure).
-
-        Args:
-            path: Pfad der Notiz relativ zum Vault-Root.
-
-        Returns:
-            Bestaetigungsnachricht oder Fehlermeldung.
-        """
-        if not path.strip():
-            return "Fehler: Kein Pfad angegeben."
-
-        full = self._validate_vault_path(self._vault_root / path)
-        if full is None:
-            return f"Ungültiger Pfad (Path-Traversal blockiert): {path}"
-        if not full.exists():
-            return f"Notiz nicht gefunden: {path}"
-        if not full.is_file():
-            return f"Pfad ist keine Datei: {path}"
-
-        # Remove from index
-        if _efile is not None and self._encrypt_files:
-            _full_content = _efile.read(full)
-        else:
-            _full_content = full.read_text(encoding="utf-8")
-        title = self._extract_frontmatter_field(_full_content, "title") or full.stem
-        index = self._read_index()
-        # Remove by title match or path match
-        keys_to_remove = [
-            k for k, v in index.items()
-            if k == title or v.get("path") == path
-        ]
-        for k in keys_to_remove:
-            del index[k]
-        if keys_to_remove:
-            self._write_index(index)
-
-        full.unlink()
-        log.info("vault_note_deleted", path=path, title=title)
-        return f"Notiz gelöscht: {path}"
-
-    # ── Helper methods ────────────────────────────────────────────────────
+        return folders.get("knowledge", "wissen")
 
     def _find_note(self, identifier: str) -> Path | None:
-        """Findet eine Notiz per Titel, Pfad oder Slug."""
-        # 1. Try as relative path (with path-traversal protection)
-        direct = self._validate_vault_path(self._vault_root / identifier)
-        if direct and direct.exists() and direct.is_file():
-            return direct
+        """Findet eine Notiz per Titel, Pfad oder Slug.
 
-        # 2. Index lookup by title
-        index = self._read_index()
-        for title, meta in index.items():
-            if title.lower() == identifier.lower():
-                path = self._validate_vault_path(self._vault_root / meta["path"])
-                if path and path.exists():
-                    return path
+        Returns a Path for backward compatibility with existing tests.
+        Delegates to backend.find_note() internally.
+        """
+        note = self._backend.find_note(identifier)
+        if note is None:
+            return None
+        # Convert NoteData path back to absolute Path
+        return self._vault_root / note.path
 
-        # 3. Slug search
-        slug = _slugify(identifier)
-        for md_file in self._vault_root.rglob("*.md"):
-            if md_file.stem == slug:
-                return md_file
-
-        return None
-
-    # ── Frontmatter-Parsing (PyYAML) ─────────────────────────────────────
+    # ── Frontmatter-Parsing (backward compatibility) ─────────────────────
 
     @staticmethod
     def _parse_frontmatter(content: str) -> tuple[dict[str, Any], int, int]:
@@ -672,16 +244,15 @@ class VaultTools:
         """
         if not content.startswith("---"):
             return {}, -1, -1
-        # Find the closing --- (after the opening one)
         close = content.find("\n---", 3)
         if close < 0:
             return {}, -1, -1
-        yaml_text = content[4:close]  # Zwischen erstem --- und zweitem ---
+        yaml_text = content[4:close]
         try:
             data = yaml.safe_load(yaml_text)
             if not isinstance(data, dict):
                 return {}, -1, -1
-            return data, 0, close + 4  # +4 für "\n---"
+            return data, 0, close + 4
         except yaml.YAMLError:
             log.debug("vault_frontmatter_parse_error", content_start=content[:80])
             return {}, -1, -1
@@ -692,7 +263,6 @@ class VaultTools:
         lines = ["---"]
         for key, value in data.items():
             if isinstance(value, list):
-                # Inline array: [a, b, c] — Obsidian-compatible
                 items = []
                 for item in value:
                     s = str(item)
@@ -730,10 +300,7 @@ class VaultTools:
         """Ersetzt oder fuegt ein Feld im YAML-Frontmatter hinzu."""
         data, start, end = self._parse_frontmatter(content)
         if start < 0:
-            # No frontmatter present — nothing to replace
             return content
-
-        # Parse value if it is a YAML string (e.g. "[a, b]")
         if isinstance(value, str):
             try:
                 parsed = yaml.safe_load(value)
@@ -741,7 +308,6 @@ class VaultTools:
                     value = parsed
             except yaml.YAMLError:
                 pass
-
         data[field] = value
         new_fm = self._serialize_frontmatter(data)
         body = content[end:]
@@ -752,36 +318,189 @@ class VaultTools:
         data, start, _ = self._parse_frontmatter(content)
         if start < 0:
             return content
-
         existing = data.get("linked_notes", [])
         if not isinstance(existing, list):
             existing = []
-
-        # Cleanup: strings without quotes
         existing = [str(n).strip().strip('"') for n in existing if str(n).strip()]
         if note_title not in existing:
             existing.append(note_title)
-
         escaped = [f'"{n}"' for n in existing]
         new_val = f"[{', '.join(escaped)}]"
         return self._replace_frontmatter_field(content, "linked_notes", new_val)
 
     def _extract_snippet(self, content: str, query: str, context_chars: int = 100) -> str:
         """Extrahiert einen kurzen Kontext-Snippet um den Suchbegriff."""
-        # Skip frontmatter via parser
         _, _, fm_end = self._parse_frontmatter(content)
         body = content[fm_end:] if fm_end > 0 else content
-
         idx = body.lower().find(query)
         if idx < 0:
             return ""
-
         start = max(0, idx - context_chars)
         end = min(len(body), idx + len(query) + context_chars)
         snippet = body[start:end].strip()
-        # Remove line breaks
         snippet = re.sub(r"\s+", " ", snippet)
         return snippet[:250]
+
+    # ── Tool: vault_save ─────────────────────────────────────────────────
+
+    async def vault_save(
+        self,
+        title: str,
+        content: str,
+        tags: str = "",
+        folder: str = "knowledge",
+        sources: str = "",
+        linked_notes: str = "",
+    ) -> str:
+        """Erstellt eine neue Notiz im Vault."""
+        if not title.strip():
+            return "Fehler: Kein Titel angegeben."
+        if not content.strip():
+            return "Fehler: Kein Inhalt angegeben."
+
+        link_list = (
+            [n.strip() for n in linked_notes.split(",") if n.strip()] if linked_notes else []
+        )
+
+        return self._backend.save(
+            path=f"{folder}/{_ext_slugify(title)}.md",
+            title=title,
+            content=content,
+            tags=tags,
+            folder=folder,
+            sources=sources,
+            backlinks=link_list,
+        )
+
+    # ── Tool: vault_search ───────────────────────────────────────────────
+
+    async def vault_search(
+        self,
+        query: str,
+        folder: str = "",
+        tags: str = "",
+        limit: int = 10,
+    ) -> str:
+        """Durchsucht das Vault nach Notizen."""
+        if not query.strip():
+            return "Fehler: Kein Suchbegriff angegeben."
+
+        results = self._backend.search(query, folder=folder, tags=tags, limit=int(limit))
+
+        if not results:
+            return f"Keine Notizen gefunden für: {query}"
+
+        lines = [f"Vault-Suche: {query} ({len(results)} Treffer)\n"]
+        for i, note in enumerate(results, 1):
+            snippet = note.content[:150].replace("\n", " ") if note.content else ""
+            lines.append(f"[{i}] {note.title}")
+            lines.append(f"    Pfad: {note.path}")
+            if snippet:
+                lines.append(f"    ...{snippet}...")
+            lines.append("")
+        return "\n".join(lines)
+
+    # ── Tool: vault_list ─────────────────────────────────────────────────
+
+    async def vault_list(
+        self,
+        folder: str = "",
+        tags: str = "",
+        sort_by: str = "updated",
+        limit: int = 20,
+    ) -> str:
+        """Listet Notizen im Vault auf."""
+        notes = self._backend.list_notes(
+            folder=folder, tags=tags, sort_by=sort_by, limit=int(limit),
+        )
+
+        if not notes:
+            return "Keine Notizen im Vault gefunden."
+
+        lines = [f"Vault-Inhalt ({len(notes)} Notizen):\n"]
+        for i, n in enumerate(notes, 1):
+            lines.append(f"[{i}] {n.title}")
+            lines.append(f"    Pfad: {n.path}")
+            if n.tags:
+                lines.append(f"    Tags: {n.tags}")
+            lines.append(f"    Aktualisiert: {n.updated_at or '?'}")
+            lines.append("")
+        return "\n".join(lines)
+
+    # ── Tool: vault_read ─────────────────────────────────────────────────
+
+    async def vault_read(self, identifier: str) -> str:
+        """Liest eine einzelne Notiz aus dem Vault."""
+        if not identifier.strip():
+            return "Fehler: Kein Identifier angegeben."
+
+        note = self._backend.find_note(identifier)
+        if not note:
+            return f"Notiz nicht gefunden: {identifier}"
+
+        # For FileBackend: read raw file content to preserve frontmatter for tests
+        if hasattr(self._backend, "_read_file"):
+            full = self._vault_root / note.path
+            if full.exists():
+                return self._backend._read_file(full)
+
+        # For DBBackend: reconstruct display content
+        return f"# {note.title}\n\nPfad: {note.path}\nTags: {note.tags}\n\n{note.content}"
+
+    # ── Tool: vault_update ───────────────────────────────────────────────
+
+    async def vault_update(
+        self,
+        identifier: str,
+        append_content: str = "",
+        add_tags: str = "",
+    ) -> str:
+        """Aktualisiert eine bestehende Notiz."""
+        if not identifier.strip():
+            return "Fehler: Kein Identifier angegeben."
+
+        if not append_content.strip() and not add_tags.strip():
+            return "Fehler: Weder Inhalt noch Tags zum Aktualisieren angegeben."
+
+        note = self._backend.find_note(identifier)
+        if note is None:
+            return f"Notiz nicht gefunden: {identifier}"
+
+        return self._backend.update(note.path, append_content=append_content, add_tags=add_tags)
+
+    # ── Tool: vault_link ─────────────────────────────────────────────────
+
+    async def vault_link(
+        self,
+        source_note: str,
+        target_note: str,
+    ) -> str:
+        """Erstellt eine bidirektionale Verknuepfung zwischen zwei Notizen."""
+        src = self._backend.find_note(source_note)
+        tgt = self._backend.find_note(target_note)
+
+        if not src:
+            return f"Quell-Notiz nicht gefunden: {source_note}"
+        if not tgt:
+            return f"Ziel-Notiz nicht gefunden: {target_note}"
+
+        return self._backend.link(src.path, tgt.path)
+
+    # ── Tool: vault_delete ──────────────────────────────────────────────
+
+    async def vault_delete(self, path: str) -> str:
+        """Loescht eine Notiz aus dem Vault (GDPR erasure)."""
+        if not path.strip():
+            return "Fehler: Kein Pfad angegeben."
+
+        # Path validation
+        try:
+            resolved = (self._vault_root / path).resolve()
+            resolved.relative_to(self._vault_root.resolve())
+        except (ValueError, OSError):
+            return f"Ungültiger Pfad (Path-Traversal blockiert): {path}"
+
+        return self._backend.delete(path)
 
 
 # ── MCP client registration ─────────────────────────────────────────────

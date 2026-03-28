@@ -471,7 +471,7 @@ class TestRegisterVaultTools:
         config.vault.default_folders = {}
         vault = register_vault_tools(mock_client, config=config)
         assert isinstance(vault, VaultTools)
-        assert mock_client.register_builtin_handler.call_count == 6
+        assert mock_client.register_builtin_handler.call_count == 7
 
     def test_tool_names(self, tmp_path: Path) -> None:
         mock_client = MagicMock()

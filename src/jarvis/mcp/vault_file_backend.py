@@ -35,6 +35,8 @@ class VaultFileBackend(VaultBackend):
         self._vault_root.mkdir(parents=True, exist_ok=True)
         for folder in self._default_folders.values():
             (self._vault_root / folder).mkdir(exist_ok=True)
+        if not self._index_path.exists():
+            self._write_index({})
 
     # --- File I/O helpers ---
 
@@ -144,7 +146,9 @@ class VaultFileBackend(VaultBackend):
         fm = self._build_frontmatter(title, tag_list, source_list, backlinks)
         full_content = fm + f"\n# {title}\n\n{content}\n"
         if source_list:
-            full_content += "\n## Quellen\n" + "\n".join(f"- {s}" for s in source_list) + "\n"
+            full_content += "\n## Quellen\n" + "\n".join(f"- [{s}]({s})" for s in source_list) + "\n"
+        if backlinks:
+            full_content += "\n## Verknüpfte Notizen\n" + "\n".join(f"- [[{b}]]" for b in backlinks) + "\n"
         # Write
         self._write_file(file_path, full_content)
         rel_path = str(file_path.relative_to(self._vault_root))
@@ -315,7 +319,7 @@ class VaultFileBackend(VaultBackend):
         t_fm["linked_notes"] = t_links
         t_fm["updated"] = now_iso()
         self._write_file(t_full, self._build_frontmatter_from_dict(t_fm) + t_body)
-        return f"Verknuepft: {source_path} <-> {target_path}"
+        return f"Verknüpfung erstellt: [[{source.title}]] <-> [[{target.title}]]"
 
     def exists(self, path: str) -> bool:
         return (self._vault_root / path).exists()
