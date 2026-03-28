@@ -104,7 +104,13 @@ class ComplianceEngine:
                     f"OSINT investigation requires explicit osint consent from user {user_id[:8]}"
                 )
 
-        # Rule 5: Legitimate interest is allowed without consent
+        # Rule 5: Purpose-specific restriction (Art. 18/21)
+        if self._consent and self._consent.is_restricted(user_id, channel, purpose.value):
+            raise ComplianceViolation(
+                f"User has restricted {purpose.value} processing on channel {channel}"
+            )
+
+        # Rule 6: Legitimate interest is allowed without consent
         # (security monitoring, audit trails, fraud detection)
 
         log.debug(

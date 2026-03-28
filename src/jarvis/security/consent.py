@@ -158,5 +158,23 @@ class ConsentManager:
         self._conn.commit()
         return cursor.rowcount
 
+    def restrict_purpose(self, user_id: str, channel: str, purpose: str) -> None:
+        """Record that user restricts a specific processing purpose."""
+        self.grant_consent(user_id, channel, f"restrict_{purpose}")
+
+    def unrestrict_purpose(self, user_id: str, channel: str, purpose: str) -> None:
+        """Remove a purpose restriction."""
+        self.withdraw_consent(user_id, channel, f"restrict_{purpose}")
+
+    def is_restricted(self, user_id: str, channel: str, purpose: str) -> bool:
+        """Check if user has restricted a specific purpose."""
+        return self.has_consent(user_id, channel, f"restrict_{purpose}")
+
+    def get_restrictions(self, user_id: str) -> list[str]:
+        """Get all active restrictions for a user."""
+        consents = self.get_user_consents(user_id)
+        return [c["consent_type"].replace("restrict_", "")
+                for c in consents if c["consent_type"].startswith("restrict_")]
+
     def close(self) -> None:
         self._conn.close()

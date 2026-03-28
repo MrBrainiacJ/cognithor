@@ -163,6 +163,22 @@ class FeedbackStore:
                 ).fetchall()
         return [dict(r) for r in rows]
 
+    def delete_user(self, user_id: str) -> int:
+        """Delete all feedback entries (GDPR erasure).
+
+        This is a single-user store without a user_id column,
+        so all data is deleted unconditionally.
+
+        Returns:
+            Number of deleted rows.
+        """
+        with self._conn() as conn:
+            cursor = conn.execute("DELETE FROM feedback")
+            count = cursor.rowcount
+        if count > 0:
+            log.info("GDPR-Erasure: %d Feedback-Eintraege geloescht", count)
+        return count
+
     def get_recent(self, limit: int = 50) -> list[dict[str, Any]]:
         """Get recent feedback entries."""
         with self._conn() as conn:

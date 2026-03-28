@@ -457,6 +457,26 @@ class Gateway:
             if session_store and hasattr(session_store, "delete_user_sessions"):
                 erasure.register_handler(lambda uid: session_store.delete_user_sessions(uid))
 
+            # User preferences
+            pref = getattr(self, "_user_pref_store", None)
+            if pref and hasattr(pref, "delete_user"):
+                erasure.register_handler(lambda uid, p=pref: p.delete_user(uid))
+
+            # Conversation tree
+            ct = getattr(self, "_conversation_tree", None)
+            if ct and hasattr(ct, "delete_user"):
+                erasure.register_handler(lambda uid, c=ct: c.delete_user(uid))
+
+            # Feedback
+            fb = getattr(self, "_feedback_store", None)
+            if fb and hasattr(fb, "delete_user"):
+                erasure.register_handler(lambda uid, f=fb: f.delete_user(uid))
+
+            # Corrections
+            cm = getattr(self, "_correction_memory", None)
+            if cm and hasattr(cm, "delete_user"):
+                erasure.register_handler(lambda uid, c=cm: c.delete_user(uid))
+
         # Governance-Cron-Job registrieren (taeglich um 02:00)
         if self._cron_engine and hasattr(self, "_governance_agent") and self._governance_agent:
             try:

@@ -705,6 +705,42 @@ class SessionStore:
             "exported_at": datetime.now(tz=UTC).isoformat(),
         }
 
+    def delete_user_sessions(self, user_id: str) -> int:
+        """Delete all sessions and chat history for a user (GDPR erasure).
+
+        Returns:
+            Total number of deleted rows (sessions + chat_history).
+        """
+        # Delete chat history for all sessions owned by this user
+        session_ids = self.conn.execute(
+            "SELECT session_id FROM sessions WHERE user_id = ?",
+            (user_id,),
+        ).fetchall()
+        chat_deleted = 0
+        for row in session_ids:
+            cursor = self.conn.execute(
+                "DELETE FROM chat_history WHERE session_id = ?",
+                (row["session_id"],),
+            )
+            chat_deleted += cursor.rowcount
+
+        # Delete the sessions themselves
+        cursor = self.conn.execute(
+            "DELETE FROM sessions WHERE user_id = ?",
+            (user_id,),
+        )
+        session_deleted = cursor.rowcount
+        self.conn.commit()
+        total = session_deleted + chat_deleted
+        if total > 0:
+            logger.info(
+                "GDPR-Erasure: %d Sessions + %d Chat-Nachrichten geloescht fuer user_id=%s",
+                session_deleted,
+                chat_deleted,
+                user_id,
+            )
+        return total
+
     def close(self) -> None:
         """Schliesst die DB-Verbindung."""
         if self._conn:

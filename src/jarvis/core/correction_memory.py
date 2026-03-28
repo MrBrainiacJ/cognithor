@@ -167,6 +167,22 @@ class CorrectionMemory:
             + "\nBeruecksichtige das in deinem Plan."
         )
 
+    def delete_user(self, user_id: str) -> int:
+        """Delete all corrections (GDPR erasure).
+
+        This is a single-user store without a user_id column,
+        so all data is deleted unconditionally.
+
+        Returns:
+            Number of deleted rows.
+        """
+        with self._conn() as conn:
+            cursor = conn.execute("DELETE FROM corrections")
+            count = cursor.rowcount
+        if count > 0:
+            log.info("GDPR-Erasure: %d Korrekturen geloescht", count)
+        return count
+
     def _extract_keywords(self, text: str) -> list[str]:
         """Extract meaningful keywords from text."""
         import re

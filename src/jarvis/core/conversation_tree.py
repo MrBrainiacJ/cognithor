@@ -223,6 +223,29 @@ class ConversationTree:
 
     # ── Utility ───────────────────────────────────────────────────
 
+    def delete_user(self, user_id: str) -> int:
+        """Delete all conversations and nodes (GDPR erasure).
+
+        This is a single-user store without a user_id column,
+        so all data is deleted unconditionally.
+
+        Returns:
+            Total number of deleted rows (conversations + nodes).
+        """
+        with self._conn() as conn:
+            cursor_nodes = conn.execute("DELETE FROM chat_nodes")
+            nodes_deleted = cursor_nodes.rowcount
+            cursor_convs = conn.execute("DELETE FROM conversations")
+            convs_deleted = cursor_convs.rowcount
+        total = nodes_deleted + convs_deleted
+        if total > 0:
+            log.info(
+                "GDPR-Erasure: %d Nodes + %d Conversations geloescht",
+                nodes_deleted,
+                convs_deleted,
+            )
+        return total
+
     def get_messages_for_replay(self, conversation_id: str, leaf_id: str) -> list[dict[str, Any]]:
         """Get ordered messages from root to leaf for WM replay.
 

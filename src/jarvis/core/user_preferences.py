@@ -164,6 +164,27 @@ class UserPreferenceStore:
         except Exception as exc:
             log.warning("user_preferences_update_failed", exc_info=exc)
 
+    def delete_user(self, user_id: str) -> int:
+        """Delete all preferences for a user (GDPR erasure).
+
+        Returns:
+            Number of deleted rows.
+        """
+        try:
+            with self._lock:
+                cursor = self._conn.execute(
+                    "DELETE FROM user_preferences WHERE user_id = ?",
+                    (user_id,),
+                )
+                self._conn.commit()
+                count = cursor.rowcount
+            if count > 0:
+                log.info("GDPR-Erasure: %d Praeferenz-Zeilen geloescht fuer user_id=%s", count, user_id)
+            return count
+        except Exception as exc:
+            log.warning("user_preferences_delete_failed", exc_info=exc)
+            return 0
+
     def record_interaction(self, user_id: str, msg_length: int) -> UserPreference:
         """Records an interaction and auto-learns verbosity from message length.
 

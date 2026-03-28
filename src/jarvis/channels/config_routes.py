@@ -2382,7 +2382,8 @@ def _register_security_routes(
             return {"error": "user_id query parameter required"}
 
         export: dict[str, Any] = {
-            "export_version": "1.0",
+            "export_version": "2.0",
+            "format": "cognithor_portable",
             "user_id": user_id,
             "gdpr_article": "Art. 15/20 DSGVO",
         }
@@ -2395,7 +2396,7 @@ def _register_security_routes(
             except Exception:
                 export["processing_log"] = {"error": "unavailable"}
 
-        # Consent records
+        # Consents
         consent_mgr = getattr(gateway, "_consent_manager", None)
         if consent_mgr:
             try:
@@ -2403,12 +2404,24 @@ def _register_security_routes(
             except Exception:
                 export["consents"] = []
 
+        # Sessions
+        session_store = getattr(gateway, "_session_store", None)
+        if session_store:
+            try:
+                # Get sessions for this user
+                sessions = session_store.conn.execute(
+                    "SELECT session_id, user_id, channel, agent_id, created_at FROM sessions WHERE user_id = ? LIMIT 100",
+                    (user_id,)
+                ).fetchall()
+                export["sessions"] = [dict(s) for s in sessions] if sessions else []
+            except Exception:
+                export["sessions"] = []
+
         # Memory data
         memory_mgr = getattr(gateway, "_memory_manager", None)
         if memory_mgr:
             try:
-                # Search for user-related memories
-                results = memory_mgr.search_memory_sync(query=user_id, top_k=50)
+                results = memory_mgr.search_memory_sync(query=user_id, top_k=100)
                 export["memories"] = [
                     {"text": getattr(r, "text", str(r))[:500], "source": getattr(r, "source", "")}
                     for r in (results or [])
@@ -2419,15 +2432,172 @@ def _register_security_routes(
             # Entities
             try:
                 if hasattr(memory_mgr, "semantic") and hasattr(memory_mgr.semantic, "list_entities"):
-                    entities = memory_mgr.semantic.list_entities(limit=200)
+                    entities = memory_mgr.semantic.list_entities(limit=500)
                     export["entities"] = [
-                        {"name": getattr(e, "name", ""), "type": getattr(e, "entity_type", "")}
+                        {"name": getattr(e, "name", ""), "type": getattr(e, "entity_type", ""),
+                         "attributes": str(getattr(e, "attributes", ""))[:200]}
                         for e in (entities or [])
                     ]
             except Exception:
                 export["entities"] = []
 
+        # User preferences
+        pref_store = getattr(gateway, "_user_pref_store", None)
+        if pref_store:
+            try:
+                if hasattr(pref_store, "get_preferences"):
+                    export["user_preferences"] = pref_store.get_preferences(user_id)
+                elif hasattr(pref_store, "_conn"):
+                    rows = pref_store._conn.execute("SELECT * FROM user_preferences LIMIT 50").fetchall()
+                    export["user_preferences"] = [dict(r) for r in rows] if rows else []
+            except Exception:
+                export["user_preferences"] = []
+
+        # Vault notes list
+        vault = getattr(gateway, "_vault_tools", None)
+        if not vault:
+            # Try to find vault in the tools phase
+            for attr in dir(gateway):
+                obj = getattr(gateway, attr, None)
+                if hasattr(obj, "vault_list"):
+                    vault = obj
+                    break
+        if vault and hasattr(vault, "_backend"):
+            try:
+                notes = vault._backend.list_notes(limit=200)
+                export["vault_notes"] = [
+                    {"path": n.path, "title": n.title, "tags": n.tags, "folder": n.folder,
+                     "created_at": n.created_at, "updated_at": n.updated_at}
+                    for n in notes
+                ]
+            except Exception:
+                export["vault_notes"] = []
+
         return export
+
+    @app.patch("/api/v1/user/data", dependencies=deps)
+    async def correct_user_data(request: Request) -> dict[str, Any]:
+        """GDPR Art. 16: Correct personal data."""
+        try:
+            body = await request.json()
+        except Exception:
+            return {"error": "Invalid JSON"}
+
+        corrections = body.get("corrections", [])
+        if not corrections:
+            return {"error": "No corrections provided"}
+
+        results = []
+        for corr in corrections:
+            corr_type = corr.get("type", "")
+            try:
+                if corr_type == "preference":
+                    pref_store = getattr(gateway, "_user_pref_store", None)
+                    if pref_store and hasattr(pref_store, "_conn"):
+                        key = corr.get("key", "")
+                        value = corr.get("new_value", "")
+                        pref_store._conn.execute(
+                            "UPDATE user_preferences SET value = ? WHERE key = ?",
+                            (str(value), key)
+                        )
+                        pref_store._conn.commit()
+                        results.append({"type": "preference", "key": key, "status": "corrected"})
+
+                elif corr_type == "entity":
+                    memory_mgr = getattr(gateway, "_memory_manager", None)
+                    if memory_mgr and hasattr(memory_mgr, "semantic"):
+                        name = corr.get("name", "")
+                        field = corr.get("field", "name")
+                        new_value = corr.get("new_value", "")
+                        # Update entity in indexer
+                        indexer = memory_mgr.semantic._indexer if hasattr(memory_mgr.semantic, "_indexer") else None
+                        if indexer and hasattr(indexer, "_conn"):
+                            indexer._conn.execute(
+                                f"UPDATE entities SET {field} = ? WHERE name = ?",
+                                (new_value, name)
+                            )
+                            indexer._conn.commit()
+                            results.append({"type": "entity", "name": name, "status": "corrected"})
+
+                elif corr_type == "vault_note":
+                    path = corr.get("path", "")
+                    new_content = corr.get("new_value", "")
+                    # Use vault backend if available
+                    vault = None
+                    for attr in dir(gateway):
+                        obj = getattr(gateway, attr, None)
+                        if hasattr(obj, "_backend") and hasattr(obj._backend, "update"):
+                            vault = obj
+                            break
+                    if vault:
+                        vault._backend.update(path, append_content=new_content)
+                        results.append({"type": "vault_note", "path": path, "status": "corrected"})
+
+                else:
+                    results.append({"type": corr_type, "status": "unsupported"})
+
+            except Exception as e:
+                results.append({"type": corr_type, "status": "error", "error": str(e)[:100]})
+
+        # Log corrections in compliance audit
+        try:
+            from jarvis.security.compliance_audit import ComplianceAuditLog
+            audit = ComplianceAuditLog()
+            audit.record("data_corrected", corrections_count=len(results),
+                         results=[r["status"] for r in results])
+        except Exception:
+            pass
+
+        return {"corrections_applied": len(results), "results": results,
+                "gdpr_article": "Art. 16 DSGVO — Recht auf Berichtigung"}
+
+    # -- GDPR Art. 18/21: Purpose Restrictions ----------------------------
+
+    @app.post("/api/v1/user/restrictions", dependencies=deps)
+    async def set_restriction(request: Request) -> dict[str, Any]:
+        """GDPR Art. 18/21: Restrict specific processing purposes."""
+        consent_mgr = getattr(gateway, "_consent_manager", None)
+        if not consent_mgr:
+            return {"error": "Consent manager not available"}
+        try:
+            body = await request.json()
+        except Exception:
+            return {"error": "Invalid JSON"}
+        user_id = body.get("user_id", "")
+        channel = body.get("channel", "all")
+        purpose = body.get("purpose", "")
+        if not user_id or not purpose:
+            return {"error": "user_id and purpose required"}
+        consent_mgr.restrict_purpose(user_id, channel, purpose)
+        return {"status": "restricted", "user_id": user_id, "purpose": purpose}
+
+    @app.get("/api/v1/user/restrictions", dependencies=deps)
+    async def get_restrictions(user_id: str = "") -> dict[str, Any]:
+        """GDPR Art. 18/21: List active restrictions."""
+        consent_mgr = getattr(gateway, "_consent_manager", None)
+        if not consent_mgr:
+            return {"restrictions": []}
+        if not user_id:
+            return {"error": "user_id query parameter required"}
+        return {"user_id": user_id, "restrictions": consent_mgr.get_restrictions(user_id)}
+
+    @app.delete("/api/v1/user/restrictions", dependencies=deps)
+    async def remove_restriction(request: Request) -> dict[str, Any]:
+        """GDPR Art. 18/21: Remove a processing restriction."""
+        consent_mgr = getattr(gateway, "_consent_manager", None)
+        if not consent_mgr:
+            return {"error": "Consent manager not available"}
+        try:
+            body = await request.json()
+        except Exception:
+            return {"error": "Invalid JSON"}
+        user_id = body.get("user_id", "")
+        channel = body.get("channel", "all")
+        purpose = body.get("purpose", "")
+        if not user_id or not purpose:
+            return {"error": "user_id and purpose required"}
+        consent_mgr.unrestrict_purpose(user_id, channel, purpose)
+        return {"status": "unrestricted", "user_id": user_id, "purpose": purpose}
 
     # -- Security Pipeline (Phase 19) ------------------------------------
 
