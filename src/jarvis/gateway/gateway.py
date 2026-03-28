@@ -508,6 +508,20 @@ class Gateway:
         except Exception:
             log.debug("checkpoint_store_init_skipped", exc_info=True)
 
+        # LLM call function for Evolution Engine + DeepLearner
+        self._llm_call = None
+        if self._llm and self._model_router:
+            async def _evolution_llm_call(prompt: str) -> str:
+                model = self._model_router.select_model("planning", "medium")
+                resp = await self._llm.chat(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.7,
+                )
+                return resp.get("message", {}).get("content", "")
+
+            self._llm_call = _evolution_llm_call
+
         # Evolution Engine (idle-time autonomous learning)
         self._idle_detector = None
         self._evolution_loop = None
