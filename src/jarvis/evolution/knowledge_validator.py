@@ -17,6 +17,31 @@ log = get_logger(__name__)
 
 __all__ = ["KnowledgeClaim", "KnowledgeValidator"]
 
+# Domain trust tiers — authoritative sources get higher initial confidence
+_TRUST_TIERS: dict[str, float] = {
+    # Tier 1: Official government / law sources (0.8 base confidence)
+    ".gov.de": 0.8, ".bund.de": 0.8, "gesetze-im-internet.de": 0.8,
+    "bundesfinanzministerium.de": 0.8, "dejure.org": 0.8,
+    "bundesgerichtshof.de": 0.8, "bafin.de": 0.8,
+    "deutsche-rentenversicherung.de": 0.8, "bundesbank.de": 0.8,
+    # Tier 2: Established institutions / publishers (0.65)
+    ".edu": 0.65, "wikipedia.org": 0.65, "haufe.de": 0.65,
+    "beck-online.de": 0.65, "juris.de": 0.65, "stiftung-warentest.de": 0.65,
+    "verbraucherzentrale.de": 0.65, "finanztip.de": 0.65,
+    # Tier 3: General reference (0.5 default)
+}
+
+
+def _get_source_trust(url: str) -> float:
+    """Return trust score (0.0-1.0) based on the source domain."""
+    if not url:
+        return 0.5
+    url_lower = url.lower()
+    for domain_pattern, trust in _TRUST_TIERS.items():
+        if domain_pattern in url_lower:
+            return trust
+    return 0.5  # Unknown source = neutral
+
 _EXTRACT_CLAIMS_PROMPT = """\
 Extrahiere die 5 wichtigsten faktischen Aussagen (Claims) aus folgendem Text.
 Jeder Claim muss eine ueberpruefbare Tatsachenbehauptung sein.
@@ -191,17 +216,19 @@ class KnowledgeValidator:
                         goal_slug=goal_slug,
                         first_source=source_url,
                         sources_checked=1,
-                        confidence=0.5,
+                        confidence=_get_source_trust(source_url),
                         status="unverified",
                         created_at=self._now(),
                         last_checked=self._now(),
                     )
                     self._save_claim(claim)
                     claims.append(claim)
+            trust = _get_source_trust(source_url)
             log.info(
                 "knowledge_claims_extracted",
                 count=len(claims),
                 source=source_url[:50],
+                trust=trust,
             )
             return claims
         except Exception:
