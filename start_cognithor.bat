@@ -287,7 +287,7 @@ if errorlevel 1 (
         echo   [OK] SearXNG started.
     ) else (
         echo   [INFO] Creating SearXNG container...
-        docker run -d --name cognithor-searxng -p 8888:8080 --restart unless-stopped searxng/searxng >nul 2>&1
+        docker run -d --name cognithor-searxng -p 8888:8080 --restart unless-stopped -v "%REPO_ROOT%\docker\searxng\settings.yml:/etc/searxng/settings.yml:ro" -v "%REPO_ROOT%\docker\searxng\limiter.toml:/etc/searxng/limiter.toml:ro" -e SEARXNG_SECRET=cognithor-local searxng/searxng >nul 2>&1
         if not errorlevel 1 (
             echo   [OK] SearXNG created and started on port 8888.
         ) else (
