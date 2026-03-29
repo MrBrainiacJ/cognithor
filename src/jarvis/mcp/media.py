@@ -1233,10 +1233,10 @@ class MediaPipeline:
             filename: Dateiname ohne Endung.
         """
         fmt = fmt.lower().strip()
-        if fmt not in ("pdf", "docx", "xlsx"):
+        if fmt not in ("pdf", "docx", "xlsx", "pptx"):
             return MediaResult(
                 success=False,
-                error=f"Nicht unterstütztes Format: {fmt}. Erlaubt: pdf, docx, xlsx",
+                error=f"Nicht unterstütztes Format: {fmt}. Erlaubt: pdf, docx, xlsx, pptx",
             )
 
         if not content.strip():
@@ -1259,6 +1259,10 @@ class MediaPipeline:
                 )
             elif fmt == "xlsx":
                 await loop.run_in_executor(None, self._generate_xlsx, output_path, content, title)
+            elif fmt == "pptx":
+                await loop.run_in_executor(
+                    None, self._generate_pptx_simple, output_path, content, title
+                )
             else:
                 await loop.run_in_executor(
                     None, self._generate_docx, output_path, content, title, author
@@ -1434,8 +1438,37 @@ class MediaPipeline:
 
         wb.save(output_path)
 
+    def _generate_pptx_simple(self, output_path: Path, content: str, title: str) -> None:
+        """Generate a simple PPTX from plain text (one slide per paragraph)."""
+        try:
+            from pptx import Presentation
+            from pptx.util import Inches, Pt
+        except ImportError as exc:
+            raise ImportError("python-pptx not installed. Run: pip install python-pptx") from exc
+
+        prs = Presentation()
+        # Title slide
+        slide_layout = prs.slide_layouts[0]
+        slide = prs.slides.add_slide(slide_layout)
+        slide.shapes.title.text = title or "Dokument"
+        if slide.placeholders[1]:
+            slide.placeholders[1].text = ""
+
+        # Content slides (split by double-newline = paragraphs)
+        paragraphs = [p.strip() for p in content.split("\n\n") if p.strip()]
+        for para in paragraphs:
+            slide_layout = prs.slide_layouts[1]  # Title + Content
+            slide = prs.slides.add_slide(slide_layout)
+            lines = para.split("\n")
+            slide.shapes.title.text = lines[0][:80] if lines else ""
+            body = slide.placeholders[1]
+            tf = body.text_frame
+            tf.text = "\n".join(lines[1:]) if len(lines) > 1 else lines[0]
+
+        prs.save(str(output_path))
+
     # ========================================================================
-    # Strukturiertes Dokument-Erstellen (JSON → DOCX / PDF / PPTX / XLSX)
+    # Strukturiertes Dokument-Erstellen (JSON -> DOCX / PDF / PPTX / XLSX)
     # ========================================================================
 
     async def create_document(
@@ -2262,9 +2295,10 @@ MEDIA_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
     },
     "document_export": {
         "description": (
-            "Exportiert Text als PDF-, DOCX- oder XLSX-Dokument (Briefform, Schreiben, Tabellen). "
-            "Fuer PDF/DOCX: Fließtext, Absätze durch doppelte Zeilenumbrüche getrennt. "
-            "Fuer XLSX: Zeilen durch \\n, Zellen durch | oder Tab getrennt."
+            "Exportiert Text als PDF-, DOCX-, XLSX- oder PPTX-Dokument. "
+            "Fuer PDF/DOCX: Fliesstext, Absaetze durch doppelte Zeilenumbrueche getrennt. "
+            "Fuer XLSX: Zeilen durch \\n, Zellen durch | oder Tab getrennt. "
+            "Fuer PPTX: Absaetze werden zu einzelnen Slides."
         ),
         "inputSchema": {
             "type": "object",
@@ -2272,7 +2306,7 @@ MEDIA_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
                 "content": {"type": "string", "description": "Text-Inhalt des Dokuments"},
                 "format": {
                     "type": "string",
-                    "enum": ["pdf", "docx", "xlsx"],
+                    "enum": ["pdf", "docx", "xlsx", "pptx"],
                     "description": "Ausgabeformat",
                     "default": "pdf",
                 },

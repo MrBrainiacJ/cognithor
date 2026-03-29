@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,memory,search,mcp,telegram,web,documents,cron,vector,postgresql]"
+          pip install -e ".[dev,memory,search,mcp,telegram,web,documents,cron,vector,postgresql,arc]"
       - name: Run tests
         run: python -m pytest tests/ -x -q --tb=short --ignore=tests/test_channels/test_voice_ws_bridge.py
         env:

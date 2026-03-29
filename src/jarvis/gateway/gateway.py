@@ -1224,6 +1224,32 @@ class Gateway:
                 if sl_cfg is None or sl_cfg.auto_repair:
                     for broken in self._skill_lifecycle.get_broken_skills():
                         self._skill_lifecycle.repair_skill(broken.slug)
+
+                # Periodic audit background task
+                interval_h = getattr(sl_cfg, "audit_interval_hours", 24) if sl_cfg else 24
+
+                async def _periodic_skill_audit() -> None:
+                    """Run skill audit periodically in the background."""
+                    import asyncio as _aio
+
+                    while True:
+                        await _aio.sleep(interval_h * 3600)
+                        try:
+                            mgr = self._skill_lifecycle
+                            mgr.audit_all()
+                            if sl_cfg is None or sl_cfg.auto_repair:
+                                for b in mgr.get_broken_skills():
+                                    mgr.repair_skill(b.slug)
+                            if sl_cfg is None or getattr(sl_cfg, "suggest_new", True):
+                                mgr.suggest_skills()
+                            log.info("skill_lifecycle_periodic_audit_done")
+                        except Exception:
+                            log.debug("skill_lifecycle_periodic_audit_failed", exc_info=True)
+
+                _audit_task = asyncio.create_task(_periodic_skill_audit())
+                self._background_tasks.add(_audit_task)
+                _audit_task.add_done_callback(self._background_tasks.discard)
+                log.info("skill_lifecycle_periodic_started", interval_hours=interval_h)
         except Exception:
             log.debug("skill_lifecycle_init_failed", exc_info=True)
 
