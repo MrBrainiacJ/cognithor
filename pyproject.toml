@@ -154,6 +154,14 @@ worm = [
 blockchain = [
     "web3>=7.0.0",
 ]
+arc = [
+    "arc-agi>=0.3.0",
+    "numpy>=2.0,<3",
+]
+arc-gpu = [
+    "cognithor[arc]",
+    "torch>=2.2.0",
+]
 all = [
     "cognithor[memory,vector,mcp,telegram,web,search,cron,documents,identity,desktop]",
 ]

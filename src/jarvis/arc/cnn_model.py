@@ -14,9 +14,11 @@ __all__ = [
 
 import hashlib
 from collections import deque
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
+import torch
+import torch.nn as nn
 
 # ---------------------------------------------------------------------------
 # Optional torch import
@@ -30,10 +32,6 @@ try:
 except ImportError:  # pragma: no cover
     _TORCH_AVAILABLE = False
 
-if TYPE_CHECKING:
-    # These are only used for type annotations; no runtime cost.
-    import torch
-    import torch.nn as nn
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -181,7 +179,7 @@ if _TORCH_AVAILABLE:
             grid: np.ndarray,
             action_idx: int,
             coord: tuple[int, int] | None = None,
-            frame_changed: bool = False,  # noqa: ARG002  (reserved for future use)
+            frame_changed: bool = False,
         ) -> None:
             """Add one step-experience to the replay buffer.
 
@@ -313,7 +311,7 @@ if _TORCH_AVAILABLE:
             """
             g = np.asarray(grid, dtype=np.int64)
             if g.ndim == 3:
-                g = g[0] if g.shape[0] == 1 else g[0]
+                g = g[0]
             # Pad or crop to (64, 64)
             h, w = g.shape
             canvas = np.zeros((_GRID_H, _GRID_W), dtype=np.int64)
@@ -334,7 +332,7 @@ if _TORCH_AVAILABLE:
         ) -> str:
             """Return a short deduplication hash for ``(grid, action_idx, coord)``."""
             grid_bytes = np.asarray(grid, dtype=np.int8).tobytes()
-            grid_hash = hashlib.md5(grid_bytes, usedforsecurity=False).hexdigest()  # noqa: S324
+            grid_hash = hashlib.md5(grid_bytes, usedforsecurity=False).hexdigest()
             return f"{grid_hash}:{action_idx}:{coord}"
 
 else:

@@ -4,22 +4,24 @@ from __future__ import annotations
 
 import functools
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from jarvis.utils.logging import get_logger
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 log = get_logger(__name__)
 
 __all__ = [
     "ArcAgentError",
-    "FrameExtractionError",
     "EnvironmentConnectionError",
+    "FrameExtractionError",
+    "GameRunGuard",
     "retry_on_error",
     "safe_frame_extract",
-    "GameRunGuard",
 ]
 
 
@@ -143,7 +145,7 @@ def safe_frame_extract(
 
     try:
         arr = np.asarray(raw, dtype=np.int8)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         log.warning("arc.safe_frame_extract.convert_failed", attr=used_attr, error=str(exc))
         return np.zeros(fallback_shape, dtype=np.int8)
 
@@ -196,7 +198,7 @@ class GameRunGuard:
     def __enter__(self) -> GameRunGuard:
         try:
             env = self.arcade.make(self.game_id)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise EnvironmentConnectionError(
                 f"Failed to create environment for game '{self.game_id}': {exc}"
             ) from exc
@@ -237,7 +239,7 @@ class GameRunGuard:
                     game_id=self.game_id,
                     score=getattr(scorecard, "score", None),
                 )
-        except Exception as sc_exc:  # noqa: BLE001
+        except Exception as sc_exc:
             log.warning(
                 "arc.game_run_guard.scorecard_failed",
                 game_id=self.game_id,

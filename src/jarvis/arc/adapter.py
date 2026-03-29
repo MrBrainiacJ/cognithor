@@ -11,8 +11,8 @@ from jarvis.arc.error_handler import EnvironmentConnectionError, safe_frame_extr
 from jarvis.utils.logging import get_logger
 
 __all__ = [
-    "ArcObservation",
     "ArcEnvironmentAdapter",
+    "ArcObservation",
 ]
 
 log = get_logger(__name__)

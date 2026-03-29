@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from typing import Any
 
 __all__ = ["ArcAuditEvent", "ArcAuditTrail"]
@@ -132,7 +132,7 @@ class ArcAuditTrail:
             return True
 
         prev = "GENESIS"
-        for event, stored_hash in zip(self.events, self._hashes):
+        for event, stored_hash in zip(self.events, self._hashes, strict=False):
             event_json = _event_to_json(event)
             chain_input = f"{prev}:{event_json}"
             expected = hashlib.sha256(chain_input.encode()).hexdigest()

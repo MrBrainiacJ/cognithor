@@ -163,10 +163,9 @@ def _run_swarm(use_llm: bool, parallel: int, verbose: bool, config: Any) -> int:
     game_ids: list[str] = []
     if config is not None:
         arc_cfg = getattr(config, "arc", None)
-        if arc_cfg is not None and arc_cfg.swarm_max_parallel:
-            # Use config parallelism unless overridden via CLI
-            if parallel == 4:  # default CLI value — prefer config
-                parallel = arc_cfg.swarm_max_parallel
+        if arc_cfg is not None and arc_cfg.swarm_max_parallel and parallel == 4:
+            # Use config parallelism unless overridden via CLI (4 is default)
+            parallel = arc_cfg.swarm_max_parallel
 
     if not game_ids:
         # Try to discover available games from the adapter

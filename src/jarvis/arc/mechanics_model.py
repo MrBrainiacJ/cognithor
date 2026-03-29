@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from jarvis.arc.episode_memory import EpisodeMemory
 
 __all__ = [
-    "MechanicType",
     "Mechanic",
+    "MechanicType",
     "MechanicsModel",
 ]
 

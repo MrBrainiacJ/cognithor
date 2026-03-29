@@ -49,7 +49,7 @@ class VisualStateEncoder:
         total_pixels = grid_2d.size
         unique, counts = np.unique(grid_2d, return_counts=True)
         order = np.argsort(counts)[::-1]
-        for rank, idx in enumerate(order[:5]):
+        for _rank, idx in enumerate(order[:5]):
             color_idx = int(unique[idx])
             pct = counts[idx] / total_pixels * 100
             name = self.color_names.get(color_idx, str(color_idx))

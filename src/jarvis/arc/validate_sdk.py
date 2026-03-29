@@ -26,7 +26,7 @@ def validate() -> dict:
     # ------------------------------------------------------------------ 1
     print("\n[1/11] arc-agi import...")
     try:
-        import arc_agi  # noqa: F811
+        import arc_agi
 
         results["arc_agi_version"] = getattr(arc_agi, "__version__", "unknown")
         print(f"  [OK] arc_agi {results['arc_agi_version']}")
@@ -37,7 +37,7 @@ def validate() -> dict:
         sys.exit(1)
 
     try:
-        import arcengine  # noqa: F811
+        import arcengine
 
         results["arcengine_version"] = getattr(arcengine, "__version__", "unknown")
         print(f"  [OK] arcengine {results['arcengine_version']}")
