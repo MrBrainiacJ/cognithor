@@ -61,8 +61,8 @@ class TestAgentInit:
     def test_default_params(self):
         agent = CognithorArcAgent("test")
         assert agent.max_steps_per_level == 500
-        assert agent.max_resets_per_level == 5
-        assert agent.llm_call_interval == 10
+        assert agent.max_resets_per_level == 20
+        assert agent.llm_call_interval == 30
 
     def test_use_llm_planner_false(self):
         agent = CognithorArcAgent("test", use_llm_planner=False)

@@ -39,10 +39,10 @@ class CognithorArcAgent:
     def __init__(
         self,
         game_id: str,
-        use_llm_planner: bool = True,
-        llm_call_interval: int = 10,
+        use_llm_planner: bool = False,
+        llm_call_interval: int = 30,
         max_steps_per_level: int = 500,
-        max_resets_per_level: int = 5,
+        max_resets_per_level: int = 20,
     ) -> None:
         self.game_id = game_id
         self.use_llm_planner = use_llm_planner
@@ -215,10 +215,11 @@ class CognithorArcAgent:
             action, data = self.explorer.choose_action(self.current_obs, self.memory, self.goals)
             action_str = self._action_to_str(action, data)
 
-        # LLM only rarely and only when no win path known
+        # LLM only rarely: skip first 50 steps (let graph explore first),
+        # then only every N steps, and never when a win path is known
         if (
             self.use_llm_planner
-            and self.total_steps > 0
+            and self.adapter.level_step_count > 50
             and self.total_steps % self.llm_call_interval == 0
             and not self.state_graph.should_navigate()
         ):
@@ -378,21 +379,37 @@ class CognithorArcAgent:
                 if getattr(a, "name", "") != "RESET"
             ]
 
+            # Per-action effectiveness for the prompt
+            action_stats = []
+            for aname in action_names:
+                eff = self.memory.get_action_effectiveness(aname)
+                nov = self.memory.get_action_novelty(aname)
+                effects = self.memory.action_effect_map.get(aname, {})
+                total = effects.get("total", 0) if isinstance(effects, dict) else 0
+                wins = effects.get("caused_win", 0) if isinstance(effects, dict) else 0
+                gos = effects.get("caused_game_over", 0) if isinstance(effects, dict) else 0
+                action_stats.append(
+                    f"  {aname}: {eff:.0%} change, {nov:.0%} novelty, "
+                    f"{total} uses, {wins} wins, {gos} game_overs"
+                )
+            action_block = "\n".join(action_stats)
+
             prompt = (
-                "You are playing an ARC-AGI-3 puzzle game. You must figure out the "
-                "rules by experimenting. Based on the information below, recommend "
-                "the SINGLE BEST next action.\n\n"
-                f"AVAILABLE ACTIONS: {action_names}\n\n"
-                f"CURRENT GRID STATE:\n{state_desc}\n\n"
-                f"EPISODE MEMORY:\n{memory_summary}\n\n"
-                f"LEARNED MECHANICS:\n{mechanics_summary}\n\n"
+                "You are playing an ARC-AGI-3 puzzle game with NO instructions. "
+                "You must discover the rules by trying different actions and observing "
+                "what changes. Your goal is to reach a WIN state efficiently.\n\n"
+                "CRITICAL: Do NOT always pick the same action. Vary your choices to "
+                "explore the game mechanics. Pick the action most likely to lead to "
+                "NEW, UNEXPLORED states.\n\n"
+                f"AVAILABLE ACTIONS + STATS:\n{action_block}\n\n"
+                f"GRID STATE:\n{state_desc}\n\n"
                 f"STATE GRAPH:\n{graph_summary}\n\n"
-                f"GOAL HYPOTHESES:\n{goal_summary}\n\n"
-                f"Explorer phase: {self.explorer.phase.value}\n"
-                f"Level: {self.current_level}, Step: {self.adapter.level_step_count}\n"
+                f"MEMORY:\n{memory_summary}\n\n"
+                f"GOALS:\n{goal_summary}\n\n"
+                f"Level: {self.current_level}, Step: {self.adapter.level_step_count}, "
                 f"Resets: {self.level_resets}\n\n"
-                "Reply with ONLY the action name (e.g. ACTION1 or ACTION2). "
-                "Nothing else."
+                "Pick the SINGLE BEST action to try next. Reply with ONLY the action "
+                "name. Nothing else."
             )
 
             # Call Ollama directly via httpx (lightweight, no full PGE overhead)
