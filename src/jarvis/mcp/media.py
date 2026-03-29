@@ -85,6 +85,8 @@ class MediaPipeline:
         self._llm_model: str = ""
         self._vault: Any = None
         self._config = config
+        # Lazy-initialised template manager
+        self._template_manager: Any = None
 
         # Konfigurierbare Limits (aus config.media.* mit Fallback auf Defaults)
         _media = getattr(config, "media", None)
@@ -2438,6 +2440,53 @@ MEDIA_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
             "required": ["source"],
         },
     },
+    "template_list": {
+        "description": (
+            "Listet alle verfuegbaren Dokumentvorlagen (Templates) auf. "
+            "Jede Vorlage hat einen Slug, eine Beschreibung und eine Liste der "
+            "auszufuellenden Variablen. Nutze template_render, um eine Vorlage "
+            "mit konkreten Werten zu befuellen und als PDF zu exportieren."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    "template_render": {
+        "description": (
+            "Befuellt eine Dokumentvorlage mit den angegebenen Variablen und "
+            "kompiliert das Ergebnis zu einem PDF. Schritt 1: template_list aufrufen "
+            "um verfuegbare Vorlagen zu sehen. Schritt 2: Variablen als JSON-Dict "
+            "angeben. Schritt 3: Dieses Tool gibt den Pfad zur fertigen PDF zurueck."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "template_slug": {
+                    "type": "string",
+                    "description": (
+                        "Slug der Vorlage (z.B. 'brief', 'rechnung', 'bericht'). "
+                        "Erhaeltlich via template_list."
+                    ),
+                },
+                "variables": {
+                    "type": "string",
+                    "description": (
+                        "JSON-Objekt mit den Platzhalterwerten, z.B. "
+                        '\'{"empfaenger_name": "Firma GmbH", "betreff": "Angebot"}\''
+                    ),
+                    "default": "{}",
+                },
+                "filename": {
+                    "type": "string",
+                    "description": "Ausgabe-Dateiname ohne .pdf Endung",
+                    "default": "dokument",
+                },
+            },
+            "required": ["template_slug"],
+        },
+    },
 }
 
 
@@ -2627,6 +2676,47 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
             return result.output_path or result.text
         return f"Fehler: {result.error}"
 
+    def _get_template_manager() -> Any:
+        """Lazy-init TemplateManager on first use."""
+        if pipeline._template_manager is None:
+            from jarvis.documents.templates import TemplateManager
+
+            pipeline._template_manager = TemplateManager()
+        return pipeline._template_manager
+
+    async def _template_list(**_: Any) -> str:
+        import json as _json
+
+        tm = _get_template_manager()
+        templates = tm.list_as_json()
+        if not templates:
+            return "Keine Dokumentvorlagen gefunden in ~/.jarvis/templates/documents/"
+        return _json.dumps(templates, ensure_ascii=False, indent=2)
+
+    async def _template_render(
+        template_slug: str,
+        variables: str = "{}",
+        filename: str = "dokument",
+        **_: Any,
+    ) -> str:
+        import json as _json
+
+        tm = _get_template_manager()
+        try:
+            vars_dict: dict[str, str] = _json.loads(variables) if variables.strip() else {}
+        except Exception as exc:  # noqa: BLE001
+            return f"Fehler: Ungueltige JSON-Variablen: {exc}"
+
+        try:
+            rendered_source = tm.render_template(template_slug, vars_dict)
+        except KeyError as exc:
+            return f"Fehler: {exc}"
+
+        result = await pipeline.typst_render(rendered_source, filename=filename)
+        if result.success:
+            return result.output_path or result.text
+        return f"Fehler: {result.error}"
+
     handlers = {
         "media_transcribe_audio": _transcribe,
         "media_analyze_image": _analyze_image,
@@ -2642,6 +2732,8 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
         "read_docx": _read_docx,
         "read_xlsx": _read_xlsx,
         "typst_render": _typst_render,
+        "template_list": _template_list,
+        "template_render": _template_render,
     }
 
     for name, schema in MEDIA_TOOL_SCHEMAS.items():
