@@ -1685,8 +1685,16 @@ class Gateway:
                 is_final=True,
             )
 
+        # Detect system-internal messages (cron jobs, sub-agents, etc.)
+        _is_system = (
+            (msg.user_id or "").startswith("cron")
+            or (msg.channel or "") in ("cron", "sub_agent", "system", "evolution", "heartbeat")
+            or (msg.metadata or {}).get("cron_job")
+        )
+
         # Handle consent responses (works for all channels including WebUI)
-        if msg.text and msg.text.strip().lower() in ("akzeptieren", "accept", "ja", "yes"):
+        # Skip for system messages — they don't need consent
+        if not _is_system and msg.text and msg.text.strip().lower() in ("akzeptieren", "accept", "ja", "yes"):
             if hasattr(self, "_consent_manager") and self._consent_manager:
                 _uid = msg.user_id or msg.session_id or "unknown"
                 _ch = msg.channel or "unknown"
@@ -1696,7 +1704,7 @@ class Gateway:
                     return OutgoingMessage(
                         channel=msg.channel,
                         text="Datenschutz-Einwilligung erteilt. Ich bin jetzt bereit!",
-                        session_id=msg.session_id,
+                        session_id=msg.session_id or msg.id or "consent",
                         is_final=True,
                     )
 
@@ -1707,11 +1715,11 @@ class Gateway:
 
                 _channel = msg.channel or "unknown"
                 _user = msg.user_id or msg.session_id or "unknown"
-                # System-internal channels use legitimate interest, not consent
-                _system_channels = {"cron", "sub_agent", "system", "evolution", "heartbeat"}
+                # System-internal messages use legitimate interest, not consent
+                # Detect via channel name, user_id prefix, or metadata
                 _basis = (
                     ProcessingBasis.LEGITIMATE_INTEREST
-                    if _channel in _system_channels
+                    if _is_system
                     else ProcessingBasis.CONSENT
                 )
                 self._compliance_engine.check(
@@ -1733,7 +1741,7 @@ class Gateway:
                 return OutgoingMessage(
                     channel=msg.channel,
                     text=consent_text,
-                    session_id=msg.session_id,
+                    session_id=msg.session_id or msg.id or "compliance",
                     is_final=True,
                 )
 
