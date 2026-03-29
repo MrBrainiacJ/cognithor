@@ -85,13 +85,14 @@ class MessageRole(StrEnum):
 
 
 class MemoryTier(StrEnum):
-    """The 5 memory tiers. [B§4.1]"""
+    """The 6 memory tiers. [B§4.1]"""
 
     CORE = "core"
     EPISODIC = "episodic"
     SEMANTIC = "semantic"
     PROCEDURAL = "procedural"
     WORKING = "working"
+    TACTICAL = "tactical"
 
 
 class OperationMode(StrEnum):

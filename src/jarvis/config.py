@@ -515,6 +515,24 @@ class ContextPipelineConfig(BaseModel):
     """Patterns die als Smalltalk erkannt werden (keine Kontext-Suche)."""
 
 
+class TacticalMemoryConfig(BaseModel):
+    """Tactical Memory (Tier 6) -- tool outcome tracking and avoidance rules."""
+
+    enabled: bool = Field(default=True, description="Enable tactical memory tier")
+    db_name: str = Field(default="tactical_memory.db", description="SQLite DB filename")
+    ttl_hours: float = Field(default=24.0, ge=1.0, le=168.0, description="Avoidance rule TTL")
+    flush_threshold: float = Field(
+        default=0.7, ge=0.1, le=1.0, description="Min confidence to persist to DB"
+    )
+    max_outcomes: int = Field(default=50_000, ge=1000, description="Max in-memory outcomes")
+    avoidance_consecutive_failures: int = Field(
+        default=3, ge=2, le=10, description="Failures before avoidance rule"
+    )
+    budget_tokens: int = Field(
+        default=400, ge=100, le=2000, description="Token budget for tactical insights"
+    )
+
+
 class MemoryConfig(BaseModel):
     """Memory-System Konfiguration. [B§4]"""
 
@@ -2136,6 +2154,7 @@ class JarvisConfig(BaseModel):
     gatekeeper: GatekeeperConfig = Field(default_factory=GatekeeperConfig)
     planner: PlannerConfig = Field(default_factory=PlannerConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
+    tactical_memory: TacticalMemoryConfig = Field(default_factory=TacticalMemoryConfig)
     channels: ChannelConfig = Field(default_factory=ChannelConfig)
     web: WebConfig = Field(default_factory=WebConfig)
     browser: BrowserConfig = Field(default_factory=BrowserConfig)
