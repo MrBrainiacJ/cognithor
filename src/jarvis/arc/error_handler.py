@@ -157,6 +157,11 @@ def safe_frame_extract(
     if arr.ndim == 3 and arr.shape[0] == 1:
         return arr.squeeze(0)
 
+    # Multi-layer frame: (N, H, W) where N > 1 → take first layer
+    # ARC-AGI-3 can return multi-layer frames as game complexity increases
+    if arr.ndim == 3 and arr.shape[1:] == (h, w):
+        return arr[0]
+
     # Flat 1-D array with exactly H*W elements → reshape
     if arr.ndim == 1 and arr.size == h * w:
         return arr.reshape(fallback_shape)

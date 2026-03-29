@@ -97,15 +97,18 @@ class HypothesisDrivenExplorer:
         """Build the discovery queue from the *dynamic* action space.
 
         Args:
-            action_space: List of ``GameAction``-like objects supplied by the
-                environment.  The list may contain RESET and any mix of simple
-                and complex actions.
+            action_space: List of ``GameAction``-like objects OR raw ints supplied
+                by the environment.  The SDK returns ``available_actions`` as ints
+                (e.g. ``[1, 2, 3, 4]``); ``env.action_space`` may return
+                ``GameAction`` enums.  Both formats are handled.
         """
-        self._available_actions = list(action_space)
+        # Normalise: convert raw ints to GameAction enums if possible
+        normalised = self._normalise_actions(action_space)
+        self._available_actions = normalised
         simple: list[Any] = []
         complex_: list[Any] = []
 
-        for action in action_space:
+        for action in normalised:
             # Defensive attribute check — not all mock / future SDK versions
             # may expose is_simple / is_complex.
             if hasattr(action, "is_simple") and action.is_simple():
@@ -114,6 +117,10 @@ class HypothesisDrivenExplorer:
                     simple.append(action)
             elif hasattr(action, "is_complex") and action.is_complex():
                 complex_.append(action)
+            elif isinstance(action, int):
+                # Raw int without GameAction conversion — treat as simple, skip 0 (RESET)
+                if action != 0:
+                    simple.append(action)
 
         self._simple_actions = simple
         self._complex_actions = complex_
@@ -130,10 +137,32 @@ class HypothesisDrivenExplorer:
         self.discovery_queue = queue
 
         # Initialise action_test_grid entries
-        for action in action_space:
+        for action in normalised:
             name = getattr(action, "name", str(action))
             if name not in self.action_test_grid:
                 self.action_test_grid[name] = []
+
+    @staticmethod
+    def _normalise_actions(action_space: list[Any]) -> list[Any]:
+        """Convert raw int actions to GameAction enums if possible.
+
+        The ARC SDK returns ``obs.available_actions`` as plain ints (e.g.
+        ``[1, 2, 3, 4]``) while ``env.action_space`` may return GameAction
+        enums.  This method ensures we always work with enum objects.
+        """
+        if not action_space:
+            return []
+        # Already GameAction-like (has .name attribute)?
+        if hasattr(action_space[0], "name"):
+            return list(action_space)
+        # Raw ints — try to convert via arcengine.GameAction
+        try:
+            from arcengine import GameAction
+
+            return [GameAction(v) for v in action_space]
+        except (ImportError, ValueError):
+            # Can't convert — return as-is
+            return list(action_space)
 
     # ------------------------------------------------------------------
     # Main entry point

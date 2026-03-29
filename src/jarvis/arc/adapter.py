@@ -139,10 +139,10 @@ class ArcEnvironmentAdapter:
             The :class:`ArcObservation` from the post-reset frame.
         """
         try:
-            from arc_agi import GameAction  # type: ignore[import]
+            from arcengine import GameAction  # type: ignore[import-untyped]
         except ImportError as exc:
             raise EnvironmentConnectionError(
-                "arc_agi SDK is not installed — cannot import GameAction for RESET."
+                "arcengine SDK is not installed — cannot import GameAction for RESET."
             ) from exc
 
         raw = self.env.step(GameAction.RESET)
