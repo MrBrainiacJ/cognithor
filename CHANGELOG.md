@@ -5,6 +5,23 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.66.1] -- 2026-03-29
+
+### Added
+
+#### LLM Provider Expansion — 16 Providers (4 Local + 12 Cloud)
+- **vLLM** backend — high-throughput local inference via OpenAI-compatible API (default: `localhost:8000/v1`)
+- **llama-cpp-python** backend — lightweight local inference via OpenAI-compatible API (default: `localhost:8080/v1`)
+- Both backends reuse the existing `OpenAIBackend` — zero new code, full feature parity (streaming, tool calling, JSON mode)
+- Flutter UI: backend dropdown updated with `vllm` and `llama_cpp` options
+- Config: `vllm_base_url`, `vllm_api_key`, `llama_cpp_base_url`, `llama_cpp_api_key` fields
+
+Complete provider list: Ollama, LM Studio, vLLM, llama-cpp-python, OpenAI, Anthropic, Google Gemini, Groq, DeepSeek, Mistral, Together AI, OpenRouter, xAI (Grok), Cerebras, AWS Bedrock, HuggingFace. Plus any custom OpenAI-compatible endpoint.
+
+### Fixed
+- CI: pinned `ruff==0.12.12` to prevent format drift between local and CI environments
+- ARCHITECTURE.md: encryption and GDPR sections that were missed in v0.66.0 release commit
+
 ## [0.66.0] -- 2026-03-29
 
 ### Added
