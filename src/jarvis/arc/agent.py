@@ -63,6 +63,17 @@ class CognithorArcAgent:
         self._current_path: list = []
         self._path_index: int = 0
 
+        # CNN Action Predictor (online learning during gameplay)
+        self._cnn_trainer: Any = None
+        try:
+            from jarvis.arc.cnn_model import OnlineTrainer, _TORCH_AVAILABLE
+
+            if _TORCH_AVAILABLE:
+                self._cnn_trainer = OnlineTrainer(device="cuda")
+                log.info("arc.agent.cnn_initialized", device=str(self._cnn_trainer._device))
+        except Exception:
+            log.debug("arc.agent.cnn_not_available", exc_info=True)
+
         # Runtime state
         self.current_obs: ArcObservation | None = None
         self.current_level: int = 0
@@ -194,29 +205,62 @@ class CognithorArcAgent:
             return self._step()  # Immediately start navigating
 
         # === EXPLORATION MODE: Build the graph ===
-        available = [
-            getattr(a, "name", str(a))
-            for a in self.explorer._available_actions
-            if getattr(a, "name", "") != "RESET"
+        available_actions = [
+            a for a in self.explorer._available_actions if getattr(a, "name", "") != "RESET"
         ]
-        graph_action = self.state_graph.get_best_exploration_action(current_hash, available)
+        available_names = [getattr(a, "name", str(a)) for a in available_actions]
 
-        if graph_action:
-            action_str, action_data = graph_action
-            action = self._resolve_action(action_str)
-            data = action_data or {}
-            # Complex actions need x,y coordinates — supply random if missing
-            if hasattr(action, "is_complex") and action.is_complex() and "x" not in data:
-                import random
+        # Decision priority: CNN prediction → Graph exploration → Explorer fallback
+        action_str: str | None = None
+        action: Any = None
+        data: dict[str, Any] = {}
 
-                data = {"x": random.randint(0, 63), "y": random.randint(0, 63)}
-        else:
-            # Fallback: Explorer decides
+        # 1. CNN-guided action selection (after enough training data)
+        if self._cnn_trainer is not None and self.adapter.level_step_count > 20:
+            try:
+                action_probs, coord_probs = self._cnn_trainer.predict(self.current_obs.raw_grid)
+                # Mask unavailable actions: only score available ones
+                import numpy as np
+
+                masked = np.full_like(action_probs, -1.0)
+                for a in available_actions:
+                    idx = getattr(a, "value", 0)
+                    if 0 <= idx < len(action_probs):
+                        masked[idx] = action_probs[idx]
+
+                best_idx = int(np.argmax(masked))
+                # Only use CNN if confidence is meaningful (> 0.3)
+                if masked[best_idx] > 0.3:
+                    action = self._resolve_action_by_value(best_idx)
+                    if action is not None:
+                        action_str = getattr(action, "name", str(action))
+                        # For complex actions, use coord_probs heat-map
+                        if hasattr(action, "is_complex") and action.is_complex():
+                            best_pos = np.unravel_index(np.argmax(coord_probs), (64, 64))
+                            data = {"x": int(best_pos[1]), "y": int(best_pos[0])}
+            except Exception:
+                log.debug("arc.agent.cnn_predict_failed", exc_info=True)
+
+        # 2. Graph-guided exploration (untested actions first)
+        if action_str is None:
+            graph_action = self.state_graph.get_best_exploration_action(
+                current_hash, available_names
+            )
+            if graph_action:
+                action_str, action_data = graph_action
+                action = self._resolve_action(action_str)
+                data = action_data or {}
+                if hasattr(action, "is_complex") and action.is_complex() and "x" not in data:
+                    import random
+
+                    data = {"x": random.randint(0, 63), "y": random.randint(0, 63)}
+
+        # 3. Explorer fallback
+        if action_str is None:
             action, data = self.explorer.choose_action(self.current_obs, self.memory, self.goals)
             action_str = self._action_to_str(action, data)
 
-        # LLM only rarely: skip first 50 steps (let graph explore first),
-        # then only every N steps, and never when a win path is known
+        # LLM only rarely (disabled by default)
         if (
             self.use_llm_planner
             and self.adapter.level_step_count > 50
@@ -233,6 +277,18 @@ class CognithorArcAgent:
 
         # Record in memory + audit + graph
         self._record_step(previous_obs, action_str, data)
+
+        # Feed CNN trainer with experience (online learning)
+        if self._cnn_trainer is not None and action is not None:
+            try:
+                action_idx = getattr(action, "value", 0)
+                frame_changed = self.current_obs.changed_pixels > 0
+                coord = (data.get("y"), data.get("x")) if data.get("x") is not None else None
+                self._cnn_trainer.add_experience(
+                    previous_obs.raw_grid, action_idx, coord, frame_changed
+                )
+            except Exception:
+                log.debug("arc.agent.cnn_train_failed", exc_info=True)
 
         # Periodic goal analysis
         if self.total_steps % _GOAL_REANALYSIS_INTERVAL == 0:
@@ -294,6 +350,18 @@ class CognithorArcAgent:
             return self.explorer._available_actions[0]
         return action_str
 
+    def _resolve_action_by_value(self, value: int) -> Any:
+        """Convert an integer action value to a GameAction enum."""
+        for a in self.explorer._available_actions:
+            if getattr(a, "value", -1) == value:
+                return a
+        try:
+            from arcengine import GameAction
+
+            return GameAction(value)
+        except (ImportError, ValueError):
+            return None
+
     # ------------------------------------------------------------------
     # Level completion
     # ------------------------------------------------------------------
@@ -305,6 +373,10 @@ class CognithorArcAgent:
         self._navigation_mode = False
         self._current_path = []
         self._path_index = 0
+
+        # CNN: reset model for new level mechanics
+        if self._cnn_trainer is not None:
+            self._cnn_trainer.reset_for_new_level()
 
         log.info(
             "arc.agent.level_complete",
