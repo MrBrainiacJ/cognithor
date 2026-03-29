@@ -152,6 +152,7 @@ def _migrate_to_encrypted(
         # 2. Use sqlcipher_export to create encrypted copy
         enc_conn = sqlcipher.connect(tmp_path, check_same_thread=check_same_thread)
         enc_conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+        enc_conn.execute("PRAGMA cipher_memory_security = OFF")
         enc_conn.execute("PRAGMA journal_mode=WAL")
 
         # 3. Copy all data: dump from plain, execute in encrypted
@@ -175,6 +176,7 @@ def _migrate_to_encrypted(
         # 6. Open the now-encrypted DB
         conn = sqlcipher.connect(db_path, check_same_thread=check_same_thread)
         conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+        conn.execute("PRAGMA cipher_memory_security = OFF")
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("SELECT count(*) FROM sqlite_master")
         return conn
@@ -210,6 +212,10 @@ def encrypted_connect(
         try:
             conn = sqlcipher.connect(db_path, check_same_thread=check_same_thread, timeout=timeout)
             conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+            # Disable VirtualLock — prevents ERROR_WORKING_SET_QUOTA (1453)
+            # on Windows when many DBs are open. Encryption keys may land in
+            # pagefile, but Windows can encrypt it (EncryptPagingFile=1).
+            conn.execute("PRAGMA cipher_memory_security = OFF")
             conn.execute("PRAGMA journal_mode=WAL")
             # Test that the key works
             conn.execute("SELECT count(*) FROM sqlite_master")
@@ -234,6 +240,7 @@ def encrypted_connect(
                         db_path, check_same_thread=check_same_thread, timeout=timeout
                     )
                     conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+                    conn.execute("PRAGMA cipher_memory_security = OFF")
                     conn.execute("PRAGMA journal_mode=WAL")
                     log.debug("encrypted_db_created", path=db_path[-30:])
                     return conn
