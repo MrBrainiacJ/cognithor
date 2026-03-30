@@ -1,4 +1,5 @@
 """Tests for ATL configuration."""
+
 from __future__ import annotations
 
 from jarvis.evolution.atl_config import ATLConfig

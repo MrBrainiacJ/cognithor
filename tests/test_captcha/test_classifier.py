@@ -1,4 +1,5 @@
 """Tests for CAPTCHA classifier."""
+
 from __future__ import annotations
 
 from jarvis.browser.captcha.classifier import classify_challenge, select_vision_model

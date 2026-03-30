@@ -1,4 +1,5 @@
 """Browser stealth — anti-bot-detection basics for Playwright."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -39,7 +40,9 @@ DEFAULT_VIEWPORT = {"width": 1280, "height": 720}
 
 
 def get_stealth_launch_opts(
-    *, headless: bool = True, stealth: bool = True,
+    *,
+    headless: bool = True,
+    stealth: bool = True,
 ) -> dict[str, Any]:
     opts: dict[str, Any] = {"headless": headless}
     if stealth:

@@ -265,7 +265,11 @@ def encrypted_connect(
                 return conn
             except sqlite3.DatabaseError:
                 # DB exists and is encrypted — open with SQLCipher + memory_security OFF
-                if _sqlcipher_available and os.path.exists(db_path) and os.path.getsize(db_path) > 0:
+                if (
+                    _sqlcipher_available
+                    and os.path.exists(db_path)
+                    and os.path.getsize(db_path) > 0
+                ):
                     fallback_key = _get_db_key()
                     if fallback_key:
                         hex_key = fallback_key.encode().hex()

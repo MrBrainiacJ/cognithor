@@ -1,4 +1,5 @@
 """AACS Central Configuration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -22,13 +23,15 @@ class AACSConfig:
     trust_score_max: float = 1.0
     trust_score_initial: float = 0.5
     trust_decay_rate: float = 0.01
-    memory_tiers: dict[int, str] = field(default_factory=lambda: {
-        1: "working",
-        2: "task",
-        3: "session",
-        4: "knowledge",
-        5: "system_config",
-    })
+    memory_tiers: dict[int, str] = field(
+        default_factory=lambda: {
+            1: "working",
+            2: "task",
+            3: "session",
+            4: "knowledge",
+            5: "system_config",
+        }
+    )
     key_store_path: Path = field(
         default_factory=lambda: Path.home() / ".jarvis" / "keys",
     )

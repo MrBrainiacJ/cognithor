@@ -1,4 +1,5 @@
 """Tests for ATL Journal."""
+
 from __future__ import annotations
 
 import datetime

@@ -1,4 +1,5 @@
 """ATL system prompt builder and JSON response parser."""
+
 from __future__ import annotations
 
 import json
@@ -58,6 +59,7 @@ Antworte ausschließlich mit einem JSON-Objekt im folgenden Format
 # build_atl_prompt
 # ---------------------------------------------------------------------------
 
+
 def build_atl_prompt(
     identity: str,
     goals_formatted: str,
@@ -80,6 +82,7 @@ def build_atl_prompt(
 # ---------------------------------------------------------------------------
 # AutonomousThought dataclass
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class AutonomousThought:

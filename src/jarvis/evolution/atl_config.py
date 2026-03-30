@@ -1,4 +1,5 @@
 """ATL (Autonomous Thinking Loop) configuration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -20,13 +21,21 @@ class ATLConfig:
     notification_level: str = "important"
     goal_review_interval: str = "daily"
     risk_ceiling: str = "YELLOW"
-    allowed_action_types: list[str] = field(default_factory=lambda: [
-        "memory_update", "research", "notification",
-        "file_management", "goal_management",
-    ])
-    blocked_action_types: list[str] = field(default_factory=lambda: [
-        "shell_exec", "send_message_unprompted",
-    ])
+    allowed_action_types: list[str] = field(
+        default_factory=lambda: [
+            "memory_update",
+            "research",
+            "notification",
+            "file_management",
+            "goal_management",
+        ]
+    )
+    blocked_action_types: list[str] = field(
+        default_factory=lambda: [
+            "shell_exec",
+            "send_message_unprompted",
+        ]
+    )
 
     def __post_init__(self) -> None:
         self.interval_minutes = max(5, min(60, self.interval_minutes))

@@ -87,7 +87,7 @@ class TestVisionToolRegistration:
         mcp_mock.register_builtin_handler = mock_register
 
         register_browser_use_tools(mcp_mock, vision_analyzer=MagicMock())
-        assert len(registered_tools) == 13
+        assert len(registered_tools) == 14  # 13 browser + 1 browser_solve_captcha
 
 
 # ============================================================================

@@ -1,4 +1,5 @@
 """AACS Token Issuer — creates and Ed25519-signs Capability Tokens."""
+
 from __future__ import annotations
 
 import typing

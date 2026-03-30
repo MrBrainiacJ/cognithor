@@ -1,4 +1,5 @@
 """Tests for CAPTCHA data models."""
+
 from __future__ import annotations
 
 from jarvis.browser.captcha.models import CaptchaChallenge, CaptchaType, SolveResult
@@ -25,8 +26,11 @@ def test_captcha_challenge_defaults():
 
 def test_solve_result_success():
     r = SolveResult(
-        success=True, captcha_type=CaptchaType.TEXT,
-        model_used="minicpm-v4.5", attempts=1, duration_ms=1200,
+        success=True,
+        captcha_type=CaptchaType.TEXT,
+        model_used="minicpm-v4.5",
+        attempts=1,
+        duration_ms=1200,
         answer="abc123",
     )
     assert r.success
@@ -35,8 +39,11 @@ def test_solve_result_success():
 
 def test_solve_result_failure():
     r = SolveResult(
-        success=False, captcha_type=CaptchaType.RECAPTCHA_V2_IMAGE,
-        model_used="qwen3-vl:32b", attempts=3, duration_ms=15000,
+        success=False,
+        captcha_type=CaptchaType.RECAPTCHA_V2_IMAGE,
+        model_used="qwen3-vl:32b",
+        attempts=3,
+        duration_ms=15000,
         error="Vision model could not identify images",
     )
     assert not r.success

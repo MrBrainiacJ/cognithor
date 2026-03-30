@@ -1,4 +1,5 @@
 """AACS Capability Token data model."""
+
 from __future__ import annotations
 
 import hashlib
@@ -125,17 +126,13 @@ class CapabilityToken:
         """Deterministic JSON serialization of all fields except *signature*."""
         data = {
             "allowed_actions": [
-                {"resource": a.resource, "verb": str(a.verb)}
-                for a in self.allowed_actions
+                {"resource": a.resource, "verb": str(a.verb)} for a in self.allowed_actions
             ],
             "delegation_depth": self.delegation_depth,
             "denied_actions": [
-                {"resource": a.resource, "verb": str(a.verb)}
-                for a in self.denied_actions
+                {"resource": a.resource, "verb": str(a.verb)} for a in self.denied_actions
             ],
-            "expires_at": (
-                self.expires_at.isoformat() if self.expires_at is not None else None
-            ),
+            "expires_at": (self.expires_at.isoformat() if self.expires_at is not None else None),
             "issued_at": self.issued_at.isoformat(),
             "issuer_did": self.issuer_did,
             "max_delegation_depth": self.max_delegation_depth,

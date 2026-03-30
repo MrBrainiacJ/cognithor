@@ -1,4 +1,5 @@
 """Tests for AACS configuration."""
+
 from __future__ import annotations
 
 from jarvis.aacs.config import AACSConfig, AACSFeatureFlags

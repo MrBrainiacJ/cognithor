@@ -1,4 +1,5 @@
 """Agent Access Control System (AACS) for Cognithor."""
+
 from __future__ import annotations
 
 from jarvis.aacs.config import AACS_CONFIG, AACSConfig, AACSFeatureFlags

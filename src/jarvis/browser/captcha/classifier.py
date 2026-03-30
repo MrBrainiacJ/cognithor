@@ -1,4 +1,5 @@
 """CAPTCHA classifier — determines strategy and model for each type."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -34,8 +35,10 @@ def classify_challenge(challenge: CaptchaChallenge) -> ChallengeProfile:
         return ChallengeProfile(needs_vision=True, complexity="simple")
     if t == CaptchaType.RECAPTCHA_V2_CHECKBOX:
         return ChallengeProfile(
-            needs_click=True, may_escalate=True,
-            needs_stealth=True, complexity="simple",
+            needs_click=True,
+            may_escalate=True,
+            needs_stealth=True,
+            complexity="simple",
         )
     if t == CaptchaType.RECAPTCHA_V2_IMAGE:
         return ChallengeProfile(needs_vision=True, needs_click=True, complexity="complex")
@@ -43,8 +46,10 @@ def classify_challenge(challenge: CaptchaChallenge) -> ChallengeProfile:
         return ChallengeProfile(needs_stealth=True, complexity="simple")
     if t == CaptchaType.HCAPTCHA:
         return ChallengeProfile(
-            needs_vision=True, needs_click=True,
-            may_escalate=True, complexity="complex",
+            needs_vision=True,
+            needs_click=True,
+            may_escalate=True,
+            complexity="complex",
         )
     if t == CaptchaType.TURNSTILE:
         return ChallengeProfile(needs_stealth=True, needs_click=True, complexity="simple")

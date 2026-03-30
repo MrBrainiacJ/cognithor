@@ -1,4 +1,5 @@
 """AACS Token sub-package."""
+
 from __future__ import annotations
 
 from jarvis.aacs.tokens.capability_token import Action, ActionVerb, CapabilityToken

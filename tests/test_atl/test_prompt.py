@@ -1,4 +1,5 @@
 """Tests for ATL system prompt and response parsing."""
+
 from __future__ import annotations
 
 from jarvis.evolution.atl_prompt import AutonomousThought, build_atl_prompt, parse_atl_response

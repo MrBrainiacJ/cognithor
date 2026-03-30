@@ -1,4 +1,5 @@
 """Integration tests for CAPTCHA solver."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -26,13 +27,17 @@ async def test_full_flow_no_captcha():
 @pytest.mark.asyncio
 async def test_full_flow_text_captcha():
     page = MagicMock()
-    page.evaluate = AsyncMock(return_value=[
-        {"type": "text", "selector": "img.captcha", "sitekey": ""},
-    ])
+    page.evaluate = AsyncMock(
+        return_value=[
+            {"type": "text", "selector": "img.captcha", "sitekey": ""},
+        ]
+    )
     page.url = "https://example.com"
-    page.query_selector = AsyncMock(return_value=MagicMock(
-        screenshot=AsyncMock(return_value=b"fake-png"),
-    ))
+    page.query_selector = AsyncMock(
+        return_value=MagicMock(
+            screenshot=AsyncMock(return_value=b"fake-png"),
+        )
+    )
     page.fill = AsyncMock()
     solver = CaptchaSolver(
         vision_fn=AsyncMock(return_value="XY42Z"),

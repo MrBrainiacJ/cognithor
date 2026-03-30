@@ -395,8 +395,10 @@ class Gatekeeper:
         # --- Step 6b: Risk ceiling enforcement (ATL) ---
         if risk_ceiling is not None:
             _risk_order = {
-                RiskLevel.GREEN: 0, RiskLevel.YELLOW: 1,
-                RiskLevel.ORANGE: 2, RiskLevel.RED: 3,
+                RiskLevel.GREEN: 0,
+                RiskLevel.YELLOW: 1,
+                RiskLevel.ORANGE: 2,
+                RiskLevel.RED: 3,
             }
             _ceiling_map = {"GREEN": RiskLevel.GREEN, "YELLOW": RiskLevel.YELLOW}
             ceiling_level = _ceiling_map.get(risk_ceiling.upper())

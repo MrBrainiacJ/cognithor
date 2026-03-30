@@ -1,4 +1,5 @@
 """Tests for Token Validator."""
+
 from __future__ import annotations
 
 from dataclasses import replace

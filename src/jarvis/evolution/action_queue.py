@@ -1,4 +1,5 @@
 """ATL ActionQueue — priority-based action queue with blocked types."""
+
 from __future__ import annotations
 
 import heapq

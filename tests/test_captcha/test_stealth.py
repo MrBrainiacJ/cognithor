@@ -1,4 +1,5 @@
 """Tests for browser stealth configuration."""
+
 from __future__ import annotations
 
 from jarvis.browser.captcha.stealth import (

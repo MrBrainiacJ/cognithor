@@ -1,4 +1,5 @@
 """AACS Token Validator — signature, expiry, nonce and revocation checks."""
+
 from __future__ import annotations
 
 import time

@@ -1,4 +1,5 @@
 """ATL GoalManager — structured goal tracking with YAML persistence."""
+
 from __future__ import annotations
 
 import uuid
@@ -125,9 +126,11 @@ class GoalManager:
     def migrate_learning_goals(self, old_goals: list[str]) -> None:
         """Convert plain string goals into structured Goal objects."""
         for title in old_goals:
-            self.add_goal(Goal(
-                title=title,
-                description=title,
-                priority=3,
-                source="user",
-            ))
+            self.add_goal(
+                Goal(
+                    title=title,
+                    description=title,
+                    priority=3,
+                    source="user",
+                )
+            )

@@ -1,4 +1,5 @@
 """Tests for ATL ActionQueue."""
+
 from __future__ import annotations
 
 from jarvis.evolution.action_queue import ActionQueue, ATLAction

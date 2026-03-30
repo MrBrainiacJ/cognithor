@@ -1,4 +1,5 @@
 """Tests for ATL thinking cycle integration in EvolutionLoop."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -24,24 +25,35 @@ def make_loop(tmp_path):
 
         if quiet_hours:
             loop._atl_config = ATLConfig(
-                enabled=True, quiet_hours_start="00:00", quiet_hours_end="23:59",
+                enabled=True,
+                quiet_hours_start="00:00",
+                quiet_hours_end="23:59",
             )
         else:
             loop._atl_config = ATLConfig(
-                enabled=True, quiet_hours_start="03:00", quiet_hours_end="04:00",
+                enabled=True,
+                quiet_hours_start="03:00",
+                quiet_hours_end="04:00",
             )
 
         gm = GoalManager(goals_path=tmp_path / "goals.yaml")
-        gm.add_goal(Goal(
-            id="g_test", title="Test goal", description="A test",
-            priority=2, source="user",
-        ))
+        gm.add_goal(
+            Goal(
+                id="g_test",
+                title="Test goal",
+                description="A test",
+                priority=2,
+                source="user",
+            )
+        )
         loop._goal_manager = gm
         loop._atl_journal = ATLJournal(journal_dir=tmp_path / "journal")
 
         if llm_response is not None:
+
             async def mock_llm(prompt):
                 return llm_response
+
             loop._llm_fn = mock_llm
 
         return loop
@@ -77,14 +89,17 @@ async def test_thinking_cycle_skips_no_llm(make_loop):
 @pytest.mark.asyncio
 async def test_thinking_cycle_runs_with_valid_response(make_loop):
     import json
-    response = json.dumps({
-        "summary": "Evaluated test goal, looking good",
-        "goal_evaluations": [{"goal_id": "g_test", "progress_delta": 0.1, "note": "progress"}],
-        "proposed_actions": [],
-        "wants_to_notify": False,
-        "notification": None,
-        "priority": "low",
-    })
+
+    response = json.dumps(
+        {
+            "summary": "Evaluated test goal, looking good",
+            "goal_evaluations": [{"goal_id": "g_test", "progress_delta": 0.1, "note": "progress"}],
+            "proposed_actions": [],
+            "wants_to_notify": False,
+            "notification": None,
+            "priority": "low",
+        }
+    )
     loop = make_loop(idle=True, llm_response=response)
     result = await loop.thinking_cycle()
     assert not result.skipped
@@ -106,14 +121,17 @@ async def test_thinking_cycle_handles_invalid_llm_response(make_loop):
 @pytest.mark.asyncio
 async def test_thinking_cycle_writes_journal(make_loop):
     import json
-    response = json.dumps({
-        "summary": "Journal test cycle",
-        "goal_evaluations": [],
-        "proposed_actions": [],
-        "wants_to_notify": False,
-        "notification": None,
-        "priority": "low",
-    })
+
+    response = json.dumps(
+        {
+            "summary": "Journal test cycle",
+            "goal_evaluations": [],
+            "proposed_actions": [],
+            "wants_to_notify": False,
+            "notification": None,
+            "priority": "low",
+        }
+    )
     loop = make_loop(idle=True, llm_response=response)
     await loop.thinking_cycle()
     journal_content = loop._atl_journal.today()

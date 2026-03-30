@@ -1,4 +1,5 @@
 """ATL Journal — daily markdown journal for thinking cycles."""
+
 from __future__ import annotations
 
 import datetime

@@ -1,4 +1,5 @@
 """Tests for CAPTCHA solve strategies."""
+
 from __future__ import annotations
 
 from jarvis.browser.captcha.models import CaptchaType
@@ -56,9 +57,14 @@ def test_parse_grid_coordinates_empty():
 
 
 def test_get_strategy_returns_callable():
-    for ct in [CaptchaType.TEXT, CaptchaType.RECAPTCHA_V2_CHECKBOX,
-               CaptchaType.RECAPTCHA_V2_IMAGE, CaptchaType.HCAPTCHA,
-               CaptchaType.TURNSTILE, CaptchaType.FUNCAPTCHA]:
+    for ct in [
+        CaptchaType.TEXT,
+        CaptchaType.RECAPTCHA_V2_CHECKBOX,
+        CaptchaType.RECAPTCHA_V2_IMAGE,
+        CaptchaType.HCAPTCHA,
+        CaptchaType.TURNSTILE,
+        CaptchaType.FUNCAPTCHA,
+    ]:
         s = get_strategy(ct)
         assert s is not None
         assert callable(s)

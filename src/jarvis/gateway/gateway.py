@@ -1337,10 +1337,14 @@ class Gateway:
                                             if start <= d <= end:
                                                 p = ep_dir / f"{d.isoformat()}.md"
                                                 if p.exists():
-                                                    entries.append(p.read_text(encoding="utf-8")[:2000])
+                                                    entries.append(
+                                                        p.read_text(encoding="utf-8")[:2000]
+                                                    )
                                         if entries:
                                             compressed = compressor.compress_heuristic(
-                                                entries, start.isoformat(), end.isoformat(),
+                                                entries,
+                                                start.isoformat(),
+                                                end.isoformat(),
                                             )
                                             if compressed:
                                                 log.info(
@@ -3624,7 +3628,11 @@ class Gateway:
                     try:
                         applied = self._session_analyzer.apply_improvement(imp)
                         if applied:
-                            log.info("session_improvement_applied", action=imp.action_type, target=imp.target)
+                            log.info(
+                                "session_improvement_applied",
+                                action=imp.action_type,
+                                target=imp.target,
+                            )
                     except Exception:
                         log.debug("session_improvement_apply_failed", exc_info=True)
             except Exception:

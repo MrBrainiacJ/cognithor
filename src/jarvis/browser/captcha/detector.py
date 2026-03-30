@@ -1,4 +1,5 @@
 """CAPTCHA detector — scans a page for CAPTCHA elements via JavaScript injection."""
+
 from __future__ import annotations
 
 from jarvis.browser.captcha.models import CaptchaChallenge, CaptchaType

@@ -1,4 +1,5 @@
 """CAPTCHA Solver — orchestrator: detect, classify, solve, retry, learn."""
+
 from __future__ import annotations
 
 import time

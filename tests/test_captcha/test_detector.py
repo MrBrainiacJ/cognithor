@@ -1,4 +1,5 @@
 """Tests for CAPTCHA detector."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -58,10 +59,12 @@ async def test_detect_none():
 
 @pytest.mark.asyncio
 async def test_detect_multiple():
-    page = _mock_page([
-        {"type": "recaptcha_v2", "selector": ".g-recaptcha", "sitekey": "abc"},
-        {"type": "hcaptcha", "selector": ".h-captcha", "sitekey": "def"},
-    ])
+    page = _mock_page(
+        [
+            {"type": "recaptcha_v2", "selector": ".g-recaptcha", "sitekey": "abc"},
+            {"type": "hcaptcha", "selector": ".h-captcha", "sitekey": "def"},
+        ]
+    )
     challenges = await detect_captcha(page)
     assert len(challenges) == 2
 

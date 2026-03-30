@@ -1,4 +1,5 @@
 """Tests for Gatekeeper risk ceiling (ATL Phase 6)."""
+
 from __future__ import annotations
 
 import pytest

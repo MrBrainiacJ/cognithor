@@ -452,8 +452,7 @@ def register_browser_use_tools(
     mcp_client.register_builtin_handler(
         tool_name="browser_solve_captcha",
         description=(
-            "Erkennt und loest ein CAPTCHA auf der aktuellen "
-            "Browser-Seite via Vision-LLM."
+            "Erkennt und loest ein CAPTCHA auf der aktuellen Browser-Seite via Vision-LLM."
         ),
         input_schema={
             "max_retries": {

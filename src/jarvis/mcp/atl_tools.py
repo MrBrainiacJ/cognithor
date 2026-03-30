@@ -5,6 +5,7 @@ Provides three tools for inspecting and managing the Autonomous Thinking Loop:
   - atl_goals:   List / add / pause / resume / complete goals
   - atl_journal:  Read daily ATL journal entries
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -80,9 +81,7 @@ async def atl_goals(
             return "Keine aktiven Ziele."
         lines: list[str] = []
         for g in goals:
-            lines.append(
-                f"- {g.id}: {g.title} ({g.progress:.0%}) [P{g.priority}, {g.source}]"
-            )
+            lines.append(f"- {g.id}: {g.title} ({g.progress:.0%}) [P{g.priority}, {g.source}]")
             if g.success_criteria:
                 for sc in g.success_criteria:
                     lines.append(f"    * {sc}")

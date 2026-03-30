@@ -1,4 +1,5 @@
 """CAPTCHA solve strategies — one async function per captcha type."""
+
 from __future__ import annotations
 
 import base64
@@ -150,9 +151,7 @@ async def checkbox_strategy(
         await page.wait_for_timeout(3000)
 
         # Check if an image challenge appeared (not solved yet)
-        image_challenge = await page.query_selector(
-            'iframe[src*="recaptcha/api2/bframe"]'
-        )
+        image_challenge = await page.query_selector('iframe[src*="recaptcha/api2/bframe"]')
         solved = image_challenge is None
 
         return SolveResult(
@@ -186,8 +185,7 @@ async def image_grid_strategy(
     try:
         # Screenshot the challenge iframe area
         iframe_el = await page.query_selector(
-            'iframe[src*="recaptcha/api2/bframe"], '
-            'iframe[src*="hcaptcha.com/captcha"]'
+            'iframe[src*="recaptcha/api2/bframe"], iframe[src*="hcaptcha.com/captcha"]'
         )
         if not iframe_el:
             iframe_el = await page.query_selector(challenge.selector)
@@ -307,8 +305,7 @@ async def generic_strategy(
         screenshot_b64 = base64.b64encode(screenshot).decode()
         description = await vision_fn(
             screenshot_b64,
-            "Describe the CAPTCHA on this page and how to solve it. "
-            "Be concise.",
+            "Describe the CAPTCHA on this page and how to solve it. Be concise.",
         )
         return SolveResult(
             success=False,

@@ -1,4 +1,5 @@
 """Tests for AACS Capability Token data model."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -10,6 +11,7 @@ from jarvis.aacs.tokens.capability_token import (
 )
 
 # ---- ActionVerb -----------------------------------------------------------
+
 
 def test_action_verb_values():
     assert set(ActionVerb) == {
@@ -25,6 +27,7 @@ def test_action_verb_values():
 
 
 # ---- Action matching -------------------------------------------------------
+
 
 def test_action_exact_match():
     action = Action(resource="mcp.tool.web_search", verb=ActionVerb.EXECUTE)
@@ -57,6 +60,7 @@ def test_action_is_subset_of():
 
 # ---- CapabilityToken defaults ----------------------------------------------
 
+
 def test_token_defaults():
     token = CapabilityToken(
         token_id="tok-1",
@@ -74,6 +78,7 @@ def test_token_defaults():
 
 
 # ---- Expiry ----------------------------------------------------------------
+
 
 def test_token_expiry():
     past = datetime.now(UTC) - timedelta(seconds=10)
@@ -108,14 +113,13 @@ def test_token_expiry():
 
 # ---- Action authorisation ---------------------------------------------------
 
+
 def test_token_action_allowed():
     token = CapabilityToken(
         token_id="tok-a",
         issuer_did="did:jarvis:root",
         subject_did="did:jarvis:agent-1",
-        allowed_actions=(
-            Action(resource="mcp.tool.*", verb=ActionVerb.EXECUTE),
-        ),
+        allowed_actions=(Action(resource="mcp.tool.*", verb=ActionVerb.EXECUTE),),
     )
     assert token.check_action_allowed("mcp.tool.web_search", ActionVerb.EXECUTE) is True
     assert token.check_action_allowed("mcp.memory", ActionVerb.EXECUTE) is False
@@ -126,18 +130,15 @@ def test_token_deny_overrides_allow():
         token_id="tok-d",
         issuer_did="did:jarvis:root",
         subject_did="did:jarvis:agent-1",
-        allowed_actions=(
-            Action(resource="mcp.tool.*", verb=ActionVerb.EXECUTE),
-        ),
-        denied_actions=(
-            Action(resource="mcp.tool.shell_exec", verb=ActionVerb.EXECUTE),
-        ),
+        allowed_actions=(Action(resource="mcp.tool.*", verb=ActionVerb.EXECUTE),),
+        denied_actions=(Action(resource="mcp.tool.shell_exec", verb=ActionVerb.EXECUTE),),
     )
     assert token.check_action_allowed("mcp.tool.web_search", ActionVerb.EXECUTE) is True
     assert token.check_action_allowed("mcp.tool.shell_exec", ActionVerb.EXECUTE) is False
 
 
 # ---- Payload determinism & hashing -----------------------------------------
+
 
 def test_token_payload_bytes_deterministic():
     now = datetime(2026, 1, 1, tzinfo=UTC)
@@ -171,6 +172,7 @@ def test_token_compute_hash():
 
 # ---- Delegation ------------------------------------------------------------
 
+
 def test_token_can_delegate():
     no_del = CapabilityToken(
         token_id="tok-nd",
@@ -192,6 +194,7 @@ def test_token_can_delegate():
 
 
 # ---- Attenuation validation ------------------------------------------------
+
 
 def test_token_attenuation_valid():
     now = datetime.now(UTC)

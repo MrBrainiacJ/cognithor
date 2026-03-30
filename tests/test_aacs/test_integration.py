@@ -1,4 +1,5 @@
 """Integration test: full PGE token flow."""
+
 from __future__ import annotations
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -67,15 +68,9 @@ def test_full_pge_token_flow():
     assert result2.valid, f"Exec token invalid: {result2.error}"
 
     # Step 3: Check executor permissions
-    assert exec_token.check_action_allowed(
-        "mcp.tool.web_search", ActionVerb.EXECUTE
-    )
-    assert not exec_token.check_action_allowed(
-        "mcp.tool.exec_command", ActionVerb.EXECUTE
-    )
-    assert not exec_token.check_action_allowed(
-        "memory.tier.3", ActionVerb.READ
-    )
+    assert exec_token.check_action_allowed("mcp.tool.web_search", ActionVerb.EXECUTE)
+    assert not exec_token.check_action_allowed("mcp.tool.exec_command", ActionVerb.EXECUTE)
+    assert not exec_token.check_action_allowed("memory.tier.3", ActionVerb.READ)
 
     # Step 4: Executor cannot delegate further
     assert not exec_token.can_delegate()

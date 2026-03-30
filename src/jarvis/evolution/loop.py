@@ -302,10 +302,10 @@ class EvolutionLoop:
 
         # Build context
         goals = self._goal_manager.active_goals()
-        goals_fmt = "\n".join(
-            f"- {g.id}: {g.title} ({g.progress:.0%}) [P{g.priority}]"
-            for g in goals
-        ) or "Keine aktiven Ziele."
+        goals_fmt = (
+            "\n".join(f"- {g.id}: {g.title} ({g.progress:.0%}) [P{g.priority}]" for g in goals)
+            or "Keine aktiven Ziele."
+        )
 
         recent = ""
         if self._atl_journal:
@@ -362,12 +362,14 @@ class EvolutionLoop:
                 blocked_types=blocked,
             )
             for a in thought.proposed_actions:
-                queue.enqueue(ATLAction(
-                    type=a.get("type", "unknown"),
-                    params=a.get("params", {}),
-                    priority=a.get("priority", 3),
-                    rationale=a.get("rationale", ""),
-                ))
+                queue.enqueue(
+                    ATLAction(
+                        type=a.get("type", "unknown"),
+                        params=a.get("params", {}),
+                        priority=a.get("priority", 3),
+                        rationale=a.get("rationale", ""),
+                    )
+                )
 
             _action_map = {
                 "research": "search_and_read",
@@ -395,14 +397,10 @@ class EvolutionLoop:
                     params.setdefault("tier", "semantic")
                 try:
                     await self._mcp_client.call_tool(tool_name, params)
-                    executed_actions.append(
-                        f"[OK] {action.type}: {action.rationale[:60]}"
-                    )
+                    executed_actions.append(f"[OK] {action.type}: {action.rationale[:60]}")
                     log.info("atl_action_executed", type=action.type, tool=tool_name)
                 except Exception as exc:
-                    executed_actions.append(
-                        f"[FAIL] {action.type}: {exc!s:.60}"
-                    )
+                    executed_actions.append(f"[FAIL] {action.type}: {exc!s:.60}")
                     log.debug("atl_action_failed", type=action.type, error=str(exc)[:80])
 
         # Journal

@@ -1,4 +1,5 @@
 """Tests for ATL GoalManager."""
+
 from __future__ import annotations
 
 import pytest
@@ -12,11 +13,15 @@ def gm(tmp_path):
 
 
 def test_add_and_list_goals(gm):
-    gm.add_goal(Goal(
-        id="g_001", title="Learn Solvency II",
-        description="Full knowledge of insurance regulation",
-        priority=2, source="user",
-    ))
+    gm.add_goal(
+        Goal(
+            id="g_001",
+            title="Learn Solvency II",
+            description="Full knowledge of insurance regulation",
+            priority=2,
+            source="user",
+        )
+    )
     goals = gm.active_goals()
     assert len(goals) == 1
     assert goals[0].id == "g_001"
