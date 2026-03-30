@@ -364,7 +364,10 @@ class EvolutionLoop:
         result.thought = thought.summary
         result.research_topic = thought.summary[:100]
 
-        # Apply goal evaluations
+        # Metric-based progress: compute from DeepLearner data, override LLM guesses
+        self._update_goal_progress_from_metrics(goals)
+
+        # Apply LLM goal evaluations (only if metrics didn't already set progress)
         for ev in thought.goal_evaluations:
             gid = ev.get("goal_id", "")
             delta = ev.get("progress_delta", 0.0)
@@ -482,6 +485,75 @@ class EvolutionLoop:
             return start <= now <= end
         # Wrap around midnight (e.g., 23:00 to 07:00)
         return now >= start or now <= end
+
+    def _update_goal_progress_from_metrics(self, goals: list) -> None:
+        """Compute goal progress from DeepLearner metrics instead of LLM guesses.
+
+        Progress formula (weighted):
+          40% coverage (0-1 from DeepLearner)
+          30% subgoal completion ratio
+          20% quality score (0-1 from QualityAssessor)
+          10% chunk density (normalized: 100+ chunks = 1.0)
+
+        This gives objective, measurable progress instead of LLM speculation.
+        """
+        if not self._deep_learner or not self._goal_manager:
+            return
+
+        plans = self._deep_learner.list_plans()
+        if not plans:
+            return
+
+        for goal in goals:
+            # Match goal to DeepLearner plan by title similarity
+            best_plan = None
+            best_score = 0.0
+            goal_words = set(goal.title.lower().split())
+            for plan in plans:
+                plan_words = set(plan.goal.lower().split())
+                overlap = len(goal_words & plan_words)
+                if overlap > best_score:
+                    best_score = overlap
+                    best_plan = plan
+            if not best_plan or best_score < 2:
+                continue  # No matching plan found
+
+            # Calculate progress from metrics
+            coverage = best_plan.coverage_score or 0.0
+            quality = best_plan.quality_score or 0.0
+            total_sg = len(best_plan.sub_goals) or 1
+            done_sg = sum(1 for sg in best_plan.sub_goals if sg.status in ("passed", "done"))
+            subgoal_ratio = done_sg / total_sg
+            chunks = best_plan.total_chunks_indexed or 0
+            chunk_density = min(1.0, chunks / 100.0)
+
+            progress = (
+                0.40 * coverage + 0.30 * subgoal_ratio + 0.20 * quality + 0.10 * chunk_density
+            )
+            progress = round(min(1.0, max(0.0, progress)), 2)
+
+            # Only update if metric-based progress differs from current
+            current = goal.progress
+            if abs(progress - current) >= 0.01:
+                delta = progress - current
+                try:
+                    self._goal_manager.update_progress(
+                        goal.id,
+                        delta,
+                        f"Metrisch: Cov={coverage:.0%} SG={done_sg}/{total_sg} "
+                        f"Q={quality:.0%} Chunks={chunks}",
+                    )
+                    log.info(
+                        "atl_goal_progress_metric",
+                        goal=goal.title[:40],
+                        old=f"{current:.0%}",
+                        new=f"{progress:.0%}",
+                        coverage=f"{coverage:.0%}",
+                        subgoals=f"{done_sg}/{total_sg}",
+                        quality=f"{quality:.0%}",
+                    )
+                except Exception:
+                    log.debug("atl_metric_progress_failed", goal_id=goal.id, exc_info=True)
 
     def _should_think(self) -> bool:
         """Check if it's time for a thinking cycle vs learning cycle."""
