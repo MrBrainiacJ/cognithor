@@ -465,14 +465,19 @@ class EvolutionLoop:
         return result
 
     def _in_quiet_hours(self) -> bool:
-        """Check if current time is within ATL quiet hours."""
+        """Check if current time is within ATL quiet hours.
+
+        Returns False (quiet hours disabled) when start or end is empty.
+        """
         if not self._atl_config:
             return False
+        start = self._atl_config.quiet_hours_start
+        end = self._atl_config.quiet_hours_end
+        if not start or not end:
+            return False  # Disabled until user configures via Flutter UI
         from datetime import datetime
 
         now = datetime.now().strftime("%H:%M")
-        start = self._atl_config.quiet_hours_start
-        end = self._atl_config.quiet_hours_end
         if start <= end:
             return start <= now <= end
         # Wrap around midnight (e.g., 23:00 to 07:00)
