@@ -465,8 +465,24 @@ class OpenAIBackend(LLMBackend):
                     )
 
             usage = data.get("usage", {})
+            # qwen3.5 and other reasoning models may return reasoning_content
+            # instead of content (think tokens). Fall back to reasoning_content
+            # if content is empty.
+            content = msg.get("content", "") or ""
+            if not content:
+                content = msg.get("reasoning_content", "") or ""
+                # Strip <think> tags if present in reasoning content
+                if content:
+                    import re as _re_think
+
+                    content = (
+                        _re_think.sub(
+                            r"<think>.*?</think>\s*", "", content, flags=_re_think.DOTALL
+                        ).strip()
+                        or content
+                    )
             return ChatResponse(
-                content=msg.get("content", "") or "",
+                content=content,
                 tool_calls=tool_calls,
                 model=data.get("model", model),
                 usage={
