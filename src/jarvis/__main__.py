@@ -1537,6 +1537,9 @@ def main() -> None:
                     "host": api_host,
                     "port": args.api_port,
                     "log_level": "warning",
+                    # Use h11 on Windows to avoid ProactorEventLoop WSASend
+                    # "buffer too large" crash with responses >64KB.
+                    "http": "h11" if sys.platform == "win32" else "auto",
                 }
                 if _mtls_certs_dir is not None:
                     # mTLS: Server-Zertifikat + Client-Verifizierung
