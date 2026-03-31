@@ -82,6 +82,10 @@ class CoreMemory:
                 return value
         return ""
 
+    # CORE.md should never exceed this size. A healthy CORE.md is 1-50 KB.
+    # If it grows beyond this, something is appending in a loop.
+    _MAX_CORE_BYTES = 1_000_000  # 1 MB
+
     def save(self, content: str | None = None) -> None:
         """Save CORE.md to disk.
 
@@ -91,6 +95,17 @@ class CoreMemory:
         if content is not None:
             self._content = content
             self._sections = self._parse_sections(content)
+
+        # Guard: prevent runaway growth that killed 24 GB of RAM
+        size = len(self._content.encode("utf-8"))
+        if size > self._MAX_CORE_BYTES:
+            logger.error(
+                "core_memory_too_large",
+                size_bytes=size,
+                max_bytes=self._MAX_CORE_BYTES,
+                hint="CORE.md growth blocked — possible append loop",
+            )
+            return
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
         if _efile is not None:
