@@ -472,8 +472,7 @@ def main() -> None:
                 import time as _time
                 from collections import defaultdict as _defaultdict
 
-                from starlette.middleware.base import BaseHTTPMiddleware
-                from starlette.responses import JSONResponse as _JSONResponse
+                from starlette.types import ASGIApp, Receive, Scope, Send
 
                 _rate_limit = int(os.environ.get("JARVIS_API_RATE_LIMIT", "60"))
                 _rate_window = 60.0  # seconds
@@ -489,27 +488,43 @@ def main() -> None:
                 )
                 _rate_hits: dict[str, list[float]] = _defaultdict(list)
 
-                class _RateLimitMiddleware(BaseHTTPMiddleware):
-                    async def dispatch(self, request, call_next):
-                        path = request.url.path
+                # Pure ASGI middleware — does NOT buffer responses (unlike
+                # BaseHTTPMiddleware which causes "buffer too large" crashes
+                # on Windows ProactorEventLoop for responses >64KB).
+                class _RateLimitMiddleware:
+                    def __init__(self, app: ASGIApp) -> None:
+                        self.app = app
+
+                    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+                        if scope["type"] != "http":
+                            await self.app(scope, receive, send)
+                            return
+                        path = scope.get("path", "")
                         if path in _rate_exempt or path.startswith(_rate_exempt_prefixes):
-                            return await call_next(request)
-                        client = request.client.host if request.client else "unknown"
+                            await self.app(scope, receive, send)
+                            return
+                        client = (scope.get("client") or ("unknown",))[0]
                         now = _time.monotonic()
                         hits = _rate_hits[client]
-                        # Purge expired entries
                         cutoff = now - _rate_window
                         _rate_hits[client] = hits = [t for t in hits if t > cutoff]
                         if len(hits) >= _rate_limit:
-                            return _JSONResponse(
+                            await send(
                                 {
-                                    "error": "Too many requests",
-                                    "retry_after_seconds": int(_rate_window),
-                                },
-                                status_code=429,
+                                    "type": "http.response.start",
+                                    "status": 429,
+                                    "headers": [(b"content-type", b"application/json")],
+                                }
                             )
+                            await send(
+                                {
+                                    "type": "http.response.body",
+                                    "body": b'{"error":"Too many requests","retry_after_seconds":60}',
+                                }
+                            )
+                            return
                         hits.append(now)
-                        return await call_next(request)
+                        await self.app(scope, receive, send)
 
                 api_app.add_middleware(_RateLimitMiddleware)
 
@@ -1537,9 +1552,7 @@ def main() -> None:
                     "host": api_host,
                     "port": args.api_port,
                     "log_level": "warning",
-                    # Use h11 on Windows to avoid ProactorEventLoop WSASend
-                    # "buffer too large" crash with responses >64KB.
-                    "http": "h11" if sys.platform == "win32" else "auto",
+                    "http": "auto",
                 }
                 if _mtls_certs_dir is not None:
                     # mTLS: Server-Zertifikat + Client-Verifizierung
@@ -1809,11 +1822,6 @@ def main() -> None:
             log.info("jarvis_stopped")
 
     try:
-        # On Windows, use SelectorEventLoop to avoid ProactorEventLoop's
-        # WSASend "buffer too large" crash with responses >64KB.
-        # ProactorEventLoop is the default on Windows but has this hard limit.
-        if sys.platform == "win32":
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         asyncio.run(run())
     except KeyboardInterrupt:
         log.info("jarvis_shutdown_by_user")
