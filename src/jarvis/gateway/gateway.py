@@ -837,11 +837,12 @@ class Gateway:
         rollenbasierte Tool-Abschnitte. Faellt auf die alte statische Methode
         zurueck, wenn die DB nicht verfuegbar ist.
         """
-        core_path = self._config.core_memory_file
-        if not core_path or not core_path.exists():
+        if not self._memory_manager or not hasattr(self._memory_manager, "_core"):
             return
-
-        content = core_path.read_text(encoding="utf-8")
+        core = self._memory_manager._core
+        content = core.content
+        if not content:
+            return
         language = getattr(self._config, "language", "de")
 
         # Try DB-backed generation
@@ -972,7 +973,7 @@ class Gateway:
         else:
             content = content.rstrip() + "\n\n---\n\n" + inventory + "\n"
 
-        core_path.write_text(content, encoding="utf-8")
+        core.save(content)
         log.info(
             "core_inventory_synced",
             tools=tool_count,
