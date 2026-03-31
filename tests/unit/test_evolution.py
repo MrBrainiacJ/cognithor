@@ -367,3 +367,118 @@ class TestATLSynthesis:
         )
 
         assert result is None
+
+
+class TestATLAutoPersist:
+    """ATL auto-persists search_and_read results through KnowledgeBuilder."""
+
+    @pytest.mark.asyncio
+    async def test_research_result_persisted(self):
+        """search_and_read result flows through synthesis -> KnowledgeBuilder."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from jarvis.evolution.loop import EvolutionLoop
+
+        loop = EvolutionLoop.__new__(EvolutionLoop)
+        loop._llm_fn = AsyncMock(
+            return_value=(
+                "## ARC-AGI Strategien\n"
+                "- CNN+Graph Ansaetze dominieren (Quelle: kaggle.com)\n"
+                "- Stochastic Goose erreicht 45% Accuracy\n"
+            )
+        )
+        loop._mcp_client = AsyncMock()
+        loop._deep_learner = MagicMock()
+        loop._deep_learner._plans_dir = MagicMock()
+        loop._deep_learner._plans_dir.parent = MagicMock()
+
+        goal = MagicMock()
+        goal.title = "Werde Experte fuer ARC-AGI-3 Strategien"
+        goal.id = "arc-agi"
+
+        mock_builder = AsyncMock()
+        mock_build_result = MagicMock()
+        mock_build_result.errors = []
+        mock_build_result.chunks_created = 3
+        mock_builder.build = AsyncMock(return_value=mock_build_result)
+
+        loop._atl_knowledge_builders = {"arc-agi": mock_builder}
+        loop._atl_persisted_queries = set()
+
+        action = MagicMock()
+        action.type = "research"
+        action.rationale = "ARC-AGI-3 Strategien research"
+        action.params = {"query": "ARC-AGI-3 Strategien"}
+
+        await loop._persist_research_result(
+            tool_result="Long research text about ARC-AGI strategies " * 20,
+            action=action,
+            goals=[goal],
+        )
+
+        assert loop._llm_fn.call_count == 1
+        mock_builder.build.assert_called_once()
+        call_args = mock_builder.build.call_args
+        fetch_result = call_args[0][0]
+        assert "ARC-AGI" in fetch_result.text
+        assert fetch_result.source_type == "atl_research"
+
+    @pytest.mark.asyncio
+    async def test_dedup_prevents_double_persist(self):
+        from unittest.mock import AsyncMock, MagicMock
+
+        from jarvis.evolution.loop import EvolutionLoop
+
+        loop = EvolutionLoop.__new__(EvolutionLoop)
+        loop._llm_fn = AsyncMock(return_value="## Note\n- Fact 1\n")
+        loop._atl_persisted_queries = {"arc-agi-3 strategies"}
+
+        goal = MagicMock()
+        goal.title = "ARC-AGI-3 Strategien"
+        goal.id = "arc"
+
+        mock_builder = AsyncMock()
+        loop._atl_knowledge_builders = {"arc": mock_builder}
+
+        action = MagicMock()
+        action.rationale = "ARC strategies"
+        action.params = {"query": "ARC-AGI-3 strategies"}
+
+        await loop._persist_research_result(
+            tool_result="some text " * 50,
+            action=action,
+            goals=[goal],
+        )
+
+        loop._llm_fn.assert_not_called()
+        mock_builder.build.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_no_persist_when_synthesis_returns_none(self):
+        from unittest.mock import AsyncMock, MagicMock
+
+        from jarvis.evolution.loop import EvolutionLoop
+
+        loop = EvolutionLoop.__new__(EvolutionLoop)
+        loop._llm_fn = AsyncMock(return_value="KEINE_RELEVANZ")
+        loop._mcp_client = AsyncMock()
+        loop._atl_persisted_queries = set()
+
+        goal = MagicMock()
+        goal.title = "Cybersecurity Experte"
+        goal.id = "cyber"
+
+        mock_builder = AsyncMock()
+        loop._atl_knowledge_builders = {"cyber": mock_builder}
+
+        action = MagicMock()
+        action.rationale = "Cybersecurity research"
+        action.params = {"query": "irrelevant cooking recipes"}
+
+        await loop._persist_research_result(
+            tool_result="Recipe for chocolate cake " * 50,
+            action=action,
+            goals=[goal],
+        )
+
+        mock_builder.build.assert_not_called()

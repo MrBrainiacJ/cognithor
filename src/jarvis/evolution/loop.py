@@ -134,6 +134,8 @@ class EvolutionLoop:
         self._goal_manager: Any = None  # Set by gateway: GoalManager
         self._atl_journal: Any = None  # Set by gateway: ATLJournal
         self._atl_cycle_count = 0
+        self._atl_knowledge_builders: dict[str, Any] = {}  # goal_id -> KnowledgeBuilder
+        self._atl_persisted_queries: set[str] = set()
         self._last_thinking_time = time.monotonic()
 
     async def _synthesize_for_goal(
@@ -175,6 +177,99 @@ class EvolutionLoop:
         except Exception:
             log.debug("atl_synthesis_failed", exc_info=True)
             return None
+
+    def _create_builder_for_goal(self, goal: Any) -> Any | None:
+        """Lazily create a KnowledgeBuilder for an ATL goal."""
+        if not self._deep_learner or not self._mcp_client:
+            return None
+        try:
+            from jarvis.evolution.goal_index import GoalScopedIndex
+            from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+
+            # Use same index base as deep_learner
+            index_base = self._deep_learner._plans_dir.parent / "indexes"
+            goal_slug = goal.id
+            goal_index = GoalScopedIndex(goal_slug=goal_slug, base_dir=index_base)
+
+            return KnowledgeBuilder(
+                mcp_client=self._mcp_client,
+                llm_fn=self._llm_fn,
+                goal_slug=goal_slug,
+                goal_index=goal_index,
+            )
+        except Exception:
+            log.debug("atl_builder_creation_failed", exc_info=True)
+            return None
+
+    async def _persist_research_result(
+        self,
+        tool_result: Any,
+        action: Any,
+        goals: list,
+    ) -> None:
+        """Persist a search_and_read result: match goal, dedup, synthesize, build.
+
+        This is the core of Cognithor's intelligent learning during idle time.
+        Rather than dumping raw web scrapes, it synthesizes findings like an
+        expert taking structured notes.
+        """
+        result_text = str(tool_result)
+        if len(result_text) < 200:
+            return
+
+        # Goal matching
+        goal = _match_goal_for_action(action, goals)
+        if not goal:
+            log.debug("atl_persist_no_goal_match", rationale=getattr(action, "rationale", "")[:60])
+            return
+
+        # Dedup: skip if this query was already persisted this session
+        query_key = getattr(action, "params", {}).get("query", "")[:100].lower().strip()
+        if query_key in self._atl_persisted_queries:
+            log.debug("atl_persist_dedup_skip", query=query_key[:60])
+            return
+
+        # Synthesis: extract relevant findings
+        synthesis = await self._synthesize_for_goal(
+            research_text=result_text,
+            goal_title=goal.title,
+            query=query_key,
+        )
+        if not synthesis:
+            log.debug("atl_persist_no_relevance", goal=goal.title[:40], query=query_key[:40])
+            return
+
+        # Get or create KnowledgeBuilder for this goal
+        builder = self._atl_knowledge_builders.get(goal.id)
+        if not builder:
+            builder = self._create_builder_for_goal(goal)
+            if not builder:
+                return
+            self._atl_knowledge_builders[goal.id] = builder
+
+        # Build knowledge from synthesized text
+        from jarvis.evolution.research_agent import FetchResult
+
+        fetch = FetchResult(
+            url=query_key or "atl-research",
+            text=synthesis,
+            title=f"ATL: {getattr(action, 'rationale', '')[:80]}",
+            source_type="atl_research",
+        )
+        try:
+            build_result = await builder.build(fetch, skip_entity_extraction=True)
+            if build_result.errors:
+                log.debug("atl_persist_build_errors", errors=build_result.errors[:2])
+            else:
+                self._atl_persisted_queries.add(query_key)
+                log.info(
+                    "atl_research_persisted",
+                    goal=goal.title[:40],
+                    chunks=build_result.chunks_created,
+                    query=query_key[:40],
+                )
+        except Exception:
+            log.debug("atl_persist_build_failed", exc_info=True)
 
     async def start(self) -> None:
         """Start the evolution background loop."""
@@ -498,9 +593,16 @@ class EvolutionLoop:
                     params.setdefault("content", action.rationale[:500])
                     params.setdefault("tier", "semantic")
                 try:
-                    await self._mcp_client.call_tool(tool_name, params)
+                    tool_result = await self._mcp_client.call_tool(tool_name, params)
                     executed_actions.append(f"[OK] {action.type}: {action.rationale[:60]}")
                     log.info("atl_action_executed", type=action.type, tool=tool_name)
+
+                    # Auto-persist: research results -> synthesis -> KnowledgeBuilder
+                    if tool_name == "search_and_read" and tool_result:
+                        try:
+                            await self._persist_research_result(tool_result, action, goals)
+                        except Exception:
+                            log.debug("atl_auto_persist_failed", exc_info=True)
                 except Exception as exc:
                     executed_actions.append(f"[FAIL] {action.type}: {exc!s:.60}")
                     log.debug("atl_action_failed", type=action.type, error=str(exc)[:80])
