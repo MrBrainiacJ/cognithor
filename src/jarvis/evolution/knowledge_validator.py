@@ -14,6 +14,16 @@ from typing import Any, Callable, Coroutine
 from jarvis.security.encrypted_db import encrypted_connect
 from jarvis.utils.logging import get_logger
 
+# Claims matching these patterns are PDF/web artifacts — skip validation entirely.
+_GARBAGE_CLAIM_RE = re.compile(
+    r"(Objekt.{0,5}\d+.{0,10}(Länge|Laenge|Length|ID)|"
+    r"FlateDecode|MediaBox|DeviceRGB|endobj|xref|%%EOF|"
+    r"Kompressionsfilter|Audiogerätesystem|grüne Buchse|"
+    r"Kreuzworträtsel|Wiktionary|Wikipedia.{0,10}Suche|"
+    r"^\d+ \d+ obj)",
+    re.IGNORECASE,
+)
+
 log = get_logger(__name__)
 
 __all__ = ["KnowledgeClaim", "KnowledgeValidator"]
@@ -300,8 +310,21 @@ class KnowledgeValidator:
         Skips already-debunked claims — no point re-challenging them.
         """
         weak = self.get_claims(goal_slug=goal_slug, max_confidence=0.6, limit=max_challenges + 10)
-        # Filter out debunked claims — they've already been proven false
-        weak = [c for c in weak if c.status != "debunked"][:max_challenges]
+        # Filter out debunked claims and PDF/web garbage artifacts
+        filtered = []
+        for c in weak:
+            if c.status == "debunked":
+                continue
+            if _GARBAGE_CLAIM_RE.search(c.claim):
+                # Auto-debunk garbage claims instead of wasting LLM time
+                c.status = "debunked"
+                c.confidence = 0.0
+                c.evidence_against = "Auto-debunked: PDF/web artifact pattern"
+                self._save_claim(c)
+                log.info("garbage_claim_auto_debunked", claim=c.claim[:50])
+                continue
+            filtered.append(c)
+        weak = filtered[:max_challenges]
         if not weak or not self._mcp:
             return weak
 
