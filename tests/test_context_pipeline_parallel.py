@@ -51,6 +51,7 @@ def _make_memory_manager(
     episodes: list[tuple[date, str]] | None = None,
 ) -> MagicMock:
     mm = MagicMock()
+    mm.search_memory = AsyncMock(return_value=search_results or [])
     mm.search_memory_sync.return_value = search_results or []
     episodic = MagicMock()
     episodic.get_recent.return_value = episodes or []
@@ -95,6 +96,7 @@ class TestWave1Parallel:
         self, pipeline: ContextPipeline, wm: WorkingMemory
     ) -> None:
         mm = MagicMock()
+        mm.search_memory = AsyncMock(side_effect=RuntimeError("BM25 crash"))
         mm.search_memory_sync.side_effect = RuntimeError("BM25 crash")
         mm.episodic = MagicMock()
         mm.episodic.get_recent.return_value = []
@@ -132,6 +134,7 @@ class TestWave1Parallel:
     ) -> None:
         results = [_make_search_result("memory ok", 0.7)]
         mm = MagicMock()
+        mm.search_memory = AsyncMock(return_value=results)
         mm.search_memory_sync.return_value = results
         mm.episodic = MagicMock()
         mm.episodic.get_recent.side_effect = RuntimeError("Episodes corrupt")
