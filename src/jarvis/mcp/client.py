@@ -325,7 +325,9 @@ class JarvisMCPClient:
                 result = handler(**params)
             return ToolCallResult(content=str(result), is_error=False)
         except Exception as exc:
-            log.warning("builtin_tool_error", tool=name, error=str(exc)[:200], params=list(params.keys()))
+            log.warning(
+                "builtin_tool_error", tool=name, error=str(exc)[:200], params=list(params.keys())
+            )
             return ToolCallResult(
                 content=f"Builtin-Tool-Fehler: {exc}",
                 is_error=True,
