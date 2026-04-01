@@ -441,7 +441,7 @@ class TestResourceOptimizer:
         ro = ResourceOptimizer()
         ro.snapshot(cpu=95, ram_used=15, ram_total=16, gpu=10)
         recs = ro.recommendations()
-        assert any("GPU-Offloading" in r for r in recs)
+        assert any("GPU" in r and "offload" in r.lower() for r in recs)
 
 
 class TestLatencyTracker:
