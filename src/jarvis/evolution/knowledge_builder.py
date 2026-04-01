@@ -20,7 +20,7 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-__all__ = ["BuildResult", "KnowledgeBuilder", "_is_usable_content"]
+__all__ = ["BuildResult", "KnowledgeBuilder", "_is_usable_content", "_score_source_confidence"]
 
 
 @dataclass
@@ -176,6 +176,53 @@ def _is_usable_content(text: str, min_chars: int = 200) -> tuple[bool, str]:
         return False, f"pdf_artifacts_{ratio:.0%}"
 
     return True, "ok"
+
+
+# ── Source Confidence Scoring ────────────────────────────────────────
+
+_TRUSTED_DOMAINS: dict[str, float] = {
+    ".gov.de": 0.9,
+    ".bund.de": 0.9,
+    ".europa.eu": 0.9,
+    "gesetze-im-internet.de": 0.9,
+    "dejure.org": 0.9,
+    "bafin.de": 0.9,
+    "bundesbank.de": 0.9,
+    "bsi.bund.de": 0.9,
+    "owasp.org": 0.8,
+    "wikipedia.org": 0.7,
+    "arxiv.org": 0.7,
+    "springer.com": 0.7,
+    "nature.com": 0.7,
+    "heise.de": 0.7,
+    "golem.de": 0.7,
+}
+_LOW_TRUST_SIGNALS: list[str] = ["blog", "medium.com", "reddit.com", "forum", "quora.com"]
+_DEFAULT_CONFIDENCE: float = 0.5
+
+
+def _score_source_confidence(url: str) -> float:
+    """Derive confidence from the source URL domain.
+
+    Trusted government/academic sources score higher. Blogs and forums
+    score lower. Unknown domains get a neutral 0.5.
+    """
+    if not url:
+        return _DEFAULT_CONFIDENCE
+
+    url_lower = url.lower()
+
+    # Check trusted domains (longest suffix match first for specificity)
+    for domain, score in sorted(_TRUSTED_DOMAINS.items(), key=lambda x: -len(x[0])):
+        if domain in url_lower:
+            return score
+
+    # Check low-trust signals
+    for signal in _LOW_TRUST_SIGNALS:
+        if signal in url_lower:
+            return 0.3
+
+    return _DEFAULT_CONFIDENCE
 
 
 _ENTITY_EXTRACTION_PROMPT = """\

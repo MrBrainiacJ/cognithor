@@ -375,3 +375,73 @@ class TestBuildRejectsGarbage:
         result = await kb.build(fr)
         assert result.vault_path != ""
         assert result.chunks_created > 0
+
+
+class TestSourceConfidenceScoring:
+    """Tests for _score_source_confidence — URL-based trust scoring."""
+
+    def test_trusted_gov_domain(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://www.bafin.de/SharedDocs/some-article.html")
+        assert score == 0.9
+
+    def test_trusted_bund_domain(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://www.gesetze-im-internet.de/vvg/__1.html")
+        assert score == 0.9
+
+    def test_medium_trust_wikipedia(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://de.wikipedia.org/wiki/Versicherung")
+        assert score == 0.7
+
+    def test_medium_trust_heise(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://www.heise.de/news/some-article.html")
+        assert score == 0.7
+
+    def test_low_trust_blog(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://some-random-blog.com/post/123")
+        assert score == 0.3
+
+    def test_low_trust_medium(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://medium.com/@user/my-article-abc123")
+        assert score == 0.3
+
+    def test_low_trust_reddit(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://www.reddit.com/r/python/comments/abc")
+        assert score == 0.3
+
+    def test_default_unknown_domain(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://www.example.com/article")
+        assert score == 0.5
+
+    def test_empty_url(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("")
+        assert score == 0.5
+
+    def test_owasp_high_trust(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://owasp.org/Top10/")
+        assert score == 0.8
+
+    def test_europa_eu(self):
+        from jarvis.evolution.knowledge_builder import _score_source_confidence
+
+        score = _score_source_confidence("https://eur-lex.europa.eu/legal-content/EN/ALL/")
+        assert score == 0.9
