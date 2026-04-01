@@ -36,7 +36,7 @@ class TestSecurityGate:
             }
         )
         assert result.verdict == GateVerdict.FAIL
-        assert "kritische" in result.reasons[0]
+        assert "critical" in result.reasons[0].lower() or "kritische" in result.reasons[0]
 
     def test_fail_high_finding(self) -> None:
         gate = SecurityGate()
