@@ -20,7 +20,13 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-__all__ = ["BuildResult", "KnowledgeBuilder", "_is_usable_content", "_score_source_confidence"]
+__all__ = [
+    "BuildResult",
+    "KnowledgeBuilder",
+    "_is_usable_content",
+    "_score_source_confidence",
+    "_parse_llm_json",
+]
 
 
 @dataclass
@@ -223,6 +229,73 @@ def _score_source_confidence(url: str) -> float:
             return 0.3
 
     return _DEFAULT_CONFIDENCE
+
+
+# ── LLM JSON Parsing with Fallback ──────────────────────────────────
+
+def _parse_llm_json(raw: str, fallback_content: str, url: str) -> dict:
+    """Parse LLM response with graceful degradation.
+
+    4-tier strategy:
+    1. Direct json.loads
+    2. Extract ```json ... ``` markdown block
+    3. Regex extraction of individual fields
+    4. Fallback defaults using original content
+    """
+    # Tier 1: direct parse
+    try:
+        data = json.loads(raw)
+        if isinstance(data, dict) and "summary" in data:
+            return _validate_parsed(data)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Tier 2: markdown code block
+    md_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", raw, re.DOTALL)
+    if md_match:
+        try:
+            data = json.loads(md_match.group(1))
+            if isinstance(data, dict) and "summary" in data:
+                return _validate_parsed(data)
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Tier 3: regex extraction of individual fields
+    summary_m = re.search(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"', raw)
+    type_m = re.search(r'"memory_type"\s*:\s*"(\w+)"', raw)
+    useful_m = re.search(r'"is_useful"\s*:\s*(true|false)', raw, re.IGNORECASE)
+    tags_m = re.search(r'"tags"\s*:\s*\[(.*?)\]', raw)
+
+    if summary_m:
+        tags: list[str] = []
+        if tags_m:
+            tags = re.findall(r'"([^"]+)"', tags_m.group(1))
+        return _validate_parsed({
+            "summary": summary_m.group(1),
+            "memory_type": type_m.group(1) if type_m else "semantic",
+            "tags": tags,
+            "is_useful": (useful_m.group(1).lower() == "true") if useful_m else True,
+        })
+
+    # Tier 4: fallback
+    return {
+        "summary": fallback_content[:800],
+        "memory_type": "semantic",
+        "tags": [],
+        "is_useful": True,
+    }
+
+
+def _validate_parsed(data: dict) -> dict:
+    """Ensure parsed dict has all required fields with correct types."""
+    return {
+        "summary": str(data.get("summary", ""))[:3000],
+        "memory_type": str(data.get("memory_type", "semantic"))
+        if data.get("memory_type") in ("semantic", "procedural", "episodic")
+        else "semantic",
+        "tags": [str(t) for t in data.get("tags", []) if isinstance(t, str)][:10],
+        "is_useful": bool(data.get("is_useful", True)),
+    }
 
 
 _ENTITY_EXTRACTION_PROMPT = """\

@@ -445,3 +445,87 @@ class TestSourceConfidenceScoring:
 
         score = _score_source_confidence("https://eur-lex.europa.eu/legal-content/EN/ALL/")
         assert score == 0.9
+
+
+class TestParseLLMJson:
+    """Tests for _parse_llm_json — 4-tier fallback parsing."""
+
+    def test_tier1_valid_json(self):
+        from jarvis.evolution.knowledge_builder import _parse_llm_json
+
+        raw = json.dumps({
+            "summary": "Das VVG regelt Versicherungen.",
+            "memory_type": "semantic",
+            "tags": ["versicherung", "recht"],
+            "is_useful": True,
+        })
+        result = _parse_llm_json(raw, "fallback text", "https://example.com")
+        assert result["summary"] == "Das VVG regelt Versicherungen."
+        assert result["memory_type"] == "semantic"
+        assert result["tags"] == ["versicherung", "recht"]
+        assert result["is_useful"] is True
+
+    def test_tier2_json_in_markdown_block(self):
+        from jarvis.evolution.knowledge_builder import _parse_llm_json
+
+        raw = (
+            "Hier ist meine Analyse:\n\n"
+            "```json\n"
+            '{"summary": "Wichtige Fakten.", "memory_type": "procedural", '
+            '"tags": ["prozess"], "is_useful": true}\n'
+            "```\n"
+        )
+        result = _parse_llm_json(raw, "fallback", "https://example.com")
+        assert result["summary"] == "Wichtige Fakten."
+        assert result["memory_type"] == "procedural"
+
+    def test_tier3_regex_extraction(self):
+        from jarvis.evolution.knowledge_builder import _parse_llm_json
+
+        raw = (
+            'Hier ist das Ergebnis: "summary": "Extracted via regex.", '
+            '"memory_type": "episodic", "tags": ["event", "news"], "is_useful": true'
+        )
+        result = _parse_llm_json(raw, "fallback", "https://example.com")
+        assert result["summary"] == "Extracted via regex."
+        assert result["memory_type"] == "episodic"
+
+    def test_tier4_complete_fallback(self):
+        from jarvis.evolution.knowledge_builder import _parse_llm_json
+
+        raw = "I cannot process this request. Here is some random text."
+        result = _parse_llm_json(raw, "Original article about insurance law and regulation.", "https://example.com")
+        assert result["summary"] == "Original article about insurance law and regulation."
+        assert result["memory_type"] == "semantic"
+        assert result["tags"] == []
+        assert result["is_useful"] is True
+
+    def test_fallback_truncates_long_content(self):
+        from jarvis.evolution.knowledge_builder import _parse_llm_json
+
+        long_fallback = "x" * 2000
+        result = _parse_llm_json("garbage", long_fallback, "https://example.com")
+        assert len(result["summary"]) == 800
+
+    def test_is_useful_false_parsed(self):
+        from jarvis.evolution.knowledge_builder import _parse_llm_json
+
+        raw = json.dumps({
+            "summary": "Nichts relevantes.",
+            "memory_type": "semantic",
+            "tags": [],
+            "is_useful": False,
+        })
+        result = _parse_llm_json(raw, "fallback", "https://example.com")
+        assert result["is_useful"] is False
+
+    def test_partial_json_with_extra_text(self):
+        from jarvis.evolution.knowledge_builder import _parse_llm_json
+
+        raw = (
+            '<think>Let me analyze this text.</think>\n'
+            '{"summary": "Nach dem Denken.", "memory_type": "semantic", '
+            '"tags": ["ki"], "is_useful": true}'
+        )
+        result = _parse_llm_json(raw, "fallback", "https://example.com")
+        assert result["summary"] == "Nach dem Denken."
