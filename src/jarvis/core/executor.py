@@ -324,28 +324,38 @@ class Executor:
             async with semaphore:
                 result = await self._execute_single(action.tool, params)
 
-                # After launching a GUI app, wait for it to appear
+                # After launching a GUI app, wait then focus it via Windows API
                 if action.tool == "exec_command" and result.success and _has_computer_use:
                     await asyncio.sleep(2.0)
-
-                # Before computer_type/computer_click: auto-click center of
-                # screen to ensure SOME window has focus. This replaces the
-                # unreliable Alt+Tab approach. The proper flow is
-                # screenshot → click on target → type, but as a safety net
-                # we click the screen center if no screenshot preceded this.
-                if action.tool in ("computer_type", "computer_click") and _has_computer_use:
+                    # Focus the most recently created window (UWP apps like
+                    # Calculator run as ApplicationFrameHost, so process name
+                    # matching doesn't work — use the newest visible window)
                     try:
-                        import pyautogui
+                        import subprocess as _sp
 
-                        loop = asyncio.get_running_loop()
-                        # Click center of primary monitor to grab focus
-                        sw, sh = pyautogui.size()
-                        await loop.run_in_executor(
-                            None, lambda: pyautogui.click(x=sw // 2, y=sh // 2)
+                        _ps = (
+                            "Add-Type -Name W -Namespace W -Member "
+                            '\'[DllImport("user32.dll")] public static extern bool '
+                            "SetForegroundWindow(IntPtr h);"
+                            '[DllImport("user32.dll")] public static extern IntPtr '
+                            "GetForegroundWindow();';"
+                            "$all = Get-Process | Where-Object "
+                            "{$_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -ne ''} "
+                            "| Sort-Object StartTime -Descending | Select-Object -First 1;"
+                            "if ($all) { [W.W]::SetForegroundWindow($all.MainWindowHandle) }"
                         )
-                        await asyncio.sleep(0.3)
+                        loop = asyncio.get_running_loop()
+                        await loop.run_in_executor(
+                            None,
+                            lambda: _sp.run(
+                                ["powershell", "-NoProfile", "-Command", _ps],
+                                capture_output=True,
+                                timeout=5,
+                            ),
+                        )
+                        await asyncio.sleep(0.5)
                     except Exception:
-                        pass
+                        pass  # Best effort
 
             results[idx] = result
             if result.success:
