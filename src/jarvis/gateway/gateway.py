@@ -3068,6 +3068,21 @@ class Gateway:
                         no_tool_streak=_consecutive_no_tool_iters,
                         preview=_resp[:100],
                     )
+                    # Computer Use: if previous iteration had successful CU tools,
+                    # don't replan — the action is done, just formulate response.
+                    _CU_DONE = {"computer_type", "computer_click", "computer_hotkey"}
+                    if all_results and any(
+                        r.success and r.tool_name in _CU_DONE for r in all_results
+                    ):
+                        log.info("computer_use_replan_blocked", reason="CU tools succeeded")
+                        await _status_cb("finishing", "Composing response...")
+                        final_response = await self._formulate_response(
+                            msg.text,
+                            all_results,
+                            wm,
+                            stream_callback,
+                        )
+                        break
                     # On first iteration with no tool results, the LLM is
                     # hallucinating REPLAN text for a conversational message.
                     # Don't retry — immediately formulate a direct response.
