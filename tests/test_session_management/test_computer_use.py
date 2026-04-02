@@ -13,15 +13,28 @@ def test_computer_use_tools_importable():
     assert tools is not None
 
 
-def test_computer_use_gatekeeper_green():
-    """Computer use tools should be GREEN when computer_use_enabled=True."""
+def test_computer_use_gatekeeper_classification():
+    """Computer use tools should NOT be RED when computer_use_enabled=True.
+
+    Security model: screenshot is GREEN (read-only), action tools are YELLOW
+    (user-opted-in but still require approval gate).  All tools become RED
+    when computer_use_enabled=False.
+    """
     from jarvis.core.gatekeeper import Gatekeeper
     from jarvis.config import JarvisConfig, ToolsConfig
     from jarvis.models import PlannedAction
 
-    gk = Gatekeeper(JarvisConfig(tools=ToolsConfig(computer_use_enabled=True)))
+    gk_enabled = Gatekeeper(JarvisConfig(tools=ToolsConfig(computer_use_enabled=True)))
+    gk_disabled = Gatekeeper(JarvisConfig(tools=ToolsConfig(computer_use_enabled=False)))
+
+    # Screenshot is read-only → GREEN
+    ss_action = PlannedAction(tool="computer_screenshot", params={}, rationale="test")
+    assert gk_enabled._classify_risk(ss_action).value == "green", (
+        "computer_screenshot should be green"
+    )
+
+    # Active desktop actions → YELLOW (not RED, not GREEN)
     for tool in [
-        "computer_screenshot",
         "computer_click",
         "computer_type",
         "computer_hotkey",
@@ -29,8 +42,13 @@ def test_computer_use_gatekeeper_green():
         "computer_drag",
     ]:
         action = PlannedAction(tool=tool, params={}, rationale="test")
-        risk = gk._classify_risk(action)
-        assert risk.value == "green", f"{tool} should be green, got {risk}"
+        assert gk_enabled._classify_risk(action).value == "yellow", (
+            f"{tool} should be yellow when enabled, got {gk_enabled._classify_risk(action)}"
+        )
+        # Disabled → RED
+        assert gk_disabled._classify_risk(action).value == "red", (
+            f"{tool} should be red when disabled"
+        )
 
 
 @pytest.mark.asyncio

@@ -374,10 +374,22 @@ from jarvis.browser.vision import _parse_desktop_elements, _validate_elements
 
 class TestParseDesktopElements:
     def test_valid_json(self):
-        raw = json.dumps({"elements": [
-            {"name": "Rechner", "type": "window", "x": 200, "y": 300,
-             "w": 400, "h": 500, "text": "459", "clickable": True}
-        ]})
+        raw = json.dumps(
+            {
+                "elements": [
+                    {
+                        "name": "Rechner",
+                        "type": "window",
+                        "x": 200,
+                        "y": 300,
+                        "w": 400,
+                        "h": 500,
+                        "text": "459",
+                        "clickable": True,
+                    }
+                ]
+            }
+        )
         elements = _parse_desktop_elements(raw)
         assert len(elements) == 1
         assert elements[0]["name"] == "Rechner"
@@ -385,18 +397,24 @@ class TestParseDesktopElements:
         assert elements[0]["clickable"] is True
 
     def test_json_in_markdown_block(self):
-        raw = "Hier ist meine Analyse:\n```json\n" + json.dumps({
-            "elements": [{"name": "Button", "type": "button", "x": 50, "y": 60}]
-        }) + "\n```"
+        raw = (
+            "Hier ist meine Analyse:\n```json\n"
+            + json.dumps({"elements": [{"name": "Button", "type": "button", "x": 50, "y": 60}]})
+            + "\n```"
+        )
         elements = _parse_desktop_elements(raw)
         assert len(elements) == 1
         assert elements[0]["name"] == "Button"
 
     def test_missing_coordinates_skipped(self):
-        raw = json.dumps({"elements": [
-            {"name": "OK", "type": "button"},
-            {"name": "Cancel", "type": "button", "x": 100, "y": 200},
-        ]})
+        raw = json.dumps(
+            {
+                "elements": [
+                    {"name": "OK", "type": "button"},
+                    {"name": "Cancel", "type": "button", "x": 100, "y": 200},
+                ]
+            }
+        )
         elements = _parse_desktop_elements(raw)
         assert len(elements) == 1
         assert elements[0]["name"] == "Cancel"
@@ -406,9 +424,9 @@ class TestParseDesktopElements:
         assert elements == []
 
     def test_think_tags_with_json(self):
-        raw = "<think>Let me analyze...</think>\n" + json.dumps({
-            "elements": [{"name": "Start", "type": "button", "x": 24, "y": 1060}]
-        })
+        raw = "<think>Let me analyze...</think>\n" + json.dumps(
+            {"elements": [{"name": "Start", "type": "button", "x": 24, "y": 1060}]}
+        )
         elements = _parse_desktop_elements(raw)
         assert len(elements) == 1
         assert elements[0]["name"] == "Start"
@@ -416,9 +434,9 @@ class TestParseDesktopElements:
 
 class TestValidateElements:
     def test_int_coercion(self):
-        elements = _validate_elements([
-            {"name": "Test", "x": "100", "y": "200", "w": "50", "h": "30"}
-        ])
+        elements = _validate_elements(
+            [{"name": "Test", "x": "100", "y": "200", "w": "50", "h": "30"}]
+        )
         assert elements[0]["x"] == 100
         assert isinstance(elements[0]["x"], int)
 
@@ -447,18 +465,32 @@ class TestAnalyzeDesktop:
 
     def _make_analyzer(self, llm_response: str) -> tuple[VisionAnalyzer, AsyncMock]:
         llm = AsyncMock()
-        llm.chat = AsyncMock(return_value={
-            "message": {"role": "assistant", "content": llm_response},
-        })
+        llm.chat = AsyncMock(
+            return_value={
+                "message": {"role": "assistant", "content": llm_response},
+            }
+        )
         cfg = VisionConfig(enabled=True, model="qwen3-vl:32b", backend_type="ollama")
         return VisionAnalyzer(llm, cfg), llm
 
     @pytest.mark.asyncio
     async def test_returns_elements(self):
-        response = json.dumps({"elements": [
-            {"name": "Rechner", "type": "window", "x": 200, "y": 300,
-             "w": 400, "h": 500, "text": "", "clickable": True},
-        ]})
+        response = json.dumps(
+            {
+                "elements": [
+                    {
+                        "name": "Rechner",
+                        "type": "window",
+                        "x": 200,
+                        "y": 300,
+                        "w": 400,
+                        "h": 500,
+                        "text": "",
+                        "clickable": True,
+                    },
+                ]
+            }
+        )
         v, llm = self._make_analyzer(response)
         result = await v.analyze_desktop("base64data")
 

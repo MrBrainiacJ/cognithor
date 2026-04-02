@@ -93,8 +93,7 @@ _DESKTOP_ANALYSIS_PROMPT = (
 )
 
 _DESKTOP_CONTEXTUAL_PROMPT_SUFFIX = (
-    "\n\nKontext: {context}\n"
-    "Fokussiere auf Elemente die fuer diese Aufgabe relevant sind."
+    "\n\nKontext: {context}\nFokussiere auf Elemente die fuer diese Aufgabe relevant sind."
 )
 
 
@@ -153,16 +152,18 @@ def _validate_elements(elements: Any) -> list[dict[str, Any]]:
             continue
         if "name" not in el or "x" not in el or "y" not in el:
             continue
-        validated.append({
-            "name": str(el.get("name", "")),
-            "type": str(el.get("type", "other")),
-            "x": int(el.get("x", 0)),
-            "y": int(el.get("y", 0)),
-            "w": int(el.get("w", 0)),
-            "h": int(el.get("h", 0)),
-            "text": str(el.get("text", "")),
-            "clickable": bool(el.get("clickable", False)),
-        })
+        validated.append(
+            {
+                "name": str(el.get("name", "")),
+                "type": str(el.get("type", "other")),
+                "x": int(el.get("x", 0)),
+                "y": int(el.get("y", 0)),
+                "w": int(el.get("w", 0)),
+                "h": int(el.get("h", 0)),
+                "text": str(el.get("text", "")),
+                "clickable": bool(el.get("clickable", False)),
+            }
+        )
 
     return validated
 
@@ -288,9 +289,7 @@ class VisionAnalyzer:
 
         effective_prompt = prompt or _DESKTOP_ANALYSIS_PROMPT
         if task_context and not prompt:
-            effective_prompt += _DESKTOP_CONTEXTUAL_PROMPT_SUFFIX.format(
-                context=task_context
-            )
+            effective_prompt += _DESKTOP_CONTEXTUAL_PROMPT_SUFFIX.format(context=task_context)
 
         result = await self._send_vision_request(screenshot_b64, effective_prompt)
 

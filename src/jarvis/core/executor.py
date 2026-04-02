@@ -329,12 +329,8 @@ class Executor:
                     await asyncio.sleep(2.0)
                     # Vision-based focusing: screenshot → find window → click
                     try:
-                        _ss_handler = self._mcp_client._builtin_handlers.get(
-                            "computer_screenshot"
-                        )
-                        _click_handler = self._mcp_client._builtin_handlers.get(
-                            "computer_click"
-                        )
+                        _ss_handler = self._mcp_client._builtin_handlers.get("computer_screenshot")
+                        _click_handler = self._mcp_client._builtin_handlers.get("computer_click")
                         if _ss_handler and _click_handler:
                             _ss = await _ss_handler()
                             _elements = _ss.get("elements", [])

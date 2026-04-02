@@ -13,17 +13,30 @@ class TestComputerScreenshotWithVision:
     @pytest.mark.asyncio
     async def test_elements_in_result(self):
         mock_vision = AsyncMock()
-        mock_vision.analyze_desktop = AsyncMock(return_value=VisionAnalysisResult(
-            success=True,
-            description="Desktop mit Rechner",
-            elements=[{"name": "Rechner", "type": "window", "x": 200, "y": 300,
-                        "w": 400, "h": 500, "text": "", "clickable": True}],
-        ))
+        mock_vision.analyze_desktop = AsyncMock(
+            return_value=VisionAnalysisResult(
+                success=True,
+                description="Desktop mit Rechner",
+                elements=[
+                    {
+                        "name": "Rechner",
+                        "type": "window",
+                        "x": 200,
+                        "y": 300,
+                        "w": 400,
+                        "h": 500,
+                        "text": "",
+                        "clickable": True,
+                    }
+                ],
+            )
+        )
 
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64",
-                    return_value=("base64", 1920, 1080)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080)
+        ):
             result = await tools.computer_screenshot()
 
         assert result["success"] is True
@@ -36,8 +49,9 @@ class TestComputerScreenshotWithVision:
     async def test_no_vision_returns_empty_elements(self):
         tools = ComputerUseTools(vision_analyzer=None)
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64",
-                    return_value=("base64", 1920, 1080)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080)
+        ):
             result = await tools.computer_screenshot()
 
         assert result["success"] is True
@@ -47,14 +61,18 @@ class TestComputerScreenshotWithVision:
     @pytest.mark.asyncio
     async def test_vision_error_returns_empty_elements(self):
         mock_vision = AsyncMock()
-        mock_vision.analyze_desktop = AsyncMock(return_value=VisionAnalysisResult(
-            success=False, error="GPU timeout",
-        ))
+        mock_vision.analyze_desktop = AsyncMock(
+            return_value=VisionAnalysisResult(
+                success=False,
+                error="GPU timeout",
+            )
+        )
 
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64",
-                    return_value=("base64", 1920, 1080)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080)
+        ):
             result = await tools.computer_screenshot()
 
         assert result["success"] is True
@@ -64,14 +82,19 @@ class TestComputerScreenshotWithVision:
     @pytest.mark.asyncio
     async def test_task_context_passed_through(self):
         mock_vision = AsyncMock()
-        mock_vision.analyze_desktop = AsyncMock(return_value=VisionAnalysisResult(
-            success=True, description="OK", elements=[],
-        ))
+        mock_vision.analyze_desktop = AsyncMock(
+            return_value=VisionAnalysisResult(
+                success=True,
+                description="OK",
+                elements=[],
+            )
+        )
 
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64",
-                    return_value=("base64", 1920, 1080)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080)
+        ):
             await tools.computer_screenshot(task_context="Reddit oeffnen")
 
         call_args = mock_vision.analyze_desktop.call_args

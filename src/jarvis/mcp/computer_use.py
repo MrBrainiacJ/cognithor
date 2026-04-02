@@ -90,12 +90,14 @@ class ComputerUseTools:
             elements = []
             if self._vision:
                 try:
-                    result = await self._vision.analyze_desktop(
-                        b64, task_context=task_context
-                    )
-                    description = result.description if result.success else (
-                        f"Screenshot taken ({width}x{height}). "
-                        f"Vision analysis failed: {result.error}"
+                    result = await self._vision.analyze_desktop(b64, task_context=task_context)
+                    description = (
+                        result.description
+                        if result.success
+                        else (
+                            f"Screenshot taken ({width}x{height}). "
+                            f"Vision analysis failed: {result.error}"
+                        )
                     )
                     elements = result.elements
                     if elements:
@@ -105,9 +107,7 @@ class ComputerUseTools:
                             names=[e["name"] for e in elements[:5]],
                         )
                 except Exception as exc:
-                    description = (
-                        f"Screenshot taken ({width}x{height}). Vision error: {exc}"
-                    )
+                    description = f"Screenshot taken ({width}x{height}). Vision error: {exc}"
             else:
                 description = (
                     f"Screenshot taken ({width}x{height}). "
