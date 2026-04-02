@@ -75,6 +75,97 @@ _DESCRIBE_PAGE_PROMPT = (
     "welcher Typ ist es (Shop, Login, Artikel, etc.)?"
 )
 
+_DESKTOP_ANALYSIS_PROMPT = (
+    "Analysiere diesen Desktop-Screenshot. Identifiziere ALLE sichtbaren "
+    "UI-Elemente.\n\n"
+    "Fuer JEDES Element liefere:\n"
+    "- name: Beschreibender Name (z.B. 'Adressleiste', 'Suchfeld', 'Rechner')\n"
+    "- type: window | button | textfield | menu | icon | tab | scrollbar | link | other\n"
+    "- x: X-Pixel-Koordinate der Mitte des Elements\n"
+    "- y: Y-Pixel-Koordinate der Mitte des Elements\n"
+    "- w: Breite in Pixeln (geschaetzt)\n"
+    "- h: Hoehe in Pixeln (geschaetzt)\n"
+    "- text: Sichtbarer Text im Element (falls vorhanden)\n"
+    "- clickable: true/false\n\n"
+    "Antworte NUR mit validem JSON:\n"
+    '{"elements": [{"name": "...", "type": "...", "x": 0, "y": 0, '
+    '"w": 0, "h": 0, "text": "...", "clickable": true}]}'
+)
+
+_DESKTOP_CONTEXTUAL_PROMPT_SUFFIX = (
+    "\n\nKontext: {context}\n"
+    "Fokussiere auf Elemente die fuer diese Aufgabe relevant sind."
+)
+
+
+def _parse_desktop_elements(raw_response: str) -> list[dict[str, Any]]:
+    """Parse structured UI elements from vision model response.
+
+    Uses a 4-tier fallback strategy:
+    1. Direct json.loads
+    2. Extract ```json ... ``` markdown block
+    3. Find JSON object containing "elements" in response
+    4. Empty list fallback
+    """
+    import json
+    import re
+
+    # Tier 1: direct parse
+    try:
+        data = json.loads(raw_response)
+        if isinstance(data, dict) and "elements" in data:
+            return _validate_elements(data["elements"])
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Tier 2: markdown code block
+    md_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", raw_response, re.DOTALL)
+    if md_match:
+        try:
+            data = json.loads(md_match.group(1))
+            if isinstance(data, dict) and "elements" in data:
+                return _validate_elements(data["elements"])
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Tier 3: find JSON object in response
+    json_match = re.search(r"\{[\s\S]*\"elements\"[\s\S]*\}", raw_response)
+    if json_match:
+        try:
+            data = json.loads(json_match.group())
+            if isinstance(data, dict) and "elements" in data:
+                return _validate_elements(data["elements"])
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Tier 4: empty list
+    return []
+
+
+def _validate_elements(elements: Any) -> list[dict[str, Any]]:
+    """Validate and normalize element dicts from vision model."""
+    if not isinstance(elements, list):
+        return []
+
+    validated = []
+    for el in elements:
+        if not isinstance(el, dict):
+            continue
+        if "name" not in el or "x" not in el or "y" not in el:
+            continue
+        validated.append({
+            "name": str(el.get("name", "")),
+            "type": str(el.get("type", "other")),
+            "x": int(el.get("x", 0)),
+            "y": int(el.get("y", 0)),
+            "w": int(el.get("w", 0)),
+            "h": int(el.get("h", 0)),
+            "text": str(el.get("text", "")),
+            "clickable": bool(el.get("clickable", False)),
+        })
+
+    return validated
+
 
 # ── VisionAnalyzer ───────────────────────────────────────────────────
 

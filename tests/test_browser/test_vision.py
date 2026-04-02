@@ -361,3 +361,77 @@ class TestVisionPageContent:
         v, llm = self._make_enabled("Ein Shop")
         desc = await v.describe_page("aGVsbG8=", page_content="<h1>Shop</h1>")
         assert desc == "Ein Shop"
+
+
+# ============================================================================
+# Desktop Element Parser
+# ============================================================================
+
+import json
+
+from jarvis.browser.vision import _parse_desktop_elements, _validate_elements
+
+
+class TestParseDesktopElements:
+    def test_valid_json(self):
+        raw = json.dumps({"elements": [
+            {"name": "Rechner", "type": "window", "x": 200, "y": 300,
+             "w": 400, "h": 500, "text": "459", "clickable": True}
+        ]})
+        elements = _parse_desktop_elements(raw)
+        assert len(elements) == 1
+        assert elements[0]["name"] == "Rechner"
+        assert elements[0]["x"] == 200
+        assert elements[0]["clickable"] is True
+
+    def test_json_in_markdown_block(self):
+        raw = "Hier ist meine Analyse:\n```json\n" + json.dumps({
+            "elements": [{"name": "Button", "type": "button", "x": 50, "y": 60}]
+        }) + "\n```"
+        elements = _parse_desktop_elements(raw)
+        assert len(elements) == 1
+        assert elements[0]["name"] == "Button"
+
+    def test_missing_coordinates_skipped(self):
+        raw = json.dumps({"elements": [
+            {"name": "OK", "type": "button"},
+            {"name": "Cancel", "type": "button", "x": 100, "y": 200},
+        ]})
+        elements = _parse_desktop_elements(raw)
+        assert len(elements) == 1
+        assert elements[0]["name"] == "Cancel"
+
+    def test_garbage_returns_empty(self):
+        elements = _parse_desktop_elements("This is not JSON at all.")
+        assert elements == []
+
+    def test_think_tags_with_json(self):
+        raw = "<think>Let me analyze...</think>\n" + json.dumps({
+            "elements": [{"name": "Start", "type": "button", "x": 24, "y": 1060}]
+        })
+        elements = _parse_desktop_elements(raw)
+        assert len(elements) == 1
+        assert elements[0]["name"] == "Start"
+
+
+class TestValidateElements:
+    def test_int_coercion(self):
+        elements = _validate_elements([
+            {"name": "Test", "x": "100", "y": "200", "w": "50", "h": "30"}
+        ])
+        assert elements[0]["x"] == 100
+        assert isinstance(elements[0]["x"], int)
+
+    def test_non_list_returns_empty(self):
+        assert _validate_elements("not a list") == []
+        assert _validate_elements(None) == []
+
+    def test_non_dict_entries_skipped(self):
+        assert _validate_elements(["not a dict", 42]) == []
+
+    def test_defaults_applied(self):
+        elements = _validate_elements([{"name": "X", "x": 10, "y": 20}])
+        assert elements[0]["type"] == "other"
+        assert elements[0]["w"] == 0
+        assert elements[0]["text"] == ""
+        assert elements[0]["clickable"] is False
