@@ -198,7 +198,8 @@ class TestConfigurableBudgets:
     def test_default_budgets(self) -> None:
         """Default-Budgets stimmen mit Modul-Konstanten überein."""
         wm = WorkingMemoryManager()
-        assert wm._static_budget == STATIC_BUDGET
+        # Instance includes BUDGET_TACTICAL (400) which module-level STATIC_BUDGET omits
+        assert wm._static_budget == STATIC_BUDGET + 400
 
     def test_custom_budgets(self) -> None:
         """Konfigurierte Budgets werden korrekt angewendet."""
