@@ -76,3 +76,24 @@ class TestComputerScreenshotWithVision:
 
         call_args = mock_vision.analyze_desktop.call_args
         assert "Reddit" in str(call_args)
+
+
+class TestGatekeeperCUClassification:
+    """Verify security classification hasn't regressed."""
+
+    def test_screenshot_green_actions_yellow(self):
+        from jarvis.core.gatekeeper import Gatekeeper
+        from jarvis.config import JarvisConfig, ToolsConfig
+        from jarvis.models import PlannedAction
+
+        config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=True))
+        gk = Gatekeeper(config)
+
+        # Screenshot is GREEN (read-only)
+        action = PlannedAction(tool="computer_screenshot", params={}, rationale="test")
+        assert gk._classify_risk(action).name == "GREEN"
+
+        # Active actions are YELLOW (not GREEN!)
+        for tool in ["computer_click", "computer_type", "computer_hotkey"]:
+            action = PlannedAction(tool=tool, params={}, rationale="test")
+            assert gk._classify_risk(action).name == "YELLOW", f"{tool} must be YELLOW"

@@ -100,15 +100,18 @@ spaetere Operationen (lesen, editieren, loeschen). Beispiel: \
 **COMPUTER USE (Desktop-Automation):** Du KANNST den Desktop des Nutzers \
 steuern! Wenn der Nutzer dich bittet ein Programm zu oeffnen und darin zu \
 tippen/klicken, nutze die computer_* Tools. Du hast: \
-computer_screenshot (zeigt dir den Bildschirm mit Koordinaten), \
-computer_click (klickt auf x,y Koordinaten), computer_type (tippt Text), \
+computer_screenshot (zeigt dir den Bildschirm mit UI-Elementen und Koordinaten), \
+computer_click (klickt auf x,y Koordinaten aus dem Screenshot), \
+computer_type (tippt Text via Clipboard-Paste), \
 computer_hotkey (drueckt Tastenkombinationen wie Enter, Alt+Tab). \
 ABLAUF: Schritt 1: exec_command zum Programm-Start. Schritt 2: \
-computer_screenshot um den Bildschirm zu sehen. Schritt 3: \
-computer_click/computer_type an den richtigen Koordinaten. \
-WICHTIG: Jeder Schritt ist ein EIGENER Step im JSON-Plan. NIE mehrere \
-computer_* Tools im selben Step. SAGE NIEMALS "ich kann keine GUI steuern" \
--- du KANNST es, mit diesen Tools.
+computer_screenshot -- du erhaeltst eine Liste von UI-Elementen mit \
+Pixel-Koordinaten (x, y). Schritt 3: computer_click mit den Koordinaten \
+eines Elements aus dem Screenshot. Schritt 4: computer_type zum Tippen. \
+WICHTIG: Nutze IMMER die Koordinaten aus dem Screenshot-Ergebnis fuer Clicks. \
+Klicke IMMER auf ein Element BEVOR du computer_type verwendest. \
+Jeder Schritt ist ein EIGENER Step im JSON-Plan. SAGE NIEMALS \
+"ich kann keine GUI steuern" -- du KANNST es.
 
 {tools_section}
 
@@ -139,12 +142,14 @@ Beispiel -- "Was weisst du ueber Projekt Alpha?":
 Beispiel -- "Oeffne den Taschenrechner und tippe 1+4=":
 ```json
 {{"goal": "Taschenrechner oeffnen und Rechnung eintippen", \
-"reasoning": "Desktop-Automation: erst oeffnen, dann Screenshot, dann tippen.", \
+"reasoning": "Desktop-Automation: oeffnen, Screenshot fuer Koordinaten, klicken, tippen.", \
 "steps": [\
 {{"tool": "exec_command", "params": {{"command": "start calc.exe"}}, \
 "rationale": "Taschenrechner starten"}}, \
 {{"tool": "computer_screenshot", "params": {{}}, \
-"rationale": "Bildschirm ansehen um Taschenrechner-Position zu finden"}}, \
+"rationale": "Bildschirm ansehen, UI-Elemente mit Koordinaten erhalten"}}, \
+{{"tool": "computer_click", "params": {{"x": 0, "y": 0}}, \
+"rationale": "Auf Taschenrechner klicken (Koordinaten aus Screenshot)"}}, \
 {{"tool": "computer_type", "params": {{"text": "1+4="}}, \
 "rationale": "Rechnung eintippen"}}], "confidence": 0.85}}
 ```
