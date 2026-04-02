@@ -579,13 +579,8 @@ class Gatekeeper:
             "set_clipboard",
             "screenshot_desktop",
             "screenshot_region",
-            # Computer Use (screenshot + coordinate actions)
+            # Computer Use (read-only)
             "computer_screenshot",
-            "computer_click",
-            "computer_type",
-            "computer_hotkey",
-            "computer_scroll",
-            "computer_drag",
             "calendar_today",
             "calendar_upcoming",
             "calendar_check_availability",
@@ -650,6 +645,12 @@ class Gatekeeper:
             "vault_update",
             "vault_link",
             "delegate_to_remote_agent",
+            # Computer Use (active desktop actions — user opted in via config)
+            "computer_click",
+            "computer_type",
+            "computer_hotkey",
+            "computer_scroll",
+            "computer_drag",
             "email_read_inbox",
             "email_search",
             "email_summarize",
