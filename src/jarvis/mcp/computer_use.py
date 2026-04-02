@@ -32,8 +32,12 @@ def _get_pyautogui():
     return _pyautogui
 
 
-def _take_screenshot_b64() -> tuple[str, int, int]:
-    """Take a desktop screenshot, return (base64_png, width, height)."""
+def _take_screenshot_b64(monitor_index: int = 0) -> tuple[str, int, int]:
+    """Take a desktop screenshot, return (base64_png, width, height).
+
+    Args:
+        monitor_index: 0 = all monitors combined, 1 = primary, 2+ = specific monitor.
+    """
     try:
         import mss
     except ImportError:
@@ -44,15 +48,17 @@ def _take_screenshot_b64() -> tuple[str, int, int]:
         raise ImportError("Pillow not installed. Run: pip install cognithor[desktop]")
 
     with mss.mss() as sct:
-        # Use primary monitor (index 1), not combined (index 0)
-        monitor = sct.monitors[1] if len(sct.monitors) > 1 else sct.monitors[0]
+        # Index 0 = combined virtual screen (all monitors), 1+ = specific monitor
+        if monitor_index >= len(sct.monitors):
+            monitor_index = 0  # Fallback to all
+        monitor = sct.monitors[monitor_index]
         img = sct.grab(monitor)
 
         # mss returns BGRA bytes — convert properly
         pil_img = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
 
-        # Resize for vision model (max 1920px wide to save tokens)
-        max_w = 1920
+        # Resize for vision model (max 2560px wide to support 4K)
+        max_w = 2560
         if pil_img.width > max_w:
             ratio = max_w / pil_img.width
             pil_img = pil_img.resize((max_w, int(pil_img.height * ratio)), Image.LANCZOS)
@@ -69,11 +75,17 @@ class ComputerUseTools:
     def __init__(self, vision_analyzer: Any = None) -> None:
         self._vision = vision_analyzer
 
-    async def computer_screenshot(self) -> dict[str, Any]:
-        """Take a screenshot of the desktop and describe what's visible."""
+    async def computer_screenshot(self, monitor: int = 0) -> dict[str, Any]:
+        """Take a screenshot and describe what's visible.
+
+        Args:
+            monitor: 0 = all monitors combined (default), 1 = primary, 2+ = specific.
+        """
         try:
             loop = asyncio.get_running_loop()
-            b64, width, height = await loop.run_in_executor(None, _take_screenshot_b64)
+            b64, width, height = await loop.run_in_executor(
+                None, lambda: _take_screenshot_b64(monitor_index=int(monitor))
+            )
             description = ""
             if self._vision:
                 try:
@@ -284,7 +296,15 @@ def register_computer_use_tools(
             "with their approximate pixel coordinates. "
             "Use this to see what's on screen before clicking."
         ),
-        input_schema={"type": "object", "properties": {}},
+        input_schema={
+            "type": "object",
+            "properties": {
+                "monitor": {
+                    "type": "integer",
+                    "description": "0=all monitors (default), 1=primary, 2+=specific monitor",
+                },
+            },
+        },
     )
 
     client.register_builtin_handler(

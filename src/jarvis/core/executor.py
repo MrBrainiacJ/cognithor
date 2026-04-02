@@ -324,18 +324,28 @@ class Executor:
             async with semaphore:
                 result = await self._execute_single(action.tool, params)
 
-                # After launching a GUI app, wait then focus it
+                # After launching a GUI app, wait for it to appear
                 if action.tool == "exec_command" and result.success and _has_computer_use:
-                    await asyncio.sleep(1.5)
-                    # Alt+Tab to focus the newly opened window
+                    await asyncio.sleep(2.0)
+
+                # Before computer_type/computer_click: auto-click center of
+                # screen to ensure SOME window has focus. This replaces the
+                # unreliable Alt+Tab approach. The proper flow is
+                # screenshot → click on target → type, but as a safety net
+                # we click the screen center if no screenshot preceded this.
+                if action.tool in ("computer_type", "computer_click") and _has_computer_use:
                     try:
                         import pyautogui
 
                         loop = asyncio.get_running_loop()
-                        await loop.run_in_executor(None, lambda: pyautogui.hotkey("alt", "tab"))
-                        await asyncio.sleep(0.5)  # Let focus settle
+                        # Click center of primary monitor to grab focus
+                        sw, sh = pyautogui.size()
+                        await loop.run_in_executor(
+                            None, lambda: pyautogui.click(x=sw // 2, y=sh // 2)
+                        )
+                        await asyncio.sleep(0.3)
                     except Exception:
-                        pass  # Best effort
+                        pass
 
             results[idx] = result
             if result.success:
