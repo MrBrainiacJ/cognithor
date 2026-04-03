@@ -835,3 +835,117 @@ class TestGatewayResultMessage:
         assert "posts 1" in content
         assert "Zusammenfassung:" in content
         assert "Erstellte Dateien:" in content
+
+
+class TestRedditScenarioIntegration:
+    """End-to-end mock of the Reddit reference scenario from the spec."""
+
+    @pytest.mark.asyncio
+    async def test_reddit_scenario_full_flow(self):
+        planner = MagicMock()
+        planner._ollama = AsyncMock()
+        planner._ollama.chat = AsyncMock(side_effect=[
+            # 1. Decompose
+            {"message": {"content": json.dumps([
+                {"name": "open_reddit", "goal": "Oeffne Reddit",
+                 "completion_hint": "Reddit Startseite sichtbar",
+                 "max_iterations": 8, "tools": ["computer_click", "exec_command"]},
+                {"name": "search_locallama", "goal": "Suche /locallama",
+                 "completion_hint": "locallama Subreddit sichtbar",
+                 "max_iterations": 6, "tools": ["computer_click", "computer_type"]},
+                {"name": "read_posts", "goal": "Scrolle und lies 10 Posts",
+                 "completion_hint": "Posts gelesen",
+                 "max_iterations": 15, "tools": ["computer_scroll", "extract_text"],
+                 "extract_content": True, "content_key": "posts"},
+                {"name": "save_file", "goal": "Speichere in Datei",
+                 "completion_hint": "Datei geschrieben",
+                 "max_iterations": 5, "tools": ["write_file"],
+                 "output_file": "Reddit_fetch_{date}.txt"},
+            ])}},
+            # 2. open_reddit: click then DONE
+            {"message": {"content": '{"tool": "computer_click", "params": {"x": 400, "y": 50}}'}},
+            {"message": {"content": "DONE: Reddit geoeffnet"}},
+            # 3. search_locallama: type then DONE
+            {"message": {"content": '{"tool": "computer_type", "params": {"text": "/locallama"}}'}},
+            {"message": {"content": "DONE: locallama Subreddit geoeffnet"}},
+            # 4. read_posts: extract, scroll, extract then DONE
+            {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
+            {"message": {"content": '{"tool": "computer_scroll", "params": {"direction": "down", "amount": 3}}'}},
+            {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
+            {"message": {"content": "DONE: Posts gelesen"}},
+            # 5. save_file: write_file then DONE
+            {"message": {"content": '{"tool": "write_file", "params": {"path": "C:\\\\Users\\\\Test\\\\Documents\\\\Reddit_fetch_20260403.txt", "content": "posts content"}}'}},
+            {"message": {"content": "DONE: Datei gespeichert"}},
+        ])
+
+        mcp = MagicMock()
+        mcp._builtin_handlers = {
+            "computer_screenshot": AsyncMock(return_value={
+                "success": True, "description": "screen", "elements": [],
+            }),
+            "computer_click": AsyncMock(return_value={"success": True}),
+            "computer_type": AsyncMock(return_value={"success": True}),
+            "computer_scroll": AsyncMock(return_value={"success": True}),
+            "write_file": AsyncMock(return_value="Datei geschrieben"),
+        }
+
+        agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
+        agent._extract_text_from_screen = AsyncMock(side_effect=[
+            "Post 1: Local LLMs are amazing\nSummary of post 1...",
+            "Post 2: Running Llama on a laptop\nSummary of post 2...",
+        ])
+
+        result = await agent.execute(
+            goal="Oeffne Reddit, suche /locallama, lies 10 Posts, speichere in Datei",
+            initial_plan=ActionPlan(goal="test", steps=[]),
+        )
+
+        assert result.success is True
+        assert "4/4" in result.task_summary
+        assert len(result.output_files) >= 1
+        assert "Reddit_fetch" in result.output_files[0]
+        assert result.extracted_content != ""
+        assert "## posts 1" in result.extracted_content
+        assert "## posts 2" in result.extracted_content
+        assert "Post 1:" in result.extracted_content
+
+    @pytest.mark.asyncio
+    async def test_error_recovery_mid_scenario(self):
+        """Phase fails, next phase still runs."""
+        planner = MagicMock()
+        planner._ollama = AsyncMock()
+        planner._ollama.chat = AsyncMock(side_effect=[
+            # Decompose: 2 phases
+            {"message": {"content": json.dumps([
+                {"name": "broken_phase", "goal": "Will fail",
+                 "completion_hint": "never", "max_iterations": 3,
+                 "tools": ["computer_click"]},
+                {"name": "ok_phase", "goal": "Should work",
+                 "completion_hint": "done", "max_iterations": 5,
+                 "tools": ["computer_click"]},
+            ])}},
+            # broken_phase: 3 clicks that exhaust iterations
+            {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
+            {"message": {"content": '{"tool": "computer_click", "params": {"x": 2, "y": 2}}'}},
+            {"message": {"content": '{"tool": "computer_click", "params": {"x": 3, "y": 3}}'}},
+            # ok_phase: DONE immediately
+            {"message": {"content": "DONE: Phase 2 erledigt"}},
+        ])
+
+        mcp = MagicMock()
+        mcp._builtin_handlers = {
+            "computer_screenshot": AsyncMock(return_value={
+                "success": True, "description": "screen", "elements": [],
+            }),
+            "computer_click": AsyncMock(return_value={"success": True}),
+        }
+
+        agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
+        result = await agent.execute(
+            goal="test recovery",
+            initial_plan=ActionPlan(goal="test", steps=[]),
+        )
+
+        assert result.success is True
+        assert "1/2" in result.task_summary
+        assert "broken_phase" in result.task_summary
