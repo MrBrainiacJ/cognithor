@@ -1520,34 +1520,44 @@ class TestContentLimit:
     @pytest.mark.asyncio
     async def test_extraction_stops_appending_at_limit(self):
         """When extracted_content exceeds limit, new text is not appended."""
+        from jarvis.core.cu_agent import _MAX_EXTRACTED_CONTENT
+        from jarvis.models import ActionPlan
+
+        # Generate enough extract calls to exceed the limit
+        # Each extraction returns ~10KB, limit is 512KB, so ~55 extractions to exceed
+        chunk = "A" * 10_000
+        n_extracts = (_MAX_EXTRACTED_CONTENT // 10_000) + 5  # enough to exceed
+
+        side_effects = [
+            # decompose: single phase with many iterations
+            {
+                "message": {
+                    "content": json.dumps(
+                        [
+                            {
+                                "name": "read",
+                                "goal": "Read",
+                                "completion_hint": "done",
+                                "max_iterations": n_extracts + 2,
+                                "tools": ["extract_text"],
+                                "extract_content": True,
+                                "content_key": "data",
+                            },
+                        ]
+                    )
+                }
+            },
+        ]
+        # All decide calls return extract_text, then DONE
+        for _ in range(n_extracts):
+            side_effects.append(
+                {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
+            )
+        side_effects.append({"message": {"content": "DONE: fertig"}})
+
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(
-            side_effect=[
-                # decompose
-                {
-                    "message": {
-                        "content": json.dumps(
-                            [
-                                {
-                                    "name": "read",
-                                    "goal": "Read",
-                                    "completion_hint": "done",
-                                    "max_iterations": 5,
-                                    "tools": ["extract_text"],
-                                    "extract_content": True,
-                                    "content_key": "data",
-                                },
-                            ]
-                        )
-                    }
-                },
-                # decide: extract
-                {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
-                # decide: DONE
-                {"message": {"content": "DONE: fertig"}},
-            ]
-        )
+        planner._ollama.chat = AsyncMock(side_effect=side_effects)
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
@@ -1560,21 +1570,19 @@ class TestContentLimit:
             ),
         }
 
-        from jarvis.core.cu_agent import _MAX_EXTRACTED_CONTENT
-        from jarvis.models import ActionPlan
-
-        agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
-        # Pre-fill extracted_content to just under limit
-        agent_result_hack = "x" * (_MAX_EXTRACTED_CONTENT - 10)
-        agent._extract_text_from_screen = AsyncMock(return_value="A" * 1000)
+        config = CUAgentConfig(max_iterations=n_extracts + 10)
+        agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {}, config=config)
+        agent._extract_text_from_screen = AsyncMock(return_value=chunk)
 
         result = await agent.execute(
             goal="test limit",
             initial_plan=ActionPlan(goal="test", steps=[]),
         )
 
-        # Content should not grow beyond limit
-        assert len(result.extracted_content) < _MAX_EXTRACTED_CONTENT + 2000
+        # Content must be capped — should NOT be n_extracts * 10KB
+        assert len(result.extracted_content) <= _MAX_EXTRACTED_CONTENT + len(chunk)
+        # Verify limit was actually hit (action history should mention it)
+        assert any("LIMIT erreicht" in a for a in result.action_history)
 
 
 class TestDialogHint:
