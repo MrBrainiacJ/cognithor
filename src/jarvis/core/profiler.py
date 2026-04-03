@@ -215,16 +215,17 @@ class TaskProfiler:
         """Gesamtprofil der Faehigkeiten (Staerken/Schwaechen)."""
         conn = self._get_conn()
 
-        # Get all tool names
+        # Get all tool names (row may be tuple or dict depending on row_factory)
         tool_names = [
-            r[0] for r in conn.execute("SELECT DISTINCT tool_name FROM tool_calls").fetchall()
+            r["tool_name"] if isinstance(r, dict) else r[0]
+            for r in conn.execute("SELECT DISTINCT tool_name FROM tool_calls").fetchall()
         ]
 
         tool_profiles = [self.get_tool_profile(t) for t in tool_names]
 
         # Get all categories
         categories = [
-            r[0]
+            r["category"] if isinstance(r, dict) else r[0]
             for r in conn.execute(
                 "SELECT DISTINCT category FROM task_records WHERE end_time IS NOT NULL"
             ).fetchall()
