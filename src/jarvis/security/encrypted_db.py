@@ -15,6 +15,7 @@ macOS Keychain password. The key never touches the filesystem in plaintext.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sqlite3
 from typing import Any
@@ -24,12 +25,12 @@ from jarvis.utils.logging import get_logger
 log = get_logger(__name__)
 
 __all__ = [
-    "encrypted_connect",
-    "is_encryption_available",
-    "compatible_row_factory",
-    "OperationalError",
     "DatabaseError",
     "IntegrityError",
+    "OperationalError",
+    "compatible_row_factory",
+    "encrypted_connect",
+    "is_encryption_available",
 ]
 
 
@@ -39,7 +40,7 @@ class _DictRow(dict):
     __slots__ = ("_values",)
 
     def __init__(self, columns: list[str], values: tuple) -> None:
-        super().__init__(zip(columns, values))
+        super().__init__(zip(columns, values, strict=False))
         self._values = values
 
     def __getitem__(self, key: str | int) -> Any:
@@ -108,7 +109,7 @@ def _check_encryption_enabled() -> bool:
     the result for the lifetime of the process.  Falls back to False if the
     config cannot be read.
     """
-    global _encryption_enabled_cache  # noqa: PLW0603
+    global _encryption_enabled_cache
     if _encryption_enabled_cache is not None:
         return _encryption_enabled_cache
 
@@ -212,7 +213,6 @@ def _migrate_to_encrypted(
     Strategy: open plain DB, create encrypted copy, replace original.
     """
     import shutil
-    import tempfile
 
     backup_path = db_path + ".unencrypted.bak"
     tmp_path = db_path + ".encrypting"
@@ -224,16 +224,14 @@ def _migrate_to_encrypted(
 
         # 2. Use sqlcipher_export to create encrypted copy
         enc_conn = sqlcipher.connect(tmp_path, check_same_thread=check_same_thread)
-        enc_conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+        enc_conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")
         enc_conn.execute("PRAGMA cipher_memory_security = OFF")
         enc_conn.execute("PRAGMA journal_mode=WAL")
 
         # 3. Copy all data: dump from plain, execute in encrypted
         for line in plain_conn.iterdump():
-            try:
+            with contextlib.suppress(Exception):
                 enc_conn.execute(line)
-            except Exception:
-                pass  # Skip duplicate CREATE statements etc. (catches both sqlite3 and sqlcipher3)
         enc_conn.commit()
 
         # 4. Verify encrypted DB
@@ -248,7 +246,7 @@ def _migrate_to_encrypted(
 
         # 6. Open the now-encrypted DB
         conn = sqlcipher.connect(db_path, check_same_thread=check_same_thread)
-        conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+        conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")
         conn.execute("PRAGMA cipher_memory_security = OFF")
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("SELECT count(*) FROM sqlite_master")
@@ -311,7 +309,7 @@ def encrypted_connect(
                             conn = sqlcipher.connect(
                                 db_path, check_same_thread=check_same_thread, timeout=timeout
                             )
-                            conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+                            conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")
                             conn.execute("PRAGMA cipher_memory_security = OFF")
                             conn.execute("PRAGMA journal_mode=WAL")
                             conn.execute("SELECT count(*) FROM sqlite_master")
@@ -332,7 +330,7 @@ def encrypted_connect(
         hex_key = key.encode().hex()
         try:
             conn = sqlcipher.connect(db_path, check_same_thread=check_same_thread, timeout=timeout)
-            conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+            conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")
             # Disable VirtualLock — prevents ERROR_WORKING_SET_QUOTA (1453)
             # on Windows when many DBs are open. Encryption keys may land in
             # pagefile, but Windows can encrypt it (EncryptPagingFile=1).
@@ -360,7 +358,7 @@ def encrypted_connect(
                     conn = sqlcipher.connect(
                         db_path, check_same_thread=check_same_thread, timeout=timeout
                     )
-                    conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")  # noqa: S608
+                    conn.execute(f"PRAGMA key = \"x'{hex_key}'\"")
                     conn.execute("PRAGMA cipher_memory_security = OFF")
                     conn.execute("PRAGMA journal_mode=WAL")
                     log.debug("encrypted_db_created", path=db_path[-30:])

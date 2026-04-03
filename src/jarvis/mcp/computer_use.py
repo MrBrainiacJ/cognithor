@@ -41,12 +41,12 @@ def _take_screenshot_b64(monitor_index: int = 0) -> tuple[str, int, int]:
     """
     try:
         import mss
-    except ImportError:
-        raise ImportError("mss not installed. Run: pip install cognithor[desktop]")
+    except ImportError as err:
+        raise ImportError("mss not installed. Run: pip install cognithor[desktop]") from err
     try:
         from PIL import Image
-    except ImportError:
-        raise ImportError("Pillow not installed. Run: pip install cognithor[desktop]")
+    except ImportError as err:
+        raise ImportError("Pillow not installed. Run: pip install cognithor[desktop]") from err
 
     with mss.mss() as sct:
         # Index 0 = combined virtual screen (all monitors), 1+ = specific monitor

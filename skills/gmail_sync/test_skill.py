@@ -1,4 +1,4 @@
-"""Tests für Gmail Sync."""
+"""Tests fuer Gmail Sync."""
 import pytest
 from .skill import GmailSyncSkill
 

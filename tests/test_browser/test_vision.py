@@ -570,9 +570,11 @@ class TestExtractText:
     @pytest.mark.asyncio
     async def test_extract_text_success(self):
         llm = AsyncMock()
-        llm.chat = AsyncMock(return_value={
-            "message": {"content": "Reddit - r/locallama\nPost 1: Hello World\nPost 2: Test"},
-        })
+        llm.chat = AsyncMock(
+            return_value={
+                "message": {"content": "Reddit - r/locallama\nPost 1: Hello World\nPost 2: Test"},
+            }
+        )
         cfg = VisionConfig(enabled=True, model="qwen3-vl:32b", backend_type="ollama")
         v = VisionAnalyzer(llm, cfg)
 

@@ -1,4 +1,4 @@
-"""Tests für Test Skill."""
+"""Tests fuer Test Skill."""
 
 import pytest
 from .skill import TestSkillSkill

@@ -916,7 +916,9 @@ class PackageInstaller:
                 return InstallResult(
                     success=False,
                     package_id=pkg_id,
-                    message=(f"Herausgeber '{package.signature.signer_id}' ist nicht vertrauenswürdig"),
+                    message=(
+                        f"Herausgeber '{package.signature.signer_id}' ist nicht vertrauenswürdig"
+                    ),
                 )
 
         # 2. Signature integrity

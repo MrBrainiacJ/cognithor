@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from jarvis.browser.vision import VisionAnalysisResult
 from jarvis.mcp.computer_use import ComputerUseTools
@@ -105,8 +106,8 @@ class TestGatekeeperCUClassification:
     """Verify security classification hasn't regressed."""
 
     def test_screenshot_green_actions_yellow(self):
-        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.config import JarvisConfig, ToolsConfig
+        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.models import PlannedAction
 
         config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=True))
@@ -132,8 +133,12 @@ class TestGatewayCUDetection:
         plan = ActionPlan(
             goal="test",
             steps=[
-                PlannedAction(tool="exec_command", params={"command": "calc.exe"}, rationale="start"),
-                PlannedAction(tool="computer_click", params={"x": 100, "y": 200}, rationale="click"),
+                PlannedAction(
+                    tool="exec_command", params={"command": "calc.exe"}, rationale="start"
+                ),
+                PlannedAction(
+                    tool="computer_click", params={"x": 100, "y": 200}, rationale="click"
+                ),
             ],
         )
         assert Gateway._is_cu_plan(plan) is True

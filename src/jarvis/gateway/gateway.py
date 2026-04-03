@@ -20,12 +20,12 @@ import re
 import signal
 import threading
 import time
-from typing import TYPE_CHECKING, Any, ClassVar
-
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from jarvis.config import JarvisConfig, load_config
 from jarvis.core.agent_router import RouteDecision
+from jarvis.core.autonomous_orchestrator import AutonomousOrchestrator
 from jarvis.gateway.phases import (
     apply_phase,
     declare_advanced_attrs,
@@ -61,9 +61,8 @@ from jarvis.models import (
     ToolResult,
     WorkingMemory,
 )
-from jarvis.core.autonomous_orchestrator import AutonomousOrchestrator
-from jarvis.security.consent import ConsentManager
 from jarvis.security.compliance_engine import ComplianceEngine, ComplianceViolation
+from jarvis.security.consent import ConsentManager
 from jarvis.utils.logging import get_logger, setup_logging
 
 if TYPE_CHECKING:
@@ -677,7 +676,7 @@ class Gateway:
                         ),
                         timeout=120,  # ATL calls fail fast, don't block 10min
                     )
-                except _evo_aio.TimeoutError:
+                except TimeoutError:
                     log.debug("evolution_llm_timeout", model=model)
                     return ""
                 return resp.get("message", {}).get("content", "")
@@ -779,8 +778,8 @@ class Gateway:
                 self._evolution_loop._atl_config = atl_cfg
 
                 if atl_cfg.enabled:
-                    from jarvis.evolution.goal_manager import GoalManager
                     from jarvis.evolution.atl_journal import ATLJournal
+                    from jarvis.evolution.goal_manager import GoalManager
 
                     goals_path = self._config.jarvis_home / "evolution" / "goals.yaml"
                     journal_dir = self._config.jarvis_home / "evolution" / "journal"
@@ -804,7 +803,7 @@ class Gateway:
 
                     # Register ATL MCP tools
                     try:
-                        from jarvis.mcp.atl_tools import set_atl_context, register_atl_tools
+                        from jarvis.mcp.atl_tools import register_atl_tools, set_atl_context
 
                         set_atl_context(
                             goal_manager=self._evolution_loop._goal_manager,
@@ -1194,8 +1193,9 @@ class Gateway:
                         and self._audit_trail
                     ):
                         try:
-                            from jarvis.security.tsa import TSAClient
                             from datetime import UTC, datetime
+
+                            from jarvis.security.tsa import TSAClient
 
                             anchor = self._audit_trail.get_anchor()
                             if anchor["entry_count"] > 0:
@@ -1376,7 +1376,6 @@ class Gateway:
         if self._memory_manager and hasattr(self._memory_manager, "compressor"):
             try:
                 from datetime import date
-                from pathlib import Path
 
                 async def _periodic_episode_compression() -> None:
                     await asyncio.sleep(3600)  # First run after 1 hour
@@ -1953,7 +1952,7 @@ class Gateway:
         # GDPR compliance gate — check consent before processing
         if hasattr(self, "_compliance_engine") and self._compliance_engine:
             try:
-                from jarvis.security.gdpr import ProcessingBasis, DataPurpose
+                from jarvis.security.gdpr import DataPurpose, ProcessingBasis
 
                 _channel = msg.channel or "unknown"
                 _user = msg.user_id or msg.session_id or "unknown"
@@ -4054,9 +4053,7 @@ class Gateway:
                         # Ensure uniqueness by appending short hash if file exists
                         _base_name = name
                         _proc_dir = getattr(procedural, "_dir", None)
-                        if _proc_dir is not None and isinstance(
-                            _proc_dir, (str, Path)
-                        ):
+                        if _proc_dir is not None and isinstance(_proc_dir, (str, Path)):
                             _proc_dir = Path(_proc_dir)
                             if (_proc_dir / f"{name}.md").exists():
                                 _short = hashlib.sha256(

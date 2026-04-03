@@ -14,16 +14,16 @@ Bible reference: §3.5 (Audit & Compliance)
 from __future__ import annotations
 
 import os
-import sqlite3
 import time
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from jarvis.security.encrypted_db import encrypted_connect
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from jarvis.config import AuditConfig
 
 log = get_logger(__name__)
