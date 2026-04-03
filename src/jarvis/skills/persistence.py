@@ -21,9 +21,17 @@ from jarvis.db import SQLITE_BUSY_TIMEOUT_MS
 from jarvis.security.encrypted_db import encrypted_connect
 
 try:
-    from jarvis.security.encrypted_db import compatible_row_factory, IntegrityError as _DbIntegrityError
+    from jarvis.security.encrypted_db import (
+        IntegrityError as _DbIntegrityError,
+    )
+    from jarvis.security.encrypted_db import (
+        compatible_row_factory,
+    )
 except ImportError:
-    compatible_row_factory = lambda: sqlite3.Row
+
+    def compatible_row_factory() -> type:  # type: ignore[misc]
+        return sqlite3.Row
+
     _DbIntegrityError = sqlite3.IntegrityError  # type: ignore[assignment,misc]
 from jarvis.utils.logging import get_logger
 
@@ -408,7 +416,8 @@ class MarketplaceStore:
         try:
             self.conn.execute(
                 """
-                INSERT INTO reviews (review_id, package_id, reviewer_id, rating, comment, created_at)
+                INSERT INTO reviews
+                    (review_id, package_id, reviewer_id, rating, comment, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (review_id, package_id, reviewer_id, rating, comment, now),
@@ -844,5 +853,5 @@ class MarketplaceStore:
             "featured_reason": row["featured_reason"],
             "recalled": bool(row["recalled"]),
             "recall_reason": row["recall_reason"],
-            "source": row["source"] if "source" in row.keys() else "builtin",
+            "source": row.get("source", "builtin"),
         }

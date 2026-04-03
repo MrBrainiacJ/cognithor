@@ -13,15 +13,19 @@ Architecture:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from jarvis.models import ActionPlan, PlannedAction, ToolResult
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+from jarvis.models import ActionPlan, ToolResult
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -128,28 +132,22 @@ class CUTaskDecomposer:
         data = None
 
         # Tier 1: direct JSON parse
-        try:
+        with contextlib.suppress(json.JSONDecodeError, ValueError):
             data = json.loads(raw)
-        except (json.JSONDecodeError, ValueError):
-            pass
 
         # Tier 2: markdown code block
         if data is None:
             md_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", raw, re.DOTALL)
             if md_match:
-                try:
+                with contextlib.suppress(json.JSONDecodeError, ValueError):
                     data = json.loads(md_match.group(1))
-                except (json.JSONDecodeError, ValueError):
-                    pass
 
         # Tier 3: find JSON array
         if data is None:
             arr_match = re.search(r"\[.*\]", raw, re.DOTALL)
             if arr_match:
-                try:
+                with contextlib.suppress(json.JSONDecodeError, ValueError):
                     data = json.loads(arr_match.group())
-                except (json.JSONDecodeError, ValueError):
-                    pass
 
         if not isinstance(data, list):
             return []
@@ -365,10 +363,7 @@ class CUAgentExecutor:
             return prefix + "Versuche eine Alternative: anderes Element, scrollen, oder warten."
         if consecutive_failures == 2:
             return prefix + "Versuche einen komplett anderen Ansatz."
-        return (
-            prefix
-            + "Phase wird uebersprungen wenn naechste Aktion auch fehlschlaegt."
-        )
+        return prefix + "Phase wird uebersprungen wenn naechste Aktion auch fehlschlaegt."
 
     async def execute(
         self,
@@ -385,10 +380,8 @@ class CUAgentExecutor:
 
         async def _status(phase: str, msg: str) -> None:
             if status_callback:
-                try:
+                with contextlib.suppress(Exception):
                     await status_callback(phase, msg)
-                except Exception:
-                    pass
 
         # Execute initial plan steps
         await _status("computer_use", f"Starte: {goal[:60]}...")
@@ -429,7 +422,7 @@ class CUAgentExecutor:
                 if abort:
                     result.abort_reason = abort
                     sub_task.status = "failed"
-                    for remaining in task_plan.sub_tasks[st_idx + 1:]:
+                    for remaining in task_plan.sub_tasks[st_idx + 1 :]:
                         remaining.status = "failed"
                     break
 
@@ -451,8 +444,7 @@ class CUAgentExecutor:
                 if self._check_completion_hint(sub_task.completion_hint, screenshot_desc):
                     sub_task.status = "done"
                     self._action_history.append(
-                        f"[Phase {st_idx + 1} '{sub_task.name}': "
-                        f"Hint matched -> abgeschlossen]"
+                        f"[Phase {st_idx + 1} '{sub_task.name}': Hint matched -> abgeschlossen]"
                     )
                     break
 
@@ -487,7 +479,7 @@ class CUAgentExecutor:
                 file_context = ""
                 if sub_task.output_file and content_bag:
                     all_content = []
-                    for key, entries in content_bag.items():
+                    for _key, entries in content_bag.items():
                         all_content.extend(entries)
                     full_text = "\n\n".join(all_content)
                     file_context = (
@@ -563,15 +555,13 @@ class CUAgentExecutor:
                 # Failure tracking
                 if tool_result.is_error:
                     last_failure = (
-                        f"{tool}({self._format_params(params)}) -> "
-                        f"{tool_result.content[:200]}"
+                        f"{tool}({self._format_params(params)}) -> {tool_result.content[:200]}"
                     )
                     consecutive_failures += 1
                     if consecutive_failures >= 4:
                         sub_task.status = "failed"
                         self._action_history.append(
-                            f"[Phase {st_idx + 1} '{sub_task.name}': "
-                            f"4 Fehler -> uebersprungen]"
+                            f"[Phase {st_idx + 1} '{sub_task.name}': 4 Fehler -> uebersprungen]"
                         )
                         break
                 else:
@@ -741,8 +731,8 @@ class CUAgentExecutor:
     async def _extract_text_from_screen(self) -> str:
         """Extract all visible text from current screen via vision model."""
         try:
-            from jarvis.mcp.computer_use import _take_screenshot_b64
             from jarvis.core.vision import build_vision_message, format_for_backend
+            from jarvis.mcp.computer_use import _take_screenshot_b64
 
             b64, _, _ = await asyncio.get_running_loop().run_in_executor(None, _take_screenshot_b64)
             msg = build_vision_message(

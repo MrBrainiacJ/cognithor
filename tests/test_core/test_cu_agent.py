@@ -102,7 +102,11 @@ class TestCUDecisionParsing:
 
     def test_parse_json_in_markdown(self):
         agent = self._make_agent()
-        raw = '```json\n{"tool": "computer_type", "params": {"text": "hello"}, "rationale": "type"}\n```'
+        raw = (
+            "```json\n"
+            '{"tool": "computer_type", "params": {"text": "hello"}, "rationale": "type"}'
+            "\n```"
+        )
         result = agent._parse_tool_decision(raw)
         assert result is not None
         assert result["tool"] == "computer_type"
@@ -168,15 +172,28 @@ class TestCUAgentExecuteLoop:
         planner._ollama.chat = AsyncMock(
             side_effect=[
                 # decompose call
-                {"message": {"content": json.dumps([
-                    {"name": "full_task", "goal": "Rechner oeffnen",
-                     "completion_hint": "Taschenrechner sichtbar", "max_iterations": 10,
-                     "tools": ["computer_click", "computer_type", "exec_command"]},
-                ])}},
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "full_task",
+                                    "goal": "Rechner oeffnen",
+                                    "completion_hint": "Taschenrechner sichtbar",
+                                    "max_iterations": 10,
+                                    "tools": ["computer_click", "computer_type", "exec_command"],
+                                },
+                            ]
+                        )
+                    }
+                },
                 # decide: click
                 {
                     "message": {
-                        "content": '{"tool": "computer_click", "params": {"x": 200, "y": 300}, "rationale": "click window"}'
+                        "content": (
+                            '{"tool": "computer_click", "params": {"x": 200, "y": 300},'
+                            ' "rationale": "click window"}'
+                        )
                     }
                 },
                 # decide: DONE
@@ -230,13 +247,30 @@ class TestCUAgentExecuteLoop:
         planner._ollama.chat = AsyncMock(
             side_effect=[
                 # decompose call
-                {"message": {"content": json.dumps([
-                    {"name": "full_task", "goal": "test", "completion_hint": "",
-                     "max_iterations": 30, "tools": ["computer_click"]},
-                ])}},
-            ] + [
-                {"message": {"content": '{"tool": "computer_click", "params": {"x": 100, "y": 100}}'}},
-            ] * 10
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "full_task",
+                                    "goal": "test",
+                                    "completion_hint": "",
+                                    "max_iterations": 30,
+                                    "tools": ["computer_click"],
+                                },
+                            ]
+                        )
+                    }
+                },
+            ]
+            + [
+                {
+                    "message": {
+                        "content": '{"tool": "computer_click", "params": {"x": 100, "y": 100}}'
+                    }
+                },
+            ]
+            * 10
         )
 
         mcp = MagicMock()
@@ -269,10 +303,21 @@ class TestCUAgentExecuteLoop:
         planner._ollama.chat = AsyncMock(
             side_effect=[
                 # decompose call
-                {"message": {"content": json.dumps([
-                    {"name": "full_task", "goal": "test", "completion_hint": "",
-                     "max_iterations": 30, "tools": ["computer_click"]},
-                ])}},
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "full_task",
+                                    "goal": "test",
+                                    "completion_hint": "",
+                                    "max_iterations": 30,
+                                    "tools": ["computer_click"],
+                                },
+                            ]
+                        )
+                    }
+                },
                 {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
             ]
         )
@@ -375,17 +420,23 @@ class TestCompletionHintMatching:
 
     def test_hint_matches_when_keywords_present(self):
         agent = self._make_agent()
-        assert agent._check_completion_hint(
-            "locallama erscheint in URL oder Titel",
-            "Browser zeigt reddit.com/r/locallama im Titel",
-        ) is True
+        assert (
+            agent._check_completion_hint(
+                "locallama erscheint in URL oder Titel",
+                "Browser zeigt reddit.com/r/locallama im Titel",
+            )
+            is True
+        )
 
     def test_hint_no_match_when_keywords_missing(self):
         agent = self._make_agent()
-        assert agent._check_completion_hint(
-            "locallama erscheint in URL oder Titel",
-            "Desktop mit verschiedenen Icons sichtbar",
-        ) is False
+        assert (
+            agent._check_completion_hint(
+                "locallama erscheint in URL oder Titel",
+                "Desktop mit verschiedenen Icons sichtbar",
+            )
+            is False
+        )
 
     def test_hint_empty_returns_false(self):
         agent = self._make_agent()
@@ -393,24 +444,33 @@ class TestCompletionHintMatching:
 
     def test_hint_short_words_ignored(self):
         agent = self._make_agent()
-        assert agent._check_completion_hint(
-            "in URL Titel locallama erscheint",
-            "locallama erscheint Titel",
-        ) is True
+        assert (
+            agent._check_completion_hint(
+                "in URL Titel locallama erscheint",
+                "locallama erscheint Titel",
+            )
+            is True
+        )
 
     def test_hint_partial_match_below_threshold(self):
         agent = self._make_agent()
-        assert agent._check_completion_hint(
-            "Rechner Fenster zeigt Ergebnis sichtbar",
-            "Rechner Fenster ist im Hintergrund",
-        ) is False
+        assert (
+            agent._check_completion_hint(
+                "Rechner Fenster zeigt Ergebnis sichtbar",
+                "Rechner Fenster ist im Hintergrund",
+            )
+            is False
+        )
 
     def test_hint_60_percent_threshold(self):
         agent = self._make_agent()
-        assert agent._check_completion_hint(
-            "Reddit Seite zeigt locallama Ergebnisse",
-            "Reddit zeigt locallama und andere Dinge Ergebnisse",
-        ) is True
+        assert (
+            agent._check_completion_hint(
+                "Reddit Seite zeigt locallama Ergebnisse",
+                "Reddit zeigt locallama und andere Dinge Ergebnisse",
+            )
+            is True
+        )
 
 
 class TestScreenshotSimilarity:
@@ -528,14 +588,30 @@ class TestCUTaskDecomposerParsing:
 
     def test_parse_subtasks_valid_json(self):
         d = self._make_decomposer()
-        raw = json.dumps([
-            {"name": "open_app", "goal": "Oeffne Reddit", "completion_hint": "Reddit sichtbar",
-             "max_iterations": 8, "tools": ["computer_click"], "extract_content": False,
-             "content_key": "", "output_file": ""},
-            {"name": "search", "goal": "Suche locallama", "completion_hint": "locallama in URL",
-             "max_iterations": 6, "tools": ["computer_type", "computer_click"],
-             "extract_content": False, "content_key": "", "output_file": ""},
-        ])
+        raw = json.dumps(
+            [
+                {
+                    "name": "open_app",
+                    "goal": "Oeffne Reddit",
+                    "completion_hint": "Reddit sichtbar",
+                    "max_iterations": 8,
+                    "tools": ["computer_click"],
+                    "extract_content": False,
+                    "content_key": "",
+                    "output_file": "",
+                },
+                {
+                    "name": "search",
+                    "goal": "Suche locallama",
+                    "completion_hint": "locallama in URL",
+                    "max_iterations": 6,
+                    "tools": ["computer_type", "computer_click"],
+                    "extract_content": False,
+                    "content_key": "",
+                    "output_file": "",
+                },
+            ]
+        )
         tasks = d._parse_subtasks(raw)
         assert len(tasks) == 2
         assert tasks[0].name == "open_app"
@@ -546,9 +622,20 @@ class TestCUTaskDecomposerParsing:
         d = self._make_decomposer()
         raw = (
             "Hier ist der Plan:\n```json\n"
-            + json.dumps([{"name": "step1", "goal": "Do thing", "completion_hint": "done",
-                          "max_iterations": 5, "tools": [], "extract_content": False,
-                          "content_key": "", "output_file": ""}])
+            + json.dumps(
+                [
+                    {
+                        "name": "step1",
+                        "goal": "Do thing",
+                        "completion_hint": "done",
+                        "max_iterations": 5,
+                        "tools": [],
+                        "extract_content": False,
+                        "content_key": "",
+                        "output_file": "",
+                    }
+                ]
+            )
             + "\n```\nDas war der Plan."
         )
         tasks = d._parse_subtasks(raw)
@@ -571,8 +658,16 @@ class TestCUTaskDecomposerParsing:
 
     def test_parse_subtasks_tools_mapped_to_available_tools(self):
         d = self._make_decomposer()
-        raw = json.dumps([{"name": "a", "goal": "b", "completion_hint": "c",
-                          "tools": ["computer_click", "extract_text"]}])
+        raw = json.dumps(
+            [
+                {
+                    "name": "a",
+                    "goal": "b",
+                    "completion_hint": "c",
+                    "tools": ["computer_click", "extract_text"],
+                }
+            ]
+        )
         tasks = d._parse_subtasks(raw)
         assert tasks[0].available_tools == ["computer_click", "extract_text"]
 
@@ -582,14 +677,32 @@ class TestCUTaskDecomposerDecompose:
     async def test_decompose_happy_path(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(return_value={
-            "message": {"content": json.dumps([
-                {"name": "open_app", "goal": "Oeffne Reddit", "completion_hint": "Reddit sichtbar",
-                 "max_iterations": 8, "tools": ["computer_click"], "output_file": ""},
-                {"name": "write_result", "goal": "Schreibe Datei", "completion_hint": "Datei geschrieben",
-                 "max_iterations": 5, "tools": ["write_file"], "output_file": "result_{date}.txt"},
-            ])}
-        })
+        planner._ollama.chat = AsyncMock(
+            return_value={
+                "message": {
+                    "content": json.dumps(
+                        [
+                            {
+                                "name": "open_app",
+                                "goal": "Oeffne Reddit",
+                                "completion_hint": "Reddit sichtbar",
+                                "max_iterations": 8,
+                                "tools": ["computer_click"],
+                                "output_file": "",
+                            },
+                            {
+                                "name": "write_result",
+                                "goal": "Schreibe Datei",
+                                "completion_hint": "Datei geschrieben",
+                                "max_iterations": 5,
+                                "tools": ["write_file"],
+                                "output_file": "result_{date}.txt",
+                            },
+                        ]
+                    )
+                }
+            }
+        )
         d = CUTaskDecomposer(planner, CUAgentConfig())
         plan = await d.decompose("Oeffne Reddit und speichere")
         assert len(plan.sub_tasks) == 2
@@ -613,9 +726,11 @@ class TestCUTaskDecomposerDecompose:
     async def test_decompose_garbage_response_degrades(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(return_value={
-            "message": {"content": "Ich bin ein Sprachmodell und kann keine Phasen erzeugen."}
-        })
+        planner._ollama.chat = AsyncMock(
+            return_value={
+                "message": {"content": "Ich bin ein Sprachmodell und kann keine Phasen erzeugen."}
+            }
+        )
         d = CUTaskDecomposer(planner, CUAgentConfig())
         plan = await d.decompose("Irgendwas")
         assert len(plan.sub_tasks) == 1
@@ -625,12 +740,18 @@ class TestCUTaskDecomposerDecompose:
     async def test_decompose_think_tags_stripped(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(return_value={
-            "message": {"content": (
-                "<think>Let me think about this...</think>"
-                + json.dumps([{"name": "step1", "goal": "do it", "completion_hint": "done"}])
-            )}
-        })
+        planner._ollama.chat = AsyncMock(
+            return_value={
+                "message": {
+                    "content": (
+                        "<think>Let me think about this...</think>"
+                        + json.dumps(
+                            [{"name": "step1", "goal": "do it", "completion_hint": "done"}]
+                        )
+                    )
+                }
+            }
+        )
         d = CUTaskDecomposer(planner, CUAgentConfig())
         plan = await d.decompose("Test")
         assert len(plan.sub_tasks) == 1
@@ -642,24 +763,50 @@ class TestSubTaskLoop:
     async def test_two_subtasks_both_complete_via_done(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(side_effect=[
-            {"message": {"content": json.dumps([
-                {"name": "phase1", "goal": "Klicke Button", "completion_hint": "Button geklickt",
-                 "max_iterations": 5, "tools": ["computer_click"]},
-                {"name": "phase2", "goal": "Tippe Text", "completion_hint": "Text sichtbar",
-                 "max_iterations": 5, "tools": ["computer_type"]},
-            ])}},
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 100, "y": 200}}'}},
-            {"message": {"content": "DONE: Button wurde geklickt"}},
-            {"message": {"content": '{"tool": "computer_type", "params": {"text": "hello"}}'}},
-            {"message": {"content": "DONE: Text wurde eingegeben"}},
-        ])
+        planner._ollama.chat = AsyncMock(
+            side_effect=[
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "phase1",
+                                    "goal": "Klicke Button",
+                                    "completion_hint": "Button geklickt",
+                                    "max_iterations": 5,
+                                    "tools": ["computer_click"],
+                                },
+                                {
+                                    "name": "phase2",
+                                    "goal": "Tippe Text",
+                                    "completion_hint": "Text sichtbar",
+                                    "max_iterations": 5,
+                                    "tools": ["computer_type"],
+                                },
+                            ]
+                        )
+                    }
+                },
+                {
+                    "message": {
+                        "content": '{"tool": "computer_click", "params": {"x": 100, "y": 200}}'
+                    }
+                },
+                {"message": {"content": "DONE: Button wurde geklickt"}},
+                {"message": {"content": '{"tool": "computer_type", "params": {"text": "hello"}}'}},
+                {"message": {"content": "DONE: Text wurde eingegeben"}},
+            ]
+        )
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
-            "computer_screenshot": AsyncMock(return_value={
-                "success": True, "description": "screen", "elements": [],
-            }),
+            "computer_screenshot": AsyncMock(
+                return_value={
+                    "success": True,
+                    "description": "screen",
+                    "elements": [],
+                }
+            ),
             "computer_click": AsyncMock(return_value={"success": True}),
             "computer_type": AsyncMock(return_value={"success": True}),
         }
@@ -677,22 +824,40 @@ class TestSubTaskLoop:
     async def test_subtask_completes_via_hint_match(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(side_effect=[
-            {"message": {"content": json.dumps([
-                {"name": "open_reddit", "goal": "Oeffne Reddit",
-                 "completion_hint": "Reddit Seite locallama sichtbar",
-                 "max_iterations": 10, "tools": ["computer_click"]},
-            ])}},
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 50, "y": 50}}'}},
-        ])
+        planner._ollama.chat = AsyncMock(
+            side_effect=[
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "open_reddit",
+                                    "goal": "Oeffne Reddit",
+                                    "completion_hint": "Reddit Seite locallama sichtbar",
+                                    "max_iterations": 10,
+                                    "tools": ["computer_click"],
+                                },
+                            ]
+                        )
+                    }
+                },
+                {
+                    "message": {
+                        "content": '{"tool": "computer_click", "params": {"x": 50, "y": 50}}'
+                    }
+                },
+            ]
+        )
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
-            "computer_screenshot": AsyncMock(return_value={
-                "success": True,
-                "description": "Browser Reddit Seite mit locallama Posts sichtbar",
-                "elements": [],
-            }),
+            "computer_screenshot": AsyncMock(
+                return_value={
+                    "success": True,
+                    "description": "Browser Reddit Seite mit locallama Posts sichtbar",
+                    "elements": [],
+                }
+            ),
             "computer_click": AsyncMock(return_value={"success": True}),
         }
 
@@ -709,23 +874,45 @@ class TestSubTaskLoop:
     async def test_subtask_fails_after_max_iterations_continues_next(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(side_effect=[
-            {"message": {"content": json.dumps([
-                {"name": "fail_phase", "goal": "Will fail", "completion_hint": "impossible",
-                 "max_iterations": 2, "tools": ["computer_click"]},
-                {"name": "ok_phase", "goal": "Will succeed", "completion_hint": "done",
-                 "max_iterations": 5, "tools": ["computer_click"]},
-            ])}},
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
-            {"message": {"content": "DONE: OK phase done"}},
-        ])
+        planner._ollama.chat = AsyncMock(
+            side_effect=[
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "fail_phase",
+                                    "goal": "Will fail",
+                                    "completion_hint": "impossible",
+                                    "max_iterations": 2,
+                                    "tools": ["computer_click"],
+                                },
+                                {
+                                    "name": "ok_phase",
+                                    "goal": "Will succeed",
+                                    "completion_hint": "done",
+                                    "max_iterations": 5,
+                                    "tools": ["computer_click"],
+                                },
+                            ]
+                        )
+                    }
+                },
+                {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
+                {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
+                {"message": {"content": "DONE: OK phase done"}},
+            ]
+        )
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
-            "computer_screenshot": AsyncMock(return_value={
-                "success": True, "description": "screen", "elements": [],
-            }),
+            "computer_screenshot": AsyncMock(
+                return_value={
+                    "success": True,
+                    "description": "screen",
+                    "elements": [],
+                }
+            ),
             "computer_click": AsyncMock(return_value={"success": True}),
         }
 
@@ -742,25 +929,45 @@ class TestSubTaskLoop:
     async def test_content_extraction_accumulates_in_bag(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(side_effect=[
-            {"message": {"content": json.dumps([
-                {"name": "read_posts", "goal": "Lies Posts", "completion_hint": "done",
-                 "max_iterations": 5, "tools": ["extract_text"],
-                 "extract_content": True, "content_key": "posts"},
-            ])}},
-            {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
-            {"message": {"content": "DONE: Posts gelesen"}},
-        ])
+        planner._ollama.chat = AsyncMock(
+            side_effect=[
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "read_posts",
+                                    "goal": "Lies Posts",
+                                    "completion_hint": "done",
+                                    "max_iterations": 5,
+                                    "tools": ["extract_text"],
+                                    "extract_content": True,
+                                    "content_key": "posts",
+                                },
+                            ]
+                        )
+                    }
+                },
+                {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
+                {"message": {"content": "DONE: Posts gelesen"}},
+            ]
+        )
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
-            "computer_screenshot": AsyncMock(return_value={
-                "success": True, "description": "screen with posts", "elements": [],
-            }),
+            "computer_screenshot": AsyncMock(
+                return_value={
+                    "success": True,
+                    "description": "screen with posts",
+                    "elements": [],
+                }
+            ),
         }
 
         agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
-        agent._extract_text_from_screen = AsyncMock(return_value="Post about LLMs on local hardware")
+        agent._extract_text_from_screen = AsyncMock(
+            return_value="Post about LLMs on local hardware"
+        )
 
         result = await agent.execute(
             goal="Lies Posts",
@@ -775,16 +982,22 @@ class TestSubTaskLoop:
     async def test_decompose_failure_degrades_to_flat_loop(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(side_effect=[
-            RuntimeError("LLM down"),
-            {"message": {"content": "DONE: Aufgabe erledigt"}},
-        ])
+        planner._ollama.chat = AsyncMock(
+            side_effect=[
+                RuntimeError("LLM down"),
+                {"message": {"content": "DONE: Aufgabe erledigt"}},
+            ]
+        )
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
-            "computer_screenshot": AsyncMock(return_value={
-                "success": True, "description": "screen", "elements": [],
-            }),
+            "computer_screenshot": AsyncMock(
+                return_value={
+                    "success": True,
+                    "description": "screen",
+                    "elements": [],
+                }
+            ),
         }
 
         agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
@@ -813,11 +1026,7 @@ class TestGatewayResultMessage:
             "[Computer Use Ergebnis]\n"
             + "\n".join(cu_result.action_history[-10:])
             + f"\n\nAbschluss: {cu_result.abort_reason}"
-            + (
-                f"\nZusammenfassung: {cu_result.task_summary}"
-                if cu_result.task_summary
-                else ""
-            )
+            + (f"\nZusammenfassung: {cu_result.task_summary}" if cu_result.task_summary else "")
             + (
                 f"\nErstellte Dateien: {', '.join(cu_result.output_files)}"
                 if cu_result.output_files
@@ -844,45 +1053,97 @@ class TestRedditScenarioIntegration:
     async def test_reddit_scenario_full_flow(self):
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(side_effect=[
-            # 1. Decompose
-            {"message": {"content": json.dumps([
-                {"name": "open_reddit", "goal": "Oeffne Reddit",
-                 "completion_hint": "Reddit Startseite sichtbar",
-                 "max_iterations": 8, "tools": ["computer_click", "exec_command"]},
-                {"name": "search_locallama", "goal": "Suche /locallama",
-                 "completion_hint": "locallama Subreddit sichtbar",
-                 "max_iterations": 6, "tools": ["computer_click", "computer_type"]},
-                {"name": "read_posts", "goal": "Scrolle und lies 10 Posts",
-                 "completion_hint": "Posts gelesen",
-                 "max_iterations": 15, "tools": ["computer_scroll", "extract_text"],
-                 "extract_content": True, "content_key": "posts"},
-                {"name": "save_file", "goal": "Speichere in Datei",
-                 "completion_hint": "Datei geschrieben",
-                 "max_iterations": 5, "tools": ["write_file"],
-                 "output_file": "Reddit_fetch_{date}.txt"},
-            ])}},
-            # 2. open_reddit: click then DONE
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 400, "y": 50}}'}},
-            {"message": {"content": "DONE: Reddit geoeffnet"}},
-            # 3. search_locallama: type then DONE
-            {"message": {"content": '{"tool": "computer_type", "params": {"text": "/locallama"}}'}},
-            {"message": {"content": "DONE: locallama Subreddit geoeffnet"}},
-            # 4. read_posts: extract, scroll, extract then DONE
-            {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
-            {"message": {"content": '{"tool": "computer_scroll", "params": {"direction": "down", "amount": 3}}'}},
-            {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
-            {"message": {"content": "DONE: Posts gelesen"}},
-            # 5. save_file: write_file then DONE
-            {"message": {"content": '{"tool": "write_file", "params": {"path": "C:\\\\Users\\\\Test\\\\Documents\\\\Reddit_fetch_20260403.txt", "content": "posts content"}}'}},
-            {"message": {"content": "DONE: Datei gespeichert"}},
-        ])
+        planner._ollama.chat = AsyncMock(
+            side_effect=[
+                # 1. Decompose
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "open_reddit",
+                                    "goal": "Oeffne Reddit",
+                                    "completion_hint": "Reddit Startseite sichtbar",
+                                    "max_iterations": 8,
+                                    "tools": ["computer_click", "exec_command"],
+                                },
+                                {
+                                    "name": "search_locallama",
+                                    "goal": "Suche /locallama",
+                                    "completion_hint": "locallama Subreddit sichtbar",
+                                    "max_iterations": 6,
+                                    "tools": ["computer_click", "computer_type"],
+                                },
+                                {
+                                    "name": "read_posts",
+                                    "goal": "Scrolle und lies 10 Posts",
+                                    "completion_hint": "Posts gelesen",
+                                    "max_iterations": 15,
+                                    "tools": ["computer_scroll", "extract_text"],
+                                    "extract_content": True,
+                                    "content_key": "posts",
+                                },
+                                {
+                                    "name": "save_file",
+                                    "goal": "Speichere in Datei",
+                                    "completion_hint": "Datei geschrieben",
+                                    "max_iterations": 5,
+                                    "tools": ["write_file"],
+                                    "output_file": "Reddit_fetch_{date}.txt",
+                                },
+                            ]
+                        )
+                    }
+                },
+                # 2. open_reddit: click then DONE
+                {
+                    "message": {
+                        "content": '{"tool": "computer_click", "params": {"x": 400, "y": 50}}'
+                    }
+                },
+                {"message": {"content": "DONE: Reddit geoeffnet"}},
+                # 3. search_locallama: type then DONE
+                {
+                    "message": {
+                        "content": '{"tool": "computer_type", "params": {"text": "/locallama"}}'
+                    }
+                },
+                {"message": {"content": "DONE: locallama Subreddit geoeffnet"}},
+                # 4. read_posts: extract, scroll, extract then DONE
+                {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
+                {
+                    "message": {
+                        "content": (
+                            '{"tool": "computer_scroll",'
+                            ' "params": {"direction": "down", "amount": 3}}'
+                        )
+                    }
+                },
+                {"message": {"content": '{"tool": "extract_text", "params": {}}'}},
+                {"message": {"content": "DONE: Posts gelesen"}},
+                # 5. save_file: write_file then DONE
+                {
+                    "message": {
+                        "content": (
+                            '{"tool": "write_file", "params": {"path":'
+                            ' "C:\\\\Users\\\\Test\\\\Documents\\\\Reddit_fetch_20260403.txt",'
+                            ' "content": "posts content"}}'
+                        )
+                    }
+                },
+                {"message": {"content": "DONE: Datei gespeichert"}},
+            ]
+        )
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
-            "computer_screenshot": AsyncMock(return_value={
-                "success": True, "description": "screen", "elements": [],
-            }),
+            "computer_screenshot": AsyncMock(
+                return_value={
+                    "success": True,
+                    "description": "screen",
+                    "elements": [],
+                }
+            ),
             "computer_click": AsyncMock(return_value={"success": True}),
             "computer_type": AsyncMock(return_value={"success": True}),
             "computer_scroll": AsyncMock(return_value={"success": True}),
@@ -890,10 +1151,12 @@ class TestRedditScenarioIntegration:
         }
 
         agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
-        agent._extract_text_from_screen = AsyncMock(side_effect=[
-            "Post 1: Local LLMs are amazing\nSummary of post 1...",
-            "Post 2: Running Llama on a laptop\nSummary of post 2...",
-        ])
+        agent._extract_text_from_screen = AsyncMock(
+            side_effect=[
+                "Post 1: Local LLMs are amazing\nSummary of post 1...",
+                "Post 2: Running Llama on a laptop\nSummary of post 2...",
+            ]
+        )
 
         result = await agent.execute(
             goal="Oeffne Reddit, suche /locallama, lies 10 Posts, speichere in Datei",
@@ -914,29 +1177,49 @@ class TestRedditScenarioIntegration:
         """Phase fails, next phase still runs."""
         planner = MagicMock()
         planner._ollama = AsyncMock()
-        planner._ollama.chat = AsyncMock(side_effect=[
-            # Decompose: 2 phases
-            {"message": {"content": json.dumps([
-                {"name": "broken_phase", "goal": "Will fail",
-                 "completion_hint": "never", "max_iterations": 3,
-                 "tools": ["computer_click"]},
-                {"name": "ok_phase", "goal": "Should work",
-                 "completion_hint": "done", "max_iterations": 5,
-                 "tools": ["computer_click"]},
-            ])}},
-            # broken_phase: 3 clicks that exhaust iterations
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 2, "y": 2}}'}},
-            {"message": {"content": '{"tool": "computer_click", "params": {"x": 3, "y": 3}}'}},
-            # ok_phase: DONE immediately
-            {"message": {"content": "DONE: Phase 2 erledigt"}},
-        ])
+        planner._ollama.chat = AsyncMock(
+            side_effect=[
+                # Decompose: 2 phases
+                {
+                    "message": {
+                        "content": json.dumps(
+                            [
+                                {
+                                    "name": "broken_phase",
+                                    "goal": "Will fail",
+                                    "completion_hint": "never",
+                                    "max_iterations": 3,
+                                    "tools": ["computer_click"],
+                                },
+                                {
+                                    "name": "ok_phase",
+                                    "goal": "Should work",
+                                    "completion_hint": "done",
+                                    "max_iterations": 5,
+                                    "tools": ["computer_click"],
+                                },
+                            ]
+                        )
+                    }
+                },
+                # broken_phase: 3 clicks that exhaust iterations
+                {"message": {"content": '{"tool": "computer_click", "params": {"x": 1, "y": 1}}'}},
+                {"message": {"content": '{"tool": "computer_click", "params": {"x": 2, "y": 2}}'}},
+                {"message": {"content": '{"tool": "computer_click", "params": {"x": 3, "y": 3}}'}},
+                # ok_phase: DONE immediately
+                {"message": {"content": "DONE: Phase 2 erledigt"}},
+            ]
+        )
 
         mcp = MagicMock()
         mcp._builtin_handlers = {
-            "computer_screenshot": AsyncMock(return_value={
-                "success": True, "description": "screen", "elements": [],
-            }),
+            "computer_screenshot": AsyncMock(
+                return_value={
+                    "success": True,
+                    "description": "screen",
+                    "elements": [],
+                }
+            ),
             "computer_click": AsyncMock(return_value={"success": True}),
         }
 
