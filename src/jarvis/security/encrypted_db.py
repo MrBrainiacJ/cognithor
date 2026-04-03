@@ -26,14 +26,29 @@ log = get_logger(__name__)
 __all__ = ["encrypted_connect", "is_encryption_available", "compatible_row_factory"]
 
 
-def _dict_row_factory(cursor: Any, row: tuple) -> sqlite3.Row | dict:
+class _DictRow(dict):
+    """Dict that also supports integer index access like sqlite3.Row."""
+
+    __slots__ = ("_values",)
+
+    def __init__(self, columns: list[str], values: tuple) -> None:
+        super().__init__(zip(columns, values))
+        self._values = values
+
+    def __getitem__(self, key: str | int) -> Any:
+        if isinstance(key, int):
+            return self._values[key]
+        return super().__getitem__(key)
+
+
+def _dict_row_factory(cursor: Any, row: tuple) -> _DictRow:
     """Row factory that works with both sqlite3 and sqlcipher3 cursors.
 
     sqlite3.Row requires a sqlite3.Cursor, which sqlcipher3 doesn't provide.
     This factory returns a dict-like object that supports both index and key access.
     """
     columns = [d[0] for d in cursor.description]
-    return dict(zip(columns, row))
+    return _DictRow(columns, row)
 
 
 def compatible_row_factory() -> Any:

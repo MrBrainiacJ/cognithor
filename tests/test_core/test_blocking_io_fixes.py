@@ -25,16 +25,14 @@ class TestUserPreferencePersistentConn:
         """Store hat ein _conn Attribut."""
         store = UserPreferenceStore(tmp_path / "prefs.db")
         assert hasattr(store, "_conn")
-        # encrypted_connect may return sqlite3.Connection or sqlcipher Connection
+        # encrypted_connect may return sqlite3 or sqlcipher Connection
         assert hasattr(store._conn, "execute")
         store.close()
 
     def test_wal_mode_enabled(self, tmp_path: Path) -> None:
         """WAL-Modus ist aktiviert."""
         store = UserPreferenceStore(tmp_path / "prefs.db")
-        row = store._conn.execute("PRAGMA journal_mode").fetchone()
-        # row may be a tuple (sqlite3) or dict (sqlcipher with row_factory)
-        mode = row[0] if isinstance(row, (tuple, list)) else row.get("journal_mode", row.get(0))
+        mode = store._conn.execute("PRAGMA journal_mode").fetchone()[0]
         assert mode == "wal"
         store.close()
 
