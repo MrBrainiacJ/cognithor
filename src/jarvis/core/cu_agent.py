@@ -30,6 +30,12 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
+try:
+    from jarvis.core.vision import build_vision_message, format_for_backend
+except ImportError:  # vision module optional
+    build_vision_message = None  # type: ignore[assignment]
+    format_for_backend = None  # type: ignore[assignment]
+
 
 @dataclass
 class CUAgentConfig:
@@ -110,6 +116,22 @@ class CUTaskDecomposer:
         '"completion_hint": "Ergebnis 8 ist sichtbar", "max_iterations": 6, '
         '"tools": ["computer_screenshot", "computer_click", "computer_type"], '
         '"extract_content": false, "content_key": "", "output_file": ""}}\n'
+        "]\n"
+        "```"
+        "\n\n"
+        "Beispiel fuer 'Lies 3 Nachrichten und speichere sie':\n"
+        "```json\n"
+        "[\n"
+        '  {{"name": "read_messages", "goal": "Lies die Nachrichten", '
+        '"completion_hint": "Nachrichten sichtbar", "max_iterations": 10, '
+        '"tools": ["computer_scroll", "extract_text"], '
+        '"extract_content": true, "content_key": "messages", '
+        '"output_file": ""}},\n'
+        '  {{"name": "save_file", "goal": "Speichere in Datei", '
+        '"completion_hint": "Datei geschrieben", "max_iterations": 5, '
+        '"tools": ["write_file"], '
+        '"extract_content": false, "content_key": "", '
+        '"output_file": "messages_{{date}}.txt"}}\n'
         "]\n"
         "```"
     )
@@ -275,8 +297,8 @@ class CUAgentExecutor:
         '{{"tool": "extract_text", "params": {{}}, "rationale": "Text vom Bildschirm lesen"}}\n\n'
         "3. Wenn das Ziel erreicht ist:\n"
         "DONE: [Zusammenfassung was erreicht wurde]\n\n"
-        "Verfuegbare Tools: exec_command, computer_screenshot, computer_click, "
-        "computer_type, computer_hotkey, computer_scroll\n\n"
+        "Verfuegbare Tools: computer_screenshot, computer_click, "
+        "computer_type, computer_hotkey, computer_scroll, write_file\n\n"
         "WICHTIG: Plane immer nur EINEN Schritt. Nach der Ausfuehrung "
         "bekommst du einen neuen Screenshot."
     )
@@ -653,15 +675,25 @@ class CUAgentExecutor:
             except (json.JSONDecodeError, ValueError):
                 pass
 
-        # Tier 3: find JSON object with "tool" key
-        json_match = re.search(r'\{[^{}]*"tool"[^{}]*\}', raw)
-        if json_match:
-            try:
-                data = json.loads(json_match.group())
-                if "tool" in data:
-                    return data
-            except (json.JSONDecodeError, ValueError):
-                pass
+        # Tier 3: find JSON object with "tool" key via balanced brace matching
+        tool_pos = raw.find('"tool"')
+        if tool_pos != -1:
+            brace_start = raw.rfind("{", 0, tool_pos)
+            if brace_start != -1:
+                depth = 0
+                for i in range(brace_start, len(raw)):
+                    if raw[i] == "{":
+                        depth += 1
+                    elif raw[i] == "}":
+                        depth -= 1
+                    if depth == 0:
+                        try:
+                            data = json.loads(raw[brace_start : i + 1])
+                            if isinstance(data, dict) and "tool" in data:
+                                return data
+                        except (json.JSONDecodeError, ValueError):
+                            pass
+                        break
 
         return None
 
@@ -742,22 +774,25 @@ class CUAgentExecutor:
     async def _extract_text_from_screen(self) -> str:
         """Extract all visible text from current screen via vision model."""
         try:
-            from jarvis.core.vision import build_vision_message, format_for_backend
             from jarvis.mcp.computer_use import _take_screenshot_b64
+            _bvm = build_vision_message
+            _ffb = format_for_backend
 
             b64, _, _, _ = await asyncio.get_running_loop().run_in_executor(None, _take_screenshot_b64)
-            msg = build_vision_message(
+            msg = _bvm(
                 "Lies ALLEN sichtbaren Text in diesem Screenshot ab. "
                 "Gib den Text zeilenweise wieder. Antworte NUR mit dem Text.",
                 [b64],
             )
-            formatted = format_for_backend(msg, "ollama")
+            formatted = _ffb(msg, "ollama")
             response = await self._planner._ollama.chat(
                 model=self._config.vision_model,
                 messages=[formatted],
                 temperature=0.1,
             )
-            return response.get("message", {}).get("content", "")
+            text = response.get("message", {}).get("content", "")
+            text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+            return text
         except Exception:
             log.debug("cu_agent_extract_text_failed", exc_info=True)
             return ""

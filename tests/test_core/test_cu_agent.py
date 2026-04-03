@@ -1264,3 +1264,64 @@ class TestCUAgentConfigDelays:
         mcp._builtin_handlers = {}
         agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
         assert agent._cu_tools is None
+
+
+class TestTier3RegexFix:
+    def _make_agent(self) -> CUAgentExecutor:
+        planner = MagicMock()
+        planner._ollama = AsyncMock()
+        mcp = MagicMock()
+        mcp._builtin_handlers = {}
+        return CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
+
+    def test_parse_nested_params_in_prose(self):
+        agent = self._make_agent()
+        raw = (
+            "Ich werde jetzt klicken.\n"
+            '{"tool": "computer_click", "params": {"x": 200, "y": 300}, '
+            '"rationale": "click button"}\n'
+            "Das war mein Plan."
+        )
+        result = agent._parse_tool_decision(raw)
+        assert result is not None
+        assert result["tool"] == "computer_click"
+        assert result["params"]["x"] == 200
+        assert result["params"]["y"] == 300
+
+    def test_parse_flat_json_still_works(self):
+        agent = self._make_agent()
+        raw = '{"tool": "computer_scroll", "params": {"direction": "down"}}'
+        result = agent._parse_tool_decision(raw)
+        assert result is not None
+        assert result["tool"] == "computer_scroll"
+
+
+class TestThinkStripExtractText:
+    @pytest.mark.asyncio
+    async def test_think_tags_stripped_from_extracted_text(self):
+        from unittest.mock import patch
+
+        planner = MagicMock()
+        planner._ollama = AsyncMock()
+        planner._ollama.chat = AsyncMock(return_value={
+            "message": {
+                "content": (
+                    "<think>Let me read...</think>"
+                    "Line 1: Hello World\nLine 2: Test"
+                )
+            }
+        })
+        mcp = MagicMock()
+        mcp._builtin_handlers = {}
+        agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
+
+        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+            mock_ss.return_value = ("b64data", 1920, 1080, 1.0)
+            with patch("jarvis.core.cu_agent.build_vision_message") as mock_bvm:
+                mock_bvm.return_value = {"role": "user", "content": "test"}
+                with patch("jarvis.core.cu_agent.format_for_backend") as mock_fmt:
+                    mock_fmt.return_value = {"role": "user", "content": "test"}
+                    text = await agent._extract_text_from_screen()
+
+        assert "<think>" not in text
+        assert "Hello World" in text
