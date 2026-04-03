@@ -20,7 +20,11 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from jarvis.security.encrypted_db import encrypted_connect
+from jarvis.security.encrypted_db import (
+    DatabaseError as _EncryptedDatabaseError,
+    OperationalError as _EncryptedOperationalError,
+    encrypted_connect,
+)
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -212,7 +216,7 @@ class DatabaseTools:
             if row_count_note:
                 table += row_count_note
             return table
-        except sqlite3.OperationalError as exc:
+        except _EncryptedOperationalError as exc:
             if "interrupted" in str(exc).lower():
                 raise DatabaseError(f"Query-Timeout nach {_QUERY_TIMEOUT_S}s") from exc
             raise DatabaseError(f"SQL-Fehler: {exc}") from exc
@@ -319,7 +323,7 @@ class DatabaseTools:
             conn.commit()
             rows_affected = cursor.rowcount
             return f"Erfolgreich. {rows_affected} Zeile(n) betroffen."
-        except sqlite3.OperationalError as exc:
+        except _EncryptedOperationalError as exc:
             if "interrupted" in str(exc).lower():
                 raise DatabaseError(f"Query-Timeout nach {_QUERY_TIMEOUT_S}s") from exc
             raise DatabaseError(f"SQL-Fehler: {exc}") from exc

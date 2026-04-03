@@ -14,12 +14,11 @@ import contextlib
 import json
 import sqlite3
 
-from jarvis.security.encrypted_db import encrypted_connect
-
-try:
-    from jarvis.security.encrypted_db import compatible_row_factory
-except ImportError:
-    compatible_row_factory = lambda: sqlite3.Row
+from jarvis.security.encrypted_db import (
+    OperationalError as _EncryptedOperationalError,
+    compatible_row_factory,
+    encrypted_connect,
+)
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -873,7 +872,7 @@ class ToolRegistryDB:
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(_SCHEMA_SQL)
         # Migration: add locked column to existing databases
-        with contextlib.suppress(sqlite3.OperationalError):
+        with contextlib.suppress(_EncryptedOperationalError):
             self._conn.execute("ALTER TABLE tools ADD COLUMN locked INTEGER DEFAULT 1")
         self._conn.commit()
         log.debug("tool_registry_db_init", path=str(db_path))

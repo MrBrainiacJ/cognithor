@@ -23,7 +23,13 @@ from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
 
-__all__ = ["encrypted_connect", "is_encryption_available", "compatible_row_factory"]
+__all__ = [
+    "encrypted_connect",
+    "is_encryption_available",
+    "compatible_row_factory",
+    "OperationalError",
+    "DatabaseError",
+]
 
 
 class _DictRow(dict):
@@ -74,6 +80,16 @@ except ImportError:
         _sqlcipher_available = True
     except ImportError:
         sqlcipher = None
+
+# Unified exception aliases — resolve to the active backend's types so that
+# callers can catch ``encrypted_db.OperationalError`` without caring whether
+# sqlcipher3 or sqlite3 is in use.
+if _sqlcipher_available and sqlcipher is not None:
+    OperationalError: type[Exception] = sqlcipher.OperationalError  # type: ignore[assignment]
+    DatabaseError: type[Exception] = sqlcipher.DatabaseError  # type: ignore[assignment]
+else:
+    OperationalError = sqlite3.OperationalError  # type: ignore[assignment]
+    DatabaseError = sqlite3.DatabaseError  # type: ignore[assignment]
 
 _KEYRING_SERVICE = "cognithor"
 _KEYRING_KEY_NAME = "db_encryption_key"

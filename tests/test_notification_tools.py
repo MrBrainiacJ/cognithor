@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime, timedelta
+
+from jarvis.security.encrypted_db import encrypted_connect
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -55,13 +57,13 @@ class TestDatabaseCreation:
         assert db_path.exists()
 
     def test_schema_has_reminders_table(self, db_path: Path, notification_tools):
-        conn = sqlite3.connect(str(db_path))
+        conn = encrypted_connect(str(db_path))
         cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='reminders'")
         assert cur.fetchone() is not None
         conn.close()
 
     def test_schema_columns(self, db_path: Path, notification_tools):
-        conn = sqlite3.connect(str(db_path))
+        conn = encrypted_connect(str(db_path))
         cur = conn.execute("PRAGMA table_info(reminders)")
         columns = {row[1] for row in cur.fetchall()}
         assert columns >= {"id", "text", "created_at", "due_at", "repeat", "status", "fired_at"}
