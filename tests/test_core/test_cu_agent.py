@@ -428,6 +428,43 @@ class TestScreenshotSimilarity:
         assert sim > 0.7
 
 
+class TestFailureEscalation:
+    def _make_agent(self) -> CUAgentExecutor:
+        planner = MagicMock()
+        planner._ollama = AsyncMock()
+        mcp = MagicMock()
+        mcp._builtin_handlers = {}
+        return CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
+
+    def test_build_failure_hint_level_1(self):
+        agent = self._make_agent()
+        hint = agent._build_failure_hint(
+            "computer_click(x=100, y=200) -> Element nicht gefunden", 1
+        )
+        assert "Alternative" in hint
+        assert "fehlgeschlagen" in hint.lower() or "Fehlgeschlagen" in hint
+
+    def test_build_failure_hint_level_2(self):
+        agent = self._make_agent()
+        hint = agent._build_failure_hint("computer_click failed", 2)
+        assert "anderen Ansatz" in hint
+
+    def test_build_failure_hint_level_3(self):
+        agent = self._make_agent()
+        hint = agent._build_failure_hint("failed action", 3)
+        assert "uebersprungen" in hint
+
+    def test_build_failure_hint_level_4_plus(self):
+        agent = self._make_agent()
+        hint = agent._build_failure_hint("failed", 4)
+        assert "uebersprungen" in hint
+
+    def test_build_failure_hint_zero_returns_empty(self):
+        agent = self._make_agent()
+        hint = agent._build_failure_hint("", 0)
+        assert hint == ""
+
+
 class TestCUTaskDecomposerVariables:
     def _make_decomposer(self) -> CUTaskDecomposer:
         planner = MagicMock()

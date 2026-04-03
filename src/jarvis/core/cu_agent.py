@@ -345,6 +345,21 @@ class CUAgentExecutor:
             return 0.0
         return len(words_a & words_b) / len(words_a | words_b)
 
+    @staticmethod
+    def _build_failure_hint(failure_desc: str, consecutive_failures: int) -> str:
+        """Build escalating failure hint for the decide prompt."""
+        if consecutive_failures <= 0:
+            return ""
+        prefix = f"Letzte Aktion fehlgeschlagen: {failure_desc}\n"
+        if consecutive_failures == 1:
+            return prefix + "Versuche eine Alternative: anderes Element, scrollen, oder warten."
+        if consecutive_failures == 2:
+            return prefix + "Versuche einen komplett anderen Ansatz."
+        return (
+            prefix
+            + "Phase wird uebersprungen wenn naechste Aktion auch fehlschlaegt."
+        )
+
     async def execute(
         self,
         goal: str,
