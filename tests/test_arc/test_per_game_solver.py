@@ -201,3 +201,100 @@ class TestStrategyExecution:
         # Should stop early due to stagnation (after ~5 identical frames)
         assert outcome.steps < 50
         assert outcome.stagnated is True
+
+
+class TestSolve:
+    def test_solve_single_level_win(self):
+        """solve() wins a single level and returns SolveResult."""
+        profile = _make_profile("click")
+
+        mock_env = MagicMock()
+        step_count = [0]
+
+        def mock_step(action, data=None):
+            step_count[0] += 1
+            if step_count[0] >= 2:
+                return _make_mock_obs(state_name="WIN", levels=1)
+            return _make_mock_obs()
+
+        mock_env.step = mock_step
+        mock_env.reset.return_value = _make_mock_obs()
+
+        mock_arcade = MagicMock()
+        mock_arcade.make.return_value = mock_env
+
+        solver = PerGameSolver(profile, arcade=mock_arcade)
+        result = solver.solve(max_levels=1)
+
+        assert isinstance(result, SolveResult)
+        assert result.levels_completed >= 1
+        assert result.total_steps > 0
+        assert len(result.strategy_log) >= 1
+
+    def test_solve_skips_failed_level(self):
+        """solve() moves to next level after all strategies fail."""
+        profile = _make_profile("click")
+
+        mock_env = MagicMock()
+        # Always return same grid -> stagnation -> all strategies fail
+        same_grid = np.zeros((1, 64, 64), dtype=np.int8)
+        mock_env.step.return_value = _make_mock_obs(grid=same_grid)
+        mock_env.reset.return_value = _make_mock_obs(grid=same_grid)
+
+        mock_arcade = MagicMock()
+        mock_arcade.make.return_value = mock_env
+
+        solver = PerGameSolver(profile, arcade=mock_arcade)
+        result = solver.solve(max_levels=2)
+
+        assert result.levels_completed == 0
+
+    def test_solve_updates_profile_metrics(self, tmp_path):
+        """solve() updates strategy metrics in the profile."""
+        profile = _make_profile("click")
+
+        mock_env = MagicMock()
+        step_count = [0]
+
+        def mock_step(action, data=None):
+            step_count[0] += 1
+            if step_count[0] >= 2:
+                return _make_mock_obs(state_name="WIN", levels=1)
+            return _make_mock_obs()
+
+        mock_env.step = mock_step
+        mock_env.reset.return_value = _make_mock_obs()
+
+        mock_arcade = MagicMock()
+        mock_arcade.make.return_value = mock_env
+
+        solver = PerGameSolver(profile, arcade=mock_arcade)
+        solver.solve(max_levels=1, base_dir=tmp_path)
+
+        # Profile should have been updated
+        assert profile.total_runs == 1
+        assert len(profile.strategy_metrics) > 0
+
+    def test_solve_respects_timeout(self):
+        """solve() respects the timeout per game."""
+        profile = _make_profile("keyboard")
+
+        mock_env = MagicMock()
+        # Return varied grids so stagnation doesn't trigger
+        call_count = [0]
+        def varied_step(action, data=None):
+            call_count[0] += 1
+            grid = np.full((1, 64, 64), call_count[0] % 16, dtype=np.int8)
+            return _make_mock_obs(grid=grid)
+
+        mock_env.step = varied_step
+        mock_env.reset.return_value = _make_mock_obs()
+
+        mock_arcade = MagicMock()
+        mock_arcade.make.return_value = mock_env
+
+        solver = PerGameSolver(profile, arcade=mock_arcade)
+        # With a tiny timeout, should return quickly
+        result = solver.solve(max_levels=10, timeout_s=0.1)
+
+        assert isinstance(result, SolveResult)

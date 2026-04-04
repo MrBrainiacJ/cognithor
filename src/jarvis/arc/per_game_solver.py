@@ -176,6 +176,120 @@ class PerGameSolver:
         # Unknown strategy -> interact
         return 5, None
 
+    def solve(
+        self,
+        max_levels: int = 10,
+        timeout_s: float = 300.0,
+        base_dir: Any | None = None,
+    ) -> SolveResult:
+        """Solve the game level by level with budget-based strategy mix."""
+        import time
+
+        from arcengine.enums import GameState
+
+        env = self._arcade.make(self._profile.game_id)
+        obs = env.reset()
+
+        result = SolveResult(
+            game_id=self._profile.game_id,
+            levels_completed=0,
+            total_steps=0,
+            strategy_log=[],
+            score=0.0,
+        )
+
+        start_time = time.monotonic()
+        max_resets = 3
+
+        for level_num in range(max_levels):
+            if time.monotonic() - start_time > timeout_s:
+                log.info("arc.solver_timeout", game_id=self._profile.game_id)
+                break
+
+            level_result = self._solve_level(env, level_num, max_resets, start_time, timeout_s)
+            result.total_steps += level_result["steps"]
+            result.strategy_log.append(level_result)
+
+            if level_result["won"]:
+                result.levels_completed += 1
+                # Update profile metrics for the winning strategy
+                self._profile.update_metrics(
+                    level_result["strategy"],
+                    won=True,
+                    levels_solved=1,
+                    steps=level_result["steps"],
+                    budget_ratio=level_result.get("budget_ratio", 1.0),
+                )
+            else:
+                # Update metrics for failed strategies
+                for failed in level_result.get("tried", []):
+                    self._profile.update_metrics(
+                        failed,
+                        won=False,
+                        levels_solved=0,
+                        steps=level_result["steps"],
+                        budget_ratio=1.0,
+                    )
+
+        self._profile.update_run(score=result.levels_completed)
+        self._profile.save(base_dir=base_dir)
+        result.score = float(result.levels_completed)
+        return result
+
+    def _solve_level(
+        self,
+        env: Any,
+        level_num: int,
+        max_resets: int,
+        start_time: float,
+        timeout_s: float,
+    ) -> dict:
+        """Try all budget slots on one level."""
+        import time
+
+        from arcengine.enums import GameState
+
+        slots = self._allocate_budget(level_num)
+        total_steps = 0
+        tried: list[str] = []
+        resets_used = 0
+
+        for slot in slots:
+            if time.monotonic() - start_time > timeout_s:
+                break
+
+            tried.append(slot.strategy)
+            outcome = self._execute_strategy(env, slot.strategy, slot.max_actions)
+            total_steps += outcome.steps
+
+            if outcome.won:
+                return {
+                    "level": level_num,
+                    "strategy": slot.strategy,
+                    "won": True,
+                    "steps": total_steps,
+                    "budget_ratio": outcome.budget_ratio,
+                    "tried": tried,
+                }
+
+            if outcome.game_over:
+                resets_used += 1
+                if resets_used >= max_resets:
+                    break
+                # Reset level
+                try:
+                    env.reset()
+                except Exception:
+                    break
+
+        return {
+            "level": level_num,
+            "strategy": tried[-1] if tried else "none",
+            "won": False,
+            "steps": total_steps,
+            "tried": tried,
+        }
+
     def _detect_stagnation(self, frame_history: list[np.ndarray]) -> bool:
         """Check if recent frames show no meaningful change."""
         if len(frame_history) < _STAGNATION_WINDOW:
