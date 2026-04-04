@@ -1,19 +1,23 @@
-"""ARC-AGI-3 Hybrid Solver — runs all solver strategies per game.
+"""ARC-AGI-3 Hybrid Solver — fast cluster detection + subset search.
 
-Strategy priority:
-1. ClusterSolver (click-toggle games) — fast, proven on ft09
-2. Keyboard explorer (directional games) — epsilon-greedy with pixel reward
-3. Random baseline — fallback
+Click games: ndimage.label() finds clusters instantly (no SDK calls),
+then subset search validates on SDK. This is the approach that solved
+ft09 Level 1 (17 clicks, 60s) and Level 2 (9 clicks).
 
-Runs each game for a limited budget, reports results.
+Keyboard games: epsilon-greedy with pixel reward (200 steps).
+
+Mixed games: try click approach first, keyboard fallback.
 """
 
 from __future__ import annotations
 
+import itertools
+import random
 import time
 from typing import Any
 
 import numpy as np
+from scipy import ndimage
 
 from jarvis.utils.logging import get_logger
 
@@ -23,13 +27,14 @@ log = get_logger(__name__)
 
 
 class HybridSolver:
-    """Attempts multiple strategies per game to maximize score."""
+    """Fast solver using cluster detection for clicks, exploration for keyboard."""
 
-    def __init__(self, max_actions_per_level: int = 40) -> None:
-        self.max_actions = max_actions_per_level
+    def __init__(self, max_skip: int = 6, max_keyboard_steps: int = 200) -> None:
+        self.max_skip = max_skip
+        self.max_keyboard_steps = max_keyboard_steps
 
     def solve_game(self, game_id: str) -> dict[str, Any]:
-        """Play one game with the best available strategy."""
+        """Play one game with the best strategy."""
         import arc_agi
 
         arcade = arc_agi.Arcade()
@@ -44,157 +49,141 @@ class HybridSolver:
 
         t0 = time.monotonic()
 
-        if has_click and not has_keyboard:
-            # Pure click game → ClusterSolver
-            result = self._solve_click(arcade, game_id, env, obs)
-        elif has_keyboard and not has_click:
-            # Pure keyboard game → Keyboard explorer
-            result = self._solve_keyboard(arcade, game_id, env, obs)
-        else:
-            # Mixed → try click first, then keyboard
-            result = self._solve_click(arcade, game_id, env, obs)
-            if result["levels_completed"] == 0:
-                # Retry with keyboard
-                env2 = arcade.make(game_id)
-                obs2 = env2.reset()
-                result = self._solve_keyboard(arcade, game_id, env2, obs2)
+        if has_click:
+            result = self._solve_click(arcade, game_id)
+            if result["levels_completed"] > 0 or not has_keyboard:
+                result["elapsed_s"] = round(time.monotonic() - t0, 1)
+                result["game_id"] = game_id.split("-")[0]
+                return result
 
+        # Keyboard fallback
+        result = self._solve_keyboard(arcade, game_id)
         result["elapsed_s"] = round(time.monotonic() - t0, 1)
         result["game_id"] = game_id.split("-")[0]
         return result
 
-    def _solve_click(self, arcade: Any, game_id: str, env: Any, obs: Any) -> dict[str, Any]:
-        """Solve a click-based game using cluster detection + subset search."""
-        import itertools
+    def _find_clusters(self, grid: np.ndarray) -> dict[int, list[tuple[int, int]]]:
+        """Find cluster centers for each non-background color. Pure numpy, no SDK."""
+        if grid.ndim == 3:
+            grid = grid[0]
 
+        # Background = most common color
+        colors, counts = np.unique(grid, return_counts=True)
+        bg = colors[np.argmax(counts)]
+
+        result: dict[int, list[tuple[int, int]]] = {}
+        for c in colors:
+            if c == bg:
+                continue
+            mask = grid == c
+            labeled, n = ndimage.label(mask)
+            if n > 0:
+                centers = []
+                for i in range(1, n + 1):
+                    ys, xs = np.where(labeled == i)
+                    centers.append((int(np.mean(xs)), int(np.mean(ys))))
+                result[int(c)] = centers
+
+        return result
+
+    def _solve_click(self, arcade: Any, game_id: str) -> dict[str, Any]:
+        """Solve click game using cluster detection + subset search."""
         from arcengine.enums import GameState
 
-        levels = 0
-        total_clicks = 0
         all_solutions: list[list[tuple[int, int]]] = []
+        levels = 0
 
-        for _level in range(10):
+        for _level_attempt in range(10):
+            # Get current grid state
+            env = arcade.make(game_id)
+            obs = env.reset()
+            for sol in all_solutions:
+                for cx, cy in sol:
+                    obs = env.step(6, data={"x": cx, "y": cy})
+
             grid = np.array(obs.frame)
             if grid.ndim == 3:
                 grid = grid[0]
 
-            # Find ALL clickable regions by scanning
-            hot_spots = self._find_hot_spots(arcade, game_id, all_solutions, grid)
+            # Find all non-bg clusters
+            color_clusters = self._find_clusters(grid)
 
-            if not hot_spots:
+            if not color_clusters:
                 break
 
-            n = len(hot_spots)
+            # Try each color's clusters as click targets
             solved = False
+            for color, centers in sorted(
+                color_clusters.items(), key=lambda x: len(x[1]), reverse=True
+            ):
+                n = len(centers)
+                if n == 0:
+                    continue
 
-            # Try subsets: skip 0, 1, 2, ... clusters
-            for skip in range(min(n + 1, 8)):
-                if solved:
-                    break
-                for combo in itertools.combinations(range(n), skip):
-                    click_idx = [i for i in range(n) if i not in combo]
-                    clicks = [hot_spots[i] for i in click_idx]
+                # Try subsets: click all, skip 1, skip 2, ...
+                for skip in range(min(n + 1, self.max_skip + 1)):
+                    if solved:
+                        break
+                    for combo in itertools.combinations(range(n), skip):
+                        click_idx = [i for i in range(n) if i not in combo]
+                        clicks = [centers[i] for i in click_idx]
 
-                    # Test on fresh env
-                    env_t = arcade.make(game_id)
-                    obs_t = env_t.reset()
+                        # Validate on fresh env
+                        env_t = arcade.make(game_id)
+                        obs_t = env_t.reset()
 
-                    # Replay previous solutions
-                    ok = True
-                    for prev_sol in all_solutions:
-                        for cx, cy in prev_sol:
-                            obs_t = env_t.step(6, data={"x": cx, "y": cy})
-                            if obs_t.state == GameState.GAME_OVER:
-                                ok = False
+                        ok = True
+                        for prev in all_solutions:
+                            for cx, cy in prev:
+                                obs_t = env_t.step(6, data={"x": cx, "y": cy})
+                                if obs_t.state == GameState.GAME_OVER:
+                                    ok = False
+                                    break
+                            if not ok:
                                 break
                         if not ok:
-                            break
-                    if not ok:
-                        continue
+                            continue
 
-                    # Test this combination
-                    for cx, cy in clicks:
-                        obs_t = env_t.step(6, data={"x": cx, "y": cy})
-                        if obs_t.state != GameState.NOT_FINISHED:
-                            break
-
-                    if obs_t.levels_completed > levels:
-                        # Apply to real env
                         for cx, cy in clicks:
-                            obs = env.step(6, data={"x": cx, "y": cy})
-                            total_clicks += 1
-                        levels = obs.levels_completed
-                        all_solutions.append(clicks)
-                        log.info(
-                            "hybrid_click_level",
-                            game=game_id.split("-")[0],
-                            level=levels,
-                            clicks=len(clicks),
-                        )
-                        solved = True
-                        break
+                            obs_t = env_t.step(6, data={"x": cx, "y": cy})
+                            if obs_t.state != GameState.NOT_FINISHED:
+                                break
 
-                    if obs_t.state == GameState.GAME_OVER:
-                        break
+                        if obs_t.levels_completed > levels:
+                            all_solutions.append(clicks)
+                            levels = obs_t.levels_completed
+                            log.info(
+                                "hybrid_click_solved",
+                                game=game_id.split("-")[0],
+                                level=levels,
+                                color=color,
+                                clicks=len(clicks),
+                                skipped=skip,
+                                total_clusters=n,
+                            )
+                            solved = True
+                            break
+
+                        if obs_t.state == GameState.GAME_OVER:
+                            break
+                if solved:
+                    break
 
             if not solved:
-                break
-            if obs.state == GameState.WIN:
                 break
 
         return {
             "levels_completed": levels,
-            "total_actions": total_clicks,
+            "total_actions": sum(len(s) for s in all_solutions),
             "method": "click",
         }
 
-    def _find_hot_spots(
-        self,
-        arcade: Any,
-        game_id: str,
-        prev_solutions: list[list[tuple[int, int]]],
-        grid: np.ndarray,
-    ) -> list[tuple[int, int]]:
-        """Find clickable positions that cause >5px change."""
+    def _solve_keyboard(self, arcade: Any, game_id: str) -> dict[str, Any]:
+        """Solve keyboard game with epsilon-greedy exploration."""
+        from arcengine.enums import GameState
 
-        # Get base state
         env = arcade.make(game_id)
         obs = env.reset()
-        for sol in prev_solutions:
-            for cx, cy in sol:
-                obs = env.step(6, data={"x": cx, "y": cy})
-        base = np.array(obs.frame)
-        if base.ndim == 3:
-            base = base[0]
-
-        spots = []
-        seen = set()
-        for y in range(0, 64, 2):
-            for x in range(0, 64, 2):
-                env2 = arcade.make(game_id)
-                obs2 = env2.reset()
-                for sol in prev_solutions:
-                    for cx, cy in sol:
-                        obs2 = env2.step(6, data={"x": cx, "y": cy})
-                obs2 = env2.step(6, data={"x": x, "y": y})
-                g2 = np.array(obs2.frame)
-                if g2.ndim == 3:
-                    g2 = g2[0]
-                ch = int(np.sum(g2 != base))
-                if ch > 5:
-                    # Deduplicate by region
-                    key = (x // 8, y // 8)
-                    if key not in seen:
-                        seen.add(key)
-                        spots.append((x, y))
-
-        return spots
-
-    def _solve_keyboard(self, arcade: Any, game_id: str, env: Any, obs: Any) -> dict[str, Any]:
-        """Solve a keyboard game using systematic action sequences."""
-        import random
-
-        from arcengine.enums import GameState
 
         actions = [
             a.value if hasattr(a, "value") else int(a)
@@ -207,12 +196,11 @@ class HybridSolver:
         if prev_grid.ndim == 3:
             prev_grid = prev_grid[0]
 
-        # Simple strategy: cycle through actions, prefer ones that cause change
-        action_reward: dict[int, float] = {a: 0.0 for a in actions}
+        action_reward: dict[int, float] = {a: 1.0 for a in actions}
 
-        for _step in range(self.max_actions * 5):
-            # Pick action: 30% random, 70% best reward
-            if random.random() < 0.3 or not any(action_reward.values()):
+        for _step in range(self.max_keyboard_steps):
+            # 30% random, 70% best
+            if random.random() < 0.3:
                 action = random.choice(actions)
             else:
                 action = max(action_reward, key=lambda a: action_reward[a])
@@ -220,13 +208,12 @@ class HybridSolver:
             obs = env.step(action)
             total_steps += 1
 
-            cur_grid = np.array(obs.frame)
-            if cur_grid.ndim == 3:
-                cur_grid = cur_grid[0]
-            changed = int(np.sum(cur_grid != prev_grid))
-            prev_grid = cur_grid
+            cur = np.array(obs.frame)
+            if cur.ndim == 3:
+                cur = cur[0]
+            changed = int(np.sum(cur != prev_grid))
+            prev_grid = cur
 
-            # Update reward
             action_reward[action] = action_reward.get(action, 0) * 0.9 + changed * 0.1
 
             if obs.levels_completed > levels:
@@ -235,7 +222,7 @@ class HybridSolver:
                     "hybrid_keyboard_level",
                     game=game_id.split("-")[0],
                     level=levels,
-                    steps=total_steps,
+                    step=total_steps,
                 )
 
             if obs.state == GameState.WIN:
@@ -253,7 +240,7 @@ class HybridSolver:
         }
 
 
-def run_all_games(max_time_per_game: int = 120) -> list[dict]:
+def run_all_games() -> list[dict]:
     """Run hybrid solver on all available games."""
     import arc_agi
 
@@ -262,12 +249,13 @@ def run_all_games(max_time_per_game: int = 120) -> list[dict]:
 
     results = []
     total_levels = 0
+    t0 = time.monotonic()
 
     for e in envs:
         gid = e.game_id
         short = gid.split("-")[0]
 
-        solver = HybridSolver(max_actions_per_level=40)
+        solver = HybridSolver()
         try:
             result = solver.solve_game(gid)
             total_levels += result["levels_completed"]
@@ -282,13 +270,8 @@ def run_all_games(max_time_per_game: int = 120) -> list[dict]:
             )
         except Exception as exc:
             print(f"{short:5s}: ERROR {str(exc)[:60]}", flush=True)
-            results.append(
-                {
-                    "game_id": short,
-                    "levels_completed": 0,
-                    "error": str(exc)[:100],
-                }
-            )
+            results.append({"game_id": short, "levels_completed": 0, "error": str(exc)[:100]})
 
-    print(f"\nTOTAL: {total_levels} levels across {len(envs)} games", flush=True)
+    elapsed = time.monotonic() - t0
+    print(f"\nTOTAL: {total_levels} levels across {len(envs)} games in {elapsed:.0f}s", flush=True)
     return results
