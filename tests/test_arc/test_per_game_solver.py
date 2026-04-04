@@ -507,3 +507,90 @@ class TestEffectivePositionScanner:
         positions = solver._scan_effective_positions(mock_env, replay_sequence=[])
 
         assert len(positions) <= 6
+
+
+class TestSequenceClickStrategy:
+    def test_finds_winning_sequence(self):
+        """BFS should find a click sequence that solves the level."""
+        from arcengine.enums import GameState
+
+        grid = np.zeros((64, 64), dtype=np.int8)
+        grid[0, :] = 7  # bar
+
+        click_history = []
+
+        def mock_step(action, data=None):
+            x = data.get("x", 0) if data else 0
+            y = data.get("y", 0) if data else 0
+            click_history.append((x, y))
+            grid_out = grid.copy()
+            grid_out[0, 63] = 4  # bar change
+
+            # Count effective clicks (at valve position 10,10)
+            effective = sum(1 for cx, cy in click_history if 8 <= cx <= 12 and 8 <= cy <= 12)
+
+            obs = MagicMock()
+            if effective >= 3:
+                obs.levels_completed = 1
+            else:
+                obs.levels_completed = 0
+                # Show some grid change for effective clicks
+                if 8 <= x <= 12 and 8 <= y <= 12:
+                    grid_out[20:30, 20:30] = effective
+
+            obs.frame = np.expand_dims(grid_out, 0)
+            obs.state = GameState.NOT_FINISHED
+            return obs
+
+        mock_env = MagicMock()
+
+        def mock_reset():
+            click_history.clear()
+            obs = MagicMock()
+            obs.frame = np.expand_dims(grid, 0)
+            obs.state = GameState.NOT_FINISHED
+            obs.levels_completed = 0
+            return obs
+
+        mock_env.reset = mock_reset
+        mock_env.step = mock_step
+
+        mock_arcade = MagicMock()
+        mock_arcade.make.return_value = mock_env
+
+        profile = _make_profile("click")
+        solver = PerGameSolver(profile, arcade=mock_arcade)
+        outcome = solver._execute_sequence_click(max_actions=200)
+
+        assert outcome.won is True
+        assert outcome.levels_solved >= 1
+
+    def test_returns_false_when_no_effective_positions(self):
+        """Should return won=False when scan finds no effective clicks."""
+        from arcengine.enums import GameState
+
+        grid = np.zeros((64, 64), dtype=np.int8)
+
+        def mock_step(action, data=None):
+            obs = MagicMock()
+            obs.frame = np.expand_dims(grid, 0)
+            obs.state = GameState.NOT_FINISHED
+            obs.levels_completed = 0
+            return obs
+
+        mock_env = MagicMock()
+        mock_env.reset.return_value = MagicMock(
+            frame=np.expand_dims(grid, 0),
+            state=GameState.NOT_FINISHED,
+            levels_completed=0,
+        )
+        mock_env.step = mock_step
+
+        mock_arcade = MagicMock()
+        mock_arcade.make.return_value = mock_env
+
+        solver = PerGameSolver(_make_profile("click"), arcade=mock_arcade)
+        outcome = solver._execute_sequence_click(max_actions=200)
+
+        assert outcome.won is False
+        assert outcome.steps == 0

@@ -571,3 +571,138 @@ class PerGameSolver:
         representatives = representatives[:6]
 
         return [(x, y) for x, y, _ in representatives]
+
+    def _execute_sequence_click(self, max_actions: int) -> StrategyOutcome:
+        """BFS-based click sequence search with sub-level detection."""
+        import time
+
+        outcome = StrategyOutcome()
+        game_id = self._profile.game_id
+        max_levels = 10
+        timeout = 120.0
+
+        env = self._arcade.make(game_id)
+        prev_level_clicks: list[list[tuple[int, int]]] = []
+
+        for level in range(max_levels):
+            t0 = time.monotonic()
+            replay_prefix = [c for seq in prev_level_clicks for c in seq]
+
+            solution = self._bfs_find_sequence(
+                env, replay_prefix, timeout,
+                max_depth=12, max_sub_levels=5,
+                sub_level_threshold=500, max_states=50_000,
+            )
+
+            if solution is None:
+                break
+
+            outcome.steps += 1
+            prev_level_clicks.append(solution)
+            outcome.levels_solved += 1
+            outcome.won = True
+            log.info(
+                "arc.sequence_level_solved",
+                game_id=game_id,
+                level=level,
+                clicks=len(solution),
+                time_s=round(time.monotonic() - t0, 1),
+            )
+
+        outcome.budget_ratio = 1.0
+        return outcome
+
+    def _bfs_find_sequence(
+        self,
+        env: Any,
+        replay_prefix: list[tuple[int, int]],
+        timeout: float,
+        max_depth: int,
+        max_sub_levels: int,
+        sub_level_threshold: int,
+        max_states: int,
+    ) -> list[tuple[int, int]] | None:
+        """BFS through click sequences with sub-level re-scanning."""
+        import time
+        from collections import deque
+
+        from arcengine.enums import GameState
+
+        t0 = time.monotonic()
+
+        # Scan effective positions
+        action_set = self._scan_effective_positions(env, replay_prefix)
+        if not action_set:
+            return None
+
+        # Get initial state
+        obs = env.reset()
+        for x, y in replay_prefix:
+            obs = env.step(6, data={"x": x, "y": y})
+        initial_grid = safe_frame_extract(obs)
+        current_levels = obs.levels_completed
+
+        # BFS
+        queue: deque[list[tuple[int, int]]] = deque()
+        queue.append([])
+        visited: set[int] = {hash(initial_grid[1:].tobytes())}
+
+        while queue:
+            if time.monotonic() - t0 > timeout:
+                break
+            if len(visited) > max_states:
+                break
+
+            seq = queue.popleft()
+            if len(seq) >= max_depth:
+                continue
+
+            for cx, cy in action_set:
+                new_seq = seq + [(cx, cy)]
+                full_seq = replay_prefix + new_seq
+
+                # Replay
+                obs = env.reset()
+                game_over = False
+                for rx, ry in full_seq:
+                    obs = env.step(6, data={"x": rx, "y": ry})
+                    if obs.state == GameState.GAME_OVER:
+                        game_over = True
+                        break
+
+                if game_over:
+                    continue
+
+                # Check win
+                if obs.levels_completed > current_levels:
+                    return new_seq
+
+                grid = safe_frame_extract(obs)
+                state_hash = hash(grid[1:].tobytes())
+
+                if state_hash not in visited:
+                    visited.add(state_hash)
+
+                    # Sub-level detection: massive grid change from initial
+                    puzzle_diff = int(np.sum(grid[1:] != initial_grid[1:]))
+
+                    if puzzle_diff > sub_level_threshold and max_sub_levels > 0:
+                        # Sub-level transition — re-scan and recurse
+                        remaining_timeout = timeout - (time.monotonic() - t0)
+                        if remaining_timeout <= 0:
+                            break
+                        sub_result = self._bfs_find_sequence(
+                            env,
+                            replay_prefix=full_seq,
+                            timeout=remaining_timeout,
+                            max_depth=max_depth,
+                            max_sub_levels=max_sub_levels - 1,
+                            sub_level_threshold=sub_level_threshold,
+                            max_states=max_states - len(visited),
+                        )
+                        if sub_result is not None:
+                            return new_seq + sub_result
+
+                    queue.append(new_seq)
+
+        return None
