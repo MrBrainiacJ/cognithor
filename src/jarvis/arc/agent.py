@@ -9,6 +9,7 @@ from typing import Any
 from jarvis.arc.adapter import ArcEnvironmentAdapter, ArcObservation
 from jarvis.arc.audit import ArcAuditTrail
 from jarvis.arc.episode_memory import EpisodeMemory
+from jarvis.arc.frame_analyzer import FrameAnalyzer
 from jarvis.arc.explorer import ExplorationPhase, HypothesisDrivenExplorer
 from jarvis.arc.goal_inference import GoalInferenceModule
 from jarvis.arc.mechanics_model import MechanicsModel
@@ -174,8 +175,9 @@ class CognithorArcAgent:
         except Exception:
             log.debug("arc.agent.cnn_not_available", exc_info=True)
 
-        # Pixel-reward explorer (primary action selection)
+        # Pixel-reward explorer + frame analyzer (primary action selection)
         self.pixel_explorer = PixelRewardExplorer(epsilon=0.2)
+        self.frame_analyzer = FrameAnalyzer()
         self.telemetry = ArcTelemetry()
 
         # Runtime state
@@ -361,7 +363,17 @@ class CognithorArcAgent:
 
                     data = {"x": random.randint(0, 63), "y": random.randint(0, 63)}
 
-        # 3. Pixel-reward explorer (primary fallback)
+        # 3. Frame-analyzer suggestion (if it has learned enough)
+        if action_str is None:
+            suggested = self.frame_analyzer.suggest_action(
+                self.current_obs.available_actions or [1, 2, 3, 4]
+            )
+            if suggested is not None:
+                action = suggested
+                data = {}
+                action_str = self._action_to_str(action, data)
+
+        # 4. Pixel-reward explorer (final fallback)
         if action_str is None:
             action = self.pixel_explorer.select_action(
                 self.current_obs.available_actions or [1, 2, 3, 4]
@@ -387,7 +399,8 @@ class CognithorArcAgent:
         # Record in memory + audit + graph
         self._record_step(previous_obs, action_str, data)
 
-        # Telemetry + pixel-reward feedback
+        # Frame analysis + telemetry + pixel-reward feedback
+        self.frame_analyzer.analyze(self.current_obs.raw_grid, action=action_str)
         self.pixel_explorer.record_reward(action, self.current_obs.changed_pixels)
         self.telemetry.record_step(
             action=action_str or str(action),
