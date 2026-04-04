@@ -298,3 +298,57 @@ class TestSolve:
         result = solver.solve(max_levels=10, timeout_s=0.1)
 
         assert isinstance(result, SolveResult)
+
+
+class TestClusterClickStrategy:
+    def test_cluster_click_uses_subset_search(self):
+        """cluster_click should find clusters and try subsets via arcade.make()."""
+        profile = _make_profile("click")
+        profile.target_colors = [3]
+
+        # Initial grid with 3 clusters of color 3
+        grid = np.zeros((64, 64), dtype=np.int8)
+        grid[10:15, 10:15] = 3
+        grid[30:35, 30:35] = 3
+        grid[50:55, 50:55] = 3
+
+        make_count = [0]
+
+        def mock_make(game_id):
+            make_count[0] += 1
+            env = MagicMock()
+            click_count = [0]
+
+            def env_step(action, data=None):
+                click_count[0] += 1
+                # Win when clicking exactly 2 of the 3 clusters
+                if click_count[0] == 2:
+                    return _make_mock_obs(state_name="WIN", levels=1)
+                return _make_mock_obs(grid=np.expand_dims(grid, 0))
+
+            env.step = env_step
+            env.reset.return_value = _make_mock_obs(grid=np.expand_dims(grid, 0))
+            return env
+
+        mock_arcade = MagicMock()
+        mock_arcade.make = mock_make
+
+        solver = PerGameSolver(profile, arcade=mock_arcade)
+        outcome = solver._execute_cluster_click(
+            initial_grid=grid, target_color=3, max_actions=20
+        )
+
+        assert outcome.won is True
+        assert make_count[0] > 0  # Used arcade.make for subset search
+
+    def test_cluster_click_no_target_color_returns_empty(self):
+        """cluster_click with no target color returns no-win outcome."""
+        profile = _make_profile("click")
+        profile.target_colors = []
+
+        solver = PerGameSolver(profile, arcade=MagicMock())
+        grid = np.zeros((64, 64), dtype=np.int8)
+        outcome = solver._execute_cluster_click(grid, target_color=None, max_actions=10)
+
+        assert outcome.won is False
+        assert outcome.steps == 0

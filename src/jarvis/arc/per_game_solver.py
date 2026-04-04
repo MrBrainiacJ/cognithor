@@ -87,11 +87,80 @@ class PerGameSolver:
 
         return slots
 
+    def _execute_cluster_click(
+        self,
+        initial_grid: np.ndarray,
+        target_color: int | None,
+        max_actions: int,
+    ) -> StrategyOutcome:
+        """Cluster-based click strategy: find clusters, try subsets via arcade.make()."""
+        import itertools
+
+        from arcengine.enums import GameState
+
+        from jarvis.arc.cluster_solver import ClusterSolver
+
+        outcome = StrategyOutcome()
+
+        if target_color is None:
+            return outcome
+
+        solver = ClusterSolver(target_color=target_color, max_skip=6)
+        centers = solver.find_clusters(initial_grid)
+
+        if not centers:
+            return outcome
+
+        n = len(centers)
+        max_skip = min(n, 6)
+        combos_tried = 0
+
+        for skip in range(max_skip + 1):
+            for skip_combo in itertools.combinations(range(n), skip):
+                if combos_tried >= max_actions:
+                    outcome.budget_ratio = 1.0
+                    return outcome
+
+                click_idx = [i for i in range(n) if i not in skip_combo]
+                combos_tried += 1
+
+                # Test this combo in a fresh env
+                env = self._arcade.make(self._profile.game_id)
+                obs = env.reset()
+
+                won = False
+                for idx in click_idx:
+                    cx, cy = centers[idx]
+                    obs = env.step(6, data={"x": cx, "y": cy})
+                    outcome.steps += 1
+
+                    if obs.state == GameState.WIN:
+                        won = True
+                        break
+                    if obs.state == GameState.GAME_OVER:
+                        break
+
+                if won:
+                    outcome.won = True
+                    outcome.levels_solved = 1
+                    outcome.budget_ratio = combos_tried / max_actions
+                    return outcome
+
+        outcome.budget_ratio = 1.0
+        return outcome
+
     def _execute_strategy(
         self, env: Any, strategy: str, max_actions: int
     ) -> StrategyOutcome:
         """Execute a single strategy with a given action budget."""
         from arcengine.enums import GameState
+
+        # Special handling for cluster_click: uses arcade.make() per combo
+        if strategy == "cluster_click":
+            target_color = self._profile.target_colors[0] if self._profile.target_colors else None
+            obs = env.reset()
+            last_grid = safe_frame_extract(obs)
+            return self._execute_cluster_click(last_grid, target_color, max_actions)
 
         outcome = StrategyOutcome()
         frame_history: list[np.ndarray] = []
