@@ -182,3 +182,152 @@ class TestSacrificeLevel:
         )
 
         assert report.game_over_trigger is not None
+
+
+class TestVisionCalls:
+    def test_vision_call_1_returns_dict(self):
+        analyzer = GameAnalyzer.__new__(GameAnalyzer)
+        grid = np.zeros((64, 64), dtype=np.int8)
+        grid[10:20, 10:20] = 3
+
+        mock_resp = {
+            "message": {
+                "content": json.dumps({
+                    "game_type": "click",
+                    "target_color": 3,
+                    "strategy": "Click red clusters",
+                    "description": "Grid with red blocks",
+                })
+            }
+        }
+
+        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+            mock_ollama.chat.return_value = mock_resp
+            result = analyzer._vision_call_initial(grid, [5, 6])
+
+        assert result is not None
+        assert result["game_type"] == "click"
+
+    def test_vision_call_1_ollama_error_returns_none(self):
+        analyzer = GameAnalyzer.__new__(GameAnalyzer)
+        grid = np.zeros((64, 64), dtype=np.int8)
+
+        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+            mock_ollama.chat.side_effect = ConnectionError("Ollama offline")
+            result = analyzer._vision_call_initial(grid, [1, 2, 3, 4])
+
+        assert result is None
+
+    def test_vision_call_2_with_diff(self):
+        analyzer = GameAnalyzer.__new__(GameAnalyzer)
+        grid_before = np.zeros((64, 64), dtype=np.int8)
+        grid_after = np.zeros((64, 64), dtype=np.int8)
+        grid_after[10:20, 10:20] = 5
+
+        mock_resp = {
+            "message": {
+                "content": json.dumps({
+                    "win_condition": "clear_board",
+                    "correction": None,
+                    "description": "Clusters toggled from red to yellow",
+                })
+            }
+        }
+
+        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+            mock_ollama.chat.return_value = mock_resp
+            result = analyzer._vision_call_final(grid_before, grid_after)
+
+        assert result is not None
+        assert result["win_condition"] == "clear_board"
+
+
+class TestAnalyze:
+    def test_analyze_uses_cache(self, tmp_path):
+        from jarvis.arc.game_profile import GameProfile
+
+        # Pre-save a profile
+        p = GameProfile(
+            game_id="cached_game",
+            game_type="click",
+            available_actions=[6],
+            click_zones=[(10, 10)],
+            target_colors=[3],
+            movement_effects={},
+            win_condition="clear_board",
+            vision_description="cached",
+            vision_strategy="cached",
+            strategy_metrics={},
+            analyzed_at="2026-01-01",
+        )
+        p.save(base_dir=tmp_path)
+
+        analyzer = GameAnalyzer(arcade=None)
+        result = analyzer.analyze("cached_game", base_dir=tmp_path)
+
+        assert result.game_id == "cached_game"
+        assert result.vision_description == "cached"
+
+    def test_analyze_force_ignores_cache(self, tmp_path):
+        from jarvis.arc.game_profile import GameProfile
+
+        p = GameProfile(
+            game_id="force_test",
+            game_type="click",
+            available_actions=[6],
+            click_zones=[],
+            target_colors=[],
+            movement_effects={},
+            win_condition="unknown",
+            vision_description="old",
+            vision_strategy="old",
+            strategy_metrics={},
+            analyzed_at="2026-01-01",
+        )
+        p.save(base_dir=tmp_path)
+
+        initial_grid = np.zeros((64, 64), dtype=np.int8)
+        initial_grid[10:15, 10:15] = 3
+        not_finished = _make_mock_game_state("NOT_FINISHED")
+        game_over = _make_mock_game_state("GAME_OVER")
+
+        mock_env = MagicMock()
+        step_count = [0]
+
+        def mock_step(action, data=None):
+            step_count[0] += 1
+            # After a few steps, return GAME_OVER to end sacrifice
+            state = game_over if step_count[0] > 3 else not_finished
+            return _make_mock_obs(
+                grid=np.expand_dims(initial_grid, 0),
+                state=state,
+                actions=[MagicMock(value=6)],
+            )
+
+        mock_env.step = mock_step
+        mock_env.reset.return_value = _make_mock_obs(
+            grid=np.expand_dims(initial_grid, 0),
+            state=not_finished,
+            actions=[MagicMock(value=a) for a in [5, 6]],
+        )
+
+        mock_arcade = MagicMock()
+        mock_arcade.make.return_value = mock_env
+
+        vision_resp = {
+            "message": {
+                "content": json.dumps({
+                    "game_type": "click",
+                    "target_color": 3,
+                    "strategy": "new strategy",
+                    "description": "new description",
+                })
+            }
+        }
+
+        analyzer = GameAnalyzer(arcade=mock_arcade)
+        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+            mock_ollama.chat.return_value = vision_resp
+            result = analyzer.analyze("force_test", force=True, base_dir=tmp_path)
+
+        assert result.vision_description != "old"

@@ -13,6 +13,11 @@ import numpy as np
 
 from jarvis.utils.logging import get_logger
 
+try:
+    import ollama
+except ImportError:
+    ollama = None  # type: ignore[assignment]
+
 __all__ = ["GameAnalyzer"]
 
 log = get_logger(__name__)
@@ -174,3 +179,175 @@ class GameAnalyzer:
 
         report.unique_states_seen = len(seen_states)
         return report
+
+    def _vision_call_initial(
+        self, grid: np.ndarray, action_ids: list[int]
+    ) -> dict | None:
+        """Vision call 1: ask what the game is from initial frame."""
+        try:
+            b64 = _grid_to_png_b64(grid, scale=4)
+            action_desc = [f"ACTION{a}={_ACTION_NAMES.get(a, '?')}" for a in action_ids]
+
+            resp = ollama.chat(
+                model="qwen3-vl:32b",
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        f"64x64 pixel puzzle game. Available actions: {', '.join(action_desc)}.\n"
+                        "Analyze this game:\n"
+                        "1. What type of game is this? (click, keyboard, or mixed)\n"
+                        "2. What is the goal?\n"
+                        "3. Which colors are interactive?\n"
+                        "4. What strategy should I use?\n"
+                        'Reply JSON: {"game_type": "click"|"keyboard"|"mixed", '
+                        '"target_color": N or null, "strategy": "...", '
+                        '"description": "..."}'
+                    ),
+                    "images": [b64],
+                }],
+                options={"num_predict": 8192, "temperature": 0.3, "num_ctx": 8192},
+            )
+
+            raw = resp.get("message", {}).get("content", "")
+            return _parse_vision_json(raw)
+        except Exception as exc:
+            log.debug("arc.vision_call_1_failed", error=str(exc)[:200])
+            return None
+
+    def _vision_call_final(
+        self, grid_before: np.ndarray, grid_after: np.ndarray
+    ) -> dict | None:
+        """Vision call 2: compare before/after sacrifice level."""
+        try:
+            b64_before = _grid_to_png_b64(grid_before, scale=4)
+            b64_after = _grid_to_png_b64(grid_after, scale=4)
+
+            # Create diff image: highlight changed pixels in red
+            diff_grid = np.where(grid_before != grid_after, 3, grid_before)
+            b64_diff = _grid_to_png_b64(diff_grid.astype(np.int8), scale=4)
+
+            resp = ollama.chat(
+                model="qwen3-vl:32b",
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "Three images of a 64x64 puzzle game:\n"
+                        "1. Initial state\n"
+                        "2. After testing actions\n"
+                        "3. Diff (changes highlighted in red)\n\n"
+                        "What changed? What is the win condition?\n"
+                        'Reply JSON: {"win_condition": "clear_board"|"reach_state"|'
+                        '"navigate"|"unknown", "correction": null or "...", '
+                        '"description": "..."}'
+                    ),
+                    "images": [b64_before, b64_after, b64_diff],
+                }],
+                options={"num_predict": 8192, "temperature": 0.3, "num_ctx": 8192},
+            )
+
+            raw = resp.get("message", {}).get("content", "")
+            return _parse_vision_json(raw)
+        except Exception as exc:
+            log.debug("arc.vision_call_2_failed", error=str(exc)[:200])
+            return None
+
+    def analyze(
+        self,
+        game_id: str,
+        *,
+        force: bool = False,
+        base_dir: Any | None = None,
+    ) -> "GameProfile":
+        """Analyze a game: load from cache or run sacrifice level + 2 vision calls."""
+        from datetime import datetime, timezone
+
+        from jarvis.arc.error_handler import safe_frame_extract
+        from jarvis.arc.game_profile import GameProfile
+
+        # Cache check
+        if not force and GameProfile.exists(game_id, base_dir=base_dir):
+            cached = GameProfile.load(game_id, base_dir=base_dir)
+            if cached is not None:
+                log.info("arc.profile_cache_hit", game_id=game_id)
+                return cached
+
+        # Create environment
+        env = self._arcade.make(game_id)
+        obs = env.reset()
+        initial_grid = safe_frame_extract(obs)
+
+        # Extract available action IDs
+        action_ids: list[int] = []
+        if hasattr(obs, "available_actions") and obs.available_actions:
+            for a in obs.available_actions:
+                action_ids.append(a.value if hasattr(a, "value") else int(a))
+        if not action_ids:
+            action_ids = [1, 2, 3, 4, 5, 6]
+
+        # Determine game type from actions
+        has_click = 6 in action_ids
+        has_keyboard = any(a in action_ids for a in [1, 2, 3, 4])
+        if has_click and has_keyboard:
+            game_type = "mixed"
+        elif has_click:
+            game_type = "click"
+        else:
+            game_type = "keyboard"
+
+        # Vision call 1
+        vision1 = self._vision_call_initial(initial_grid, action_ids)
+        if vision1 and "game_type" in vision1:
+            game_type = vision1["game_type"]
+
+        # Sacrifice level
+        report = self._run_sacrifice_level(env, initial_grid, action_ids)
+
+        # Vision call 2
+        final_grid = report.frames[-1] if report.frames else initial_grid
+        vision2 = self._vision_call_final(initial_grid, final_grid)
+
+        # Determine win condition
+        win_condition = "unknown"
+        if vision2 and "win_condition" in vision2:
+            win_condition = vision2["win_condition"]
+
+        # Correct game_type if vision2 disagrees
+        if vision2 and vision2.get("correction"):
+            correction = vision2["correction"]
+            if correction in ("click", "keyboard", "mixed"):
+                game_type = correction
+
+        # Extract target colors from clicks that had effects
+        target_colors: list[int] = []
+        if vision1 and vision1.get("target_color") is not None:
+            target_colors = [int(vision1["target_color"])]
+
+        # Extract click zones from report
+        click_zones = [(x, y) for x, y, effect in report.clicks_tested if effect == "changed"]
+
+        # Build movement effects
+        movement_effects: dict[int, str] = {}
+        for action_id, diff in report.movements_tested.items():
+            if diff > 20:
+                movement_effects[action_id] = "moves_player"
+            elif diff > 0:
+                movement_effects[action_id] = "transforms"
+            else:
+                movement_effects[action_id] = "no_effect"
+
+        profile = GameProfile(
+            game_id=game_id,
+            game_type=game_type,
+            available_actions=action_ids,
+            click_zones=click_zones,
+            target_colors=target_colors,
+            movement_effects=movement_effects,
+            win_condition=win_condition,
+            vision_description=vision1.get("description", "") if vision1 else "unavailable",
+            vision_strategy=vision1.get("strategy", "") if vision1 else "unavailable",
+            strategy_metrics={},
+            analyzed_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+        profile.save(base_dir=base_dir)
+        return profile
