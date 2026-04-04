@@ -301,8 +301,10 @@ class TestSolve:
 
 
 class TestClusterClickStrategy:
-    def test_cluster_click_uses_subset_search(self):
-        """cluster_click should find clusters and try subsets via arcade.make()."""
+    def test_cluster_click_uses_find_solution(self):
+        """cluster_click delegates to ClusterSolver.find_solution() and solves levels."""
+        from arcengine.enums import GameState
+
         profile = _make_profile("click")
         profile.target_colors = [3]
 
@@ -314,20 +316,30 @@ class TestClusterClickStrategy:
 
         make_count = [0]
 
-        def mock_make(game_id):
+        def mock_make(game_id=None):
             make_count[0] += 1
             env = MagicMock()
             click_count = [0]
 
             def env_step(action, data=None):
                 click_count[0] += 1
-                # Win when clicking exactly 2 of the 3 clusters
-                if click_count[0] == 2:
-                    return _make_mock_obs(state_name="WIN", levels=1)
-                return _make_mock_obs(grid=np.expand_dims(grid, 0))
+                obs = MagicMock()
+                obs.frame = np.expand_dims(grid, 0)
+                # After clicking all 3 clusters, levels_completed increments
+                if click_count[0] >= 3:
+                    obs.levels_completed = 1
+                    obs.state = GameState.NOT_FINISHED
+                else:
+                    obs.levels_completed = 0
+                    obs.state = GameState.NOT_FINISHED
+                return obs
 
             env.step = env_step
-            env.reset.return_value = _make_mock_obs(grid=np.expand_dims(grid, 0))
+            obs0 = MagicMock()
+            obs0.frame = np.expand_dims(grid, 0)
+            obs0.levels_completed = 0
+            obs0.state = GameState.NOT_FINISHED
+            env.reset.return_value = obs0
             return env
 
         mock_arcade = MagicMock()
@@ -339,7 +351,8 @@ class TestClusterClickStrategy:
         )
 
         assert outcome.won is True
-        assert make_count[0] > 0  # Used arcade.make for subset search
+        assert outcome.levels_solved >= 1
+        assert make_count[0] > 0
 
     def test_cluster_click_no_target_color_returns_empty(self):
         """cluster_click with no target color returns no-win outcome."""

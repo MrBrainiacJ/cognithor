@@ -94,11 +94,7 @@ class PerGameSolver:
         target_color: int | None,
         max_actions: int,
     ) -> StrategyOutcome:
-        """Cluster-based click strategy: find clusters, try subsets via arcade.make()."""
-        import itertools
-
-        from arcengine.enums import GameState
-
+        """Cluster-based click: delegates to ClusterSolver.find_solution() level by level."""
         from jarvis.arc.cluster_solver import ClusterSolver
 
         outcome = StrategyOutcome()
@@ -108,7 +104,6 @@ class PerGameSolver:
             unique_colors = [int(c) for c in np.unique(initial_grid) if c != 0]
             if not unique_colors:
                 return outcome
-            # Try each color, pick the one with the most clusters
             best_color = max(
                 unique_colors,
                 key=lambda c: len(ClusterSolver(target_color=c, max_skip=0).find_clusters(initial_grid)),
@@ -116,54 +111,30 @@ class PerGameSolver:
             target_color = best_color
 
         solver = ClusterSolver(target_color=target_color, max_skip=6)
+        game_id = self._profile.game_id
 
-        # Scan clusters from a fresh env (each level has different layout)
-        scan_env = self._arcade.make(self._profile.game_id)
-        scan_obs = scan_env.reset()
-        level_grid = safe_frame_extract(scan_obs)
-        centers = solver.find_clusters(level_grid)
+        def env_factory():
+            return self._arcade.make(game_id)
 
-        if not centers:
-            # Fallback: try from the provided grid
-            centers = solver.find_clusters(initial_grid)
-            if not centers:
-                return outcome
+        prev_solutions: list[list[tuple[int, int]]] = []
+        max_levels = 10
 
-        n = len(centers)
-        max_skip = min(n, 6)
-        combos_tried = 0
+        for level in range(max_levels):
+            solution = solver.find_solution(
+                env_factory=env_factory,
+                action_id=6,
+                prev_solutions=prev_solutions,
+                target_level=level,
+            )
+            outcome.steps += 1  # count each level attempt
 
-        for skip in range(max_skip + 1):
-            for skip_combo in itertools.combinations(range(n), skip):
-                if combos_tried >= max_actions:
-                    outcome.budget_ratio = 1.0
-                    return outcome
+            if solution is None:
+                break
 
-                click_idx = [i for i in range(n) if i not in skip_combo]
-                combos_tried += 1
-
-                # Test this combo in a fresh env
-                env = self._arcade.make(self._profile.game_id)
-                obs = env.reset()
-
-                won = False
-                for idx in click_idx:
-                    cx, cy = centers[idx]
-                    obs = env.step(6, data={"x": cx, "y": cy})
-                    outcome.steps += 1
-
-                    if obs.state == GameState.WIN:
-                        won = True
-                        break
-                    if obs.state == GameState.GAME_OVER:
-                        break
-
-                if won:
-                    outcome.won = True
-                    outcome.levels_solved = 1
-                    outcome.budget_ratio = combos_tried / max_actions
-                    outcome.winning_clicks = [centers[i] for i in click_idx]
-                    return outcome
+            prev_solutions.append(solution)
+            outcome.levels_solved += 1
+            outcome.won = True
+            outcome.winning_clicks = solution
 
         outcome.budget_ratio = 1.0
         return outcome
@@ -174,19 +145,14 @@ class PerGameSolver:
         """Execute a single strategy with a given action budget."""
         from arcengine.enums import GameState
 
-        # Special handling for cluster_click: uses arcade.make() per combo
+        # Special handling for cluster_click: delegates to ClusterSolver.find_solution()
         if strategy == "cluster_click":
             target_color = self._profile.target_colors[0] if self._profile.target_colors else None
-            # Get current grid from a fresh env (don't touch the main env)
+            # Get initial grid for auto-detect fallback
             peek_env = self._arcade.make(self._profile.game_id)
             obs_peek = peek_env.reset()
             last_grid = safe_frame_extract(obs_peek)
-            result = self._execute_cluster_click(last_grid, target_color, max_actions)
-            # Replay winning clicks on the main env so it advances
-            if result.won and result.winning_clicks:
-                for cx, cy in result.winning_clicks:
-                    env.step(6, data={"x": cx, "y": cy})
-            return result
+            return self._execute_cluster_click(last_grid, target_color, max_actions)
 
         outcome = StrategyOutcome()
         frame_history: list[np.ndarray] = []
