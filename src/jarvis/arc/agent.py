@@ -9,11 +9,12 @@ from typing import Any
 from jarvis.arc.adapter import ArcEnvironmentAdapter, ArcObservation
 from jarvis.arc.audit import ArcAuditTrail
 from jarvis.arc.episode_memory import EpisodeMemory
-from jarvis.arc.frame_analyzer import FrameAnalyzer
 from jarvis.arc.explorer import ExplorationPhase, HypothesisDrivenExplorer
+from jarvis.arc.frame_analyzer import FrameAnalyzer
 from jarvis.arc.goal_inference import GoalInferenceModule
 from jarvis.arc.mechanics_model import MechanicsModel
 from jarvis.arc.state_graph import StateGraphNavigator
+from jarvis.arc.vision_guide import ArcVisionGuide
 from jarvis.arc.visual_encoder import VisualStateEncoder
 from jarvis.utils.logging import get_logger
 
@@ -175,7 +176,8 @@ class CognithorArcAgent:
         except Exception:
             log.debug("arc.agent.cnn_not_available", exc_info=True)
 
-        # Pixel-reward explorer + frame analyzer (primary action selection)
+        # Vision guide + pixel-reward explorer + frame analyzer
+        self.vision_guide = ArcVisionGuide(call_interval=50)
         self.pixel_explorer = PixelRewardExplorer(epsilon=0.2)
         self.frame_analyzer = FrameAnalyzer()
         self.telemetry = ArcTelemetry()
@@ -231,6 +233,7 @@ class CognithorArcAgent:
                 self.current_obs = self.adapter.reset_level()
                 self.level_resets += 1
                 self.telemetry.game_overs += 1
+                self.vision_guide.force_next_call()
                 self.memory.clear_for_new_level()
                 log.info(
                     "arc.agent.level_reset",
@@ -259,7 +262,12 @@ class CognithorArcAgent:
             "score": final_score,
         }
         log.info("arc.agent.run.done", **result_dict)
-        log.info("arc_telemetry\n%s", self.telemetry.summary())
+        log.info(
+            "arc_telemetry\n%s\nVision calls: %d, actions followed: %d",
+            self.telemetry.summary(),
+            self.vision_guide.call_count,
+            self.vision_guide.actions_followed,
+        )
         return result_dict
 
     # ------------------------------------------------------------------
@@ -363,7 +371,24 @@ class CognithorArcAgent:
 
                     data = {"x": random.randint(0, 63), "y": random.randint(0, 63)}
 
-        # 3. Frame-analyzer suggestion (if it has learned enough)
+        # 3. Vision guide (if enough steps/pixels since last call)
+        if (
+            action_str is None
+            and self.vision_guide is not None
+            and self.vision_guide.should_call(self.current_obs.changed_pixels)
+        ):
+            action_names = [
+                getattr(a, "name", str(a)) for a in (self.current_obs.available_actions or [])
+            ]
+            guidance = self.vision_guide.analyze_sync(self.current_obs.raw_grid, action_names)
+            if guidance and guidance.get("next_action"):
+                action = self._resolve_action(guidance["next_action"])
+                if action is not None:
+                    data = {}
+                    action_str = self._action_to_str(action, data)
+                    self.vision_guide.actions_followed += 1
+
+        # 4. Frame-analyzer suggestion (if it has learned enough)
         if action_str is None:
             suggested = self.frame_analyzer.suggest_action(
                 self.current_obs.available_actions or [1, 2, 3, 4]
