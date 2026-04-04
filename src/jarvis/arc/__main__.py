@@ -4,12 +4,6 @@ Usage:
     python -m jarvis.arc --game <game_id> [options]
     python -m jarvis.arc --list-games
     python -m jarvis.arc --mode benchmark
-    python -m jarvis.arc --mode swarm --parallel 4
-
-Modes:
-    single      Run a single game (default)
-    benchmark   Run all known games sequentially
-    swarm       Run games in parallel via ArcSwarmOrchestrator
 """
 
 from __future__ import annotations
@@ -32,28 +26,15 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=["single", "benchmark", "swarm"],
+        choices=["single", "benchmark"],
         default="single",
-        help="Run mode: single (default), benchmark (all games sequential), swarm (parallel)",
+        help="Run mode: single (default), benchmark (all games sequential)",
     )
     parser.add_argument(
         "--no-llm",
         action="store_true",
         default=False,
         help="Disable LLM planner (algorithmic-only mode)",
-    )
-    parser.add_argument(
-        "--cnn",
-        action="store_true",
-        default=False,
-        help="Enable CNN visual encoder",
-    )
-    parser.add_argument(
-        "--parallel",
-        type=int,
-        default=4,
-        metavar="N",
-        help="Max parallel workers for swarm mode (default: 4)",
     )
     parser.add_argument(
         "--verbose",
@@ -103,17 +84,6 @@ def _run_single(game_id: str, use_llm: bool, verbose: bool, config: Any) -> int:
         )
         return 1
 
-    llm_call_interval = 10
-    max_steps = 500
-    max_resets = 5
-
-    if config is not None:
-        arc_cfg = getattr(config, "arc", None)
-        if arc_cfg is not None:
-            llm_call_interval = arc_cfg.llm_call_interval
-            max_steps = arc_cfg.max_steps_per_level
-            max_resets = arc_cfg.max_resets_per_level
-
     if verbose:
         print(f"[INFO] Starting single game: {game_id}")
         print(f"[INFO] LLM planner: {'enabled' if use_llm else 'disabled'}")
@@ -122,9 +92,6 @@ def _run_single(game_id: str, use_llm: bool, verbose: bool, config: Any) -> int:
         agent = CognithorArcAgent(
             game_id=game_id,
             use_llm_planner=use_llm,
-            llm_call_interval=llm_call_interval,
-            max_steps_per_level=max_steps,
-            max_resets_per_level=max_resets,
         )
         result = agent.run()
     except Exception as exc:
@@ -144,67 +111,28 @@ def _run_single(game_id: str, use_llm: bool, verbose: bool, config: Any) -> int:
 
 
 def _run_benchmark(use_llm: bool, verbose: bool, config: Any) -> int:
-    """Run all known games sequentially (swarm with max_parallel=1)."""
-    return _run_swarm(use_llm=use_llm, parallel=1, verbose=verbose, config=config)
-
-
-def _run_swarm(use_llm: bool, parallel: int, verbose: bool, config: Any) -> int:
-    """Run games in parallel via ArcSwarmOrchestrator. Returns exit code."""
+    """Run all known games sequentially."""
     try:
-        from jarvis.arc.swarm import ArcSwarmOrchestrator
-    except ImportError as exc:
-        print(
-            f"[FAIL] Could not import ArcSwarmOrchestrator: {exc}",
-            file=sys.stderr,
-        )
-        return 1
+        from jarvis.arc.adapter import ArcEnvironmentAdapter
 
-    # Determine game list from config or fall back to empty discovery
-    game_ids: list[str] = []
-    if config is not None:
-        arc_cfg = getattr(config, "arc", None)
-        if arc_cfg is not None and arc_cfg.swarm_max_parallel and parallel == 4:
-            # Use config parallelism unless overridden via CLI (4 is default)
-            parallel = arc_cfg.swarm_max_parallel
+        game_ids = ArcEnvironmentAdapter.list_games()
+    except Exception:
+        game_ids = []
 
     if not game_ids:
-        # Try to discover available games from the adapter
-        try:
-            from jarvis.arc.adapter import ArcEnvironmentAdapter
-
-            game_ids = ArcEnvironmentAdapter.list_games()
-        except Exception:
-            game_ids = []
-
-    if not game_ids:
-        print(
-            "[WARN] No game IDs found. Provide a --game argument or ensure ARC SDK is installed.",
-            file=sys.stderr,
-        )
+        print("[WARN] No game IDs found.", file=sys.stderr)
         return 1
 
-    if verbose:
-        print(f"[INFO] Swarm mode: {len(game_ids)} game(s), max_parallel={parallel}")
-
-    import asyncio
-
-    orchestrator = ArcSwarmOrchestrator(
-        max_parallel=parallel,
-        use_llm=use_llm,
-        config=config,
-    )
-
-    try:
-        asyncio.run(orchestrator.run_swarm(game_ids))
-    except Exception as exc:
-        print(f"[FAIL] Swarm run failed: {exc}", file=sys.stderr)
+    wins = 0
+    total = len(game_ids)
+    for i, game_id in enumerate(game_ids):
         if verbose:
-            import traceback
+            print(f"[{i + 1}/{total}] Playing {game_id}...")
+        code = _run_single(game_id, use_llm, verbose, config)
+        if code == 0:
+            wins += 1
 
-            traceback.print_exc()
-        return 1
-
-    print(orchestrator.get_summary())
+    print(f"\n[BENCHMARK] {wins}/{total} games won ({100 * wins / total:.1f}%)")
     return 0
 
 
@@ -251,14 +179,6 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.mode == "benchmark":
         return _run_benchmark(use_llm=use_llm, verbose=args.verbose, config=config)
-
-    if args.mode == "swarm":
-        return _run_swarm(
-            use_llm=use_llm,
-            parallel=args.parallel,
-            verbose=args.verbose,
-            config=config,
-        )
 
     print(f"[FAIL] Unknown mode: {args.mode}", file=sys.stderr)
     return 1
