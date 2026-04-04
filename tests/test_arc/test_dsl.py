@@ -323,8 +323,6 @@ def test_get_largest_object():
 
 def test_mask_where_alias():
     grid = [[1, 2, 1], [3, 1, 2]]
-    from jarvis.arc.dsl import mask_where, get_by_color
-
     assert mask_where(grid, 1) == get_by_color(grid, 1)
 
 
