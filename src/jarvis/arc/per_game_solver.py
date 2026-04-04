@@ -11,7 +11,7 @@ from jarvis.arc.error_handler import safe_frame_extract
 from jarvis.arc.game_profile import GameProfile
 from jarvis.utils.logging import get_logger
 
-__all__ = ["BudgetSlot", "PerGameSolver", "SolveResult"]
+__all__ = ["BudgetSlot", "PerGameSolver", "SolveResult", "StrategyOutcome"]
 
 log = get_logger(__name__)
 
@@ -29,6 +29,18 @@ class BudgetSlot:
     strategy: str
     max_actions: int
     priority: int
+
+
+@dataclass
+class StrategyOutcome:
+    """Result of executing one strategy on one level."""
+
+    won: bool = False
+    game_over: bool = False
+    stagnated: bool = False
+    steps: int = 0
+    levels_solved: int = 0
+    budget_ratio: float = 0.0
 
 
 @dataclass
@@ -74,6 +86,95 @@ class PerGameSolver:
             ))
 
         return slots
+
+    def _execute_strategy(
+        self, env: Any, strategy: str, max_actions: int
+    ) -> StrategyOutcome:
+        """Execute a single strategy with a given action budget."""
+        from arcengine.enums import GameState
+
+        outcome = StrategyOutcome()
+        frame_history: list[np.ndarray] = []
+        initial_levels = 0
+
+        for step in range(max_actions):
+            action_id, data = self._pick_action(strategy, frame_history)
+            obs = env.step(action_id, data=data)
+            grid = safe_frame_extract(obs)
+            frame_history.append(grid)
+            outcome.steps += 1
+
+            if hasattr(obs, "levels_completed"):
+                initial_levels = initial_levels or obs.levels_completed
+
+            # Check terminal states
+            if obs.state == GameState.WIN:
+                outcome.won = True
+                outcome.levels_solved = (
+                    getattr(obs, "levels_completed", 0) - initial_levels + 1
+                )
+                outcome.budget_ratio = outcome.steps / max_actions
+                return outcome
+
+            if obs.state == GameState.GAME_OVER:
+                outcome.game_over = True
+                outcome.budget_ratio = outcome.steps / max_actions
+                return outcome
+
+            # Check stagnation
+            if self._detect_stagnation(frame_history):
+                outcome.stagnated = True
+                outcome.budget_ratio = outcome.steps / max_actions
+                return outcome
+
+        outcome.budget_ratio = 1.0
+        return outcome
+
+    def _pick_action(
+        self, strategy: str, frame_history: list[np.ndarray]
+    ) -> tuple[int, dict | None]:
+        """Pick next action based on strategy."""
+        profile = self._profile
+
+        if strategy == "cluster_click" or strategy == "targeted_click":
+            # Click on known zones from profile
+            if profile.click_zones:
+                idx = len(frame_history) % len(profile.click_zones)
+                x, y = profile.click_zones[idx]
+                return 6, {"x": x, "y": y}
+            # Fallback: center position
+            return 6, {"x": 32, "y": 32}
+
+        if strategy == "keyboard_explore":
+            # Cycle through directions
+            directions = [a for a in profile.available_actions if a in (1, 2, 3, 4)]
+            if directions:
+                idx = len(frame_history) % len(directions)
+                return directions[idx], None
+            return 1, None
+
+        if strategy == "keyboard_sequence":
+            # Use directions in order, repeat
+            directions = [a for a in profile.available_actions if a in (1, 2, 3, 4)]
+            if directions:
+                idx = len(frame_history) % len(directions)
+                return directions[idx], None
+            return 5, None  # interact as fallback
+
+        if strategy == "hybrid":
+            # Alternate: keyboard for first 3/4, click for 1/4
+            if profile.click_zones and len(frame_history) % 4 == 3:
+                idx = len(frame_history) % len(profile.click_zones)
+                x, y = profile.click_zones[idx]
+                return 6, {"x": x, "y": y}
+            directions = [a for a in profile.available_actions if a in (1, 2, 3, 4)]
+            if directions:
+                idx = len(frame_history) % len(directions)
+                return directions[idx], None
+            return 5, None
+
+        # Unknown strategy -> interact
+        return 5, None
 
     def _detect_stagnation(self, frame_history: list[np.ndarray]) -> bool:
         """Check if recent frames show no meaningful change."""

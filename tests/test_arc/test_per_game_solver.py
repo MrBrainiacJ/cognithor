@@ -12,6 +12,7 @@ from jarvis.arc.per_game_solver import (
     BudgetSlot,
     PerGameSolver,
     SolveResult,
+    StrategyOutcome,
 )
 
 
@@ -112,3 +113,91 @@ class TestSolveResult:
     def test_defaults(self):
         r = SolveResult(game_id="test", levels_completed=0, total_steps=0, strategy_log=[], score=0.0)
         assert r.game_id == "test"
+
+
+def _make_mock_game_state(name):
+    state = MagicMock()
+    state.name = name
+    state.__eq__ = lambda self, other: getattr(other, "name", other) == name
+    return state
+
+
+def _make_mock_obs(grid=None, state_name="NOT_FINISHED", levels=0, actions=None):
+    if grid is None:
+        grid = np.zeros((1, 64, 64), dtype=np.int8)
+    obs = MagicMock()
+    obs.frame = grid
+    obs.state = _make_mock_game_state(state_name)
+    obs.levels_completed = levels
+    obs.available_actions = actions or []
+    obs.win_levels = 0
+    return obs
+
+
+class TestStrategyExecution:
+    def test_execute_targeted_click_win(self):
+        """targeted_click strategy clicks on known zones and wins."""
+        profile = _make_profile("click")
+
+        mock_env = MagicMock()
+        step_count = [0]
+
+        def mock_step(action, data=None):
+            step_count[0] += 1
+            if step_count[0] >= 2:
+                return _make_mock_obs(state_name="WIN", levels=1)
+            return _make_mock_obs()
+
+        mock_env.step = mock_step
+
+        solver = PerGameSolver(profile, arcade=MagicMock())
+        outcome = solver._execute_strategy(mock_env, "targeted_click", max_actions=10)
+
+        assert isinstance(outcome, StrategyOutcome)
+        assert outcome.won is True
+        assert outcome.steps > 0
+
+    def test_execute_keyboard_explore(self):
+        """keyboard_explore strategy runs actions without error."""
+        profile = _make_profile("keyboard")
+        mock_env = MagicMock()
+        call_count = [0]
+
+        def varied_step(action, data=None):
+            call_count[0] += 1
+            grid = np.full((1, 64, 64), call_count[0] % 256, dtype=np.int8)
+            return _make_mock_obs(grid=grid)
+
+        mock_env.step = varied_step
+
+        solver = PerGameSolver(profile, arcade=MagicMock())
+        outcome = solver._execute_strategy(mock_env, "keyboard_explore", max_actions=20)
+
+        assert isinstance(outcome, StrategyOutcome)
+        assert outcome.steps == 20  # used full budget
+
+    def test_execute_stops_on_game_over(self):
+        """Strategy stops when GAME_OVER is received."""
+        profile = _make_profile("click")
+        mock_env = MagicMock()
+        mock_env.step.return_value = _make_mock_obs(state_name="GAME_OVER")
+
+        solver = PerGameSolver(profile, arcade=MagicMock())
+        outcome = solver._execute_strategy(mock_env, "targeted_click", max_actions=10)
+
+        assert outcome.won is False
+        assert outcome.game_over is True
+
+    def test_execute_stops_on_stagnation(self):
+        """Strategy switches on stagnation (identical frames)."""
+        profile = _make_profile("keyboard")
+        same_grid = np.zeros((1, 64, 64), dtype=np.int8)
+        mock_env = MagicMock()
+        mock_env.step.return_value = _make_mock_obs(grid=same_grid)
+
+        solver = PerGameSolver(profile, arcade=MagicMock())
+        outcome = solver._execute_strategy(mock_env, "keyboard_explore", max_actions=50)
+
+        # Should stop early due to stagnation (after ~5 identical frames)
+        assert outcome.steps < 50
+        assert outcome.stagnated is True
