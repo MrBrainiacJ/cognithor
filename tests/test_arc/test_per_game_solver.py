@@ -40,11 +40,11 @@ class TestBudgetAllocation:
 
         assert len(slots) == 3
         assert slots[0].strategy == "cluster_click"
-        assert slots[0].max_actions == 10  # 50% of 20
+        assert slots[0].max_actions == 100  # 50% of 200
         assert slots[1].strategy == "targeted_click"
-        assert slots[1].max_actions == 6   # 30% of 20
+        assert slots[1].max_actions == 60   # 30% of 200
         assert slots[2].strategy == "hybrid"
-        assert slots[2].max_actions == 4   # 20% of 20
+        assert slots[2].max_actions == 40   # 20% of 200
 
     def test_default_keyboard_allocation(self):
         profile = _make_profile("keyboard")

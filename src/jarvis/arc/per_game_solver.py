@@ -16,7 +16,7 @@ __all__ = ["BudgetSlot", "PerGameSolver", "SolveResult", "StrategyOutcome"]
 log = get_logger(__name__)
 
 # Default total budget per game type
-_BUDGET_BY_TYPE = {"click": 20, "keyboard": 200, "mixed": 100}
+_BUDGET_BY_TYPE = {"click": 200, "keyboard": 200, "mixed": 100}
 
 _STAGNATION_WINDOW = 5
 _STAGNATION_THRESHOLD = 10  # pixels
@@ -104,7 +104,16 @@ class PerGameSolver:
         outcome = StrategyOutcome()
 
         if target_color is None:
-            return outcome
+            # Auto-detect: try each non-background color
+            unique_colors = [int(c) for c in np.unique(initial_grid) if c != 0]
+            if not unique_colors:
+                return outcome
+            # Try each color, pick the one with the most clusters
+            best_color = max(
+                unique_colors,
+                key=lambda c: len(ClusterSolver(target_color=c, max_skip=0).find_clusters(initial_grid)),
+            )
+            target_color = best_color
 
         solver = ClusterSolver(target_color=target_color, max_skip=6)
         centers = solver.find_clusters(initial_grid)
@@ -160,11 +169,10 @@ class PerGameSolver:
         # Special handling for cluster_click: uses arcade.make() per combo
         if strategy == "cluster_click":
             target_color = self._profile.target_colors[0] if self._profile.target_colors else None
-            # Get current grid without resetting — use a no-op interact action
-            obs_peek = env.step(5)
+            # Get current grid from a fresh env (don't touch the main env)
+            peek_env = self._arcade.make(self._profile.game_id)
+            obs_peek = peek_env.reset()
             last_grid = safe_frame_extract(obs_peek)
-            if obs_peek.state == GameState.GAME_OVER:
-                return StrategyOutcome(game_over=True, steps=1, budget_ratio=1.0 / max_actions)
             result = self._execute_cluster_click(last_grid, target_color, max_actions)
             # Replay winning clicks on the main env so it advances
             if result.won and result.winning_clicks:
