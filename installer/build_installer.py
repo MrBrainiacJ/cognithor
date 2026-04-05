@@ -98,6 +98,14 @@ def step_python_embed() -> Path:
     )
     print("  [OK] pip installed")
 
+    # Install setuptools (needed by some dependencies)
+    subprocess.run(
+        [str(python_exe), "-m", "pip", "install", "setuptools", "wheel",
+         "--no-warn-script-location"],
+        check=True,
+    )
+    print("  [OK] setuptools installed")
+
     # Build cognithor wheel
     print("  Building cognithor wheel...")
     wheel_dir = BUILD_DIR / "wheel"

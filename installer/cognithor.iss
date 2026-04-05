@@ -9,11 +9,11 @@
 #endif
 
 #ifndef BuildDir
-  #define BuildDir "build"
+  #define BuildDir SourcePath + "\build"
 #endif
 
 #ifndef ProjectRoot
-  #define ProjectRoot ".."
+  #define ProjectRoot SourcePath + "\.."
 #endif
 
 #ifndef PythonDir
@@ -32,7 +32,7 @@ AppVerName=Cognithor {#MyAppVersion}
 AppPublisher=Alexander Soellner
 AppPublisherURL=https://github.com/Alex8791-cyber/cognithor
 AppSupportURL=https://github.com/Alex8791-cyber/cognithor/issues
-DefaultDirName={autopf}\Cognithor
+DefaultDirName={localappdata}\Cognithor
 DefaultGroupName=Cognithor
 AllowNoIcons=yes
 LicenseFile={#ProjectRoot}\LICENSE
@@ -41,7 +41,8 @@ OutputBaseFilename=CognithorSetup-{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-PrivilegesRequired=admin
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog
 SetupIconFile={#ProjectRoot}\flutter_app\windows\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\cognithor.bat
 ArchitecturesAllowed=x64compatible
@@ -92,14 +93,14 @@ Name: "{autodesktop}\Cognithor"; Filename: "{app}\cognithor.bat"; Parameters: "-
 
 [Registry]
 ; Add to PATH if selected
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; \
+Root: HKCU; Subkey: "Environment"; \
     ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
     Components: addpath; Check: NeedsAddPath('{app}')
 
 [Run]
 ; Post-install: offer to start Cognithor
-Filename: "{app}\cognithor.bat"; Parameters: "--ui"; Description: "Start Cognithor"; \
-    Flags: nowait postinstall skipifsilent shellexec
+Filename: "{cmd}"; Parameters: "/c ""{app}\cognithor.bat"" --ui"; Description: "Start Cognithor"; \
+    Flags: nowait postinstall skipifsilent runhidden
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\python\__pycache__"
@@ -111,8 +112,8 @@ function NeedsAddPath(Param: string): boolean;
 var
   OrigPath: string;
 begin
-  if not RegQueryStringValue(HKEY_LOCAL_MACHINE,
-    'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+  if not RegQueryStringValue(HKEY_CURRENT_USER,
+    'Environment',
     'Path', OrigPath)
   then begin
     Result := True;
@@ -130,15 +131,15 @@ begin
   if CurUninstallStep = usPostUninstall then
   begin
     AppDir := ExpandConstant('{app}');
-    if RegQueryStringValue(HKEY_LOCAL_MACHINE,
-      'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+    if RegQueryStringValue(HKEY_CURRENT_USER,
+      'Environment',
       'Path', Path) then
     begin
       StringChangeEx(Path, ';' + AppDir, '', True);
       StringChangeEx(Path, AppDir + ';', '', True);
       StringChangeEx(Path, AppDir, '', True);
-      RegWriteStringValue(HKEY_LOCAL_MACHINE,
-        'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+      RegWriteStringValue(HKEY_CURRENT_USER,
+        'Environment',
         'Path', Path);
     end;
   end;
