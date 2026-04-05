@@ -173,7 +173,7 @@ class TestStrategyExecution:
         mock_env.step = varied_step
 
         solver = PerGameSolver(profile, arcade=MagicMock())
-        outcome = solver._execute_strategy(mock_env, "keyboard_explore", max_actions=20)
+        outcome = solver._execute_strategy(mock_env, "hybrid", max_actions=20)
 
         assert isinstance(outcome, StrategyOutcome)
         assert outcome.steps == 20  # used full budget
@@ -198,7 +198,7 @@ class TestStrategyExecution:
         mock_env.step.return_value = _make_mock_obs(grid=same_grid)
 
         solver = PerGameSolver(profile, arcade=MagicMock())
-        outcome = solver._execute_strategy(mock_env, "keyboard_explore", max_actions=50)
+        outcome = solver._execute_strategy(mock_env, "hybrid", max_actions=50)
 
         # Should stop early due to stagnation (after ~5 identical frames)
         assert outcome.steps < 50

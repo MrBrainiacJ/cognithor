@@ -285,6 +285,10 @@ class PerGameSolver:
         if strategy == "sequence_click":
             return self._execute_sequence_click(max_actions)
 
+        # Special handling for keyboard strategies: incremental DFS
+        if strategy in ("keyboard_explore", "keyboard_sequence"):
+            return self._execute_keyboard(max_actions)
+
         outcome = StrategyOutcome()
         frame_history: list[np.ndarray] = []
         initial_levels = None
@@ -617,6 +621,23 @@ class PerGameSolver:
 
         outcome.budget_ratio = 1.0
         return outcome
+
+    def _execute_keyboard(self, max_actions: int) -> StrategyOutcome:
+        """Delegate to KeyboardSolver for incremental DFS on keyboard games."""
+        from jarvis.arc.keyboard_solver import KeyboardSolver
+
+        actions = [a for a in self._profile.available_actions if a in (1, 2, 3, 4, 5)]
+        if not actions:
+            return StrategyOutcome()
+
+        ks = KeyboardSolver(self._arcade, self._profile.game_id, actions)
+        result = ks.solve(max_levels=10, timeout_s=300.0)
+
+        return StrategyOutcome(
+            won=result.levels_completed > 0,
+            levels_solved=result.levels_completed,
+            steps=result.total_steps,
+        )
 
     def _bfs_find_sequence(
         self,
