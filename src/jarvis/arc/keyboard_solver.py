@@ -78,6 +78,9 @@ class KeyboardSolver:
                 log.info("arc.keyboard_false_positive", level=level)
                 break
 
+            # Shorten path: remove redundant steps
+            solution = self._shorten_path(env, replay_prefix, solution, level)
+
             prev_solutions.append(solution)
             result.levels_completed += 1
             result.total_steps += len(solution)
@@ -199,6 +202,52 @@ class KeyboardSolver:
                  states=len(visited), path_len=len(path),
                  time_s=round(time.monotonic() - t0, 1))
         return None
+
+    def _shorten_path(
+        self,
+        env: Any,
+        replay_prefix: list[int],
+        solution: list[int],
+        target_level: int,
+    ) -> list[int]:
+        """Remove redundant steps from a DFS solution.
+
+        Iteratively tries removing each step. If the solution still works
+        without it, keep the shorter version. O(n^2) but n is small after
+        a few passes.
+        """
+        from arcengine.enums import GameState
+
+        original_len = len(solution)
+        improved = True
+
+        while improved:
+            improved = False
+            i = 0
+            while i < len(solution):
+                # Try without step i
+                candidate = solution[:i] + solution[i + 1:]
+                full_seq = replay_prefix + candidate
+
+                obs = env.reset()
+                ok = True
+                for a in full_seq:
+                    obs = env.step(a)
+                    if obs.state == GameState.GAME_OVER:
+                        ok = False
+                        break
+
+                if ok and obs.levels_completed > target_level:
+                    solution = candidate
+                    improved = True
+                    # Don't increment i — check same index again
+                else:
+                    i += 1
+
+        if len(solution) < original_len:
+            log.info("arc.keyboard_path_shortened",
+                     original=original_len, shortened=len(solution))
+        return solution
 
     @staticmethod
     def _replay_to(env: Any, prefix: list[int], path: list[int]) -> Any:
