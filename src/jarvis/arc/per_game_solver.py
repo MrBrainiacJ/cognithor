@@ -575,7 +575,7 @@ class PerGameSolver:
         outcome = StrategyOutcome()
         game_id = self._profile.game_id
         max_levels = 10
-        timeout = 120.0
+        timeout = 300.0  # 5 min per level (higher levels need more search depth)
 
         env = self._arcade.make(game_id)
         prev_level_clicks: list[list[tuple[int, int]]] = []
@@ -659,6 +659,18 @@ class PerGameSolver:
                 valves.append((cx, cy))
 
         log.info("arc.bfs_classified", valves=len(valves), triggers=len(triggers))
+
+        # For deep puzzles (many valves), skip BFS and go straight to sim-A*
+        if len(valves) >= 4 and not triggers:
+            action_set = valves + triggers
+            height_result = self._height_space_solve(
+                env, replay_prefix, action_set, current_levels, timeout * 0.9,
+            )
+            if height_result is not None:
+                return height_result
+            # Fallback to greedy
+            return self._greedy_effect_solve(env, replay_prefix, action_set,
+                                              current_levels, timeout - (time.monotonic() - t0))
 
         # Phase 1: BFS with valves only (no triggers) — "pump first"
         result = self._bfs_valves_only(
@@ -1069,10 +1081,23 @@ class PerGameSolver:
 
         current_heights = measure_heights(grid)
 
-        # --- Find target heights from teal markers (color 14) ---
-        teal_ys, teal_xs = np.where(grid == 14)
-        if len(teal_ys) == 0:
-            return None
+        # --- Find target heights from marker colors ---
+        # Try teal(14), violet(15), green(4), gray(11) as possible markers
+        marker_ys, marker_xs = np.array([], dtype=int), np.array([], dtype=int)
+        for marker_color in [14, 15, 10, 13]:
+            ys_m, xs_m = np.where(grid == marker_color)
+            if len(ys_m) > 0 and len(ys_m) <= 30:  # markers are small
+                marker_ys = np.concatenate([marker_ys, ys_m])
+                marker_xs = np.concatenate([marker_xs, xs_m])
+        # Also try green(4) and gray(11) if they're small enough to be markers
+        for marker_color in [4, 11]:
+            ys_m, xs_m = np.where(grid == marker_color)
+            if 0 < len(ys_m) <= 30:
+                marker_ys = np.concatenate([marker_ys, ys_m])
+                marker_xs = np.concatenate([marker_xs, xs_m])
+
+        has_markers = len(marker_ys) > 0
+        teal_ys, teal_xs = marker_ys, marker_xs
 
         target_list: list[int] = []
         for idx, (cs, ce) in enumerate(containers):
@@ -1106,6 +1131,8 @@ class PerGameSolver:
 
         # --- Simulation A*: real clicks, height-based dedup ---
         def heuristic(h: tuple[int, ...]) -> int:
+            if not has_markers:
+                return 0  # no markers → BFS (no heuristic bias)
             return sum(abs(a - b) for a, b in zip(h, target))
 
         # pq: (priority, depth, heights, click_path)
@@ -1113,8 +1140,8 @@ class PerGameSolver:
             (heuristic(current_heights), 0, current_heights, [])
         ]
         visited: dict[tuple[int, ...], int] = {current_heights: 0}
-        max_depth = 50
-        max_states = 200_000
+        max_depth = 100  # baseline max is 92 actions for VC33 L4
+        max_states = 500_000
 
         while pq:
             if time.monotonic() - t0 > timeout:
