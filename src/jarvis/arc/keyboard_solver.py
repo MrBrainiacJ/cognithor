@@ -41,10 +41,12 @@ class KeyboardSolver:
         arcade: Any,
         game_id: str,
         keyboard_actions: list[int] | None = None,
+        click_positions: list[tuple[int, int]] | None = None,
     ):
         self._arcade = arcade
         self._game_id = game_id
         self._actions = keyboard_actions or [1, 2, 3, 4]
+        self._click_positions = click_positions or []
 
     def solve(
         self,
@@ -347,20 +349,24 @@ class KeyboardSolver:
             path.extend(actions_taken)
             stack.append(smart_action_order(actions_taken[0]))
 
-            # At each new position, try INTERACT and CLICK
-            for try_action in [5, 6, 7]:
+            # At each new position, try INTERACT, CLICK at key positions, ACTION7
+            for try_action in [5, 7]:
                 if try_action not in self._actions:
                     continue
-                if try_action == 6:
-                    # Click at grid center (common target)
-                    obs_try = env.step(6, data={"x": 32, "y": 32})
-                else:
-                    obs_try = env.step(try_action)
+                obs_try = env.step(try_action)
                 if obs_try.levels_completed > current_levels:
                     path.append(try_action)
                     return path
-                # Undo: reset to current path
                 self._replay_to(env, replay_prefix, path)
+
+            # Try CLICK at each known click position
+            if 6 in self._actions:
+                for cx, cy in (self._click_positions or [(32, 32)]):
+                    obs_try = env.step(6, data={"x": cx, "y": cy})
+                    if obs_try.levels_completed > current_levels:
+                        path.append(6)  # simplified — stores action not coords
+                        return path
+                    self._replay_to(env, replay_prefix, path)
 
         log.info("arc.keyboard_dfs_exhausted",
                  states=len(visited), path_len=len(path),

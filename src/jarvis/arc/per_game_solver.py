@@ -654,7 +654,16 @@ class PerGameSolver:
         if not actions:
             return StrategyOutcome()
 
-        ks = KeyboardSolver(self._arcade, self._profile.game_id, actions)
+        # For mixed games: scan effective click positions
+        click_positions: list[tuple[int, int]] = []
+        if 6 in self._profile.available_actions:
+            env_scan = self._arcade.make(self._profile.game_id)
+            click_positions = self._scan_effective_positions(env_scan, [])
+
+        ks = KeyboardSolver(
+            self._arcade, self._profile.game_id, actions,
+            click_positions=click_positions or None,
+        )
         result = ks.solve(max_levels=10, timeout_s=300.0)
 
         return StrategyOutcome(
