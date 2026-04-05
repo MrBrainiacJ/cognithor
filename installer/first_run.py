@@ -295,7 +295,7 @@ def mark_initialized() -> None:
     """Create marker file so first-run doesn't run again."""
     marker = JARVIS_HOME / ".cognithor_initialized"
     marker.write_text(json.dumps({
-        "version": "0.74.0",
+        "version": "0.75.0",
         "first_run": True,
     }))
 

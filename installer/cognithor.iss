@@ -5,7 +5,7 @@
 ; Uses embedded Python (no system Python required).
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.74.0"
+  #define MyAppVersion "0.75.0"
 #endif
 
 #ifndef BuildDir
