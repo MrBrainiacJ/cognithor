@@ -330,7 +330,12 @@ class KeyboardSolver:
             # Delayed-render fix: some games need 2 steps for grid to update.
             # If this step produced no visible change, repeat the action once.
             if h in visited:
-                obs = env.step(action)
+                if action < 0:
+                    idx = -(action + 1)
+                    cx, cy = self._click_positions[idx]
+                    obs = env.step(6, data={"x": cx, "y": cy})
+                else:
+                    obs = env.step(action)
                 actions_taken.append(action)
 
                 if obs.levels_completed > current_levels:
@@ -344,8 +349,8 @@ class KeyboardSolver:
                 h = self._grid_hash(grid)
 
             if h in visited:
-                # Still visited after double-step — try undo or reset
-                undo = _UNDO.get(action)
+                # Still visited — try undo (keyboard only) or reset
+                undo = _UNDO.get(action) if action > 0 else None
                 if undo is not None and len(actions_taken) <= 2:
                     for _ in actions_taken:
                         obs = env.step(undo)
