@@ -1548,13 +1548,19 @@ def main() -> None:
                 # Mount pre-built UI at / (catch-all, MUSS als letztes)
                 # Prioritaet: Flutter-Build > React-Build
                 _repo_root = Path(__file__).resolve().parent.parent.parent
-                _flutter_dist = _repo_root / "flutter_app" / "build" / "web"
-                _react_dist = _repo_root / "ui" / "dist"
+                _jarvis_home = Path(os.environ.get("JARVIS_HOME", Path.home() / ".jarvis"))
+                _install_root = Path(sys.executable).resolve().parent.parent  # e.g. D:\Cognithor
+                _ui_candidates = [
+                    _repo_root / "flutter_app" / "build" / "web",
+                    _install_root / "flutter_app" / "web",
+                    _jarvis_home / "flutter_web",
+                    _repo_root / "ui" / "dist",
+                ]
                 _ui_dist = None
-                if _flutter_dist.is_dir() and (_flutter_dist / "index.html").exists():
-                    _ui_dist = _flutter_dist
-                elif _react_dist.is_dir() and (_react_dist / "index.html").exists():
-                    _ui_dist = _react_dist
+                for _candidate in _ui_candidates:
+                    if _candidate.is_dir() and (_candidate / "index.html").exists():
+                        _ui_dist = _candidate
+                        break
 
                 if _ui_dist is not None:
                     from fastapi.staticfiles import StaticFiles
