@@ -98,7 +98,7 @@ Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environmen
 
 [Run]
 ; Post-install: offer to start Cognithor
-Filename: "{app}\cognithor.bat"; Description: "Start Cognithor"; \
+Filename: "{app}\cognithor.bat"; Parameters: "--ui"; Description: "Start Cognithor"; \
     Flags: nowait postinstall skipifsilent shellexec
 
 [UninstallDelete]
