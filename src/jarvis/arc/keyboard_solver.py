@@ -265,15 +265,18 @@ class KeyboardSolver:
         path: list[int] = []
         visited: set[int] = {self._grid_hash(initial_grid)}
 
+        # Encode click positions as negative indices: -1 = click[0], -2 = click[1], etc.
+        click_actions = [-(i + 1) for i in range(len(self._click_positions))]
+        all_actions = list(self._actions) + click_actions
+
         def smart_action_order(last_action: int | None) -> list[int]:
             """Order actions: avoid immediate reversal of last action."""
             if last_action is None:
-                return list(self._actions)
+                return list(all_actions)
             reverse = _UNDO.get(last_action)
-            # Put reverse last (popped first = tried last)
-            ordered = [a for a in self._actions if a != reverse]
-            if reverse in self._actions:
-                ordered.insert(0, reverse)  # reverse tried last (.pop() from end)
+            ordered = [a for a in all_actions if a != reverse]
+            if reverse is not None and reverse in all_actions:
+                ordered.insert(0, reverse)
             return ordered
 
         # Stack of remaining actions to try at each depth
@@ -302,7 +305,13 @@ class KeyboardSolver:
                 continue
 
             # INCREMENTAL step — no reset needed!
-            obs = env.step(action)
+            if action < 0:
+                # Click at a predefined position
+                idx = -(action + 1)
+                cx, cy = self._click_positions[idx]
+                obs = env.step(6, data={"x": cx, "y": cy})
+            else:
+                obs = env.step(action)
             actions_taken = [action]
 
             # Check win
@@ -349,24 +358,8 @@ class KeyboardSolver:
             path.extend(actions_taken)
             stack.append(smart_action_order(actions_taken[0]))
 
-            # At each new position, try INTERACT, CLICK at key positions, ACTION7
-            for try_action in [5, 7]:
-                if try_action not in self._actions:
-                    continue
-                obs_try = env.step(try_action)
-                if obs_try.levels_completed > current_levels:
-                    path.append(try_action)
-                    return path
-                self._replay_to(env, replay_prefix, path)
-
-            # Try CLICK at each known click position
-            if 6 in self._actions:
-                for cx, cy in (self._click_positions or [(32, 32)]):
-                    obs_try = env.step(6, data={"x": cx, "y": cy})
-                    if obs_try.levels_completed > current_levels:
-                        path.append(6)  # simplified — stores action not coords
-                        return path
-                    self._replay_to(env, replay_prefix, path)
+            # Clicks and INTERACT are now regular DFS actions (via negative indices)
+            # No separate try-click block needed
 
         log.info("arc.keyboard_dfs_exhausted",
                  states=len(visited), path_len=len(path),
@@ -419,14 +412,18 @@ class KeyboardSolver:
                      original=original_len, shortened=len(solution))
         return solution
 
-    @staticmethod
-    def _replay_to(env: Any, prefix: list[int], path: list[int]) -> Any:
-        """Reset env and replay prefix + path."""
+    def _replay_to(self, env: Any, prefix: list[int], path: list[int]) -> Any:
+        """Reset env and replay prefix + path. Handles click actions (negative indices)."""
         obs = env.reset()
         for a in prefix:
             obs = env.step(a)
         for a in path:
-            obs = env.step(a)
+            if a < 0 and self._click_positions:
+                idx = -(a + 1)
+                cx, cy = self._click_positions[idx]
+                obs = env.step(6, data={"x": cx, "y": cy})
+            else:
+                obs = env.step(a)
         return obs
 
     @staticmethod
