@@ -5,6 +5,45 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.73.0] -- 2026-04-05
+
+### Added
+- **ClickSequenceSolver** — BFS through click sequences with sub-level detection
+  - Effective position scanner (2px grid, grouping, max-diff representative)
+  - Pump-then-trigger architecture for water-routing puzzles
+  - Simulation A* with real env.step() calls for state-dependent effects
+  - Height-space container detection, target marker recognition (multi-color)
+  - Greedy effect-matrix fallback with round-robin valve cycling
+  - VC33: 3/7 levels solved (water routing, Score 21.43)
+  - LP85: 1/8 levels solved (repeated click)
+- **KeyboardSolver** (`src/jarvis/arc/keyboard_solver.py`) — new file
+  - Incremental DFS: env.step() forward, reset only on backtrack (~50x faster than BFS)
+  - Undo optimization: tries reverse direction before full reset
+  - Double-step for delayed-render games (G50T FPS fix)
+  - Smart action ordering: avoids immediate reversal
+  - Path shortening: iterative step removal (20-45% reduction)
+  - LS20: 1/7 levels (maze), SP80: 1/6, CN04: 1/6, M0R0: 1/6
+- **`has_toggles` field** in GameProfile for solver routing
+  - Toggle-detected games route to cluster_click first
+  - Non-toggle games route to sequence_click first
+- **False positive detection** — verifies levels_completed before counting solved
+- **Full 25-game benchmark** — all games tested and classified
+- **20 new tests** (257 total ARC tests)
+
+### Changed
+- Click budget raised to 200 (was 20)
+- Per-level timeout raised to 300s (was 120s)
+- Game timeout raised to 1200s (was 300s)
+- Valve grouping uses exact diff match + Manhattan <= 4 (was 10% + 8)
+- Group representative uses max-diff pixel (was centroid)
+- BFS always runs before sim-A* (was skipped for >=4 valves)
+
+### Fixed
+- R11L false positive (was reporting 10/10, actually 0)
+- BFS skip bug (LP85 missed because >=4 valves skipped straight to sim-A*)
+- Non-numeric vision target_color (e.g. "green") handled gracefully
+- Double-step for games with delayed grid rendering
+
 ## [0.72.0] -- 2026-04-04
 
 ### Added
