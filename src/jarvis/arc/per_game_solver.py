@@ -650,7 +650,7 @@ class PerGameSolver:
         """Delegate to KeyboardSolver for incremental DFS on keyboard games."""
         from jarvis.arc.keyboard_solver import KeyboardSolver
 
-        actions = [a for a in self._profile.available_actions if a in (1, 2, 3, 4, 5)]
+        actions = [a for a in self._profile.available_actions if a in (1, 2, 3, 4, 5, 7)]
         if not actions:
             return StrategyOutcome()
 
