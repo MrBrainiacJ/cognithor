@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-__all__ = ["EvolutionCycleResult", "EvolutionLoop", "_match_goal_for_action"]
+__all__ = ["EvolutionCycleResult", "EvolutionLoop", "_ACTION_RISK", "_check_risk_ceiling", "_match_goal_for_action"]
 
 
 def _match_goal_for_action(action: Any, goals: list) -> Any | None:
@@ -82,6 +82,23 @@ class EvolutionCycleResult:
     source: str = ""  # "curiosity" | "user" | "self_analysis" | "atl"
     steps_completed: list[str] = field(default_factory=list)
     thought: str = ""
+
+
+_ACTION_RISK: dict[str, str] = {
+    "research": "GREEN",
+    "memory_update": "GREEN",
+    "notification": "GREEN",
+    "goal_management": "GREEN",
+    "file_management": "YELLOW",
+}
+
+
+def _check_risk_ceiling(action_type: str, ceiling: str) -> bool:
+    """Check if an action is allowed under the current risk ceiling."""
+    risk = _ACTION_RISK.get(action_type, "YELLOW")
+    if ceiling == "GREEN" and risk != "GREEN":
+        return False
+    return True
 
 
 class EvolutionLoop:
@@ -588,10 +605,83 @@ class EvolutionLoop:
                 "memory_update": "save_to_memory",
                 "notification": "send_notification",
             }
+            _risk_ceiling = self._atl_config.risk_ceiling if self._atl_config else "YELLOW"
             while not queue.empty():
                 action = queue.dequeue()
                 if not action:
                     break
+                # Risk ceiling enforcement
+                if not _check_risk_ceiling(action.type, _risk_ceiling):
+                    log.info(
+                        "atl_action_blocked_risk_ceiling",
+                        type=action.type,
+                        ceiling=_risk_ceiling,
+                    )
+                    executed_actions.append(
+                        f"[SKIP] {action.type}: blocked by risk ceiling ({_risk_ceiling})"
+                    )
+                    continue
+                # goal_management: add/pause/resume/complete goals via goal_manager
+                if action.type == "goal_management" and self._goal_manager:
+                    op = action.params.get("operation", "add")
+                    goal_id = action.params.get("goal_id", "")
+                    try:
+                        if op == "add":
+                            from jarvis.evolution.goal_manager import Goal
+
+                            new_goal = Goal(
+                                title=action.params.get("title", action.rationale[:80]),
+                                description=action.params.get("description", action.rationale[:500]),
+                                priority=int(action.params.get("priority", 3)),
+                                source="atl",
+                            )
+                            self._goal_manager.add_goal(new_goal)
+                        elif op == "pause" and goal_id:
+                            self._goal_manager.pause_goal(goal_id)
+                        elif op == "resume" and goal_id:
+                            self._goal_manager.resume_goal(goal_id)
+                        elif op == "complete" and goal_id:
+                            self._goal_manager.complete_goal(goal_id)
+                        else:
+                            raise ValueError(f"Unknown goal_management op: {op!r}")
+                        executed_actions.append(
+                            f"[OK] {action.type}({op}): {action.rationale[:60]}"
+                        )
+                        log.info("atl_goal_management_executed", op=op, goal_id=goal_id)
+                    except Exception as exc:
+                        executed_actions.append(f"[FAIL] {action.type}: {exc!s:.60}")
+                        log.debug("atl_goal_management_failed", op=op, error=str(exc)[:80])
+                    continue
+                # file_management: create_report via vault_save, save_note via save_to_memory
+                if action.type == "file_management":
+                    op = action.params.get("operation", "save_note")
+                    try:
+                        if op == "create_report":
+                            fm_params = {
+                                "path": action.params.get(
+                                    "path",
+                                    f"reports/atl_report_{self._atl_cycle_count}.md",
+                                ),
+                                "content": action.params.get("content", action.rationale),
+                            }
+                            tool_result = await self._mcp_client.call_tool("vault_save", fm_params)
+                        else:
+                            # save_note — default
+                            fm_params = {
+                                "content": action.params.get("content", action.rationale[:500]),
+                                "tier": action.params.get("tier", "semantic"),
+                            }
+                            tool_result = await self._mcp_client.call_tool(
+                                "save_to_memory", fm_params
+                            )
+                        executed_actions.append(
+                            f"[OK] {action.type}({op}): {action.rationale[:60]}"
+                        )
+                        log.info("atl_file_management_executed", op=op)
+                    except Exception as exc:
+                        executed_actions.append(f"[FAIL] {action.type}: {exc!s:.60}")
+                        log.debug("atl_file_management_failed", op=op, error=str(exc)[:80])
+                    continue
                 tool_name = _action_map.get(action.type, action.type)
                 # Normalize params for known tools
                 params = dict(action.params)
