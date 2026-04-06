@@ -774,5 +774,22 @@
   "@configPageEvolution": {},
   "kanbanNewTask": "Neuer Task",
   "kanbanMyTasks": "Meine Tasks",
-  "kanbanLivePipeline": "Live Pipeline"
+  "kanbanLivePipeline": "Live Pipeline",
+  "auditChainIntegrity": "Kettenintegrität",
+  "auditExport": "Audit exportieren",
+  "auditGdprExport": "DSGVO-Export",
+  "auditTimestamps": "Zeitstempel",
+  "auditVerifyChain": "Kette verifizieren",
+  "configPageAudit": "Audit",
+  "configPageSystemProfile": "Systemprofil",
+  "configPageTools": "Tools",
+  "systemRecommendedMode": "Empfohlener Modus",
+  "systemRescan": "Neu scannen",
+  "systemTier": "System-Stufe",
+  "toolsComputerUseDesc": "Ermöglicht Computer-Steuerung (Maus, Tastatur, Screenshots)",
+  "toolsComputerUseLabel": "Computer-Steuerung",
+  "toolsDesktopDesc": "Zugriff auf Zwischenablage und Desktop-Screenshots",
+  "toolsDesktopLabel": "Desktop-Tools",
+  "toolsSectionDesktop": "Desktop & Automation",
+  "toolsWarning": "Änderungen erfordern einen Neustart"
 }
