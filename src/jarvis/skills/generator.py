@@ -443,6 +443,7 @@ class SkillGenerator:
         self._audit_logger = audit_logger
         self._generated: dict[str, GeneratedSkill] = {}  # name → skill
         self._gap_detector = GapDetector()
+        self.skill_registry: Any | None = None  # set by gateway for hot-reload
 
         # Verzeichnisse erstellen
         self._skills_dir.mkdir(parents=True, exist_ok=True)
@@ -644,10 +645,11 @@ class SkillGenerator:
         skill.status = GenerationStatus.REGISTERED
         skill.registered_at = datetime.now(UTC).isoformat()
 
-        # Optionally load into SkillRegistry
-        if skill_registry is not None and hasattr(skill_registry, "load_from_directories"):
+        # Load into SkillRegistry (parameter or instance attribute)
+        _registry = skill_registry or self.skill_registry
+        if _registry is not None and hasattr(_registry, "load_from_directories"):
             try:
-                skill_registry.load_from_directories([self._skills_dir])
+                _registry.load_from_directories([self._skills_dir])
                 log.info("skill_loaded_into_registry", name=skill.name)
             except Exception as exc:
                 log.warning("skill_registry_load_failed", name=skill.name, error=str(exc))

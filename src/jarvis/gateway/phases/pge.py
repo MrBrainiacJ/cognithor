@@ -154,6 +154,9 @@ async def init_pge(
             require_approval=getattr(config.gatekeeper, "auto_approve_threshold", 0.7) < 0.5,
             audit_logger=audit_logger,
         )
+        # Wire skill_registry for hot-reload after generation
+        if skill_registry is not None:
+            skill_generator.skill_registry = skill_registry
         # Use the SkillGenerator's internal GapDetector for the Executor too
         gap_detector = skill_generator.gap_detector
         log.info("skill_generator_initialized", skills_dir=str(skills_dir))
