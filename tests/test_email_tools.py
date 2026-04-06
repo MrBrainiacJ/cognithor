@@ -434,19 +434,19 @@ class TestEmailSend:
     async def test_send_missing_to(self, email_tools: Any) -> None:
         from jarvis.mcp.email_tools import EmailError
 
-        with pytest.raises(EmailError, match="mpf.nger|missing_recipient"):
+        with pytest.raises(EmailError, match="mpf.nger|Empfaenger|missing_recipient"):
             await email_tools.email_send(to="", subject="Test", body="Hello")
 
     async def test_send_missing_subject(self, email_tools: Any) -> None:
         from jarvis.mcp.email_tools import EmailError
 
-        with pytest.raises(EmailError, match="etreff|missing_subject"):
+        with pytest.raises(EmailError, match="etreff|Betreff|missing_subject"):
             await email_tools.email_send(to="recipient@example.com", subject="", body="Hello")
 
     async def test_send_missing_body(self, email_tools: Any) -> None:
         from jarvis.mcp.email_tools import EmailError
 
-        with pytest.raises(EmailError, match="achrichtentext|missing_body"):
+        with pytest.raises(EmailError, match="achrichtentext|Nachrichtentext|missing_body"):
             await email_tools.email_send(to="recipient@example.com", subject="Test", body="")
 
     async def test_send_invalid_address(self, email_tools: Any) -> None:
