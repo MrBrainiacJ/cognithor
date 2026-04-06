@@ -331,6 +331,7 @@
     "invalid_tier": "Error: Unknown tier '{tier}'. Valid: {valid}",
     "no_results": "No results for: '{query}'",
     "access_denied": "Access denied: path '{path}' is outside the workspace",
+    "entity_not_found_generic": "Entity not found",
     "entity_not_found": "No entity found for: '{name}'",
     "invalid_json": "Error: Invalid JSON in attributes: {attributes}",
     "entity_created": "Entity created: {name} (type: {entity_type}, ID: {id})",
@@ -403,6 +404,7 @@
     "invalid_token_format": "Invalid token format (Base64 error): {error}",
     "token_too_short": "Token too short for legacy decryption",
     "not_found": "Note not found: {identifier}",
+    "link_notes_not_found": "One or both notes not found",
     "saved": "Note saved: {title}",
     "error_no_title": "Error: No title provided.",
     "error_no_content": "Error: No content provided.",
@@ -523,6 +525,10 @@
     "hash_mismatch": "Hash mismatch for entry '{entry_id}'"
   },
   "tools": {
+    "tool_not_found": "Tool '{name}' not found",
+    "resource_not_found": "Resource '{uri}' not found",
+    "prompt_not_found": "Prompt '{name}' not found",
+    "tool_not_found_available": "Tool '{name}' not found. Available: {available}",
     "git_not_installed": "git is not installed or not in PATH.",
     "git_timeout": "Git command timed out after {timeout}s.",
     "git_output_truncated": "\n\n[... output truncated]",

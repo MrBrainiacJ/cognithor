@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from jarvis.i18n import t
 from jarvis.mcp.vault_backend import NoteData, VaultBackend, new_id, now_iso, parse_tags, slugify
 from jarvis.utils.logging import get_logger
 
@@ -273,7 +274,7 @@ class VaultFileBackend(VaultBackend):
     def update(self, path: str, append_content: str = "", add_tags: str = "") -> str:
         full = self._vault_root / path
         if not full.exists():
-            return f"Notiz nicht gefunden: {path}"
+            return t("vault.not_found", identifier=path)
         content = self._read_file(full)
         fm, body = self._parse_frontmatter(content)
         if append_content:
@@ -316,7 +317,7 @@ class VaultFileBackend(VaultBackend):
         except ValueError:
             return f"Ungueltiger Pfad: {path}"
         if not full.exists():
-            return f"Notiz nicht gefunden: {path}"
+            return t("vault.not_found", identifier=path)
         # Remove from index
         index = self._read_index()
         content = self._read_file(full)
@@ -332,7 +333,7 @@ class VaultFileBackend(VaultBackend):
         source = self.read(source_path)
         target = self.read(target_path)
         if not source or not target:
-            return "Eine oder beide Notizen nicht gefunden"
+            return t("vault.link_notes_not_found")
         # Update source file
         s_full = self._vault_root / source_path
         s_content = self._read_file(s_full)

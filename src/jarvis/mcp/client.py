@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from jarvis.i18n import t
 from jarvis.models import MCPServerConfig, MCPToolInfo
 from jarvis.utils.logging import get_logger
 
@@ -176,7 +177,7 @@ class JarvisMCPClient:
         if tool_info is None:
             available = ", ".join(sorted(self._tool_registry.keys()))
             return ToolCallResult(
-                content=f"Tool '{name}' nicht gefunden. Verfügbar: {available}",
+                content=t("tools.tool_not_found_available", name=name, available=available),
                 is_error=True,
             )
 

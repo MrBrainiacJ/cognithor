@@ -24,6 +24,7 @@ import json
 import time
 from typing import TYPE_CHECKING, Any
 
+from jarvis.i18n import t
 from jarvis.mcp.server import (
     JarvisMCPServer,
     MCPResource,
@@ -214,7 +215,7 @@ class JarvisResourceProvider:
         entity_id = uri.rsplit("/", 1)[-1] if "/" in uri else ""
 
         if not entity_id or self._memory is None:
-            return json.dumps({"error": "Entität nicht gefunden"})
+            return json.dumps({"error": t("memory.entity_not_found_generic")})
 
         try:
             entity = self._memory.get_entity(entity_id)
@@ -222,7 +223,7 @@ class JarvisResourceProvider:
                 return json.dumps(entity.to_dict(), ensure_ascii=False, default=str)
             elif entity:
                 return json.dumps({"entity": str(entity)})
-            return json.dumps({"error": f"Entität '{entity_id}' nicht gefunden"})
+            return json.dumps({"error": t("memory.entity_not_found", name=entity_id)})
         except Exception as exc:
             return json.dumps({"error": str(exc)})
 

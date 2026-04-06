@@ -331,6 +331,7 @@
     "invalid_tier": "Fehler: Unbekannter Tier '{tier}'. Gültig: {valid}",
     "no_results": "Keine Ergebnisse für: '{query}'",
     "access_denied": "Zugriff verweigert: Pfad '{path}' liegt ausserhalb des Workspace",
+    "entity_not_found_generic": "Entität nicht gefunden",
     "entity_not_found": "Keine Entität gefunden für: '{name}'",
     "invalid_json": "Fehler: Ungültiges JSON in attributes: {attributes}",
     "entity_created": "Entität erstellt: {name} (Typ: {entity_type}, ID: {id})",
@@ -403,6 +404,7 @@
     "invalid_token_format": "Ungültiges Token-Format (Base64-Fehler): {error}",
     "token_too_short": "Token zu kurz für Legacy-Entschlüsselung",
     "not_found": "Notiz nicht gefunden: {identifier}",
+    "link_notes_not_found": "Eine oder beide Notizen nicht gefunden",
     "saved": "Notiz gespeichert: {title}",
     "error_no_title": "Fehler: Kein Titel angegeben.",
     "error_no_content": "Fehler: Kein Inhalt angegeben.",
@@ -523,6 +525,10 @@
     "hash_mismatch": "Hash-Mismatch für Eintrag '{entry_id}'"
   },
   "tools": {
+    "tool_not_found": "Tool '{name}' nicht gefunden",
+    "resource_not_found": "Resource '{uri}' nicht gefunden",
+    "prompt_not_found": "Prompt '{name}' nicht gefunden",
+    "tool_not_found_available": "Tool '{name}' nicht gefunden. Verfügbar: {available}",
     "git_not_installed": "git ist nicht installiert oder nicht im PATH.",
     "git_timeout": "Git-Befehl Timeout nach {timeout}s.",
     "git_output_truncated": "\n\n[... Output gekuerzt]",

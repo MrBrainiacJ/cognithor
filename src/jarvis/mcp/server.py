@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -342,7 +343,7 @@ class JarvisMCPServer:
         tool = self._tools.get(name)
         if tool is None:
             return {
-                "content": [{"type": "text", "text": f"Tool '{name}' nicht gefunden"}],
+                "content": [{"type": "text", "text": t("tools.tool_not_found", name=name)}],
                 "isError": True,
             }
 
@@ -421,7 +422,7 @@ class JarvisMCPServer:
                         {
                             "uri": uri,
                             "mimeType": "text/plain",
-                            "text": f"Resource '{uri}' nicht gefunden",
+                            "text": t("tools.resource_not_found", uri=uri),
                         }
                     ]
                 }
@@ -515,7 +516,7 @@ class JarvisMCPServer:
 
         prompt = self._prompts.get(name)
         if prompt is None:
-            return {"description": f"Prompt '{name}' nicht gefunden", "messages": []}
+            return {"description": t("tools.prompt_not_found", name=name), "messages": []}
 
         try:
             if prompt.handler:

@@ -331,6 +331,7 @@
     "invalid_tier": "错误：未知层级 '{tier}'。有效值：{valid}",
     "no_results": "没有找到结果：'{query}'",
     "access_denied": "访问被拒绝：路径 '{path}' 超出工作区范围",
+    "entity_not_found_generic": "实体未找到",
     "entity_not_found": "未找到实体：'{name}'",
     "invalid_json": "错误：attributes 中的 JSON 无效：{attributes}",
     "entity_created": "实体已创建：{name}（类型：{entity_type}，ID：{id}）",
@@ -403,6 +404,7 @@
     "invalid_token_format": "无效的令牌格式（Base64 错误）：{error}",
     "token_too_short": "令牌太短，无法进行旧版解密",
     "not_found": "未找到笔记：{identifier}",
+    "link_notes_not_found": "一个或两个笔记未找到",
     "saved": "笔记已保存：{title}",
     "error_no_title": "错误：未提供标题。",
     "error_no_content": "错误：未提供内容。",
@@ -523,6 +525,10 @@
     "hash_mismatch": "条目 '{entry_id}' 的哈希不匹配"
   },
   "tools": {
+    "tool_not_found": "工具 '{name}' 未找到",
+    "resource_not_found": "资源 '{uri}' 未找到",
+    "prompt_not_found": "提示 '{name}' 未找到",
+    "tool_not_found_available": "工具 '{name}' 未找到。可用：{available}",
     "git_not_installed": "git 未安装或不在 PATH 中。",
     "git_timeout": "Git 命令在 {timeout} 秒后超时。",
     "git_output_truncated": "\n\n[... 输出已截断]",

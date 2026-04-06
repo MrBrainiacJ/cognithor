@@ -6,6 +6,7 @@ import json
 import sqlite3
 from pathlib import Path
 
+from jarvis.i18n import t
 from jarvis.mcp.vault_backend import NoteData, VaultBackend, new_id, now_iso, parse_tags
 from jarvis.utils.logging import get_logger
 
@@ -178,7 +179,7 @@ class VaultDBBackend(VaultBackend):
     def update(self, path: str, append_content: str = "", add_tags: str = "") -> str:
         note = self.read(path)
         if not note:
-            return f"Notiz nicht gefunden: {path}"
+            return t("vault.not_found", identifier=path)
         new_content = note.content
         if append_content:
             new_content = note.content.rstrip("\n") + "\n\n" + append_content.strip() + "\n"
@@ -199,14 +200,14 @@ class VaultDBBackend(VaultBackend):
         cursor = self._conn.execute("DELETE FROM notes WHERE path = ?", (path,))
         self._conn.commit()
         if cursor.rowcount == 0:
-            return f"Notiz nicht gefunden: {path}"
+            return t("vault.not_found", identifier=path)
         return f"Geloescht: {path}"
 
     def link(self, source_path: str, target_path: str) -> str:
         source = self.read(source_path)
         target = self.read(target_path)
         if not source or not target:
-            return "Eine oder beide Notizen nicht gefunden"
+            return t("vault.link_notes_not_found")
         # Add bidirectional backlinks
         s_bl = json.loads(source.backlinks) if source.backlinks else []
         t_bl = json.loads(target.backlinks) if target.backlinks else []
