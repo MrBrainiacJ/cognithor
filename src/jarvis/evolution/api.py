@@ -33,7 +33,11 @@ def create_evolution_router(
 
     @router.get("/goals")
     def list_goals() -> list[dict[str, Any]]:
-        goals = goal_manager.all_goals() if hasattr(goal_manager, "all_goals") else goal_manager.active_goals()
+        goals = (
+            goal_manager.all_goals()
+            if hasattr(goal_manager, "all_goals")
+            else goal_manager.active_goals()
+        )
         return [
             {
                 "id": g.id,
@@ -51,6 +55,7 @@ def create_evolution_router(
     def create_goal(req: CreateGoalRequest) -> dict[str, str]:
         try:
             from jarvis.evolution.goal_manager import Goal
+
             goal = Goal(title=req.title, description=req.description, priority=req.priority)
             goal_manager.add_goal(goal)
             return {"status": "created", "id": goal.id, "title": goal.title}
@@ -148,7 +153,11 @@ def create_evolution_router(
 
     @router.get("/stats")
     def get_stats() -> dict[str, Any]:
-        goals = goal_manager.all_goals() if hasattr(goal_manager, "all_goals") else goal_manager.active_goals()
+        goals = (
+            goal_manager.all_goals()
+            if hasattr(goal_manager, "all_goals")
+            else goal_manager.active_goals()
+        )
         return {
             "total_goals": len(goals),
             "active": sum(1 for g in goals if g.status == "active"),

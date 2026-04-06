@@ -130,7 +130,15 @@ class TestMetricsUpdate:
 
     def test_update_metrics_existing_strategy(self):
         p = self._make_profile(
-            strategy_metrics={"cluster_click": StrategyMetrics(attempts=1, wins=1, total_levels_solved=2, avg_steps_to_win=20.0, avg_budget_ratio=0.5)},
+            strategy_metrics={
+                "cluster_click": StrategyMetrics(
+                    attempts=1,
+                    wins=1,
+                    total_levels_solved=2,
+                    avg_steps_to_win=20.0,
+                    avg_budget_ratio=0.5,
+                )
+            },
         )
         p.update_metrics("cluster_click", won=True, levels_solved=4, steps=30, budget_ratio=0.7)
         m = p.strategy_metrics["cluster_click"]
@@ -142,7 +150,9 @@ class TestMetricsUpdate:
 
     def test_update_metrics_loss(self):
         p = self._make_profile()
-        p.update_metrics("keyboard_explore", won=False, levels_solved=0, steps=100, budget_ratio=1.0)
+        p.update_metrics(
+            "keyboard_explore", won=False, levels_solved=0, steps=100, budget_ratio=1.0
+        )
         m = p.strategy_metrics["keyboard_explore"]
         assert m.attempts == 1
         assert m.wins == 0
@@ -175,19 +185,23 @@ class TestRankedStrategies:
         )
 
     def test_ranked_by_win_rate(self):
-        p = self._make_profile({
-            "a": StrategyMetrics(attempts=10, wins=8),
-            "b": StrategyMetrics(attempts=10, wins=2),
-            "c": StrategyMetrics(attempts=10, wins=5),
-        })
+        p = self._make_profile(
+            {
+                "a": StrategyMetrics(attempts=10, wins=8),
+                "b": StrategyMetrics(attempts=10, wins=2),
+                "c": StrategyMetrics(attempts=10, wins=5),
+            }
+        )
         ranked = p.ranked_strategies()
         assert ranked == ["a", "c", "b"]
 
     def test_exploration_bonus_for_untried(self):
-        p = self._make_profile({
-            "tried": StrategyMetrics(attempts=10, wins=3),
-            "untried": StrategyMetrics(attempts=0, wins=0),
-        })
+        p = self._make_profile(
+            {
+                "tried": StrategyMetrics(attempts=10, wins=3),
+                "untried": StrategyMetrics(attempts=0, wins=0),
+            }
+        )
         ranked = p.ranked_strategies()
         # untried gets exploration bonus (1.0) > tried win_rate (0.3)
         assert ranked[0] == "untried"

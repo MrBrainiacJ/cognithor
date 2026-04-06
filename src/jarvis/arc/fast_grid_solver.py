@@ -334,9 +334,7 @@ class FastGridSolver:
         bg_color = int(colors[np.argmax(counts)])
 
         candidates = [
-            (int(c), int(n))
-            for c, n in zip(colors, counts, strict=False)
-            if c != bg_color
+            (int(c), int(n)) for c, n in zip(colors, counts, strict=False) if c != bg_color
         ]
         candidates.sort(key=lambda x: -x[1])
 

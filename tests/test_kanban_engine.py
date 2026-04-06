@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.kanban.engine import InvalidTransition, KanbanEngine, SubtaskDepthExceeded, TaskLimitExceeded
+from jarvis.kanban.engine import (
+    InvalidTransition,
+    KanbanEngine,
+    SubtaskDepthExceeded,
+    TaskLimitExceeded,
+)
 from jarvis.kanban.models import Task, TaskPriority, TaskSource, TaskStatus
 from jarvis.kanban.store import KanbanStore
 

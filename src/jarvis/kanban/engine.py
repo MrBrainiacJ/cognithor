@@ -140,8 +140,9 @@ class KanbanEngine:
         if target == TaskStatus.CANCELLED and self._cascade_cancel:
             for sub in self._store.get_subtasks(task_id):
                 if sub.status not in (TaskStatus.DONE, TaskStatus.CANCELLED):
-                    self.transition(sub.id, TaskStatus.CANCELLED, changed_by="system",
-                                    note="Parent cancelled")
+                    self.transition(
+                        sub.id, TaskStatus.CANCELLED, changed_by="system", note="Parent cancelled"
+                    )
 
         if target == TaskStatus.DONE and task.parent_id:
             self._check_parent_completion(task.parent_id)
@@ -152,8 +153,9 @@ class KanbanEngine:
         self._store.delete(task_id, cascade=True)
         log.info("kanban_task_deleted", task_id=task_id)
 
-    def move_task(self, task_id: str, new_status: str, sort_order: int = 0,
-                  changed_by: str = "user") -> Task | None:
+    def move_task(
+        self, task_id: str, new_status: str, sort_order: int = 0, changed_by: str = "user"
+    ) -> Task | None:
         task = self._store.get(task_id)
         if task is None:
             return None
@@ -161,7 +163,9 @@ class KanbanEngine:
         allowed = VALID_TRANSITIONS.get(task.status, set())
         if target not in allowed:
             raise InvalidTransition(task.status.value, target.value)
-        self._store.record_history(task_id, task.status.value, target.value, changed_by, "drag-and-drop")
+        self._store.record_history(
+            task_id, task.status.value, target.value, changed_by, "drag-and-drop"
+        )
         return self._store.move(task_id, new_status, sort_order)
 
     def get_history(self, task_id: str) -> list[TaskHistory]:
@@ -196,5 +200,6 @@ class KanbanEngine:
             return
         all_done = all(s.status == TaskStatus.DONE for s in subtasks)
         if all_done and parent.status == TaskStatus.IN_PROGRESS:
-            self.transition(parent_id, TaskStatus.VERIFYING, changed_by="system",
-                            note="All subtasks completed")
+            self.transition(
+                parent_id, TaskStatus.VERIFYING, changed_by="system", note="All subtasks completed"
+            )

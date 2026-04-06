@@ -512,7 +512,9 @@ class DeepLearner:
         if all_done:
             if getattr(self._config, "auto_expand", True):
                 # CycleController: check if we should skip (stagnating/mastered)
-                if self._cycle_controller and self._cycle_controller.should_skip_cycle(plan.goal_slug):
+                if self._cycle_controller and self._cycle_controller.should_skip_cycle(
+                    plan.goal_slug
+                ):
                     log.info("deep_learner_cycle_skipped", plan=plan.goal_slug)
                 else:
                     expansions = await self._horizon_scanner.scan(plan)
@@ -530,6 +532,7 @@ class DeepLearner:
                         if exp_count > 0 and exp_count % 10 == 0:
                             try:
                                 from jarvis.evolution.cycle_controller import ExamResult
+
                                 # Run quality test on passed subgoals and average scores
                                 passed_sgs = [sg for sg in plan.sub_goals if sg.status == "passed"]
                                 if passed_sgs:
@@ -539,7 +542,11 @@ class DeepLearner:
                                     total_p = 0
                                     for sg in passed_sgs[-5:]:  # Test last 5 to limit LLM calls
                                         try:
-                                            exam_data = await self._quality_assessor.run_quality_test(sg, plan.goal_slug)
+                                            exam_data = (
+                                                await self._quality_assessor.run_quality_test(
+                                                    sg, plan.goal_slug
+                                                )
+                                            )
                                             if isinstance(exam_data, dict):
                                                 scores.append(exam_data.get("score", 0.0))
                                                 total_q += exam_data.get("total", 0)

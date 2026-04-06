@@ -276,7 +276,7 @@ class ComputerUseTools:
                 return {
                     "success": False,
                     "error": f"No element matching '{description}' found.\n"
-                             f"Available elements:\n" + "\n".join(available),
+                    f"Available elements:\n" + "\n".join(available),
                 }
 
             x = best_match.get("x", 0)

@@ -53,11 +53,13 @@ class HorizonScanner:
         targeted = []
         if self._targeted_gaps:
             for gap in self._targeted_gaps:
-                targeted.append({
-                    "title": gap,
-                    "reason": "Knowledge gap detected in quality exam",
-                    "source": "cycle_controller",
-                })
+                targeted.append(
+                    {
+                        "title": gap,
+                        "reason": "Knowledge gap detected in quality exam",
+                        "source": "cycle_controller",
+                    }
+                )
             self._targeted_gaps.clear()
 
         combined = llm_results + graph_results + targeted

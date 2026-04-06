@@ -54,7 +54,7 @@ class EvolutionTaskAdapter:
         return {
             "title": f"Optimize skill: {skill_name} ({failure_rate:.0%} failure rate)",
             "description": f"Skill '{skill_name}' has a {failure_rate:.0%} failure rate. "
-                           f"Investigate root cause and improve.",
+            f"Investigate root cause and improve.",
             "source": "evolution",
             "source_ref": f"skill:{skill_name}",
             "priority": "high" if failure_rate > 0.5 else "medium",
@@ -66,8 +66,7 @@ class EvolutionTaskAdapter:
     def from_knowledge_gap(topic: str) -> dict[str, Any]:
         return {
             "title": f"Research: {topic}",
-            "description": f"Knowledge gap detected for topic '{topic}'. "
-                           f"Schedule deep research.",
+            "description": f"Knowledge gap detected for topic '{topic}'. Schedule deep research.",
             "source": "evolution",
             "source_ref": f"gap:{topic}",
             "priority": "medium",
@@ -88,7 +87,7 @@ class SystemTaskAdapter:
         return {
             "title": f"Investigate: {tool_name} failures ({attempts}x)",
             "description": f"Tool '{tool_name}' failed {attempts} times. "
-                           f"Last error: {error}. Recovery exhausted.",
+            f"Last error: {error}. Recovery exhausted.",
             "source": "system",
             "source_ref": f"recovery:{tool_name}",
             "priority": "urgent",

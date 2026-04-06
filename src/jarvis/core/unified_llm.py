@@ -203,6 +203,7 @@ class UnifiedLLMClient:
                 # Cache model router to avoid re-creating on every call
                 if not hasattr(self, "_model_router_cache"):
                     from jarvis.core.model_router import ModelRouter
+
                     self._model_router_cache = ModelRouter(self._config)
                 _model_cfg = self._model_router_cache.get_model_config(model)
                 _ctx_window = _model_cfg.get("context_window", 0)
@@ -212,7 +213,9 @@ class UnifiedLLMClient:
                     _max_out = (options or {}).get("num_predict", 4096)
                     # Don't pass system separately — it's already in messages
                     preflight_check(
-                        model, messages, _ctx_window,
+                        model,
+                        messages,
+                        _ctx_window,
                         tools=tools,
                         max_output_tokens=_max_out,
                     )

@@ -43,9 +43,7 @@ class ExamResult:
     questions_passed: int
     gaps: list[str] = field(default_factory=list)
     expansion_count: int = 0
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 @dataclass
@@ -113,10 +111,7 @@ class CycleController:
                     history.frequency_multiplier = 1.0
                     log.info("cycle_recovered", plan_id=plan_id, delta=round(delta, 3))
 
-        if (
-            history.stagnation_count >= _STAGNATION_COUNT
-            and history.state != CycleState.STAGNATING
-        ):
+        if history.stagnation_count >= _STAGNATION_COUNT and history.state != CycleState.STAGNATING:
             history.state = CycleState.STAGNATING
             history.frequency_multiplier = _STAGNATION_FREQUENCY
             log.info("cycle_stagnating", plan_id=plan_id, score=exam.score)
@@ -149,7 +144,9 @@ class CycleController:
         return {
             "plans": len(self._histories),
             "mastered": sum(1 for h in self._histories.values() if h.state == CycleState.MASTERED),
-            "stagnating": sum(1 for h in self._histories.values() if h.state == CycleState.STAGNATING),
+            "stagnating": sum(
+                1 for h in self._histories.values() if h.state == CycleState.STAGNATING
+            ),
             "learning": sum(1 for h in self._histories.values() if h.state == CycleState.LEARNING),
         }
 
@@ -174,9 +171,12 @@ class CycleController:
             "frequency_multiplier": history.frequency_multiplier,
             "exam_results": [
                 {
-                    "score": e.score, "questions_total": e.questions_total,
-                    "questions_passed": e.questions_passed, "gaps": e.gaps,
-                    "expansion_count": e.expansion_count, "timestamp": e.timestamp,
+                    "score": e.score,
+                    "questions_total": e.questions_total,
+                    "questions_passed": e.questions_passed,
+                    "gaps": e.gaps,
+                    "expansion_count": e.expansion_count,
+                    "timestamp": e.timestamp,
                 }
                 for e in history.exam_results
             ],

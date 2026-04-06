@@ -20,7 +20,9 @@ from typing import TYPE_CHECKING, Any
 # Suppress noisy third-party warnings that clutter startup output
 warnings.filterwarnings("ignore", message=".*AVX512.*", category=UserWarning)
 warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*", category=UserWarning)
-warnings.filterwarnings("ignore", message=".*unauthenticated requests to the HF Hub.*", category=FutureWarning)
+warnings.filterwarnings(
+    "ignore", message=".*unauthenticated requests to the HF Hub.*", category=FutureWarning
+)
 warnings.filterwarnings("ignore", message=".*invalid escape sequence.*", category=SyntaxWarning)
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
@@ -52,6 +54,7 @@ def _silence_library_loggers() -> None:
         tf_logging.set_verbosity_error()
     except Exception:
         pass
+
 
 from jarvis import BANNER_ASCII, __version__
 
@@ -742,6 +745,7 @@ def main() -> None:
                 try:
                     if hasattr(gateway, "_kanban_engine") and gateway._kanban_engine is not None:
                         from jarvis.kanban.api import create_kanban_router
+
                         api_app.include_router(create_kanban_router(gateway._kanban_engine))
                         log.info("kanban_api_registered")
                 except Exception:
@@ -751,12 +755,19 @@ def main() -> None:
                 try:
                     if hasattr(gateway, "_goal_manager") and gateway._goal_manager is not None:
                         from jarvis.evolution.api import create_evolution_router
-                        api_app.include_router(create_evolution_router(
-                            goal_manager=gateway._goal_manager,
-                            journal=getattr(gateway, "_atl_journal", None),
-                            deep_learner=getattr(gateway, "_deep_learner", None),
-                            cycle_controller=getattr(getattr(gateway, "_deep_learner", None), "_cycle_controller", None),
-                        ))
+
+                        api_app.include_router(
+                            create_evolution_router(
+                                goal_manager=gateway._goal_manager,
+                                journal=getattr(gateway, "_atl_journal", None),
+                                deep_learner=getattr(gateway, "_deep_learner", None),
+                                cycle_controller=getattr(
+                                    getattr(gateway, "_deep_learner", None),
+                                    "_cycle_controller",
+                                    None,
+                                ),
+                            )
+                        )
                         log.info("evolution_api_registered")
                 except Exception:
                     log.debug("evolution_api_registration_failed", exc_info=True)

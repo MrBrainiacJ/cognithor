@@ -175,9 +175,7 @@ class MediaPipeline:
         """
         path = self._validate_input_path(audio_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.file_not_found", path=audio_path)
-            )
+            return MediaResult(success=False, error=t("media.file_not_found", path=audio_path))
 
         file_size = path.stat().st_size
         if file_size > self._max_audio_file_size:
@@ -253,9 +251,7 @@ class MediaPipeline:
 
         path = self._validate_input_path(image_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.image_not_found", path=image_path)
-            )
+            return MediaResult(success=False, error=t("media.image_not_found", path=image_path))
 
         suffix = path.suffix.lower()
         if suffix not in (".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"):
@@ -385,9 +381,7 @@ class MediaPipeline:
         """
         path = self._validate_input_path(file_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.file_not_found", path=file_path)
-            )
+            return MediaResult(success=False, error=t("media.file_not_found", path=file_path))
 
         file_size = path.stat().st_size
         if file_size > self._max_extract_file_size:
@@ -424,14 +418,19 @@ class MediaPipeline:
             if len(text) > self._max_extract_length:
                 text = (
                     text[: self._max_extract_length]
-                    + "\n\n" + t("media.text_truncated", length=original_length)
+                    + "\n\n"
+                    + t("media.text_truncated", length=original_length)
                 )
 
             log.info("text_extracted", path=file_path, length=len(text), format=suffix)
             return MediaResult(
                 success=True,
                 text=text,
-                metadata={"source": file_path, "format": suffix, "original_length": original_length},
+                metadata={
+                    "source": file_path,
+                    "format": suffix,
+                    "original_length": original_length,
+                },
             )
 
         except Exception as exc:
@@ -524,9 +523,7 @@ class MediaPipeline:
         """Liest ein PDF strukturiert mit Seiten, Metadaten, Bildern, Tabellen."""
         path = self._validate_input_path(file_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.file_not_found", path=file_path)
-            )
+            return MediaResult(success=False, error=t("media.file_not_found", path=file_path))
 
         file_size = path.stat().st_size
         if file_size > self._max_extract_file_size:
@@ -665,9 +662,7 @@ class MediaPipeline:
         """Liest eine PowerPoint-Praesentation strukturiert."""
         path = self._validate_input_path(file_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.file_not_found", path=file_path)
-            )
+            return MediaResult(success=False, error=t("media.file_not_found", path=file_path))
 
         file_size = path.stat().st_size
         if file_size > self._max_extract_file_size:
@@ -769,9 +764,7 @@ class MediaPipeline:
         """Liest ein Word-Dokument strukturiert."""
         path = self._validate_input_path(file_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.file_not_found", path=file_path)
-            )
+            return MediaResult(success=False, error=t("media.file_not_found", path=file_path))
 
         file_size = path.stat().st_size
         if file_size > self._max_extract_file_size:
@@ -1086,9 +1079,7 @@ class MediaPipeline:
 
         path = self._validate_input_path(input_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.file_not_found", path=input_path)
-            )
+            return MediaResult(success=False, error=t("media.file_not_found", path=input_path))
 
         output_path = self._workspace / f"{path.stem}_converted.{output_format}"
 
@@ -1158,9 +1149,7 @@ class MediaPipeline:
 
         path = self._validate_input_path(image_path)
         if path is None:
-            return MediaResult(
-                success=False, error=t("media.image_not_found", path=image_path)
-            )
+            return MediaResult(success=False, error=t("media.image_not_found", path=image_path))
 
         try:
             from PIL import Image
@@ -1507,7 +1496,10 @@ class MediaPipeline:
             )
 
         if not isinstance(doc_struct, dict):
-            return MediaResult(success=False, error=t("media.invalid_json_variables", error="JSON must be an object"))
+            return MediaResult(
+                success=False,
+                error=t("media.invalid_json_variables", error="JSON must be an object"),
+            )
 
         # Ausgabeverzeichnis
         doc_dir = Path.home() / ".jarvis" / "workspace" / "documents"

@@ -22,11 +22,14 @@ def client(tmp_path):
 
 class TestKanbanAPI:
     def test_create_task(self, client):
-        resp = client.post("/api/v1/kanban/tasks", json={
-            "title": "Test task",
-            "priority": "high",
-            "assigned_agent": "coder",
-        })
+        resp = client.post(
+            "/api/v1/kanban/tasks",
+            json={
+                "title": "Test task",
+                "priority": "high",
+                "assigned_agent": "coder",
+            },
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["title"] == "Test task"
@@ -61,10 +64,13 @@ class TestKanbanAPI:
     def test_update_task(self, client):
         r = client.post("/api/v1/kanban/tasks", json={"title": "Old"})
         task_id = r.json()["id"]
-        resp = client.patch(f"/api/v1/kanban/tasks/{task_id}", json={
-            "title": "New",
-            "assigned_agent": "researcher",
-        })
+        resp = client.patch(
+            f"/api/v1/kanban/tasks/{task_id}",
+            json={
+                "title": "New",
+                "assigned_agent": "researcher",
+            },
+        )
         assert resp.status_code == 200
         assert resp.json()["title"] == "New"
 
@@ -78,19 +84,25 @@ class TestKanbanAPI:
     def test_move_task(self, client):
         r = client.post("/api/v1/kanban/tasks", json={"title": "Move"})
         task_id = r.json()["id"]
-        resp = client.post(f"/api/v1/kanban/tasks/{task_id}/move", json={
-            "status": "in_progress",
-            "sort_order": 3,
-        })
+        resp = client.post(
+            f"/api/v1/kanban/tasks/{task_id}/move",
+            json={
+                "status": "in_progress",
+                "sort_order": 3,
+            },
+        )
         assert resp.status_code == 200
         assert resp.json()["status"] == "in_progress"
 
     def test_move_invalid_transition(self, client):
         r = client.post("/api/v1/kanban/tasks", json={"title": "Bad"})
         task_id = r.json()["id"]
-        resp = client.post(f"/api/v1/kanban/tasks/{task_id}/move", json={
-            "status": "done",
-        })
+        resp = client.post(
+            f"/api/v1/kanban/tasks/{task_id}/move",
+            json={
+                "status": "done",
+            },
+        )
         assert resp.status_code == 409
 
     def test_history(self, client):

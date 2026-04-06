@@ -51,8 +51,7 @@ class ContextWindowExceeded(Exception):
         self.estimated = estimated
         self.limit = limit
         super().__init__(
-            f"Context window exceeded for {model}: "
-            f"{estimated} estimated tokens > {limit} limit"
+            f"Context window exceeded for {model}: {estimated} estimated tokens > {limit} limit"
         )
 
 
@@ -105,9 +104,7 @@ def preflight_check(
     """
     if context_window <= 0:
         # Unknown or unconfigured model — skip check
-        return PreflightResult(
-            ok=True, estimated_tokens=0, context_window=0, usage_pct=0.0
-        )
+        return PreflightResult(ok=True, estimated_tokens=0, context_window=0, usage_pct=0.0)
 
     estimated_input = estimate_tokens(messages, system, tools)
     estimated_total = estimated_input + max_output_tokens
@@ -142,9 +139,7 @@ def preflight_check(
     if not auto_compact:
         raise ContextWindowExceeded(model, estimated_total, context_window)
 
-    dropped = _compact_messages(
-        messages, context_window, max_output_tokens, system, tools
-    )
+    dropped = _compact_messages(messages, context_window, max_output_tokens, system, tools)
 
     if dropped > 0:
         new_estimated = estimate_tokens(messages, system, tools)

@@ -67,13 +67,15 @@ class TestFullPipeline:
 
         vision_resp = {
             "message": {
-                "content": json.dumps({
-                    "game_type": "click",
-                    "target_color": 3,
-                    "strategy": "Click red clusters",
-                    "description": "Grid with red blocks",
-                    "win_condition": "clear_board",
-                })
+                "content": json.dumps(
+                    {
+                        "game_type": "click",
+                        "target_color": 3,
+                        "strategy": "Click red clusters",
+                        "description": "Grid with red blocks",
+                        "win_condition": "clear_board",
+                    }
+                )
             }
         }
 
@@ -143,9 +145,15 @@ class TestFullPipeline:
         )
 
         # Simulate 3 runs with improving results
-        profile.update_metrics("cluster_click", won=True, levels_solved=1, steps=50, budget_ratio=0.8)
-        profile.update_metrics("cluster_click", won=True, levels_solved=2, steps=30, budget_ratio=0.5)
-        profile.update_metrics("targeted_click", won=False, levels_solved=0, steps=20, budget_ratio=1.0)
+        profile.update_metrics(
+            "cluster_click", won=True, levels_solved=1, steps=50, budget_ratio=0.8
+        )
+        profile.update_metrics(
+            "cluster_click", won=True, levels_solved=2, steps=30, budget_ratio=0.5
+        )
+        profile.update_metrics(
+            "targeted_click", won=False, levels_solved=0, steps=20, budget_ratio=1.0
+        )
 
         ranked = profile.ranked_strategies()
         assert ranked[0] == "cluster_click"  # 100% win rate

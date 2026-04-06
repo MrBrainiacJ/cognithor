@@ -83,7 +83,9 @@ class Task:
             "title": self.title,
             "description": self.description,
             "status": self.status.value if isinstance(self.status, TaskStatus) else self.status,
-            "priority": self.priority.value if isinstance(self.priority, TaskPriority) else self.priority,
+            "priority": self.priority.value
+            if isinstance(self.priority, TaskPriority)
+            else self.priority,
             "assigned_agent": self.assigned_agent,
             "source": self.source.value if isinstance(self.source, TaskSource) else self.source,
             "source_ref": self.source_ref,

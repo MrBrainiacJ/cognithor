@@ -112,7 +112,10 @@ def register_kanban_tools(mcp_client: Any, engine: KanbanEngine) -> None:
             "type": "object",
             "properties": {
                 "task_id": {"type": "string", "description": "Task ID to update"},
-                "status": {"type": "string", "enum": ["todo", "in_progress", "verifying", "done", "blocked"]},
+                "status": {
+                    "type": "string",
+                    "enum": ["todo", "in_progress", "verifying", "done", "blocked"],
+                },
                 "result_summary": {"type": "string", "description": "Result after completion"},
             },
             "required": ["task_id"],
@@ -127,8 +130,14 @@ def register_kanban_tools(mcp_client: Any, engine: KanbanEngine) -> None:
         input_schema={
             "type": "object",
             "properties": {
-                "status": {"type": "string", "enum": ["todo", "in_progress", "verifying", "done", "blocked"]},
-                "assigned_to_me": {"type": "boolean", "description": "Only show tasks assigned to this agent"},
+                "status": {
+                    "type": "string",
+                    "enum": ["todo", "in_progress", "verifying", "done", "blocked"],
+                },
+                "assigned_to_me": {
+                    "type": "boolean",
+                    "description": "Only show tasks assigned to this agent",
+                },
             },
         },
         risk_level="green",

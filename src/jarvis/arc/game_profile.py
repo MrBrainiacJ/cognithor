@@ -70,9 +70,7 @@ class GameProfile:
             "win_condition": self.win_condition,
             "vision_description": self.vision_description,
             "vision_strategy": self.vision_strategy,
-            "strategy_metrics": {
-                name: asdict(m) for name, m in self.strategy_metrics.items()
-            },
+            "strategy_metrics": {name: asdict(m) for name, m in self.strategy_metrics.items()},
             "total_runs": self.total_runs,
             "best_score": self.best_score,
             "analyzed_at": self.analyzed_at,

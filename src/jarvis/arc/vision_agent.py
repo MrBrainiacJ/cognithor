@@ -18,10 +18,21 @@ __all__ = ["VisionAgent"]
 log = get_logger(__name__)
 
 _ACTION_NAMES = {1: "UP", 2: "DOWN", 3: "LEFT", 4: "RIGHT", 5: "INTERACT", 6: "CLICK", 7: "ACTION7"}
-_NAME_TO_ACTION = {"UP": 1, "DOWN": 2, "LEFT": 3, "RIGHT": 4,
-                   "INTERACT": 5, "CLICK": 6, "ACTION7": 7,
-                   "ACTION1": 1, "ACTION2": 2, "ACTION3": 3, "ACTION4": 4,
-                   "ACTION5": 5, "ACTION6": 6}
+_NAME_TO_ACTION = {
+    "UP": 1,
+    "DOWN": 2,
+    "LEFT": 3,
+    "RIGHT": 4,
+    "INTERACT": 5,
+    "CLICK": 6,
+    "ACTION7": 7,
+    "ACTION1": 1,
+    "ACTION2": 2,
+    "ACTION3": 3,
+    "ACTION4": 4,
+    "ACTION5": 5,
+    "ACTION6": 6,
+}
 
 
 @dataclass
@@ -37,9 +48,7 @@ class VisionAgent:
         self._arcade = arcade
         self._game_id = game_id
         self._actions = available_actions
-        self._action_str = ", ".join(
-            _ACTION_NAMES.get(a, f"ACTION{a}") for a in available_actions
-        )
+        self._action_str = ", ".join(_ACTION_NAMES.get(a, f"ACTION{a}") for a in available_actions)
 
     def solve(self, max_levels: int = 5, timeout_s: float = 300.0) -> VisionResult:
         """Solve game level by level with vision guidance."""
@@ -89,17 +98,19 @@ class VisionAgent:
 
                 # Check win
                 if obs.levels_completed > current_levels:
-                    log.info("arc.vision_level_solved",
-                             game_id=self._game_id, level=level,
-                             steps=len(level_actions),
-                             time_s=round(time.monotonic() - t0, 1))
+                    log.info(
+                        "arc.vision_level_solved",
+                        game_id=self._game_id,
+                        level=level,
+                        steps=len(level_actions),
+                        time_s=round(time.monotonic() - t0, 1),
+                    )
                     prev_actions.extend(level_actions)
                     result.levels_completed += 1
                     break
 
                 if obs.state == GameState.GAME_OVER:
-                    log.info("arc.vision_game_over",
-                             level=level, step=step)
+                    log.info("arc.vision_game_over", level=level, step=step)
                     break
 
                 # Get strategy on first step
@@ -119,15 +130,17 @@ class VisionAgent:
             b64 = _grid_to_png_b64(grid, scale=4)
             resp = ollama.chat(
                 model="qwen3-vl:32b",
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        f"64x64 pixel game. I can press: {self._action_str}. "
-                        "What is the goal of this game? Where should I navigate to? "
-                        "Describe the target position briefly."
-                    ),
-                    "images": [b64],
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"64x64 pixel game. I can press: {self._action_str}. "
+                            "What is the goal of this game? Where should I navigate to? "
+                            "Describe the target position briefly."
+                        ),
+                        "images": [b64],
+                    }
+                ],
                 options={"num_predict": 128, "temperature": 0.3, "num_ctx": 4096},
             )
             raw = resp.get("message", {}).get("content", "")
@@ -138,7 +151,10 @@ class VisionAgent:
             return None
 
     def _ask_vision(
-        self, grid: np.ndarray, step: int, strategy: str | None,
+        self,
+        grid: np.ndarray,
+        step: int,
+        strategy: str | None,
         last_actions: list[str] | None = None,
     ) -> tuple[int | None, dict | None]:
         """Ask vision for the next action."""
@@ -156,15 +172,17 @@ class VisionAgent:
 
             resp = ollama.chat(
                 model="qwen3-vl:32b",
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        f"{context}"
-                        f"I can ONLY press: {self._action_str}. "
-                        f"What should I press NEXT to reach the goal? Say just the action name."
-                    ),
-                    "images": [b64],
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"{context}"
+                            f"I can ONLY press: {self._action_str}. "
+                            f"What should I press NEXT to reach the goal? Say just the action name."
+                        ),
+                        "images": [b64],
+                    }
+                ],
                 options={"num_predict": 512, "temperature": 0.3, "num_ctx": 8192},
             )
             raw = resp.get("message", {}).get("content", "")
@@ -200,8 +218,9 @@ class VisionAgent:
                 # Action not available — try first available keyboard action
                 for fallback in [1, 2, 3, 4, 5]:
                     if fallback in self._actions:
-                        log.debug("arc.vision_fallback",
-                                  wanted=name, using=_ACTION_NAMES.get(fallback))
+                        log.debug(
+                            "arc.vision_fallback", wanted=name, using=_ACTION_NAMES.get(fallback)
+                        )
                         return fallback, None
 
         # Fallback: try to find any action number

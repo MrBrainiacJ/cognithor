@@ -24,8 +24,22 @@ def tools():
         return_value=MockVisionResult(
             description="Desktop with login form",
             elements=[
-                {"name": "Login Button", "type": "button", "x": 400, "y": 300, "clickable": True, "text": "Login"},
-                {"name": "Username Field", "type": "textfield", "x": 400, "y": 200, "clickable": True, "text": ""},
+                {
+                    "name": "Login Button",
+                    "type": "button",
+                    "x": 400,
+                    "y": 300,
+                    "clickable": True,
+                    "text": "Login",
+                },
+                {
+                    "name": "Username Field",
+                    "type": "textfield",
+                    "x": 400,
+                    "y": 200,
+                    "clickable": True,
+                    "text": "",
+                },
                 {"name": "Logo", "type": "icon", "x": 100, "y": 50, "clickable": False, "text": ""},
             ],
         )
@@ -36,7 +50,10 @@ def tools():
 class TestClickElement:
     @pytest.mark.asyncio
     async def test_click_by_name(self, tools):
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64data", 1920, 1080, 1.0)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64data", 1920, 1080, 1.0),
+        ):
             with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("Login Button")
@@ -46,7 +63,10 @@ class TestClickElement:
 
     @pytest.mark.asyncio
     async def test_click_by_partial_description(self, tools):
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64data", 1920, 1080, 1.0)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64data", 1920, 1080, 1.0),
+        ):
             with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("login")
@@ -55,7 +75,10 @@ class TestClickElement:
 
     @pytest.mark.asyncio
     async def test_click_by_text(self, tools):
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64data", 1920, 1080, 1.0)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64data", 1920, 1080, 1.0),
+        ):
             with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("Login")
@@ -63,7 +86,10 @@ class TestClickElement:
 
     @pytest.mark.asyncio
     async def test_no_match(self, tools):
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64data", 1920, 1080, 1.0)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64data", 1920, 1080, 1.0),
+        ):
             result = await tools.computer_click_element("nonexistent element xyz")
             assert result["success"] is False
             assert "No element matching" in result["error"]
@@ -71,10 +97,11 @@ class TestClickElement:
 
     @pytest.mark.asyncio
     async def test_no_elements_detected(self, tools):
-        tools._vision.analyze_desktop = AsyncMock(
-            return_value=MockVisionResult(elements=[])
-        )
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64data", 1920, 1080, 1.0)):
+        tools._vision.analyze_desktop = AsyncMock(return_value=MockVisionResult(elements=[]))
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64data", 1920, 1080, 1.0),
+        ):
             result = await tools.computer_click_element("anything")
             assert result["success"] is False
             assert "No UI elements" in result["error"]
@@ -84,12 +111,29 @@ class TestClickElement:
         tools._vision.analyze_desktop = AsyncMock(
             return_value=MockVisionResult(
                 elements=[
-                    {"name": "Save", "type": "icon", "x": 100, "y": 100, "clickable": False, "text": "Save"},
-                    {"name": "Save", "type": "button", "x": 200, "y": 200, "clickable": True, "text": "Save"},
+                    {
+                        "name": "Save",
+                        "type": "icon",
+                        "x": 100,
+                        "y": 100,
+                        "clickable": False,
+                        "text": "Save",
+                    },
+                    {
+                        "name": "Save",
+                        "type": "button",
+                        "x": 200,
+                        "y": 200,
+                        "clickable": True,
+                        "text": "Save",
+                    },
                 ],
             )
         )
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64data", 1920, 1080, 1.0)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64data", 1920, 1080, 1.0),
+        ):
             with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("Save")
@@ -102,7 +146,10 @@ class TestWaitForChange:
     @pytest.mark.asyncio
     async def test_detects_change(self, tools):
         tools._last_screenshot_hash = "old_hash"
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", return_value=("new_data", 1920, 1080, 1.0)):
+        with patch(
+            "jarvis.mcp.computer_use._take_screenshot_b64",
+            return_value=("new_data", 1920, 1080, 1.0),
+        ):
             result = await tools.computer_wait_for_change(timeout_ms=1000)
             assert result["changed"] is True
 

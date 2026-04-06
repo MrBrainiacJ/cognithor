@@ -519,7 +519,12 @@ class Planner:
                 goal=user_message,
                 reasoning="LLM-Fehler -- kann nicht planen",
                 direct_response=(
-                    t("planner.llm_error", status_code=exc.status_code, model=model, detail=str(exc)[:200])
+                    t(
+                        "planner.llm_error",
+                        status_code=exc.status_code,
+                        model=model,
+                        detail=str(exc)[:200],
+                    )
                 ),
                 confidence=0.0,
             )
@@ -649,7 +654,11 @@ class Planner:
                     return ActionPlan(
                         goal=original_goal,
                         direct_response=(
-                            t("planner.replan_exhausted", attempts=_replan_attempts, error=str(exc)[:200])
+                            t(
+                                "planner.replan_exhausted",
+                                attempts=_replan_attempts,
+                                error=str(exc)[:200],
+                            )
                         ),
                         confidence=0.0,
                     )

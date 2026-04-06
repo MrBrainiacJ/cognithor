@@ -18,7 +18,13 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-__all__ = ["EvolutionCycleResult", "EvolutionLoop", "_ACTION_RISK", "_check_risk_ceiling", "_match_goal_for_action"]
+__all__ = [
+    "EvolutionCycleResult",
+    "EvolutionLoop",
+    "_ACTION_RISK",
+    "_check_risk_ceiling",
+    "_match_goal_for_action",
+]
 
 
 def _match_goal_for_action(action: Any, goals: list) -> Any | None:
@@ -631,7 +637,9 @@ class EvolutionLoop:
 
                             new_goal = Goal(
                                 title=action.params.get("title", action.rationale[:80]),
-                                description=action.params.get("description", action.rationale[:500]),
+                                description=action.params.get(
+                                    "description", action.rationale[:500]
+                                ),
                                 priority=int(action.params.get("priority", 3)),
                                 source="atl",
                             )
@@ -1121,11 +1129,18 @@ class EvolutionLoop:
                         # Kanban: create task for improvement opportunity
                         try:
                             _kanban = getattr(self, "_kanban_engine", None)
-                            _kanban_cfg = getattr(self._config, "kanban", None) if hasattr(self, "_config") else None
+                            _kanban_cfg = (
+                                getattr(self._config, "kanban", None)
+                                if hasattr(self, "_config")
+                                else None
+                            )
                             if _kanban and _kanban_cfg and _kanban_cfg.auto_create_from_evolution:
                                 from jarvis.kanban.sources import EvolutionTaskAdapter
+
                                 _task_data = EvolutionTaskAdapter.from_skill_failure(name, sr)
-                                _kanban.create_task(**{k: v for k, v in _task_data.items() if k != "status"})
+                                _kanban.create_task(
+                                    **{k: v for k, v in _task_data.items() if k != "status"}
+                                )
                         except Exception:
                             pass
                     elif uses == 0 and getattr(skill, "source", "") != "builtin":

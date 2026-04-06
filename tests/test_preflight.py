@@ -70,9 +70,7 @@ class TestPreflightCheck:
         # Create messages that fill ~85% of a small context window
         content = "x" * 3000  # ~750 tokens
         msgs = [{"role": "user", "content": content}]
-        result = preflight_check(
-            "test-model", msgs, context_window=1200, max_output_tokens=200
-        )
+        result = preflight_check("test-model", msgs, context_window=1200, max_output_tokens=200)
         assert result.ok is True
         assert result.usage_pct > 0.5  # should be in warning zone or above
 
@@ -85,9 +83,7 @@ class TestPreflightCheck:
         ]
         original_count = len(msgs)
 
-        result = preflight_check(
-            "test-model", msgs, context_window=3000, max_output_tokens=200
-        )
+        result = preflight_check("test-model", msgs, context_window=3000, max_output_tokens=200)
         assert result.ok is True
         assert result.compacted is True
         assert result.dropped_count > 0
@@ -137,7 +133,8 @@ class TestPreflightCheck:
     def test_preserves_recent_messages(self):
         """Last messages are preserved, oldest are dropped."""
         msgs = [
-            {"role": "user", "content": f"message-{i} " + "x" * 1000} if i % 2 == 0
+            {"role": "user", "content": f"message-{i} " + "x" * 1000}
+            if i % 2 == 0
             else {"role": "assistant", "content": f"reply-{i} " + "x" * 1000}
             for i in range(20)
         ]
@@ -159,25 +156,25 @@ class TestPreflightCheck:
 
 class TestCompactMessages:
     def test_drops_oldest_first(self):
-        msgs = [
-            {"role": "user", "content": f"msg-{i} " + "x" * 500}
-            for i in range(12)
-        ]
-        dropped = _compact_messages(msgs, context_window=1500, max_output_tokens=100, system="", tools=None)
+        msgs = [{"role": "user", "content": f"msg-{i} " + "x" * 500} for i in range(12)]
+        dropped = _compact_messages(
+            msgs, context_window=1500, max_output_tokens=100, system="", tools=None
+        )
         assert dropped > 0
         # First remaining message should NOT be msg-0
         assert "msg-0" not in msgs[0].get("content", "")
 
     def test_no_compaction_needed(self):
         msgs = [{"role": "user", "content": "hi"}]
-        dropped = _compact_messages(msgs, context_window=100000, max_output_tokens=100, system="", tools=None)
+        dropped = _compact_messages(
+            msgs, context_window=100000, max_output_tokens=100, system="", tools=None
+        )
         assert dropped == 0
 
     def test_all_system_messages(self):
         """If all messages are system messages, nothing is dropped."""
-        msgs = [
-            {"role": "system", "content": f"sys-{i}"}
-            for i in range(10)
-        ]
-        dropped = _compact_messages(msgs, context_window=100, max_output_tokens=50, system="", tools=None)
+        msgs = [{"role": "system", "content": f"sys-{i}"} for i in range(10)]
+        dropped = _compact_messages(
+            msgs, context_window=100, max_output_tokens=50, system="", tools=None
+        )
         assert dropped == 0

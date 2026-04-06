@@ -12,7 +12,9 @@ from jarvis.evolution.cycle_controller import (
 )
 
 
-def _make_exam(score: float, gaps: list[str] | None = None, expansion_count: int = 10) -> ExamResult:
+def _make_exam(
+    score: float, gaps: list[str] | None = None, expansion_count: int = 10
+) -> ExamResult:
     return ExamResult(
         score=score,
         questions_total=10,

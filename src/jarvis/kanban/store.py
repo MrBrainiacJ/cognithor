@@ -72,6 +72,7 @@ class KanbanStore:
         if self._use_encryption:
             try:
                 from jarvis.security.encrypted_db import encrypted_connect
+
                 self._conn = encrypted_connect(self._db_path)
             except Exception:
                 self._conn = sqlite3.connect(self._db_path, check_same_thread=False)
@@ -95,24 +96,29 @@ class KanbanStore:
                created_by, result_summary)
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
-                task.id, task.title, task.description,
+                task.id,
+                task.title,
+                task.description,
                 task.status.value if isinstance(task.status, TaskStatus) else task.status,
                 task.priority.value if isinstance(task.priority, TaskPriority) else task.priority,
                 task.assigned_agent,
                 task.source.value if isinstance(task.source, TaskSource) else task.source,
-                task.source_ref, task.parent_id,
-                task.labels_json, task.sort_order,
-                task.created_at, task.updated_at, task.completed_at,
-                task.created_by, task.result_summary,
+                task.source_ref,
+                task.parent_id,
+                task.labels_json,
+                task.sort_order,
+                task.created_at,
+                task.updated_at,
+                task.completed_at,
+                task.created_by,
+                task.result_summary,
             ),
         )
         conn.commit()
         return task
 
     def get(self, task_id: str) -> Task | None:
-        row = self._get_conn().execute(
-            "SELECT * FROM tasks WHERE id = ?", (task_id,)
-        ).fetchone()
+        row = self._get_conn().execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
         if row is None:
             return None
         return self._row_to_task(row)
@@ -152,11 +158,25 @@ class KanbanStore:
         rows = self._get_conn().execute(query, params).fetchall()
         return [self._row_to_task(r) for r in rows]
 
-    _ALLOWED_COLUMNS = frozenset({
-        "title", "description", "status", "priority", "assigned_agent",
-        "source", "source_ref", "parent_id", "labels", "sort_order",
-        "created_at", "updated_at", "completed_at", "created_by", "result_summary",
-    })
+    _ALLOWED_COLUMNS = frozenset(
+        {
+            "title",
+            "description",
+            "status",
+            "priority",
+            "assigned_agent",
+            "source",
+            "source_ref",
+            "parent_id",
+            "labels",
+            "sort_order",
+            "created_at",
+            "updated_at",
+            "completed_at",
+            "created_by",
+            "result_summary",
+        }
+    )
 
     def update(self, task_id: str, **fields: Any) -> Task | None:
         if not fields:
@@ -170,9 +190,7 @@ class KanbanStore:
             fields["labels"] = json.dumps(fields["labels"])
         sets = ", ".join(f"{k} = ?" for k in fields)
         vals = list(fields.values()) + [task_id]
-        self._get_conn().execute(
-            f"UPDATE tasks SET {sets} WHERE id = ?", vals
-        )
+        self._get_conn().execute(f"UPDATE tasks SET {sets} WHERE id = ?", vals)
         self._get_conn().commit()
         return self.get(task_id)
 
@@ -198,8 +216,12 @@ class KanbanStore:
         return self.list_tasks(parent_id=parent_id)
 
     def record_history(
-        self, task_id: str, old_status: str, new_status: str,
-        changed_by: str, note: str = "",
+        self,
+        task_id: str,
+        old_status: str,
+        new_status: str,
+        changed_by: str,
+        note: str = "",
     ) -> None:
         self._get_conn().execute(
             """INSERT INTO task_history (task_id, old_status, new_status,
@@ -209,15 +231,22 @@ class KanbanStore:
         self._get_conn().commit()
 
     def get_history(self, task_id: str) -> list[TaskHistory]:
-        rows = self._get_conn().execute(
-            "SELECT * FROM task_history WHERE task_id = ? ORDER BY id ASC",
-            (task_id,),
-        ).fetchall()
+        rows = (
+            self._get_conn()
+            .execute(
+                "SELECT * FROM task_history WHERE task_id = ? ORDER BY id ASC",
+                (task_id,),
+            )
+            .fetchall()
+        )
         return [
             TaskHistory(
-                id=r["id"], task_id=r["task_id"],
-                old_status=r["old_status"], new_status=r["new_status"],
-                changed_by=r["changed_by"], changed_at=r["changed_at"],
+                id=r["id"],
+                task_id=r["task_id"],
+                old_status=r["old_status"],
+                new_status=r["new_status"],
+                changed_by=r["changed_by"],
+                changed_at=r["changed_at"],
                 note=r["note"] or "",
             )
             for r in rows
@@ -227,9 +256,7 @@ class KanbanStore:
         conn = self._get_conn()
         total = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
         by_status: dict[str, int] = {}
-        for row in conn.execute(
-            "SELECT status, COUNT(*) as cnt FROM tasks GROUP BY status"
-        ):
+        for row in conn.execute("SELECT status, COUNT(*) as cnt FROM tasks GROUP BY status"):
             by_status[row["status"]] = row["cnt"]
         by_agent: dict[str, int] = {}
         for row in conn.execute(
@@ -238,9 +265,7 @@ class KanbanStore:
         ):
             by_agent[row["assigned_agent"]] = row["cnt"]
         by_source: dict[str, int] = {}
-        for row in conn.execute(
-            "SELECT source, COUNT(*) as cnt FROM tasks GROUP BY source"
-        ):
+        for row in conn.execute("SELECT source, COUNT(*) as cnt FROM tasks GROUP BY source"):
             by_source[row["source"]] = row["cnt"]
         return {
             "total": total,

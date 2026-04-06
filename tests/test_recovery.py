@@ -138,9 +138,7 @@ class TestRecoveryEngine:
 
     def test_build_result_recovered(self):
         engine = RecoveryEngine()
-        result = engine.build_result(
-            FailureClass.TOOL_RUNTIME, recovered=True, events=[]
-        )
+        result = engine.build_result(FailureClass.TOOL_RUNTIME, recovered=True, events=[])
         assert result.recovered is True
         assert result.escalation is None
 

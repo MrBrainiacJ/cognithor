@@ -463,7 +463,13 @@ class VaultTools:
                 return self._backend._read_file(full)
 
         # For DBBackend: reconstruct display content
-        return t("vault.read_display", title=note.title, path=note.path, tags=note.tags, content=note.content)
+        return t(
+            "vault.read_display",
+            title=note.title,
+            path=note.path,
+            tags=note.tags,
+            content=note.content,
+        )
 
     # ── Tool: vault_update ───────────────────────────────────────────────
 

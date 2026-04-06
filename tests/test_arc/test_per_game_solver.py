@@ -44,9 +44,9 @@ class TestBudgetAllocation:
         assert slots[0].strategy == "sequence_click"
         assert slots[0].max_actions == 120  # 60% of 200
         assert slots[1].strategy == "cluster_click"
-        assert slots[1].max_actions == 60   # 30% of 200
+        assert slots[1].max_actions == 60  # 30% of 200
         assert slots[2].strategy == "targeted_click"
-        assert slots[2].max_actions == 20   # 10% of 200
+        assert slots[2].max_actions == 20  # 10% of 200
 
     def test_default_keyboard_allocation(self):
         profile = _make_profile("keyboard")
@@ -113,7 +113,9 @@ class TestStagnationDetection:
 
 class TestSolveResult:
     def test_defaults(self):
-        r = SolveResult(game_id="test", levels_completed=0, total_steps=0, strategy_log=[], score=0.0)
+        r = SolveResult(
+            game_id="test", levels_completed=0, total_steps=0, strategy_log=[], score=0.0
+        )
         assert r.game_id == "test"
 
 
@@ -284,6 +286,7 @@ class TestSolve:
         mock_env = MagicMock()
         # Return varied grids so stagnation doesn't trigger
         call_count = [0]
+
         def varied_step(action, data=None):
             call_count[0] += 1
             grid = np.full((1, 64, 64), call_count[0] % 16, dtype=np.int8)
@@ -348,9 +351,7 @@ class TestClusterClickStrategy:
         mock_arcade.make = mock_make
 
         solver = PerGameSolver(profile, arcade=mock_arcade)
-        outcome = solver._execute_cluster_click(
-            initial_grid=grid, target_color=3, max_actions=20
-        )
+        outcome = solver._execute_cluster_click(initial_grid=grid, target_color=3, max_actions=20)
 
         assert outcome.won is True
         assert outcome.levels_solved >= 1

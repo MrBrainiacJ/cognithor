@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.kanban.sources import ChatTaskDetector, CronTaskAdapter, EvolutionTaskAdapter, SystemTaskAdapter
+from jarvis.kanban.sources import (
+    ChatTaskDetector,
+    CronTaskAdapter,
+    EvolutionTaskAdapter,
+    SystemTaskAdapter,
+)
 
 
 class TestChatTaskDetector:

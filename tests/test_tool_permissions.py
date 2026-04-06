@@ -53,9 +53,7 @@ class TestGatekeeperToolRegistryIntegration:
     def test_annotated_green_tool(self):
         gk = self._make_gatekeeper()
         registry = {
-            "read_file": MCPToolInfo(
-                name="read_file", server="builtin", risk_level="green"
-            ),
+            "read_file": MCPToolInfo(name="read_file", server="builtin", risk_level="green"),
         }
         gk.set_tool_registry(registry)
 
@@ -67,9 +65,7 @@ class TestGatekeeperToolRegistryIntegration:
     def test_annotated_red_tool(self):
         gk = self._make_gatekeeper()
         registry = {
-            "danger_tool": MCPToolInfo(
-                name="danger_tool", server="builtin", risk_level="red"
-            ),
+            "danger_tool": MCPToolInfo(name="danger_tool", server="builtin", risk_level="red"),
         }
         gk.set_tool_registry(registry)
 
@@ -82,9 +78,7 @@ class TestGatekeeperToolRegistryIntegration:
         """Empty risk_level → Gatekeeper uses hardcoded lists."""
         gk = self._make_gatekeeper()
         registry = {
-            "read_file": MCPToolInfo(
-                name="read_file", server="builtin", risk_level=""
-            ),
+            "read_file": MCPToolInfo(name="read_file", server="builtin", risk_level=""),
         }
         gk.set_tool_registry(registry)
 
@@ -124,9 +118,7 @@ class TestGatekeeperToolRegistryIntegration:
         gk = self._make_gatekeeper()
         # exec_command is GREEN in hardcoded list, but annotate as orange
         registry = {
-            "exec_command": MCPToolInfo(
-                name="exec_command", server="builtin", risk_level="orange"
-            ),
+            "exec_command": MCPToolInfo(name="exec_command", server="builtin", risk_level="orange"),
         }
         gk.set_tool_registry(registry)
 

@@ -26,6 +26,7 @@ class TestVisionHelpers:
         assert len(b64) > 100
         # Should be valid base64
         import base64
+
         raw = base64.b64decode(b64)
         assert raw[:4] == b"\x89PNG"
 
@@ -153,9 +154,7 @@ class TestSacrificeLevel:
         mock_env.step = mock_step
 
         analyzer = GameAnalyzer.__new__(GameAnalyzer)
-        report = analyzer._run_sacrifice_level(
-            mock_env, initial_grid, available_action_ids=[5, 6]
-        )
+        report = analyzer._run_sacrifice_level(mock_env, initial_grid, available_action_ids=[5, 6])
 
         assert isinstance(report, SacrificeReport)
         assert len(report.clicks_tested) > 0
@@ -176,9 +175,7 @@ class TestSacrificeLevel:
         )
 
         analyzer = GameAnalyzer.__new__(GameAnalyzer)
-        report = analyzer._run_sacrifice_level(
-            mock_env, initial_grid, available_action_ids=[5, 6]
-        )
+        report = analyzer._run_sacrifice_level(mock_env, initial_grid, available_action_ids=[5, 6])
 
         assert report.game_over_trigger is not None
 
@@ -191,12 +188,14 @@ class TestVisionCalls:
 
         mock_resp = {
             "message": {
-                "content": json.dumps({
-                    "game_type": "click",
-                    "target_color": 3,
-                    "strategy": "Click red clusters",
-                    "description": "Grid with red blocks",
-                })
+                "content": json.dumps(
+                    {
+                        "game_type": "click",
+                        "target_color": 3,
+                        "strategy": "Click red clusters",
+                        "description": "Grid with red blocks",
+                    }
+                )
             }
         }
 
@@ -225,11 +224,13 @@ class TestVisionCalls:
 
         mock_resp = {
             "message": {
-                "content": json.dumps({
-                    "win_condition": "clear_board",
-                    "correction": None,
-                    "description": "Clusters toggled from red to yellow",
-                })
+                "content": json.dumps(
+                    {
+                        "win_condition": "clear_board",
+                        "correction": None,
+                        "description": "Clusters toggled from red to yellow",
+                    }
+                )
             }
         }
 
@@ -315,12 +316,14 @@ class TestAnalyze:
 
         vision_resp = {
             "message": {
-                "content": json.dumps({
-                    "game_type": "click",
-                    "target_color": 3,
-                    "strategy": "new strategy",
-                    "description": "new description",
-                })
+                "content": json.dumps(
+                    {
+                        "game_type": "click",
+                        "target_color": 3,
+                        "strategy": "new strategy",
+                        "description": "new description",
+                    }
+                )
             }
         }
 
@@ -399,12 +402,14 @@ class TestHasTogglesDetection:
 
         vision_resp = {
             "message": {
-                "content": json.dumps({
-                    "game_type": "click",
-                    "target_color": 3,
-                    "strategy": "test",
-                    "description": "test",
-                })
+                "content": json.dumps(
+                    {
+                        "game_type": "click",
+                        "target_color": 3,
+                        "strategy": "test",
+                        "description": "test",
+                    }
+                )
             }
         }
 
@@ -452,12 +457,14 @@ class TestHasTogglesDetection:
 
         vision_resp = {
             "message": {
-                "content": json.dumps({
-                    "game_type": "click",
-                    "target_color": 3,
-                    "strategy": "test",
-                    "description": "test",
-                })
+                "content": json.dumps(
+                    {
+                        "game_type": "click",
+                        "target_color": 3,
+                        "strategy": "test",
+                        "description": "test",
+                    }
+                )
             }
         }
 

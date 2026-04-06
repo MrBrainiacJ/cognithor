@@ -82,15 +82,21 @@ class SmartExplorer:
             replay_prefix.extend(solution)
             result.levels_completed += 1
             result.total_steps += len(solution)
-            log.info("arc.explorer_level_solved",
-                     game_id=self._game_id, level=level,
-                     steps=len(solution),
-                     time_s=round(time.monotonic() - t0, 1))
+            log.info(
+                "arc.explorer_level_solved",
+                game_id=self._game_id,
+                level=level,
+                steps=len(solution),
+                time_s=round(time.monotonic() - t0, 1),
+            )
 
         return result
 
     def _explore_level(
-        self, env: Any, replay_prefix: list[int], timeout: float,
+        self,
+        env: Any,
+        replay_prefix: list[int],
+        timeout: float,
     ) -> list[int] | None:
         """Explore one level: build state graph, navigate to frontiers."""
         from arcengine.enums import GameState
@@ -132,9 +138,11 @@ class SmartExplorer:
                 # Check win
                 if obs.levels_completed > current_levels:
                     solution = node.path_from_start + [action]
-                    log.info("arc.explorer_solved",
-                             states=len(states),
-                             time_s=round(time.monotonic() - t0, 1))
+                    log.info(
+                        "arc.explorer_solved",
+                        states=len(states),
+                        time_s=round(time.monotonic() - t0, 1),
+                    )
                     return solution
 
                 # Check game over
@@ -174,13 +182,15 @@ class SmartExplorer:
                     break  # fully explored
                 current_hash = frontier
 
-        log.info("arc.explorer_exhausted",
-                 states=len(states),
-                 time_s=round(time.monotonic() - t0, 1))
+        log.info(
+            "arc.explorer_exhausted", states=len(states), time_s=round(time.monotonic() - t0, 1)
+        )
         return None
 
     def _find_nearest_frontier(
-        self, states: dict[int, StateNode], current_hash: int,
+        self,
+        states: dict[int, StateNode],
+        current_hash: int,
     ) -> int | None:
         """Find the nearest state that still has untested actions (BFS on graph)."""
         visited = {current_hash}

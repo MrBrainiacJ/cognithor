@@ -386,7 +386,9 @@ class ProceduralMemory:
 
     # ── Internal ─────────────────────────────────────────────────
 
-    def _parse_file(self, path: Path, *, quiet: bool = False) -> tuple[ProcedureMetadata, str] | None:
+    def _parse_file(
+        self, path: Path, *, quiet: bool = False
+    ) -> tuple[ProcedureMetadata, str] | None:
         """Parst eine Prozedur-Datei in Metadata + Body."""
         try:
             if _efile is not None:

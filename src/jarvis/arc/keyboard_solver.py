@@ -65,7 +65,9 @@ class KeyboardSolver:
             replay_prefix = [a for sol in prev_solutions for a in sol]
 
             solution = self._solve_level(
-                env, replay_prefix, timeout_s,
+                env,
+                replay_prefix,
+                timeout_s,
             )
 
             if solution is None:
@@ -179,8 +181,9 @@ class KeyboardSolver:
         block_grid = np.zeros((bh, bw), dtype=int)
         for by in range(bh):
             for bx in range(bw):
-                block = grid[by * block_size:(by + 1) * block_size,
-                             bx * block_size:(bx + 1) * block_size]
+                block = grid[
+                    by * block_size : (by + 1) * block_size, bx * block_size : (bx + 1) * block_size
+                ]
                 colors, counts = np.unique(block, return_counts=True)
                 block_grid[by, bx] = colors[np.argmax(counts)]
 
@@ -193,9 +196,7 @@ class KeyboardSolver:
 
         # A* on block grid
         DELTAS = [(0, -1, 1), (0, 1, 2), (-1, 0, 3), (1, 0, 4)]  # UP,DOWN,LEFT,RIGHT
-        open_set: list[tuple[int, tuple[int, int], list[int]]] = [
-            (0, start_block, [])
-        ]
+        open_set: list[tuple[int, tuple[int, int], list[int]]] = [(0, start_block, [])]
         closed: set[tuple[int, int]] = set()
 
         while open_set:
@@ -212,9 +213,12 @@ class KeyboardSolver:
                         for _ in range(mult):
                             obs = env.step(a)
                             if obs.levels_completed > current_levels:
-                                log.info("arc.astar_solved",
-                                         steps=len(path) * mult, mult=mult,
-                                         blocks=len(path))
+                                log.info(
+                                    "arc.astar_solved",
+                                    steps=len(path) * mult,
+                                    mult=mult,
+                                    blocks=len(path),
+                                )
                                 return [a for a in path for _ in range(mult)]
                             if obs.state == GameState.GAME_OVER:
                                 break
@@ -235,9 +239,7 @@ class KeyboardSolver:
                 if 0 <= nx < bw and 0 <= ny < bh and (nx, ny) not in closed:
                     if block_grid[ny, nx] in walkable:
                         dist = abs(nx - goal_block[0]) + abs(ny - goal_block[1])
-                        heapq.heappush(open_set, (
-                            len(path) + 1 + dist, (nx, ny), path + [action]
-                        ))
+                        heapq.heappush(open_set, (len(path) + 1 + dist, (nx, ny), path + [action]))
 
         return None
 
@@ -366,9 +368,12 @@ class KeyboardSolver:
             # Clicks and INTERACT are now regular DFS actions (via negative indices)
             # No separate try-click block needed
 
-        log.info("arc.keyboard_dfs_exhausted",
-                 states=len(visited), path_len=len(path),
-                 time_s=round(time.monotonic() - t0, 1))
+        log.info(
+            "arc.keyboard_dfs_exhausted",
+            states=len(visited),
+            path_len=len(path),
+            time_s=round(time.monotonic() - t0, 1),
+        )
         return None
 
     def _shorten_path(
@@ -394,7 +399,7 @@ class KeyboardSolver:
             i = 0
             while i < len(solution):
                 # Try without step i
-                candidate = solution[:i] + solution[i + 1:]
+                candidate = solution[:i] + solution[i + 1 :]
                 full_seq = replay_prefix + candidate
 
                 obs = env.reset()
@@ -413,8 +418,7 @@ class KeyboardSolver:
                     i += 1
 
         if len(solution) < original_len:
-            log.info("arc.keyboard_path_shortened",
-                     original=original_len, shortened=len(solution))
+            log.info("arc.keyboard_path_shortened", original=original_len, shortened=len(solution))
         return solution
 
     def _replay_to(self, env: Any, prefix: list[int], path: list[int]) -> Any:

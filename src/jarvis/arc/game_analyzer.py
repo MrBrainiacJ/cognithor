@@ -26,10 +26,22 @@ __all__ = ["GameAnalyzer"]
 log = get_logger(__name__)
 
 PALETTE = [
-    (255, 255, 255), (0, 0, 0), (0, 116, 217), (255, 65, 54),
-    (46, 204, 64), (255, 220, 0), (170, 170, 170), (255, 133, 27),
-    (127, 219, 255), (135, 12, 37), (240, 18, 190), (200, 200, 200),
-    (200, 200, 100), (100, 50, 150), (0, 200, 200), (128, 0, 255),
+    (255, 255, 255),
+    (0, 0, 0),
+    (0, 116, 217),
+    (255, 65, 54),
+    (46, 204, 64),
+    (255, 220, 0),
+    (170, 170, 170),
+    (255, 133, 27),
+    (127, 219, 255),
+    (135, 12, 37),
+    (240, 18, 190),
+    (200, 200, 200),
+    (200, 200, 100),
+    (100, 50, 150),
+    (0, 200, 200),
+    (128, 0, 255),
 ]
 
 _ACTION_NAMES = {1: "UP", 2: "DOWN", 3: "LEFT", 4: "RIGHT", 5: "Interact", 6: "Click(x,y)"}
@@ -100,7 +112,9 @@ class SacrificeReport:
     movements_tested: dict[int, int] = field(default_factory=dict)
     unique_states_seen: int = 0
     game_over_trigger: str | None = None
-    toggle_pairs: list[tuple[int, int]] = field(default_factory=list)  # (source, target) color pairs
+    toggle_pairs: list[tuple[int, int]] = field(
+        default_factory=list
+    )  # (source, target) color pairs
     frames: list[np.ndarray] = field(default_factory=list)
 
 
@@ -183,6 +197,7 @@ class GameAnalyzer:
                         if len(old_vals) > 0:
                             # Most common source→target transition
                             from collections import Counter
+
                             pairs = Counter(zip(old_vals.tolist(), new_vals.tolist()))
                             src, tgt = pairs.most_common(1)[0][0]
                             if (src, tgt) not in report.toggle_pairs:
@@ -207,9 +222,7 @@ class GameAnalyzer:
         report.unique_states_seen = len(seen_states)
         return report
 
-    def _vision_call_initial(
-        self, grid: np.ndarray, action_ids: list[int]
-    ) -> dict | None:
+    def _vision_call_initial(self, grid: np.ndarray, action_ids: list[int]) -> dict | None:
         """Vision call 1: ask what the game is from initial frame."""
         try:
             b64 = _grid_to_png_b64(grid, scale=4)
@@ -217,21 +230,23 @@ class GameAnalyzer:
 
             resp = ollama.chat(
                 model="qwen3-vl:32b",
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        f"64x64 pixel puzzle game. Available actions: {', '.join(action_desc)}.\n"
-                        "Analyze this game:\n"
-                        "1. What type of game is this? (click, keyboard, or mixed)\n"
-                        "2. What is the goal?\n"
-                        "3. Which colors are interactive?\n"
-                        "4. What strategy should I use?\n"
-                        'Reply JSON: {"game_type": "click"|"keyboard"|"mixed", '
-                        '"target_color": N or null, "strategy": "...", '
-                        '"description": "..."}'
-                    ),
-                    "images": [b64],
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"64x64 pixel puzzle game. Available actions: {', '.join(action_desc)}.\n"
+                            "Analyze this game:\n"
+                            "1. What type of game is this? (click, keyboard, or mixed)\n"
+                            "2. What is the goal?\n"
+                            "3. Which colors are interactive?\n"
+                            "4. What strategy should I use?\n"
+                            'Reply JSON: {"game_type": "click"|"keyboard"|"mixed", '
+                            '"target_color": N or null, "strategy": "...", '
+                            '"description": "..."}'
+                        ),
+                        "images": [b64],
+                    }
+                ],
                 options={"num_predict": 8192, "temperature": 0.3, "num_ctx": 8192},
             )
 
@@ -241,9 +256,7 @@ class GameAnalyzer:
             log.debug("arc.vision_call_1_failed", error=str(exc)[:200])
             return None
 
-    def _vision_call_final(
-        self, grid_before: np.ndarray, grid_after: np.ndarray
-    ) -> dict | None:
+    def _vision_call_final(self, grid_before: np.ndarray, grid_after: np.ndarray) -> dict | None:
         """Vision call 2: compare before/after sacrifice level."""
         try:
             b64_before = _grid_to_png_b64(grid_before, scale=4)
@@ -255,20 +268,22 @@ class GameAnalyzer:
 
             resp = ollama.chat(
                 model="qwen3-vl:32b",
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        "Three images of a 64x64 puzzle game:\n"
-                        "1. Initial state\n"
-                        "2. After testing actions\n"
-                        "3. Diff (changes highlighted in red)\n\n"
-                        "What changed? What is the win condition?\n"
-                        'Reply JSON: {"win_condition": "clear_board"|"reach_state"|'
-                        '"navigate"|"unknown", "correction": null or "...", '
-                        '"description": "..."}'
-                    ),
-                    "images": [b64_before, b64_after, b64_diff],
-                }],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            "Three images of a 64x64 puzzle game:\n"
+                            "1. Initial state\n"
+                            "2. After testing actions\n"
+                            "3. Diff (changes highlighted in red)\n\n"
+                            "What changed? What is the win condition?\n"
+                            'Reply JSON: {"win_condition": "clear_board"|"reach_state"|'
+                            '"navigate"|"unknown", "correction": null or "...", '
+                            '"description": "..."}'
+                        ),
+                        "images": [b64_before, b64_after, b64_diff],
+                    }
+                ],
                 options={"num_predict": 8192, "temperature": 0.3, "num_ctx": 8192},
             )
 

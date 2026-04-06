@@ -245,9 +245,8 @@ class BrowserTool:
             if extract_text:
                 text = await self._page.inner_text("body")
                 if len(text) > self._max_text_length:
-                    text = (
-                        text[: self._max_text_length]
-                        + t("browser.text_truncated", total=len(text))
+                    text = text[: self._max_text_length] + t(
+                        "browser.text_truncated", total=len(text)
                     )
 
             status = response.status if response else 0
@@ -262,7 +261,9 @@ class BrowserTool:
         except Exception as exc:
             log.error("browser_navigate_failed", url=url, error=str(exc))
             return BrowserResult(
-                success=False, url=url, error=t("browser.navigate_failed", exc_type=type(exc).__name__)
+                success=False,
+                url=url,
+                error=t("browser.navigate_failed", exc_type=type(exc).__name__),
             )
 
     async def screenshot(
@@ -330,7 +331,9 @@ class BrowserTool:
             )
         except Exception as exc:
             log.error("browser_click_failed", selector=selector, error=str(exc))
-            return BrowserResult(success=False, error=t("browser.click_failed", exc_type=type(exc).__name__))
+            return BrowserResult(
+                success=False, error=t("browser.click_failed", exc_type=type(exc).__name__)
+            )
 
     async def fill(self, selector: str, value: str) -> BrowserResult:
         """Fuellt ein Formularfeld aus.
@@ -393,7 +396,9 @@ class BrowserTool:
             )
         except Exception as exc:
             log.error("browser_js_failed", error=str(exc))
-            return BrowserResult(success=False, error=t("browser.js_failed", exc_type=type(exc).__name__))
+            return BrowserResult(
+                success=False, error=t("browser.js_failed", exc_type=type(exc).__name__)
+            )
 
     async def get_page_info(self) -> BrowserResult:
         """Gibt Informationen zur aktuellen Seite zurueck."""

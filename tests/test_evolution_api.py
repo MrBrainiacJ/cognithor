@@ -82,11 +82,14 @@ class TestEvolutionAPI:
         assert goals[0]["title"] == "Insurance Expert"
 
     def test_create_goal(self, client):
-        resp = client.post("/api/v1/evolution/goals", json={
-            "title": "Learn Rust",
-            "description": "Master Rust programming",
-            "priority": 2,
-        })
+        resp = client.post(
+            "/api/v1/evolution/goals",
+            json={
+                "title": "Learn Rust",
+                "description": "Master Rust programming",
+                "priority": 2,
+            },
+        )
         assert resp.status_code == 201
 
     def test_journal(self, client):

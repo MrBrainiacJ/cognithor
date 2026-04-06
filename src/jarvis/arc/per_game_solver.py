@@ -80,11 +80,13 @@ class PerGameSolver:
         slots = []
         for i, strategy in enumerate(top3):
             ratio = ratios[i] if i < len(ratios) else 0.1
-            slots.append(BudgetSlot(
-                strategy=strategy,
-                max_actions=int(total * ratio),
-                priority=i,
-            ))
+            slots.append(
+                BudgetSlot(
+                    strategy=strategy,
+                    max_actions=int(total * ratio),
+                    priority=i,
+                )
+            )
 
         return slots
 
@@ -110,7 +112,9 @@ class PerGameSolver:
                 return outcome
             best_color = max(
                 unique_colors,
-                key=lambda c: len(ClusterSolver(target_color=c, max_skip=0).find_clusters(initial_grid)),
+                key=lambda c: len(
+                    ClusterSolver(target_color=c, max_skip=0).find_clusters(initial_grid)
+                ),
             )
             target_color = best_color
 
@@ -121,7 +125,11 @@ class PerGameSolver:
         for level in range(max_levels):
             t0 = time.monotonic()
             solution = self._smart_find_solution(
-                game_id, target_color, prev_solutions, level, timeout,
+                game_id,
+                target_color,
+                prev_solutions,
+                level,
+                timeout,
             )
             outcome.steps += 1
 
@@ -234,7 +242,14 @@ class PerGameSolver:
             poison |= found
             safe_idx = [i for i in all_idx if i not in poison]
             if test_combo(safe_idx):
-                log.info("arc.smart_solve", phase=2, level=target_level, n=n, poison=len(poison), combos=combos_tested)
+                log.info(
+                    "arc.smart_solve",
+                    phase=2,
+                    level=target_level,
+                    n=n,
+                    poison=len(poison),
+                    combos=combos_tested,
+                )
                 return [centers[i] for i in safe_idx]
 
         # Phase 3: Single elimination — skip each cluster one at a time
@@ -243,7 +258,14 @@ class PerGameSolver:
                 break
             combo = [i for i in range(n) if i != skip_idx]
             if test_combo(combo):
-                log.info("arc.smart_solve", phase=3, level=target_level, n=n, skipped=1, combos=combos_tested)
+                log.info(
+                    "arc.smart_solve",
+                    phase=3,
+                    level=target_level,
+                    n=n,
+                    skipped=1,
+                    combos=combos_tested,
+                )
                 return [centers[i] for i in combo]
 
         # Phase 4: Progressive elimination — skip 2, 3, ..., up to max_skip
@@ -257,18 +279,25 @@ class PerGameSolver:
                 combo = [i for i in range(n) if i not in skip_combo]
                 if test_combo(combo):
                     log.info(
-                        "arc.smart_solve", phase=4, level=target_level, n=n,
-                        skipped=skip_count, combos=combos_tested,
+                        "arc.smart_solve",
+                        phase=4,
+                        level=target_level,
+                        n=n,
+                        skipped=skip_count,
+                        combos=combos_tested,
                     )
                     return [centers[i] for i in combo]
 
-        log.info("arc.smart_solve_failed", level=target_level, n=n, combos=combos_tested,
-                 time_s=round(time.monotonic() - t0, 1))
+        log.info(
+            "arc.smart_solve_failed",
+            level=target_level,
+            n=n,
+            combos=combos_tested,
+            time_s=round(time.monotonic() - t0, 1),
+        )
         return None
 
-    def _execute_strategy(
-        self, env: Any, strategy: str, max_actions: int
-    ) -> StrategyOutcome:
+    def _execute_strategy(self, env: Any, strategy: str, max_actions: int) -> StrategyOutcome:
         """Execute a single strategy with a given action budget."""
         from arcengine.enums import GameState
 
@@ -596,9 +625,13 @@ class PerGameSolver:
             replay_prefix = [c for seq in prev_level_clicks for c in seq]
 
             solution = self._bfs_find_sequence(
-                env, replay_prefix, timeout,
-                max_depth=15, max_sub_levels=5,
-                sub_level_threshold=500, max_states=50_000,
+                env,
+                replay_prefix,
+                timeout,
+                max_depth=15,
+                max_sub_levels=5,
+                sub_level_threshold=500,
+                max_states=50_000,
             )
 
             if solution is None:
@@ -619,7 +652,7 @@ class PerGameSolver:
             replay_prefix = [c for seq in prev_level_clicks for c in seq]
             i = 0
             while i < len(solution):
-                candidate = solution[:i] + solution[i + 1:]
+                candidate = solution[:i] + solution[i + 1 :]
                 full = replay_prefix + candidate
                 obs_s = env.reset()
                 ok = True
@@ -633,8 +666,7 @@ class PerGameSolver:
                 else:
                     i += 1
             if len(solution) < original_len:
-                log.info("arc.click_path_shortened",
-                         original=original_len, shortened=len(solution))
+                log.info("arc.click_path_shortened", original=original_len, shortened=len(solution))
 
             outcome.steps += 1
             prev_level_clicks.append(solution)
@@ -656,7 +688,8 @@ class PerGameSolver:
         from jarvis.arc.smart_explorer import SmartExplorer
 
         se = SmartExplorer(
-            self._arcade, self._profile.game_id,
+            self._arcade,
+            self._profile.game_id,
             self._profile.available_actions,
         )
         result = se.solve(max_levels=10, timeout_s=300.0)
@@ -681,7 +714,9 @@ class PerGameSolver:
             click_positions = self._scan_effective_positions(env_scan, [])
 
         ks = KeyboardSolver(
-            self._arcade, self._profile.game_id, actions,
+            self._arcade,
+            self._profile.game_id,
+            actions,
             click_positions=click_positions or None,
         )
         result = ks.solve(max_levels=10, timeout_s=300.0)
@@ -746,8 +781,15 @@ class PerGameSolver:
 
         # Phase 1: BFS with valves only (no triggers) — "pump first"
         result = self._bfs_valves_only(
-            env, replay_prefix, valves, initial_grid, current_levels,
-            t0, timeout, max_depth, max_states,
+            env,
+            replay_prefix,
+            valves,
+            initial_grid,
+            current_levels,
+            t0,
+            timeout,
+            max_depth,
+            max_states,
         )
         if result is not None:
             return result
@@ -757,8 +799,12 @@ class PerGameSolver:
             remaining_time = timeout - (time.monotonic() - t0)
             if remaining_time > 10:
                 result = self._incremental_click_dfs(
-                    env, replay_prefix, valves, current_levels,
-                    remaining_time, max_depth=60,
+                    env,
+                    replay_prefix,
+                    valves,
+                    current_levels,
+                    remaining_time,
+                    max_depth=60,
                 )
                 if result is not None:
                     return result
@@ -766,17 +812,27 @@ class PerGameSolver:
         # Phase 2: For each trigger, try pre-pumping then triggering
         if triggers and max_sub_levels > 0:
             result = self._pump_then_trigger(
-                env, replay_prefix, valves, triggers, initial_grid,
-                current_levels, t0, timeout, max_depth, max_sub_levels,
-                sub_level_threshold, max_states,
+                env,
+                replay_prefix,
+                valves,
+                triggers,
+                initial_grid,
+                current_levels,
+                t0,
+                timeout,
+                max_depth,
+                max_sub_levels,
+                sub_level_threshold,
+                max_states,
             )
             if result is not None:
                 return result
 
         # Phase 3: Greedy fallback
         action_set = valves + triggers
-        return self._greedy_effect_solve(env, replay_prefix, action_set,
-                                          current_levels, timeout - (time.monotonic() - t0))
+        return self._greedy_effect_solve(
+            env, replay_prefix, action_set, current_levels, timeout - (time.monotonic() - t0)
+        )
 
     def _incremental_click_dfs(
         self,
@@ -832,8 +888,12 @@ class PerGameSolver:
             if obs.levels_completed > current_levels:
                 path.append(idx)
                 solution = [valves[i] for i in path]
-                log.info("arc.click_dfs_solved", clicks=len(solution),
-                         states=len(visited), time_s=round(time.monotonic() - t0, 1))
+                log.info(
+                    "arc.click_dfs_solved",
+                    clicks=len(solution),
+                    states=len(visited),
+                    time_s=round(time.monotonic() - t0, 1),
+                )
                 return solution
 
             if obs.state == GameState.GAME_OVER:
@@ -874,8 +934,12 @@ class PerGameSolver:
             path.append(idx)
             stack.append(list(range(len(valves))))
 
-        log.info("arc.click_dfs_exhausted", states=len(visited), depth=len(path),
-                 time_s=round(time.monotonic() - t0, 1))
+        log.info(
+            "arc.click_dfs_exhausted",
+            states=len(visited),
+            depth=len(path),
+            time_s=round(time.monotonic() - t0, 1),
+        )
         return None
 
     def _bfs_valves_only(
@@ -1013,8 +1077,9 @@ class PerGameSolver:
                         pre_pump_seqs.append(new_seq)
                         queue.append(new_seq)
 
-        log.info("arc.pump_then_trigger", pre_pump_states=len(pre_pump_seqs),
-                 triggers=len(triggers))
+        log.info(
+            "arc.pump_then_trigger", pre_pump_states=len(pre_pump_seqs), triggers=len(triggers)
+        )
 
         # For each pre-pump state, try each trigger, then recurse
         for pre_seq in pre_pump_seqs:
@@ -1051,8 +1116,11 @@ class PerGameSolver:
 
                 # Try height-space A* on post-trigger state
                 height_result = self._height_space_solve(
-                    env, full_trigger_seq, action_set_post,
-                    current_levels, remaining * 0.5,
+                    env,
+                    full_trigger_seq,
+                    action_set_post,
+                    current_levels,
+                    remaining * 0.5,
                 )
                 if height_result is not None:
                     return trigger_seq + height_result
@@ -1064,8 +1132,14 @@ class PerGameSolver:
                 post_grid = safe_frame_extract(obs2)
 
                 post_result = self._bfs_valves_only(
-                    env, full_trigger_seq, action_set_post, post_grid,
-                    current_levels, t0, timeout, max_depth,
+                    env,
+                    full_trigger_seq,
+                    action_set_post,
+                    post_grid,
+                    current_levels,
+                    t0,
+                    timeout,
+                    max_depth,
                     max_states // 3,
                 )
                 if post_result is not None:
@@ -1115,7 +1189,11 @@ class PerGameSolver:
 
         # Try height-space planning first (much smarter than greedy)
         height_result = self._height_space_solve(
-            env, replay_prefix, action_set, current_levels, timeout - (time.monotonic() - t0),
+            env,
+            replay_prefix,
+            action_set,
+            current_levels,
+            timeout - (time.monotonic() - t0),
         )
         if height_result is not None:
             return height_result
@@ -1188,7 +1266,11 @@ class PerGameSolver:
                         return solution
 
                 # Check for sub-level (new valves may appear)
-                if any(new_effects[c] != effects.get(c, 0) for c in action_set if new_effects.get(c, 0) > 0):
+                if any(
+                    new_effects[c] != effects.get(c, 0)
+                    for c in action_set
+                    if new_effects.get(c, 0) > 0
+                ):
                     # Effects changed — re-scan positions
                     new_positions = self._scan_effective_positions(env, full_seq)
                     if new_positions:
@@ -1257,10 +1339,7 @@ class PerGameSolver:
             return None
 
         def measure_heights(g: np.ndarray) -> tuple[int, ...]:
-            return tuple(
-                int(np.sum(g[1:57, cs:ce + 1] == 0))
-                for cs, ce in containers
-            )
+            return tuple(int(np.sum(g[1:57, cs : ce + 1] == 0)) for cs, ce in containers)
 
         current_heights = measure_heights(grid)
 
@@ -1308,9 +1387,13 @@ class PerGameSolver:
         if current_heights == target:
             return []
 
-        log.info("arc.sim_astar_start",
-                 containers=len(containers), valves=len(action_set),
-                 current=current_heights, target=target)
+        log.info(
+            "arc.sim_astar_start",
+            containers=len(containers),
+            valves=len(action_set),
+            current=current_heights,
+            target=target,
+        )
 
         # --- Simulation BFS: real clicks, height-based dedup ---
         # Use BFS (not A*) — target heights are unreliable, rely only on levels_completed
@@ -1353,8 +1436,7 @@ class PerGameSolver:
 
                 if obs.levels_completed > current_levels:
                     solution = path + [(vx, vy)]
-                    log.info("arc.sim_astar_solved",
-                             clicks=len(solution), states=len(visited))
+                    log.info("arc.sim_astar_solved", clicks=len(solution), states=len(visited))
                     return solution
 
                 g = safe_frame_extract(obs)
@@ -1376,9 +1458,11 @@ class PerGameSolver:
             all_states = list(visited.keys())
             for dim in range(len(containers)):
                 vals = sorted(set(s[dim] for s in all_states))
-                log.info("arc.sim_astar_dim_range", dim=dim,
-                         min=vals[0], max=vals[-1], unique=len(vals))
+                log.info(
+                    "arc.sim_astar_dim_range", dim=dim, min=vals[0], max=vals[-1], unique=len(vals)
+                )
 
-        log.info("arc.sim_astar_failed", states=len(visited),
-                 time_s=round(time.monotonic() - t0, 1))
+        log.info(
+            "arc.sim_astar_failed", states=len(visited), time_s=round(time.monotonic() - t0, 1)
+        )
         return None

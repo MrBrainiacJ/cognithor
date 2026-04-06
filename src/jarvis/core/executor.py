@@ -651,9 +651,12 @@ class Executor:
         # Kanban: create investigation task for repeated failures
         try:
             _kanban = getattr(self, "_kanban_engine", None)
-            _kanban_cfg = getattr(self._config, "kanban", None) if hasattr(self, "_config") else None
+            _kanban_cfg = (
+                getattr(self._config, "kanban", None) if hasattr(self, "_config") else None
+            )
             if _kanban and _kanban_cfg and _kanban_cfg.auto_create_from_agents:
                 from jarvis.kanban.sources import SystemTaskAdapter
+
                 _task_data = SystemTaskAdapter.from_recovery_failure(
                     tool_name, self._max_retries, last_error[:200]
                 )
@@ -682,7 +685,9 @@ class Executor:
 
             friendly_msg = retry_exhausted_message(tool_name, self._max_retries, last_error)
         except Exception:
-            friendly_msg = t("executor.retry_exhausted_fallback", attempts=self._max_retries, error=last_error)
+            friendly_msg = t(
+                "executor.retry_exhausted_fallback", attempts=self._max_retries, error=last_error
+            )
         return ToolResult(
             tool_name=tool_name,
             content=friendly_msg,

@@ -7,7 +7,12 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 
-from jarvis.kanban.engine import InvalidTransition, KanbanEngine, SubtaskDepthExceeded, TaskLimitExceeded
+from jarvis.kanban.engine import (
+    InvalidTransition,
+    KanbanEngine,
+    SubtaskDepthExceeded,
+    TaskLimitExceeded,
+)
 from jarvis.kanban.models import TaskPriority, TaskSource, TaskStatus
 from jarvis.utils.logging import get_logger
 

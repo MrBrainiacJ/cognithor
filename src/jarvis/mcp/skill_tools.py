@@ -90,7 +90,9 @@ class SkillTools:
         # Keywords und Tools als YAML-Listen formatieren
         keywords = [kw.strip() for kw in trigger_keywords.split(",") if kw.strip()]
         tools = (
-            [tool.strip() for tool in tools_required.split(",") if tool.strip()] if tools_required else []
+            [tool.strip() for tool in tools_required.split(",") if tool.strip()]
+            if tools_required
+            else []
         )
 
         keywords_yaml = ", ".join(keywords)
@@ -205,7 +207,9 @@ class SkillTools:
             if total == 0:
                 success_info = t("skill.not_yet_tested")
             else:
-                success_info = t("skill.success_rate", rate=f"{skill.success_rate:.0%}", total=total)
+                success_info = t(
+                    "skill.success_rate", rate=f"{skill.success_rate:.0%}", total=total
+                )
 
             lines.append(
                 f"  - {skill.name} [{skill.slug}] ({status}, {success_info}, Keywords: {keywords})"
@@ -323,10 +327,16 @@ def register_skill_tools(
             with contextlib.suppress(Exception):
                 skill_registry.load_from_directories(skills_dirs)
 
-            tools_info = ", ".join(result.tools_required) if result.tools_required else t("skill.no_tools")
+            tools_info = (
+                ", ".join(result.tools_required) if result.tools_required else t("skill.no_tools")
+            )
             warnings_str = ""
             if result.warnings:
-                warnings_str = t("skill.install_warnings_prefix") + "\n" + "\n".join(f"  - {w}" for w in result.warnings)
+                warnings_str = (
+                    t("skill.install_warnings_prefix")
+                    + "\n"
+                    + "\n".join(f"  - {w}" for w in result.warnings)
+                )
 
             return t(
                 "skill.install_success",

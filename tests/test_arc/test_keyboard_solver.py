@@ -15,7 +15,7 @@ def _make_grid(avatar_pos=(5, 5), size=16):
     g = np.full((64, 64), 1, dtype=np.int8)  # background
     r, c = avatar_pos
     # 4x4 avatar block so downsampled hash still detects movement
-    g[r:r+4, c:c+4] = 3
+    g[r : r + 4, c : c + 4] = 3
     return g
 
 
@@ -69,9 +69,9 @@ class TestKeyboardSolverBasic:
         """DFS should find a path from start to goal in a simple corridor."""
         # Simple corridor: (5,5) → right → right → right → (5,8) = goal
         maze = {
-            (5, 5): {4},      # can only go RIGHT
-            (5, 6): {3, 4},   # LEFT or RIGHT
-            (5, 7): {3, 4},   # LEFT or RIGHT
+            (5, 5): {4},  # can only go RIGHT
+            (5, 6): {3, 4},  # LEFT or RIGHT
+            (5, 7): {3, 4},  # LEFT or RIGHT
         }
         mock_env = _make_mock_env(maze, start=(5, 5), goal=(5, 8))
 
@@ -87,9 +87,9 @@ class TestKeyboardSolverBasic:
         """DFS should backtrack from dead ends and find alternative path."""
         # Maze: start (5,5), dead end at (4,5), goal at (5,7)
         maze = {
-            (5, 5): {1, 4},   # UP or RIGHT
-            (4, 5): {2},      # can only go DOWN (dead end)
-            (5, 6): {3, 4},   # LEFT or RIGHT
+            (5, 5): {1, 4},  # UP or RIGHT
+            (4, 5): {2},  # can only go DOWN (dead end)
+            (5, 6): {3, 4},  # LEFT or RIGHT
         }
         mock_env = _make_mock_env(maze, start=(5, 5), goal=(5, 7))
 

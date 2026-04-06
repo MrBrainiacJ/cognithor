@@ -370,7 +370,12 @@ class MemoryTools:
             relation=relation_type,
             target=target_name,
         )
-        return t("memory.relation_created", source=source_name, relation=relation_type, target=target_name)
+        return t(
+            "memory.relation_created",
+            source=source_name,
+            relation=relation_type,
+            target=target_name,
+        )
 
     # ── Delete Entity/Relation (GDPR erasure) ──────────────────
 
@@ -440,7 +445,12 @@ class MemoryTools:
             return t("memory.delete_failed", error=e)
 
         if count == 0:
-            return t("memory.relation_not_found", relation=relation_type, source=source_name, target=target_name)
+            return t(
+                "memory.relation_not_found",
+                relation=relation_type,
+                source=source_name,
+                target=target_name,
+            )
 
         log.info(
             "relation_deleted_gdpr",
@@ -448,7 +458,12 @@ class MemoryTools:
             relation=relation_type,
             target=target_name,
         )
-        return t("memory.relation_deleted", source=source_name, relation=relation_type, target=target_name)
+        return t(
+            "memory.relation_deleted",
+            source=source_name,
+            relation=relation_type,
+            target=target_name,
+        )
 
     # ── Core Memory ──────────────────────────────────────────────
 
@@ -564,7 +579,11 @@ class MemoryTools:
         if result is None:
             return t("memory.procedure_not_found", name=name)
 
-        status = t("memory.procedure_status_success") if success else t("memory.procedure_status_failure")
+        status = (
+            t("memory.procedure_status_success")
+            if success
+            else t("memory.procedure_status_failure")
+        )
         return t(
             "memory.procedure_usage_recorded",
             name=name,
@@ -591,10 +610,18 @@ class MemoryTools:
             t("memory.stats_embeddings", value=stats["embeddings"]),
             t("memory.stats_entities", value=stats["entities"]),
             t("memory.stats_relations", value=stats["relations"]),
-            t("memory.stats_procedures", value=stats["procedures"], reliable=stats["procedures_reliable"]),
+            t(
+                "memory.stats_procedures",
+                value=stats["procedures"],
+                reliable=stats["procedures_reliable"],
+            ),
             t("memory.stats_episode_dates", value=stats["episode_dates"]),
             t("memory.stats_core_loaded", value=yes if stats["core_memory_loaded"] else no),
-            t("memory.stats_embedding_cache", hits=stats["embedding_cache_hits"], calls=stats["embedding_api_calls"]),
+            t(
+                "memory.stats_embedding_cache",
+                hits=stats["embedding_cache_hits"],
+                calls=stats["embedding_api_calls"],
+            ),
             t("memory.stats_initialized", value=yes if stats["initialized"] else no),
         ]
 
