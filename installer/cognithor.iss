@@ -44,7 +44,7 @@ WizardStyle=modern
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 SetupIconFile={#ProjectRoot}\flutter_app\windows\runner\resources\app_icon.ico
-UninstallDisplayIcon={app}\python\python.exe
+UninstallDisplayIcon={app}\app_icon.ico
 UninstallDisplayName=Cognithor {#MyAppVersion}
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -88,11 +88,14 @@ Source: "{#ProjectRoot}\installer\agents.yaml.default"; DestDir: "{app}"; Compon
 ; Config template
 Source: "{#ProjectRoot}\config.yaml.example"; DestDir: "{app}"; DestName: "config.yaml"; Flags: onlyifdoesntexist
 
+; App icon for shortcuts
+Source: "{#ProjectRoot}\flutter_app\windows\runner\resources\app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+
 [Icons]
-Name: "{group}\Cognithor"; Filename: "{app}\cognithor.bat"; Parameters: "--ui"; Comment: "Start Cognithor with Web UI"
-Name: "{group}\Cognithor CLI"; Filename: "cmd.exe"; Parameters: "/k ""{app}\cognithor.bat"""; Comment: "Cognithor Command Line"
+Name: "{group}\Cognithor"; Filename: "{app}\cognithor.bat"; Parameters: "--ui"; IconFilename: "{app}\app_icon.ico"; Comment: "Start Cognithor with Web UI"
+Name: "{group}\Cognithor CLI"; Filename: "cmd.exe"; Parameters: "/k ""{app}\cognithor.bat"""; IconFilename: "{app}\app_icon.ico"; Comment: "Cognithor Command Line"
 Name: "{group}\Uninstall Cognithor"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\Cognithor"; Filename: "{app}\cognithor.bat"; Parameters: "--ui"; Comment: "Start Cognithor"
+Name: "{autodesktop}\Cognithor"; Filename: "{app}\cognithor.bat"; Parameters: "--ui"; IconFilename: "{app}\app_icon.ico"; Comment: "Start Cognithor"
 
 [Registry]
 ; Add to PATH if selected
