@@ -1341,5 +1341,8 @@
   "configPageBudget": "Budget",
   "@configPageBudget": {},
   "configPageEvolution": "Evolution",
-  "@configPageEvolution": {}
+  "@configPageEvolution": {},
+  "kanbanNewTask": "New Task",
+  "kanbanMyTasks": "My Tasks",
+  "kanbanLivePipeline": "Live Pipeline"
 }

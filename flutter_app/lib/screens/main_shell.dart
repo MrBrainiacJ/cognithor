@@ -10,6 +10,7 @@ import 'package:jarvis_ui/screens/chat_screen.dart';
 import 'package:jarvis_ui/screens/config_screen.dart';
 import 'package:jarvis_ui/screens/dashboard_screen.dart';
 import 'package:jarvis_ui/screens/identity_screen.dart';
+import 'package:jarvis_ui/screens/kanban_screen.dart';
 import 'package:jarvis_ui/screens/skills_screen.dart';
 import 'package:jarvis_ui/widgets/global_search_dialog.dart';
 import 'package:jarvis_ui/widgets/responsive_scaffold.dart';
@@ -29,6 +30,7 @@ class _MainShellState extends State<MainShell> {
     SkillsScreen(),
     AdminHubScreen(),
     IdentityScreen(),
+    KanbanScreen(),
   ];
 
   void _openSearch() {
@@ -97,6 +99,12 @@ class _MainShellState extends State<MainShell> {
         label: l.identity,
         shortcut: '^5',
       ),
+      NavItem(
+        icon: Icons.view_kanban_outlined,
+        selectedIcon: Icons.view_kanban,
+        label: 'Kanban',
+        shortcut: '^6',
+      ),
     ];
 
     final pipProvider = context.watch<PipProvider>();
@@ -115,6 +123,8 @@ class _MainShellState extends State<MainShell> {
             () => _navigateTab(3),
         const SingleActivator(LogicalKeyboardKey.digit5, control: true):
             () => _navigateTab(4),
+        const SingleActivator(LogicalKeyboardKey.digit6, control: true):
+            () => _navigateTab(5),
       },
       child: Focus(
         autofocus: true,
