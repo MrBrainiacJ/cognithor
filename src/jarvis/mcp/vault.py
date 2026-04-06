@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from jarvis.i18n import t
 from jarvis.mcp.vault_backend import parse_tags as _parse_tags
 from jarvis.mcp.vault_backend import slugify as _ext_slugify
 from jarvis.utils.logging import get_logger
@@ -368,9 +369,9 @@ class VaultTools:
     ) -> str:
         """Erstellt eine neue Notiz im Vault."""
         if not title.strip():
-            return "Fehler: Kein Titel angegeben."
+            return t("vault.error_no_title")
         if not content.strip():
-            return "Fehler: Kein Inhalt angegeben."
+            return t("vault.error_no_content")
 
         link_list = (
             [n.strip() for n in linked_notes.split(",") if n.strip()] if linked_notes else []
@@ -397,18 +398,18 @@ class VaultTools:
     ) -> str:
         """Durchsucht das Vault nach Notizen."""
         if not query.strip():
-            return "Fehler: Kein Suchbegriff angegeben."
+            return t("vault.error_no_query")
 
         results = self._backend.search(query, folder=folder, tags=tags, limit=int(limit))
 
         if not results:
-            return f"Keine Notizen gefunden für: {query}"
+            return t("vault.no_results", query=query)
 
-        lines = [f"Vault-Suche: {query} ({len(results)} Treffer)\n"]
+        lines = [t("vault.search_header", query=query, count=len(results))]
         for i, note in enumerate(results, 1):
             snippet = note.content[:150].replace("\n", " ") if note.content else ""
             lines.append(f"[{i}] {note.title}")
-            lines.append(f"    Pfad: {note.path}")
+            lines.append(t("vault.list_path", path=note.path))
             if snippet:
                 lines.append(f"    ...{snippet}...")
             lines.append("")
@@ -432,15 +433,15 @@ class VaultTools:
         )
 
         if not notes:
-            return "Keine Notizen im Vault gefunden."
+            return t("vault.list_empty")
 
-        lines = [f"Vault-Inhalt ({len(notes)} Notizen):\n"]
+        lines = [t("vault.list_header", count=len(notes))]
         for i, n in enumerate(notes, 1):
             lines.append(f"[{i}] {n.title}")
-            lines.append(f"    Pfad: {n.path}")
+            lines.append(t("vault.list_path", path=n.path))
             if n.tags:
-                lines.append(f"    Tags: {n.tags}")
-            lines.append(f"    Aktualisiert: {n.updated_at or '?'}")
+                lines.append(t("vault.list_tags", tags=n.tags))
+            lines.append(t("vault.list_updated", updated_at=n.updated_at or "?"))
             lines.append("")
         return "\n".join(lines)
 
@@ -449,11 +450,11 @@ class VaultTools:
     async def vault_read(self, identifier: str) -> str:
         """Liest eine einzelne Notiz aus dem Vault."""
         if not identifier.strip():
-            return "Fehler: Kein Identifier angegeben."
+            return t("vault.error_no_identifier")
 
         note = self._backend.find_note(identifier)
         if not note:
-            return f"Notiz nicht gefunden: {identifier}"
+            return t("vault.not_found", identifier=identifier)
 
         # For FileBackend: read raw file content to preserve frontmatter for tests
         if hasattr(self._backend, "_read_file"):
@@ -462,7 +463,7 @@ class VaultTools:
                 return self._backend._read_file(full)
 
         # For DBBackend: reconstruct display content
-        return f"# {note.title}\n\nPfad: {note.path}\nTags: {note.tags}\n\n{note.content}"
+        return t("vault.read_display", title=note.title, path=note.path, tags=note.tags, content=note.content)
 
     # ── Tool: vault_update ───────────────────────────────────────────────
 
@@ -474,14 +475,14 @@ class VaultTools:
     ) -> str:
         """Aktualisiert eine bestehende Notiz."""
         if not identifier.strip():
-            return "Fehler: Kein Identifier angegeben."
+            return t("vault.error_no_identifier")
 
         if not append_content.strip() and not add_tags.strip():
-            return "Fehler: Weder Inhalt noch Tags zum Aktualisieren angegeben."
+            return t("vault.error_no_update_data")
 
         note = self._backend.find_note(identifier)
         if note is None:
-            return f"Notiz nicht gefunden: {identifier}"
+            return t("vault.not_found", identifier=identifier)
 
         return self._backend.update(note.path, append_content=append_content, add_tags=add_tags)
 
@@ -497,9 +498,9 @@ class VaultTools:
         tgt = self._backend.find_note(target_note)
 
         if not src:
-            return f"Quell-Notiz nicht gefunden: {source_note}"
+            return t("vault.error_source_not_found", identifier=source_note)
         if not tgt:
-            return f"Ziel-Notiz nicht gefunden: {target_note}"
+            return t("vault.error_target_not_found", identifier=target_note)
 
         return self._backend.link(src.path, tgt.path)
 
@@ -508,14 +509,14 @@ class VaultTools:
     async def vault_delete(self, path: str) -> str:
         """Loescht eine Notiz aus dem Vault (GDPR erasure)."""
         if not path.strip():
-            return "Fehler: Kein Pfad angegeben."
+            return t("vault.error_no_path")
 
         # Path validation
         try:
             resolved = (self._vault_root / path).resolve()
             resolved.relative_to(self._vault_root.resolve())
         except (ValueError, OSError):
-            return f"Ungültiger Pfad (Path-Traversal blockiert): {path}"
+            return t("vault.error_invalid_path", path=path)
 
         return self._backend.delete(path)
 
