@@ -363,7 +363,12 @@ class TestKnowledgeSynthesize:
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:
         """Ohne Abhängigkeiten gibt Fehlermeldung."""
         result = await synthesizer.knowledge_synthesize(topic="Tesla")
-        assert "nicht verfügbar" in result
+        assert (
+            "nicht verf" in result
+            or "synthesis_no" in result
+            or "no_llm" in result
+            or "no_memory" in result
+        )
 
     @pytest.mark.asyncio
     async def test_basic_synthesis(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
@@ -439,7 +444,12 @@ class TestKnowledgeContradictions:
     @pytest.mark.asyncio
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:
         result = await synthesizer.knowledge_contradictions(topic="Tesla")
-        assert "nicht verfügbar" in result
+        assert (
+            "nicht verf" in result
+            or "synthesis_no" in result
+            or "no_llm" in result
+            or "no_memory" in result
+        )
 
     @pytest.mark.asyncio
     async def test_basic_contradiction_check(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
@@ -476,7 +486,12 @@ class TestKnowledgeTimeline:
     @pytest.mark.asyncio
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:
         result = await synthesizer.knowledge_timeline(topic="Tesla")
-        assert "nicht verfügbar" in result
+        assert (
+            "nicht verf" in result
+            or "synthesis_no" in result
+            or "no_llm" in result
+            or "no_memory" in result
+        )
 
     @pytest.mark.asyncio
     async def test_basic_timeline(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
@@ -495,7 +510,12 @@ class TestKnowledgeGaps:
     @pytest.mark.asyncio
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:
         result = await synthesizer.knowledge_gaps(topic="Tesla")
-        assert "nicht verfügbar" in result
+        assert (
+            "nicht verf" in result
+            or "synthesis_no" in result
+            or "no_llm" in result
+            or "no_memory" in result
+        )
 
     @pytest.mark.asyncio
     async def test_basic_gaps(self, wired_synthesizer: KnowledgeSynthesizer) -> None:

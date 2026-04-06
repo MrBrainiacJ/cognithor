@@ -103,7 +103,11 @@ class TestNavigate:
         tool._initialized = True
         result = await tool.navigate("http://localhost/admin")
         assert not result.success
-        assert "blockiert" in result.error or "blocked" in result.error.lower() or "block" in result.error.lower()
+        assert (
+            "blockiert" in result.error
+            or "blocked" in result.error.lower()
+            or "block" in result.error.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_success(self, tool: BrowserTool) -> None:
