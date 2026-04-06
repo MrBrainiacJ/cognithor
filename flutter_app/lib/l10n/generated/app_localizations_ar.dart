@@ -2305,4 +2305,61 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get configPageEvolution => 'Evolution';
+
+  @override
+  String get kanbanNewTask => 'مهمة جديدة';
+
+  @override
+  String get kanbanMyTasks => 'مهامي';
+
+  @override
+  String get kanbanLivePipeline => 'خط الأنابيب المباشر';
+
+  @override
+  String get kanbanDescription => 'الوصف';
+
+  @override
+  String get kanbanResult => 'النتيجة';
+
+  @override
+  String kanbanSubtasks(int count) => 'المهام الفرعية ($count)';
+
+  @override
+  String get kanbanHistory => 'السجل';
+
+  @override
+  String get kanbanNoHistory => 'لا توجد تغييرات في الحالة بعد.';
+
+  @override
+  String get kanbanMetadata => 'البيانات الوصفية';
+
+  @override
+  String kanbanSource(String source) => 'المصدر: $source';
+
+  @override
+  String kanbanCreated(String date) => 'تم الإنشاء: $date';
+
+  @override
+  String kanbanUpdated(String date) => 'تم التحديث: $date';
+
+  @override
+  String kanbanCompleted(String date) => 'تم الإكمال: $date';
+
+  @override
+  String get kanbanEditTask => 'تعديل المهمة';
+
+  @override
+  String get kanbanSave => 'حفظ';
+
+  @override
+  String get kanbanCreate => 'إنشاء';
+
+  @override
+  String get deviceSettings => 'إعدادات الجهاز';
+
+  @override
+  String get refreshSensors => 'تحديث أجهزة الاستشعار';
+
+  @override
+  String get documentsTitle => 'المستندات والقوالب';
 }

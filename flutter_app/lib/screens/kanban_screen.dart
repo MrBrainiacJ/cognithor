@@ -4,6 +4,7 @@ import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/kanban_provider.dart';
 import 'package:jarvis_ui/providers/chat_provider.dart';
 import 'package:jarvis_ui/widgets/kanban/kanban_board.dart';
+import 'package:jarvis_ui/widgets/kanban/kanban_config_dialog.dart';
 import 'package:jarvis_ui/widgets/kanban/task_dialog.dart';
 import 'package:jarvis_ui/widgets/kanban/task_detail_sheet.dart';
 import 'package:jarvis_ui/widgets/observe/kanban_panel.dart';
@@ -64,7 +65,7 @@ class _KanbanScreenState extends State<KanbanScreen> {
                   children: [
                     // Toggle
                     SegmentedButton<bool>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(value: false, label: Text(l.kanbanMyTasks)),
                         ButtonSegment(value: true, label: Text(l.kanbanLivePipeline)),
                       ],
@@ -99,6 +100,16 @@ class _KanbanScreenState extends State<KanbanScreen> {
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.settings_outlined),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => const KanbanConfigDialog(),
+                          );
+                        },
                       ),
                     ],
                   ],

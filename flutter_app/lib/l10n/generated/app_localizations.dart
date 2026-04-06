@@ -4577,6 +4577,63 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Evolution'**
   String get configPageEvolution;
+
+  /// No description provided for @kanbanNewTask.
+  String get kanbanNewTask;
+
+  /// No description provided for @kanbanMyTasks.
+  String get kanbanMyTasks;
+
+  /// No description provided for @kanbanLivePipeline.
+  String get kanbanLivePipeline;
+
+  /// No description provided for @kanbanDescription.
+  String get kanbanDescription;
+
+  /// No description provided for @kanbanResult.
+  String get kanbanResult;
+
+  /// No description provided for @kanbanSubtasks.
+  String kanbanSubtasks(int count);
+
+  /// No description provided for @kanbanHistory.
+  String get kanbanHistory;
+
+  /// No description provided for @kanbanNoHistory.
+  String get kanbanNoHistory;
+
+  /// No description provided for @kanbanMetadata.
+  String get kanbanMetadata;
+
+  /// No description provided for @kanbanSource.
+  String kanbanSource(String source);
+
+  /// No description provided for @kanbanCreated.
+  String kanbanCreated(String date);
+
+  /// No description provided for @kanbanUpdated.
+  String kanbanUpdated(String date);
+
+  /// No description provided for @kanbanCompleted.
+  String kanbanCompleted(String date);
+
+  /// No description provided for @kanbanEditTask.
+  String get kanbanEditTask;
+
+  /// No description provided for @kanbanSave.
+  String get kanbanSave;
+
+  /// No description provided for @kanbanCreate.
+  String get kanbanCreate;
+
+  /// No description provided for @deviceSettings.
+  String get deviceSettings;
+
+  /// No description provided for @refreshSensors.
+  String get refreshSensors;
+
+  /// No description provided for @documentsTitle.
+  String get documentsTitle;
 }
 
 class _AppLocalizationsDelegate

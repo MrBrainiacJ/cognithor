@@ -2307,4 +2307,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get configPageEvolution => 'Evolution';
+
+  @override
+  String get kanbanNewTask => 'New Task';
+
+  @override
+  String get kanbanMyTasks => 'My Tasks';
+
+  @override
+  String get kanbanLivePipeline => 'Live Pipeline';
+
+  @override
+  String get kanbanDescription => 'Description';
+
+  @override
+  String get kanbanResult => 'Result';
+
+  @override
+  String kanbanSubtasks(int count) => 'Subtasks ($count)';
+
+  @override
+  String get kanbanHistory => 'History';
+
+  @override
+  String get kanbanNoHistory => 'No status changes yet.';
+
+  @override
+  String get kanbanMetadata => 'Metadata';
+
+  @override
+  String kanbanSource(String source) => 'Source: $source';
+
+  @override
+  String kanbanCreated(String date) => 'Created: $date';
+
+  @override
+  String kanbanUpdated(String date) => 'Updated: $date';
+
+  @override
+  String kanbanCompleted(String date) => 'Completed: $date';
+
+  @override
+  String get kanbanEditTask => 'Edit Task';
+
+  @override
+  String get kanbanSave => 'Save';
+
+  @override
+  String get kanbanCreate => 'Create';
+
+  @override
+  String get deviceSettings => 'Device Settings';
+
+  @override
+  String get refreshSensors => 'Refresh Sensors';
+
+  @override
+  String get documentsTitle => 'Documents & Templates';
 }

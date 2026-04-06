@@ -2293,4 +2293,61 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get configPageEvolution => 'Evolution';
+
+  @override
+  String get kanbanNewTask => '新任务';
+
+  @override
+  String get kanbanMyTasks => '我的任务';
+
+  @override
+  String get kanbanLivePipeline => '实时管道';
+
+  @override
+  String get kanbanDescription => '描述';
+
+  @override
+  String get kanbanResult => '结果';
+
+  @override
+  String kanbanSubtasks(int count) => '子任务 ($count)';
+
+  @override
+  String get kanbanHistory => '历史';
+
+  @override
+  String get kanbanNoHistory => '暂无状态变更。';
+
+  @override
+  String get kanbanMetadata => '元数据';
+
+  @override
+  String kanbanSource(String source) => '来源：$source';
+
+  @override
+  String kanbanCreated(String date) => '创建：$date';
+
+  @override
+  String kanbanUpdated(String date) => '更新：$date';
+
+  @override
+  String kanbanCompleted(String date) => '完成：$date';
+
+  @override
+  String get kanbanEditTask => '编辑任务';
+
+  @override
+  String get kanbanSave => '保存';
+
+  @override
+  String get kanbanCreate => '创建';
+
+  @override
+  String get deviceSettings => '设备设置';
+
+  @override
+  String get refreshSensors => '刷新传感器';
+
+  @override
+  String get documentsTitle => '文档和模板';
 }
