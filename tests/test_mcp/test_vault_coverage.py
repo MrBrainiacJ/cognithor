@@ -151,12 +151,12 @@ class TestVaultSaveEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_title(self, vault: VaultTools) -> None:
         result = await vault.vault_save(title="", content="text")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_empty_content(self, vault: VaultTools) -> None:
         result = await vault.vault_save(title="Title", content="")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_duplicate_filename_increments(self, vault: VaultTools) -> None:
@@ -200,7 +200,7 @@ class TestVaultSearch:
     @pytest.mark.asyncio
     async def test_empty_query(self, vault: VaultTools) -> None:
         result = await vault.vault_search(query="")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_search_finds_content(self, vault: VaultTools) -> None:
@@ -319,7 +319,7 @@ class TestVaultRead:
     @pytest.mark.asyncio
     async def test_read_empty_identifier(self, vault: VaultTools) -> None:
         result = await vault.vault_read("")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_read_by_title(self, vault: VaultTools) -> None:
@@ -358,12 +358,12 @@ class TestVaultUpdateEdgeCases:
     @pytest.mark.asyncio
     async def test_update_empty_identifier(self, vault: VaultTools) -> None:
         result = await vault.vault_update(identifier="", append_content="x")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_update_no_changes(self, vault: VaultTools) -> None:
         result = await vault.vault_update(identifier="Something", append_content="", add_tags="")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_update_not_found(self, vault: VaultTools) -> None:

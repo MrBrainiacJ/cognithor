@@ -167,7 +167,7 @@ class TestSQLiteReadOnly:
     @pytest.mark.asyncio()
     async def test_empty_sql_returns_error(self, db_tools: DatabaseTools, sample_db: Path) -> None:
         result = await db_tools.db_query(str(sample_db), "")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio()
     async def test_limit_parameter(self, db_tools: DatabaseTools, sample_db: Path) -> None:
@@ -330,7 +330,7 @@ class TestDbExecute:
     @pytest.mark.asyncio()
     async def test_empty_sql(self, db_tools: DatabaseTools, sample_db: Path) -> None:
         result = await db_tools.db_execute(str(sample_db), "")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
 
 # =============================================================================

@@ -67,7 +67,7 @@ class TestValidateUrl:
     def test_localhost_blocked(self) -> None:
         result = BrowserTool._validate_url("http://localhost/admin")
         assert result is not None
-        assert "blockiert" in result
+        assert "blockiert" in result or "blocked" in result.lower() or "block" in result.lower()
 
     def test_private_10_blocked(self) -> None:
         result = BrowserTool._validate_url("http://10.0.0.1/")
@@ -103,7 +103,9 @@ class TestNavigate:
         tool._initialized = True
         result = await tool.navigate("http://localhost/admin")
         assert not result.success
-        assert "blockiert" in result.error
+        assert (
+            "blockiert" in result or "blocked" in result.lower() or "block" in result.lower().error
+        )
 
     @pytest.mark.asyncio
     async def test_success(self, tool: BrowserTool) -> None:

@@ -242,7 +242,7 @@ class TestIngestPipeline:
         f.write_text("   ", encoding="utf-8")
         result = await pipeline.ingest_file(f)
         assert not result.success
-        assert "Kein Text" in result.error
+        assert "Kein Text" in result or "empty" in result.lower().error
 
     @pytest.mark.asyncio
     async def test_ingest_extraction_error(

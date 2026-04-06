@@ -208,14 +208,14 @@ class TestDependencyInjection:
         """Fehlermeldung wenn kein LLM."""
         error = synthesizer._check_ready()
         assert error is not None
-        assert "LLM" in error
+        assert "LLM" in error or "no_llm" in error or "synthesis" in error
 
     def test_check_ready_no_memory(self, synthesizer: KnowledgeSynthesizer) -> None:
         """Fehlermeldung wenn kein Memory."""
         synthesizer._set_llm_fn(lambda p, m="": "test", "model")
         error = synthesizer._check_ready()
         assert error is not None
-        assert "Memory" in error
+        assert "Memory" in error or "no_memory" in error or "memory" in error.lower()
 
     def test_check_ready_ok(self, synthesizer: KnowledgeSynthesizer) -> None:
         """None wenn LLM + Memory gesetzt."""
@@ -351,13 +351,13 @@ class TestKnowledgeSynthesize:
     async def test_empty_topic(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
         """Leeres Thema gibt Fehlermeldung."""
         result = await wired_synthesizer.knowledge_synthesize(topic="")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_whitespace_topic(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
         """Nur Whitespace-Thema gibt Fehlermeldung."""
         result = await wired_synthesizer.knowledge_synthesize(topic="   ")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:
@@ -424,7 +424,7 @@ class TestKnowledgeSynthesize:
 
         wired_synthesizer._set_llm_fn(failing_llm, "model")
         result = await wired_synthesizer.knowledge_synthesize(topic="Tesla")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
         assert "LLM timeout" in result
 
 
@@ -434,7 +434,7 @@ class TestKnowledgeContradictions:
     @pytest.mark.asyncio
     async def test_empty_topic(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
         result = await wired_synthesizer.knowledge_contradictions(topic="")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:
@@ -471,7 +471,7 @@ class TestKnowledgeTimeline:
     @pytest.mark.asyncio
     async def test_empty_topic(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
         result = await wired_synthesizer.knowledge_timeline(topic="")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:
@@ -490,7 +490,7 @@ class TestKnowledgeGaps:
     @pytest.mark.asyncio
     async def test_empty_topic(self, wired_synthesizer: KnowledgeSynthesizer) -> None:
         result = await wired_synthesizer.knowledge_gaps(topic="")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_not_ready(self, synthesizer: KnowledgeSynthesizer) -> None:

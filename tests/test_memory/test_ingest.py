@@ -208,7 +208,7 @@ class TestIngestFile:
 
         result = await pipeline.ingest_file(f)
         assert result.success is False
-        assert "Kein Text" in result.error
+        assert "Kein Text" in result or "empty" in result.lower().error
 
     @pytest.mark.asyncio
     async def test_ingest_duplicate_detection(

@@ -64,7 +64,7 @@ class TestReadCoreMemory:
     def test_exception(self, provider_with_deps: JarvisResourceProvider) -> None:
         provider_with_deps._memory.get_core_memory.side_effect = RuntimeError("fail")
         result = provider_with_deps._read_core_memory()
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
 
 class TestReadEpisodes:

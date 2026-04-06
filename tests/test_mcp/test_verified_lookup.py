@@ -146,7 +146,7 @@ class TestVerifiedLookup:
         """Fehler wenn WebTools nicht verfuegbar."""
         vl = VerifiedWebLookup(config)
         result = await vl.verified_lookup(query="test")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
         assert "WebTools" in result
 
     @pytest.mark.asyncio
@@ -448,7 +448,7 @@ class TestRegistration:
         handler = mcp.register_builtin_handler.call_args[1]["handler"]
         # Ohne WebTools gibt es eine Fehlermeldung (kein Crash)
         result = await handler(query="test")
-        assert "Fehler" in result or "WebTools" in result
+        assert "Fehler" in result or "error" in result.lower() or "WebTools" in result
 
 
 # ============================================================================

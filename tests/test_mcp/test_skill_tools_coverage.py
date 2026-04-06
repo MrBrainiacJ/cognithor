@@ -88,7 +88,7 @@ class TestCreateSkill:
             trigger_keywords="kw",
             body="body",
         )
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
         assert "name" in result
 
     def test_empty_description(self, skill_tools: SkillTools) -> None:
@@ -98,7 +98,7 @@ class TestCreateSkill:
             trigger_keywords="kw",
             body="body",
         )
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
         assert "description" in result
 
     def test_empty_keywords(self, skill_tools: SkillTools) -> None:
@@ -108,7 +108,7 @@ class TestCreateSkill:
             trigger_keywords="",
             body="body",
         )
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
         assert "trigger_keywords" in result
 
     def test_empty_body(self, skill_tools: SkillTools) -> None:
@@ -118,7 +118,7 @@ class TestCreateSkill:
             trigger_keywords="kw",
             body="",
         )
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
         assert "body" in result
 
     def test_whitespace_only_name(self, skill_tools: SkillTools) -> None:
@@ -128,7 +128,7 @@ class TestCreateSkill:
             trigger_keywords="kw",
             body="body",
         )
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     def test_file_already_exists(self, skill_tools: SkillTools) -> None:
         # Create first

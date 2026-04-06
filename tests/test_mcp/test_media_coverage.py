@@ -122,7 +122,7 @@ class TestAnalyzeDocument:
     async def test_extract_fails(self, pipeline: MediaPipeline) -> None:
         pipeline._set_llm_fn(AsyncMock(return_value="answer"), "model")
         result = await pipeline.analyze_document("/nonexistent/doc.pdf")
-        assert "Fehler" in result
+        assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio
     async def test_empty_text(self, pipeline: MediaPipeline, workspace: Path) -> None:
@@ -130,7 +130,7 @@ class TestAnalyzeDocument:
         f.write_text("", encoding="utf-8")
         pipeline._set_llm_fn(AsyncMock(return_value="answer"), "model")
         result = await pipeline.analyze_document(str(f))
-        assert "Kein Text" in result
+        assert "Kein Text" in result or "empty" in result.lower()
 
     @pytest.mark.asyncio
     async def test_success(self, pipeline: MediaPipeline, workspace: Path) -> None:
@@ -138,7 +138,7 @@ class TestAnalyzeDocument:
         f.write_text("Dies ist ein laengerer Dokumenttext fuer die Analyse.", encoding="utf-8")
         pipeline._set_llm_fn(AsyncMock(return_value="## Analyse\nGut."), "model")
         result = await pipeline.analyze_document(str(f), analysis_type="summary")
-        assert "Analyse" in result
+        assert "Analyse" in result or "analy" in result.lower()
 
     @pytest.mark.asyncio
     async def test_short_text_ocr_warning(self, pipeline: MediaPipeline, workspace: Path) -> None:

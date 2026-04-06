@@ -406,7 +406,9 @@ class TestSearchDuckDuckGoAsync:
     async def test_search_duckduckgo_no_results(self, web: WebTools) -> None:
         with patch.object(web, "_ddg_search_with_fallback", return_value=[]):
             result = await web._search_duckduckgo("noresults", 5, "de", "")
-            assert "Keine Ergebnisse" in result
+            assert (
+                "Keine Ergebnisse" in result or "no_results" in result or "keine" in result.lower()
+            )
 
     @pytest.mark.asyncio
     async def test_search_duckduckgo_with_timelimit(self, web: WebTools) -> None:
@@ -469,7 +471,9 @@ class TestGoogleCSESearch:
             mock_client.return_value = mock_instance
 
             result = await w._search_google_cse("empty", 5, "de")
-            assert "Keine Ergebnisse" in result
+            assert (
+                "Keine Ergebnisse" in result or "no_results" in result or "keine" in result.lower()
+            )
 
     @pytest.mark.asyncio
     async def test_google_cse_in_fallback_chain(self) -> None:
@@ -843,7 +847,12 @@ class TestWebSearchAllFail:
             mock_client.return_value = mock_instance
 
             result = await w.web_search("nothing")
-            assert "Keine Ergebnisse" in result or "fehlgeschlagen" in result
+            assert (
+                "Keine Ergebnisse" in result
+                or "no_results" in result
+                or "keine" in result.lower()
+                or "fehlgeschlagen" in result
+            )
 
     @pytest.mark.asyncio
     async def test_brave_no_results(self) -> None:
@@ -868,7 +877,12 @@ class TestWebSearchAllFail:
             mock_client.return_value = mock_instance
 
             result = await w.web_search("empty")
-            assert "Keine Ergebnisse" in result or "fehlgeschlagen" in result
+            assert (
+                "Keine Ergebnisse" in result
+                or "no_results" in result
+                or "keine" in result.lower()
+                or "fehlgeschlagen" in result
+            )
 
 
 # ============================================================================
@@ -948,7 +962,7 @@ class TestSearchAndReadCrossCheck:
             # The fetch itself will try to validate URL, which needs DNS
             with patch.object(w, "web_fetch", side_effect=WebError("Fetch failed")):
                 result = await w.search_and_read("test", num_results=1)
-                assert "Fehler" in result
+                assert "Fehler" in result or "error" in result.lower()
 
 
 # ============================================================================

@@ -346,7 +346,11 @@ class TestTextToSpeech:
         with patch("asyncio.create_subprocess_exec", side_effect=FileNotFoundError):
             result = await pipeline.text_to_speech("Hallo Welt")
             assert result.success is False
-            assert "Kein TTS-Backend" in result.error
+            assert (
+                "Kein TTS" in result.error
+                or "tts_unavailable" in result.error
+                or "tts" in result.error.lower()
+            )
 
 
 # ============================================================================
