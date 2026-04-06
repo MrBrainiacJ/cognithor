@@ -784,5 +784,46 @@
   "toolsWarning": "更改需要重新启动",
   "kanbanNewTask": "新任务",
   "kanbanMyTasks": "我的任务",
-  "kanbanLivePipeline": "实时管道"
+  "kanbanLivePipeline": "实时管道",
+  "kanbanDescription": "描述",
+  "kanbanResult": "结果",
+  "kanbanSubtasks": "子任务 ({count})",
+  "@kanbanSubtasks": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kanbanHistory": "历史",
+  "kanbanNoHistory": "暂无状态变更。",
+  "kanbanMetadata": "元数据",
+  "kanbanSource": "来源：{source}",
+  "@kanbanSource": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "kanbanCreated": "创建：{date}",
+  "@kanbanCreated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanUpdated": "更新：{date}",
+  "@kanbanUpdated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanCompleted": "完成：{date}",
+  "@kanbanCompleted": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanEditTask": "编辑任务",
+  "kanbanSave": "保存",
+  "kanbanCreate": "创建",
+  "deviceSettings": "设备设置",
+  "refreshSensors": "刷新传感器",
+  "documentsTitle": "文档和模板"
 }

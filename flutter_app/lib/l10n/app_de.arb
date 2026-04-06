@@ -791,5 +791,46 @@
   "toolsDesktopDesc": "Zugriff auf Zwischenablage und Desktop-Screenshots",
   "toolsDesktopLabel": "Desktop-Tools",
   "toolsSectionDesktop": "Desktop & Automation",
-  "toolsWarning": "Änderungen erfordern einen Neustart"
+  "toolsWarning": "Änderungen erfordern einen Neustart",
+  "kanbanDescription": "Beschreibung",
+  "kanbanResult": "Ergebnis",
+  "kanbanSubtasks": "Unteraufgaben ({count})",
+  "@kanbanSubtasks": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kanbanHistory": "Verlauf",
+  "kanbanNoHistory": "Noch keine Statusänderungen.",
+  "kanbanMetadata": "Metadaten",
+  "kanbanSource": "Quelle: {source}",
+  "@kanbanSource": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "kanbanCreated": "Erstellt: {date}",
+  "@kanbanCreated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanUpdated": "Aktualisiert: {date}",
+  "@kanbanUpdated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanCompleted": "Abgeschlossen: {date}",
+  "@kanbanCompleted": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanEditTask": "Task bearbeiten",
+  "kanbanSave": "Speichern",
+  "kanbanCreate": "Erstellen",
+  "deviceSettings": "Geräteeinstellungen",
+  "refreshSensors": "Sensoren aktualisieren",
+  "documentsTitle": "Dokumente & Vorlagen"
 }

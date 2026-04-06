@@ -1344,5 +1344,54 @@
   "@configPageEvolution": {},
   "kanbanNewTask": "New Task",
   "kanbanMyTasks": "My Tasks",
-  "kanbanLivePipeline": "Live Pipeline"
+  "kanbanLivePipeline": "Live Pipeline",
+  "kanbanDescription": "Description",
+  "@kanbanDescription": {},
+  "kanbanResult": "Result",
+  "@kanbanResult": {},
+  "kanbanSubtasks": "Subtasks ({count})",
+  "@kanbanSubtasks": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kanbanHistory": "History",
+  "@kanbanHistory": {},
+  "kanbanNoHistory": "No status changes yet.",
+  "@kanbanNoHistory": {},
+  "kanbanMetadata": "Metadata",
+  "@kanbanMetadata": {},
+  "kanbanSource": "Source: {source}",
+  "@kanbanSource": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "kanbanCreated": "Created: {date}",
+  "@kanbanCreated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanUpdated": "Updated: {date}",
+  "@kanbanUpdated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanCompleted": "Completed: {date}",
+  "@kanbanCompleted": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanEditTask": "Edit Task",
+  "@kanbanEditTask": {},
+  "kanbanSave": "Save",
+  "@kanbanSave": {},
+  "kanbanCreate": "Create",
+  "@kanbanCreate": {},
+  "deviceSettings": "Device Settings",
+  "refreshSensors": "Refresh Sensors",
+  "documentsTitle": "Documents & Templates"
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/kanban_provider.dart';
 
 /// Bottom sheet showing full task details, subtasks, and history.
@@ -31,6 +32,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final task = widget.task;
 
     return DraggableScrollableSheet(
@@ -90,14 +92,14 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
               // Description
               if (task.description.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text('Description', style: theme.textTheme.titleMedium),
+                Text(l.kanbanDescription, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(task.description),
               ],
               // Result
               if (task.resultSummary.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text('Result', style: theme.textTheme.titleMedium),
+                Text(l.kanbanResult, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -111,7 +113,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
               // Subtasks
               if (task.subtasks.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text('Subtasks (${task.subtasks.length})', style: theme.textTheme.titleMedium),
+                Text(l.kanbanSubtasks(task.subtasks.length), style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 ...task.subtasks.map((sub) => ListTile(
                       leading: Icon(
@@ -127,12 +129,12 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
               ],
               // History
               const SizedBox(height: 16),
-              Text('History', style: theme.textTheme.titleMedium),
+              Text(l.kanbanHistory, style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               if (_loadingHistory)
                 const Center(child: CircularProgressIndicator())
               else if (_history.isEmpty)
-                const Text('No status changes yet.')
+                Text(l.kanbanNoHistory)
               else
                 ..._history.map((h) => ListTile(
                       leading: const Icon(Icons.history, size: 18),
@@ -142,13 +144,13 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                     )),
               // Metadata
               const SizedBox(height: 16),
-              Text('Metadata', style: theme.textTheme.titleMedium),
+              Text(l.kanbanMetadata, style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
-              Text('Source: ${task.source}', style: theme.textTheme.bodySmall),
-              Text('Created: ${task.createdAt}', style: theme.textTheme.bodySmall),
-              Text('Updated: ${task.updatedAt}', style: theme.textTheme.bodySmall),
+              Text(l.kanbanSource(task.source), style: theme.textTheme.bodySmall),
+              Text(l.kanbanCreated(task.createdAt), style: theme.textTheme.bodySmall),
+              Text(l.kanbanUpdated(task.updatedAt), style: theme.textTheme.bodySmall),
               if (task.completedAt.isNotEmpty)
-                Text('Completed: ${task.completedAt}', style: theme.textTheme.bodySmall),
+                Text(l.kanbanCompleted(task.completedAt), style: theme.textTheme.bodySmall),
               const SizedBox(height: 32),
             ],
           ),

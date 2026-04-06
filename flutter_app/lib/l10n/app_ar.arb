@@ -784,5 +784,46 @@
   "toolsWarning": "التغييرات تتطلب إعادة التشغيل",
   "kanbanNewTask": "مهمة جديدة",
   "kanbanMyTasks": "مهامي",
-  "kanbanLivePipeline": "خط الأنابيب المباشر"
+  "kanbanLivePipeline": "خط الأنابيب المباشر",
+  "kanbanDescription": "الوصف",
+  "kanbanResult": "النتيجة",
+  "kanbanSubtasks": "المهام الفرعية ({count})",
+  "@kanbanSubtasks": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kanbanHistory": "السجل",
+  "kanbanNoHistory": "لا توجد تغييرات في الحالة بعد.",
+  "kanbanMetadata": "البيانات الوصفية",
+  "kanbanSource": "المصدر: {source}",
+  "@kanbanSource": {
+    "placeholders": {
+      "source": {"type": "String"}
+    }
+  },
+  "kanbanCreated": "تم الإنشاء: {date}",
+  "@kanbanCreated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanUpdated": "تم التحديث: {date}",
+  "@kanbanUpdated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanCompleted": "تم الإكمال: {date}",
+  "@kanbanCompleted": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kanbanEditTask": "تعديل المهمة",
+  "kanbanSave": "حفظ",
+  "kanbanCreate": "إنشاء",
+  "deviceSettings": "إعدادات الجهاز",
+  "refreshSensors": "تحديث أجهزة الاستشعار",
+  "documentsTitle": "المستندات والقوالب"
 }
