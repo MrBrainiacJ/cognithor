@@ -349,7 +349,25 @@ class StartupChecker:
             log.debug("startup_ollama_running")
             return report
 
-        # Not running
+        # Check if using remote mode (config.ollama.mode or URL heuristic)
+        _ollama_mode = (
+            getattr(getattr(self._config, "ollama", None), "mode", "local")
+            if self._config
+            else "local"
+        )
+        _is_remote = _ollama_mode == "remote" or not any(
+            h in ollama_url for h in ("localhost", "127.0.0.1", "0.0.0.0", "::1")
+        )
+        if _is_remote:
+            # Remote server not reachable — warn but don't try to start locally
+            report.warnings.append(
+                f"Remote Ollama server at {ollama_url} not reachable. "
+                f"Check the server is running and the URL is correct."
+            )
+            log.warning("startup_remote_ollama_unreachable", url=ollama_url)
+            return report
+
+        # Not running (local mode)
         if not self._auto_install:
             # Without --auto-install: only warn, do not auto-start
             report.warnings.append(
@@ -359,7 +377,7 @@ class StartupChecker:
             log.warning("startup_ollama_not_running")
             return report
 
-        # Try to find and start it (only with explicit --auto-install)
+        # Try to find and start it locally (only with explicit --auto-install)
         ollama_path = self._find_ollama()
         if ollama_path is None:
             report.warnings.append("Ollama not found. Install from https://ollama.com/download")

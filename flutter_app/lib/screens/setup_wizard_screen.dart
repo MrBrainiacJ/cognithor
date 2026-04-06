@@ -209,8 +209,11 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     await prefs.setBool(SetupWizardScreen.prefKey, true);
 
     if (_selectedBackend == 'ollama') {
+      final ollamaUrl = _ollamaUrlController.text.trim();
+      final isLocal = ollamaUrl.contains('localhost') || ollamaUrl.contains('127.0.0.1');
       await prefs.setString('jarvis_server_url', 'http://localhost:8741');
-      await prefs.setString('ollama_url', _ollamaUrlController.text.trim());
+      await prefs.setString('ollama_url', ollamaUrl);
+      await prefs.setString('ollama_mode', isLocal ? 'local' : 'remote');
     }
 
     if (!mounted) return;
@@ -460,6 +463,23 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
         // Ollama
         if (_selectedBackend == 'ollama') ...[
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'local', label: Text('Local'), icon: Icon(Icons.computer)),
+              ButtonSegment(value: 'remote', label: Text('Remote API'), icon: Icon(Icons.cloud)),
+            ],
+            selected: {_ollamaUrlController.text.contains('localhost') || _ollamaUrlController.text.contains('127.0.0.1') ? 'local' : 'remote'},
+            onSelectionChanged: (s) {
+              setState(() {
+                if (s.first == 'local') {
+                  _ollamaUrlController.text = 'http://localhost:11434';
+                } else {
+                  _ollamaUrlController.text = 'http://';
+                }
+              });
+            },
+          ),
+          const SizedBox(height: 12),
           Text(l.ollamaUrl, style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           TextField(

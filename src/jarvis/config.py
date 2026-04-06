@@ -33,6 +33,10 @@ log = logging.getLogger(__name__)
 class OllamaConfig(BaseModel):
     """Ollama-Server Konfiguration."""
 
+    mode: str = Field(
+        default="local",
+        description="'local' = Ollama on this machine (auto-start), 'remote' = external API server",
+    )
     base_url: str = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
     timeout_seconds: int = Field(default=180, ge=10, le=1800)
     keep_alive: str = "30m"  # Wie lange Modelle im VRAM bleiben
