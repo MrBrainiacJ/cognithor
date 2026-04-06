@@ -46,6 +46,8 @@ async def _handle_update(engine: KanbanEngine, params: dict[str, Any]) -> str:
         engine.update_task(task_id, changed_by="agent", **updates)
 
     updated = engine.get_task(task_id)
+    if updated is None:
+        return f"Task {task_id} updated but no longer found"
     return f"Task updated: '{updated.title}' -> {updated.status.value}"
 
 

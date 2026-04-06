@@ -146,7 +146,7 @@ class KanbanEngine:
         if target == TaskStatus.DONE and task.parent_id:
             self._check_parent_completion(task.parent_id)
 
-        return self._store.get(task_id)
+        return self._store.get(task_id) or task  # fallback to pre-update task
 
     def delete_task(self, task_id: str) -> None:
         self._store.delete(task_id, cascade=True)

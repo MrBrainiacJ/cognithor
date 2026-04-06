@@ -534,18 +534,34 @@ class DeepLearner:
                         if exp_count > 0 and exp_count % 10 == 0:
                             try:
                                 from jarvis.evolution.cycle_controller import ExamResult
-                                exam_data = await self._quality_assessor.run_quality_test(plan)
-                                score = exam_data.get("score", 0.0) if isinstance(exam_data, dict) else 0.0
-                                exam = ExamResult(
-                                    score=score,
-                                    questions_total=exam_data.get("total", 10) if isinstance(exam_data, dict) else 10,
-                                    questions_passed=exam_data.get("passed", 0) if isinstance(exam_data, dict) else 0,
-                                    gaps=exam_data.get("gaps", []) if isinstance(exam_data, dict) else [],
-                                    expansion_count=exp_count,
-                                )
-                                state = self._cycle_controller.record_exam(plan.goal_slug, exam)
-                                if state.value == "mastered":
-                                    plan.status = "mastered"
+                                # Run quality test on passed subgoals and average scores
+                                passed_sgs = [sg for sg in plan.sub_goals if sg.status == "passed"]
+                                if passed_sgs:
+                                    scores = []
+                                    all_gaps: list[str] = []
+                                    total_q = 0
+                                    total_p = 0
+                                    for sg in passed_sgs[-5:]:  # Test last 5 to limit LLM calls
+                                        try:
+                                            exam_data = await self._quality_assessor.run_quality_test(sg, plan.goal_slug)
+                                            if isinstance(exam_data, dict):
+                                                scores.append(exam_data.get("score", 0.0))
+                                                total_q += exam_data.get("total", 0)
+                                                total_p += exam_data.get("passed", 0)
+                                                all_gaps.extend(exam_data.get("gaps", []))
+                                        except Exception:
+                                            pass
+                                    avg_score = sum(scores) / len(scores) if scores else 0.0
+                                    exam = ExamResult(
+                                        score=avg_score,
+                                        questions_total=total_q,
+                                        questions_passed=total_p,
+                                        gaps=list(set(all_gaps)),
+                                        expansion_count=exp_count,
+                                    )
+                                    state = self._cycle_controller.record_exam(plan.goal_slug, exam)
+                                    if state.value == "mastered":
+                                        plan.status = "mastered"
                             except Exception:
                                 log.debug("cycle_exam_failed", exc_info=True)
             # Setup cron schedules
