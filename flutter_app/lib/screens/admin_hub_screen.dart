@@ -16,6 +16,7 @@ import 'package:jarvis_ui/screens/learning_screen.dart';
 import 'package:jarvis_ui/screens/device_settings_screen.dart';
 import 'package:jarvis_ui/screens/teach_screen.dart';
 import 'package:jarvis_ui/screens/workflows_screen.dart';
+import 'package:jarvis_ui/screens/evolution_goals_page.dart';
 
 class AdminHubScreen extends StatefulWidget {
   const AdminHubScreen({super.key});
@@ -105,6 +106,12 @@ class _AdminHubScreenState extends State<AdminHubScreen> {
           title: 'Device',
           subtitle: 'Native device features & connection',
           builder: (_) => const DeviceSettingsScreen(),
+        ),
+        _AdminSection(
+          icon: Icons.psychology_alt_outlined,
+          title: 'Evolution',
+          subtitle: 'Goals, learning plans & journal',
+          builder: (_) => const EvolutionGoalsPage(),
         ),
       ];
 
