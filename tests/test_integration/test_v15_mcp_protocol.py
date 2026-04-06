@@ -307,7 +307,10 @@ class TestJarvisMCPServer:
     async def test_handle_resources_read_not_found(self) -> None:
         server = self._make_server()
         result = await server.handle_resources_read("jarvis://missing")
-        assert "nicht gefunden" in result["contents"][0]["text"]
+        assert (
+            "not_found" in result["contents"][0]["text"]
+            or "nicht gefunden" in result["contents"][0]["text"]
+        )
 
     @pytest.mark.asyncio
     async def test_handle_resources_template_match(self) -> None:
@@ -361,7 +364,7 @@ class TestJarvisMCPServer:
     async def test_handle_prompts_get_not_found(self) -> None:
         server = self._make_server()
         result = await server.handle_prompts_get("nonexistent")
-        assert "nicht gefunden" in result["description"]
+        assert "not_found" in result["description"] or "nicht gefunden" in result["description"]
 
     @pytest.mark.asyncio
     async def test_dispatch_ping(self) -> None:

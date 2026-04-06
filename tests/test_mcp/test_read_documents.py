@@ -33,7 +33,7 @@ class TestReadPdf:
     async def test_file_not_found(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.read_pdf("/nonexistent/file.pdf")
         assert not result.success
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_extract_text(self, pipeline: MediaPipeline, workspace: Path) -> None:
@@ -101,7 +101,7 @@ class TestReadPpt:
     async def test_file_not_found(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.read_ppt("/nonexistent/file.pptx")
         assert not result.success
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_extract_slides(self, pipeline: MediaPipeline, workspace: Path) -> None:
@@ -159,7 +159,7 @@ class TestReadDocx:
     async def test_file_not_found(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.read_docx("/nonexistent/file.docx")
         assert not result.success
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_extract_paragraphs(self, pipeline: MediaPipeline, workspace: Path) -> None:

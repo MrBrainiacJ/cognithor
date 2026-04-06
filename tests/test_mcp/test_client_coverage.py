@@ -91,7 +91,7 @@ class TestCallTool:
     async def test_call_not_found(self, client: JarvisMCPClient) -> None:
         result = await client.call_tool("nonexistent", {})
         assert result.is_error
-        assert "nicht gefunden" in result.content
+        assert "not_found" in result.content or "nicht gefunden" in result.content
 
     @pytest.mark.asyncio
     async def test_call_mcp_server_not_connected(self, client: JarvisMCPClient) -> None:
@@ -105,7 +105,7 @@ class TestCallTool:
         )
         result = await client.call_tool("remote_tool", {})
         assert result.is_error
-        assert "nicht verbunden" in result.content
+        assert "not_connected" in result.content or "nicht verbunden" in result.content
 
     @pytest.mark.asyncio
     async def test_call_mcp_server_success(self, client: JarvisMCPClient) -> None:

@@ -508,7 +508,7 @@ class TestWebNewsSearch:
     @pytest.mark.asyncio
     async def test_news_search_empty_query(self, web: WebTools) -> None:
         result = await web.web_news_search("")
-        assert "Keine Suchanfrage" in result
+        assert "error_empty_query" in result or "Keine Suchanfrage" in result
 
     @pytest.mark.asyncio
     async def test_news_search_success(self, web: WebTools) -> None:

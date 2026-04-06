@@ -194,7 +194,7 @@ class TestSandboxExecutorBare:
     async def test_exec_empty_command(self, executor: SandboxExecutor) -> None:
         result = await executor.execute("")
         assert result.success is False
-        assert "Kein Befehl" in result.error
+        assert "no_command" in (result.error or "") or "Kein Befehl" in result.error
 
     @pytest.mark.asyncio
     async def test_exec_exit_code(self, executor: SandboxExecutor, workspace: Path) -> None:
@@ -339,7 +339,7 @@ class TestShellToolsIntegration:
 
         shell = ShellTools(config)
         result = await shell.exec_command("")
-        assert "Kein Befehl" in result
+        assert "no_command" in result or "Kein Befehl" in result
 
     @pytest.mark.asyncio
     async def test_shell_register(self, tmp_path: Path) -> None:

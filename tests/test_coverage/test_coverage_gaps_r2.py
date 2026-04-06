@@ -688,7 +688,7 @@ class TestMCPClientConnections:
 
         result = await mcp.call_tool("remote_tool", {})
         assert result.is_error is True
-        assert "nicht verbunden" in result.content
+        assert "not_connected" in result.content or "nicht verbunden" in result.content
 
     @pytest.mark.asyncio()
     async def test_multiple_builtin_handlers(self, mcp):

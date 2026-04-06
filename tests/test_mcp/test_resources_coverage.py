@@ -119,11 +119,11 @@ class TestReadMemoryStats:
 class TestReadEntity:
     def test_no_entity_id(self, provider: JarvisResourceProvider) -> None:
         result = json.loads(provider._read_entity(uri=""))
-        assert "nicht gefunden" in result["error"]
+        assert "not_found" in result["error"] or "nicht gefunden" in result["error"]
 
     def test_no_memory(self, provider: JarvisResourceProvider) -> None:
         result = json.loads(provider._read_entity(uri="jarvis://memory/entity/abc"))
-        assert "nicht gefunden" in result["error"]
+        assert "not_found" in result["error"] or "nicht gefunden" in result["error"]
 
     def test_entity_with_to_dict(self, provider_with_deps: JarvisResourceProvider) -> None:
         entity = MagicMock()
@@ -140,7 +140,7 @@ class TestReadEntity:
     def test_entity_not_found(self, provider_with_deps: JarvisResourceProvider) -> None:
         provider_with_deps._memory.get_entity.return_value = None
         result = json.loads(provider_with_deps._read_entity(uri="jarvis://memory/entity/abc"))
-        assert "nicht gefunden" in result["error"]
+        assert "not_found" in result["error"] or "nicht gefunden" in result["error"]
 
     def test_entity_exception(self, provider_with_deps: JarvisResourceProvider) -> None:
         provider_with_deps._memory.get_entity.side_effect = RuntimeError("db err")

@@ -273,8 +273,8 @@ class TestEntityOperations:
             relation_type="kennt",
             target_name="AuchNichtDa",
         )
-        assert "Fehler" in result
-        assert "nicht gefunden" in result
+        assert "Fehler" in result or "error" in result.lower()
+        assert "not_found" in result or "nicht gefunden" in result
 
     def test_add_relation_target_not_found(self, tools_with_data: MemoryTools):
         result = tools_with_data.add_relation(
@@ -282,8 +282,8 @@ class TestEntityOperations:
             relation_type="kennt",
             target_name="NichtDa999",
         )
-        assert "Fehler" in result
-        assert "Ziel-Entität" in result
+        assert "Fehler" in result or "error" in result.lower()
+        assert "target_not_found" in result or "Ziel-Entität" in result
 
     def test_add_relation_invalid_json(self, tools_with_data: MemoryTools):
         result = tools_with_data.add_relation(

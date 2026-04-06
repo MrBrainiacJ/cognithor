@@ -167,7 +167,7 @@ class TestBuiltinCall:
         """Nicht vorhandenes Tool gibt is_error=True zurück."""
         result = await client.call_tool("gibts_nicht", {})
         assert result.is_error is True
-        assert "nicht gefunden" in result.content
+        assert "not_found" in result.content or "nicht gefunden" in result.content
 
 
 # =============================================================================

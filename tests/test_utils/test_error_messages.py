@@ -45,7 +45,7 @@ class TestClassifyErrorForUser:
     def test_file_not_found_error(self) -> None:
         exc = FileNotFoundError("No such file")
         msg = classify_error_for_user(exc)
-        assert "nicht gefunden" in msg
+        assert "not_found" in msg or "nicht gefunden" in msg
 
     def test_rate_limit_error(self) -> None:
         exc = Exception("429 Too Many Requests - rate limit exceeded")

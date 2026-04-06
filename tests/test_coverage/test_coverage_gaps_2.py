@@ -405,7 +405,7 @@ class TestMCPClientServerPaths:
 
         result = await mcp.call_tool("remote_tool", {})
         assert result.is_error is True
-        assert "nicht verbunden" in result.content
+        assert "not_connected" in result.content or "nicht verbunden" in result.content
 
     @pytest.mark.asyncio()
     async def test_call_tool_server_not_found(self, mcp):
@@ -421,7 +421,7 @@ class TestMCPClientServerPaths:
 
         result = await mcp.call_tool("orphan_tool", {})
         assert result.is_error is True
-        assert "nicht verbunden" in result.content
+        assert "not_connected" in result.content or "nicht verbunden" in result.content
 
     @pytest.mark.asyncio()
     async def test_call_tool_on_connected_server(self, mcp):

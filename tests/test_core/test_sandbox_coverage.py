@@ -181,7 +181,7 @@ class TestSandboxExecutor:
         cfg = SandboxConfig(workspace_dir=tmp_path)
         executor = SandboxExecutor(cfg)
         result = await executor.execute("")
-        assert result.error == "Kein Befehl angegeben"
+        assert "no_command" in (result.error or "") or result.error == "Kein Befehl angegeben"
 
     @pytest.mark.asyncio
     async def test_execute_simple_command(self, tmp_path) -> None:

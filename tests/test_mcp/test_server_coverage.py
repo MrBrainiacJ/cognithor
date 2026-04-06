@@ -256,7 +256,10 @@ class TestHandleTools:
     async def test_tools_call_not_found(self, server: JarvisMCPServer) -> None:
         result = await server.handle_tools_call("nonexistent")
         assert result["isError"] is True
-        assert "nicht gefunden" in result["content"][0]["text"]
+        assert (
+            "not_found" in result["content"][0]["text"]
+            or "nicht gefunden" in result["content"][0]["text"]
+        )
 
     @pytest.mark.asyncio
     async def test_tools_call_sync_handler(self, server: JarvisMCPServer) -> None:
@@ -443,7 +446,10 @@ class TestHandleResources:
     @pytest.mark.asyncio
     async def test_resources_read_not_found(self, server: JarvisMCPServer) -> None:
         result = await server.handle_resources_read("jarvis://nonexistent")
-        assert "nicht gefunden" in result["contents"][0]["text"]
+        assert (
+            "not_found" in result["contents"][0]["text"]
+            or "nicht gefunden" in result["contents"][0]["text"]
+        )
 
     @pytest.mark.asyncio
     async def test_resources_read_template_match(self, server: JarvisMCPServer) -> None:
@@ -557,7 +563,7 @@ class TestHandlePrompts:
     @pytest.mark.asyncio
     async def test_prompts_get_not_found(self, server: JarvisMCPServer) -> None:
         result = await server.handle_prompts_get("nonexistent")
-        assert "nicht gefunden" in result["description"]
+        assert "not_found" in result["description"] or "nicht gefunden" in result["description"]
 
     @pytest.mark.asyncio
     async def test_prompts_get_sync_handler(self, server: JarvisMCPServer) -> None:

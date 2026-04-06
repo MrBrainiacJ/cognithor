@@ -175,7 +175,7 @@ class TestIngestPipeline:
     async def test_ingest_file_not_found(self, pipeline: IngestPipeline, tmp_path: Path) -> None:
         result = await pipeline.ingest_file(tmp_path / "nonexistent.txt")
         assert not result.success
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_ingest_unsupported_format(

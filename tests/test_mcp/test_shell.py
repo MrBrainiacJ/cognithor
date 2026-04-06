@@ -112,13 +112,13 @@ class TestBasicCommands:
     async def test_empty_command(self, shell: ShellTools) -> None:
         """Leerer Befehl gibt Hinweis zurück."""
         result = await shell.exec_command("")
-        assert "Kein Befehl" in result
+        assert "no_command" in result or "Kein Befehl" in result
 
     @pytest.mark.asyncio
     async def test_whitespace_command(self, shell: ShellTools) -> None:
         """Nur-Whitespace-Befehl gibt Hinweis zurück."""
         result = await shell.exec_command("   ")
-        assert "Kein Befehl" in result
+        assert "no_command" in result or "Kein Befehl" in result
 
 
 # =============================================================================

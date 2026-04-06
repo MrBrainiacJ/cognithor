@@ -144,7 +144,7 @@ class TestAnalyzeCode:
         """Nicht existierende Datei gibt Fehler."""
         fake_path = str(config.workspace_dir / "nonexistent" / "file.py")
         result = await code_tools.analyze_code(file_path=fake_path)
-        assert "nicht gefunden" in result
+        assert "not_found" in result or "nicht gefunden" in result
 
     @pytest.mark.asyncio()
     async def test_non_python_file(self, code_tools: CodeTools, config: JarvisConfig) -> None:

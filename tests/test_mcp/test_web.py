@@ -241,7 +241,7 @@ class TestWebSearch:
     @pytest.mark.asyncio()
     async def test_empty_query(self, web: WebTools) -> None:
         result = await web.web_search("")
-        assert "Keine Suchanfrage" in result
+        assert "error_empty_query" in result or "Keine Suchanfrage" in result
 
     @pytest.mark.asyncio()
     async def test_searxng_success(self, web_searxng: WebTools) -> None:

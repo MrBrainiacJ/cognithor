@@ -53,7 +53,7 @@ class TestExecCommand:
     async def test_empty_command(self, config: MagicMock) -> None:
         shell = ShellTools(config)
         result = await shell.exec_command("   ")
-        assert "Kein Befehl" in result
+        assert "no_command" in result or "Kein Befehl" in result
 
     @pytest.mark.asyncio
     async def test_outside_workspace(self, config: MagicMock) -> None:

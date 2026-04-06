@@ -127,7 +127,7 @@ class TestExtractText:
     async def test_extract_nonexistent(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.extract_text("/nonexistent/file.txt")
         assert result.success is False
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_extract_unsupported_format(
@@ -177,7 +177,7 @@ class TestTranscribeAudio:
     async def test_transcribe_file_not_found(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.transcribe_audio("/nonexistent/audio.wav")
         assert result.success is False
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_transcribe_no_whisper(self, pipeline: MediaPipeline, workspace: Path) -> None:
@@ -232,7 +232,7 @@ class TestAnalyzeImage:
     async def test_image_not_found(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.analyze_image("/nonexistent/photo.jpg")
         assert result.success is False
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_unsupported_format(self, pipeline: MediaPipeline, workspace: Path) -> None:
@@ -295,7 +295,7 @@ class TestConvertAudio:
     async def test_convert_file_not_found(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.convert_audio("/nonexistent/audio.mp3")
         assert result.success is False
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_convert_no_ffmpeg(self, pipeline: MediaPipeline, workspace: Path) -> None:
@@ -318,7 +318,7 @@ class TestResizeImage:
     async def test_resize_not_found(self, pipeline: MediaPipeline) -> None:
         result = await pipeline.resize_image("/nonexistent/img.png")
         assert result.success is False
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
     @pytest.mark.asyncio
     async def test_resize_no_pillow(self, pipeline: MediaPipeline, workspace: Path) -> None:

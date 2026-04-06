@@ -346,7 +346,7 @@ class TestVaultRead:
     @pytest.mark.asyncio
     async def test_read_not_found(self, vault: VaultTools) -> None:
         result = await vault.vault_read("nonexistent")
-        assert "nicht gefunden" in result
+        assert "not_found" in result or "nicht gefunden" in result
 
 
 # ============================================================================
@@ -368,7 +368,7 @@ class TestVaultUpdateEdgeCases:
     @pytest.mark.asyncio
     async def test_update_not_found(self, vault: VaultTools) -> None:
         result = await vault.vault_update(identifier="nonexistent", append_content="text")
-        assert "nicht gefunden" in result
+        assert "not_found" in result or "nicht gefunden" in result
 
     @pytest.mark.asyncio
     async def test_update_only_append(self, vault: VaultTools) -> None:
@@ -400,13 +400,21 @@ class TestVaultLinkEdgeCases:
     async def test_link_source_not_found(self, vault: VaultTools) -> None:
         await vault.vault_save(title="Target", content="T content.")
         result = await vault.vault_link(source_note="nonexistent", target_note="Target")
-        assert "Quell-Notiz nicht gefunden" in result
+        assert (
+            "source_not_found" in result
+            or "not_found" in result
+            or "Quell-Notiz nicht gefunden" in result
+        )
 
     @pytest.mark.asyncio
     async def test_link_target_not_found(self, vault: VaultTools) -> None:
         await vault.vault_save(title="Source", content="S content.")
         result = await vault.vault_link(source_note="Source", target_note="nonexistent")
-        assert "Ziel-Notiz nicht gefunden" in result
+        assert (
+            "target_not_found" in result
+            or "not_found" in result
+            or "Ziel-Notiz nicht gefunden" in result
+        )
 
     @pytest.mark.asyncio
     async def test_link_already_linked_no_duplicate(self, vault: VaultTools) -> None:

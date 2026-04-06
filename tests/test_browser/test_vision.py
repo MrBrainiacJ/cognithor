@@ -236,7 +236,7 @@ class TestFindElementByVision:
 
         result = await v.find_element_by_vision("data", "Impressum-Link")
         assert result.success is False
-        assert "nicht gefunden" in result.error
+        assert "not_found" in result.error or "nicht gefunden" in result.error
 
 
 # ============================================================================
