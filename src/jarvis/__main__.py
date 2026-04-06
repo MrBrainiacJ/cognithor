@@ -747,6 +747,20 @@ def main() -> None:
                 except Exception:
                     log.debug("kanban_api_registration_failed", exc_info=True)
 
+                # Evolution Engine API
+                try:
+                    if hasattr(gateway, "_goal_manager") and gateway._goal_manager is not None:
+                        from jarvis.evolution.api import create_evolution_router
+                        api_app.include_router(create_evolution_router(
+                            goal_manager=gateway._goal_manager,
+                            journal=getattr(gateway, "_atl_journal", None),
+                            deep_learner=getattr(gateway, "_deep_learner", None),
+                            cycle_controller=getattr(gateway._deep_learner, "_cycle_controller", None) if hasattr(gateway, "_deep_learner") and gateway._deep_learner else None,
+                        ))
+                        log.info("evolution_api_registered")
+                except Exception:
+                    log.debug("evolution_api_registration_failed", exc_info=True)
+
                 # ── WebSocket Chat-Endpoint ──────────────────────────────
                 import json as _json
 

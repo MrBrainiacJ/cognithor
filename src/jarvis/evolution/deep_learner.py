@@ -102,6 +102,7 @@ class DeepLearner:
         self._config = config
         self._idle_detector = idle_detector
         self._operation_mode = operation_mode
+        self._cycle_controller: Any = None  # set by gateway
 
     # ------------------------------------------------------------------
     # Plan CRUD
@@ -514,14 +515,39 @@ class DeepLearner:
         all_done = all(sg.status in ("passed", "failed") for sg in plan.sub_goals)
         if all_done:
             if getattr(self._config, "auto_expand", True):
-                expansions = await self._horizon_scanner.scan(plan)
-                if expansions:
-                    new_context = "\n".join(
-                        f"- {e['title']}: {e.get('reason', '')}" for e in expansions
-                    )
-                    plan = await self._strategy_planner.replan(plan, new_context)
-                    plan.expansions.extend(e["title"] for e in expansions)
-                    log.info("deep_learner_horizon_expanded", count=len(expansions))
+                # CycleController: check if we should skip (stagnating/mastered)
+                if self._cycle_controller and self._cycle_controller.should_skip_cycle(plan.goal_slug):
+                    log.info("deep_learner_cycle_skipped", plan=plan.goal_slug)
+                else:
+                    expansions = await self._horizon_scanner.scan(plan)
+                    if expansions:
+                        new_context = "\n".join(
+                            f"- {e['title']}: {e.get('reason', '')}" for e in expansions
+                        )
+                        plan = await self._strategy_planner.replan(plan, new_context)
+                        plan.expansions.extend(e["title"] for e in expansions)
+                        log.info("deep_learner_horizon_expanded", count=len(expansions))
+                    # CycleController: track expansions, trigger exam every 10
+                    if self._cycle_controller and expansions:
+                        exp_count = len(getattr(plan, "expansions", []))
+                        self._cycle_controller.after_expansion(plan.goal_slug, exp_count)
+                        if exp_count > 0 and exp_count % 10 == 0:
+                            try:
+                                from jarvis.evolution.cycle_controller import ExamResult
+                                exam_data = await self._quality_assessor.run_quality_test(plan)
+                                score = exam_data.get("score", 0.0) if isinstance(exam_data, dict) else 0.0
+                                exam = ExamResult(
+                                    score=score,
+                                    questions_total=exam_data.get("total", 10) if isinstance(exam_data, dict) else 10,
+                                    questions_passed=exam_data.get("passed", 0) if isinstance(exam_data, dict) else 0,
+                                    gaps=exam_data.get("gaps", []) if isinstance(exam_data, dict) else [],
+                                    expansion_count=exp_count,
+                                )
+                                state = self._cycle_controller.record_exam(plan.goal_slug, exam)
+                                if state.value == "mastered":
+                                    plan.status = "mastered"
+                            except Exception:
+                                log.debug("cycle_exam_failed", exc_info=True)
             # Setup cron schedules
             if plan.schedules:
                 await self._schedule_manager.create_schedules(plan)

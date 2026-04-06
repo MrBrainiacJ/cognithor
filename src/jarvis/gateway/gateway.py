@@ -764,6 +764,15 @@ class Gateway:
                         self._deep_learner._entity_llm_fn = _entity_llm_call
 
                     log.info("deep_learner_initialized")
+
+                    # CycleController for autonomous exam-based learning
+                    try:
+                        from jarvis.evolution.cycle_controller import CycleController
+                        _cycle_ctrl = CycleController(plans_dir=self._config.jarvis_home / "evolution" / "plans")
+                        self._deep_learner._cycle_controller = _cycle_ctrl
+                        log.info("cycle_controller_initialized")
+                    except Exception:
+                        log.debug("cycle_controller_init_failed", exc_info=True)
                 except Exception:
                     log.debug("deep_learner_init_failed", exc_info=True)
 
