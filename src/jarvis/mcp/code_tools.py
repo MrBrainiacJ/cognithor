@@ -23,6 +23,7 @@ from jarvis.core.sandbox import (
     SandboxExecutor,
     SandboxLevel,
 )
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -126,13 +127,14 @@ class CodeTools:
             timeout = self._default_timeout
 
         if not code.strip():
-            return "Kein Code angegeben."
+            return t("code.no_code")
 
         code_size = len(code.encode("utf-8"))
         if code_size > self._max_code_size:
-            return (
-                f"Code zu gross ({code_size / 1_048_576:.1f} MB, "
-                f"max {self._max_code_size / 1_048_576:.0f} MB)"
+            return t(
+                "code.too_large",
+                size=f"{code_size / 1_048_576:.1f}",
+                max=f"{self._max_code_size / 1_048_576:.0f}",
             )
 
         # GUI-Erkennung: headless-Modus aktivieren wenn GUI-Bibliotheken erkannt
@@ -155,10 +157,7 @@ class CodeTools:
         try:
             cwd_path.relative_to(workspace_root)
         except ValueError:
-            return (
-                f"Zugriff verweigert: Arbeitsverzeichnis '{cwd}' liegt ausserhalb "
-                f"des Workspace ({workspace_root})"
-            )
+            return t("code.working_dir_denied", cwd=cwd, root=workspace_root)
         cwd_path.mkdir(parents=True, exist_ok=True)
 
         # Temp-Datei erstellen
@@ -210,18 +209,9 @@ class CodeTools:
             output = result.output
             if _is_gui:
                 if result.exit_code == 0 or result.timed_out:
-                    output += (
-                        "\n[Headless-Test OK] GUI-App startet fehlerfrei im "
-                        "Dummy-Modus. Der User kann sie mit Grafik starten."
-                    )
+                    output += "\n" + t("code.headless_ok")
                 else:
-                    output += (
-                        "\n[Headless-Test FEHLER] Exit-Code: "
-                        f"{result.exit_code}. Die GUI-App crashed beim Start. "
-                        "AKTION ERFORDERLICH: Analysiere den Fehler oben, "
-                        "korrigiere den Code mit write_file und teste erneut "
-                        "mit run_python. Wiederhole bis der Test OK ist."
-                    )
+                    output += "\n" + t("code.headless_error", exit_code=result.exit_code)
             return output
 
         finally:
@@ -250,7 +240,7 @@ class CodeTools:
             Strukturierter Analyse-Bericht als Text.
         """
         if not code and not file_path:
-            return "Fehler: Entweder 'code' oder 'file_path' muss angegeben werden."
+            return t("code.no_input")
 
         # Code aus Datei laden wenn noetig
         source = code
@@ -263,18 +253,15 @@ class CodeTools:
                 try:
                     path.relative_to(workspace_root)
                 except ValueError:
-                    return (
-                        f"Zugriff verweigert: '{file_path}' liegt außerhalb "
-                        f"des Workspace ({workspace_root})"
-                    )
+                    return t("code.file_access_denied", file_path=file_path, root=workspace_root)
                 if not path.exists():
-                    return f"Fehler: Datei '{file_path}' nicht gefunden."
+                    return t("code.file_not_found", file_path=file_path)
                 if path.suffix != ".py":
-                    return "Fehler: Nur Python-Dateien (.py) werden unterstützt."
+                    return t("code.only_python")
                 source = path.read_text(encoding="utf-8")
                 source_name = str(path)
             except (OSError, UnicodeDecodeError) as e:
-                return f"Fehler beim Lesen der Datei: {e}"
+                return t("code.file_read_error", exc=e)
 
         # 1. Code-Smell-Analyse
         from jarvis.tools.code_analyzer import CodeSmellDetector

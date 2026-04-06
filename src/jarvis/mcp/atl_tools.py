@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -78,7 +79,7 @@ async def atl_goals(
     if action == "list":
         goals = _goal_manager.active_goals()
         if not goals:
-            return "Keine aktiven Ziele."
+            return t("tools.atl_no_goals")
         lines: list[str] = []
         for g in goals:
             lines.append(f"- {g.id}: {g.title} ({g.progress:.0%}) [P{g.priority}, {g.source}]")
@@ -89,32 +90,32 @@ async def atl_goals(
 
     if action == "add":
         if not title:
-            return "Fehler: 'title' ist erforderlich."
+            return t("tools.atl_title_required")
         from jarvis.evolution.goal_manager import Goal
 
         goal = Goal(title=title, description=description or title, priority=3, source="user")
         _goal_manager.add_goal(goal)
-        return f"Ziel erstellt: {goal.id} -- {goal.title}"
+        return t("tools.atl_goal_created", id=goal.id, title=goal.title)
 
     if action == "pause" and goal_id:
         if not _goal_manager.get_goal(goal_id):
-            return f"Fehler: Ziel '{goal_id}' nicht gefunden."
+            return t("tools.atl_goal_not_found", id=goal_id)
         _goal_manager.pause_goal(goal_id)
-        return f"Ziel {goal_id} pausiert."
+        return t("tools.atl_goal_paused", id=goal_id)
 
     if action == "resume" and goal_id:
         if not _goal_manager.get_goal(goal_id):
-            return f"Fehler: Ziel '{goal_id}' nicht gefunden."
+            return t("tools.atl_goal_not_found", id=goal_id)
         _goal_manager.resume_goal(goal_id)
-        return f"Ziel {goal_id} fortgesetzt."
+        return t("tools.atl_goal_resumed", id=goal_id)
 
     if action == "complete" and goal_id:
         if not _goal_manager.get_goal(goal_id):
-            return f"Fehler: Ziel '{goal_id}' nicht gefunden."
+            return t("tools.atl_goal_not_found", id=goal_id)
         _goal_manager.complete_goal(goal_id)
-        return f"Ziel {goal_id} abgeschlossen."
+        return t("tools.atl_goal_completed", id=goal_id)
 
-    return f"Unbekannte Aktion: {action}"
+    return t("tools.atl_unknown_action", action=action)
 
 
 async def atl_journal(days: int = 1, **_kwargs: Any) -> str:
@@ -124,11 +125,11 @@ async def atl_journal(days: int = 1, **_kwargs: Any) -> str:
 
     if days <= 1:
         content = _atl_journal.today()
-        return content or "Kein Journal-Eintrag fuer heute."
+        return content or t("tools.atl_no_journal_today")
 
     entries = _atl_journal.recent(days=days)
     if not entries:
-        return f"Keine Journal-Eintraege der letzten {days} Tage."
+        return t("tools.atl_no_journal_days", days=days)
     return "\n\n---\n\n".join(entries)
 
 

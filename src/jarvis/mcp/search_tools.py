@@ -19,6 +19,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -85,15 +86,14 @@ class SearchTools:
         try:
             path = Path(path_str).expanduser().resolve()
         except (ValueError, OSError) as exc:
-            raise SearchToolsError(f"Ungueltiger Pfad: {path_str}") from exc
+            raise SearchToolsError(t("tools.search_invalid_path", path=path_str)) from exc
 
         workspace_root = self._workspace.expanduser().resolve()
         try:
             path.relative_to(workspace_root)
         except ValueError as exc:
             raise SearchToolsError(
-                f"Zugriff verweigert: '{path_str}' liegt ausserhalb "
-                f"des Workspace ({workspace_root})"
+                t("tools.search_access_denied", path=path_str, root=workspace_root)
             ) from exc
 
         return path
@@ -195,17 +195,17 @@ class SearchTools:
             Liste der gefundenen Dateien (relativ zum Workspace).
         """
         if not pattern or not pattern.strip():
-            return "Fehler: Such-Pattern ist erforderlich."
+            return t("tools.search_pattern_required")
 
         root = self._get_search_root(path or None)
         workspace_root = self._workspace.expanduser().resolve()
         max_results = max(1, min(max_results, 10000))
 
         if not root.exists():
-            return f"Verzeichnis nicht gefunden: {root}"
+            return t("tools.search_dir_not_found", root=root)
 
         if not root.is_dir():
-            return f"Kein Verzeichnis: {root}"
+            return t("tools.search_not_a_dir", root=root)
 
         # Verwende pathlib.glob fuer rekursive Suche
         matches: list[str] = []
@@ -225,19 +225,16 @@ class SearchTools:
                 if len(matches) >= max_results:
                     break
         except (OSError, ValueError) as exc:
-            return f"Fehler bei der Suche: {exc}"
+            return t("tools.search_error", exc=exc)
 
         if not matches:
-            return f"Keine Dateien gefunden fuer Pattern: '{pattern}'"
+            return t("tools.search_no_files", pattern=pattern)
 
         total_note = ""
         if len(matches) >= max_results:
-            total_note = (
-                f"\n\n(Ergebnis auf {max_results} begrenzt"
-                " -- es gibt moeglicherweise weitere Treffer)"
-            )
+            total_note = t("tools.search_result_limited", count=max_results)
 
-        header = f"Gefunden: {len(matches)} Datei(en) fuer '{pattern}'\n"
+        header = t("tools.search_found_files", count=len(matches), pattern=pattern) + "\n"
         file_list = "\n".join(f"  {m}" for m in sorted(matches))
 
         return header + file_list + total_note
@@ -265,7 +262,7 @@ class SearchTools:
             Treffer mit Datei:Zeile und Kontext.
         """
         if not query or not query.strip():
-            return "Fehler: Suchbegriff ist erforderlich."
+            return t("tools.search_query_required")
 
         root = self._get_search_root(path or None)
         workspace_root = self._workspace.expanduser().resolve()
@@ -273,13 +270,13 @@ class SearchTools:
         context_lines = max(0, min(context_lines, 10))
 
         if not root.exists():
-            return f"Verzeichnis nicht gefunden: {root}"
+            return t("tools.search_dir_not_found", root=root)
 
         # Regex kompilieren oder escaped Pattern erstellen
         try:
             search_pattern = re.compile(query) if regex else re.compile(re.escape(query))
         except re.error as exc:
-            return f"Ungueltiges Regex-Pattern: {exc}"
+            return t("tools.search_invalid_regex", exc=exc)
 
         # Dateien sammeln
         file_glob = glob.strip() if glob else None
@@ -352,13 +349,13 @@ class SearchTools:
                 break
 
         if not results:
-            return f"Keine Treffer fuer: '{query}'"
+            return t("tools.search_no_matches", query=query)
 
         total_note = ""
         if len(results) >= max_results:
-            total_note = f"\n\n(Ergebnis auf {max_results} Treffer begrenzt)"
+            total_note = t("tools.search_matches_limited", count=max_results)
 
-        header = f"Suche nach '{query}' -- {files_with_matches} Datei(en) mit Treffern\n"
+        header = t("tools.search_matches_header", query=query, count=files_with_matches) + "\n"
         return header + "\n".join(results) + total_note
 
     async def find_and_replace(
@@ -384,19 +381,19 @@ class SearchTools:
             Liste der Aenderungen (oder Vorschau im dry_run-Modus).
         """
         if not query or not query.strip():
-            return "Fehler: Suchbegriff ist erforderlich."
+            return t("tools.search_query_required")
 
         root = self._get_search_root(path or None)
         workspace_root = self._workspace.expanduser().resolve()
 
         if not root.exists():
-            return f"Verzeichnis nicht gefunden: {root}"
+            return t("tools.search_dir_not_found", root=root)
 
         # Pattern kompilieren
         try:
             search_pattern = re.compile(query) if regex else re.compile(re.escape(query))
         except re.error as exc:
-            return f"Ungueltiges Regex-Pattern: {exc}"
+            return t("tools.search_invalid_regex", exc=exc)
 
         # Dateien sammeln
         file_glob = glob.strip() if glob else None
@@ -467,20 +464,23 @@ class SearchTools:
                         changes.append(f"  {rel_path}: FEHLER beim Schreiben: {exc}")
 
         if not changes:
-            return f"Keine Treffer fuer: '{query}'"
+            return t("tools.search_no_matches", query=query)
 
         if dry_run:
-            header = (
-                f"[DRY RUN] Vorschau -- '{query}' -> '{replacement}'\n"
-                f"Betroffene Dateien: {len([c for c in changes if c.startswith('\\n')])}\n"
-                f"Setze dry_run=false um die Aenderungen durchzufuehren.\n"
+            affected = len([c for c in changes if c.startswith("\n")])
+            header = t(
+                "tools.search_dry_run_header",
+                query=query,
+                replacement=replacement,
+                count=affected,
             )
         else:
-            header = (
-                f"Ersetzung abgeschlossen: '{query}' -> '{replacement}'\n"
-                f"Dateien geaendert: {files_changed}\n"
-                f"Gesamte Ersetzungen: {total_replacements}\n"
-                f"Backups erstellt (.bak)\n"
+            header = t(
+                "tools.search_replace_done_header",
+                query=query,
+                replacement=replacement,
+                files=files_changed,
+                total=total_replacements,
             )
 
         log.info(

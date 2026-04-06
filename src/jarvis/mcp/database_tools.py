@@ -25,6 +25,7 @@ from jarvis.security.encrypted_db import (
     OperationalError as _EncryptedOperationalError,
     encrypted_connect,
 )
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -154,7 +155,7 @@ class DatabaseTools:
         try:
             path = Path(path_str).expanduser().resolve()
         except (ValueError, OSError) as exc:
-            raise DatabaseError(f"Ungueltiger Pfad: {path_str}") from exc
+            raise DatabaseError(t("tools.db_invalid_path", path=path_str)) from exc
 
         for root in self._allowed_roots:
             try:
@@ -164,8 +165,11 @@ class DatabaseTools:
                 continue
 
         raise DatabaseError(
-            f"Zugriff verweigert: {path_str} liegt ausserhalb erlaubter Verzeichnisse "
-            f"({', '.join(str(r) for r in self._allowed_roots)})"
+            t(
+                "tools.db_access_denied",
+                path=path_str,
+                roots=", ".join(str(r) for r in self._allowed_roots),
+            )
         )
 
     # ------------------------------------------------------------------ #
@@ -175,7 +179,7 @@ class DatabaseTools:
     def _sqlite_connect(self, db_path: Path, *, read_only: bool = False) -> sqlite3.Connection:
         """Open a SQLite connection with timeout and optional read-only pragma."""
         if not db_path.exists():
-            raise DatabaseError(f"Datenbank nicht gefunden: {db_path}")
+            raise DatabaseError(t("tools.db_not_found", path=str(db_path)))
         conn = encrypted_connect(str(db_path), timeout=_CONN_TIMEOUT)
         if read_only:
             conn.execute("PRAGMA query_only = ON")
@@ -218,8 +222,8 @@ class DatabaseTools:
             return table
         except _EncryptedOperationalError as exc:
             if "interrupted" in str(exc).lower():
-                raise DatabaseError(f"Query-Timeout nach {_QUERY_TIMEOUT_S}s") from exc
-            raise DatabaseError(f"SQL-Fehler: {exc}") from exc
+                raise DatabaseError(t("tools.db_query_timeout", seconds=_QUERY_TIMEOUT_S)) from exc
+            raise DatabaseError(t("tools.db_sql_error", exc=exc)) from exc
         finally:
             conn.close()
 
@@ -229,15 +233,15 @@ class DatabaseTools:
         try:
             if table:
                 if not _SAFE_IDENTIFIER_RE.match(table):
-                    raise DatabaseError(f"Ungueltiger Tabellenname: {table!r}")
+                    raise DatabaseError(t("tools.db_invalid_table", table=repr(table)))
                 safe_table = f"[{table}]"
                 # Detailed column info for a specific table
                 cursor = conn.execute(f"PRAGMA table_info({safe_table})")
                 cols = cursor.fetchall()
                 if not cols:
-                    raise DatabaseError(f"Tabelle nicht gefunden: {table}")
+                    raise DatabaseError(t("tools.db_table_not_found", table=table))
 
-                lines = [f"Schema fuer Tabelle: {table}", ""]
+                lines = [t("tools.db_schema_table_header", table=table), ""]
                 lines.append(
                     f"{'Name':<30} {'Type':<15} {'Nullable':<10} {'PK':<5} {'Default':<20}"
                 )
@@ -272,9 +276,9 @@ class DatabaseTools:
                 )
                 objects = cursor.fetchall()
                 if not objects:
-                    return "Keine Tabellen oder Views gefunden."
+                    return t("tools.db_no_tables")
 
-                lines = ["Datenbank-Schema:", ""]
+                lines = [t("tools.db_schema_header"), ""]
                 current_type = ""
                 for name, obj_type in objects:
                     if obj_type != current_type:
@@ -306,7 +310,7 @@ class DatabaseTools:
         # Block DROP statements at this level too (defence in depth)
         sql_upper = sql.strip().upper()
         if sql_upper.startswith("DROP "):
-            raise DatabaseError("DROP-Anweisungen sind blockiert. Bitte manuell ausfuehren.")
+            raise DatabaseError(t("tools.db_drop_blocked"))
 
         conn = self._sqlite_connect(db_path, read_only=False)
         try:
@@ -322,18 +326,18 @@ class DatabaseTools:
             cursor = conn.execute(sql, params or [])
             conn.commit()
             rows_affected = cursor.rowcount
-            return f"Erfolgreich. {rows_affected} Zeile(n) betroffen."
+            return t("tools.db_rows_affected", count=rows_affected)
         except _EncryptedOperationalError as exc:
             if "interrupted" in str(exc).lower():
-                raise DatabaseError(f"Query-Timeout nach {_QUERY_TIMEOUT_S}s") from exc
-            raise DatabaseError(f"SQL-Fehler: {exc}") from exc
+                raise DatabaseError(t("tools.db_query_timeout", seconds=_QUERY_TIMEOUT_S)) from exc
+            raise DatabaseError(t("tools.db_sql_error", exc=exc)) from exc
         finally:
             conn.close()
 
     def _sqlite_connect_info(self, db_path: Path) -> str:
         """Return connection info for a SQLite database (sync)."""
         if not db_path.exists():
-            raise DatabaseError(f"Datenbank nicht gefunden: {db_path}")
+            raise DatabaseError(t("tools.db_not_found", path=str(db_path)))
 
         conn = self._sqlite_connect(db_path, read_only=True)
         try:
@@ -355,7 +359,7 @@ class DatabaseTools:
             size_str = f"{size_bytes / 1_048_576:.1f} MB"
 
         lines = [
-            "Datenbankverbindung erfolgreich.",
+            t("tools.db_conn_success"),
             "",
             "  Typ:       SQLite",
             f"  Version:   {version}",
@@ -390,9 +394,9 @@ class DatabaseTools:
                 timeout=_CONN_TIMEOUT,
             )
         except TimeoutError as exc:
-            raise DatabaseError(f"Verbindungs-Timeout nach {_CONN_TIMEOUT}s") from exc
+            raise DatabaseError(t("tools.db_conn_timeout", seconds=_CONN_TIMEOUT)) from exc
         except Exception as exc:
-            raise DatabaseError(f"Verbindungsfehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_conn_error", exc=exc)) from exc
 
         try:
             await conn.execute(f"SET statement_timeout = {_QUERY_TIMEOUT_S * 1000}")
@@ -419,7 +423,7 @@ class DatabaseTools:
                 table += f" (showing first {limit}, more rows available)"
             return table
         except Exception as exc:
-            raise DatabaseError(f"SQL-Fehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_sql_error", exc=exc)) from exc
         finally:
             await conn.close()
 
@@ -434,15 +438,12 @@ class DatabaseTools:
         try:
             import psycopg2  # type: ignore[import-untyped]
         except ImportError as exc:
-            raise DatabaseError(
-                "PostgreSQL nicht verfuegbar. Installiere: pip install asyncpg "
-                "oder pip install psycopg2-binary"
-            ) from exc
+            raise DatabaseError(t("tools.db_pg_unavailable")) from exc
 
         try:
             conn = psycopg2.connect(connstr, connect_timeout=_CONN_TIMEOUT)
         except Exception as exc:
-            raise DatabaseError(f"Verbindungsfehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_conn_error", exc=exc)) from exc
 
         try:
             conn.set_session(readonly=True)
@@ -458,7 +459,7 @@ class DatabaseTools:
             table = _format_table(columns, rows, len(rows))
             return table
         except Exception as exc:
-            raise DatabaseError(f"SQL-Fehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_sql_error", exc=exc)) from exc
         finally:
             conn.close()
 
@@ -472,16 +473,14 @@ class DatabaseTools:
 
                 return self._pg_psycopg2_schema(connstr, table)
             except ImportError as exc:
-                raise DatabaseError(
-                    "PostgreSQL nicht verfuegbar. Installiere: pip install asyncpg"
-                ) from exc
+                raise DatabaseError(t("tools.db_pg_unavailable")) from exc
 
         try:
             conn = await asyncio.wait_for(asyncpg.connect(connstr), timeout=_CONN_TIMEOUT)
         except TimeoutError as exc:
-            raise DatabaseError(f"Verbindungs-Timeout nach {_CONN_TIMEOUT}s") from exc
+            raise DatabaseError(t("tools.db_conn_timeout", seconds=_CONN_TIMEOUT)) from exc
         except Exception as exc:
-            raise DatabaseError(f"Verbindungsfehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_conn_error", exc=exc)) from exc
 
         try:
             if table:
@@ -492,7 +491,7 @@ class DatabaseTools:
                     table,
                 )
                 if not records:
-                    raise DatabaseError(f"Tabelle nicht gefunden: {table}")
+                    raise DatabaseError(t("tools.db_table_not_found", table=table))
 
                 # Get primary key columns
                 pk_records = await conn.fetch(
@@ -503,7 +502,7 @@ class DatabaseTools:
                 )
                 pk_cols = {r["attname"] for r in pk_records}
 
-                lines = [f"Schema fuer Tabelle: {table}", ""]
+                lines = [t("tools.db_schema_table_header", table=table), ""]
                 lines.append(
                     f"{'Name':<30} {'Type':<20} {'Nullable':<10} {'PK':<5} {'Default':<30}"
                 )
@@ -523,9 +522,9 @@ class DatabaseTools:
                     "WHERE table_schema = 'public' ORDER BY table_type, table_name"
                 )
                 if not records:
-                    return "Keine Tabellen oder Views gefunden."
+                    return t("tools.db_no_tables")
 
-                lines = ["Datenbank-Schema:", ""]
+                lines = [t("tools.db_schema_header"), ""]
                 for rec in records:
                     lines.append(f"  - {rec['table_name']} ({rec['table_type']})")
                 return "\n".join(lines)
@@ -548,9 +547,9 @@ class DatabaseTools:
                 )
                 rows = cursor.fetchall()
                 if not rows:
-                    raise DatabaseError(f"Tabelle nicht gefunden: {table}")
+                    raise DatabaseError(t("tools.db_table_not_found", table=table))
 
-                lines = [f"Schema fuer Tabelle: {table}", ""]
+                lines = [t("tools.db_schema_table_header", table=table), ""]
                 lines.append(f"{'Name':<30} {'Type':<20} {'Nullable':<10} {'Default':<30}")
                 lines.append("-" * 90)
                 for name, dtype, nullable, default in rows:
@@ -564,8 +563,8 @@ class DatabaseTools:
                 )
                 rows = cursor.fetchall()
                 if not rows:
-                    return "Keine Tabellen oder Views gefunden."
-                lines = ["Datenbank-Schema:", ""]
+                    return t("tools.db_no_tables")
+                lines = [t("tools.db_schema_header"), ""]
                 for name, ttype in rows:
                     lines.append(f"  - {name} ({ttype})")
                 return "\n".join(lines)
@@ -583,7 +582,7 @@ class DatabaseTools:
 
         sql_upper = sql.strip().upper()
         if sql_upper.startswith("DROP "):
-            raise DatabaseError("DROP-Anweisungen sind blockiert. Bitte manuell ausfuehren.")
+            raise DatabaseError(t("tools.db_drop_blocked"))
 
         try:
             import asyncpg  # type: ignore[import-untyped]
@@ -593,9 +592,9 @@ class DatabaseTools:
         try:
             conn = await asyncio.wait_for(asyncpg.connect(connstr), timeout=_CONN_TIMEOUT)
         except TimeoutError as exc:
-            raise DatabaseError(f"Verbindungs-Timeout nach {_CONN_TIMEOUT}s") from exc
+            raise DatabaseError(t("tools.db_conn_timeout", seconds=_CONN_TIMEOUT)) from exc
         except Exception as exc:
-            raise DatabaseError(f"Verbindungsfehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_conn_error", exc=exc)) from exc
 
         try:
             await conn.execute(f"SET statement_timeout = {_QUERY_TIMEOUT_S * 1000}")
@@ -606,9 +605,9 @@ class DatabaseTools:
                 result = await conn.execute(pg_sql, *params)
             else:
                 result = await conn.execute(sql)
-            return f"Erfolgreich. {result}"
+            return t("tools.db_execute_success", result=result)
         except Exception as exc:
-            raise DatabaseError(f"SQL-Fehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_sql_error", exc=exc)) from exc
         finally:
             await conn.close()
 
@@ -622,9 +621,7 @@ class DatabaseTools:
         try:
             import psycopg2  # type: ignore[import-untyped]
         except ImportError as exc:
-            raise DatabaseError(
-                "PostgreSQL nicht verfuegbar. Installiere: pip install asyncpg"
-            ) from exc
+            raise DatabaseError(t("tools.db_pg_unavailable")) from exc
 
         conn = psycopg2.connect(connstr, connect_timeout=_CONN_TIMEOUT)
         try:
@@ -632,10 +629,10 @@ class DatabaseTools:
             cursor.execute(sql, params or None)
             conn.commit()
             rows_affected = cursor.rowcount
-            return f"Erfolgreich. {rows_affected} Zeile(n) betroffen."
+            return t("tools.db_rows_affected", count=rows_affected)
         except Exception as exc:
             conn.rollback()
-            raise DatabaseError(f"SQL-Fehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_sql_error", exc=exc)) from exc
         finally:
             conn.close()
 
@@ -649,9 +646,9 @@ class DatabaseTools:
         try:
             conn = await asyncio.wait_for(asyncpg.connect(connstr), timeout=_CONN_TIMEOUT)
         except TimeoutError as exc:
-            raise DatabaseError(f"Verbindungs-Timeout nach {_CONN_TIMEOUT}s") from exc
+            raise DatabaseError(t("tools.db_conn_timeout", seconds=_CONN_TIMEOUT)) from exc
         except Exception as exc:
-            raise DatabaseError(f"Verbindungsfehler: {exc}") from exc
+            raise DatabaseError(t("tools.db_conn_error", exc=exc)) from exc
 
         try:
             version = await conn.fetchval("SELECT version()")
@@ -663,7 +660,7 @@ class DatabaseTools:
                 "SELECT pg_size_pretty(pg_database_size(current_database()))"
             )
             lines = [
-                "Datenbankverbindung erfolgreich.",
+                t("tools.db_conn_success"),
                 "",
                 "  Typ:       PostgreSQL",
                 f"  Version:   {version}",
@@ -680,9 +677,7 @@ class DatabaseTools:
         try:
             import psycopg2  # type: ignore[import-untyped]
         except ImportError as exc:
-            raise DatabaseError(
-                "PostgreSQL nicht verfuegbar. Installiere: pip install asyncpg"
-            ) from exc
+            raise DatabaseError(t("tools.db_pg_unavailable")) from exc
 
         conn = psycopg2.connect(connstr, connect_timeout=_CONN_TIMEOUT)
         try:
@@ -702,7 +697,7 @@ class DatabaseTools:
             row = cursor.fetchone()
             db_size = row[0] if row else "unknown"
             lines = [
-                "Datenbankverbindung erfolgreich.",
+                t("tools.db_conn_success"),
                 "",
                 "  Typ:       PostgreSQL",
                 f"  Version:   {version}",
@@ -737,7 +732,7 @@ class DatabaseTools:
             Formatted ASCII table with results.
         """
         if not sql.strip():
-            return "Fehler: Kein SQL angegeben."
+            return t("tools.db_no_sql")
 
         limit = max(1, min(limit, _MAX_ROW_LIMIT))
 
@@ -789,7 +784,7 @@ class DatabaseTools:
             Confirmation with rows affected.
         """
         if not sql.strip():
-            return "Fehler: Kein SQL angegeben."
+            return t("tools.db_no_sql")
 
         if _is_pg_connection_string(database):
             return await self._pg_execute(database, sql, params)
