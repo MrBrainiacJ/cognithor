@@ -2059,6 +2059,28 @@ class SessionConfig(BaseModel):
     )
 
 
+class KanbanConfig(BaseModel):
+    """Kanban Board configuration."""
+
+    enabled: bool = True
+    max_auto_tasks_per_session: int = Field(default=10, ge=1, le=50)
+    max_subtask_depth: int = Field(default=3, ge=1, le=5)
+    ws_debounce_ms: int = Field(default=500, ge=100, le=2000)
+    auto_create_from_chat: bool = True
+    auto_create_from_cron: bool = True
+    auto_create_from_evolution: bool = True
+    auto_create_from_agents: bool = True
+    auto_verify_on_complete: bool = False
+    cascade_cancel_subtasks: bool = True
+    default_priority: str = "medium"
+    default_agent: str = "jarvis"
+    archive_after_days: int = Field(default=30, ge=7, le=365)
+    columns: list[str] = Field(
+        default_factory=lambda: ["todo", "in_progress", "verifying", "done", "blocked"]
+    )
+    custom_labels: list[str] = Field(default_factory=list)
+
+
 # ============================================================================
 # Haupt-Konfiguration
 # ============================================================================
@@ -2222,6 +2244,7 @@ class JarvisConfig(BaseModel):
     session: SessionConfig = Field(default_factory=SessionConfig)
     evolution: EvolutionConfig = Field(default_factory=EvolutionConfig)
     arc: ArcConfig = Field(default_factory=ArcConfig)
+    kanban: KanbanConfig = Field(default_factory=KanbanConfig)
     atl: dict[str, Any] = Field(
         default_factory=dict,
         description="ATL (Autonomous Thinking Loop) config — parsed into ATLConfig at runtime",
