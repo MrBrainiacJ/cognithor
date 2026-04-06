@@ -43,7 +43,7 @@ class ComplianceAuditLog:
         if not self._path.exists():
             return "genesis"
         try:
-            with open(self._path, "r", encoding="utf-8") as f:
+            with open(self._path, encoding="utf-8") as f:
                 last_line = ""
                 for line in f:
                     line = line.strip()
@@ -85,7 +85,7 @@ class ComplianceAuditLog:
             return True, 0
         prev_hash = "genesis"
         count = 0
-        with open(self._path, "r", encoding="utf-8") as f:
+        with open(self._path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -112,7 +112,7 @@ class ComplianceAuditLog:
         if not self._path.exists():
             return []
         entries = []
-        with open(self._path, "r", encoding="utf-8") as f:
+        with open(self._path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -138,7 +138,7 @@ class ComplianceAuditLog:
 
         entries = []
         count = 0
-        with open(self._path, "r", encoding="utf-8") as f:
+        with open(self._path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:

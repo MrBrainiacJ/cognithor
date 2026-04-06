@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.kanban.models import Task, TaskPriority, TaskSource, TaskStatus
+from jarvis.kanban.models import Task, TaskPriority, TaskStatus
 from jarvis.kanban.store import KanbanStore
 
 

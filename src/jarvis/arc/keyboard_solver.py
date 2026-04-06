@@ -54,7 +54,6 @@ class KeyboardSolver:
         timeout_s: float = 300.0,
     ) -> SolveResult:
         """Solve keyboard game level by level with incremental DFS."""
-        from arcengine.enums import GameState
 
         env = self._arcade.make(self._game_id)
         result = SolveResult()
@@ -149,7 +148,7 @@ class KeyboardSolver:
             g_after = safe_frame_extract(obs2)
             diff = g_before != g_after
             ys, xs = np.where(diff)
-            for y, x in zip(ys.tolist(), xs.tolist()):
+            for y, x in zip(ys.tolist(), xs.tolist(), strict=False):
                 avatar_pixels.add((x, y))
 
         if not avatar_pixels:

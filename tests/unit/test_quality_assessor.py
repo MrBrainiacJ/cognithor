@@ -6,8 +6,6 @@ import json
 from dataclasses import dataclass
 from unittest.mock import AsyncMock
 
-import pytest
-
 from jarvis.evolution.models import QualityQuestion, SubGoal
 
 

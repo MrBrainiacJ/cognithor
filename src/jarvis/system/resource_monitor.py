@@ -124,7 +124,7 @@ class ResourceMonitor:
                     snap.gpu_util_percent = float(parts[0].strip())
                     snap.gpu_vram_used_gb = round(float(parts[1].strip()) / 1024, 1)
                     snap.gpu_vram_total_gb = round(float(parts[2].strip()) / 1024, 1)
-        except (FileNotFoundError, asyncio.TimeoutError, ValueError, OSError):
+        except (TimeoutError, FileNotFoundError, ValueError, OSError):
             pass  # No NVIDIA GPU or nvidia-smi not available
 
     def _is_busy(self, snap: ResourceSnapshot) -> bool:

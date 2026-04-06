@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from jarvis.mcp.vault_backend import NoteData
 from jarvis.mcp.vault_db_backend import VaultDBBackend
 from jarvis.mcp.vault_file_backend import VaultFileBackend
 from jarvis.utils.logging import get_logger

@@ -18,9 +18,8 @@ import contextvars
 import time
 from typing import TYPE_CHECKING, Any
 
-from jarvis.i18n import t
-
 from jarvis.core.plan_graph import PlanGraph
+from jarvis.i18n import t
 from jarvis.models import (
     ActionPlan,
     GateDecision,

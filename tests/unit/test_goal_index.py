@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.evolution.goal_index import GoalScopedIndex, IndexedChunk
 
 

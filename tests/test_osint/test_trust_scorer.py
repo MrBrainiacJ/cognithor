@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import pytest
-from datetime import datetime, timezone
-from jarvis.osint.trust_scorer import TrustScorer
+from datetime import UTC, datetime
+
 from jarvis.osint.models import (
     ClaimResult,
     ClaimType,
     Evidence,
-    TrustScore,
     VerificationStatus,
 )
+from jarvis.osint.trust_scorer import TrustScorer
 
 
 def _cr(
@@ -28,7 +27,7 @@ def _cr(
                 source_type=st,
                 content="test",
                 confidence=confidence,
-                collected_at=datetime.now(timezone.utc),
+                collected_at=datetime.now(UTC),
             )
             for st in source_types
         ],

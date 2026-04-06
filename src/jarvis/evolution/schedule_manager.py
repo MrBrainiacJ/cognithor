@@ -86,7 +86,7 @@ class ScheduleManager:
             cls._stagger_counter += 1
         return " ".join(parts)
 
-    async def create_schedules(self, plan: "LearningPlan") -> int:
+    async def create_schedules(self, plan: LearningPlan) -> int:
         """Create cron jobs for every ScheduleSpec in *plan*.
 
         Returns number of cron jobs successfully created.

@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-import pytest
+from datetime import UTC, datetime
+
 from jarvis.osint.models import (
     ClaimType,
-    ClaimResult,
     Evidence,
     Finding,
-    GDPRScope,
-    HIMReport,
     HIMRequest,
     TrustScore,
-    VerificationStatus,
 )
-from datetime import datetime, timezone
 
 
 def test_him_request_minimal():
@@ -51,7 +47,7 @@ def test_evidence_creation():
         source_type="github",
         content="User profile shows 3 repos",
         confidence=0.8,
-        collected_at=datetime.now(timezone.utc),
+        collected_at=datetime.now(UTC),
         url="https://github.com/user",
     )
     assert ev.confidence == 0.8

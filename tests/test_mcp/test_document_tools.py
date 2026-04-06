@@ -5,11 +5,10 @@ from __future__ import annotations
 
 import json
 from typing import TYPE_CHECKING
-from unittest.mock import patch
 
 import pytest
 
-from jarvis.documents.templates import DocumentTemplate, TemplateManager
+from jarvis.documents.templates import TemplateManager
 from jarvis.mcp.media import MediaPipeline
 
 if TYPE_CHECKING:

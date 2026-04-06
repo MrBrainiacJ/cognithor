@@ -9,7 +9,6 @@ import pytest
 
 from jarvis.tools.parallel_executor import (
     ToolCall,
-    ToolResult,
     execute_single,
     execute_tool_calls,
     partition_calls,

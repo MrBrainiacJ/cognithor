@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import os
 import pytest
-from jarvis.security.encrypted_file import EncryptedFileIO, _MAGIC_HEADER
+
+from jarvis.security.encrypted_file import _MAGIC_HEADER, EncryptedFileIO
 
 
 @pytest.fixture
@@ -129,5 +129,5 @@ def test_write_without_key_writes_plaintext(tmp_path, monkeypatch):
     path = tmp_path / "unencrypted.md"
     io.write(path, "Plaintext content")
 
-    with open(path, "r") as f:
+    with open(path) as f:
         assert f.read() == "Plaintext content"

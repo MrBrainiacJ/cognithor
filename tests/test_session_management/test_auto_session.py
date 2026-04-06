@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 
 def test_session_config_defaults():

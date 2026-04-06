@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 
 import pytest
 
@@ -62,7 +61,7 @@ class TestDeepLearner:
         # Verify persisted on disk
         plan_json = plans_dir / plan.id / "plan.json"
         assert plan_json.exists()
-        with open(plan_json, "r", encoding="utf-8") as f:
+        with open(plan_json, encoding="utf-8") as f:
             data = json.load(f)
         assert data["goal"] == "Learn quantum computing"
 

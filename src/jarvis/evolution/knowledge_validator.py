@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import json
 import re
-import sqlite3
 import time
 import uuid
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from jarvis.security.encrypted_db import encrypted_connect
 from jarvis.utils.logging import get_logger
@@ -382,7 +382,7 @@ class KnowledgeValidator:
 
         claims = []
         for row in rows:
-            d = dict(zip(columns, row))
+            d = dict(zip(columns, row, strict=False))
             claims.append(
                 KnowledgeClaim(
                     **{k: v for k, v in d.items() if k in KnowledgeClaim.__dataclass_fields__}
@@ -427,7 +427,7 @@ class KnowledgeValidator:
             return None
         cursor = self._conn.execute("SELECT * FROM knowledge_claims LIMIT 0")
         columns = [d[0] for d in cursor.description]
-        d = dict(zip(columns, row))
+        d = dict(zip(columns, row, strict=False))
         return KnowledgeClaim(
             **{k: v for k, v in d.items() if k in KnowledgeClaim.__dataclass_fields__}
         )

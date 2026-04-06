@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any
 
 from jarvis.evolution.research_agent import FetchResult
 from jarvis.memory.consolidation import ContentDeduplicator
@@ -25,8 +26,8 @@ __all__ = [
     "BuildResult",
     "KnowledgeBuilder",
     "_is_usable_content",
-    "_score_source_confidence",
     "_parse_llm_json",
+    "_score_source_confidence",
 ]
 
 
@@ -39,7 +40,7 @@ class BuildResult:
     entities_created: int = 0
     relations_created: int = 0
     claims_extracted: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 # Patterns that indicate garbage entities extracted from PDF metadata,
@@ -341,11 +342,11 @@ class KnowledgeBuilder:
     def __init__(
         self,
         mcp_client: Any,
-        llm_fn: Optional[Callable] = None,
+        llm_fn: Callable | None = None,
         goal_slug: str = "",
         knowledge_validator: Any = None,
         goal_index: Any = None,
-        entity_llm_fn: Optional[Callable] = None,
+        entity_llm_fn: Callable | None = None,
         memory_manager: Any = None,
     ) -> None:
         self._mcp = mcp_client
@@ -357,7 +358,7 @@ class KnowledgeBuilder:
         self._goal_slug = goal_slug
         self._validator = knowledge_validator
         self._goal_index = goal_index
-        self._entity_queue: List[str] = []  # Deferred texts for entity extraction
+        self._entity_queue: list[str] = []  # Deferred texts for entity extraction
         self._memory_manager = memory_manager
         self._identity_dedup = ContentDeduplicator(similarity_threshold=0.85)
         self._identity_seen_hashes: set[str] = set()
@@ -709,7 +710,7 @@ class KnowledgeBuilder:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def chunk_text(text: str, max_tokens: int = 512, overlap_tokens: int = 64) -> List[str]:
+    def chunk_text(text: str, max_tokens: int = 512, overlap_tokens: int = 64) -> list[str]:
         """Split text into overlapping word-based chunks.
 
         Parameters use 'tokens' in name but operate on words as a proxy.
@@ -720,7 +721,7 @@ class KnowledgeBuilder:
         if len(words) <= max_tokens:
             return [text]
 
-        chunks: List[str] = []
+        chunks: list[str] = []
         start = 0
         while start < len(words):
             end = start + max_tokens
@@ -734,7 +735,7 @@ class KnowledgeBuilder:
     # Entity extraction
     # ------------------------------------------------------------------
 
-    async def extract_entities(self, text: str) -> Tuple[List[dict], List[dict]]:
+    async def extract_entities(self, text: str) -> tuple[list[dict], list[dict]]:
         """Ask the LLM to extract entities and relations from *text*.
 
         Returns (entities, relations). Falls back to empty lists if the

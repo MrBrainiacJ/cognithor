@@ -74,7 +74,7 @@ class VaultDBBackend(VaultBackend):
         self._conn.commit()
 
     def _row_to_note(self, row: tuple, columns: list[str]) -> NoteData:
-        d = dict(zip(columns, row))
+        d = dict(zip(columns, row, strict=False))
         return NoteData(**{k: v for k, v in d.items() if k in NoteData.__slots__})
 
     def _query_notes(self, sql: str, params: tuple = ()) -> list[NoteData]:

@@ -19,9 +19,9 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 __all__ = [
+    "_ACTION_RISK",
     "EvolutionCycleResult",
     "EvolutionLoop",
-    "_ACTION_RISK",
     "_check_risk_ceiling",
     "_match_goal_for_action",
 ]
@@ -1060,8 +1060,6 @@ class EvolutionLoop:
                     if self._deep_learner.is_complex_goal(g):
                         log.info("evolution_promoting_to_deep_plan", goal=g[:60])
                         try:
-                            import asyncio
-
                             await self._deep_learner.create_plan(g)
                         except Exception:
                             log.debug("evolution_promote_failed", exc_info=True)

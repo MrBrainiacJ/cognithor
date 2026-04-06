@@ -20,12 +20,13 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from jarvis.i18n import t
 from jarvis.security.encrypted_db import (
-    DatabaseError as _EncryptedDatabaseError,
     OperationalError as _EncryptedOperationalError,
+)
+from jarvis.security.encrypted_db import (
     encrypted_connect,
 )
-from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:

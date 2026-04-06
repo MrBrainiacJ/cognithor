@@ -1,7 +1,6 @@
 """Tests for the FeedbackStore (thumbs up/down feedback system)."""
 
 import pytest
-from pathlib import Path
 
 
 class TestFeedbackStore:

@@ -5,10 +5,10 @@ from __future__ import annotations
 import re
 import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-__all__ = ["VaultBackend", "NoteData", "slugify", "now_iso", "parse_tags"]
+__all__ = ["NoteData", "VaultBackend", "now_iso", "parse_tags", "slugify"]
 
 
 def slugify(text: str) -> str:
@@ -33,7 +33,7 @@ def slugify(text: str) -> str:
 
 def now_iso() -> str:
     """Return current UTC time as ISO string."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
 
 
 def parse_tags(tags: str | list[str]) -> list[str]:
@@ -52,15 +52,15 @@ class NoteData:
     """Standardized note representation across backends."""
 
     __slots__ = (
+        "backlinks",
+        "content",
+        "created_at",
+        "folder",
         "id",
         "path",
-        "title",
-        "content",
-        "tags",
-        "folder",
         "sources",
-        "backlinks",
-        "created_at",
+        "tags",
+        "title",
         "updated_at",
     )
 

@@ -1,7 +1,6 @@
 """Tests for ConversationTree — node CRUD, path computation, branching."""
 
 import pytest
-from pathlib import Path
 
 
 class TestConversationTree:

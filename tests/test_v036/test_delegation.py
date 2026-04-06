@@ -7,7 +7,6 @@ import pytest
 from jarvis.a2a.delegation import (
     DirectedMessage,
     DirectionPermissionError,
-    DirectionResult,
     can_send_direction,
     direct,
     validate_direction_target,

@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
 from jarvis.i18n import t
-from jarvis.mcp.vault_backend import NoteData, VaultBackend, new_id, now_iso, parse_tags, slugify
+from jarvis.mcp.vault_backend import NoteData, VaultBackend, now_iso, parse_tags, slugify
 from jarvis.utils.logging import get_logger
-
-from jarvis.i18n import t
 
 log = get_logger(__name__)
 

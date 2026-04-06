@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 from jarvis.security.encrypted_db import encrypted_connect, is_encryption_available
 
 

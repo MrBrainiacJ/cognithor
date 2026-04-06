@@ -14,7 +14,6 @@ Architektur-Bibel: §16.4 (Endnutzer-Transparenz), §17.1 (DSGVO-Compliance)
 
 from __future__ import annotations
 
-import sqlite3
 import time
 from dataclasses import dataclass, field
 from enum import Enum

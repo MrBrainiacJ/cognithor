@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
@@ -10,7 +9,6 @@ import pytest
 
 from jarvis.evolution.models import SourceSpec
 from jarvis.evolution.research_agent import FetchResult, ResearchAgent
-
 
 # ---------------------------------------------------------------------------
 # Mock helpers

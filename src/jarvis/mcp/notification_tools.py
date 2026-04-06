@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import sqlite3
 import subprocess
 import sys
 from datetime import UTC, datetime, timedelta

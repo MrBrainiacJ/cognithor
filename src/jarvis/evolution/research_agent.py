@@ -6,7 +6,6 @@ import asyncio
 import re
 import time
 from dataclasses import dataclass
-from typing import List, Optional
 from urllib.parse import urljoin, urlparse
 
 from jarvis.evolution.models import SourceSpec
@@ -23,9 +22,9 @@ class FetchResult:
 
     url: str
     text: str
-    title: Optional[str] = None
-    source_type: Optional[str] = None
-    error: Optional[str] = None
+    title: str | None = None
+    source_type: str | None = None
+    error: str | None = None
 
 
 class ResearchAgent:
@@ -245,7 +244,7 @@ class ResearchAgent:
     # Low-level fetch with retry + rate limit
     # ------------------------------------------------------------------
 
-    async def _web_fetch(self, url: str) -> Optional[str]:
+    async def _web_fetch(self, url: str) -> str | None:
         """Fetch a URL via MCP ``web_fetch`` with retry and backoff."""
         backoffs = [5, 10, 15]
 

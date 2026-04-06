@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import json
-import re
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
 
 from jarvis.arc.game_analyzer import (
     GameAnalyzer,
@@ -67,9 +65,6 @@ class TestSacrificeReport:
         assert r.unique_states_seen == 0
         assert r.game_over_trigger is None
         assert r.frames == []
-
-
-from jarvis.arc.error_handler import safe_frame_extract
 
 
 def _make_mock_obs(grid=None, state="NOT_FINISHED", levels=0, actions=None):

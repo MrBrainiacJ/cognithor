@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -98,8 +98,6 @@ class PerGameSolver:
     ) -> StrategyOutcome:
         """Smart cluster-click: elimination-based search, then brute-force fallback."""
         import time
-
-        from arcengine.enums import GameState
 
         from jarvis.arc.cluster_solver import ClusterSolver
 
@@ -416,8 +414,6 @@ class PerGameSolver:
         """Solve the game level by level with budget-based strategy mix."""
         import time
 
-        from arcengine.enums import GameState
-
         env = self._arcade.make(self._profile.game_id)
         obs = env.reset()
 
@@ -477,8 +473,6 @@ class PerGameSolver:
     ) -> dict:
         """Try all budget slots on one level."""
         import time
-
-        from arcengine.enums import GameState
 
         slots = self._allocate_budget(level_num)
         total_steps = 0
@@ -739,7 +733,6 @@ class PerGameSolver:
     ) -> list[tuple[int, int]] | None:
         """BFS through click sequences with sub-level re-scanning."""
         import time
-        from collections import deque
 
         from arcengine.enums import GameState
 
@@ -1367,7 +1360,7 @@ class PerGameSolver:
             cw = ce - cs + 1
             best_y = -1
             best_dist = 999
-            for ty, tx in zip(teal_ys.tolist(), teal_xs.tolist()):
+            for ty, tx in zip(teal_ys.tolist(), teal_xs.tolist(), strict=False):
                 d = abs(tx - cc)
                 if d < best_dist and d < cw + 4:
                     best_dist = d

@@ -18,7 +18,6 @@ from jarvis.osint.him_reporter import HIMReporter
 from jarvis.osint.models import (
     Evidence,
     Finding,
-    GDPRViolationError,
     HIMReport,
     HIMRequest,
     VerificationStatus,
@@ -173,7 +172,7 @@ class HIMAgent:
                 collector.collect(target, claims),
                 timeout=self._collector_timeout,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log.warning("him_collector_timeout", source=collector.source_name)
             return []
 

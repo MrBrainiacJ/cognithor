@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.response_validator import (
     PASS_THRESHOLD,
     ResponseValidator,

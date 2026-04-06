@@ -39,7 +39,7 @@ class TestJarvisConfigDefaults:
     def test_ollama_defaults(self) -> None:
         config = JarvisConfig()
         assert config.ollama.base_url == "http://localhost:11434"
-        assert config.ollama.timeout_seconds == 180
+        assert config.ollama.timeout_seconds == 360
 
     def test_model_defaults(self) -> None:
         config = JarvisConfig()

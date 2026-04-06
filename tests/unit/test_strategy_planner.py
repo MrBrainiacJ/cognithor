@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.evolution.models import LearningPlan, SeedSource, SubGoal
+from jarvis.evolution.models import LearningPlan, SeedSource
 from jarvis.evolution.strategy_planner import StrategyPlanner
 
 _VALID_LLM_RESPONSE = json.dumps(

@@ -2574,6 +2574,7 @@ def _register_security_routes(
         if format == "csv":
             import csv
             import io
+
             from starlette.responses import StreamingResponse
 
             output = io.StringIO()
@@ -5060,8 +5061,9 @@ def _register_skill_registry_routes(
     @app.post("/api/v1/skill-registry/create", dependencies=deps)
     async def create_skill(request: Request) -> dict[str, Any]:
         """Create a new skill from JSON body."""
-        from pathlib import Path
         import re
+        from pathlib import Path
+
         import yaml
 
         body = await request.json()

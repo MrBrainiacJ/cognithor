@@ -6,7 +6,6 @@ import pytest
 
 from jarvis.ui.session_manager import (
     CORE_MEMORY_MAX_TOKENS,
-    SessionInfo,
     SessionManager,
 )
 

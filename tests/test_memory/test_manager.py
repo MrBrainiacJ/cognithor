@@ -170,6 +170,7 @@ class TestSyncDocumentToIdentity:
 
     def test_passes_through_to_identity_layer(self):
         from unittest.mock import MagicMock
+
         from jarvis.memory.manager import MemoryManager
 
         mm = MagicMock(spec=MemoryManager)
@@ -194,6 +195,7 @@ class TestSyncDocumentToIdentity:
 
     def test_no_identity_layer_is_noop(self):
         from unittest.mock import MagicMock
+
         from jarvis.memory.manager import MemoryManager
 
         mm = MagicMock(spec=MemoryManager)
@@ -207,6 +209,7 @@ class TestSyncDocumentToIdentity:
 
     def test_exception_is_silenced(self):
         from unittest.mock import MagicMock
+
         from jarvis.memory.manager import MemoryManager
 
         mm = MagicMock(spec=MemoryManager)

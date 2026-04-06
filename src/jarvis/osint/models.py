@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Literal
 
@@ -79,7 +79,7 @@ class HIMReport(BaseModel):
     report_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     target: str
     target_type: str
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     depth: str
     trust_score: TrustScore
     claims: list[ClaimResult] = Field(default_factory=list)

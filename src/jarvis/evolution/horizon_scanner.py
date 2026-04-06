@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Callable, Coroutine, List
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from jarvis.evolution.models import LearningPlan
 

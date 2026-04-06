@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 
@@ -25,7 +25,7 @@ class ArxivCollector(BaseCollector):
 
     async def collect(self, target: str, claims: list[str]) -> list[Evidence]:
         evidence: list[Evidence] = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         query = f'au:"{target}"'
         try:
             async with httpx.AsyncClient(timeout=20) as client:

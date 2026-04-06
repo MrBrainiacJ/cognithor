@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.evolution.cycle_controller import (
     CycleController,
-    CycleHistory,
     CycleState,
     ExamResult,
 )

@@ -16,10 +16,9 @@ import pytest
 
 from jarvis.mcp.vault import (
     VaultTools,
-    _now_iso,
-    _parse_tags,
     register_vault_tools,
 )
+from jarvis.mcp.vault_backend import now_iso as _now_iso, parse_tags as _parse_tags
 
 # ============================================================================
 # Fixtures

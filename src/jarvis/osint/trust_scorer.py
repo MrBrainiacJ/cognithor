@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 from jarvis.osint.models import (
     ClaimResult,
@@ -115,7 +115,7 @@ class TrustScorer:
         return 30.0
 
     def _activity_recency(self, evidence: list[Evidence]) -> float:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         most_recent = None
         for e in evidence:
             # Use collected_at as baseline
@@ -125,7 +125,7 @@ class TrustScorer:
                     most_recent = ca
             # Check content for date signals (may be more precise)
             if e.collected_at and e.collected_at > (
-                most_recent or datetime.min.replace(tzinfo=timezone.utc)
+                most_recent or datetime.min.replace(tzinfo=UTC)
             ):
                 content = e.content
                 for date_str in _extract_date_hints(content):

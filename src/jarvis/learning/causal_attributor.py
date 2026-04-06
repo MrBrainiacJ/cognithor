@@ -11,12 +11,8 @@ import re
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 from jarvis.utils.logging import get_logger
-
-if TYPE_CHECKING:
-    pass
 
 from .execution_trace import ExecutionTrace, TraceStep
 

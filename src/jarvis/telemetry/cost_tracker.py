@@ -6,7 +6,6 @@ Budget enforcement with daily and monthly limits.
 
 from __future__ import annotations
 
-import sqlite3
 from datetime import UTC, date, datetime
 
 from jarvis.db import SQLITE_BUSY_TIMEOUT_MS
@@ -231,7 +230,7 @@ class CostTracker:
         ).fetchall()
         return {name or "(unknown)": cost for name, cost in rows}
 
-    def check_agent_budget(self, agent_name: str, daily_limit: float = 0.0) -> "AgentBudgetStatus":
+    def check_agent_budget(self, agent_name: str, daily_limit: float = 0.0) -> AgentBudgetStatus:
         """Check budget for a specific agent."""
         from jarvis.models import AgentBudgetStatus
 

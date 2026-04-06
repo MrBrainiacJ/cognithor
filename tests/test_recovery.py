@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.recovery import (
     DEFAULT_RECIPES,
     EscalationPolicy,
@@ -13,7 +11,6 @@ from jarvis.core.recovery import (
     RecoveryStep,
     classify_failure,
 )
-
 
 # ---------------------------------------------------------------------------
 # classify_failure

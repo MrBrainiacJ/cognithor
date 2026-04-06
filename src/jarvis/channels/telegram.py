@@ -22,14 +22,13 @@ Optional fuer Webhook: JARVIS_TELEGRAM_USE_WEBHOOK, JARVIS_TELEGRAM_WEBHOOK_URL
 from __future__ import annotations
 
 import asyncio
-
-from jarvis.i18n import t
 import contextlib
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from jarvis.channels.base import Channel, MessageHandler, StatusType
+from jarvis.i18n import t
 from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
 from jarvis.security.token_store import get_token_store
 from jarvis.utils.circuit_breaker import CircuitBreaker, CircuitBreakerOpen

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.kanban.sources import (
     ChatTaskDetector,
     CronTaskAdapter,

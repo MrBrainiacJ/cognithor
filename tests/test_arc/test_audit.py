@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from jarvis.arc.audit import ArcAuditTrail, ArcAuditEvent  # noqa: F401
+from jarvis.arc.audit import ArcAuditEvent, ArcAuditTrail  # noqa: F401
 
 
 class TestHashChainIntegrity:

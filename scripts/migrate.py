@@ -14,14 +14,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sqlite3
 import sys
-import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
 
 # Farben
 GREEN = "\033[92m"
@@ -177,7 +175,7 @@ def save_applied_versions(jarvis_home: Path, versions: set[str]) -> None:
     marker = jarvis_home / ".migrations"
     data = {
         "applied": sorted(versions),
-        "last_run": datetime.now(timezone.utc).isoformat(),
+        "last_run": datetime.now(UTC).isoformat(),
     }
     marker.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 

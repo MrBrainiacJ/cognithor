@@ -8,7 +8,6 @@ from jarvis.browser.context_bridge import (
     ContextSnapshot,
     TabContextBridge,
     TabHandle,
-    TabInfo,
 )
 
 

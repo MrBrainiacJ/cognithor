@@ -1,7 +1,6 @@
 """Tests for CorrectionMemory — stores and retrieves user corrections."""
 
 import pytest
-from pathlib import Path
 
 
 class TestCorrectionMemory:

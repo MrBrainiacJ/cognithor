@@ -6,12 +6,10 @@ import pytest
 
 from jarvis.core.preflight import (
     ContextWindowExceeded,
-    PreflightResult,
     _compact_messages,
     estimate_tokens,
     preflight_check,
 )
-
 
 # ---------------------------------------------------------------------------
 # estimate_tokens

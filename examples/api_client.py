@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import urllib.request
 
-
 BASE_URL = "http://localhost:8741"
 
 

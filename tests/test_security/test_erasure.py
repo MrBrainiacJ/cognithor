@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from jarvis.security.gdpr import GDPRComplianceManager, DataCategory
+
 from jarvis.security.consent import ConsentManager
+from jarvis.security.gdpr import DataCategory, GDPRComplianceManager
 
 
 @pytest.fixture

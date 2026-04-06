@@ -7,9 +7,8 @@ Each template has a frontmatter comment block at the top and uses
 
 from __future__ import annotations
 
-import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -90,7 +89,7 @@ class TemplateManager:
                     slug=template.slug,
                     variables=template.variables,
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 log.warning("template_parse_failed", file=str(typ_file), error=str(exc))
 
         log.info("templates_loaded", count=len(self._templates))

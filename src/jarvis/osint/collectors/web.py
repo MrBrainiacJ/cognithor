@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from jarvis.osint.collectors.base import BaseCollector
@@ -26,7 +26,7 @@ class WebCollector(BaseCollector):
         if not self._mcp:
             return []
         evidence: list[Evidence] = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Build claim-specific queries
         queries = [f'"{target}"']

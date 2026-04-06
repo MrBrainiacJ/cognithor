@@ -2,8 +2,8 @@
 
 from jarvis.osint.him_agent import HIMAgent
 from jarvis.osint.models import (
-    ClaimType,
     ClaimResult,
+    ClaimType,
     Evidence,
     Finding,
     GDPRScope,
@@ -15,13 +15,13 @@ from jarvis.osint.models import (
 )
 
 __all__ = [
-    "HIMAgent",
-    "ClaimType",
     "ClaimResult",
+    "ClaimType",
     "Evidence",
     "Finding",
     "GDPRScope",
     "GDPRViolationError",
+    "HIMAgent",
     "HIMReport",
     "HIMRequest",
     "TrustScore",

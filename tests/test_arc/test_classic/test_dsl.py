@@ -2,36 +2,33 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.arc.classic.dsl import (
+    count_by_color,
     crop_to_content,
+    fill,
     flip_h,
     flip_v,
+    get_bounding_box,
     get_by_color,
+    get_largest_object,
     get_objects,
     gravity,
     invert_colors,
+    mask_where,
     overlay,
     pad,
-    replace_background,
     recolor,
+    replace_background,
+    rotate_90,
     rotate_180,
     rotate_270,
-    rotate_90,
     scale_up,
     stack_h,
     stack_v,
     swap_colors,
     tile,
     transpose,
-    fill,
-    count_by_color,
-    get_largest_object,
-    get_bounding_box,
-    mask_where,
 )
-
 
 # ---------------------------------------------------------------------------
 # Geometry

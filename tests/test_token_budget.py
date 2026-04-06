@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.token_budget import (
     CHANNEL_MULTIPLIERS,
     COMPLEXITY_BUDGETS,
@@ -11,7 +9,6 @@ from jarvis.core.token_budget import (
     BudgetSnapshot,
     TokenBudgetManager,
 )
-
 
 # --- Basic construction ---
 

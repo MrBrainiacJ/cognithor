@@ -1,8 +1,9 @@
 """Tests for Vault DB Backend."""
 
 from __future__ import annotations
+
 import pytest
-from pathlib import Path
+
 from jarvis.mcp.vault_db_backend import VaultDBBackend
 
 

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
-import pytest
 
 from jarvis.arc.game_profile import GameProfile, StrategyMetrics
 from jarvis.arc.per_game_solver import (
-    BudgetSlot,
     PerGameSolver,
     SolveResult,
     StrategyOutcome,

@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 
 from jarvis.arc.error_handler import safe_frame_extract
-from jarvis.arc.game_analyzer import _grid_to_png_b64, _parse_vision_json
+from jarvis.arc.game_analyzer import _grid_to_png_b64
 from jarvis.utils.logging import get_logger
 
 __all__ = ["VisionAgent"]

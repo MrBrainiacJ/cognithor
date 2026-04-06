@@ -53,11 +53,15 @@ async def main(message: str) -> None:
             print("[AUTH] Token sent")
 
         # 2. Send user message
-        await ws.send(json.dumps({
-            "type": "user_message",
-            "text": message,
-            "session_id": SESSION_ID,
-        }))
+        await ws.send(
+            json.dumps(
+                {
+                    "type": "user_message",
+                    "text": message,
+                    "session_id": SESSION_ID,
+                }
+            )
+        )
         print(f"[SENT] {message}")
 
         # 3. Listen for responses
@@ -65,7 +69,7 @@ async def main(message: str) -> None:
         while True:
             try:
                 raw = await asyncio.wait_for(ws.recv(), timeout=120)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 print("[TIMEOUT] No response within 120s")
                 break
 
@@ -89,7 +93,7 @@ async def main(message: str) -> None:
                 print(f"  [TOOL] {data.get('tool', data.get('name', '?'))} ...")
 
             elif msg_type == "tool_result":
-                print(f"  [TOOL] Done")
+                print("  [TOOL] Done")
 
             elif msg_type == "status_update":
                 print(f"  [{data.get('status', data.get('text', ''))}]")
@@ -101,12 +105,16 @@ async def main(message: str) -> None:
             elif msg_type == "approval_request":
                 print(f"  [APPROVAL] {data.get('tool', '?')}: {data.get('reason', '')}")
                 # Auto-approve for this example
-                await ws.send(json.dumps({
-                    "type": "approval_response",
-                    "id": data.get("id", data.get("request_id")),
-                    "approved": True,
-                    "session_id": SESSION_ID,
-                }))
+                await ws.send(
+                    json.dumps(
+                        {
+                            "type": "approval_response",
+                            "id": data.get("id", data.get("request_id")),
+                            "approved": True,
+                            "session_id": SESSION_ID,
+                        }
+                    )
+                )
                 print("  [APPROVAL] Auto-approved")
 
             elif msg_type == "pong":
@@ -118,6 +126,6 @@ async def main(message: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print(f"Usage: python {sys.argv[0]} \"Your message here\"")
+        print(f'Usage: python {sys.argv[0]} "Your message here"')
         sys.exit(1)
     asyncio.run(main(sys.argv[1]))

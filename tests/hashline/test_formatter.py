@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from jarvis.hashline.formatter import HashlineFormatter
-from jarvis.hashline.models import EditIntent, HashlinedFile, HashlinedLine
+from jarvis.hashline.models import HashlinedFile, HashlinedLine
 
 
 class TestFormatLine:

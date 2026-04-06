@@ -473,7 +473,9 @@ async def main() -> int:
     parser.add_argument("--skip-llm", action="store_true", help="LLM-Tests überspringen")
     args = parser.parse_args()
 
-    jarvis_home = Path(args.home) if args.home else Path(tempfile.gettempdir()) / "jarvis-smoke-test"
+    jarvis_home = (
+        Path(args.home) if args.home else Path(tempfile.gettempdir()) / "jarvis-smoke-test"
+    )
 
     print("=" * 60)
     print("  🏠 Jarvis · Live Smoke-Test")

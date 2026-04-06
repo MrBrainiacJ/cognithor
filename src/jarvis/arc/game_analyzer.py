@@ -14,6 +14,8 @@ import numpy as np
 if TYPE_CHECKING:
     from jarvis.arc.game_profile import GameProfile
 
+from datetime import UTC
+
 from jarvis.utils.logging import get_logger
 
 try:
@@ -198,7 +200,7 @@ class GameAnalyzer:
                             # Most common source→target transition
                             from collections import Counter
 
-                            pairs = Counter(zip(old_vals.tolist(), new_vals.tolist()))
+                            pairs = Counter(zip(old_vals.tolist(), new_vals.tolist(), strict=False))
                             src, tgt = pairs.most_common(1)[0][0]
                             if (src, tgt) not in report.toggle_pairs:
                                 report.toggle_pairs.append((src, tgt))
@@ -299,9 +301,9 @@ class GameAnalyzer:
         *,
         force: bool = False,
         base_dir: Any | None = None,
-    ) -> "GameProfile":
+    ) -> GameProfile:
         """Analyze a game: load from cache or run sacrifice level + 2 vision calls."""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from jarvis.arc.error_handler import safe_frame_extract
         from jarvis.arc.game_profile import GameProfile
@@ -395,7 +397,7 @@ class GameAnalyzer:
             vision_strategy=vision1.get("strategy", "") if vision1 else "unavailable",
             strategy_metrics={},
             has_toggles=len(report.toggle_pairs) > 0,
-            analyzed_at=datetime.now(timezone.utc).isoformat(),
+            analyzed_at=datetime.now(UTC).isoformat(),
         )
 
         profile.save(base_dir=base_dir)

@@ -10,13 +10,10 @@ Tests:
 from __future__ import annotations
 
 import time
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from jarvis.gateway.gateway import Gateway
-from jarvis.models import AgentResult, ToolResult, WorkingMemory, Message, MessageRole
-
+from jarvis.models import AgentResult, Message, MessageRole, ToolResult, WorkingMemory
 
 # ── Helpers ──────────────────────────────────────────────────────
 

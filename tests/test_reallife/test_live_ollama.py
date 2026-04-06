@@ -8,10 +8,10 @@ Run: pytest tests/test_reallife/test_live_ollama.py -v --timeout=120
 
 from __future__ import annotations
 
-import asyncio
 import os
-import pytest
+
 import httpx
+import pytest
 
 
 # Skip all tests if Ollama is not reachable
@@ -45,7 +45,7 @@ class TestLiveWebResearch:
     @pytest.mark.asyncio
     async def test_planner_prompts_support_research(self):
         """Planner prompts must include research quality instructions."""
-        from jarvis.core.planner import SYSTEM_PROMPT, REPLAN_PROMPT
+        from jarvis.core.planner import REPLAN_PROMPT, SYSTEM_PROMPT
 
         # System prompt must instruct thoroughness
         assert "deep_research" in SYSTEM_PROMPT
@@ -62,8 +62,8 @@ class TestLiveCodeGeneration:
 
     def test_code_tools_are_green(self):
         """run_python should be GREEN for autonomous operation."""
-        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.config import JarvisConfig
+        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.models import PlannedAction
 
         gk = Gatekeeper(JarvisConfig())
@@ -107,8 +107,8 @@ class TestLiveGatekeeperSafety:
     """Verify that safety classifications are correct for all tool types."""
 
     def test_all_search_tools_green(self):
-        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.config import JarvisConfig
+        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.models import PlannedAction
 
         gk = Gatekeeper(JarvisConfig())
@@ -129,8 +129,8 @@ class TestLiveGatekeeperSafety:
             assert risk.value == "green", f"{tool} should be green, got {risk}"
 
     def test_dangerous_tools_orange(self):
-        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.config import JarvisConfig
+        from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.models import PlannedAction
 
         gk = Gatekeeper(JarvisConfig())

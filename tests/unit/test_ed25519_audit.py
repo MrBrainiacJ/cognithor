@@ -35,7 +35,8 @@ class TestEd25519Signatures:
 
     @staticmethod
     def _make_entry():
-        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        from jarvis.models import AuditEntry as GateAuditEntry
+        from jarvis.models import GateStatus, RiskLevel
 
         return GateAuditEntry(
             session_id="s1",

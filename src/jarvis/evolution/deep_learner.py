@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Callable
+from datetime import UTC
 from pathlib import Path
-from typing import Any, Callable, List, Optional
+from typing import Any
 
 from jarvis.evolution.horizon_scanner import HorizonScanner
 from jarvis.evolution.knowledge_builder import KnowledgeBuilder
@@ -129,7 +131,7 @@ class DeepLearner:
 
         return plan
 
-    def list_plans(self) -> List[LearningPlan]:
+    def list_plans(self) -> list[LearningPlan]:
         """Return all persisted learning plans."""
         return LearningPlan.list_plans(str(self._plans_dir))
 
@@ -171,8 +173,7 @@ class DeepLearner:
         2. 'researching' / 'building' (interrupted, resume)
         3. 'failed' (retry — only if last tested > 30 min ago)
         """
-        import time as _time
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         plan = self.get_plan(plan_id)
         if plan is None:
@@ -187,7 +188,7 @@ class DeepLearner:
         # Priority 3: failed — but only after a cooldown period
         # This prevents the infinite re-test loop
         cooldown = timedelta(minutes=30)
-        cutoff = (datetime.now(timezone.utc) - cooldown).isoformat()
+        cutoff = (datetime.now(UTC) - cooldown).isoformat()
         for sg in plan.sub_goals:
             if sg.status == "failed":
                 if not sg.last_tested or sg.last_tested < cutoff:
@@ -429,7 +430,7 @@ class DeepLearner:
                 self._quality_assessor.run_quality_test(subgoal, plan.goal_slug),
                 timeout=180,  # 3 minutes max for quality test
             )
-        except (_asyncio.TimeoutError, Exception) as e:
+        except (TimeoutError, Exception) as e:
             log.warning(
                 "deep_learner_quality_test_timeout", subgoal=subgoal.title[:40], error=str(e)[:100]
             )
@@ -641,13 +642,13 @@ class DeepLearner:
         more depth. Returns count of SubGoals re-tested.
         """
         import time as _time
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         plan = self.get_plan(plan_id)
         if not plan:
             return 0
 
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=max_age_days)).isoformat()
+        cutoff = (datetime.now(UTC) - timedelta(days=max_age_days)).isoformat()
         retested = 0
 
         for sg in plan.sub_goals:
@@ -687,7 +688,7 @@ class DeepLearner:
             plan.save(str(self._plans_dir))
         return retested
 
-    async def _generate_skill_for_subgoal(self, subgoal: SubGoal, plan: "LearningPlan") -> None:
+    async def _generate_skill_for_subgoal(self, subgoal: SubGoal, plan: LearningPlan) -> None:
         """Auto-generate a Markdown skill that makes this knowledge queryable.
 
         Creates a skill file that matches on the subgoal topic keywords

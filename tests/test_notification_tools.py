@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import sqlite3
 from datetime import UTC, datetime, timedelta
-
-from jarvis.security.encrypted_db import encrypted_connect
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from jarvis.security.encrypted_db import encrypted_connect
 
 if TYPE_CHECKING:
     from pathlib import Path

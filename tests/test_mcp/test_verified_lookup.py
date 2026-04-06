@@ -11,11 +11,9 @@ Testet:
 
 from __future__ import annotations
 
-import asyncio
 import json
 from dataclasses import dataclass
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -26,7 +24,6 @@ from jarvis.mcp.verified_lookup import (
     VerifiedWebLookup,
     register_verified_lookup_tools,
 )
-
 
 # ============================================================================
 # Fixtures

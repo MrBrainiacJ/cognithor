@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import numpy as np
-import pytest
 
 from jarvis.arc.keyboard_solver import KeyboardSolver
 

@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from jarvis.kanban.models import (
+    VALID_TRANSITIONS,
     Task,
     TaskHistory,
     TaskPriority,
     TaskSource,
     TaskStatus,
-    VALID_TRANSITIONS,
     _now_iso,
 )
 from jarvis.kanban.store import KanbanStore

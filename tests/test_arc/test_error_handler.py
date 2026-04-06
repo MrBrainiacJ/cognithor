@@ -1,7 +1,7 @@
 """Tests for jarvis.arc.error_handler."""
 
-import pytest
 import numpy as np
+import pytest
 
 
 class TestSafeFrameExtract:
@@ -114,7 +114,7 @@ class TestGameRunGuard:
         assert "boom" in guard.errors[0]["error"]
 
     def test_env_creation_failure(self):
-        from jarvis.arc.error_handler import GameRunGuard, EnvironmentConnectionError
+        from jarvis.arc.error_handler import EnvironmentConnectionError, GameRunGuard
 
         class BadArcade:
             def make(self, game_id):

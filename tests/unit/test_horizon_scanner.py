@@ -11,7 +11,6 @@ import pytest
 from jarvis.evolution.horizon_scanner import HorizonScanner
 from jarvis.evolution.models import LearningPlan, SubGoal
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

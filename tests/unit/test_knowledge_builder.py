@@ -347,7 +347,7 @@ class TestBuildRejectsGarbage:
 
     @pytest.mark.asyncio
     async def test_build_skips_too_short(self):
-        from jarvis.evolution.knowledge_builder import BuildResult, KnowledgeBuilder
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, goal_slug="test")
@@ -359,7 +359,7 @@ class TestBuildRejectsGarbage:
 
     @pytest.mark.asyncio
     async def test_build_accepts_good_content(self):
-        from jarvis.evolution.knowledge_builder import BuildResult, KnowledgeBuilder
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, llm_fn=_mock_llm, goal_slug="test")
@@ -559,8 +559,9 @@ class TestSummarizeForIdentity:
 
     @pytest.mark.asyncio
     async def test_build_calls_summarize_when_memory_manager_set(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
         from unittest.mock import MagicMock
+
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -601,8 +602,9 @@ class TestSummarizeForIdentity:
 
     @pytest.mark.asyncio
     async def test_build_skips_summarize_without_llm_fn(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
         from unittest.mock import MagicMock
+
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -618,8 +620,9 @@ class TestSummarizeForIdentity:
 
     @pytest.mark.asyncio
     async def test_already_summarized_skips_llm_call(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
         from unittest.mock import MagicMock
+
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -653,8 +656,9 @@ class TestSummarizeForIdentity:
 
     @pytest.mark.asyncio
     async def test_dedup_skips_duplicate_summaries(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
         from unittest.mock import MagicMock
+
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -678,8 +682,9 @@ class TestSummarizeForIdentity:
 
     @pytest.mark.asyncio
     async def test_summarize_failure_does_not_block_pipeline(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
         from unittest.mock import MagicMock
+
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -699,8 +704,9 @@ class TestSummarizeForIdentity:
 
     @pytest.mark.asyncio
     async def test_is_useful_false_skips_store(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
         from unittest.mock import MagicMock
+
+        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
 
         async def useless_llm(prompt: str) -> str:
             if "Wissenskurator" in prompt:

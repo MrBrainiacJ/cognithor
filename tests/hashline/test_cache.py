@@ -8,8 +8,6 @@ import threading
 import time
 from pathlib import Path
 
-import pytest
-
 from jarvis.hashline.cache import HashlineCache
 from jarvis.hashline.config import HashlineConfig
 from jarvis.hashline.models import HashlinedFile, HashlinedLine

@@ -47,7 +47,11 @@ OPTIONAL_GROUPS: dict[str, list[tuple[str, str]]] = {
     "web": [("fastapi", "fastapi"), ("uvicorn", "uvicorn")],
     "telegram": [("telegram", "python-telegram-bot")],
     "search": [("trafilatura", "trafilatura"), ("ddgs", "ddgs")],
-    "voice": [("faster_whisper", "faster-whisper"), ("piper", "piper-tts"), ("sounddevice", "sounddevice")],
+    "voice": [
+        ("faster_whisper", "faster-whisper"),
+        ("piper", "piper-tts"),
+        ("sounddevice", "sounddevice"),
+    ],
     "documents": [("fpdf", "fpdf2"), ("docx", "python-docx")],
     "mcp": [("mcp", "mcp")],
     "discord": [("discord", "discord.py")],
@@ -194,7 +198,7 @@ def check_system_binaries() -> None:
                 pass
             passed(f"{binary}: {path}" + (f" ({version})" if version else ""))
         elif required:
-            failed(f"{binary} not found ({purpose})", f"Install from the project PREREQUISITES.md")
+            failed(f"{binary} not found ({purpose})", "Install from the project PREREQUISITES.md")
         else:
             warned(f"{binary} not found ({purpose})", "Optional — install if needed")
 
@@ -223,7 +227,10 @@ def check_ollama_connection() -> None:
                 else:
                     warned("No embedding model found", "ollama pull qwen3-embedding:0.6b")
             else:
-                warned("No models installed", "ollama pull qwen3:8b && ollama pull qwen3-embedding:0.6b")
+                warned(
+                    "No models installed",
+                    "ollama pull qwen3:8b && ollama pull qwen3-embedding:0.6b",
+                )
     except urllib.error.URLError:
         warned(
             f"Ollama not reachable at {OLLAMA_URL}",
@@ -303,7 +310,9 @@ def check_env_vars() -> None:
         "JARVIS_TEAMS_APP_ID",
     ]:
         if os.environ.get(key):
-            channels_found.append(key.replace("JARVIS_", "").replace("_TOKEN", "").replace("_APP_ID", ""))
+            channels_found.append(
+                key.replace("JARVIS_", "").replace("_TOKEN", "").replace("_APP_ID", "")
+            )
 
     if channels_found:
         passed(f"Channel tokens: {', '.join(channels_found)}")
@@ -337,7 +346,9 @@ def check_ports() -> None:
         result = sock.connect_ex((api_host, api_port))
         sock.close()
         if result == 0:
-            warned(f"Port {api_port} already in use on {api_host}", "Another instance may be running")
+            warned(
+                f"Port {api_port} already in use on {api_host}", "Another instance may be running"
+            )
         else:
             passed(f"Port {api_port} available on {api_host}")
     except Exception as exc:
@@ -366,7 +377,9 @@ def main() -> None:
     # Summary
     print(f"\n{'=' * 60}")
     total = _pass_count + _fail_count + _warn_count
-    print(f"  Results: {_pass_count}/{total} passed, {_warn_count} warnings, {_fail_count} failures")
+    print(
+        f"  Results: {_pass_count}/{total} passed, {_warn_count} warnings, {_fail_count} failures"
+    )
 
     if _fail_count == 0:
         print("  All critical checks passed.")

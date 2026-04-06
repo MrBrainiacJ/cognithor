@@ -96,9 +96,9 @@ def test_03_verified_lookup_full_pipeline():
 
 def test_04_locked_enforcement():
     """sync_from_mcp preserves locked tool descriptions but updates schema."""
-    from jarvis.mcp.tool_registry_db import ToolRegistryDB
-
     from pathlib import Path
+
+    from jarvis.mcp.tool_registry_db import ToolRegistryDB
 
     db = ToolRegistryDB(Path(tempfile.mkdtemp()) / "test.db")
     db.upsert_tool(name="my_tool", description_en="Original", category="web")
@@ -213,11 +213,11 @@ def test_09_gatekeeper_green():
 def test_10_tool_registry_maps():
     """verified_web_lookup in all registry maps."""
     from jarvis.mcp.tool_registry_db import (
+        _TOOL_DESCRIPTIONS_DE,
+        _TOOL_DESCRIPTIONS_ZH,
         DEFAULT_EXAMPLES,
         TOOL_CATEGORIES,
         TOOL_ROLE_DEFAULTS,
-        _TOOL_DESCRIPTIONS_DE,
-        _TOOL_DESCRIPTIONS_ZH,
     )
 
     assert "verified_web_lookup" in TOOL_ROLE_DEFAULTS["planner"]

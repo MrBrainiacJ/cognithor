@@ -1,8 +1,6 @@
 """Tests for SystemDetector — hardware/software detection."""
 
-import json
 import pytest
-from pathlib import Path
 
 
 class TestDetectionResult:

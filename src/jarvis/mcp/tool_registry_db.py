@@ -13,16 +13,17 @@ from __future__ import annotations
 import contextlib
 import json
 import sqlite3
-
-from jarvis.security.encrypted_db import (
-    OperationalError as _EncryptedOperationalError,
-    compatible_row_factory,
-    encrypted_connect,
-)
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from jarvis.security.encrypted_db import (
+    OperationalError as _EncryptedOperationalError,
+)
+from jarvis.security.encrypted_db import (
+    compatible_row_factory,
+    encrypted_connect,
+)
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:

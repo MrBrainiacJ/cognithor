@@ -3,8 +3,6 @@
 import hashlib
 import hmac
 import json
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -22,7 +20,8 @@ class TestHMACSignatures:
         )
 
     def test_record_includes_hmac_field(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        from jarvis.models import AuditEntry as GateAuditEntry
+        from jarvis.models import GateStatus, RiskLevel
 
         entry = GateAuditEntry(
             session_id="test-session",
@@ -41,7 +40,8 @@ class TestHMACSignatures:
         assert len(record["hmac"]) == 64  # SHA-256 hex digest
 
     def test_hmac_is_deterministic(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        from jarvis.models import AuditEntry as GateAuditEntry
+        from jarvis.models import GateStatus, RiskLevel
 
         entry = GateAuditEntry(
             session_id="s1",
@@ -66,8 +66,9 @@ class TestHMACSignatures:
         assert record["hmac"] == expected
 
     def test_no_hmac_when_key_is_none(self, tmp_path):
+        from jarvis.models import AuditEntry as GateAuditEntry
+        from jarvis.models import GateStatus, RiskLevel
         from jarvis.security.audit import AuditTrail
-        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
 
         trail = AuditTrail(log_path=tmp_path / "no_hmac.jsonl", hmac_key=None)
         entry = GateAuditEntry(
@@ -85,7 +86,8 @@ class TestHMACSignatures:
         assert "hmac" not in record
 
     def test_verify_chain_with_hmac(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        from jarvis.models import AuditEntry as GateAuditEntry
+        from jarvis.models import GateStatus, RiskLevel
 
         for i in range(5):
             entry = GateAuditEntry(
@@ -115,7 +117,8 @@ class TestBlockchainAnchoring:
         return AuditTrail(log_path=tmp_path / "bc_audit.jsonl")
 
     def test_get_anchor_returns_hash_and_count(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        from jarvis.models import AuditEntry as GateAuditEntry
+        from jarvis.models import GateStatus, RiskLevel
 
         for i in range(3):
             entry = GateAuditEntry(
@@ -135,7 +138,8 @@ class TestBlockchainAnchoring:
         assert "timestamp" in anchor
 
     def test_anchor_changes_after_new_entry(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry, GateStatus, RiskLevel
+        from jarvis.models import AuditEntry as GateAuditEntry
+        from jarvis.models import GateStatus, RiskLevel
 
         entry = GateAuditEntry(
             session_id="s1",
@@ -214,8 +218,8 @@ class TestBreachDetector:
         assert breaches[0]["severity"] == "critical"
 
     def test_cooldown_prevents_duplicate(self, tmp_path):
-        from jarvis.audit.breach_detector import BreachDetector
         from jarvis.audit import AuditLogger, AuditSeverity
+        from jarvis.audit.breach_detector import BreachDetector
 
         detector = BreachDetector(state_path=tmp_path / "breach_state.json", cooldown_hours=24)
         logger = AuditLogger(log_dir=tmp_path)

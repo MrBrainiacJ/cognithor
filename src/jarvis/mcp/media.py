@@ -2719,7 +2719,7 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
         tm = _get_template_manager()
         try:
             vars_dict: dict[str, str] = _json.loads(variables) if variables.strip() else {}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return t("media.invalid_json_variables", error=exc)
 
         try:

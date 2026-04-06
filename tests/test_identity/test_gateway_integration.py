@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
-
 
 class TestIdentityConfig:
     """Tests for IdentityConfig in JarvisConfig."""
 
     def test_identity_config_exists(self) -> None:
-        from jarvis.config import JarvisConfig, IdentityConfig
         import tempfile
+
+        from jarvis.config import IdentityConfig, JarvisConfig
 
         cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
         assert hasattr(cfg, "identity")
@@ -61,6 +58,7 @@ class TestGatekeeperGenesisAnchors:
     def test_gatekeeper_identity_tools_green(self) -> None:
         """Identity tools should be classified as GREEN."""
         import tempfile
+
         from jarvis.config import JarvisConfig
         from jarvis.core.gatekeeper import Gatekeeper
         from jarvis.models import PlannedAction, RiskLevel
@@ -78,9 +76,10 @@ class TestIdentityPhaseInit:
 
     def test_pge_attrs_include_identity(self) -> None:
         """declare_pge_attrs should include identity_layer."""
-        from jarvis.gateway.phases.pge import declare_pge_attrs
         import tempfile
+
         from jarvis.config import JarvisConfig
+        from jarvis.gateway.phases.pge import declare_pge_attrs
 
         cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
         attrs = declare_pge_attrs(cfg)

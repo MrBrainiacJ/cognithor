@@ -243,7 +243,11 @@ class TestIngestPipeline:
         result = await pipeline.ingest_file(f)
         assert not result.success
         assert result.error is not None
-        assert "Kein Text" in result.error or "empty" in result.error.lower() or "kein" in result.error.lower()
+        assert (
+            "Kein Text" in result.error
+            or "empty" in result.error.lower()
+            or "kein" in result.error.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_ingest_extraction_error(

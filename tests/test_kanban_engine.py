@@ -10,7 +10,7 @@ from jarvis.kanban.engine import (
     SubtaskDepthExceeded,
     TaskLimitExceeded,
 )
-from jarvis.kanban.models import Task, TaskPriority, TaskSource, TaskStatus
+from jarvis.kanban.models import TaskSource, TaskStatus
 from jarvis.kanban.store import KanbanStore
 
 

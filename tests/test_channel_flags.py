@@ -8,8 +8,6 @@ Tests:
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.channel_flags import (
     CHANNEL_PROFILES,
     ChannelFlags,

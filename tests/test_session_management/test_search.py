@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
 from jarvis.gateway.session_store import SessionStore
-from jarvis.models import SessionContext, Message, MessageRole
+from jarvis.models import Message, MessageRole, SessionContext
 
 
 def test_search_finds_matching_messages(tmp_path):

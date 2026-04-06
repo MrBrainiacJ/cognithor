@@ -26,7 +26,6 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 from jarvis.i18n import t
-from jarvis.mcp.vault_backend import parse_tags as _parse_tags
 from jarvis.mcp.vault_backend import slugify as _ext_slugify
 from jarvis.utils.logging import get_logger
 

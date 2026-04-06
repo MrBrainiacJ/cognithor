@@ -14,7 +14,6 @@ import hashlib
 import json
 import re
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -84,6 +83,7 @@ def parse_skill_frontmatter(md_content: str) -> dict:
     if not match:
         return {}
     import yaml
+
     return yaml.safe_load(match.group(1)) or {}
 
 

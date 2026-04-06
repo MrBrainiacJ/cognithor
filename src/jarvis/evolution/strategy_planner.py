@@ -5,7 +5,8 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Callable, Coroutine, List, Optional
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from jarvis.evolution.models import (
     LearningPlan,
@@ -120,7 +121,7 @@ class StrategyPlanner:
     async def create_plan(
         self,
         goal: str,
-        seed_sources: Optional[List[SeedSource]] = None,
+        seed_sources: list[SeedSource] | None = None,
     ) -> LearningPlan:
         """Build a LearningPlan by asking the LLM to decompose *goal*."""
         plan = LearningPlan(goal=goal)

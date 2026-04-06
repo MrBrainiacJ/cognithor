@@ -22,8 +22,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-
-from jarvis.i18n import t
 import re
 import time
 from html.parser import HTMLParser
@@ -33,6 +31,7 @@ from urllib.parse import urlparse
 
 import httpx
 
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 from jarvis.utils.ttl_dict import TTLDict
 

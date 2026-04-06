@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import sys
 
-import pytest
-
 from jarvis.core.checkpointing import (
     CheckpointStore,
     PersistentCheckpoint,
-    ResumeResult,
 )
 
 

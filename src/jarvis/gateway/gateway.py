@@ -842,8 +842,8 @@ class Gateway:
         # Kanban Board
         try:
             if getattr(self._config, "kanban", None) and self._config.kanban.enabled:
-                from jarvis.kanban.store import KanbanStore
                 from jarvis.kanban.engine import KanbanEngine
+                from jarvis.kanban.store import KanbanStore
                 from jarvis.mcp.kanban_tools import register_kanban_tools
 
                 _kanban_db = self._config.jarvis_home / "db" / "kanban.db"

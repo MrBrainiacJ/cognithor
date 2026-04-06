@@ -161,10 +161,9 @@ async def _run_mcp_server_mode(config: Any) -> None:
     """
     import asyncio
 
-    from jarvis.mcp.bridge import MCPBridge, MCP_WORKSPACE_SAFE_TOOLS
+    from jarvis.mcp.bridge import MCP_WORKSPACE_SAFE_TOOLS, MCPBridge
     from jarvis.mcp.client import JarvisMCPClient
     from jarvis.mcp.server import MCPServerMode
-
     from jarvis.utils.logging import get_logger
 
     log = get_logger("jarvis.mcp_server")

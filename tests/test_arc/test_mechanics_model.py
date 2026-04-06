@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from jarvis.arc.episode_memory import EpisodeMemory
-from jarvis.arc.mechanics_model import MechanicType, MechanicsModel
+from jarvis.arc.mechanics_model import MechanicsModel, MechanicType
 
 
 def _populated_memory():

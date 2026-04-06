@@ -19,7 +19,6 @@ from jarvis.config import ContextPipelineConfig
 from jarvis.core.context_pipeline import ContextPipeline, ContextResult
 from jarvis.models import Chunk, MemorySearchResult, WorkingMemory
 
-
 # ── Fixtures ──────────────────────────────────────────────────────
 
 

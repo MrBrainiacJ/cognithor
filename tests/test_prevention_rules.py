@@ -20,9 +20,7 @@ from jarvis.learning.trace_optimizer import (
     OptimizationProposal,
     ProposalStore,
     TraceOptimizer,
-    _PREVENTION_RULES,
 )
-
 
 # ── Fixtures ──────────────────────────────────────────────────────
 

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import time
 
-import pytest
-
-from jarvis.learning.reflexion import ReflexionEntry, ReflexionMemory
+from jarvis.learning.reflexion import ReflexionMemory
 
 
 class TestRecordAndLookup:

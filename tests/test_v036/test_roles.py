@@ -8,9 +8,6 @@ import pytest
 
 from jarvis.core.agent_router import AgentProfile
 from jarvis.core.roles import (
-    MONITOR_ALLOWED_TOOLS,
-    ROLE_BEHAVIOURS,
-    AgentRole,
     AgentSpawnError,
     WriteBlockedError,
     can_spawn,

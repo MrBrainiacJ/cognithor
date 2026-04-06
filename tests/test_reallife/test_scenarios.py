@@ -9,13 +9,10 @@ Tests are designed to run in Docker or locally.
 
 from __future__ import annotations
 
-import asyncio
 import json
-import pytest
-from pathlib import Path
-from datetime import datetime, timedelta, UTC
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime, timedelta
 
+import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -286,7 +283,7 @@ class TestSessionManagement:
     def test_search_across_sessions(self, tmp_path):
         """Full-text search should find messages across sessions."""
         from jarvis.gateway.session_store import SessionStore
-        from jarvis.models import SessionContext, Message, MessageRole
+        from jarvis.models import Message, MessageRole, SessionContext
 
         store = SessionStore(tmp_path / "sessions.db")
         s = SessionContext(
@@ -311,7 +308,7 @@ class TestSessionManagement:
     def test_export_session(self, tmp_path):
         """Session export should include all messages and metadata."""
         from jarvis.gateway.session_store import SessionStore
-        from jarvis.models import SessionContext, Message, MessageRole
+        from jarvis.models import Message, MessageRole, SessionContext
 
         store = SessionStore(tmp_path / "sessions.db")
         s = SessionContext(

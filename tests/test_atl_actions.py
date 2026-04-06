@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 
 class TestRiskCeiling:
     def test_green_allows_green(self):

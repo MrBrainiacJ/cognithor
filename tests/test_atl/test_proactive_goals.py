@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import MagicMock
-from pathlib import Path
 
 from jarvis.evolution.atl_config import ATLConfig
-from jarvis.evolution.goal_manager import GoalManager, Goal
+from jarvis.evolution.goal_manager import Goal, GoalManager
 
 
 def test_auto_goal_from_curiosity(tmp_path):

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.arc.classic.task_parser import ArcTask, Solution, GameResult
+from jarvis.arc.classic.task_parser import ArcTask, GameResult, Solution
 
 
 class TestArcTask:

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from jarvis.osint.evidence_aggregator import EvidenceAggregator
 from jarvis.osint.models import ClaimType, Evidence, VerificationStatus
 
@@ -14,7 +14,7 @@ def _ev(source_type: str, content: str, confidence: float = 0.7) -> Evidence:
         source_type=source_type,
         content=content,
         confidence=confidence,
-        collected_at=datetime.now(timezone.utc),
+        collected_at=datetime.now(UTC),
     )
 
 

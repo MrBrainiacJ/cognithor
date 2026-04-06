@@ -18,11 +18,9 @@ Prerequisites:
 from __future__ import annotations
 
 import os
-import platform
 import shutil
 import subprocess
 import sys
-import tempfile
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -163,7 +161,7 @@ def step_ollama() -> Path:
     ollama_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(ollama_dir)
-    print(f"  [OK] Ollama extracted")
+    print("  [OK] Ollama extracted")
 
     return ollama_dir
 

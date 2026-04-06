@@ -6,8 +6,7 @@ import time
 
 import pytest
 
-from jarvis.memory.tactical import AvoidanceRule, TacticalMemory, ToolEffectiveness, ToolOutcome
-
+from jarvis.memory.tactical import TacticalMemory, ToolEffectiveness, ToolOutcome
 
 # ---------------------------------------------------------------------------
 # TestToolOutcome

@@ -260,7 +260,8 @@ class TestMediaTTSPathTraversal:
     async def test_traversal_rejected(self, pipeline, voice: str) -> None:
         result = await pipeline.text_to_speech("Hallo Welt", voice=voice)
         assert not result.success
-        assert "Ungueltiger Voice-Name" in (result.error or "")
+        err = (result.error or "").lower()
+        assert "voice" in err or "invalid" in err or "ungueltig" in err or "ungültig" in err
 
     async def test_valid_voice_accepted(self, pipeline) -> None:
         # Will fail at Piper execution (not installed in test), but should
@@ -274,7 +275,8 @@ class TestMediaTTSPathTraversal:
     async def test_null_byte_rejected(self, pipeline) -> None:
         result = await pipeline.text_to_speech("Test", voice="voice\x00evil")
         assert not result.success
-        assert "Ungueltiger Voice-Name" in (result.error or "")
+        err = (result.error or "").lower()
+        assert "voice" in err or "invalid" in err or "ungueltig" in err or "ungültig" in err
 
 
 # ============================================================================

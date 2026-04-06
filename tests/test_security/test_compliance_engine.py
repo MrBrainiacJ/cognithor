@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
-from pathlib import Path
+
 from jarvis.security.compliance_engine import ComplianceEngine, ComplianceViolation
 from jarvis.security.consent import ConsentManager
-from jarvis.security.gdpr import ProcessingBasis, DataPurpose
+from jarvis.security.gdpr import DataPurpose, ProcessingBasis
 
 
 @pytest.fixture

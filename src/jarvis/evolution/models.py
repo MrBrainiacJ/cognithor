@@ -6,11 +6,8 @@ import json
 import os
 import re
 import uuid
-
-
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
 
 __all__ = [
     "LearningPlan",
@@ -37,15 +34,15 @@ def _slugify(text: str) -> str:
 
 def _now_iso() -> str:
     """Return current UTC time as ISO 8601 string."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 @dataclass
 class QualityQuestion:
     question: str
     expected_answer: str
-    actual_answer: Optional[str] = None
-    score: Optional[float] = None
+    actual_answer: str | None = None
+    score: float | None = None
     passed: bool = False
 
     def to_dict(self) -> dict:
@@ -72,7 +69,7 @@ class QualityQuestion:
 class SeedSource:
     content_type: str  # "url" | "file" | "hint"
     value: str
-    title: Optional[str] = None
+    title: str | None = None
     processed: bool = False
 
     def to_dict(self) -> dict:
@@ -97,12 +94,12 @@ class SeedSource:
 class SourceSpec:
     url: str
     source_type: str
-    title: Optional[str] = None
-    fetch_strategy: Optional[str] = None
-    update_frequency: Optional[str] = None
+    title: str | None = None
+    fetch_strategy: str | None = None
+    update_frequency: str | None = None
     priority: int = 5
-    max_pages: Optional[int] = None
-    last_fetched: Optional[str] = None
+    max_pages: int | None = None
+    last_fetched: str | None = None
     pages_fetched: int = 0
     status: str = "pending"
 
@@ -140,10 +137,10 @@ class SourceSpec:
 class ScheduleSpec:
     name: str
     cron_expression: str
-    source_url: Optional[str] = None
+    source_url: str | None = None
     action: str = "fetch"
-    goal_id: Optional[str] = None
-    description: Optional[str] = None
+    goal_id: str | None = None
+    description: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -174,17 +171,17 @@ class SubGoal:
     id: str = field(default_factory=_new_id)
     status: str = "pending"
     priority: int = 5
-    parent_goal_id: Optional[str] = None
+    parent_goal_id: str | None = None
     sources_fetched: int = 0
     chunks_created: int = 0
     entities_created: int = 0
     vault_entries: int = 0
     skills_generated: int = 0
     cron_jobs_created: int = 0
-    coverage_score: Optional[float] = None
-    quality_score: Optional[float] = None
-    quality_questions: List[QualityQuestion] = field(default_factory=list)
-    last_tested: Optional[str] = None  # ISO timestamp of last quality test
+    coverage_score: float | None = None
+    quality_score: float | None = None
+    quality_questions: list[QualityQuestion] = field(default_factory=list)
+    last_tested: str | None = None  # ISO timestamp of last quality test
     test_count: int = 0  # How many times this SubGoal has been tested
 
     def to_dict(self) -> dict:
@@ -241,12 +238,12 @@ class LearningPlan:
     created_at: str = field(default_factory=_now_iso)
     updated_at: str = field(default_factory=_now_iso)
     status: str = "planning"
-    sub_goals: List[SubGoal] = field(default_factory=list)
-    sources: List[SourceSpec] = field(default_factory=list)
-    schedules: List[ScheduleSpec] = field(default_factory=list)
-    seed_sources: List[SeedSource] = field(default_factory=list)
-    coverage_score: Optional[float] = None
-    quality_score: Optional[float] = None
+    sub_goals: list[SubGoal] = field(default_factory=list)
+    sources: list[SourceSpec] = field(default_factory=list)
+    schedules: list[ScheduleSpec] = field(default_factory=list)
+    seed_sources: list[SeedSource] = field(default_factory=list)
+    coverage_score: float | None = None
+    quality_score: float | None = None
     total_chunks_indexed: int = 0
     total_entities_created: int = 0
     total_vault_entries: int = 0
@@ -328,14 +325,14 @@ class LearningPlan:
     def load(cls, plan_dir: str) -> LearningPlan:
         """Load a plan from {plan_dir}/plan.json."""
         plan_path = os.path.join(plan_dir, "plan.json")
-        with open(plan_path, "r", encoding="utf-8") as f:
+        with open(plan_path, encoding="utf-8") as f:
             data = json.load(f)
         return cls.from_dict(data)
 
     @classmethod
-    def list_plans(cls, base_dir: str) -> List[LearningPlan]:
+    def list_plans(cls, base_dir: str) -> list[LearningPlan]:
         """Iterate base_dir/*/plan.json and return all found plans."""
-        plans: List[LearningPlan] = []
+        plans: list[LearningPlan] = []
         if not os.path.isdir(base_dir):
             return plans
         for entry in os.listdir(base_dir):

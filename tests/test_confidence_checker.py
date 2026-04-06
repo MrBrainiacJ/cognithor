@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.core.confidence import (
     PROCEED_THRESHOLD,
-    WARN_THRESHOLD,
     ConfidenceChecker,
     ConfidenceResult,
 )

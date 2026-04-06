@@ -166,7 +166,7 @@ class ConsentManager:
             (user_id,),
         )
         columns = [d[0] for d in cursor.description]
-        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+        return [dict(zip(columns, row, strict=False)) for row in cursor.fetchall()]
 
     def delete_user(self, user_id: str) -> int:
         """Delete all consent records for a user (for erasure)."""

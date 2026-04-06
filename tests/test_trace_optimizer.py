@@ -4,17 +4,13 @@ from __future__ import annotations
 
 import time
 import uuid
-from pathlib import Path
 from unittest.mock import MagicMock
-
-import pytest
 
 from jarvis.learning.trace_optimizer import (
     OptimizationProposal,
     ProposalStore,
     TraceOptimizer,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -1,11 +1,12 @@
 """Tests for Vault migration (files <-> DB)."""
 
 from __future__ import annotations
+
 import pytest
-from pathlib import Path
-from jarvis.mcp.vault_file_backend import VaultFileBackend
+
 from jarvis.mcp.vault_db_backend import VaultDBBackend
-from jarvis.mcp.vault_migration import migrate_files_to_db, migrate_db_to_files, detect_mode_change
+from jarvis.mcp.vault_file_backend import VaultFileBackend
+from jarvis.mcp.vault_migration import detect_mode_change, migrate_db_to_files, migrate_files_to_db
 
 
 @pytest.fixture

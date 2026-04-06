@@ -5,11 +5,8 @@ from __future__ import annotations
 import time
 import uuid
 
-import pytest
-
 from jarvis.learning.causal_attributor import CausalAttributor, CausalFinding
 from jarvis.learning.execution_trace import ExecutionTrace, TraceStep
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from jarvis.osint.collectors.base import BaseCollector, CollectorError
 from jarvis.osint.models import Evidence
@@ -30,7 +30,7 @@ class GitHubCollector(BaseCollector):
 
     async def collect(self, target: str, claims: list[str]) -> list[Evidence]:
         evidence: list[Evidence] = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         try:
             profile = await self._fetch_with_retry(
                 f"{self.BASE_URL}/users/{target}", headers=self._headers()

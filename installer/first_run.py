@@ -14,7 +14,6 @@ import sys
 import urllib.request
 from pathlib import Path
 
-
 REGISTRY_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/registry.json"
 SKILL_BASE_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/skills"
 
@@ -87,6 +86,7 @@ def setup_encryption() -> bool:
     """Set up database encryption with auto-generated key in OS keyring."""
     try:
         import secrets
+
         import keyring
     except ImportError:
         print("  [SKIP] keyring not available, encryption disabled")
@@ -129,10 +129,10 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     try:
         # Import from installed cognithor package
         from jarvis.core.installer import (
+            PRESETS,
             HardwareDetector,
             ModelRecommender,
             PresetLevel,
-            PRESETS,
         )
     except ImportError:
         print("  [WARN] Could not import setup wizard (jarvis not installed?)")
@@ -186,7 +186,9 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
             print()
             for i, rec in enumerate(recs, 1):
                 stars = "*" * rec.quality_score
-                print(f"    [{i}] {rec.model_name:<25} Quality: {stars:<10}  Speed: {rec.speed_score}/10  ({rec.use_case})")
+                print(
+                    f"    [{i}] {rec.model_name:<25} Quality: {stars:<10}  Speed: {rec.speed_score}/10  ({rec.use_case})"
+                )
             print()
 
             model_choice = _ask_choice(
@@ -227,7 +229,7 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
                 print(f"  [OK] {env_key} already set in environment")
                 config["jarvis"]["api_key_env"] = env_key
             else:
-                print(f"  Enter your API key (or press Enter to configure later):")
+                print("  Enter your API key (or press Enter to configure later):")
                 api_key = input("  > ").strip()
                 if api_key:
                     # Save to .env file in jarvis home
@@ -240,7 +242,15 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
                     print(f"  [SKIP] Set {env_key} environment variable later")
 
         if not use_ollama:
-            config["jarvis"]["model"] = "gpt-4o" if api_choice == "1" else "claude-sonnet-4-20250514" if api_choice == "2" else "gemini-2.0-flash" if api_choice == "3" else ""
+            config["jarvis"]["model"] = (
+                "gpt-4o"
+                if api_choice == "1"
+                else "claude-sonnet-4-20250514"
+                if api_choice == "2"
+                else "gemini-2.0-flash"
+                if api_choice == "3"
+                else ""
+            )
 
     # Step 5: Apply preset based on hardware tier
     tier_map = {
@@ -278,7 +288,7 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
         _write_yaml(config, config_path)
         print(f"\n  [OK] Configuration saved to {config_path}")
     else:
-        print(f"\n  [SKIP] config.yaml already exists")
+        print("\n  [SKIP] config.yaml already exists")
 
     return config
 
@@ -321,10 +331,14 @@ def _write_yaml(data: dict, path: Path) -> None:
 def mark_initialized() -> None:
     """Create marker file so first-run doesn't run again."""
     marker = JARVIS_HOME / ".cognithor_initialized"
-    marker.write_text(json.dumps({
-        "version": "0.75.0",
-        "first_run": True,
-    }))
+    marker.write_text(
+        json.dumps(
+            {
+                "version": "0.75.0",
+                "first_run": True,
+            }
+        )
+    )
 
 
 def main() -> None:

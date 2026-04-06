@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
-from jarvis.osint.collectors.base import BaseCollector, CollectorError
-from jarvis.osint.collectors.scholar import ScholarCollector
-from jarvis.osint.collectors.linkedin import LinkedInCollector
+
 from jarvis.osint.collectors.crunchbase import CrunchbaseCollector
+from jarvis.osint.collectors.linkedin import LinkedInCollector
+from jarvis.osint.collectors.scholar import ScholarCollector
 from jarvis.osint.collectors.social import SocialCollector
 
 

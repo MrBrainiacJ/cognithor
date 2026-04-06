@@ -198,7 +198,7 @@ class SmokeTest:
         try:
             from jarvis.config import JarvisConfig
             from jarvis.core.gatekeeper import Gatekeeper
-            from jarvis.models import PlannedAction, SessionContext, GateStatus
+            from jarvis.models import GateStatus, PlannedAction, SessionContext
 
             config = JarvisConfig(jarvis_home=self.jarvis_home)
             gk = Gatekeeper(config)
@@ -263,8 +263,8 @@ class SmokeTest:
     def test_audit(self) -> None:
         header("9. Audit-Trail")
         try:
-            from jarvis.security.audit import AuditTrail
             from jarvis.models import AuditEntry, GateStatus, RiskLevel
+            from jarvis.security.audit import AuditTrail
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 audit = AuditTrail(log_dir=Path(tmpdir))

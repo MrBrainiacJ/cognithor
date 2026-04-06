@@ -179,7 +179,7 @@ class EncryptedFileIO:
                     )
 
         # Plaintext file — read normally
-        with open(path, "r", encoding=encoding) as f:
+        with open(path, encoding=encoding) as f:
             return f.read()
 
     def is_encrypted(self, path: str | Path) -> bool:
@@ -206,7 +206,7 @@ class EncryptedFileIO:
             return False
 
         # Read plaintext
-        with open(path, "r", encoding=encoding) as f:
+        with open(path, encoding=encoding) as f:
             content = f.read()
 
         # Write encrypted

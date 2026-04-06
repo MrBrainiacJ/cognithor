@@ -117,25 +117,25 @@ class FeedbackStore:
             where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
             total = conn.execute(
-                f"SELECT COUNT(*) FROM feedback {where}",  # noqa: S608
+                f"SELECT COUNT(*) FROM feedback {where}",
                 params,
             ).fetchone()[0]
 
             pos_where = f"{where} {'AND' if where else 'WHERE'} rating > 0"
             positive = conn.execute(
-                f"SELECT COUNT(*) FROM feedback {pos_where}",  # noqa: S608
+                f"SELECT COUNT(*) FROM feedback {pos_where}",
                 params,
             ).fetchone()[0]
 
             neg_where = f"{where} {'AND' if where else 'WHERE'} rating < 0"
             negative = conn.execute(
-                f"SELECT COUNT(*) FROM feedback {neg_where}",  # noqa: S608
+                f"SELECT COUNT(*) FROM feedback {neg_where}",
                 params,
             ).fetchone()[0]
 
             com_where = f"{where} {'AND' if where else 'WHERE'} comment != ''"
             with_comment = conn.execute(
-                f"SELECT COUNT(*) FROM feedback {com_where}",  # noqa: S608
+                f"SELECT COUNT(*) FROM feedback {com_where}",
                 params,
             ).fetchone()[0]
 

@@ -54,7 +54,6 @@ class SmartExplorer:
 
     def solve(self, max_levels: int = 10, timeout_s: float = 300.0) -> ExploreResult:
         """Solve game level by level."""
-        from arcengine.enums import GameState
 
         env = self._arcade.make(self._game_id)
         result = ExploreResult()

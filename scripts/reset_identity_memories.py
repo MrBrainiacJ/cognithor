@@ -45,7 +45,7 @@ def main() -> None:
         sys.exit(1)
 
     # Load
-    with open(mem_path, "r", encoding="utf-8") as f:
+    with open(mem_path, encoding="utf-8") as f:
         data = json.load(f)
 
     memories = data.get("memories", {})
@@ -84,7 +84,9 @@ def main() -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
     tmp_path.replace(mem_path)
 
-    print(f"[OK] Reset complete. {len(genesis)} genesis memories retained, {len(cognithor)} removed.")
+    print(
+        f"[OK] Reset complete. {len(genesis)} genesis memories retained, {len(cognithor)} removed."
+    )
     print()
     print("Note: ChromaDB VectorStore may still contain old embeddings.")
     print("They will be naturally replaced as new memories are created,")

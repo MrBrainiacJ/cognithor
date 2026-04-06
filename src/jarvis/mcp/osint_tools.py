@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from jarvis.osint.him_agent import HIMAgent
-from jarvis.osint.models import HIMRequest, GDPRViolationError
+from jarvis.osint.models import GDPRViolationError, HIMRequest
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)

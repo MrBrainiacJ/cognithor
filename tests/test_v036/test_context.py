@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import time
 
-import pytest
-
 from jarvis.core.context_window import ContextEntry, ContextWindow
 
 

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+
 import pytest
+
 from jarvis.security.compliance_audit import ComplianceAuditLog
 
 
@@ -33,7 +35,7 @@ def test_tamper_detection(audit_log):
     audit_log.record("consent_granted", user_id="user1")
     audit_log.record("erasure_requested", user_id="user2")
     # Tamper with the file
-    with open(audit_log._path, "r") as f:
+    with open(audit_log._path) as f:
         lines = f.readlines()
     entry = json.loads(lines[0])
     entry["user_id"] = "tampered"

@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
 from jarvis.evolution.cycle_controller import CycleController, CycleState, ExamResult
-from jarvis.evolution.models import LearningPlan, SubGoal
 
 
 class TestEvolutionE2E:

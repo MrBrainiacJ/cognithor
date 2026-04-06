@@ -19,7 +19,7 @@ import json
 import shutil
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -149,7 +149,7 @@ def run_health_check(jarvis_home: str, ollama_url: str, quick: bool = False) -> 
     start = time.monotonic()
 
     results = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "checks": {},
     }
 
