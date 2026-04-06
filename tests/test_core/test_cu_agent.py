@@ -582,16 +582,22 @@ class TestCUTaskDecomposerVariables:
         assert "date_iso" in v
 
     def test_resolve_output_path_simple(self):
+        import os
+
         d = self._make_decomposer()
         variables = {"date": "20260403", "documents": "C:\\Users\\Test\\Documents"}
         path = d._resolve_output_path("Reddit_fetch_{date}.txt", variables)
-        assert path == "C:\\Users\\Test\\Documents\\Reddit_fetch_20260403.txt"
+        expected = os.path.join("C:\\Users\\Test\\Documents", "Reddit_fetch_20260403.txt")
+        assert path == expected
 
     def test_resolve_output_path_no_variables(self):
+        import os
+
         d = self._make_decomposer()
         variables = {"date": "20260403", "documents": "C:\\Users\\Test\\Documents"}
         path = d._resolve_output_path("static_name.txt", variables)
-        assert path == "C:\\Users\\Test\\Documents\\static_name.txt"
+        expected = os.path.join("C:\\Users\\Test\\Documents", "static_name.txt")
+        assert path == expected
 
 
 class TestCUTaskDecomposerParsing:
