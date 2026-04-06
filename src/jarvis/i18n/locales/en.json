@@ -606,6 +606,7 @@
     "synthesis_no_timeline_info": "No information found for '{topic}' for a timeline.",
     "synthesis_timeline_error": "Error during timeline construction: {exc}",
     "synthesis_gaps_error": "Error during gap analysis: {exc}",
+    "synthesis_footer": "\n\n---\n*Synthesis created: {now}*\n*Sources: {sources}*\n*Depth: {depth}*",
     "canvas_no_html": "No HTML content provided",
     "canvas_no_js": "No JavaScript code provided"
   },

@@ -284,9 +284,7 @@ class KnowledgeSynthesizer:
 
         # 5. Append metadata
         now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
-        footer = (
-            f"\n\n---\n*Synthese erstellt: {now}*\n*Quellen: {source_summary}*\n*Tiefe: {depth}*"
-        )
+        footer = t("tools.synthesis_footer", now=now, sources=source_summary, depth=depth)
         result = synthesis + footer
 
         # 6. Optionally save to vault

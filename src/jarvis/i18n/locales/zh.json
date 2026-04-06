@@ -606,6 +606,7 @@
     "synthesis_no_timeline_info": "未找到 '{topic}' 的时间线信息。",
     "synthesis_timeline_error": "构建时间线时出错：{exc}",
     "synthesis_gaps_error": "知识差距分析时出错：{exc}",
+    "synthesis_footer": "\n\n---\n*综合创建时间：{now}*\n*来源：{sources}*\n*深度：{depth}*",
     "canvas_no_html": "未提供HTML内容",
     "canvas_no_js": "未提供JavaScript代码"
   },

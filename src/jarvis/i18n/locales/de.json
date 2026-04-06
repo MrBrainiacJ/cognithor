@@ -606,6 +606,7 @@
     "synthesis_no_timeline_info": "Keine Informationen zu '{topic}' für eine Zeitlinie gefunden.",
     "synthesis_timeline_error": "Fehler beim Zeitlinien-Aufbau: {exc}",
     "synthesis_gaps_error": "Fehler bei der Lückenanalyse: {exc}",
+    "synthesis_footer": "\n\n---\n*Synthese erstellt: {now}*\n*Quellen: {sources}*\n*Tiefe: {depth}*",
     "canvas_no_html": "Kein HTML-Inhalt angegeben",
     "canvas_no_js": "Kein JavaScript-Code angegeben"
   },
