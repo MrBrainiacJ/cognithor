@@ -26,6 +26,7 @@ import re
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -99,9 +100,9 @@ class KnowledgeSynthesizer:
             Fehlermeldung oder None wenn bereit.
         """
         if self._llm_fn is None:
-            return "Wissenssynthese nicht verfügbar: Kein LLM konfiguriert."
+            return t("tools.synthesis_no_llm")
         if self._memory_tools is None:
-            return "Wissenssynthese nicht verfügbar: Memory-System nicht verbunden."
+            return t("tools.synthesis_no_memory")
         return None
 
     # ── Source gathering ─────────────────────────────────────────────
@@ -252,7 +253,7 @@ class KnowledgeSynthesizer:
             return error
 
         if not topic.strip():
-            return "Fehler: Kein Thema angegeben."
+            return t("tools.synthesis_error_no_topic")
 
         web_results = {"quick": 0, "standard": 3, "deep": 5}.get(depth, 3)
         do_web = include_web and depth != "quick"
@@ -265,9 +266,7 @@ class KnowledgeSynthesizer:
         )
 
         if not sources:
-            return (
-                f"Keine Informationen zu '{topic}' gefunden — weder in Memory, Vault noch im Web."
-            )
+            return t("tools.synthesis_no_info", topic=topic)
 
         # 2. Format context
         context = self._format_source_context(sources)
@@ -281,7 +280,7 @@ class KnowledgeSynthesizer:
             synthesis = await self._llm_fn(prompt, self._llm_model)
         except Exception as exc:
             log.error("synthesis_llm_failed", topic=topic[:50], error=str(exc))
-            return f"Fehler bei der Wissenssynthese: {exc}"
+            return t("tools.synthesis_llm_error", exc=exc)
 
         # 5. Append metadata
         now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
@@ -303,7 +302,7 @@ class KnowledgeSynthesizer:
                     ),
                     folder="knowledge",
                 )
-                result += f"\n\n*Im Vault gespeichert als '{vault_title}'.*"
+                result += t("tools.synthesis_vault_saved", vault_title=vault_title)
             except Exception as vault_exc:
                 log.warning("synthesis_vault_save_failed", error=str(vault_exc))
 
@@ -334,7 +333,7 @@ class KnowledgeSynthesizer:
             return error
 
         if not topic.strip():
-            return "Fehler: Kein Thema angegeben."
+            return t("tools.synthesis_error_no_topic")
 
         # Gather stored knowledge (without web)
         stored_sources = await self._gather_sources(
@@ -344,10 +343,7 @@ class KnowledgeSynthesizer:
         )
 
         if not stored_sources:
-            return (
-                f"Keine gespeicherten Informationen zu '{topic}' "
-                f"gefunden. Widerspruchsanalyse nicht möglich."
-            )
+            return t("tools.synthesis_no_stored_info", topic=topic)
 
         # Gather current web knowledge
         web_sources = await self._gather_sources(
@@ -360,10 +356,7 @@ class KnowledgeSynthesizer:
         )
 
         if not web_sources:
-            return (
-                f"Keine aktuellen Web-Informationen zu '{topic}' "
-                f"gefunden. Widerspruchsanalyse nicht möglich."
-            )
+            return t("tools.synthesis_no_web_info", topic=topic)
 
         stored_context = self._format_source_context(stored_sources)
         web_context = self._format_source_context(web_sources)
@@ -373,7 +366,7 @@ class KnowledgeSynthesizer:
         try:
             analysis = await self._llm_fn(prompt, self._llm_model)
         except Exception as exc:
-            return f"Fehler bei der Widerspruchsanalyse: {exc}"
+            return t("tools.synthesis_contradiction_error", exc=exc)
 
         log.info("contradiction_analysis_complete", topic=topic[:50])
         return analysis
@@ -402,7 +395,7 @@ class KnowledgeSynthesizer:
             return error
 
         if not topic.strip():
-            return "Fehler: Kein Thema angegeben."
+            return t("tools.synthesis_error_no_topic")
 
         sources = await self._gather_sources(
             topic,
@@ -411,7 +404,7 @@ class KnowledgeSynthesizer:
         )
 
         if not sources:
-            return f"Keine Informationen zu '{topic}' für eine Zeitlinie gefunden."
+            return t("tools.synthesis_no_timeline_info", topic=topic)
 
         context = self._format_source_context(sources)
         prompt = _build_timeline_prompt(topic, context, language)
@@ -419,7 +412,7 @@ class KnowledgeSynthesizer:
         try:
             timeline = await self._llm_fn(prompt, self._llm_model)
         except Exception as exc:
-            return f"Fehler beim Zeitlinien-Aufbau: {exc}"
+            return t("tools.synthesis_timeline_error", exc=exc)
 
         log.info("timeline_complete", topic=topic[:50])
         return timeline
@@ -448,7 +441,7 @@ class KnowledgeSynthesizer:
             return error
 
         if not topic.strip():
-            return "Fehler: Kein Thema angegeben."
+            return t("tools.synthesis_error_no_topic")
 
         # Only stored knowledge — no web, to identify gaps
         sources = await self._gather_sources(
@@ -466,7 +459,7 @@ class KnowledgeSynthesizer:
         try:
             gaps = await self._llm_fn(prompt, self._llm_model)
         except Exception as exc:
-            return f"Fehler bei der Lückenanalyse: {exc}"
+            return t("tools.synthesis_gaps_error", exc=exc)
 
         log.info("gap_analysis_complete", topic=topic[:50])
         return gaps
