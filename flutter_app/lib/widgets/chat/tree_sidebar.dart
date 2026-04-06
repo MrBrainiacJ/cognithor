@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_ui/models/chat_node.dart';
 import 'package:jarvis_ui/providers/tree_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
 
 /// Resizable sidebar showing the full conversation tree.
 /// Nodes are clickable — clicking scrolls the chat to that message.
@@ -24,6 +23,9 @@ class _TreeSidebarState extends State<TreeSidebar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Stack(
       children: [
         // Sidebar content
@@ -32,9 +34,9 @@ class _TreeSidebarState extends State<TreeSidebar> {
             return Container(
               width: _width,
               decoration: BoxDecoration(
-                color: JarvisTheme.surface,
+                color: cs.surface,
                 border: Border(
-                  right: BorderSide(color: JarvisTheme.border, width: 1),
+                  right: BorderSide(color: cs.outlineVariant, width: 1),
                 ),
               ),
               child: Column(
@@ -44,19 +46,19 @@ class _TreeSidebarState extends State<TreeSidebar> {
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: JarvisTheme.border, width: 1),
+                        bottom: BorderSide(color: cs.outlineVariant, width: 1),
                       ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.account_tree, size: 16, color: JarvisTheme.accent),
+                        Icon(Icons.account_tree, size: 16, color: cs.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Conversation Tree',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: JarvisTheme.accent,
+                            color: cs.primary,
                           ),
                         ),
                         const Spacer(),
@@ -65,7 +67,7 @@ class _TreeSidebarState extends State<TreeSidebar> {
                             '${tree.nodes.length}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: JarvisTheme.textTertiary,
+                              color: cs.onSurface.withValues(alpha: 0.5),
                             ),
                           ),
                       ],
@@ -79,7 +81,7 @@ class _TreeSidebarState extends State<TreeSidebar> {
                               'No conversation yet',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: JarvisTheme.textTertiary,
+                                color: cs.onSurface.withValues(alpha: 0.4),
                               ),
                             ),
                           )
@@ -128,6 +130,8 @@ class _TreeSidebarState extends State<TreeSidebar> {
   }
 
   Widget _buildNode(BuildContext context, TreeProvider tree, ChatNode node, int depth) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final isActive = tree.activePath.contains(node.id);
     final isFork = tree.isForkPoint(node.id);
     final children = tree.nodes.values
@@ -159,11 +163,11 @@ class _TreeSidebarState extends State<TreeSidebar> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
                 color: isActive
-                    ? JarvisTheme.accent.withValues(alpha: 0.12)
+                    ? cs.primary.withValues(alpha: 0.12)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: isActive
-                    ? Border.all(color: JarvisTheme.accent.withValues(alpha: 0.3))
+                    ? Border.all(color: cs.primary.withValues(alpha: 0.3))
                     : null,
               ),
               child: Row(
@@ -174,13 +178,13 @@ class _TreeSidebarState extends State<TreeSidebar> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: node.isUser
-                          ? JarvisTheme.accent.withValues(alpha: 0.2)
-                          : JarvisTheme.green.withValues(alpha: 0.2),
+                          ? cs.primary.withValues(alpha: 0.2)
+                          : Colors.green.withValues(alpha: 0.2),
                     ),
                     child: Icon(
                       node.isUser ? Icons.person : Icons.smart_toy,
                       size: 11,
-                      color: node.isUser ? JarvisTheme.accent : JarvisTheme.green,
+                      color: node.isUser ? cs.primary : Colors.green,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -190,8 +194,8 @@ class _TreeSidebarState extends State<TreeSidebar> {
                       style: TextStyle(
                         fontSize: 11,
                         color: isActive
-                            ? JarvisTheme.textPrimary
-                            : JarvisTheme.textSecondary,
+                            ? cs.onSurface
+                            : cs.onSurface.withValues(alpha: 0.7),
                         fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
                       ),
                       maxLines: 2,
@@ -203,14 +207,14 @@ class _TreeSidebarState extends State<TreeSidebar> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: JarvisTheme.orange.withValues(alpha: 0.15),
+                        color: Colors.orange.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         '${tree.getChildCount(node.id)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 9,
-                          color: JarvisTheme.orange,
+                          color: Colors.orange,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
