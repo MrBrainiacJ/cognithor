@@ -13,8 +13,16 @@ import argparse
 import contextlib
 import os
 import sys
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+# Suppress noisy third-party warnings that clutter startup output
+warnings.filterwarnings("ignore", message=".*AVX512.*", category=UserWarning)
+warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*", category=UserWarning)
+warnings.filterwarnings("ignore", message=".*unauthenticated requests to the HF Hub.*", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*invalid escape sequence.*", category=SyntaxWarning)
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")  # suppress tokenizer fork warning
 
 from jarvis import BANNER_ASCII, __version__
 

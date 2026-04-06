@@ -103,12 +103,32 @@ class CredentialStore:
         self._store_path.parent.mkdir(parents=True, exist_ok=True)
 
         self._passphrase = passphrase or os.environ.get("JARVIS_CREDENTIAL_KEY", "")
+        if not self._passphrase:
+            self._passphrase = self._try_keyring()
         self._salt = self._load_or_create_salt()
         self._fernet = self._init_fernet()
         self._entries: dict[str, _StoredCredential] = {}
         self._loaded = False
 
     _passphrase_warned: bool = False
+
+    @staticmethod
+    def _try_keyring() -> str:
+        """Try to get or create a credential passphrase from OS keyring."""
+        try:
+            import keyring
+
+            key = keyring.get_password("cognithor", "credential_key")
+            if key:
+                return key
+            # Auto-generate and store
+            import secrets
+
+            key = secrets.token_urlsafe(32)
+            keyring.set_password("cognithor", "credential_key", key)
+            return key
+        except Exception:
+            return ""
 
     def _init_fernet(self) -> Any:
         """Initializes Fernet encryption."""
