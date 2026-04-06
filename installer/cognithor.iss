@@ -105,8 +105,8 @@ Root: HKCU; Subkey: "Environment"; \
 
 [Run]
 ; Post-install: offer to start Cognithor
-Filename: "{cmd}"; Parameters: "/k ""{app}\cognithor.bat"" --ui"; Description: "Start Cognithor"; \
-    Flags: nowait postinstall skipifsilent
+Filename: "{cmd}"; Parameters: "/c ""{app}\cognithor.bat"" --ui"; Description: "Start Cognithor"; \
+    Flags: nowait postinstall skipifsilent runhidden
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\python\__pycache__"

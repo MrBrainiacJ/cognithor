@@ -29,7 +29,9 @@ from pathlib import Path
 
 # --- Config ---
 PYTHON_VERSION = "3.12.9"
-PYTHON_EMBED_URL = f"https://www.python.org/ftp/python/{PYTHON_VERSION}/python-{PYTHON_VERSION}-embed-amd64.zip"
+PYTHON_EMBED_URL = (
+    f"https://www.python.org/ftp/python/{PYTHON_VERSION}/python-{PYTHON_VERSION}-embed-amd64.zip"
+)
 OLLAMA_URL = "https://github.com/ollama/ollama/releases/latest/download/ollama-windows-amd64.zip"
 GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py"
 
@@ -100,8 +102,15 @@ def step_python_embed() -> Path:
 
     # Install setuptools (needed by some dependencies)
     subprocess.run(
-        [str(python_exe), "-m", "pip", "install", "setuptools", "wheel",
-         "--no-warn-script-location"],
+        [
+            str(python_exe),
+            "-m",
+            "pip",
+            "install",
+            "setuptools",
+            "wheel",
+            "--no-warn-script-location",
+        ],
         check=True,
     )
     print("  [OK] setuptools installed")
@@ -111,8 +120,16 @@ def step_python_embed() -> Path:
     wheel_dir = BUILD_DIR / "wheel"
     wheel_dir.mkdir(exist_ok=True)
     subprocess.run(
-        [sys.executable, "-m", "pip", "wheel", str(PROJECT_ROOT),
-         "--wheel-dir", str(wheel_dir), "--no-deps"],
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "wheel",
+            str(PROJECT_ROOT),
+            "--wheel-dir",
+            str(wheel_dir),
+            "--no-deps",
+        ],
         check=True,
     )
 
@@ -123,9 +140,7 @@ def step_python_embed() -> Path:
         raise RuntimeError("No cognithor wheel found")
 
     subprocess.run(
-        [str(python_exe), "-m", "pip", "install",
-         f"{wheels[0]}[all]",
-         "--no-warn-script-location"],
+        [str(python_exe), "-m", "pip", "install", f"{wheels[0]}[all]", "--no-warn-script-location"],
         check=True,
     )
     print("  [OK] cognithor[all] installed")
@@ -198,67 +213,72 @@ def step_launcher() -> Path:
 
     launcher = BUILD_DIR / "cognithor.bat"
     launcher.write_text(
-        '@echo off\r\n'
-        'setlocal enabledelayedexpansion\r\n'
-        'title Cognithor\r\n'
-        '\r\n'
+        "@echo off\r\n"
+        "setlocal enabledelayedexpansion\r\n"
+        "title Cognithor\r\n"
+        "\r\n"
         'set "COGNITHOR_HOME=%~dp0"\r\n'
         'set "PYTHON=%COGNITHOR_HOME%python\\python.exe"\r\n'
         'set "OLLAMA=%COGNITHOR_HOME%ollama\\ollama.exe"\r\n'
-        '\r\n'
-        'REM Verify Python exists\r\n'
+        "\r\n"
+        "REM Check if already running (prevent duplicate instances)\r\n"
+        'netstat -ano 2>NUL | find ":8741 " | find "LISTENING" >NUL 2>NUL\r\n'
+        "if not errorlevel 1 (\r\n"
+        "    echo Cognithor is already running on port 8741.\r\n"
+        '    start "" http://localhost:8741\r\n'
+        "    timeout /t 3 /nobreak >NUL\r\n"
+        "    exit /b 0\r\n"
+        ")\r\n"
+        "\r\n"
+        "REM Verify Python exists\r\n"
         'if not exist "%PYTHON%" (\r\n'
-        '    echo [ERROR] Python not found: %PYTHON%\r\n'
-        '    echo Please reinstall Cognithor.\r\n'
-        '    pause\r\n'
-        '    exit /b 1\r\n'
-        ')\r\n'
-        '\r\n'
-        'REM First-run setup (downloads skills, installs default agents)\r\n'
+        "    echo [ERROR] Python not found: %PYTHON%\r\n"
+        "    echo Please reinstall Cognithor.\r\n"
+        "    pause\r\n"
+        "    exit /b 1\r\n"
+        ")\r\n"
+        "\r\n"
+        "REM First-run setup (downloads skills, installs default agents)\r\n"
         'if not exist "%USERPROFILE%\\.jarvis\\.cognithor_initialized" (\r\n'
         '    if exist "%COGNITHOR_HOME%first_run.py" (\r\n'
-        '        echo Running first-time setup...\r\n'
+        "        echo Running first-time setup...\r\n"
         '        "%PYTHON%" "%COGNITHOR_HOME%first_run.py"\r\n'
-        '    )\r\n'
-        ')\r\n'
-        '\r\n'
-        'REM Start Ollama if not running\r\n'
+        "    )\r\n"
+        ")\r\n"
+        "\r\n"
+        "REM Start Ollama if not running\r\n"
         'if exist "%OLLAMA%" (\r\n'
         '    tasklist /FI "IMAGENAME eq ollama.exe" 2>NUL | find /I "ollama.exe" >NUL\r\n'
-        '    if errorlevel 1 (\r\n'
-        '        echo Starting Ollama...\r\n'
+        "    if errorlevel 1 (\r\n"
+        "        echo Starting Ollama...\r\n"
         '        start "" "%OLLAMA%" serve\r\n'
-        '        timeout /t 3 /nobreak >NUL\r\n'
-        '    )\r\n'
-        ')\r\n'
-        '\r\n'
-        'REM Start Cognithor\r\n'
+        "        timeout /t 3 /nobreak >NUL\r\n"
+        "    )\r\n"
+        ")\r\n"
+        "\r\n"
+        "REM Start Cognithor\r\n"
         'if "%1"=="--ui" (\r\n'
-        '    echo Starting Cognithor backend...\r\n'
         '    start "" "%PYTHON%" -m jarvis --no-cli --api-port 8741\r\n'
-        '    timeout /t 5 /nobreak >NUL\r\n'
-        '    echo Opening browser...\r\n'
+        "    timeout /t 5 /nobreak >NUL\r\n"
         '    start "" http://localhost:8741\r\n'
-        '    echo.\r\n'
-        '    echo Cognithor is running. Close this window to keep it in the background.\r\n'
-        '    pause >NUL\r\n'
-        ') else (\r\n'
-        '    echo Starting Cognithor CLI...\r\n'
+        "    exit /b 0\r\n"
+        ") else (\r\n"
         '    "%PYTHON%" -m jarvis %*\r\n'
-        '    if errorlevel 1 (\r\n'
-        '        echo.\r\n'
-        '        echo [ERROR] Cognithor exited with an error.\r\n'
-        '        pause\r\n'
-        '    )\r\n'
-        ')\r\n',
+        "    if errorlevel 1 (\r\n"
+        "        echo.\r\n"
+        "        echo [ERROR] Cognithor exited with an error.\r\n"
+        "        pause\r\n"
+        "    )\r\n"
+        ")\r\n",
         encoding="utf-8",
     )
     print(f"  [OK] Launcher: {launcher}")
     return launcher
 
 
-def step_inno_setup(version: str, python_dir: Path, ollama_dir: Path,
-                     flutter_dir: Path | None) -> Path:
+def step_inno_setup(
+    version: str, python_dir: Path, ollama_dir: Path, flutter_dir: Path | None
+) -> Path:
     """Step 5: Compile Inno Setup installer."""
     print("\n=== Step 5: Inno Setup Compiler ===")
 
@@ -280,7 +300,9 @@ def step_inno_setup(version: str, python_dir: Path, ollama_dir: Path,
                 break
 
     if iscc is None:
-        print("  [ERROR] Inno Setup (iscc.exe) not found. Install from https://jrsoftware.org/isdl.php")
+        print(
+            "  [ERROR] Inno Setup (iscc.exe) not found. Install from https://jrsoftware.org/isdl.php"
+        )
         return Path("")
 
     # Compile
@@ -290,7 +312,7 @@ def step_inno_setup(version: str, python_dir: Path, ollama_dir: Path,
     # Inno Setup ISCC.exe needs quoted paths when they contain spaces.
     # Using a single command string with shell=True to handle this.
     _defines = (
-        f'/DMyAppVersion={version} '
+        f"/DMyAppVersion={version} "
         f'/DPythonDir="{python_dir}" '
         f'/DOllamaDir="{ollama_dir}" '
         f'/DFlutterDir="{flutter_dir or ""}" '
@@ -307,7 +329,9 @@ def step_inno_setup(version: str, python_dir: Path, ollama_dir: Path,
 
     installers = list(output_dir.glob("CognithorSetup-*.exe"))
     if installers:
-        print(f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)")
+        print(
+            f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
+        )
         return installers[0]
 
     return Path("")

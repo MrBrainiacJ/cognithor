@@ -516,27 +516,24 @@ def main() -> None:
                 _backend = getattr(_llm, "backend_type", "ollama")
                 print()
                 print("!" * 60)
-                print("  WARNUNG: Sprachmodell nicht erreichbar!")
+                print("  WARNING: LLM backend not reachable!")
                 print("!" * 60)
                 if _backend == "ollama":
                     _ollama_url = config.ollama.base_url
-                    print(f"  Ollama antwortet nicht unter {_ollama_url}")
-                    print()
-                    print("  Bitte starte Ollama:")
-                    print("    ollama serve")
-                    print()
-                    print("  Falls noch keine Modelle installiert sind:")
-                    print(f"    ollama pull {config.models.planner.name}")
-                    print(f"    ollama pull {config.models.executor.name}")
+                    print(f"  Ollama not responding at {_ollama_url}")
+                    if config.ollama.mode == "local":
+                        print("  Start Ollama: ollama serve")
+                        print(f"  Pull model:   ollama pull {config.models.planner.name}")
                 elif _backend == "lmstudio":
-                    print(f"  LM Studio ist nicht erreichbar unter {config.lmstudio_base_url}")
-                    print("  Bitte starte LM Studio und lade ein Modell.")
+                    print(
+                        f"  LM Studio not reachable at {getattr(config, 'lmstudio_base_url', '?')}"
+                    )
                 else:
-                    print(f"  LLM-Backend '{_backend}' ist nicht erreichbar.")
-                    print("  Bitte pruefe deine API-Keys und Netzwerkverbindung.")
+                    print(f"  Backend '{_backend}' not reachable.")
+                    print("  Check your API keys and network connection.")
                 print()
-                print("  Jarvis startet trotzdem, aber Anfragen werden fehlschlagen")
-                print("  bis das Sprachmodell erreichbar ist.")
+                print("  Cognithor will start anyway, but requests will fail")
+                print("  until the LLM backend is available.")
                 print("!" * 60)
                 print()
 
@@ -2016,14 +2013,17 @@ def _print_banner(
     print(f"  COGNITHOR · Agent OS v{__version__}{lite_tag}")
     print(f"  Home:   {config.jarvis_home}")
     print(f"  API:    {scheme}://{api_host}:{api_port}")
-    if backend == "ollama":
-        print(f"  Ollama: {config.ollama.base_url}")
-    elif backend == "lmstudio":
-        print(f"  LM Studio: {config.lmstudio_base_url}")
-    else:
-        print(f"  Backend: {backend}")
-    print(f"  Planner: {config.models.planner.name}")
-    print(f"  Executor: {config.models.executor.name}")
+    _backend_label = {
+        "ollama": f"Ollama ({config.ollama.mode})",
+        "lmstudio": "LM Studio",
+        "openai": "OpenAI API",
+        "anthropic": "Anthropic API",
+    }.get(backend, backend)
+    _backend_url = {
+        "ollama": config.ollama.base_url,
+        "lmstudio": getattr(config, "lmstudio_base_url", ""),
+    }.get(backend, "")
+    print(f"  LLM:    {_backend_label}" + (f" @ {_backend_url}" if _backend_url else ""))
     print(f"{'=' * 60}\n")
 
 
