@@ -103,12 +103,25 @@ jobs:
           ARCHIVE="build/ios/archive/Runner.xcarchive"
           APP="$ARCHIVE/Products/Applications/Runner.app"
           if [ -d "$APP" ]; then
-            mkdir Payload
-            cp -r "$APP" Payload/
+            # Verify correct bundle (must be Cognithor, not a CocoaPod)
+            BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist" 2>/dev/null || echo "unknown")
+            BUNDLE_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" "$APP/Info.plist" 2>/dev/null || echo "unknown")
+            echo "Bundle ID: $BUNDLE_ID"
+            echo "Bundle Name: $BUNDLE_NAME"
+            if [[ "$BUNDLE_NAME" != *"Cognithor"* && "$BUNDLE_NAME" != *"cognithor"* ]]; then
+              echo "::warning::Bundle name is '$BUNDLE_NAME', expected 'Cognithor'. Searching for correct app..."
+              CORRECT_APP=$(find "$ARCHIVE" -name "Runner.app" -path "*/Applications/*" -type d | head -1)
+              if [ -n "$CORRECT_APP" ] && [ -d "$CORRECT_APP" ]; then
+                APP="$CORRECT_APP"
+              fi
+            fi
+            mkdir -p Payload
+            cp -r "$APP" Payload/Runner.app
             zip -r cognithor-ios.ipa Payload
+            echo "IPA created successfully"
           else
             echo "::error::No Runner.app found in archive"
-            find build -name "*.app" -type d 2>/dev/null
+            find "$ARCHIVE" -name "*.app" -type d 2>/dev/null
             exit 1
           fi
 
