@@ -190,10 +190,7 @@ class EmailTools:
 
         password = os.environ.get(self._password_env, "")
         if not password:
-            raise EmailError(
-                f"E-Mail-Passwort nicht gefunden. Umgebungsvariable "
-                f"'{self._password_env}' ist nicht gesetzt."
-            )
+            raise EmailError(t("email.missing_password", env_var=self._password_env))
         return password
 
     def _validate_email(self, addr: str) -> bool:
@@ -215,7 +212,7 @@ class EmailTools:
             try:
                 path.relative_to(root)
                 if not path.exists():
-                    raise EmailError(f"Anhang nicht gefunden: {path_str}")
+                    raise EmailError(t("email.attachment_not_found", path=str(path_str)))
                 if not path.is_file():
                     raise EmailError(f"Anhang ist keine Datei: {path_str}")
                 return path

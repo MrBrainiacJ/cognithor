@@ -506,7 +506,7 @@ class Planner:
             if exc.status_code == 404:
                 return ActionPlan(
                     goal=user_message,
-                    reasoning=f"Modell '{model}' nicht gefunden (HTTP 404)",
+                    reasoning=f"Model '{model}' not found (HTTP 404)",
                     direct_response=(
                         f"Das Sprachmodell '{model}' ist nicht installiert. "
                         f"Bitte lade es herunter:\n\n"

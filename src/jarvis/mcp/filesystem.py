@@ -134,7 +134,7 @@ class FileSystemTools:
         validated = self._validate_path(path)
 
         if not validated.exists():
-            raise FileSystemError(f"Datei nicht gefunden: {path}")
+            raise FileSystemError(t("fs.file_not_found", path=str(path)))
 
         if not validated.is_file():
             raise FileSystemError(f"Kein reguläres File: {path}")
@@ -248,7 +248,7 @@ class FileSystemTools:
         validated = self._validate_path(path)
 
         if not validated.exists():
-            raise FileSystemError(f"Datei nicht gefunden: {path}")
+            raise FileSystemError(t("fs.file_not_found", path=str(path)))
 
         # Hashline Guard: invalidate cache after edit so next read is fresh
         if self._hashline_guard is not None:
@@ -259,7 +259,7 @@ class FileSystemTools:
         # Uniqueness check
         count = content.count(old_text)
         if count == 0:
-            raise FileSystemError(f"Text nicht gefunden in {path}. Gesucht: '{old_text[:100]}...'")
+            raise FileSystemError(t("fs.text_not_found", path=str(path), text=old_text[:100]))
         if count > 1:
             raise FileSystemError(
                 f"Text kommt {count}x vor in {path} -- muss eindeutig sein. "
@@ -299,7 +299,7 @@ class FileSystemTools:
         validated = self._validate_path(path)
 
         if not validated.exists():
-            raise FileSystemError(f"Verzeichnis nicht gefunden: {path}")
+            raise FileSystemError(t("fs.dir_not_found", path=str(path)))
 
         if not validated.is_dir():
             raise FileSystemError(f"Kein Verzeichnis: {path}")

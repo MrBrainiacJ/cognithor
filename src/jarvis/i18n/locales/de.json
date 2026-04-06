@@ -322,7 +322,10 @@
     "file_written": "Datei geschrieben: {path} ({size} Bytes)",
     "file_edited": "Datei bearbeitet: {path}\nErsetzt: {old_len} \u2192 {new_len} Zeichen\nZeilen: {diff}",
     "tree_truncated": "... ({count} weitere Eintraege)",
-    "access_denied_tree": "[Zugriff verweigert]"
+    "access_denied_tree": "[Zugriff verweigert]",
+    "file_not_found": "Datei nicht gefunden: {path}",
+    "dir_not_found": "Verzeichnis nicht gefunden: {path}",
+    "text_not_found": "Text nicht gefunden in {path}. Gesucht: '{text}...'"
   },
   "shell": {
     "path_blocked": "Befehl blockiert: Pfad '{path}' liegt ausserhalb des Workspace."
@@ -529,6 +532,7 @@
     "resource_not_found": "Resource '{uri}' nicht gefunden",
     "prompt_not_found": "Prompt '{name}' nicht gefunden",
     "tool_not_found_available": "Tool '{name}' nicht gefunden. Verfügbar: {available}",
+    "server_not_connected": "MCP-Server '{server}' nicht verbunden",
     "git_not_installed": "git ist nicht installiert oder nicht im PATH.",
     "git_timeout": "Git-Befehl Timeout nach {timeout}s.",
     "git_output_truncated": "\n\n[... Output gekuerzt]",

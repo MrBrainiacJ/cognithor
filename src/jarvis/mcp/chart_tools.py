@@ -542,7 +542,7 @@ class ChartTools:
         validated = self._validate_path(file_path)
 
         if not validated.exists():
-            raise ChartError(f"Datei nicht gefunden: {file_path}")
+            raise ChartError(t("fs.file_not_found", path=str(file_path)))
 
         if not validated.suffix.lower() == ".csv":
             raise ChartError(f"Keine CSV-Datei: {file_path}")

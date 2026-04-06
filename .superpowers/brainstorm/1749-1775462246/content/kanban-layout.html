@@ -1,0 +1,108 @@
+<h2>Kanban Board — Layout</h2>
+<p class="subtitle">Wie soll die Kanban-Seite aufgebaut sein?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Dual-View: Tasks + Pipeline</h3>
+      <div class="mockup">
+        <div class="mockup-header">Kanban Screen</div>
+        <div class="mockup-body" style="padding:12px;">
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <button class="mock-button" style="font-size:12px;padding:4px 10px;background:#6366f1;color:white;">My Tasks</button>
+            <button class="mock-button" style="font-size:12px;padding:4px 10px;background:transparent;border:1px solid #555;color:#999;">Live Pipeline</button>
+            <span style="flex:1"></span>
+            <button class="mock-button" style="font-size:12px;padding:4px 10px;">+ New Task</button>
+          </div>
+          <div style="display:flex;gap:8px;overflow-x:auto;">
+            <div style="min-width:150px;background:#1a1a2e;border-radius:8px;padding:8px;">
+              <div style="font-size:11px;font-weight:bold;color:#888;margin-bottom:6px;">TO DO <span style="background:#333;padding:1px 6px;border-radius:10px;font-size:10px;">3</span></div>
+              <div style="background:#252540;border-radius:6px;padding:8px;margin-bottom:4px;border-left:3px solid #6366f1;">
+                <div style="font-size:11px;font-weight:bold;color:#ddd;">Recherchiere AI News</div>
+                <div style="font-size:9px;color:#888;">Agent: Researcher</div>
+              </div>
+              <div style="background:#252540;border-radius:6px;padding:8px;margin-bottom:4px;border-left:3px solid #f59e0b;">
+                <div style="font-size:11px;font-weight:bold;color:#ddd;">Report erstellen</div>
+                <div style="font-size:9px;color:#888;">Agent: Office</div>
+              </div>
+              <div style="background:#252540;border-radius:6px;padding:8px;border-left:3px solid #10b981;">
+                <div style="font-size:11px;font-weight:bold;color:#ddd;">Code Review</div>
+                <div style="font-size:9px;color:#888;">Agent: Coder</div>
+              </div>
+            </div>
+            <div style="min-width:150px;background:#1a1a2e;border-radius:8px;padding:8px;">
+              <div style="font-size:11px;font-weight:bold;color:#888;margin-bottom:6px;">IN PROGRESS <span style="background:#6366f1;padding:1px 6px;border-radius:10px;font-size:10px;color:white;">1</span></div>
+              <div style="background:#252540;border-radius:6px;padding:8px;border-left:3px solid #6366f1;box-shadow:0 0 8px rgba(99,102,241,0.3);">
+                <div style="font-size:11px;font-weight:bold;color:#ddd;">Web Scraping</div>
+                <div style="font-size:9px;color:#888;">Agent: Researcher</div>
+                <div style="margin-top:4px;height:3px;background:#333;border-radius:2px;"><div style="width:60%;height:100%;background:#6366f1;border-radius:2px;"></div></div>
+              </div>
+            </div>
+            <div style="min-width:150px;background:#1a1a2e;border-radius:8px;padding:8px;">
+              <div style="font-size:11px;font-weight:bold;color:#888;margin-bottom:6px;">VERIFYING <span style="background:#333;padding:1px 6px;border-radius:10px;font-size:10px;">0</span></div>
+              <div style="text-align:center;color:#555;font-size:10px;padding:20px 0;">No tasks</div>
+            </div>
+            <div style="min-width:150px;background:#1a1a2e;border-radius:8px;padding:8px;">
+              <div style="font-size:11px;font-weight:bold;color:#888;margin-bottom:6px;">DONE <span style="background:#10b981;padding:1px 6px;border-radius:10px;font-size:10px;color:white;">2</span></div>
+              <div style="background:#252540;border-radius:6px;padding:8px;margin-bottom:4px;border-left:3px solid #10b981;opacity:0.7;">
+                <div style="font-size:11px;color:#ddd;">Morgen-Briefing</div>
+                <div style="font-size:9px;color:#888;">vor 2h</div>
+              </div>
+              <div style="background:#252540;border-radius:6px;padding:8px;border-left:3px solid #10b981;opacity:0.7;">
+                <div style="font-size:11px;color:#ddd;">CVE Check</div>
+                <div style="font-size:9px;color:#888;">vor 4h</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:8px;font-size:13px;">Toggle zwischen <strong>eigenen Tasks</strong> und <strong>Live Pipeline</strong>. Ein Board, zwei Modi. Drag-and-Drop in beiden.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Split-View: Tasks links, Pipeline rechts</h3>
+      <div class="mockup">
+        <div class="mockup-header">Kanban Screen</div>
+        <div class="mockup-body" style="padding:12px;">
+          <div style="display:flex;gap:12px;">
+            <div style="flex:2;">
+              <div style="font-size:11px;font-weight:bold;color:#6366f1;margin-bottom:6px;">MY TASKS</div>
+              <div style="display:flex;gap:6px;">
+                <div style="flex:1;background:#1a1a2e;border-radius:6px;padding:6px;">
+                  <div style="font-size:10px;color:#888;margin-bottom:4px;">To Do</div>
+                  <div style="background:#252540;border-radius:4px;padding:6px;margin-bottom:3px;font-size:10px;border-left:2px solid #6366f1;">Recherche</div>
+                  <div style="background:#252540;border-radius:4px;padding:6px;font-size:10px;border-left:2px solid #f59e0b;">Report</div>
+                </div>
+                <div style="flex:1;background:#1a1a2e;border-radius:6px;padding:6px;">
+                  <div style="font-size:10px;color:#888;margin-bottom:4px;">Running</div>
+                  <div style="background:#252540;border-radius:4px;padding:6px;font-size:10px;border-left:2px solid #6366f1;">Scraping</div>
+                </div>
+                <div style="flex:1;background:#1a1a2e;border-radius:6px;padding:6px;">
+                  <div style="font-size:10px;color:#888;margin-bottom:4px;">Done</div>
+                  <div style="background:#252540;border-radius:4px;padding:6px;font-size:10px;border-left:2px solid #10b981;opacity:0.7;">Briefing</div>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1;border-left:1px solid #333;padding-left:12px;">
+              <div style="font-size:11px;font-weight:bold;color:#f59e0b;margin-bottom:6px;">LIVE PIPELINE</div>
+              <div style="background:#1a1a2e;border-radius:6px;padding:6px;margin-bottom:4px;">
+                <div style="font-size:10px;color:#10b981;">Plan: done</div>
+              </div>
+              <div style="background:#1a1a2e;border-radius:6px;padding:6px;margin-bottom:4px;">
+                <div style="font-size:10px;color:#6366f1;">Execute: web_search</div>
+              </div>
+              <div style="background:#1a1a2e;border-radius:6px;padding:6px;">
+                <div style="font-size:10px;color:#888;">Gate: pending</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:8px;font-size:13px;">Tasks und Pipeline <strong>nebeneinander</strong>. Immer beides sichtbar. Pipeline kompakter (Liste statt Kanban).</p>
+    </div>
+  </div>
+</div>

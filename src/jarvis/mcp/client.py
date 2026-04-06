@@ -184,7 +184,7 @@ class JarvisMCPClient:
         server = self._servers.get(tool_info.server)
         if server is None or not server.connected:
             return ToolCallResult(
-                content=f"MCP-Server '{tool_info.server}' nicht verbunden",
+                content=t("tools.server_not_connected", server=tool_info.server),
                 is_error=True,
             )
 

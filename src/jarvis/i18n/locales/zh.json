@@ -322,7 +322,10 @@
     "file_written": "文件已写入：{path}（{size} 字节）",
     "file_edited": "文件已编辑：{path}\n已替换：{old_len} \u2192 {new_len} 个字符\n行数变化：{diff}",
     "tree_truncated": "...（另有 {count} 个条目）",
-    "access_denied_tree": "[访问被拒绝]"
+    "access_denied_tree": "[访问被拒绝]",
+    "file_not_found": "文件未找到：{path}",
+    "dir_not_found": "目录未找到：{path}",
+    "text_not_found": "在 {path} 中未找到文本。搜索：'{text}...'"
   },
   "shell": {
     "path_blocked": "命令被阻止：路径 '{path}' 超出工作区范围。"
@@ -529,6 +532,7 @@
     "resource_not_found": "资源 '{uri}' 未找到",
     "prompt_not_found": "提示 '{name}' 未找到",
     "tool_not_found_available": "工具 '{name}' 未找到。可用：{available}",
+    "server_not_connected": "MCP 服务器 '{server}' 未连接",
     "git_not_installed": "git 未安装或不在 PATH 中。",
     "git_timeout": "Git 命令在 {timeout} 秒后超时。",
     "git_output_truncated": "\n\n[... 输出已截断]",
