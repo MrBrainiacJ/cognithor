@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from jarvis.i18n import t
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -76,20 +77,20 @@ class SkillTools:
             Erfolgsmeldung mit Dateipfad und Skill-Slug.
         """
         if not name or not name.strip():
-            return "Fehler: name darf nicht leer sein."
+            return t("skill.err_name_empty")
         if not description or not description.strip():
-            return "Fehler: description darf nicht leer sein."
+            return t("skill.err_description_empty")
         if not trigger_keywords or not trigger_keywords.strip():
-            return "Fehler: trigger_keywords darf nicht leer sein."
+            return t("skill.err_trigger_keywords_empty")
         if not body or not body.strip():
-            return "Fehler: body darf nicht leer sein."
+            return t("skill.err_body_empty")
 
         slug = _slugify(name)
 
         # Keywords und Tools als YAML-Listen formatieren
         keywords = [kw.strip() for kw in trigger_keywords.split(",") if kw.strip()]
         tools = (
-            [t.strip() for t in tools_required.split(",") if t.strip()] if tools_required else []
+            [tool.strip() for tool in tools_required.split(",") if tool.strip()] if tools_required else []
         )
 
         keywords_yaml = ", ".join(keywords)
@@ -121,15 +122,12 @@ class SkillTools:
 
         # Nicht ueberschreiben ohne Warnung
         if file_path.exists():
-            return (
-                f"Fehler: Skill-Datei existiert bereits: {file_path}\n"
-                f"Verwende einen anderen Namen oder loesche die bestehende Datei."
-            )
+            return t("skill.err_file_exists", path=str(file_path))
 
         try:
             file_path.write_text(content, encoding="utf-8")
         except OSError as exc:
-            return f"Fehler beim Schreiben der Skill-Datei: {exc}"
+            return t("skill.err_write_failed", exc=exc)
 
         # Hot-load: parse + register immediately (no full directory reload)
         try:
@@ -144,21 +142,16 @@ class SkillTools:
                 )
         except Exception as exc:
             log.warning("skill_hot_load_failed", error=str(exc))
-            return (
-                f"Skill-Datei geschrieben: {file_path}\n"
-                f"WARNUNG: Hot-Loading fehlgeschlagen: {exc}\n"
-                f"Der Skill wird beim naechsten Neustart verfuegbar sein."
-            )
+            return t("skill.warn_hot_load_failed", path=str(file_path), exc=exc)
 
-        return (
-            f"Skill erfolgreich erstellt.\n"
-            f"  Name: {name.strip()}\n"
-            f"  Slug: {slug}\n"
-            f"  Datei: {file_path}\n"
-            f"  Keywords: {', '.join(keywords)}\n"
-            f"  Kategorie: {category}\n"
-            f"  Registrierte Skills gesamt: {len(self._registry._skills)}\n"
-            f"Der Skill ist sofort verfuegbar."
+        return t(
+            "skill.created",
+            name=name.strip(),
+            slug=slug,
+            path=str(file_path),
+            keywords=", ".join(keywords),
+            category=category,
+            total=len(self._registry._skills),
         )
 
     def list_skills(
@@ -189,15 +182,15 @@ class SkillTools:
         if not skills:
             filter_info = ""
             if category:
-                filter_info += f" (Kategorie: {category})"
+                filter_info += t("skill.filter_category", category=category)
             if enabled_only:
-                filter_info += " (nur aktive)"
-            return f"Keine Skills gefunden{filter_info}."
+                filter_info += t("skill.filter_active_only")
+            return t("skill.no_skills_found", filter_info=filter_info)
 
         # Nach Kategorie und Name sortieren
         skills.sort(key=lambda s: (s.category, s.name))
 
-        lines = [f"Registrierte Skills ({len(skills)}):"]
+        lines = [t("skill.list_header", count=len(skills))]
         lines.append("")
 
         current_cat = ""
@@ -206,13 +199,13 @@ class SkillTools:
                 current_cat = skill.category
                 lines.append(f"## {current_cat}")
 
-            status = "aktiv" if skill.enabled else "inaktiv"
+            status = t("skill.status_active") if skill.enabled else t("skill.status_inactive")
             keywords = ", ".join(skill.trigger_keywords[:5])
             total = skill.success_count + skill.failure_count
             if total == 0:
-                success_info = "noch nicht getestet"
+                success_info = t("skill.not_yet_tested")
             else:
-                success_info = f"Erfolg: {skill.success_rate:.0%} ({total}x genutzt)"
+                success_info = t("skill.success_rate", rate=f"{skill.success_rate:.0%}", total=total)
 
             lines.append(
                 f"  - {skill.name} [{skill.slug}] ({status}, {success_info}, Keywords: {keywords})"
@@ -324,25 +317,27 @@ def register_skill_tools(
 
             if not result.success:
                 errors = "\n".join(result.errors)
-                return f"Installation fehlgeschlagen:\n{errors}"
+                return t("skill.install_failed", errors=errors)
 
             # Registry neu laden
             with contextlib.suppress(Exception):
                 skill_registry.load_from_directories(skills_dirs)
 
-            tools_info = ", ".join(result.tools_required) if result.tools_required else "keine"
-            warnings = ""
+            tools_info = ", ".join(result.tools_required) if result.tools_required else t("skill.no_tools")
+            warnings_str = ""
             if result.warnings:
-                warnings = "\nWarnungen:\n" + "\n".join(f"  - {w}" for w in result.warnings)
+                warnings_str = t("skill.install_warnings_prefix") + "\n" + "\n".join(f"  - {w}" for w in result.warnings)
 
-            return (
-                f"Community-Skill '{name}' erfolgreich installiert.\n"
-                f"  Version: {result.version}\n"
-                f"  Pfad: {result.install_path}\n"
-                f"  Benoetigte Tools: {tools_info}{warnings}"
+            return t(
+                "skill.install_success",
+                name=name,
+                version=result.version,
+                path=str(result.install_path),
+                tools=tools_info,
+                warnings=warnings_str,
             )
         except Exception as exc:
-            return f"Fehler bei Installation: {exc}"
+            return t("skill.install_error", exc=exc)
 
     async def _search_community_skills(query: str = "", category: str = "") -> str:
         """Durchsucht das Community-Skill-Registry."""
@@ -356,11 +351,11 @@ def register_skill_tools(
             results = await client.search(query=query, category=category)
 
             if not results:
-                return "Keine Community-Skills gefunden."
+                return t("skill.no_community_skills")
 
-            lines = [f"Community-Skills ({len(results)}):"]
+            lines = [t("skill.community_list_header", count=len(results))]
             for r in results:
-                tools = ", ".join(r.tools_required) if r.tools_required else "keine"
+                tools = ", ".join(r.tools_required) if r.tools_required else t("skill.no_tools")
                 lines.append(
                     f"  - {r.name} v{r.version} ({r.category}) "
                     f"von @{r.author_github}\n"
@@ -369,15 +364,15 @@ def register_skill_tools(
                 )
             return "\n".join(lines)
         except Exception as exc:
-            return f"Fehler bei Suche: {exc}"
+            return t("skill.search_error", exc=exc)
 
     async def _report_skill(name: str, category: str = "other", description: str = "") -> str:
         """Meldet einen Community-Skill als problematisch."""
-        return (
-            f"Abuse-Report fuer Skill '{name}' erfasst.\n"
-            f"  Kategorie: {category}\n"
-            f"  Beschreibung: {description or 'Keine Angabe'}\n"
-            f"Der Report wird bei der naechsten Registry-Sync uebermittelt."
+        return t(
+            "skill.report_recorded",
+            name=name,
+            category=category,
+            description=description or "-",
         )
 
     # install_community_skill

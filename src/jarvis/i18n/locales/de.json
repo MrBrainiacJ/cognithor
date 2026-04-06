@@ -319,7 +319,10 @@
     "stats_embedding_cache": "- **Embedding-Cache:** {hits} Hits / {calls} API-Calls",
     "stats_initialized": "- **Initialisiert:** {value}",
     "stats_yes": "Ja",
-    "stats_no": "Nein"
+    "stats_no": "Nein",
+    "procedure_item": "**{name}** · Erfolgsrate: {rate} · Nutzungen: {uses} · Relevanz: {score}",
+    "entity_type_label": "- **Typ:** {value}",
+    "entity_relations_label": "\n**Relationen:**"
   },
   "ingest": {
     "unsupported_format": "Nicht unterstütztes Format: {suffix}",

@@ -319,7 +319,10 @@
     "stats_embedding_cache": "- **嵌入缓存：** {hits} 次命中 / {calls} 次 API 调用",
     "stats_initialized": "- **已初始化：** {value}",
     "stats_yes": "是",
-    "stats_no": "否"
+    "stats_no": "否",
+    "procedure_item": "**{name}** · 成功率：{rate} · 使用次数：{uses} · 相关度：{score}",
+    "entity_type_label": "- **类型：** {value}",
+    "entity_relations_label": "\n**关系：**"
   },
   "ingest": {
     "unsupported_format": "不支持的格式：{suffix}",
