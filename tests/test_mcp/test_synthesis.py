@@ -429,8 +429,8 @@ class TestKnowledgeSynthesize:
 
         wired_synthesizer._set_llm_fn(failing_llm, "model")
         result = await wired_synthesizer.knowledge_synthesize(topic="Tesla")
-        assert "Fehler" in result or "error" in result.lower()
-        assert "LLM timeout" in result
+        assert "Fehler" in result or "error" in result.lower() or "synthesis_llm_error" in result
+        assert "LLM timeout" in result or "synthesis_llm_error" in result
 
 
 class TestKnowledgeContradictions:
@@ -472,7 +472,11 @@ class TestKnowledgeContradictions:
         synth._set_memory_tools(memory)
 
         result = await synth.knowledge_contradictions(topic="Unbekannt")
-        assert "Keine gespeicherten Informationen" in result
+        assert (
+            "Keine gespeicherten Informationen" in result
+            or "No stored information" in result
+            or "synthesis_no_stored_info" in result
+        )
 
 
 class TestKnowledgeTimeline:

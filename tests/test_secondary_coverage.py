@@ -212,9 +212,16 @@ class TestCredentialStore:
             store_path=tmp_path / "creds.enc",
             passphrase="",
         )
-        # Without passphrase, fernet is None, so encrypt should raise
-        with pytest.raises(RuntimeError):
-            store.store("s", "k", "v")
+        # CredentialStore now auto-generates a passphrase via OS keyring when
+        # none is supplied.  If keyring succeeds the store works without
+        # raising; if keyring is unavailable, fernet is None and store() raises.
+        if store._fernet is None:
+            with pytest.raises(RuntimeError):
+                store.store("s", "k", "v")
+        else:
+            # Keyring provided a key — store should succeed
+            entry = store.store("s", "k", "v")
+            assert entry.service == "s"
 
 
 # ============================================================================

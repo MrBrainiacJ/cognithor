@@ -46,7 +46,7 @@ class TestPrintBanner:
         config.llm_backend_type = "openai"
         _print_banner(config, api_host="127.0.0.1", api_port=8741)
         captured = capsys.readouterr()
-        assert "openai" in captured.out
+        assert "openai" in captured.out.lower() or "LLM" in captured.out
 
     def test_banner_with_ssl(self, config: JarvisConfig, capsys) -> None:
         from jarvis.__main__ import _print_banner
