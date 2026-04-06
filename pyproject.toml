@@ -160,6 +160,7 @@ blockchain = [
 arc = [
     "arc-agi>=0.3.0",
     "numpy>=2.0,<3",
+    "scipy>=1.14",
 ]
 arc-gpu = [
     "cognithor[arc]",
