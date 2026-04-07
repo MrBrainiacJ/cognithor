@@ -220,6 +220,7 @@ class TestValidateFullAccess:
 
 # ── Gesamtzahl ───────────────────────────────────────────────────────
 
+
 class TestCoverage:
     """Sicherstellung dass alle Stages testbar sind."""
 

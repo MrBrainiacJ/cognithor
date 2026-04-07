@@ -1251,10 +1251,18 @@ def _register_session_routes(
         chain = [session_id]
         current_id = session_id
         for _ in range(20):  # Max depth guard
-            meta = store.get_session_metadata(current_id) if hasattr(store, "get_session_metadata") else None
+            meta = (
+                store.get_session_metadata(current_id)
+                if hasattr(store, "get_session_metadata")
+                else None
+            )
             if meta is None:
                 break
-            parent = meta.get("parent_session_id", "") if isinstance(meta, dict) else getattr(meta, "parent_session_id", "")
+            parent = (
+                meta.get("parent_session_id", "")
+                if isinstance(meta, dict)
+                else getattr(meta, "parent_session_id", "")
+            )
             if not parent:
                 break
             chain.append(parent)

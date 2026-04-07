@@ -162,20 +162,18 @@ class Executor:
         # Tool-Hook-System (Pre/Post Tool-Use)
         self._tool_hook_runner: Any = None
         try:
+            from jarvis.core.tool_hooks import HookEvent as _HE
             from jarvis.core.tool_hooks import (
                 ToolHookRunner,
                 audit_logging_hook,
                 secret_redacting_hook,
             )
-            from jarvis.core.tool_hooks import HookEvent as _HE
 
             self._tool_hook_runner = ToolHookRunner()
             self._tool_hook_runner.register(
                 _HE.PRE_TOOL_USE, "secret_redacting", secret_redacting_hook
             )
-            self._tool_hook_runner.register(
-                _HE.POST_TOOL_USE, "audit_logging", audit_logging_hook
-            )
+            self._tool_hook_runner.register(_HE.POST_TOOL_USE, "audit_logging", audit_logging_hook)
         except Exception:
             pass  # Hooks optional
 
@@ -574,12 +572,10 @@ class Executor:
                 )
                 # Post-Tool-Use Hooks
                 if self._tool_hook_runner:
-                    try:
+                    with contextlib.suppress(Exception):
                         self._tool_hook_runner.run_post_tool_use(
                             tool_name, params, content, duration_ms
                         )
-                    except Exception:
-                        pass
                 # Profiler: record tool call
                 if self._task_profiler:
                     try:
@@ -615,12 +611,8 @@ class Executor:
 
             # Post-Failure Hooks
             if self._tool_hook_runner and last_error:
-                try:
-                    self._tool_hook_runner.run_post_failure(
-                        tool_name, params, last_error
-                    )
-                except Exception:
-                    pass
+                with contextlib.suppress(Exception):
+                    self._tool_hook_runner.run_post_failure(tool_name, params, last_error)
 
             # Profiler: record failed tool call
             if self._task_profiler:

@@ -25,9 +25,7 @@ class TestTrustResolver:
             assert td in reason
 
     def test_denied_path(self):
-        resolver = TrustResolver(
-            TrustConfig(denied=["/etc", "C:\\Windows"])
-        )
+        resolver = TrustResolver(TrustConfig(denied=["/etc", "C:\\Windows"]))
         decision, reason = resolver.evaluate("/etc/passwd")
         assert decision == "deny"
 
@@ -61,21 +59,15 @@ class TestTrustResolver:
 class TestTrustPromptDetection:
     def test_detects_english_prompt(self):
         resolver = TrustResolver()
-        assert resolver.detect_trust_prompt_in_output(
-            "Do you trust the files in this folder?"
-        )
+        assert resolver.detect_trust_prompt_in_output("Do you trust the files in this folder?")
 
     def test_detects_german_prompt(self):
         resolver = TrustResolver()
-        assert resolver.detect_trust_prompt_in_output(
-            "Vertrauen Sie diesem Ordner?"
-        )
+        assert resolver.detect_trust_prompt_in_output("Vertrauen Sie diesem Ordner?")
 
     def test_no_false_positive(self):
         resolver = TrustResolver()
-        assert not resolver.detect_trust_prompt_in_output(
-            "Build completed successfully."
-        )
+        assert not resolver.detect_trust_prompt_in_output("Build completed successfully.")
 
 
 class TestFromJarvisConfig:

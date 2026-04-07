@@ -118,7 +118,9 @@ class TestSecretRedactingHook:
     def test_redacts_github_pat(self):
         result = secret_redacting_hook(
             "shell_exec",
-            {"command": "git clone https://ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@github.com/repo"},
+            {
+                "command": "git clone https://ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@github.com/repo"
+            },
         )
         assert result is not None
         assert "ghp_" not in result["updated_input"]["command"]

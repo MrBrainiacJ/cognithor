@@ -16,7 +16,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from jarvis.utils.logging import get_logger
 
@@ -62,9 +65,7 @@ class ToolHookRunner:
         self._hooks[event].append((name, hook))
         log.debug("tool_hook_registered", hook_event=event.value, hook_name=name)
 
-    def run_pre_tool_use(
-        self, tool_name: str, tool_input: dict[str, Any]
-    ) -> HookResult:
+    def run_pre_tool_use(self, tool_name: str, tool_input: dict[str, Any]) -> HookResult:
         """Fuehrt alle PreToolUse-Hooks aus.
 
         Returns:
@@ -77,9 +78,7 @@ class ToolHookRunner:
                 if output and isinstance(output, dict):
                     if output.get("deny"):
                         result.denied = True
-                        result.deny_reason = output.get(
-                            "reason", f"Denied by hook '{hook_name}'"
-                        )
+                        result.deny_reason = output.get("reason", f"Denied by hook '{hook_name}'")
                         result.messages.append(result.deny_reason)
                         return result
                     if output.get("updated_input"):
@@ -114,9 +113,7 @@ class ToolHookRunner:
             try:
                 hook_fn(tool_name, tool_input, error)
             except Exception as exc:
-                log.warning(
-                    "tool_hook_failure_failed", hook=hook_name, error=str(exc)
-                )
+                log.warning("tool_hook_failure_failed", hook=hook_name, error=str(exc))
 
     @property
     def hook_count(self) -> int:
@@ -129,18 +126,16 @@ class ToolHookRunner:
 
 # Patterns fuer Secret-Redacting
 _SECRET_PATTERNS = [
-    re.compile(r"(sk-[a-zA-Z0-9]{20,})"),           # OpenAI keys
-    re.compile(r"(ghp_[a-zA-Z0-9]{36})"),            # GitHub PAT
-    re.compile(r"(gho_[a-zA-Z0-9]{36})"),            # GitHub OAuth
-    re.compile(r"(xoxb-[a-zA-Z0-9-]+)"),             # Slack bot token
-    re.compile(r"(AKIA[A-Z0-9]{16})"),               # AWS access key
+    re.compile(r"(sk-[a-zA-Z0-9]{20,})"),  # OpenAI keys
+    re.compile(r"(ghp_[a-zA-Z0-9]{36})"),  # GitHub PAT
+    re.compile(r"(gho_[a-zA-Z0-9]{36})"),  # GitHub OAuth
+    re.compile(r"(xoxb-[a-zA-Z0-9-]+)"),  # Slack bot token
+    re.compile(r"(AKIA[A-Z0-9]{16})"),  # AWS access key
     re.compile(r"(eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,})"),  # JWT
 ]
 
 
-def secret_redacting_hook(
-    tool_name: str, tool_input: dict[str, Any]
-) -> dict[str, Any] | None:
+def secret_redacting_hook(tool_name: str, tool_input: dict[str, Any]) -> dict[str, Any] | None:
     """PreToolUse: Entfernt API-Keys und Tokens aus Shell-Commands."""
     if tool_name not in ("exec_command", "shell_exec", "shell"):
         return None

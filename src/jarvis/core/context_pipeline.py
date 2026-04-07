@@ -133,11 +133,19 @@ class ContextPipeline:
         skill_task = _loop.run_in_executor(None, self._get_skill_context, user_message)
         pref_task = _loop.run_in_executor(None, self._get_user_pref_hint, user_id)
 
-        memory_results, vault_snippets, episode_snippets, skill_context, user_pref_hint = (
-            await asyncio.gather(
-                memory_task, vault_task, episode_task, skill_task, pref_task,
-                return_exceptions=True,
-            )
+        (
+            memory_results,
+            vault_snippets,
+            episode_snippets,
+            skill_context,
+            user_pref_hint,
+        ) = await asyncio.gather(
+            memory_task,
+            vault_task,
+            episode_task,
+            skill_task,
+            pref_task,
+            return_exceptions=True,
         )
 
         # Handle exceptions gracefully
