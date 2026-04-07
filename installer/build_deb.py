@@ -25,10 +25,7 @@ Output:
 from __future__ import annotations
 
 import argparse
-import os
-import platform
 import shutil
-import stat
 import subprocess
 import sys
 import tarfile
@@ -37,7 +34,7 @@ import urllib.request
 from pathlib import Path
 
 # --- Config ---
-OLLAMA_URL = "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64.tgz"
+OLLAMA_URL = "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = PROJECT_ROOT / "installer" / "build_deb"
 DIST_DIR = PROJECT_ROOT / "installer" / "dist"
@@ -97,7 +94,16 @@ def step_venv(pkg_root: Path) -> Path:
     wheel_dir = BUILD_DIR / "wheel"
     wheel_dir.mkdir(exist_ok=True)
     subprocess.run(
-        [sys.executable, "-m", "pip", "wheel", str(PROJECT_ROOT), "--wheel-dir", str(wheel_dir), "--no-deps"],
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "wheel",
+            str(PROJECT_ROOT),
+            "--wheel-dir",
+            str(wheel_dir),
+            "--no-deps",
+        ],
         check=True,
     )
 
@@ -108,7 +114,14 @@ def step_venv(pkg_root: Path) -> Path:
         raise RuntimeError("No cognithor wheel found")
 
     subprocess.run(
-        [str(venv_python), "-m", "pip", "install", f"{wheels[-1]}[all]", "--no-warn-script-location"],
+        [
+            str(venv_python),
+            "-m",
+            "pip",
+            "install",
+            f"{wheels[-1]}[all]",
+            "--no-warn-script-location",
+        ],
         check=True,
     )
     print("  [OK] cognithor[all] installed")
@@ -120,24 +133,22 @@ def step_ollama(pkg_root: Path) -> Path | None:
     """Step 2: Bundle Ollama binary."""
     print("\n=== Step 2: Ollama ===")
 
-    ollama_dest = pkg_root / INSTALL_PREFIX.lstrip("/") / "ollama"
-    if ollama_dest.exists():
-        print("  [SKIP] ollama/ already exists")
-        return ollama_dest
+    ollama_bin_dir = pkg_root / INSTALL_PREFIX.lstrip("/") / "ollama" / "bin"
+    ollama_bin = ollama_bin_dir / "ollama"
+    if ollama_bin.exists():
+        print("  [SKIP] ollama binary already exists")
+        return ollama_bin_dir.parent
 
-    tgz_path = BUILD_DIR / "downloads" / "ollama-linux-amd64.tgz"
-    download(OLLAMA_URL, tgz_path, "Ollama for Linux")
+    # Ollama ships as a single binary for Linux
+    dl_path = BUILD_DIR / "downloads" / "ollama-linux-amd64"
+    download(OLLAMA_URL, dl_path, "Ollama for Linux")
 
-    ollama_dest.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(tgz_path, "r:gz") as tf:
-        tf.extractall(ollama_dest)
+    ollama_bin_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(dl_path, ollama_bin)
+    ollama_bin.chmod(0o755)
 
-    # Make ollama executable
-    for f in ollama_dest.rglob("ollama"):
-        f.chmod(f.stat().st_mode | stat.S_IEXEC)
-
-    print("  [OK] Ollama extracted")
-    return ollama_dest
+    print(f"  [OK] Ollama binary ({ollama_bin.stat().st_size / 1024 / 1024:.0f} MB)")
+    return ollama_bin_dir.parent
 
 
 def step_flutter_ui(pkg_root: Path) -> Path | None:
@@ -168,7 +179,8 @@ def step_launcher(pkg_root: Path, version: str) -> None:
     bin_dir.mkdir(parents=True, exist_ok=True)
 
     launcher = bin_dir / "cognithor"
-    launcher.write_text(textwrap.dedent(f"""\
+    launcher.write_text(
+        textwrap.dedent(f"""\
         #!/bin/bash
         # Cognithor v{version} — Agent OS
         # Installed to {INSTALL_PREFIX}
@@ -183,7 +195,8 @@ def step_launcher(pkg_root: Path, version: str) -> None:
         fi
 
         exec "{INSTALL_PREFIX}/venv/bin/python" -m jarvis "$@"
-    """))
+    """)
+    )
     launcher.chmod(0o755)
 
     # Also create 'jarvis' symlink
@@ -201,7 +214,8 @@ def step_systemd(pkg_root: Path) -> None:
     svc_dir = pkg_root / "etc" / "systemd" / "system"
     svc_dir.mkdir(parents=True, exist_ok=True)
 
-    (svc_dir / "cognithor.service").write_text(textwrap.dedent("""\
+    (svc_dir / "cognithor.service").write_text(
+        textwrap.dedent("""\
         [Unit]
         Description=Cognithor Agent OS
         After=network-online.target ollama.service
@@ -217,7 +231,8 @@ def step_systemd(pkg_root: Path) -> None:
 
         [Install]
         WantedBy=multi-user.target
-    """))
+    """)
+    )
     print("  [OK] cognithor.service")
 
 
@@ -228,7 +243,8 @@ def step_desktop_entry(pkg_root: Path, version: str) -> None:
     apps_dir = pkg_root / "usr" / "share" / "applications"
     apps_dir.mkdir(parents=True, exist_ok=True)
 
-    (apps_dir / "cognithor.desktop").write_text(textwrap.dedent(f"""\
+    (apps_dir / "cognithor.desktop").write_text(
+        textwrap.dedent(f"""\
         [Desktop Entry]
         Name=Cognithor
         Comment=Agent OS — Local-first autonomous agent operating system
@@ -237,7 +253,8 @@ def step_desktop_entry(pkg_root: Path, version: str) -> None:
         Type=Application
         Categories=Development;Utility;
         Version={version}
-    """))
+    """)
+    )
     print("  [OK] cognithor.desktop")
 
 
@@ -249,11 +266,10 @@ def step_debian_control(pkg_root: Path, version: str) -> None:
     debian_dir.mkdir(parents=True, exist_ok=True)
 
     # Compute installed size (KB)
-    total_size = sum(
-        f.stat().st_size for f in pkg_root.rglob("*") if f.is_file()
-    ) // 1024
+    total_size = sum(f.stat().st_size for f in pkg_root.rglob("*") if f.is_file()) // 1024
 
-    (debian_dir / "control").write_text(textwrap.dedent(f"""\
+    (debian_dir / "control").write_text(
+        textwrap.dedent(f"""\
         Package: cognithor
         Version: {version}
         Section: utils
@@ -275,11 +291,13 @@ def step_debian_control(pkg_root: Path, version: str) -> None:
           - Telegram, Discord, Slack, WhatsApp, Signal, Matrix, and more
           - ARC-AGI-3 benchmark integration
           - Community Skill Marketplace
-    """))
+    """)
+    )
 
     # postinst: first-run setup
     postinst = debian_dir / "postinst"
-    postinst.write_text(textwrap.dedent("""\
+    postinst.write_text(
+        textwrap.dedent("""\
         #!/bin/bash
         set -e
 
@@ -303,12 +321,14 @@ def step_debian_control(pkg_root: Path, version: str) -> None:
         echo "  Config: ~/.jarvis/config.yaml"
         echo "  Docs:   https://github.com/Alex8791-cyber/cognithor"
         echo ""
-    """))
+    """)
+    )
     postinst.chmod(0o755)
 
     # prerm: cleanup
     prerm = debian_dir / "prerm"
-    prerm.write_text(textwrap.dedent("""\
+    prerm.write_text(
+        textwrap.dedent("""\
         #!/bin/bash
         set -e
 
@@ -316,7 +336,8 @@ def step_debian_control(pkg_root: Path, version: str) -> None:
         if systemctl is-active --quiet cognithor@* 2>/dev/null; then
             systemctl stop cognithor@* || true
         fi
-    """))
+    """)
+    )
     prerm.chmod(0o755)
 
     print(f"  [OK] DEBIAN/control (installed size: {total_size} KB)")
@@ -378,7 +399,9 @@ def _build_deb_manual(pkg_root: Path, deb_path: Path) -> None:
         if shutil.which("ar"):
             subprocess.run(
                 [
-                    "ar", "rcs", str(deb_path),
+                    "ar",
+                    "rcs",
+                    str(deb_path),
                     str(tmpdir / "debian-binary"),
                     str(tmpdir / "control.tar.gz"),
                     str(tmpdir / "data.tar.gz"),
@@ -428,7 +451,7 @@ def main() -> None:
     print(f"\n{'=' * 60}")
     print(f"  .deb package ready: {deb_path}")
     print(f"  Install: sudo dpkg -i {deb_path.name}")
-    print(f"  Remove:  sudo dpkg -r cognithor")
+    print("  Remove:  sudo dpkg -r cognithor")
     print(f"{'=' * 60}")
 
 
