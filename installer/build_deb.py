@@ -113,18 +113,21 @@ def step_venv(pkg_root: Path) -> Path:
     if not wheels:
         raise RuntimeError("No cognithor wheel found")
 
+    # Install core extras (without torch/sentence-transformers to keep size <2GB).
+    # Users can install GPU extras later: pip install cognithor[identity,arc-gpu]
+    _extras = "memory,mcp,telegram,web,search,cron,documents,desktop,encryption"
     subprocess.run(
         [
             str(venv_python),
             "-m",
             "pip",
             "install",
-            f"{wheels[-1]}[all]",
+            f"{wheels[-1]}[{_extras}]",
             "--no-warn-script-location",
         ],
         check=True,
     )
-    print("  [OK] cognithor[all] installed")
+    print(f"  [OK] cognithor[{_extras}] installed")
 
     return venv_dir
 
