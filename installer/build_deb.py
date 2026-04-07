@@ -34,7 +34,7 @@ import urllib.request
 from pathlib import Path
 
 # --- Config ---
-OLLAMA_URL = "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64"
+OLLAMA_INSTALL_SCRIPT = "https://ollama.com/install.sh"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = PROJECT_ROOT / "installer" / "build_deb"
 DIST_DIR = PROJECT_ROOT / "installer" / "dist"
@@ -129,26 +129,24 @@ def step_venv(pkg_root: Path) -> Path:
     return venv_dir
 
 
-def step_ollama(pkg_root: Path) -> Path | None:
-    """Step 2: Bundle Ollama binary."""
-    print("\n=== Step 2: Ollama ===")
+def step_ollama_install_script(pkg_root: Path) -> None:
+    """Step 2: Bundle Ollama install script (not the 1.9GB binary).
 
-    ollama_bin_dir = pkg_root / INSTALL_PREFIX.lstrip("/") / "ollama" / "bin"
-    ollama_bin = ollama_bin_dir / "ollama"
-    if ollama_bin.exists():
-        print("  [SKIP] ollama binary already exists")
-        return ollama_bin_dir.parent
+    Ollama releases are now .tar.zst (~1.9 GB) which is too large to bundle.
+    Instead, we ship the official install script and run it in postinst.
+    """
+    print("\n=== Step 2: Ollama Install Script ===")
 
-    # Ollama ships as a single binary for Linux
-    dl_path = BUILD_DIR / "downloads" / "ollama-linux-amd64"
-    download(OLLAMA_URL, dl_path, "Ollama for Linux")
+    scripts_dir = pkg_root / INSTALL_PREFIX.lstrip("/") / "scripts"
+    install_sh = scripts_dir / "install_ollama.sh"
+    if install_sh.exists():
+        print("  [SKIP] install_ollama.sh already exists")
+        return
 
-    ollama_bin_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(dl_path, ollama_bin)
-    ollama_bin.chmod(0o755)
-
-    print(f"  [OK] Ollama binary ({ollama_bin.stat().st_size / 1024 / 1024:.0f} MB)")
-    return ollama_bin_dir.parent
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    download(OLLAMA_INSTALL_SCRIPT, install_sh, "Ollama install script")
+    install_sh.chmod(0o755)
+    print("  [OK] Ollama install script bundled")
 
 
 def step_flutter_ui(pkg_root: Path) -> Path | None:
@@ -186,13 +184,6 @@ def step_launcher(pkg_root: Path, version: str) -> None:
         # Installed to {INSTALL_PREFIX}
 
         export COGNITHOR_HOME="${{COGNITHOR_HOME:-$HOME/.jarvis}}"
-
-        # Use bundled Ollama if system ollama not found
-        if ! command -v ollama &>/dev/null; then
-            if [ -x "{INSTALL_PREFIX}/ollama/bin/ollama" ]; then
-                export PATH="{INSTALL_PREFIX}/ollama/bin:$PATH"
-            fi
-        fi
 
         exec "{INSTALL_PREFIX}/venv/bin/python" -m jarvis "$@"
     """)
@@ -300,6 +291,16 @@ def step_debian_control(pkg_root: Path, version: str) -> None:
         textwrap.dedent("""\
         #!/bin/bash
         set -e
+
+        # Install Ollama if not present
+        if ! command -v ollama &>/dev/null; then
+            echo "  Installing Ollama..."
+            if [ -x "/opt/cognithor/scripts/install_ollama.sh" ]; then
+                bash /opt/cognithor/scripts/install_ollama.sh || true
+            else
+                curl -fsSL https://ollama.com/install.sh | sh || true
+            fi
+        fi
 
         # Create default config directory for installing user
         if [ -n "$SUDO_USER" ]; then
@@ -437,10 +438,7 @@ def main() -> None:
 
     # Build steps
     step_venv(pkg_root)
-    if not args.skip_ollama:
-        step_ollama(pkg_root)
-    else:
-        print("\n=== Step 2: Ollama [SKIPPED] ===")
+    step_ollama_install_script(pkg_root)
     step_flutter_ui(pkg_root)
     step_launcher(pkg_root, version)
     step_systemd(pkg_root)
