@@ -13,7 +13,9 @@ import 'package:jarvis_ui/screens/credentials_screen.dart';
 import 'package:jarvis_ui/screens/knowledge_graph_screen.dart';
 import 'package:jarvis_ui/screens/vault_screen.dart';
 import 'package:jarvis_ui/screens/learning_screen.dart';
+import 'package:jarvis_ui/screens/connected_devices_screen.dart';
 import 'package:jarvis_ui/screens/device_settings_screen.dart';
+import 'package:jarvis_ui/screens/network_settings_screen.dart';
 import 'package:jarvis_ui/screens/teach_screen.dart';
 import 'package:jarvis_ui/screens/workflows_screen.dart';
 import 'package:jarvis_ui/screens/evolution_goals_page.dart';
@@ -106,6 +108,18 @@ class _AdminHubScreenState extends State<AdminHubScreen> {
           title: 'Device',
           subtitle: 'Native device features & connection',
           builder: (_) => const DeviceSettingsScreen(),
+        ),
+        _AdminSection(
+          icon: Icons.phone_android,
+          title: l.connectedDevices,
+          subtitle: l.connectedDevicesSubtitle,
+          builder: (_) => const ConnectedDevicesScreen(),
+        ),
+        _AdminSection(
+          icon: Icons.wifi,
+          title: l.networkSettings,
+          subtitle: l.networkSettingsSubtitle,
+          builder: (_) => const NetworkSettingsScreen(),
         ),
         _AdminSection(
           icon: Icons.psychology_alt_outlined,

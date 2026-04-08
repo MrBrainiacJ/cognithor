@@ -182,7 +182,13 @@
   "gatekeeper": {
     "invalid_path": "Invalid path: {path}",
     "path_outside_allowed": "Path outside allowed directories: {path}",
-    "dangerous_code": "Dangerous Python code detected: {description}"
+    "dangerous_code": "Dangerous Python code detected: {description}",
+    "offline_network_blocked": "Tool '{tool}' requires network, but the system is in OFFLINE mode",
+    "credential_masked": "Credential detected in parameters — masked",
+    "capability_violation": "Capability violation: {violations}",
+    "risk_ceiling_exceeded": "Action exceeds risk ceiling ({ceiling}): {risk}",
+    "default_classification": "Default classification: {risk}",
+    "destructive_command": "Destructive shell command detected: pattern '{pattern}'"
   },
   "executor": {
     "action_skipped": "Action skipped: {status} — {reason}",
@@ -196,7 +202,12 @@
     "no_tools": "No tools available.",
     "output_truncated": "[... output truncated]",
     "llm_error": "I could not process your request — the language model reported an error (HTTP {status_code}).\n\nPossible causes:\n- Ollama is not running → `ollama serve`\n- Model '{model}' is not installed → `ollama pull {model}`\n- Not enough VRAM/RAM for the model\n\nError details: {detail}",
-    "replan_exhausted": "I could not continue the plan — the language model reported errors after {attempts} attempts.\n\nError: {error}"
+    "replan_exhausted": "I could not continue the plan — the language model reported errors after {attempts} attempts.\n\nError: {error}",
+    "circuit_breaker_open": "The language model is repeatedly unreachable. Automatic retry in {seconds}s.\n\nPlease check:\n- Is Ollama running? -> `ollama serve`\n- Does the system have enough RAM/VRAM?",
+    "model_not_installed": "The language model '{model}' is not installed. Please download it:\n\n  ollama pull {model}\n\nThen restart me or simply try again.",
+    "escalation_fallback": "I have tried to run '{tool}' multiple times, but it was blocked: {reason}. Please help me solve this differently.",
+    "results_summary_failed": "Here are the results (summary failed):\n\n{results}",
+    "summarize_failed": "I was unable to summarize the results — the language model is responding with errors. Check if Ollama is running and has enough resources."
   },
   "prompt": {
     "respond_default": "Respond concisely and informatively.",
@@ -258,7 +269,46 @@
     "duration": "\n*Total time: {ms}ms*"
   },
   "gateway": {
-    "parse_failed": "I could not process the language model's response. Please try again or rephrase your request."
+    "parse_failed": "I could not process the language model's response. Please try again or rephrase your request.",
+    "consent_granted": "Privacy consent granted. I am ready now!",
+    "processing_cancelled": "Processing cancelled. What can I do for you instead?",
+    "budget_limit_reached": "Budget limit reached: {warning}",
+    "sub_agent_timeout": "Sub-agent timeout after {seconds}s",
+    "sub_agent_recursion": "Sub-agent recursion aborted: depth {depth} exceeds maximum {max_depth}.",
+    "status_thinking": "Thinking...",
+    "status_planning": "Planning steps...",
+    "status_analyzing": "Analyzing task...",
+    "status_creating_plan": "Creating plan...",
+    "status_working": "Working on it...",
+    "channel_compact": "Keep answers short and compact.",
+    "channel_max_length": "Max {max} characters.",
+    "channel_no_markdown": "Do not use Markdown.",
+    "channel_no_code_blocks": "No code blocks.",
+    "correction_hint": "[CORRECTION] The user corrected: \"{text}\". Adjust your plan. Do NOT re-execute the previous action.",
+    "startup_description": "Jarvis started (LLM={llm_ok}, Tools={tool_count})",
+    "shutdown_description": "Jarvis shut down",
+    "status_web_search": "Searching the web...",
+    "status_web_news_search": "Searching news...",
+    "status_search_and_read": "Researching online...",
+    "status_web_fetch": "Fetching webpage...",
+    "status_read_file": "Reading file...",
+    "status_write_file": "Writing file...",
+    "status_edit_file": "Editing file...",
+    "status_exec_command": "Running command...",
+    "status_run_python": "Running Python code...",
+    "status_search_memory": "Searching knowledge...",
+    "status_save_to_memory": "Saving knowledge...",
+    "status_document_export": "Creating document...",
+    "status_media_analyze_image": "Analyzing image...",
+    "status_media_transcribe_audio": "Transcribing audio...",
+    "status_media_extract_text": "Extracting text...",
+    "status_media_tts": "Generating speech...",
+    "status_vault_search": "Searching vault...",
+    "status_vault_write": "Writing to vault...",
+    "status_analyze_code": "Analyzing code...",
+    "status_list_directory": "Listing directory...",
+    "status_browser_navigate": "Navigating browser...",
+    "status_browser_screenshot": "Taking screenshot..."
   },
   "media": {
     "unsupported_image": "Unsupported image format: {suffix}",

@@ -481,12 +481,9 @@ class Planner:
             return ActionPlan(
                 goal=user_message,
                 reasoning="LLM nicht erreichbar (Circuit Breaker offen)",
-                direct_response=(
-                    "Das Sprachmodell ist wiederholt nicht erreichbar. "
-                    f"Automatischer Retry in {exc.remaining_seconds:.0f}s.\n\n"
-                    "Prüfe bitte:\n"
-                    "• Läuft Ollama? → `ollama serve`\n"
-                    "• Hat das System genug RAM/VRAM?"
+                direct_response=t(
+                    "planner.circuit_breaker_open",
+                    seconds=f"{exc.remaining_seconds:.0f}",
                 ),
                 confidence=0.0,
             )
@@ -506,12 +503,7 @@ class Planner:
                 return ActionPlan(
                     goal=user_message,
                     reasoning=f"Model '{model}' not found (HTTP 404)",
-                    direct_response=(
-                        f"Das Sprachmodell '{model}' ist nicht installiert. "
-                        f"Bitte lade es herunter:\n\n"
-                        f"  ollama pull {model}\n\n"
-                        f"Danach starte mich neu oder versuch es einfach erneut."
-                    ),
+                    direct_response=t("planner.model_not_installed", model=model),
                     confidence=0.0,
                 )
             return ActionPlan(
@@ -722,7 +714,7 @@ class Planner:
         model = self._router.select_model("simple_tool_call", "low")
 
         messages = [
-            {"role": "system", "content": "Du bist Jarvis. Erkläre höflich auf Deutsch."},
+            {"role": "system", "content": t("prompt.jarvis_identity")},
             {
                 "role": "user",
                 "content": self._escalation_prompt_template.format(tool=tool, reason=reason),
@@ -739,11 +731,7 @@ class Planner:
             content: str = response.get("message", {}).get("content", "")
             return content
         except OllamaError:
-            return (
-                f"Ich habe mehrfach versucht, '{tool}' auszuführen, "
-                f"aber es wurde blockiert: {reason}. "
-                "Bitte hilf mir, das anders zu lösen."
-            )
+            return t("planner.escalation_fallback", tool=tool, reason=reason)
 
     async def formulate_response(
         self,
@@ -804,16 +792,8 @@ class Planner:
                     f"[{r.tool_name}] {r.content[:300]}" for r in results if r.success
                 )
                 if raw_results:
-                    return (
-                        "Hier sind die Ergebnisse "
-                        "(Zusammenfassung fehlgeschlagen):"
-                        f"\n\n{raw_results}"
-                    )
-                return (
-                    "Ich konnte die Ergebnisse leider nicht zusammenfassen — "
-                    "das Sprachmodell antwortet fehlerhaft. "
-                    "Prüfe, ob Ollama läuft und genug Ressourcen hat."
-                )
+                    return t("planner.results_summary_failed", results=raw_results)
+                return t("planner.summarize_failed")
         return ""  # Unreachable, aber fuer Type-Checker
 
     async def formulate_response_stream(

@@ -4497,7 +4497,7 @@ abstract class AppLocalizations {
   /// No description provided for @restartRequired.
   ///
   /// In en, this message translates to:
-  /// **'Restart required for full effect'**
+  /// **'Restart required for changes to take effect'**
   String get restartRequired;
 
   /// No description provided for @installClaude.
@@ -4579,61 +4579,328 @@ abstract class AppLocalizations {
   String get configPageEvolution;
 
   /// No description provided for @kanbanNewTask.
+  ///
+  /// In en, this message translates to:
+  /// **'New Task'**
   String get kanbanNewTask;
 
   /// No description provided for @kanbanMyTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'My Tasks'**
   String get kanbanMyTasks;
 
   /// No description provided for @kanbanLivePipeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Pipeline'**
   String get kanbanLivePipeline;
 
   /// No description provided for @kanbanDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
   String get kanbanDescription;
 
   /// No description provided for @kanbanResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
   String get kanbanResult;
 
   /// No description provided for @kanbanSubtasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtasks ({count})'**
   String kanbanSubtasks(int count);
 
   /// No description provided for @kanbanHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
   String get kanbanHistory;
 
   /// No description provided for @kanbanNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No status changes yet.'**
   String get kanbanNoHistory;
 
   /// No description provided for @kanbanMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata'**
   String get kanbanMetadata;
 
   /// No description provided for @kanbanSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {source}'**
   String kanbanSource(String source);
 
   /// No description provided for @kanbanCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created: {date}'**
   String kanbanCreated(String date);
 
   /// No description provided for @kanbanUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated: {date}'**
   String kanbanUpdated(String date);
 
   /// No description provided for @kanbanCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed: {date}'**
   String kanbanCompleted(String date);
 
   /// No description provided for @kanbanEditTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Task'**
   String get kanbanEditTask;
 
   /// No description provided for @kanbanSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
   String get kanbanSave;
 
   /// No description provided for @kanbanCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
   String get kanbanCreate;
 
   /// No description provided for @deviceSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Settings'**
   String get deviceSettings;
 
   /// No description provided for @refreshSensors.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Sensors'**
   String get refreshSensors;
 
   /// No description provided for @documentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents & Templates'**
   String get documentsTitle;
+
+  /// No description provided for @connectedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected Devices'**
+  String get connectedDevices;
+
+  /// No description provided for @connectedDevicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage paired mobile devices'**
+  String get connectedDevicesSubtitle;
+
+  /// No description provided for @noDevicesPaired.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices paired yet'**
+  String get noDevicesPaired;
+
+  /// No description provided for @noDevicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair a mobile device by scanning a QR code'**
+  String get noDevicesHint;
+
+  /// No description provided for @pairNewDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair New Device'**
+  String get pairNewDevice;
+
+  /// No description provided for @deviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Name'**
+  String get deviceName;
+
+  /// No description provided for @deviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID'**
+  String get deviceId;
+
+  /// No description provided for @pairedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Paired'**
+  String get pairedAt;
+
+  /// No description provided for @expiresAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires'**
+  String get expiresAt;
+
+  /// No description provided for @revokeDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revokeDevice;
+
+  /// No description provided for @revokeDeviceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke this device? It will need to be paired again.'**
+  String get revokeDeviceConfirm;
+
+  /// No description provided for @deviceRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Device revoked'**
+  String get deviceRevoked;
+
+  /// No description provided for @pairingQrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR Code'**
+  String get pairingQrTitle;
+
+  /// No description provided for @pairingQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the Cognithor app on your phone and scan this code'**
+  String get pairingQrHint;
+
+  /// No description provided for @pairingSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Device paired successfully'**
+  String get pairingSuccess;
+
+  /// No description provided for @scanQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR Code'**
+  String get scanQrCode;
+
+  /// No description provided for @scanQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point your camera at the pairing QR code'**
+  String get scanQrHint;
+
+  /// No description provided for @qrScanError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read QR code'**
+  String get qrScanError;
+
+  /// No description provided for @networkSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Network & Connectivity'**
+  String get networkSettings;
+
+  /// No description provided for @networkSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage network interfaces and API binding'**
+  String get networkSettingsSubtitle;
+
+  /// No description provided for @detectedInterfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected Interfaces'**
+  String get detectedInterfaces;
+
+  /// No description provided for @noInterfacesDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'No network interfaces detected'**
+  String get noInterfacesDetected;
+
+  /// No description provided for @enabledEndpoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled Endpoints'**
+  String get enabledEndpoints;
+
+  /// No description provided for @autoDetect.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detect trusted interfaces'**
+  String get autoDetect;
+
+  /// No description provided for @autoDetectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically enable Tailscale, ZeroTier, and other VPN interfaces'**
+  String get autoDetectHint;
+
+  /// No description provided for @interfaceLoopback.
+  ///
+  /// In en, this message translates to:
+  /// **'Loopback'**
+  String get interfaceLoopback;
+
+  /// No description provided for @interfaceLan.
+  ///
+  /// In en, this message translates to:
+  /// **'LAN'**
+  String get interfaceLan;
+
+  /// No description provided for @interfaceTailscale.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale'**
+  String get interfaceTailscale;
+
+  /// No description provided for @interfaceZerotier.
+  ///
+  /// In en, this message translates to:
+  /// **'ZeroTier'**
+  String get interfaceZerotier;
+
+  /// No description provided for @interfaceWireguard.
+  ///
+  /// In en, this message translates to:
+  /// **'WireGuard'**
+  String get interfaceWireguard;
+
+  /// No description provided for @interfaceCloudflare.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloudflare'**
+  String get interfaceCloudflare;
+
+  /// No description provided for @interfaceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get interfaceUnknown;
+
+  /// No description provided for @bindHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Bind Host'**
+  String get bindHost;
+
+  /// No description provided for @trusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get trusted;
+
+  /// No description provided for @untrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Untrusted'**
+  String get untrusted;
 }
 
 class _AppLocalizationsDelegate

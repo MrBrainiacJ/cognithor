@@ -1439,25 +1439,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get configPageSystem => 'النظام';
 
   @override
-  String get configPageTools => 'Tools';
+  String get configPageTools => 'الأدوات';
 
   @override
-  String get configPageAudit => 'Audit';
+  String get configPageAudit => 'التدقيق';
 
   @override
-  String get auditChainIntegrity => 'Chain Integrity';
+  String get auditChainIntegrity => 'سلامة السلسلة';
 
   @override
-  String get auditVerifyChain => 'Verify Hash Chain';
+  String get auditVerifyChain => 'التحقق من السلسلة';
 
   @override
-  String get auditTimestamps => 'TSA Timestamps';
+  String get auditTimestamps => 'الطوابع الزمنية';
 
   @override
-  String get auditGdprExport => 'GDPR Data Export';
+  String get auditGdprExport => 'تصدير GDPR';
 
   @override
-  String get auditExport => 'Export';
+  String get auditExport => 'تصدير التدقيق';
 
   @override
   String get configTitle => 'التكوين';
@@ -2268,37 +2268,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String get installClaude => 'تثبيت Claude Code';
 
   @override
-  String get toolsComputerUseLabel => 'Computer Use';
+  String get toolsComputerUseLabel => 'التحكم بالكمبيوتر';
 
   @override
   String get toolsComputerUseDesc =>
-      'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.';
+      'تمكين التحكم بالكمبيوتر (الماوس ولوحة المفاتيح ولقطات الشاشة)';
 
   @override
-  String get toolsDesktopLabel => 'Desktop Tools';
+  String get toolsDesktopLabel => 'أدوات سطح المكتب';
 
   @override
-  String get toolsDesktopDesc =>
-      'Clipboard access (read/write) and screenshot capture.';
+  String get toolsDesktopDesc => 'الوصول إلى الحافظة ولقطات سطح المكتب';
 
   @override
-  String get toolsSectionDesktop => 'Desktop & Automation';
+  String get toolsSectionDesktop => 'سطح المكتب والأتمتة';
 
   @override
-  String get toolsWarning =>
-      'These tools give Jarvis access to your desktop. Enable only when needed.';
+  String get toolsWarning => 'التغييرات تتطلب إعادة التشغيل';
 
   @override
-  String get configPageSystemProfile => 'Hardware';
+  String get configPageSystemProfile => 'ملف النظام';
 
   @override
-  String get systemTier => 'System Tier';
+  String get systemTier => 'مستوى النظام';
 
   @override
-  String get systemRecommendedMode => 'Recommended Mode';
+  String get systemRecommendedMode => 'الوضع الموصى به';
 
   @override
-  String get systemRescan => 'Rescan Hardware';
+  String get systemRescan => 'إعادة المسح';
 
   @override
   String get configPageBudget => 'Budget';
@@ -2322,7 +2320,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kanbanResult => 'النتيجة';
 
   @override
-  String kanbanSubtasks(int count) => 'المهام الفرعية ($count)';
+  String kanbanSubtasks(int count) {
+    return 'المهام الفرعية ($count)';
+  }
 
   @override
   String get kanbanHistory => 'السجل';
@@ -2334,16 +2334,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kanbanMetadata => 'البيانات الوصفية';
 
   @override
-  String kanbanSource(String source) => 'المصدر: $source';
+  String kanbanSource(String source) {
+    return 'المصدر: $source';
+  }
 
   @override
-  String kanbanCreated(String date) => 'تم الإنشاء: $date';
+  String kanbanCreated(String date) {
+    return 'تم الإنشاء: $date';
+  }
 
   @override
-  String kanbanUpdated(String date) => 'تم التحديث: $date';
+  String kanbanUpdated(String date) {
+    return 'تم التحديث: $date';
+  }
 
   @override
-  String kanbanCompleted(String date) => 'تم الإكمال: $date';
+  String kanbanCompleted(String date) {
+    return 'تم الإكمال: $date';
+  }
 
   @override
   String get kanbanEditTask => 'تعديل المهمة';
@@ -2362,4 +2370,113 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get documentsTitle => 'المستندات والقوالب';
+
+  @override
+  String get connectedDevices => 'Connected Devices';
+
+  @override
+  String get connectedDevicesSubtitle => 'Manage paired mobile devices';
+
+  @override
+  String get noDevicesPaired => 'No devices paired yet';
+
+  @override
+  String get noDevicesHint => 'Pair a mobile device by scanning a QR code';
+
+  @override
+  String get pairNewDevice => 'Pair New Device';
+
+  @override
+  String get deviceName => 'Device Name';
+
+  @override
+  String get deviceId => 'Device ID';
+
+  @override
+  String get pairedAt => 'Paired';
+
+  @override
+  String get expiresAt => 'Expires';
+
+  @override
+  String get revokeDevice => 'Revoke';
+
+  @override
+  String get revokeDeviceConfirm =>
+      'Revoke this device? It will need to be paired again.';
+
+  @override
+  String get deviceRevoked => 'Device revoked';
+
+  @override
+  String get pairingQrTitle => 'Scan QR Code';
+
+  @override
+  String get pairingQrHint =>
+      'Open the Cognithor app on your phone and scan this code';
+
+  @override
+  String get pairingSuccess => 'Device paired successfully';
+
+  @override
+  String get scanQrCode => 'Scan QR Code';
+
+  @override
+  String get scanQrHint => 'Point your camera at the pairing QR code';
+
+  @override
+  String get qrScanError => 'Could not read QR code';
+
+  @override
+  String get networkSettings => 'Network & Connectivity';
+
+  @override
+  String get networkSettingsSubtitle =>
+      'Manage network interfaces and API binding';
+
+  @override
+  String get detectedInterfaces => 'Detected Interfaces';
+
+  @override
+  String get noInterfacesDetected => 'No network interfaces detected';
+
+  @override
+  String get enabledEndpoints => 'Enabled Endpoints';
+
+  @override
+  String get autoDetect => 'Auto-detect trusted interfaces';
+
+  @override
+  String get autoDetectHint =>
+      'Automatically enable Tailscale, ZeroTier, and other VPN interfaces';
+
+  @override
+  String get interfaceLoopback => 'Loopback';
+
+  @override
+  String get interfaceLan => 'LAN';
+
+  @override
+  String get interfaceTailscale => 'Tailscale';
+
+  @override
+  String get interfaceZerotier => 'ZeroTier';
+
+  @override
+  String get interfaceWireguard => 'WireGuard';
+
+  @override
+  String get interfaceCloudflare => 'Cloudflare';
+
+  @override
+  String get interfaceUnknown => 'Unknown';
+
+  @override
+  String get bindHost => 'Bind Host';
+
+  @override
+  String get trusted => 'Trusted';
+
+  @override
+  String get untrusted => 'Untrusted';
 }

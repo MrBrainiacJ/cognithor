@@ -93,29 +93,29 @@ _PRESEARCH_NO_ENGINE = "Keine Suchengine"
 
 # ── Tool status map for progress feedback ────────────────────────
 
-_TOOL_STATUS_MAP: dict[str, str] = {
-    "web_search": "Searching the web...",
-    "web_news_search": "Searching news...",
-    "search_and_read": "Researching online...",
-    "web_fetch": "Fetching webpage...",
-    "read_file": "Reading file...",
-    "write_file": "Writing file...",
-    "edit_file": "Editing file...",
-    "exec_command": "Running command...",
-    "run_python": "Running Python code...",
-    "search_memory": "Searching knowledge...",
-    "save_to_memory": "Saving knowledge...",
-    "document_export": "Creating document...",
-    "media_analyze_image": "Analyzing image...",
-    "media_transcribe_audio": "Transcribing audio...",
-    "media_extract_text": "Extracting text...",
-    "media_tts": "Generating speech...",
-    "vault_search": "Searching vault...",
-    "vault_write": "Writing to vault...",
-    "analyze_code": "Analyzing code...",
-    "list_directory": "Listing directory...",
-    "browser_navigate": "Navigating browser...",
-    "browser_screenshot": "Taking screenshot...",
+_TOOL_STATUS_KEYS: dict[str, str] = {
+    "web_search": "gateway.status_web_search",
+    "web_news_search": "gateway.status_web_news_search",
+    "search_and_read": "gateway.status_search_and_read",
+    "web_fetch": "gateway.status_web_fetch",
+    "read_file": "gateway.status_read_file",
+    "write_file": "gateway.status_write_file",
+    "edit_file": "gateway.status_edit_file",
+    "exec_command": "gateway.status_exec_command",
+    "run_python": "gateway.status_run_python",
+    "search_memory": "gateway.status_search_memory",
+    "save_to_memory": "gateway.status_save_to_memory",
+    "document_export": "gateway.status_document_export",
+    "media_analyze_image": "gateway.status_media_analyze_image",
+    "media_transcribe_audio": "gateway.status_media_transcribe_audio",
+    "media_extract_text": "gateway.status_media_extract_text",
+    "media_tts": "gateway.status_media_tts",
+    "vault_search": "gateway.status_vault_search",
+    "vault_write": "gateway.status_vault_write",
+    "analyze_code": "gateway.status_analyze_code",
+    "list_directory": "gateway.status_list_directory",
+    "browser_navigate": "gateway.status_browser_navigate",
+    "browser_screenshot": "gateway.status_browser_screenshot",
 }
 
 
@@ -340,7 +340,7 @@ class Gateway:
                         return AgentResult(
                             response="",
                             success=False,
-                            error=f"Sub-Agent Timeout nach {config.timeout_seconds}s",
+                            error=t("gateway.sub_agent_timeout", seconds=config.timeout_seconds),
                         )
                     except Exception as exc:
                         return AgentResult(
@@ -890,9 +890,10 @@ class Gateway:
         if self._audit_logger:
             self._audit_logger.log_system(
                 "startup",
-                description=(
-                    f"Jarvis gestartet (LLM={llm_ok}, "
-                    f"Tools={len(self._mcp_client.get_tool_list())})"
+                description=t(
+                    "gateway.startup_description",
+                    llm_ok=llm_ok,
+                    tool_count=len(self._mcp_client.get_tool_list()),
                 ),
             )
 
@@ -1583,7 +1584,7 @@ class Gateway:
 
         # Audit log BEFORE closing resources
         if self._audit_logger:
-            self._audit_logger.log_system("shutdown", description="Jarvis heruntergefahren")
+            self._audit_logger.log_system("shutdown", description=t("gateway.shutdown_description"))
 
         # Active learner stoppen
         if self._active_learner is not None:
@@ -1996,10 +1997,10 @@ class Gateway:
             )
             return OutgoingMessage(
                 channel=msg.channel,
-                text=(
-                    f"Sub-Agent Rekursion abgebrochen: "
-                    f"Tiefe {_depth} überschreitet "
-                    f"Maximum {_max_depth}."
+                text=t(
+                    "gateway.sub_agent_recursion",
+                    depth=_depth,
+                    max_depth=_max_depth,
                 ),
                 is_final=True,
             )
@@ -2030,7 +2031,7 @@ class Gateway:
                     )
                     return OutgoingMessage(
                         channel=msg.channel,
-                        text="Datenschutz-Einwilligung erteilt. Ich bin jetzt bereit!",
+                        text=t("gateway.consent_granted"),
                         session_id=msg.session_id or msg.id or "consent",
                         is_final=True,
                     )
@@ -2255,22 +2256,26 @@ class Gateway:
                         content=(
                             f"Channel: {msg.channel}. "
                             + (
-                                "Halte Antworten kurz und kompakt. "
+                                t("gateway.channel_compact") + " "
                                 if _channel_flags.compact_output
                                 else ""
                             )
                             + (
-                                f"Max {_channel_flags.max_response_length} Zeichen. "
+                                t(
+                                    "gateway.channel_max_length",
+                                    max=_channel_flags.max_response_length,
+                                )
+                                + " "
                                 if _channel_flags.max_response_length
                                 else ""
                             )
                             + (
-                                "Kein Markdown verwenden. "
+                                t("gateway.channel_no_markdown") + " "
                                 if not _channel_flags.allow_markdown
                                 else ""
                             )
                             + (
-                                "Keine Code-Bloecke. "
+                                t("gateway.channel_no_code_blocks") + " "
                                 if not _channel_flags.allow_code_blocks
                                 else ""
                             )
@@ -2683,7 +2688,7 @@ class Gateway:
                 if not budget.ok:
                     return None, OutgoingMessage(
                         channel=msg.channel,
-                        text=f"Budget-Limit erreicht: {budget.warning}",
+                        text=t("gateway.budget_limit_reached", warning=budget.warning),
                         session_id=session.session_id,
                         is_final=True,
                     )
@@ -2926,11 +2931,7 @@ class Gateway:
             wm.add_message(
                 Message(
                     role=MessageRole.SYSTEM,
-                    content=(
-                        f"[KORREKTUR] Der User hat korrigiert: "
-                        f'"{msg.text}". Passe deinen Plan an. '
-                        f"Fuehre NICHT die vorherige Aktion erneut aus."
-                    ),
+                    content=t("gateway.correction_hint", text=msg.text),
                     channel=msg.channel,
                 )
             )
@@ -2940,7 +2941,7 @@ class Gateway:
             if msg.session_id in self._cancelled_sessions:
                 self._cancelled_sessions.discard(msg.session_id)
                 log.info("pge_cancelled_by_user", session=session.session_id[:8])
-                final_response = "Verarbeitung abgebrochen. Was kann ich stattdessen fuer dich tun?"
+                final_response = t("gateway.processing_cancelled")
                 break
 
             session.iteration_count += 1
@@ -2958,7 +2959,7 @@ class Gateway:
             )
 
             # Status: Thinking (with periodic keepalive for long-running plans)
-            await _status_cb("thinking", "Denke nach...")
+            await _status_cb("thinking", t("gateway.status_thinking"))
             await _pipeline_cb("plan", "start", iteration=session.iteration_count)
 
             # Keepalive: send periodic status updates while planner works
@@ -2968,11 +2969,11 @@ class Gateway:
                 """Send periodic status updates so the UI shows activity."""
                 _elapsed = 0
                 _messages = [
-                    "Denke nach...",
-                    "Plane Schritte...",
-                    "Analysiere Aufgabe...",
-                    "Erstelle Plan...",
-                    "Arbeite daran...",
+                    t("gateway.status_thinking"),
+                    t("gateway.status_planning"),
+                    t("gateway.status_analyzing"),
+                    t("gateway.status_creating_plan"),
+                    t("gateway.status_working"),
                 ]
                 while _keepalive_running:
                     await asyncio.sleep(5)
@@ -3357,7 +3358,10 @@ class Gateway:
 
             # Status: Tool-specific progress message
             for step in plan.steps:
-                tool_status = _TOOL_STATUS_MAP.get(step.tool, f"Running {step.tool}...")
+                _status_key = _TOOL_STATUS_KEYS.get(step.tool)
+                tool_status = (
+                    t(_status_key) if _status_key else t("status.tool_running", tool=step.tool)
+                )
                 await _status_cb("executing", tool_status)
                 break  # Only send the first tool's status
 
@@ -3365,13 +3369,13 @@ class Gateway:
             if stream_callback is not None:
                 for step in plan.steps:
                     try:
+                        _sk = _TOOL_STATUS_KEYS.get(step.tool)
+                        _st = t(_sk) if _sk else t("status.tool_running", tool=step.tool)
                         await stream_callback(
                             "tool_start",
                             {
                                 "tool": step.tool,
-                                "status": _TOOL_STATUS_MAP.get(
-                                    step.tool, f"Running {step.tool}..."
-                                ),
+                                "status": _st,
                             },
                         )
                     except Exception:

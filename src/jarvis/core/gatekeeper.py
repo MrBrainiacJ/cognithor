@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from jarvis.i18n import t
 from jarvis.models import (
     AuditEntry,
     GateDecision,
@@ -322,10 +323,7 @@ class Gatekeeper:
                 ):
                     decision = GateDecision(
                         status=GateStatus.BLOCK,
-                        reason=(
-                            f"Tool '{action.tool}' benoetigt Netzwerk, "
-                            f"aber System ist im OFFLINE-Modus"
-                        ),
+                        reason=t("gatekeeper.offline_network_blocked", tool=action.tool),
                         risk_level=RiskLevel.RED,
                         original_action=action,
                         policy_name="operation_mode_offline",
@@ -338,7 +336,7 @@ class Gatekeeper:
         if has_credentials:
             decision = GateDecision(
                 status=GateStatus.MASK,
-                reason="Credential in Parametern erkannt -- maskiert",
+                reason=t("gatekeeper.credential_masked"),
                 risk_level=RiskLevel.YELLOW,
                 original_action=action,
                 masked_params=masked_params,
@@ -401,7 +399,10 @@ class Gatekeeper:
                     if violations:
                         decision = GateDecision(
                             status=GateStatus.BLOCK,
-                            reason=f"Capability-Verletzung: {', '.join(violations)}",
+                            reason=t(
+                                "gatekeeper.capability_violation",
+                                violations=", ".join(violations),
+                            ),
                             risk_level=RiskLevel.RED,
                             original_action=action,
                             policy_name="capability_matrix",
@@ -428,7 +429,11 @@ class Gatekeeper:
                 decision = GateDecision(
                     status=GateStatus.BLOCK,
                     risk_level=risk,
-                    reason=f"Aktion ueberschreitet Risk-Ceiling ({risk_ceiling}): {risk.name}",
+                    reason=t(
+                        "gatekeeper.risk_ceiling_exceeded",
+                        ceiling=risk_ceiling,
+                        risk=risk.name,
+                    ),
                 )
                 self._write_audit(action, decision, context)
                 return decision
@@ -469,7 +474,7 @@ class Gatekeeper:
 
         decision = GateDecision(
             status=status,
-            reason=f"Default-Klassifizierung: {risk.name}",
+            reason=t("gatekeeper.default_classification", risk=risk.name),
             risk_level=risk,
             original_action=action,
             policy_name="default_classification",
@@ -1002,7 +1007,7 @@ class Gatekeeper:
             if pattern.search(code):
                 return GateDecision(
                     status=GateStatus.BLOCK,
-                    reason=f"Dangerous Python code detected: {description}",
+                    reason=t("gatekeeper.dangerous_code", description=description),
                     risk_level=RiskLevel.RED,
                     original_action=action,
                     policy_name="blocked_python_code",
@@ -1027,7 +1032,7 @@ class Gatekeeper:
             if pattern.search(command):
                 return GateDecision(
                     status=GateStatus.BLOCK,
-                    reason=f"Destruktiver Shell-Befehl erkannt: Pattern '{pattern.pattern}'",
+                    reason=t("gatekeeper.destructive_command", pattern=pattern.pattern),
                     risk_level=RiskLevel.RED,
                     original_action=action,
                     policy_name="blocked_command",

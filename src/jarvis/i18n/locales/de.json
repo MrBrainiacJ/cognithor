@@ -182,7 +182,13 @@
   "gatekeeper": {
     "invalid_path": "Ungültiger Pfad: {path}",
     "path_outside_allowed": "Pfad ausserhalb erlaubter Verzeichnisse: {path}",
-    "dangerous_code": "Gefährlicher Python-Code erkannt: {description}"
+    "dangerous_code": "Gefährlicher Python-Code erkannt: {description}",
+    "offline_network_blocked": "Tool '{tool}' benoetigt Netzwerk, aber System ist im OFFLINE-Modus",
+    "credential_masked": "Credential in Parametern erkannt -- maskiert",
+    "capability_violation": "Capability-Verletzung: {violations}",
+    "risk_ceiling_exceeded": "Aktion ueberschreitet Risk-Ceiling ({ceiling}): {risk}",
+    "default_classification": "Default-Klassifizierung: {risk}",
+    "destructive_command": "Destruktiver Shell-Befehl erkannt: Pattern '{pattern}'"
   },
   "executor": {
     "action_skipped": "Aktion übersprungen: {status} -- {reason}",
@@ -196,7 +202,12 @@
     "no_tools": "Keine Tools verfügbar.",
     "output_truncated": "[... Output gekürzt]",
     "llm_error": "Ich konnte deine Anfrage nicht verarbeiten — das Sprachmodell hat einen Fehler gemeldet (HTTP {status_code}).\n\nMögliche Ursachen:\n- Ollama ist nicht gestartet → `ollama serve`\n- Das Modell '{model}' ist nicht installiert → `ollama pull {model}`\n- Nicht genug VRAM/RAM für das Modell\n\nFehlerdetails: {detail}",
-    "replan_exhausted": "Ich konnte den Plan nicht fortsetzen — das Sprachmodell meldet Fehler nach {attempts} Versuchen.\n\nFehler: {error}"
+    "replan_exhausted": "Ich konnte den Plan nicht fortsetzen — das Sprachmodell meldet Fehler nach {attempts} Versuchen.\n\nFehler: {error}",
+    "circuit_breaker_open": "Das Sprachmodell ist wiederholt nicht erreichbar. Automatischer Retry in {seconds}s.\n\nPruefe bitte:\n- Laeuft Ollama? -> `ollama serve`\n- Hat das System genug RAM/VRAM?",
+    "model_not_installed": "Das Sprachmodell '{model}' ist nicht installiert. Bitte lade es herunter:\n\n  ollama pull {model}\n\nDanach starte mich neu oder versuch es einfach erneut.",
+    "escalation_fallback": "Ich habe mehrfach versucht, '{tool}' auszufuehren, aber es wurde blockiert: {reason}. Bitte hilf mir, das anders zu loesen.",
+    "results_summary_failed": "Hier sind die Ergebnisse (Zusammenfassung fehlgeschlagen):\n\n{results}",
+    "summarize_failed": "Ich konnte die Ergebnisse leider nicht zusammenfassen -- das Sprachmodell antwortet fehlerhaft. Pruefe, ob Ollama laeuft und genug Ressourcen hat."
   },
   "prompt": {
     "respond_default": "Antworte prägnant und informativ.",
@@ -258,7 +269,46 @@
     "duration": "\n*Gesamtzeit: {ms}ms*"
   },
   "gateway": {
-    "parse_failed": "Ich konnte die Antwort des Sprachmodells nicht verarbeiten. Bitte versuch es nochmal oder formuliere deine Anfrage anders."
+    "parse_failed": "Ich konnte die Antwort des Sprachmodells nicht verarbeiten. Bitte versuch es nochmal oder formuliere deine Anfrage anders.",
+    "consent_granted": "Datenschutz-Einwilligung erteilt. Ich bin jetzt bereit!",
+    "processing_cancelled": "Verarbeitung abgebrochen. Was kann ich stattdessen fuer dich tun?",
+    "budget_limit_reached": "Budget-Limit erreicht: {warning}",
+    "sub_agent_timeout": "Sub-Agent Timeout nach {seconds}s",
+    "sub_agent_recursion": "Sub-Agent Rekursion abgebrochen: Tiefe {depth} ueberschreitet Maximum {max_depth}.",
+    "status_thinking": "Denke nach...",
+    "status_planning": "Plane Schritte...",
+    "status_analyzing": "Analysiere Aufgabe...",
+    "status_creating_plan": "Erstelle Plan...",
+    "status_working": "Arbeite daran...",
+    "channel_compact": "Halte Antworten kurz und kompakt.",
+    "channel_max_length": "Max {max} Zeichen.",
+    "channel_no_markdown": "Kein Markdown verwenden.",
+    "channel_no_code_blocks": "Keine Code-Bloecke.",
+    "correction_hint": "[KORREKTUR] Der User hat korrigiert: \"{text}\". Passe deinen Plan an. Fuehre NICHT die vorherige Aktion erneut aus.",
+    "startup_description": "Jarvis gestartet (LLM={llm_ok}, Tools={tool_count})",
+    "shutdown_description": "Jarvis heruntergefahren",
+    "status_web_search": "Durchsuche das Web...",
+    "status_web_news_search": "Suche Nachrichten...",
+    "status_search_and_read": "Recherchiere online...",
+    "status_web_fetch": "Rufe Webseite ab...",
+    "status_read_file": "Lese Datei...",
+    "status_write_file": "Schreibe Datei...",
+    "status_edit_file": "Bearbeite Datei...",
+    "status_exec_command": "Fuehre Befehl aus...",
+    "status_run_python": "Fuehre Python-Code aus...",
+    "status_search_memory": "Durchsuche Wissen...",
+    "status_save_to_memory": "Speichere Wissen...",
+    "status_document_export": "Erstelle Dokument...",
+    "status_media_analyze_image": "Analysiere Bild...",
+    "status_media_transcribe_audio": "Transkribiere Audio...",
+    "status_media_extract_text": "Extrahiere Text...",
+    "status_media_tts": "Generiere Sprache...",
+    "status_vault_search": "Durchsuche Vault...",
+    "status_vault_write": "Schreibe in Vault...",
+    "status_analyze_code": "Analysiere Code...",
+    "status_list_directory": "Liste Verzeichnis auf...",
+    "status_browser_navigate": "Navigiere Browser...",
+    "status_browser_screenshot": "Erstelle Screenshot..."
   },
   "media": {
     "unsupported_image": "Nicht unterstütztes Bildformat: {suffix}",

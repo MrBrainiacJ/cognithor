@@ -1437,25 +1437,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get configPageSystem => '系统';
 
   @override
-  String get configPageTools => 'Tools';
+  String get configPageTools => '工具';
 
   @override
-  String get configPageAudit => 'Audit';
+  String get configPageAudit => '审计';
 
   @override
-  String get auditChainIntegrity => 'Chain Integrity';
+  String get auditChainIntegrity => '链完整性';
 
   @override
-  String get auditVerifyChain => 'Verify Hash Chain';
+  String get auditVerifyChain => '验证链';
 
   @override
-  String get auditTimestamps => 'TSA Timestamps';
+  String get auditTimestamps => '时间戳';
 
   @override
-  String get auditGdprExport => 'GDPR Data Export';
+  String get auditGdprExport => 'GDPR导出';
 
   @override
-  String get auditExport => 'Export';
+  String get auditExport => '导出审计';
 
   @override
   String get configTitle => '配置';
@@ -2256,37 +2256,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installClaude => '安装 Claude Code';
 
   @override
-  String get toolsComputerUseLabel => 'Computer Use';
+  String get toolsComputerUseLabel => '计算机控制';
 
   @override
-  String get toolsComputerUseDesc =>
-      'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.';
+  String get toolsComputerUseDesc => '启用计算机控制（鼠标、键盘、截图）';
 
   @override
-  String get toolsDesktopLabel => 'Desktop Tools';
+  String get toolsDesktopLabel => '桌面工具';
 
   @override
-  String get toolsDesktopDesc =>
-      'Clipboard access (read/write) and screenshot capture.';
+  String get toolsDesktopDesc => '访问剪贴板和桌面截图';
 
   @override
-  String get toolsSectionDesktop => 'Desktop & Automation';
+  String get toolsSectionDesktop => '桌面和自动化';
 
   @override
-  String get toolsWarning =>
-      'These tools give Jarvis access to your desktop. Enable only when needed.';
+  String get toolsWarning => '更改需要重新启动';
 
   @override
-  String get configPageSystemProfile => 'Hardware';
+  String get configPageSystemProfile => '系统配置';
 
   @override
-  String get systemTier => 'System Tier';
+  String get systemTier => '系统等级';
 
   @override
-  String get systemRecommendedMode => 'Recommended Mode';
+  String get systemRecommendedMode => '推荐模式';
 
   @override
-  String get systemRescan => 'Rescan Hardware';
+  String get systemRescan => '重新扫描';
 
   @override
   String get configPageBudget => 'Budget';
@@ -2310,7 +2307,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kanbanResult => '结果';
 
   @override
-  String kanbanSubtasks(int count) => '子任务 ($count)';
+  String kanbanSubtasks(int count) {
+    return '子任务 ($count)';
+  }
 
   @override
   String get kanbanHistory => '历史';
@@ -2322,16 +2321,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get kanbanMetadata => '元数据';
 
   @override
-  String kanbanSource(String source) => '来源：$source';
+  String kanbanSource(String source) {
+    return '来源：$source';
+  }
 
   @override
-  String kanbanCreated(String date) => '创建：$date';
+  String kanbanCreated(String date) {
+    return '创建：$date';
+  }
 
   @override
-  String kanbanUpdated(String date) => '更新：$date';
+  String kanbanUpdated(String date) {
+    return '更新：$date';
+  }
 
   @override
-  String kanbanCompleted(String date) => '完成：$date';
+  String kanbanCompleted(String date) {
+    return '完成：$date';
+  }
 
   @override
   String get kanbanEditTask => '编辑任务';
@@ -2350,4 +2357,113 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get documentsTitle => '文档和模板';
+
+  @override
+  String get connectedDevices => 'Connected Devices';
+
+  @override
+  String get connectedDevicesSubtitle => 'Manage paired mobile devices';
+
+  @override
+  String get noDevicesPaired => 'No devices paired yet';
+
+  @override
+  String get noDevicesHint => 'Pair a mobile device by scanning a QR code';
+
+  @override
+  String get pairNewDevice => 'Pair New Device';
+
+  @override
+  String get deviceName => 'Device Name';
+
+  @override
+  String get deviceId => 'Device ID';
+
+  @override
+  String get pairedAt => 'Paired';
+
+  @override
+  String get expiresAt => 'Expires';
+
+  @override
+  String get revokeDevice => 'Revoke';
+
+  @override
+  String get revokeDeviceConfirm =>
+      'Revoke this device? It will need to be paired again.';
+
+  @override
+  String get deviceRevoked => 'Device revoked';
+
+  @override
+  String get pairingQrTitle => 'Scan QR Code';
+
+  @override
+  String get pairingQrHint =>
+      'Open the Cognithor app on your phone and scan this code';
+
+  @override
+  String get pairingSuccess => 'Device paired successfully';
+
+  @override
+  String get scanQrCode => 'Scan QR Code';
+
+  @override
+  String get scanQrHint => 'Point your camera at the pairing QR code';
+
+  @override
+  String get qrScanError => 'Could not read QR code';
+
+  @override
+  String get networkSettings => 'Network & Connectivity';
+
+  @override
+  String get networkSettingsSubtitle =>
+      'Manage network interfaces and API binding';
+
+  @override
+  String get detectedInterfaces => 'Detected Interfaces';
+
+  @override
+  String get noInterfacesDetected => 'No network interfaces detected';
+
+  @override
+  String get enabledEndpoints => 'Enabled Endpoints';
+
+  @override
+  String get autoDetect => 'Auto-detect trusted interfaces';
+
+  @override
+  String get autoDetectHint =>
+      'Automatically enable Tailscale, ZeroTier, and other VPN interfaces';
+
+  @override
+  String get interfaceLoopback => 'Loopback';
+
+  @override
+  String get interfaceLan => 'LAN';
+
+  @override
+  String get interfaceTailscale => 'Tailscale';
+
+  @override
+  String get interfaceZerotier => 'ZeroTier';
+
+  @override
+  String get interfaceWireguard => 'WireGuard';
+
+  @override
+  String get interfaceCloudflare => 'Cloudflare';
+
+  @override
+  String get interfaceUnknown => 'Unknown';
+
+  @override
+  String get bindHost => 'Bind Host';
+
+  @override
+  String get trusted => 'Trusted';
+
+  @override
+  String get untrusted => 'Untrusted';
 }

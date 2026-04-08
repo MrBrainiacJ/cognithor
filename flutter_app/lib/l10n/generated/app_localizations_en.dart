@@ -2264,7 +2264,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchBackend => 'Change Backend';
 
   @override
-  String get restartRequired => 'Restart required for full effect';
+  String get restartRequired => 'Restart required for changes to take effect';
 
   @override
   String get installClaude => 'Install Claude Code';
@@ -2324,7 +2324,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kanbanResult => 'Result';
 
   @override
-  String kanbanSubtasks(int count) => 'Subtasks ($count)';
+  String kanbanSubtasks(int count) {
+    return 'Subtasks ($count)';
+  }
 
   @override
   String get kanbanHistory => 'History';
@@ -2336,16 +2338,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kanbanMetadata => 'Metadata';
 
   @override
-  String kanbanSource(String source) => 'Source: $source';
+  String kanbanSource(String source) {
+    return 'Source: $source';
+  }
 
   @override
-  String kanbanCreated(String date) => 'Created: $date';
+  String kanbanCreated(String date) {
+    return 'Created: $date';
+  }
 
   @override
-  String kanbanUpdated(String date) => 'Updated: $date';
+  String kanbanUpdated(String date) {
+    return 'Updated: $date';
+  }
 
   @override
-  String kanbanCompleted(String date) => 'Completed: $date';
+  String kanbanCompleted(String date) {
+    return 'Completed: $date';
+  }
 
   @override
   String get kanbanEditTask => 'Edit Task';
@@ -2364,4 +2374,113 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get documentsTitle => 'Documents & Templates';
+
+  @override
+  String get connectedDevices => 'Connected Devices';
+
+  @override
+  String get connectedDevicesSubtitle => 'Manage paired mobile devices';
+
+  @override
+  String get noDevicesPaired => 'No devices paired yet';
+
+  @override
+  String get noDevicesHint => 'Pair a mobile device by scanning a QR code';
+
+  @override
+  String get pairNewDevice => 'Pair New Device';
+
+  @override
+  String get deviceName => 'Device Name';
+
+  @override
+  String get deviceId => 'Device ID';
+
+  @override
+  String get pairedAt => 'Paired';
+
+  @override
+  String get expiresAt => 'Expires';
+
+  @override
+  String get revokeDevice => 'Revoke';
+
+  @override
+  String get revokeDeviceConfirm =>
+      'Revoke this device? It will need to be paired again.';
+
+  @override
+  String get deviceRevoked => 'Device revoked';
+
+  @override
+  String get pairingQrTitle => 'Scan QR Code';
+
+  @override
+  String get pairingQrHint =>
+      'Open the Cognithor app on your phone and scan this code';
+
+  @override
+  String get pairingSuccess => 'Device paired successfully';
+
+  @override
+  String get scanQrCode => 'Scan QR Code';
+
+  @override
+  String get scanQrHint => 'Point your camera at the pairing QR code';
+
+  @override
+  String get qrScanError => 'Could not read QR code';
+
+  @override
+  String get networkSettings => 'Network & Connectivity';
+
+  @override
+  String get networkSettingsSubtitle =>
+      'Manage network interfaces and API binding';
+
+  @override
+  String get detectedInterfaces => 'Detected Interfaces';
+
+  @override
+  String get noInterfacesDetected => 'No network interfaces detected';
+
+  @override
+  String get enabledEndpoints => 'Enabled Endpoints';
+
+  @override
+  String get autoDetect => 'Auto-detect trusted interfaces';
+
+  @override
+  String get autoDetectHint =>
+      'Automatically enable Tailscale, ZeroTier, and other VPN interfaces';
+
+  @override
+  String get interfaceLoopback => 'Loopback';
+
+  @override
+  String get interfaceLan => 'LAN';
+
+  @override
+  String get interfaceTailscale => 'Tailscale';
+
+  @override
+  String get interfaceZerotier => 'ZeroTier';
+
+  @override
+  String get interfaceWireguard => 'WireGuard';
+
+  @override
+  String get interfaceCloudflare => 'Cloudflare';
+
+  @override
+  String get interfaceUnknown => 'Unknown';
+
+  @override
+  String get bindHost => 'Bind Host';
+
+  @override
+  String get trusted => 'Trusted';
+
+  @override
+  String get untrusted => 'Untrusted';
 }

@@ -182,7 +182,13 @@
   "gatekeeper": {
     "invalid_path": "无效路径：{path}",
     "path_outside_allowed": "路径超出允许的目录范围：{path}",
-    "dangerous_code": "检测到危险的 Python 代码：{description}"
+    "dangerous_code": "检测到危险的 Python 代码：{description}",
+    "offline_network_blocked": "工具 '{tool}' 需要网络，但系统处于离线模式",
+    "credential_masked": "检测到参数中的凭据——已掩码",
+    "capability_violation": "能力违规：{violations}",
+    "risk_ceiling_exceeded": "操作超过风险上限（{ceiling}）：{risk}",
+    "default_classification": "默认分类：{risk}",
+    "destructive_command": "检测到破坏性 Shell 命令：模式 '{pattern}'"
   },
   "executor": {
     "action_skipped": "操作已跳过：{status}——{reason}",
@@ -196,7 +202,12 @@
     "no_tools": "没有可用的工具。",
     "output_truncated": "[... 输出已截断]",
     "llm_error": "无法处理您的请求——语言模型报告了错误（HTTP {status_code}）。\n\n可能原因：\n- Ollama 未启动 → `ollama serve`\n- 模型 '{model}' 未安装 → `ollama pull {model}`\n- VRAM/RAM 不足\n\n错误详情：{detail}",
-    "replan_exhausted": "无法继续执行计划——语言模型在 {attempts} 次尝试后报告错误。\n\n错误：{error}"
+    "replan_exhausted": "无法继续执行计划——语言模型在 {attempts} 次尝试后报告错误。\n\n错误：{error}",
+    "circuit_breaker_open": "语言模型持续不可达。{seconds} 秒后自动重试。\n\n请检查：\n- Ollama 是否在运行？-> `ollama serve`\n- 系统是否有足够的 RAM/VRAM？",
+    "model_not_installed": "语言模型 '{model}' 尚未安装。请下载：\n\n  ollama pull {model}\n\n然后重启我或直接重试。",
+    "escalation_fallback": "我已多次尝试运行 '{tool}'，但被阻止了：{reason}。请帮我用其他方式解决。",
+    "results_summary_failed": "以下是结果（摘要失败）：\n\n{results}",
+    "summarize_failed": "我无法总结结果——语言模型响应异常。请检查 Ollama 是否在运行并有足够的资源。"
   },
   "prompt": {
     "respond_default": "简洁且有信息量地回答。",
@@ -258,7 +269,46 @@
     "duration": "\n*总耗时：{ms}ms*"
   },
   "gateway": {
-    "parse_failed": "我无法处理语言模型的回复。请重试或换一种方式表达您的请求。"
+    "parse_failed": "我无法处理语言模型的回复。请重试或换一种方式表达您的请求。",
+    "consent_granted": "隐私同意已授权。我现在准备好了！",
+    "processing_cancelled": "处理已取消。我还能为你做什么？",
+    "budget_limit_reached": "预算上限已达到：{warning}",
+    "sub_agent_timeout": "子代理在 {seconds} 秒后超时",
+    "sub_agent_recursion": "子代理递归已中止：深度 {depth} 超过最大值 {max_depth}。",
+    "status_thinking": "正在思考...",
+    "status_planning": "正在规划步骤...",
+    "status_analyzing": "正在分析任务...",
+    "status_creating_plan": "正在创建计划...",
+    "status_working": "正在处理...",
+    "channel_compact": "保持回答简短紧凑。",
+    "channel_max_length": "最多 {max} 个字符。",
+    "channel_no_markdown": "不要使用 Markdown。",
+    "channel_no_code_blocks": "不要使用代码块。",
+    "correction_hint": "[更正] 用户更正了：「{text}」。调整你的计划。不要重新执行之前的操作。",
+    "startup_description": "Jarvis 已启动（LLM={llm_ok}，工具={tool_count}）",
+    "shutdown_description": "Jarvis 已关闭",
+    "status_web_search": "正在搜索网页...",
+    "status_web_news_search": "正在搜索新闻...",
+    "status_search_and_read": "正在在线研究...",
+    "status_web_fetch": "正在获取网页...",
+    "status_read_file": "正在读取文件...",
+    "status_write_file": "正在写入文件...",
+    "status_edit_file": "正在编辑文件...",
+    "status_exec_command": "正在执行命令...",
+    "status_run_python": "正在运行 Python 代码...",
+    "status_search_memory": "正在搜索知识...",
+    "status_save_to_memory": "正在保存知识...",
+    "status_document_export": "正在创建文档...",
+    "status_media_analyze_image": "正在分析图像...",
+    "status_media_transcribe_audio": "正在转录音频...",
+    "status_media_extract_text": "正在提取文本...",
+    "status_media_tts": "正在生成语音...",
+    "status_vault_search": "正在搜索 Vault...",
+    "status_vault_write": "正在写入 Vault...",
+    "status_analyze_code": "正在分析代码...",
+    "status_list_directory": "正在列出目录...",
+    "status_browser_navigate": "正在导航浏览器...",
+    "status_browser_screenshot": "正在截图..."
   },
   "media": {
     "unsupported_image": "不支持的图像格式：{suffix}",

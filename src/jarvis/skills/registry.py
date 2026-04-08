@@ -50,6 +50,9 @@ __all__ = [
     "SkillRegistry",
 ]
 
+# Well-known directory name for generated skills
+_GENERATED_DIR_NAME = "generated"
+
 
 # ============================================================================
 # Datenmodelle
@@ -199,6 +202,9 @@ class SkillRegistry:
         # Community-Skills aus ~/.jarvis/skills/community/
         count += self._load_community_skills(directories)
 
+        # Generated skills (agent-authored) — loaded last, never overwrite
+        count += self.load_generated_skills(directories)
+
         self._rebuild_index()
         log.info(
             "skill_registry_loaded",
@@ -347,6 +353,68 @@ class SkillRegistry:
         if count > 0:
             log.info("community_skills_loaded", count=count)
         return count
+
+    def load_generated_skills(self, directories: list[Path]) -> int:
+        """Load generated skills from ``generated/`` sub-directories.
+
+        Generated skills are agent-authored ``.md`` files stored under
+        ``<dir>/generated/``.  They are tagged with ``source="generated"``
+        and will **not** overwrite already-registered built-in or community
+        skills with the same slug.
+
+        Args:
+            directories: The same top-level skill directories passed to
+                :meth:`load_from_directories`.  Each one is checked for a
+                ``generated/`` child.
+
+        Returns:
+            Number of generated skills loaded.
+        """
+        count = 0
+        for directory in directories:
+            gen_dir = directory / _GENERATED_DIR_NAME
+            if not gen_dir.is_dir():
+                continue
+
+            for md_file in sorted(gen_dir.glob("*.md")):
+                try:
+                    skill = self._parse_skill_file(md_file)
+                    if skill is None:
+                        continue
+
+                    # Never overwrite built-in or community skills
+                    existing = self._skills.get(skill.slug)
+                    if existing is not None and existing.source in ("builtin", "community"):
+                        log.debug(
+                            "generated_skill_skipped_existing",
+                            slug=skill.slug,
+                            existing_source=existing.source,
+                        )
+                        continue
+
+                    skill.source = "generated"
+                    self._register(skill)
+                    count += 1
+                    log.debug(
+                        "generated_skill_loaded",
+                        name=skill.name,
+                        slug=skill.slug,
+                        path=str(md_file),
+                    )
+                except Exception as exc:
+                    log.warning(
+                        "generated_skill_load_error",
+                        file=str(md_file),
+                        error=str(exc),
+                    )
+
+        if count > 0:
+            log.info("generated_skills_loaded", count=count)
+        return count
+
+    def get_generated_skills(self) -> list[Skill]:
+        """Return all skills with ``source == 'generated'``."""
+        return [s for s in self._skills.values() if s.source == "generated"]
 
     @staticmethod
     def _parse_simple_frontmatter(text: str) -> dict[str, Any]:
