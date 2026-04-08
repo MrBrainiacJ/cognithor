@@ -493,29 +493,8 @@ class TestCheckDirectories:
 # ============================================================================
 
 
-class TestCheckNodeModules:
-    """Tests for StartupChecker.check_node_modules()."""
-
-    def test_no_package_json(self, checker: StartupChecker, tmp_path: Path) -> None:
-        report = checker.check_node_modules(tmp_path)
-        assert "No UI" in report.checks_passed[0]
-
-    def test_node_modules_present(self, checker: StartupChecker, tmp_path: Path) -> None:
-        ui = tmp_path / "ui"
-        ui.mkdir()
-        (ui / "package.json").write_text("{}")
-        (ui / "node_modules").mkdir()
-        report = checker.check_node_modules(tmp_path)
-        assert "node_modules present" in report.checks_passed
-
-    @patch("jarvis.core.startup_check.shutil.which", return_value=None)
-    def test_npm_not_found(self, _mock: MagicMock, checker: StartupChecker, tmp_path: Path) -> None:
-        ui = tmp_path / "ui"
-        ui.mkdir()
-        (ui / "package.json").write_text("{}")
-        report = checker.check_node_modules(tmp_path)
-        assert len(report.warnings) == 1
-        assert "npm not found" in report.warnings[0]
+# TestCheckNodeModules removed — check_node_modules() was deleted
+# when the legacy React UI was removed in favor of Flutter (Phase 4).
 
 
 # ============================================================================
@@ -552,9 +531,6 @@ class TestModelInstalled:
 class TestCheckAndFixAll:
     """Tests for the top-level check_and_fix_all orchestration."""
 
-    @patch.object(
-        StartupChecker, "check_node_modules", return_value=StartupReport(checks_passed=["node ok"])
-    )
     @patch.object(StartupChecker, "_find_repo_root", return_value="/repo")
     @patch.object(
         StartupChecker, "check_directories", return_value=StartupReport(checks_passed=["dirs ok"])
@@ -577,12 +553,11 @@ class TestCheckAndFixAll:
         _mod: MagicMock,
         _dirs: MagicMock,
         _root: MagicMock,
-        _node: MagicMock,
         checker: StartupChecker,
     ) -> None:
         report = checker.check_and_fix_all()
         assert report.ok
-        assert len(report.checks_passed) == 5
+        assert len(report.checks_passed) == 4
 
     @patch.object(StartupChecker, "_find_repo_root", return_value=None)
     @patch.object(StartupChecker, "check_directories", return_value=StartupReport())
@@ -619,11 +594,6 @@ class TestCheckAndFixAll:
         report = checker.check_and_fix_all()
         assert any("Ollama check failed" in e for e in report.errors)
 
-    @patch.object(
-        StartupChecker,
-        "check_node_modules",
-        return_value=StartupReport(fixes_applied=["npm install"]),
-    )
     @patch.object(StartupChecker, "_find_repo_root", return_value="/repo")
     @patch.object(
         StartupChecker, "check_directories", return_value=StartupReport(fixes_applied=["mkdir"])
@@ -648,11 +618,10 @@ class TestCheckAndFixAll:
         _mod: MagicMock,
         _dirs: MagicMock,
         _root: MagicMock,
-        _node: MagicMock,
         checker: StartupChecker,
     ) -> None:
         report = checker.check_and_fix_all()
-        assert len(report.fixes_applied) == 5
+        assert len(report.fixes_applied) == 4
 
 
 # ============================================================================
