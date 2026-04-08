@@ -37,10 +37,10 @@ class _MainShellState extends State<MainShell> {
     showDialog(
       context: context,
       builder: (_) => GlobalSearchDialog(
-        onNavigate: (pageIndex) {
+        onNavigate: (pageKey) {
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const ConfigScreen(),
+              builder: (_) => ConfigScreen(initialPageKey: pageKey),
             ),
           );
         },

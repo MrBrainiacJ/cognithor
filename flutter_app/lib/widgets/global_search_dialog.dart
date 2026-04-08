@@ -3,31 +3,37 @@ import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
 
 /// Indexed terms for all config pages.
-const _fieldIndex = <(String, int, List<String>)>[
-  ('General', 0, ['owner', 'mode', 'version', 'cost', 'budget']),
-  ('Language', 1, ['language', 'locale', 'translation', 'i18n']),
-  ('Providers', 2, ['provider', 'api key', 'ollama', 'openai', 'anthropic', 'gemini', 'groq', 'deepseek', 'mistral']),
-  ('Models', 3, ['model', 'planner', 'executor', 'coder', 'embedding', 'vision', 'temperature']),
-  ('Planner', 4, ['planner', 'gatekeeper', 'sandbox', 'pge', 'iterations', 'escalation']),
-  ('Executor', 5, ['executor', 'timeout', 'retry', 'parallel', 'backoff']),
-  ('Memory', 6, ['memory', 'chunk', 'weight', 'vector', 'bm25', 'graph', 'recency', 'compaction']),
-  ('Channels', 7, ['channel', 'telegram', 'slack', 'discord', 'whatsapp', 'signal', 'matrix', 'teams', 'voice', 'irc', 'twitch']),
-  ('Security', 8, ['security', 'path', 'blocked', 'command', 'credential', 'pattern']),
-  ('Web', 9, ['web', 'search', 'domain', 'fetch', 'duckduckgo', 'brave', 'google', 'jina']),
-  ('MCP', 10, ['mcp', 'server', 'a2a', 'protocol']),
-  ('Cron', 11, ['cron', 'heartbeat', 'schedule', 'plugin', 'job']),
-  ('Database', 12, ['database', 'sqlite', 'postgresql', 'postgres', 'encryption', 'pool']),
-  ('Logging', 13, ['log', 'level', 'json', 'console', 'debug']),
-  ('Prompts', 14, ['prompt', 'system', 'replan', 'escalation', 'policy', 'personality']),
-  ('Agents', 15, ['agent', 'trigger', 'tool']),
-  ('Bindings', 16, ['binding', 'filter', 'pattern', 'target', 'routing']),
-  ('System', 17, ['system', 'restart', 'export', 'import', 'reset', 'factory']),
+/// Each entry: (display label, page key, search terms).
+const _fieldIndex = <(String, String, List<String>)>[
+  ('General', 'general', ['owner', 'mode', 'version', 'cost', 'budget']),
+  ('Language', 'language', ['language', 'locale', 'translation', 'i18n']),
+  ('Providers', 'providers', ['provider', 'api key', 'ollama', 'openai', 'anthropic', 'gemini', 'groq', 'deepseek', 'mistral', 'openrouter', 'backend']),
+  ('Planner', 'planner', ['planner', 'gatekeeper', 'sandbox', 'pge', 'iterations', 'escalation', 'temperature']),
+  ('Executor', 'executor', ['executor', 'timeout', 'retry', 'parallel', 'backoff']),
+  ('Prompts', 'prompts', ['prompt', 'system', 'replan', 'escalation', 'policy', 'personality']),
+  ('Memory', 'memory', ['memory', 'chunk', 'weight', 'vector', 'bm25', 'graph', 'recency', 'compaction']),
+  ('Bindings', 'bindings', ['binding', 'filter', 'pattern', 'target', 'routing']),
+  ('Web', 'web', ['web', 'search', 'domain', 'fetch', 'duckduckgo', 'brave', 'google', 'jina']),
+  ('Vault', 'vault', ['vault', 'encrypt', 'obsidian', 'knowledge', 'auto-save']),
+  ('Channels', 'channels', ['channel', 'telegram', 'slack', 'discord', 'whatsapp', 'signal', 'matrix', 'teams', 'voice', 'irc', 'twitch']),
+  ('Security', 'security', ['security', 'path', 'blocked', 'command', 'credential', 'pattern']),
+  ('Tools', 'tools', ['tool', 'computer use', 'desktop', 'allowed', 'blocked']),
+  ('Audit', 'audit', ['audit', 'hash', 'chain', 'integrity', 'compliance']),
+  ('Database', 'database', ['database', 'sqlite', 'postgresql', 'postgres', 'encryption', 'pool']),
+  ('Logging', 'logging', ['log', 'level', 'json', 'console', 'debug']),
+  ('Cron', 'cron', ['cron', 'heartbeat', 'schedule', 'plugin', 'job']),
+  ('MCP', 'mcp', ['mcp', 'server', 'a2a', 'protocol']),
+  ('System Profile', 'system_profile', ['system', 'profile', 'hardware', 'gpu', 'vram']),
+  ('Budget', 'budget', ['budget', 'token', 'cost', 'limit']),
+  ('Evolution', 'evolution', ['evolution', 'learning', 'autonomous', 'goal']),
+  ('System', 'system', ['system', 'restart', 'export', 'import', 'reset', 'factory']),
 ];
 
 class GlobalSearchDialog extends StatefulWidget {
   const GlobalSearchDialog({super.key, required this.onNavigate});
 
-  final void Function(int pageIndex) onNavigate;
+  /// Called with the page key (e.g. 'providers', 'planner') when a result is tapped.
+  final void Function(String pageKey) onNavigate;
 
   @override
   State<GlobalSearchDialog> createState() => _GlobalSearchDialogState();
@@ -35,7 +41,7 @@ class GlobalSearchDialog extends StatefulWidget {
 
 class _GlobalSearchDialogState extends State<GlobalSearchDialog> {
   final _ctrl = TextEditingController();
-  List<(String, int, List<String>)> _results = [];
+  List<(String, String, List<String>)> _results = [];
 
   void _search(String query) {
     if (query.isEmpty) {

@@ -121,7 +121,10 @@ final _pageRegistry = <String, _SubPageDef>{
 // ── Config Screen ────────────────────────────────────────────────────────────
 
 class ConfigScreen extends StatefulWidget {
-  const ConfigScreen({super.key});
+  const ConfigScreen({super.key, this.initialPageKey});
+
+  /// If set, navigates directly to this page key on open (e.g. 'providers').
+  final String? initialPageKey;
 
   @override
   State<ConfigScreen> createState() => _ConfigScreenState();
@@ -139,6 +142,25 @@ class _ConfigScreenState extends State<ConfigScreen>
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
     _tabController.addListener(_onTabChanged);
+
+    // Navigate to initial page if specified
+    if (widget.initialPageKey != null) {
+      _navigateToPageKey(widget.initialPageKey!);
+    }
+  }
+
+  /// Find the category + sub-page index for a given page key.
+  void _navigateToPageKey(String key) {
+    for (int catIdx = 0; catIdx < _categories.length; catIdx++) {
+      final pageKeys = _categories[catIdx].pageKeys;
+      final subIdx = pageKeys.indexOf(key);
+      if (subIdx >= 0) {
+        _selectedCategory = catIdx;
+        _selectedSubPage = subIdx;
+        _tabController.index = catIdx;
+        return;
+      }
+    }
   }
 
   @override
