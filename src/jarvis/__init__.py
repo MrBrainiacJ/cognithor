@@ -1,6 +1,6 @@
 """Jarvis · Agent OS -- Local-first autonomous agent operating system."""
 
-__version__ = "0.80.1"
+__version__ = "0.81.0"
 __author__ = "Alexander Söllner"
 
 # ── Centralized branding — single source of truth for banner + version ──
