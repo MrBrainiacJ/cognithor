@@ -55,6 +55,33 @@ class _AgentsScreenState extends State<AgentsScreen> {
     await admin.updateAgent(name, {'enabled': enabled});
   }
 
+  Future<void> _deleteAgent(Map<String, dynamic> agent) async {
+    final name = agent['name']?.toString();
+    if (name == null) return;
+    final l = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.delete),
+        content: Text('${l.confirmDeleteAgent}\n\nAgent: $name'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: JarvisTheme.red),
+            child: Text(l.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await context.read<AdminProvider>().deleteAgent(name);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -127,6 +154,7 @@ class _AgentsScreenState extends State<AgentsScreen> {
                 agent: a,
                 onEdit: () => _openEditor(a['name']?.toString()),
                 onToggle: (enabled) => _toggleAgent(a, enabled),
+                onDelete: () => _deleteAgent(a),
               );
             }),
           ],
@@ -147,11 +175,13 @@ class _AgentCard extends StatelessWidget {
     required this.agent,
     this.onEdit,
     this.onToggle,
+    this.onDelete,
   });
 
   final Map<String, dynamic> agent;
   final VoidCallback? onEdit;
   final ValueChanged<bool>? onToggle;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -193,6 +223,16 @@ class _AgentCard extends StatelessWidget {
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   onPressed: onEdit,
                   tooltip: l.editAgent,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline, size: 18, color: JarvisTheme.red),
+                  onPressed: onDelete,
+                  tooltip: l.delete,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: 32,
