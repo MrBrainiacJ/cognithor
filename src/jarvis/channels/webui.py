@@ -666,16 +666,16 @@ class WebUIChannel(Channel):
                 # If tokens were streamed, the client already has the text
                 # progressively. Send assistant_message as final confirmation
                 # with the complete (post-processed) text.
-                await self._ws_send(
-                    ws,
-                    {
-                        "type": WSMessageType.ASSISTANT_MESSAGE,
-                        "text": response.text,
-                        "session_id": session_id,
-                        "timestamp": datetime.now(UTC).isoformat(),
-                        "streamed": _streamed_tokens,
-                    },
-                )
+                _msg_payload: dict[str, Any] = {
+                    "type": WSMessageType.ASSISTANT_MESSAGE,
+                    "text": response.text,
+                    "session_id": session_id,
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "streamed": _streamed_tokens,
+                }
+                if response.metadata:
+                    _msg_payload["metadata"] = response.metadata
+                await self._ws_send(ws, _msg_payload)
                 await self._ws_send(
                     ws,
                     {

@@ -20,6 +20,7 @@ class ChatMessage {
     required this.role,
     required this.text,
     DateTime? timestamp,
+    this.metadata = const {},
   })  : id = id ?? 'msg_${DateTime.now().millisecondsSinceEpoch}_${_msgCounter++}',
         timestamp = timestamp ?? DateTime.now();
 
@@ -29,6 +30,7 @@ class ChatMessage {
   final MessageRole role;
   String text;
   final DateTime timestamp;
+  Map<String, dynamic> metadata;
 
   /// Version history for edit support (Claude-style).
   /// Each entry is a (userText, assistantText) pair.
@@ -419,7 +421,8 @@ class ChatProvider extends ChangeNotifier {
       _finalizeStream();
     }
     if (text.isNotEmpty) {
-      messages.add(ChatMessage(role: MessageRole.assistant, text: text));
+      final meta = msg['metadata'] as Map<String, dynamic>? ?? {};
+      messages.add(ChatMessage(role: MessageRole.assistant, text: text, metadata: meta));
 
       // If this is a response to an edited message, store in version history
       if (_editingUserIndex != null &&

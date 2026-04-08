@@ -12,11 +12,13 @@ class ChatBubble extends StatelessWidget {
     required this.role,
     required this.text,
     this.isStreaming = false,
+    this.metadata = const {},
   });
 
   final MessageRole role;
   final String text;
   final bool isStreaming;
+  final Map<String, dynamic> metadata;
 
   @override
   Widget build(BuildContext context) {
@@ -96,68 +98,102 @@ class ChatBubble extends StatelessWidget {
   Widget _buildAssistantBubble(BuildContext context) {
     const tint = JarvisTheme.sectionChat;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark
-            ? tint.withValues(alpha: 0.10)
-            : tint.withValues(alpha: 0.08),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-          bottomLeft: Radius.circular(4),
-          bottomRight: Radius.circular(16),
-        ),
-        border: Border.all(
-          color: isDark
-              ? tint.withValues(alpha: 0.25)
-              : tint.withValues(alpha: 0.35),
-        ),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Left accent bar
-            Container(
-              width: 3,
-              decoration: const BoxDecoration(
-                color: tint,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? tint.withValues(alpha: 0.10)
+                : tint.withValues(alpha: 0.08),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+              bottomLeft: Radius.circular(4),
+              bottomRight: Radius.circular(16),
+            ),
+            border: Border.all(
+              color: isDark
+                  ? tint.withValues(alpha: 0.25)
+                  : tint.withValues(alpha: 0.35),
+            ),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Left accent bar
+                Container(
+                  width: 3,
+                  decoration: const BoxDecoration(
+                    color: tint,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(4),
+                    ),
+                  ),
                 ),
+                // Content
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Flexible(child: _buildMarkdownContent(context)),
+                        if (isStreaming) ...[
+                          const SizedBox(width: 6),
+                          const SizedBox(
+                            width: 8,
+                            height: 8,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: tint,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Token/model info row (only if metadata present)
+        if (metadata.isNotEmpty && !isStreaming)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 6),
+            child: DefaultTextStyle(
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: JarvisTheme.textSecondary.withValues(alpha: 0.6),
+                fontSize: 10,
+              ) ?? const TextStyle(fontSize: 10),
+              child: Wrap(
+                spacing: 10,
+                children: [
+                  if (metadata['model'] != null)
+                    Text(metadata['model'].toString()),
+                  if (metadata['backend'] != null)
+                    Text(metadata['backend'].toString()),
+                  if ((metadata['input_tokens'] as int? ?? 0) > 0 ||
+                      (metadata['output_tokens'] as int? ?? 0) > 0)
+                    Text(
+                      '${metadata['input_tokens'] ?? 0} in / '
+                      '${metadata['output_tokens'] ?? 0} out tokens',
+                    ),
+                  if ((metadata['duration_ms'] as int? ?? 0) > 0)
+                    Text('${((metadata['duration_ms'] as int) / 1000).toStringAsFixed(1)}s'),
+                ],
               ),
             ),
-            // Content
-            Flexible(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Flexible(child: _buildMarkdownContent(context)),
-                    if (isStreaming) ...[
-                      const SizedBox(width: 6),
-                      const SizedBox(
-                        width: 8,
-                        height: 8,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: tint,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 

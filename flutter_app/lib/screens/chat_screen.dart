@@ -300,6 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               child: ChatBubble(
                                 role: msg.role,
                                 text: msg.text,
+                                metadata: msg.metadata,
                               ),
                             );
                             if (msg.role == MessageRole.assistant) {

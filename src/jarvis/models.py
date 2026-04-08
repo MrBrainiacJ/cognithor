@@ -199,6 +199,8 @@ class ActionPlan(BaseModel, frozen=True):
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     iteration: int = Field(default=0, ge=0)
     parse_failed: bool = Field(default=False)
+    input_tokens: int = 0
+    output_tokens: int = 0
 
     @property
     def is_direct_response(self) -> bool:
@@ -784,6 +786,9 @@ class AgentResult(BaseModel):
     total_iterations: int = 0
     total_duration_ms: int = 0
     model_used: str = ""
+    input_tokens: int = 0
+    output_tokens: int = 0
+    backend_type: str = ""
     success: bool = True
     error: str | None = None
     reflection: ReflectionResult | None = None

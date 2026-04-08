@@ -521,6 +521,8 @@ class Planner:
             )
 
         _plan_ms = int((time.monotonic() - _plan_start) * 1000)
+        _input_tokens = response.get("prompt_eval_count", 0) or 0
+        _output_tokens = response.get("eval_count", 0) or 0
         self._record_cost(response, model, session_id=working_memory.session_id)
         if self._audit_logger:
             self._audit_logger.log_tool_call(
@@ -579,6 +581,11 @@ class Planner:
             except Exception as _retry_exc:
                 log.warning("planner_json_retry_error", error=str(_retry_exc))
 
+        # Attach token counts to plan
+        if _input_tokens or _output_tokens:
+            plan = plan.model_copy(
+                update={"input_tokens": _input_tokens, "output_tokens": _output_tokens}
+            )
         return plan
 
     async def replan(

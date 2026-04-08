@@ -2468,6 +2468,11 @@ class Gateway:
                 log.debug("tree_node_storage_failed", exc_info=True)
 
         # Phase 4: Reflexion, Skill-Tracking, Telemetry, Profiler, Run-Recording
+        # Sum token counts across all plans
+        _total_input = sum(getattr(p, "input_tokens", 0) for p in all_plans)
+        _total_output = sum(getattr(p, "output_tokens", 0) for p in all_plans)
+        _backend = getattr(self._config, "llm_backend_type", "ollama") if self._config else ""
+
         agent_result = AgentResult(
             response=final_response,
             plans=all_plans,
@@ -2480,6 +2485,9 @@ class Gateway:
             else (
                 self._model_router.select_model("planning", "high") if self._model_router else ""
             ),
+            input_tokens=_total_input,
+            output_tokens=_total_output,
+            backend_type=_backend,
             success=not any(r.is_error for r in all_results) if all_results else True,
         )
         # Post-processing (reflection, skill tracking, telemetry) runs in background
@@ -2520,12 +2528,25 @@ class Gateway:
         if hasattr(self, "_idle_detector") and self._idle_detector:
             self._idle_detector.notify_activity()
 
+        # Build metadata with token/model info for the UI
+        _meta: dict[str, Any] = {}
+        if agent_result.input_tokens or agent_result.output_tokens:
+            _meta["input_tokens"] = agent_result.input_tokens
+            _meta["output_tokens"] = agent_result.output_tokens
+        if agent_result.model_used:
+            _meta["model"] = agent_result.model_used
+        if agent_result.backend_type:
+            _meta["backend"] = agent_result.backend_type
+        if agent_result.total_duration_ms:
+            _meta["duration_ms"] = agent_result.total_duration_ms
+
         return OutgoingMessage(
             channel=msg.channel,
             text=final_response,
             session_id=session.session_id,
             is_final=True,
             attachments=attachments,
+            metadata=_meta,
         )
 
     # ── handle_message sub-methods ────────────────────────────────
