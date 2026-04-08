@@ -5816,25 +5816,13 @@ def _register_backend_routes(
         body = await request.json()
         new_backend = body.get("backend", "")
 
-        valid = [
-            "ollama",
-            "openai",
-            "anthropic",
-            "claude-code",
-            "gemini",
-            "groq",
-            "deepseek",
-            "mistral",
-            "together",
-            "openrouter",
-            "xai",
-            "cerebras",
-            "github",
-            "bedrock",
-            "huggingface",
-            "moonshot",
-            "lmstudio",
-        ]
+        # Derive valid backends from the config Literal type (single source of truth)
+        from typing import get_args, get_type_hints
+
+        from jarvis.config import JarvisConfig
+
+        _hints = get_type_hints(JarvisConfig, include_extras=True)
+        valid = list(get_args(_hints["llm_backend_type"]))
         if new_backend not in valid:
             raise HTTPException(400, f"Invalid backend: {new_backend}. Valid: {valid}")
 
