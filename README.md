@@ -584,7 +584,7 @@ python -m pytest tests/test_memory/ -v
 python -m pytest tests/test_channels/ -v
 ```
 
-Current status: **13,011 tests** · **100% pass rate** · **89% coverage** · **~118,000 LOC source** · **~108,000 LOC tests**
+Current status: **13,011 tests** · **100% pass rate** · **89% coverage** · **~199,000 LOC source** · **~162,000 LOC tests**
 
 Notable test suites: 183 Computer Use tests, 176 ARC tests.
 
@@ -713,7 +713,7 @@ print(t("error.timeout"))  # "The operation timed out..."
 3. Run `python -c "from jarvis.i18n import generate_pack_hash; generate_pack_hash('<locale>')"`
 4. Submit a PR
 
-**Metrics:** ~118,000 LOC source · ~108,000 LOC tests · 13,011 tests · 89% coverage · 0 lint errors · **Status: Beta**
+**Metrics:** ~199,000 LOC source · ~162,000 LOC tests · 13,011 tests · 89% coverage · 0 lint errors · **Status: Beta**
 
 ## Contributors
 
