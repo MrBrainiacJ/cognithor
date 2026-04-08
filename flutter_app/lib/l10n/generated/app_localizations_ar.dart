@@ -2479,4 +2479,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get untrusted => 'Untrusted';
+
+  @override
+  String get vaultActive => 'الخزنة نشطة';
+
+  @override
+  String get vaultActiveDesc => 'تفعيل/تعطيل خزنة المعرفة';
+
+  @override
+  String get vaultEncryption => 'تشفير الملفات';
+
+  @override
+  String get vaultEncryptionDesc => 'تشفير ملفات .md في الخزنة بـ AES-256.';
+
+  @override
+  String get vaultEncryptOn =>
+      'أقصى أمان: ملفات الخزنة مشفرة. قواعد البيانات + الذاكرة + الخزنة = كل شيء محمي. لا يمكن لـ Obsidian قراءة هذه الملفات.';
+
+  @override
+  String get vaultEncryptOff =>
+      'متوافق مع Obsidian: ملفات الخزنة نص عادي. قواعد البيانات وملفات الذاكرة لا تزال مشفرة. للحماية الكاملة لملفات الخزنة: قم بتفعيل BitLocker (ويندوز) أو LUKS (لينكس).';
+
+  @override
+  String get vaultAlwaysEncrypted => 'مشفر دائمًا (بغض النظر عن هذا المفتاح):';
+
+  @override
+  String get vaultAlwaysEncryptedList =>
+      '  - 33 قاعدة بيانات SQLite (SQLCipher / AES-256)\n  - CORE.md (شخصية الوكيل)\n  - ذكريات عرضية (.md)\n  - إجراءات مكتسبة (.md)\n  - خطط تعلم (.json)\n  - بيانات اعتماد (Fernet / PBKDF2)\n  - مفاتيح: حلقة مفاتيح نظام التشغيل (ليست على القرص)';
+
+  @override
+  String get vaultAutoSave => 'حفظ تلقائي للأبحاث';
+
+  @override
+  String get vaultAutoSaveDesc => 'حفظ أبحاث الويب تلقائيًا في الخزنة';
 }

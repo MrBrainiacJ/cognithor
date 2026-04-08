@@ -2488,4 +2488,40 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get untrusted => 'Nicht vertrauenswürdig';
+
+  @override
+  String get vaultActive => 'Vault aktiv';
+
+  @override
+  String get vaultActiveDesc => 'Knowledge Vault aktivieren/deaktivieren';
+
+  @override
+  String get vaultEncryption => 'Dateiverschluesselung';
+
+  @override
+  String get vaultEncryptionDesc =>
+      'Vault .md Dateien mit AES-256 verschluesseln.';
+
+  @override
+  String get vaultEncryptOn =>
+      'Maximale Sicherheit: Vault-Dateien sind verschluesselt. Datenbanken + Memory + Vault = alles geschuetzt. Obsidian kann diese Dateien nicht lesen.';
+
+  @override
+  String get vaultEncryptOff =>
+      'Obsidian-kompatibel: Vault-Dateien sind Klartext. Datenbanken und Memory-Dateien sind trotzdem verschluesselt. Fuer vollen Schutz der Vault-Dateien: BitLocker (Windows) oder LUKS (Linux) aktivieren.';
+
+  @override
+  String get vaultAlwaysEncrypted =>
+      'Immer verschluesselt (unabhaengig von diesem Toggle):';
+
+  @override
+  String get vaultAlwaysEncryptedList =>
+      '  - 33 SQLite-Datenbanken (SQLCipher / AES-256)\n  - CORE.md (Agent-Persoenlichkeit)\n  - Episodische Erinnerungen (.md)\n  - Gelernte Prozeduren (.md)\n  - Lernplaene (.json)\n  - Credentials (Fernet / PBKDF2)\n  - Schluessel: OS Keyring (nicht auf der Festplatte)';
+
+  @override
+  String get vaultAutoSave => 'Auto-Save Recherchen';
+
+  @override
+  String get vaultAutoSaveDesc =>
+      'Web-Recherchen automatisch im Vault speichern';
 }

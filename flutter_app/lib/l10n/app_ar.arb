@@ -825,5 +825,16 @@
   "kanbanCreate": "إنشاء",
   "deviceSettings": "إعدادات الجهاز",
   "refreshSensors": "تحديث أجهزة الاستشعار",
-  "documentsTitle": "المستندات والقوالب"
+  "documentsTitle": "المستندات والقوالب",
+
+  "vaultActive": "الخزنة نشطة",
+  "vaultActiveDesc": "تفعيل/تعطيل خزنة المعرفة",
+  "vaultEncryption": "تشفير الملفات",
+  "vaultEncryptionDesc": "تشفير ملفات .md في الخزنة بـ AES-256.",
+  "vaultEncryptOn": "أقصى أمان: ملفات الخزنة مشفرة. قواعد البيانات + الذاكرة + الخزنة = كل شيء محمي. لا يمكن لـ Obsidian قراءة هذه الملفات.",
+  "vaultEncryptOff": "متوافق مع Obsidian: ملفات الخزنة نص عادي. قواعد البيانات وملفات الذاكرة لا تزال مشفرة. للحماية الكاملة لملفات الخزنة: قم بتفعيل BitLocker (ويندوز) أو LUKS (لينكس).",
+  "vaultAlwaysEncrypted": "مشفر دائمًا (بغض النظر عن هذا المفتاح):",
+  "vaultAlwaysEncryptedList": "  - 33 قاعدة بيانات SQLite (SQLCipher / AES-256)\n  - CORE.md (شخصية الوكيل)\n  - ذكريات عرضية (.md)\n  - إجراءات مكتسبة (.md)\n  - خطط تعلم (.json)\n  - بيانات اعتماد (Fernet / PBKDF2)\n  - مفاتيح: حلقة مفاتيح نظام التشغيل (ليست على القرص)",
+  "vaultAutoSave": "حفظ تلقائي للأبحاث",
+  "vaultAutoSaveDesc": "حفظ أبحاث الويب تلقائيًا في الخزنة"
 }

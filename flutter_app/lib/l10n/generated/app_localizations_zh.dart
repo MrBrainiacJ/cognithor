@@ -2466,4 +2466,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get untrusted => 'Untrusted';
+
+  @override
+  String get vaultActive => '保险库激活';
+
+  @override
+  String get vaultActiveDesc => '启用/禁用知识保险库';
+
+  @override
+  String get vaultEncryption => '文件加密';
+
+  @override
+  String get vaultEncryptionDesc => '使用 AES-256 加密保险库 .md 文件。';
+
+  @override
+  String get vaultEncryptOn =>
+      '最高安全性：保险库文件已加密。数据库 + 记忆 + 保险库 = 全部受保护。Obsidian 无法读取这些文件。';
+
+  @override
+  String get vaultEncryptOff =>
+      '兼容 Obsidian：保险库文件为明文。数据库和记忆文件仍然加密。要完全保护保险库文件：启用 BitLocker（Windows）或 LUKS（Linux）。';
+
+  @override
+  String get vaultAlwaysEncrypted => '始终加密（与此开关无关）：';
+
+  @override
+  String get vaultAlwaysEncryptedList =>
+      '  - 33 个 SQLite 数据库（SQLCipher / AES-256）\n  - CORE.md（代理个性）\n  - 情景记忆（.md）\n  - 学习过程（.md）\n  - 学习计划（.json）\n  - 凭证（Fernet / PBKDF2）\n  - 密钥：OS 密钥环（不在磁盘上）';
+
+  @override
+  String get vaultAutoSave => '自动保存研究';
+
+  @override
+  String get vaultAutoSaveDesc => '自动将网络研究保存到保险库';
 }

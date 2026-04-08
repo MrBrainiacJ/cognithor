@@ -4901,6 +4901,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Untrusted'**
   String get untrusted;
+
+  /// No description provided for @vaultActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault active'**
+  String get vaultActive;
+
+  /// No description provided for @vaultActiveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable/disable Knowledge Vault'**
+  String get vaultActiveDesc;
+
+  /// No description provided for @vaultEncryption.
+  ///
+  /// In en, this message translates to:
+  /// **'File encryption'**
+  String get vaultEncryption;
+
+  /// No description provided for @vaultEncryptionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypt vault .md files with AES-256.'**
+  String get vaultEncryptionDesc;
+
+  /// No description provided for @vaultEncryptOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum security: Vault files are encrypted. Databases + Memory + Vault = all protected. Obsidian cannot read these files.'**
+  String get vaultEncryptOn;
+
+  /// No description provided for @vaultEncryptOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Obsidian-compatible: Vault files are plaintext. Databases and memory files are still encrypted. For full vault file protection: enable BitLocker (Windows) or LUKS (Linux).'**
+  String get vaultEncryptOff;
+
+  /// No description provided for @vaultAlwaysEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Always encrypted (regardless of this toggle):'**
+  String get vaultAlwaysEncrypted;
+
+  /// No description provided for @vaultAlwaysEncryptedList.
+  ///
+  /// In en, this message translates to:
+  /// **'  - 33 SQLite databases (SQLCipher / AES-256)\n  - CORE.md (Agent personality)\n  - Episodic memories (.md)\n  - Learned procedures (.md)\n  - Learning plans (.json)\n  - Credentials (Fernet / PBKDF2)\n  - Keys: OS Keyring (not on disk)'**
+  String get vaultAlwaysEncryptedList;
+
+  /// No description provided for @vaultAutoSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-save research'**
+  String get vaultAutoSave;
+
+  /// No description provided for @vaultAutoSaveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically save web research to vault'**
+  String get vaultAutoSaveDesc;
 }
 
 class _AppLocalizationsDelegate

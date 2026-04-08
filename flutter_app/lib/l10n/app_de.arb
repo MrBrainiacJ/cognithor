@@ -870,5 +870,16 @@
   "trusted": "Vertrauenswürdig",
   "untrusted": "Nicht vertrauenswürdig",
   "enabled": "Aktiviert",
-  "disabled": "Deaktiviert"
+  "disabled": "Deaktiviert",
+
+  "vaultActive": "Vault aktiv",
+  "vaultActiveDesc": "Knowledge Vault aktivieren/deaktivieren",
+  "vaultEncryption": "Dateiverschluesselung",
+  "vaultEncryptionDesc": "Vault .md Dateien mit AES-256 verschluesseln.",
+  "vaultEncryptOn": "Maximale Sicherheit: Vault-Dateien sind verschluesselt. Datenbanken + Memory + Vault = alles geschuetzt. Obsidian kann diese Dateien nicht lesen.",
+  "vaultEncryptOff": "Obsidian-kompatibel: Vault-Dateien sind Klartext. Datenbanken und Memory-Dateien sind trotzdem verschluesselt. Fuer vollen Schutz der Vault-Dateien: BitLocker (Windows) oder LUKS (Linux) aktivieren.",
+  "vaultAlwaysEncrypted": "Immer verschluesselt (unabhaengig von diesem Toggle):",
+  "vaultAlwaysEncryptedList": "  - 33 SQLite-Datenbanken (SQLCipher / AES-256)\n  - CORE.md (Agent-Persoenlichkeit)\n  - Episodische Erinnerungen (.md)\n  - Gelernte Prozeduren (.md)\n  - Lernplaene (.json)\n  - Credentials (Fernet / PBKDF2)\n  - Schluessel: OS Keyring (nicht auf der Festplatte)",
+  "vaultAutoSave": "Auto-Save Recherchen",
+  "vaultAutoSaveDesc": "Web-Recherchen automatisch im Vault speichern"
 }

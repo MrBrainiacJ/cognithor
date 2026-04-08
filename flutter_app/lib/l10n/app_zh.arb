@@ -825,5 +825,16 @@
   "kanbanCreate": "创建",
   "deviceSettings": "设备设置",
   "refreshSensors": "刷新传感器",
-  "documentsTitle": "文档和模板"
+  "documentsTitle": "文档和模板",
+
+  "vaultActive": "保险库激活",
+  "vaultActiveDesc": "启用/禁用知识保险库",
+  "vaultEncryption": "文件加密",
+  "vaultEncryptionDesc": "使用 AES-256 加密保险库 .md 文件。",
+  "vaultEncryptOn": "最高安全性：保险库文件已加密。数据库 + 记忆 + 保险库 = 全部受保护。Obsidian 无法读取这些文件。",
+  "vaultEncryptOff": "兼容 Obsidian：保险库文件为明文。数据库和记忆文件仍然加密。要完全保护保险库文件：启用 BitLocker（Windows）或 LUKS（Linux）。",
+  "vaultAlwaysEncrypted": "始终加密（与此开关无关）：",
+  "vaultAlwaysEncryptedList": "  - 33 个 SQLite 数据库（SQLCipher / AES-256）\n  - CORE.md（代理个性）\n  - 情景记忆（.md）\n  - 学习过程（.md）\n  - 学习计划（.json）\n  - 凭证（Fernet / PBKDF2）\n  - 密钥：OS 密钥环（不在磁盘上）",
+  "vaultAutoSave": "自动保存研究",
+  "vaultAutoSaveDesc": "自动将网络研究保存到保险库"
 }

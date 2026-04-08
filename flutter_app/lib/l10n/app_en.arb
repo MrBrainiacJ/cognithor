@@ -1431,5 +1431,16 @@
   "trusted": "Trusted",
   "untrusted": "Untrusted",
   "enabled": "Enabled",
-  "disabled": "Disabled"
+  "disabled": "Disabled",
+
+  "vaultActive": "Vault active",
+  "vaultActiveDesc": "Enable/disable Knowledge Vault",
+  "vaultEncryption": "File encryption",
+  "vaultEncryptionDesc": "Encrypt vault .md files with AES-256.",
+  "vaultEncryptOn": "Maximum security: Vault files are encrypted. Databases + Memory + Vault = all protected. Obsidian cannot read these files.",
+  "vaultEncryptOff": "Obsidian-compatible: Vault files are plaintext. Databases and memory files are still encrypted. For full vault file protection: enable BitLocker (Windows) or LUKS (Linux).",
+  "vaultAlwaysEncrypted": "Always encrypted (regardless of this toggle):",
+  "vaultAlwaysEncryptedList": "  - 33 SQLite databases (SQLCipher / AES-256)\n  - CORE.md (Agent personality)\n  - Episodic memories (.md)\n  - Learned procedures (.md)\n  - Learning plans (.json)\n  - Credentials (Fernet / PBKDF2)\n  - Keys: OS Keyring (not on disk)",
+  "vaultAutoSave": "Auto-save research",
+  "vaultAutoSaveDesc": "Automatically save web research to vault"
 }

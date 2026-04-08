@@ -2483,4 +2483,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get untrusted => 'Untrusted';
+
+  @override
+  String get vaultActive => 'Vault active';
+
+  @override
+  String get vaultActiveDesc => 'Enable/disable Knowledge Vault';
+
+  @override
+  String get vaultEncryption => 'File encryption';
+
+  @override
+  String get vaultEncryptionDesc => 'Encrypt vault .md files with AES-256.';
+
+  @override
+  String get vaultEncryptOn =>
+      'Maximum security: Vault files are encrypted. Databases + Memory + Vault = all protected. Obsidian cannot read these files.';
+
+  @override
+  String get vaultEncryptOff =>
+      'Obsidian-compatible: Vault files are plaintext. Databases and memory files are still encrypted. For full vault file protection: enable BitLocker (Windows) or LUKS (Linux).';
+
+  @override
+  String get vaultAlwaysEncrypted =>
+      'Always encrypted (regardless of this toggle):';
+
+  @override
+  String get vaultAlwaysEncryptedList =>
+      '  - 33 SQLite databases (SQLCipher / AES-256)\n  - CORE.md (Agent personality)\n  - Episodic memories (.md)\n  - Learned procedures (.md)\n  - Learning plans (.json)\n  - Credentials (Fernet / PBKDF2)\n  - Keys: OS Keyring (not on disk)';
+
+  @override
+  String get vaultAutoSave => 'Auto-save research';
+
+  @override
+  String get vaultAutoSaveDesc => 'Automatically save web research to vault';
 }
