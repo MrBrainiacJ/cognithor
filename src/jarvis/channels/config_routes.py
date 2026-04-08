@@ -82,7 +82,7 @@ def create_config_routes(
     _register_session_routes(app, deps, gateway)
     _register_memory_routes(app, deps, gateway)
     _register_skill_routes(app, deps, gateway)
-    _register_monitoring_routes(app, deps, _get_hub)
+    _register_monitoring_routes(app, deps, _get_hub, config_manager)
     _register_prometheus_routes(app, _get_hub, gateway)
     _register_security_routes(app, deps, gateway)
     _register_governance_routes(app, deps, gateway)
@@ -2106,6 +2106,7 @@ def _register_monitoring_routes(
     app: Any,
     deps: list[Any],
     get_hub: Any,
+    config_manager: Any = None,
 ) -> None:
     """Metrics, events, audit-trail, heartbeat, SSE streaming, performance."""
 
@@ -2153,7 +2154,9 @@ def _register_monitoring_routes(
         """Verify the integrity of the gatekeeper audit hash-chain."""
         import json as json_mod
 
-        _cfg = config_manager.config  # noqa: F821
+        if config_manager is None:
+            raise HTTPException(500, "Config manager not available")
+        _cfg = config_manager.config
         gk_log = _cfg.jarvis_home / "logs" / "gatekeeper.jsonl"
         if not gk_log.exists():
             return {"status": "no_log", "message": "No gatekeeper audit log found."}
@@ -2201,7 +2204,9 @@ def _register_monitoring_routes(
         try:
             from jarvis.security.tsa import TSAClient
 
-            _cfg = config_manager.config  # noqa: F821
+            if config_manager is None:
+                raise HTTPException(500, "Config manager not available")
+            _cfg = config_manager.config
             tsa_dir = _cfg.jarvis_home / "tsa"
             client = TSAClient(storage_dir=tsa_dir)
             timestamps = client.list_timestamps()
