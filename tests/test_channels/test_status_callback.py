@@ -179,18 +179,18 @@ class TestToolStatusMap:
     """Tests für die Tool-Status-Map im Gateway."""
 
     def test_common_tools_mapped(self) -> None:
-        from jarvis.gateway.gateway import _TOOL_STATUS_MAP
+        from jarvis.gateway.gateway import _TOOL_STATUS_KEYS
 
-        assert "web_search" in _TOOL_STATUS_MAP
-        assert "exec_command" in _TOOL_STATUS_MAP
-        assert "read_file" in _TOOL_STATUS_MAP
-        assert len(_TOOL_STATUS_MAP) >= 10
+        assert "web_search" in _TOOL_STATUS_KEYS
+        assert "exec_command" in _TOOL_STATUS_KEYS
+        assert "read_file" in _TOOL_STATUS_KEYS
+        assert len(_TOOL_STATUS_KEYS) >= 10
 
-    def test_status_messages_end_with_dots(self) -> None:
-        from jarvis.gateway.gateway import _TOOL_STATUS_MAP
+    def test_status_keys_are_i18n_keys(self) -> None:
+        from jarvis.gateway.gateway import _TOOL_STATUS_KEYS
 
-        for tool, msg in _TOOL_STATUS_MAP.items():
-            assert msg.endswith("..."), f"{tool}: '{msg}'"
+        for tool, key in _TOOL_STATUS_KEYS.items():
+            assert key.startswith("gateway.status_"), f"{tool}: '{key}'"
 
 
 class TestExecutorStatusCallback:
