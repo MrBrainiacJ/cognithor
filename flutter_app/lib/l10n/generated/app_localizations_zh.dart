@@ -2359,89 +2359,85 @@ class AppLocalizationsZh extends AppLocalizations {
   String get documentsTitle => '文档和模板';
 
   @override
-  String get connectedDevices => 'Connected Devices';
+  String get connectedDevices => '已连接设备';
 
   @override
-  String get connectedDevicesSubtitle => 'Manage paired mobile devices';
+  String get connectedDevicesSubtitle => '管理已配对的移动设备';
 
   @override
-  String get noDevicesPaired => 'No devices paired yet';
+  String get noDevicesPaired => '尚未配对任何设备';
 
   @override
-  String get noDevicesHint => 'Pair a mobile device by scanning a QR code';
+  String get noDevicesHint => '通过扫描二维码配对移动设备';
 
   @override
-  String get pairNewDevice => 'Pair New Device';
+  String get pairNewDevice => '配对新设备';
 
   @override
-  String get deviceName => 'Device Name';
+  String get deviceName => '设备名称';
 
   @override
-  String get deviceId => 'Device ID';
+  String get deviceId => '设备 ID';
 
   @override
-  String get pairedAt => 'Paired';
+  String get pairedAt => '配对时间';
 
   @override
-  String get expiresAt => 'Expires';
+  String get expiresAt => '过期时间';
 
   @override
-  String get revokeDevice => 'Revoke';
+  String get revokeDevice => '撤销';
 
   @override
-  String get revokeDeviceConfirm =>
-      'Revoke this device? It will need to be paired again.';
+  String get revokeDeviceConfirm => '撤销此设备？需要重新配对。';
 
   @override
-  String get deviceRevoked => 'Device revoked';
+  String get deviceRevoked => '设备已撤销';
 
   @override
-  String get pairingQrTitle => 'Scan QR Code';
+  String get pairingQrTitle => '扫描二维码';
 
   @override
-  String get pairingQrHint =>
-      'Open the Cognithor app on your phone and scan this code';
+  String get pairingQrHint => '在手机上打开 Cognithor 应用并扫描此二维码';
 
   @override
-  String get pairingSuccess => 'Device paired successfully';
+  String get pairingSuccess => '设备配对成功';
 
   @override
-  String get scanQrCode => 'Scan QR Code';
+  String get scanQrCode => '扫描二维码';
 
   @override
-  String get scanQrHint => 'Point your camera at the pairing QR code';
+  String get scanQrHint => '将摄像头对准配对二维码';
 
   @override
-  String get qrScanError => 'Could not read QR code';
+  String get qrScanError => '无法读取二维码';
 
   @override
-  String get networkSettings => 'Network & Connectivity';
+  String get networkSettings => '网络与连接';
 
   @override
-  String get networkSettingsSubtitle =>
-      'Manage network interfaces and API binding';
+  String get networkSettingsSubtitle => '管理网络接口和 API 绑定';
 
   @override
-  String get detectedInterfaces => 'Detected Interfaces';
+  String get detectedInterfaces => '检测到的接口';
 
   @override
-  String get noInterfacesDetected => 'No network interfaces detected';
+  String get noInterfacesDetected => '未检测到网络接口';
 
   @override
-  String get enabledEndpoints => 'Enabled Endpoints';
+  String get enabledEndpoints => '已启用的端点';
 
   @override
-  String get autoDetect => 'Auto-detect trusted interfaces';
+  String get autoDetect => '自动检测受信任接口';
 
   @override
-  String get autoDetectHint =>
-      'Automatically enable Tailscale, ZeroTier, and other VPN interfaces';
+  String get autoDetectHint => '自动启用 Tailscale、ZeroTier 和其他 VPN 接口';
 
   @override
-  String get interfaceLoopback => 'Loopback';
+  String get interfaceLoopback => '回环';
 
   @override
-  String get interfaceLan => 'LAN';
+  String get interfaceLan => '局域网';
 
   @override
   String get interfaceTailscale => 'Tailscale';
@@ -2456,16 +2452,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get interfaceCloudflare => 'Cloudflare';
 
   @override
-  String get interfaceUnknown => 'Unknown';
+  String get interfaceUnknown => '未知';
 
   @override
-  String get bindHost => 'Bind Host';
+  String get bindHost => '绑定主机';
 
   @override
-  String get trusted => 'Trusted';
+  String get trusted => '受信任';
 
   @override
-  String get untrusted => 'Untrusted';
+  String get untrusted => '不受信任';
 
   @override
   String get vaultActive => '保险库激活';

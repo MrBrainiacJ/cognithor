@@ -2372,89 +2372,87 @@ class AppLocalizationsAr extends AppLocalizations {
   String get documentsTitle => 'المستندات والقوالب';
 
   @override
-  String get connectedDevices => 'Connected Devices';
+  String get connectedDevices => 'الأجهزة المتصلة';
 
   @override
-  String get connectedDevicesSubtitle => 'Manage paired mobile devices';
+  String get connectedDevicesSubtitle => 'إدارة الأجهزة المحمولة المقترنة';
 
   @override
-  String get noDevicesPaired => 'No devices paired yet';
+  String get noDevicesPaired => 'لم يتم إقران أي أجهزة بعد';
 
   @override
-  String get noDevicesHint => 'Pair a mobile device by scanning a QR code';
+  String get noDevicesHint => 'قم بإقران جهاز محمول عن طريق مسح رمز QR';
 
   @override
-  String get pairNewDevice => 'Pair New Device';
+  String get pairNewDevice => 'إقران جهاز جديد';
 
   @override
-  String get deviceName => 'Device Name';
+  String get deviceName => 'اسم الجهاز';
 
   @override
-  String get deviceId => 'Device ID';
+  String get deviceId => 'معرف الجهاز';
 
   @override
-  String get pairedAt => 'Paired';
+  String get pairedAt => 'تم الإقران';
 
   @override
-  String get expiresAt => 'Expires';
+  String get expiresAt => 'تنتهي الصلاحية';
 
   @override
-  String get revokeDevice => 'Revoke';
+  String get revokeDevice => 'إلغاء';
 
   @override
   String get revokeDeviceConfirm =>
-      'Revoke this device? It will need to be paired again.';
+      'إلغاء هذا الجهاز؟ سيحتاج إلى إقران مرة أخرى.';
 
   @override
-  String get deviceRevoked => 'Device revoked';
+  String get deviceRevoked => 'تم إلغاء الجهاز';
 
   @override
-  String get pairingQrTitle => 'Scan QR Code';
+  String get pairingQrTitle => 'مسح رمز QR';
 
   @override
-  String get pairingQrHint =>
-      'Open the Cognithor app on your phone and scan this code';
+  String get pairingQrHint => 'افتح تطبيق Cognithor على هاتفك وامسح هذا الرمز';
 
   @override
-  String get pairingSuccess => 'Device paired successfully';
+  String get pairingSuccess => 'تم إقران الجهاز بنجاح';
 
   @override
-  String get scanQrCode => 'Scan QR Code';
+  String get scanQrCode => 'مسح رمز QR';
 
   @override
-  String get scanQrHint => 'Point your camera at the pairing QR code';
+  String get scanQrHint => 'وجّه الكاميرا نحو رمز QR للإقران';
 
   @override
-  String get qrScanError => 'Could not read QR code';
+  String get qrScanError => 'تعذر قراءة رمز QR';
 
   @override
-  String get networkSettings => 'Network & Connectivity';
+  String get networkSettings => 'الشبكة والاتصال';
 
   @override
-  String get networkSettingsSubtitle =>
-      'Manage network interfaces and API binding';
+  String get networkSettingsSubtitle => 'إدارة واجهات الشبكة وربط API';
 
   @override
-  String get detectedInterfaces => 'Detected Interfaces';
+  String get detectedInterfaces => 'الواجهات المكتشفة';
 
   @override
-  String get noInterfacesDetected => 'No network interfaces detected';
+  String get noInterfacesDetected => 'لم يتم اكتشاف واجهات شبكة';
 
   @override
-  String get enabledEndpoints => 'Enabled Endpoints';
+  String get enabledEndpoints => 'نقاط النهاية المفعّلة';
 
   @override
-  String get autoDetect => 'Auto-detect trusted interfaces';
+  String get autoDetect => 'اكتشاف تلقائي للواجهات الموثوقة';
 
   @override
   String get autoDetectHint =>
-      'Automatically enable Tailscale, ZeroTier, and other VPN interfaces';
+      'تفعيل Tailscale و ZeroTier وواجهات VPN الأخرى تلقائيًا';
 
   @override
-  String get interfaceLoopback => 'Loopback';
+  String get interfaceLoopback => 'الاسترجاع';
 
   @override
-  String get interfaceLan => 'LAN';
+  String get interfaceLan => 'شبكة محلية';
 
   @override
   String get interfaceTailscale => 'Tailscale';
@@ -2469,16 +2467,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get interfaceCloudflare => 'Cloudflare';
 
   @override
-  String get interfaceUnknown => 'Unknown';
+  String get interfaceUnknown => 'غير معروف';
 
   @override
-  String get bindHost => 'Bind Host';
+  String get bindHost => 'مضيف الربط';
 
   @override
-  String get trusted => 'Trusted';
+  String get trusted => 'موثوق';
 
   @override
-  String get untrusted => 'Untrusted';
+  String get untrusted => 'غير موثوق';
 
   @override
   String get vaultActive => 'الخزنة نشطة';
