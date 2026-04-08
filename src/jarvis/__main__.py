@@ -413,7 +413,12 @@ def main() -> None:
             log.debug("created_path", path=path)
 
     # 5. System-Check -- startup banner (intentional CLI output)
-    _api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
+    try:
+        from jarvis.utils.network import get_primary_bind_host as _gpbh
+
+        _api_host = _gpbh(args.api_host or os.environ.get("JARVIS_API_HOST") or None)
+    except ImportError:
+        _api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
     _print_banner(config, api_host=_api_host, api_port=args.api_port, lite=args.lite)
 
     # Phase 0 Checkpoint: Setup OK (logged at debug level — banner already shows this)
@@ -561,7 +566,16 @@ def main() -> None:
                 from jarvis.channels.config_routes import create_config_routes
                 from jarvis.config_manager import ConfigManager
 
-                api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
+                try:
+                    from jarvis.utils.network import get_primary_bind_host as _gpbh2
+
+                    api_host = _gpbh2(
+                        args.api_host or os.environ.get("JARVIS_API_HOST") or None
+                    )
+                except ImportError:
+                    api_host = args.api_host or os.environ.get(
+                        "JARVIS_API_HOST", "127.0.0.1"
+                    )
 
                 # ── Internal session token ────────────────────────────────
                 # Always generate a per-session token.  An explicit env var
@@ -683,14 +697,20 @@ def main() -> None:
                 # SECURITY (GHSA-cognithor-001): loopback-only + one-time.
                 from starlette.requests import Request as _BootstrapRequest
 
-                _LOOPBACK_PREFIXES = ("127.", "::1", "localhost")
+                try:
+                    from jarvis.utils.network import is_trusted_ip as _is_trusted
+                except ImportError:
+
+                    def _is_trusted(ip: str) -> bool:
+                        return ip.startswith("127.") or ip in ("::1", "localhost")
+
                 _bootstrap_consumed = False
 
                 @api_app.get("/api/v1/bootstrap")
                 async def _cc_bootstrap(request: _BootstrapRequest) -> dict[str, str]:
                     nonlocal _bootstrap_consumed
                     client_ip = request.client.host if request.client else ""
-                    if not any(client_ip.startswith(p) for p in _LOOPBACK_PREFIXES):
+                    if not _is_trusted(client_ip):
                         from fastapi.responses import JSONResponse as _JR
 
                         log.warning(

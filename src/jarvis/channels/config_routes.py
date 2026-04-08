@@ -1070,8 +1070,18 @@ def _register_config_routes(
             _secret = getattr(gateway, "_internal_api_token", "") if gateway else ""
             mgr = DevicePairingManager(master_secret=_secret or "fallback")
             pt = mgr.create_pairing_token(device_name)
-            _host = request.client.host if request.client else "127.0.0.1"
-            qr = mgr.qr_payload(pt, _host, getattr(request, "url", None) and request.url.port or 8741)
+            _port = request.url.port or 8741
+            try:
+                from jarvis.utils.network import get_reachable_url
+
+                _reach_url = get_reachable_url("0.0.0.0", _port)
+                # Extract host from URL
+                from urllib.parse import urlparse
+
+                _host = urlparse(_reach_url).hostname or "127.0.0.1"
+            except ImportError:
+                _host = request.client.host if request.client else "127.0.0.1"
+            qr = mgr.qr_payload(pt, _host, _port)
             return {
                 "device_id": pt.device_id,
                 "token": pt.token,
