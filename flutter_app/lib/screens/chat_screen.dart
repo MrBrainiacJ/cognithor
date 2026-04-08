@@ -154,6 +154,8 @@ class _ChatScreenState extends State<ChatScreen> {
               onSelectSession: _onSelectSession,
               onNewChat: _onNewChat,
               onNewIncognitoChat: _onNewIncognitoChat,
+              onExitIncognito: _isIncognito ? _exitIncognito : null,
+              isIncognito: _isIncognito,
               onDeleteSession: _onDeleteSession,
               onRenameSession: _onRenameSession,
               onMoveToFolder: _onMoveToFolder,
@@ -564,6 +566,23 @@ class _ChatScreenState extends State<ChatScreen> {
     if (mounted) Navigator.of(context).pop(); // close drawer
   }
 
+  void _exitIncognito() async {
+    // Start a normal (non-incognito) chat session
+    final sessions = context.read<SessionsProvider>();
+    final chat = context.read<ChatProvider>();
+    final conn = context.read<ConnectionProvider>();
+
+    final sessionId = await sessions.createNewSession();
+    if (sessionId != null) {
+      chat.clearForNewSession();
+      if (conn.state == JarvisConnectionState.connected) {
+        await conn.ws.switchSession(sessionId);
+        chat.attach(conn.ws);
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
   void _onNewIncognitoChat() async {
     final sessions = context.read<SessionsProvider>();
     final chat = context.read<ChatProvider>();
@@ -605,20 +624,29 @@ class _ChatScreenState extends State<ChatScreen> {
           Text(l.appTitle),
           if (_isIncognito) ...[
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.purple.withValues(alpha: 0.2),
+            Tooltip(
+              message: 'Inkognito beenden — neuen normalen Chat starten',
+              child: InkWell(
+                onTap: () => _exitIncognito(),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.purple.withValues(alpha: 0.4)),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.visibility_off, size: 12, color: Colors.purple),
-                  SizedBox(width: 3),
-                  Text('Inkognito', style: TextStyle(fontSize: 10, color: Colors.purple)),
-                ],
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.purple.withValues(alpha: 0.4)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.visibility_off, size: 12, color: Colors.purple),
+                      SizedBox(width: 3),
+                      Text('Inkognito', style: TextStyle(fontSize: 10, color: Colors.purple)),
+                      SizedBox(width: 3),
+                      Icon(Icons.close, size: 10, color: Colors.purple),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

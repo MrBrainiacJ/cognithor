@@ -13,6 +13,8 @@ class ChatHistoryDrawer extends StatefulWidget {
     required this.onSelectSession,
     required this.onNewChat,
     this.onNewIncognitoChat,
+    this.onExitIncognito,
+    this.isIncognito = false,
     required this.onDeleteSession,
     required this.onRenameSession,
     required this.onMoveToFolder,
@@ -27,6 +29,8 @@ class ChatHistoryDrawer extends StatefulWidget {
   final ValueChanged<String> onSelectSession;
   final VoidCallback onNewChat;
   final VoidCallback? onNewIncognitoChat;
+  final VoidCallback? onExitIncognito;
+  final bool isIncognito;
   final ValueChanged<String> onDeleteSession;
   final void Function(String sessionId, String newTitle) onRenameSession;
   final void Function(String sessionId, String folder) onMoveToFolder;
@@ -109,7 +113,13 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
                       ),
                     ),
                   ),
-                  if (widget.onNewIncognitoChat != null)
+                  if (widget.isIncognito && widget.onExitIncognito != null)
+                    IconButton(
+                      icon: const Icon(Icons.visibility, color: Colors.purple),
+                      tooltip: 'Inkognito beenden',
+                      onPressed: widget.onExitIncognito,
+                    )
+                  else if (widget.onNewIncognitoChat != null)
                     IconButton(
                       icon: const Icon(Icons.visibility_off),
                       tooltip: 'Inkognito Chat',
