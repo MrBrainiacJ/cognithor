@@ -12,7 +12,6 @@ import 'package:jarvis_ui/widgets/jarvis_toast.dart';
 import 'package:jarvis_ui/screens/config/general_page.dart';
 import 'package:jarvis_ui/screens/config/language_page.dart';
 import 'package:jarvis_ui/screens/config/providers_page.dart';
-import 'package:jarvis_ui/screens/config/models_page.dart';
 import 'package:jarvis_ui/screens/config/planner_page.dart';
 import 'package:jarvis_ui/screens/config/executor_page.dart';
 import 'package:jarvis_ui/screens/config/memory_page.dart';
@@ -46,7 +45,7 @@ class _Category {
 
 final _categories = [
   _Category((l) => l.catAiEngine, Icons.psychology, [
-    'providers', 'models', 'planner', 'executor', 'prompts',
+    'providers', 'planner', 'executor', 'prompts',
   ]),
   _Category((l) => l.catChannels, Icons.cell_tower, [
     'channels',
@@ -78,8 +77,6 @@ final _pageRegistry = <String, _SubPageDef>{
       Icons.language, (l) => l.configPageLanguage, () => const LanguagePage()),
   'providers': _SubPageDef(
       Icons.cloud, (l) => l.configPageProviders, () => const ProvidersPage()),
-  'models': _SubPageDef(Icons.model_training, (l) => l.configPageModels,
-      () => const ModelsPage()),
   'planner': _SubPageDef(Icons.architecture, (l) => l.configPagePlanner,
       () => const PlannerPage()),
   'executor': _SubPageDef(Icons.play_arrow, (l) => l.configPageExecutor,
