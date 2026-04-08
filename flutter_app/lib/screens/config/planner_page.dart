@@ -53,6 +53,7 @@ class PlannerPage extends StatelessWidget {
                   onChanged: (v) =>
                       cfg.set('planner.response_token_budget', v),
                   min: 256,
+                  max: 128000,
                 ),
               ],
             ),

@@ -182,11 +182,14 @@ class _ConfigScreenState extends State<ConfigScreen>
     final ok = await cfg.save();
     if (!mounted) return;
     if (cfg.sectionErrors.isNotEmpty) {
-      final errSections = cfg.sectionErrors.keys.join(', ');
+      final details = cfg.sectionErrors.entries
+          .map((e) => '${e.key}: ${e.value}')
+          .join('\n');
       JarvisToast.show(
         context,
-        l.savedWithErrors(errSections),
+        l.savedWithErrors(details),
         type: ToastType.warning,
+        duration: const Duration(seconds: 6),
       );
     } else {
       JarvisToast.show(

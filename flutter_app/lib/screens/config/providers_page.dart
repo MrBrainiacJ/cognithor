@@ -484,6 +484,7 @@ class _ProviderCard extends StatelessWidget {
           value: (cfg.cfg['anthropic_max_tokens'] as num?) ?? 4096,
           onChanged: (v) => cfg.set('anthropic_max_tokens', v),
           min: 256,
+          max: 200000,
         ),
     ];
   }

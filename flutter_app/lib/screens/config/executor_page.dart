@@ -21,12 +21,14 @@ class ExecutorPage extends StatelessWidget {
               value: (ex['default_timeout_seconds'] as num?) ?? 30,
               onChanged: (v) => cfg.set('executor.default_timeout_seconds', v),
               min: 5,
+              max: 3600,
             ),
             JarvisNumberField(
               label: 'Max Output Chars',
               value: (ex['max_output_chars'] as num?) ?? 10000,
               onChanged: (v) => cfg.set('executor.max_output_chars', v),
               min: 1000,
+              max: 500000,
             ),
             JarvisNumberField(
               label: 'Max Retries',
