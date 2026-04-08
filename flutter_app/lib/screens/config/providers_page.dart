@@ -200,6 +200,37 @@ class _CurrentBackendCardState extends State<_CurrentBackendCard> {
               ),
             ],
           ),
+          // Show active models for current backend
+          Builder(builder: (context) {
+            final cfg = context.watch<ConfigProvider>();
+            final models = cfg.cfg['models'] as Map<String, dynamic>? ?? {};
+            final plannerModel = (models['planner'] as Map<String, dynamic>?)?['name']?.toString() ?? '';
+            final executorModel = (models['executor'] as Map<String, dynamic>?)?['name']?.toString() ?? '';
+            if (plannerModel.isEmpty && executorModel.isEmpty) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  if (plannerModel.isNotEmpty)
+                    Chip(
+                      avatar: const Icon(Icons.architecture, size: 14),
+                      label: Text(plannerModel, style: const TextStyle(fontSize: 11)),
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  if (executorModel.isNotEmpty)
+                    Chip(
+                      avatar: const Icon(Icons.play_arrow, size: 14),
+                      label: Text(executorModel, style: const TextStyle(fontSize: 11)),
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

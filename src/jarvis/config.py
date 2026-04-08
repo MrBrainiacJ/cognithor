@@ -2424,6 +2424,18 @@ class JarvisConfig(BaseModel):
         # Check each model role and adjust if necessary
         for role in ("planner", "executor", "coder", "coder_fast", "embedding"):
             current_model: ModelConfig = getattr(self.models, role)
+            if current_model.name not in _OLLAMA_DEFAULT_MODEL_NAMES:
+                # User has a custom model set — keep it, but log for clarity
+                expected = provider_defaults.get(role, {}).get("name", "")
+                if expected and current_model.name != expected:
+                    log.info(
+                        "config_model_kept_custom",
+                        role=role,
+                        model=current_model.name,
+                        expected_default=expected,
+                        backend=backend,
+                    )
+                continue
             if current_model.name in _OLLAMA_DEFAULT_MODEL_NAMES:
                 role_defaults = provider_defaults.get(role)
                 if role_defaults:
