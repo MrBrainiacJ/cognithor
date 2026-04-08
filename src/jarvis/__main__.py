@@ -413,7 +413,7 @@ def main() -> None:
             log.debug("created_path", path=path)
 
     # 5. System-Check -- startup banner (intentional CLI output)
-    _api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "0.0.0.0")
+    _api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
     _print_banner(config, api_host=_api_host, api_port=args.api_port, lite=args.lite)
 
     # Phase 0 Checkpoint: Setup OK (logged at debug level — banner already shows this)
@@ -561,7 +561,7 @@ def main() -> None:
                 from jarvis.channels.config_routes import create_config_routes
                 from jarvis.config_manager import ConfigManager
 
-                api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "0.0.0.0")
+                api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
 
                 # ── Internal session token ────────────────────────────────
                 # Always generate a per-session token.  An explicit env var
@@ -677,11 +677,27 @@ def main() -> None:
                     }
 
                 # ── Bootstrap: one-time token delivery for the UI ─────
-                # The token is embedded in the page the browser loads, so
-                # only the same-origin frontend can read it.  External
-                # malware would have to scrape the running browser DOM.
+                # SECURITY: Only accessible from loopback addresses.
+                # Rejects requests from non-local IPs to prevent
+                # unauthenticated token disclosure (GHSA-cognithor-001).
+                from starlette.requests import Request as _BootstrapRequest
+
+                _LOOPBACK_PREFIXES = ("127.", "::1", "localhost")
+
                 @api_app.get("/api/v1/bootstrap")
-                async def _cc_bootstrap() -> dict[str, str]:
+                async def _cc_bootstrap(request: _BootstrapRequest) -> dict[str, str]:
+                    client_ip = request.client.host if request.client else ""
+                    if not any(client_ip.startswith(p) for p in _LOOPBACK_PREFIXES):
+                        from fastapi.responses import JSONResponse as _JR
+
+                        log.warning(
+                            "bootstrap_blocked_non_local",
+                            client_ip=client_ip,
+                        )
+                        return _JR(  # type: ignore[return-value]
+                            status_code=403,
+                            content={"detail": "Bootstrap endpoint is localhost-only"},
+                        )
                     return {"token": _internal_api_token}
 
                 # ── Token verification dependency ─────────────────────
