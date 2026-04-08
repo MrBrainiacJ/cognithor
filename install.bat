@@ -353,7 +353,7 @@ echo   (This may take 3-5 minutes on first run. Please do not close!)
 echo.
 
 :: Fortschritt: pip ohne --quiet, aber mit --progress-bar on
-python -m pip install -e "%REPO_ROOT%[%MODE%]" --disable-pip-version-check --progress-bar on
+"%VENV_DIR%\Scripts\python.exe" -m pip install -e "%REPO_ROOT%[%MODE%]" --disable-pip-version-check --progress-bar on
 if errorlevel 1 (
     echo.
     echo   [ERROR] pip install failed!
@@ -440,7 +440,7 @@ if "%OLLAMA_CMD%"=="" (
 echo   [OK] Ollama found: %OLLAMA_CMD%
 
 :: Pruefen ob Ollama-Server laeuft
-python -c "import urllib.request; urllib.request.urlopen('http://localhost:11434/api/tags', timeout=3)" >nul 2>&1
+"%VENV_DIR%\Scripts\python.exe" -c "import urllib.request; urllib.request.urlopen('http://localhost:11434/api/tags', timeout=3)" >nul 2>&1
 if errorlevel 1 (
     echo   Starting Ollama server...
     start "" /b "%OLLAMA_CMD%" serve >nul 2>&1
@@ -510,7 +510,7 @@ echo   ----------------------------------------------------------
 echo     8/10  Smoke-Test
 echo   ----------------------------------------------------------
 
-python -c "import jarvis; print(f'  [OK] jarvis v{jarvis.__version__}')"
+"%VENV_DIR%\Scripts\python.exe" -c "import jarvis; print(f'  [OK] jarvis v{jarvis.__version__}')"
 if errorlevel 1 (
     echo   [ERROR] Import test failed!
     echo   Try: pip install -e "%REPO_ROOT%[all]"
@@ -599,7 +599,7 @@ exit /b 0
 
 :ensure_model
 set "MODEL_NAME=%~1"
-python -c "import urllib.request, json; data=json.loads(urllib.request.urlopen('http://localhost:11434/api/tags',timeout=5).read()); models=[m['name'] for m in data.get('models',[])]; exit(0 if any('%MODEL_NAME%'.split(':')[0] in m for m in models) else 1)" >nul 2>&1
+"%VENV_DIR%\Scripts\python.exe" -c "import urllib.request, json; data=json.loads(urllib.request.urlopen('http://localhost:11434/api/tags',timeout=5).read()); models=[m['name'] for m in data.get('models',[])]; exit(0 if any('%MODEL_NAME%'.split(':')[0] in m for m in models) else 1)" >nul 2>&1
 if not errorlevel 1 (
     echo   [OK] Model available: %MODEL_NAME%
     goto :eof
