@@ -342,7 +342,20 @@ class ConfigManager:
         import os
         import tempfile
 
+        from jarvis.core.config_versioning import save_config_revision
+
         target = path or self._config_path or self._config.config_file
+
+        # Save a revision of the current config before overwriting
+        try:
+            revision_data = self._config.model_dump(mode="json")
+            # Convert Path objects for JSON serialization
+            for k in ("jarvis_home",):
+                if k in revision_data:
+                    revision_data[k] = str(revision_data[k])
+            save_config_revision(revision_data, reason="pre-save snapshot")
+        except Exception:
+            log.warning("config_revision_save_failed", exc_info=True)
 
         # Serialize
         data = self._config.model_dump(mode="json")

@@ -989,6 +989,62 @@ def _register_config_routes(
         config_manager.save()
         return {"preset": preset_name, "results": results}
 
+    # -- Config Versioning / Rollback ------------------------------------------
+
+    @app.get("/api/v1/config/revisions", dependencies=deps)
+    async def list_config_revisions() -> dict[str, Any]:
+        """List all saved config revisions (newest first)."""
+        from jarvis.core.config_versioning import list_revisions
+
+        return {"revisions": list_revisions()}
+
+    @app.post("/api/v1/config/rollback/{revision_id}", dependencies=deps)
+    async def rollback_config(revision_id: str) -> dict[str, Any]:
+        """Roll back the config to a previous revision.
+
+        Saves the current config as a new revision first, then applies
+        the historic config and persists it.
+        """
+        from jarvis.core.config_versioning import rollback_to, save_config_revision
+
+        # Save current state before rollback
+        try:
+            current = config_manager.read(include_secrets=True)
+            save_config_revision(current, reason=f"pre-rollback to {revision_id}")
+        except Exception:
+            log.warning("config_pre_rollback_save_failed", exc_info=True)
+
+        try:
+            historic_config = rollback_to(revision_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Revision '{revision_id}' not found",
+            ) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+        # Apply the historic config via Pydantic validation
+        from pydantic import ValidationError
+
+        from jarvis.config import JarvisConfig
+
+        try:
+            new_cfg = JarvisConfig(**historic_config)
+        except ValidationError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Historic config fails validation: {exc}",
+            ) from exc
+
+        config_manager._config = new_cfg
+        config_manager.save()
+
+        if gateway is not None and hasattr(gateway, "reload_components"):
+            gateway.reload_components(config=True)
+
+        return {"status": "ok", "revision_id": revision_id, "message": "Rollback applied"}
+
     # -- Config Section CRUD (AFTER presets to avoid {section} capturing "presets") --
 
     @app.get("/api/v1/config/{section}", dependencies=deps)
