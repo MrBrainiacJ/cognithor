@@ -4,10 +4,9 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.27.x  | Yes       |
-| 0.26.x  | Security fixes only |
-| 0.22–0.25 | Security fixes only |
-| < 0.22  | No        |
+| 0.78.2+ | Yes       |
+| 0.71–0.78.1 | Upgrade recommended (GHSA-cognithor-001) |
+| < 0.71  | No        |
 
 ## Reporting a Vulnerability
 
@@ -69,6 +68,24 @@ All upload and processing paths enforce size limits to prevent resource exhausti
 - API keys in configuration are masked (`***`) in all API responses by default.
 - The `.env` file (`~/.jarvis/.env`) is excluded from version control via `.gitignore`.
 - The Control Center API never writes masked placeholder values (`***`) back to configuration files.
+
+## Past Advisories
+
+### GHSA-cognithor-001 — Unauthenticated Master Token Disclosure (CRITICAL)
+
+- **CVSS**: 9.8 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)
+- **Affected**: <= 0.78.1
+- **Fixed in**: 0.78.2
+- **CWE**: CWE-306 (Missing Authentication for Critical Function), CWE-200 (Exposure of Sensitive Information)
+- **Description**: The `/api/v1/bootstrap` endpoint returned the master bearer token without authentication. Combined with the default `0.0.0.0` bind, any network-reachable host could steal the token and access all protected API endpoints.
+- **Fix**: Bootstrap endpoint restricted to loopback addresses only; default API bind changed from `0.0.0.0` to `127.0.0.1`.
+- **Reported by**: [Offgrid Security](https://www.offgridsec.com/) — responsible disclosure
+
+## Acknowledgments
+
+We thank the following researchers for responsibly disclosing security issues:
+
+- **[Offgrid Security](https://www.offgridsec.com/)** — GHSA-cognithor-001 (April 2026)
 
 ## Dependencies
 
