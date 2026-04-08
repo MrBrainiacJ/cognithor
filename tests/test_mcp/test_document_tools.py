@@ -4,15 +4,12 @@ typst_render, template_list, template_render)."""
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
 
 from jarvis.documents.templates import TemplateManager
 from jarvis.mcp.media import MediaPipeline
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 @pytest.fixture()
@@ -89,10 +86,8 @@ class TestDocumentCreate:
         result = await pipeline.create_document(structure, fmt="docx", filename="test_report")
         assert result.success
         assert result.output_path
-        from pathlib import Path as P
-
-        assert P(result.output_path).exists()
-        assert P(result.output_path).suffix == ".docx"
+        assert Path(result.output_path).exists()
+        assert Path(result.output_path).suffix == ".docx"
 
     @pytest.mark.asyncio
     async def test_invalid_json(self, pipeline: MediaPipeline) -> None:
@@ -119,10 +114,8 @@ class TestTypstRender:
         result = await pipeline.typst_render(source, filename="test_typst")
         assert result.success
         assert result.output_path
-        from pathlib import Path as P
-
-        assert P(result.output_path).exists()
-        assert P(result.output_path).suffix == ".pdf"
+        assert Path(result.output_path).exists()
+        assert Path(result.output_path).suffix == ".pdf"
 
     @pytest.mark.asyncio
     async def test_empty_source(self, pipeline: MediaPipeline) -> None:
@@ -221,6 +214,4 @@ class TestTemplateRender:
         result = await pipeline.typst_render(rendered, filename="brief_test")
         assert result.success
         assert result.output_path
-        from pathlib import Path as P
-
-        assert P(result.output_path).exists()
+        assert Path(result.output_path).exists()

@@ -5,11 +5,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.hashline.formatter import HashlineFormatter
 from jarvis.hashline.models import HashlinedFile, HashlinedLine
+
+if TYPE_CHECKING:
+    from jarvis.hashline.formatter import HashlineFormatter
 
 
 class TestFormatLine:

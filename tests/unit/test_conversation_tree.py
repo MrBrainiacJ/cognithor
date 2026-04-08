@@ -51,9 +51,9 @@ class TestConversationTree:
     def test_fork_creates_sibling(self, tree):
         conv_id = tree.create_conversation()
         n1 = tree.add_node(conv_id, role="user", text="Hello")
-        n2 = tree.add_node(conv_id, role="assistant", text="Hi!", parent_id=n1)
+        tree.add_node(conv_id, role="assistant", text="Hi!", parent_id=n1)
         # Fork: add another child to n1 (sibling of n2)
-        n3 = tree.add_node(conv_id, role="user", text="Hola", parent_id=n1)
+        tree.add_node(conv_id, role="user", text="Hola", parent_id=n1)
         children = tree.get_children(n1)
         assert len(children) == 2
 
@@ -79,8 +79,8 @@ class TestConversationTree:
     def test_get_fork_points(self, tree):
         conv_id = tree.create_conversation()
         n1 = tree.add_node(conv_id, role="user", text="Root")
-        n2 = tree.add_node(conv_id, role="assistant", text="A", parent_id=n1)
-        n3 = tree.add_node(conv_id, role="assistant", text="B", parent_id=n1)
+        tree.add_node(conv_id, role="assistant", text="A", parent_id=n1)
+        tree.add_node(conv_id, role="assistant", text="B", parent_id=n1)
         forks = tree.get_fork_points(conv_id)
         assert n1 in forks
         assert forks[n1] == 2
@@ -88,7 +88,7 @@ class TestConversationTree:
     def test_get_tree_structure(self, tree):
         conv_id = tree.create_conversation()
         n1 = tree.add_node(conv_id, role="user", text="Root")
-        n2 = tree.add_node(conv_id, role="assistant", text="A", parent_id=n1)
+        tree.add_node(conv_id, role="assistant", text="A", parent_id=n1)
         structure = tree.get_tree_structure(conv_id)
         assert structure["conversation_id"] == conv_id
         assert len(structure["nodes"]) == 2

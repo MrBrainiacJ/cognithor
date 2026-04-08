@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from jarvis.osint.collectors.base import BaseCollector
-from jarvis.osint.models import Evidence
+
+if TYPE_CHECKING:
+    from jarvis.osint.models import Evidence
 
 
 class CrunchbaseCollector(BaseCollector):

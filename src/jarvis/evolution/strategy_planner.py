@@ -36,7 +36,8 @@ strukturierten Plan.
 - Erstelle 5-15 SubGoals (Teilziele), jeweils mit title, description, priority (1-10).
 - Nenne autoritative Quellen (sources) mit url, source_type, title, fetch_strategy \
 (single_page | sitemap_crawl | rss | api), update_frequency (once | daily | weekly).
-- Erstelle schedules fuer Quellen die sich aendern (cron_expression, source_url, action, name, description).
+- Erstelle schedules fuer Quellen die sich aendern \
+(cron_expression, source_url, action, name, description).
 - Denke ueber das Ziel hinaus: Welche verwandten Themen sind relevant?
 
 ## Ausgabeformat
@@ -44,8 +45,10 @@ Antworte ausschliesslich mit validem JSON:
 ```json
 {{
   "sub_goals": [{{"title": "...", "description": "...", "priority": 10}}],
-  "sources": [{{"url": "...", "source_type": "...", "title": "...", "fetch_strategy": "...", "update_frequency": "..."}}],
-  "schedules": [{{"name": "...", "cron_expression": "...", "source_url": "...", "action": "...", "description": "..."}}]
+  "sources": [{{"url": "...", "source_type": "...", "title": "...",
+    "fetch_strategy": "...", "update_frequency": "..."}}],
+  "schedules": [{{"name": "...", "cron_expression": "...",
+    "source_url": "...", "action": "...", "description": "..."}}]
 }}
 ```
 """
@@ -68,8 +71,10 @@ Wiederhole KEINE bestehenden Teilziele. Antworte ausschliesslich mit validem JSO
 ```json
 {{
   "sub_goals": [{{"title": "...", "description": "...", "priority": 10}}],
-  "sources": [{{"url": "...", "source_type": "...", "title": "...", "fetch_strategy": "...", "update_frequency": "..."}}],
-  "schedules": [{{"name": "...", "cron_expression": "...", "source_url": "...", "action": "...", "description": "..."}}]
+  "sources": [{{"url": "...", "source_type": "...", "title": "...",
+    "fetch_strategy": "...", "update_frequency": "..."}}],
+  "schedules": [{{"name": "...", "cron_expression": "...",
+    "source_url": "...", "action": "...", "description": "..."}}]
 }}
 ```
 """

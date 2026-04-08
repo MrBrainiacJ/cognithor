@@ -220,12 +220,10 @@ class ConfidenceChecker:
                 score += 0.15
             elif word_count >= 2:
                 score += 0.08
-        elif tool_lower in _TOOLS_NEEDING_COMMAND:
-            # Check for command-like content
-            if re.search(
-                r"\b(pip|npm|git|docker|python|node|cargo|make)\b", message, re.IGNORECASE
-            ):
-                score += 0.15
+        elif tool_lower in _TOOLS_NEEDING_COMMAND and re.search(
+            r"\b(pip|npm|git|docker|python|node|cargo|make)\b", message, re.IGNORECASE
+        ):
+            score += 0.15
 
         # Penalty for vague language
         vague_matches = _VAGUE_LANGUAGE.findall(message)

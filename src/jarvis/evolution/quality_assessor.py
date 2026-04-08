@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.evolution.models import QualityQuestion, SubGoal
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 __all__ = ["QualityAssessor"]
 
@@ -183,7 +185,8 @@ class QualityAssessor:
             return q
         prompt = (
             "Bewerte ob die gegebene Antwort die erwartete Antwort INHALTLICH abdeckt.\n"
-            "Die Antwort muss NICHT woertlich identisch sein — sie stammt aus einer Wissensdatenbank.\n"
+            "Die Antwort muss NICHT woertlich identisch sein"
+            " — sie stammt aus einer Wissensdatenbank.\n"
             "Wenn die Kernaussage der erwarteten Antwort in der gegebenen Antwort enthalten ist, "
             "gilt sie als korrekt.\n\n"
             f"Frage: {q.question}\n"

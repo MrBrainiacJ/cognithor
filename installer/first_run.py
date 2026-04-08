@@ -187,7 +187,8 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
             for i, rec in enumerate(recs, 1):
                 stars = "*" * rec.quality_score
                 print(
-                    f"    [{i}] {rec.model_name:<25} Quality: {stars:<10}  Speed: {rec.speed_score}/10  ({rec.use_case})"
+                    f"    [{i}] {rec.model_name:<25} Quality: {stars:<10}"
+                    f"  Speed: {rec.speed_score}/10  ({rec.use_case})"
                 )
             print()
 

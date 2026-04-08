@@ -586,7 +586,7 @@ async def init_tools(
         from jarvis.mcp.web import WebTools
 
         _web_tools = None
-        for tool_name, handler in result.items():
+        for _tool_name, handler in result.items():
             if hasattr(handler, "__self__") and isinstance(handler.__self__, WebTools):
                 _web_tools = handler.__self__
                 break

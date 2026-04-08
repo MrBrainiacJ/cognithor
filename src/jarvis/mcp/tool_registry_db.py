@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import contextlib
 import json
-import sqlite3
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -27,6 +26,7 @@ from jarvis.security.encrypted_db import (
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    import sqlite3
     from pathlib import Path
 
     from jarvis.mcp.client import JarvisMCPClient

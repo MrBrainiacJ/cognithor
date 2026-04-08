@@ -5,12 +5,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from jarvis.hashline.audit import HashlineAuditor
 from jarvis.hashline.models import EditIntent, EditResult
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture

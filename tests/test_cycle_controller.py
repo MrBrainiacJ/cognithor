@@ -40,7 +40,7 @@ class TestCycleController:
     def test_exam_at_10(self):
         ctrl = CycleController()
         exam = _make_exam(0.6, gaps=["topic A"])
-        result = ctrl.record_exam("plan1", exam)
+        ctrl.record_exam("plan1", exam)
         assert ctrl.state == CycleState.LEARNING
 
     def test_mastered_at_08(self):

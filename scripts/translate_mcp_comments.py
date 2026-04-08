@@ -37,8 +37,8 @@ TRANSLATIONS: list[tuple[str, str]] = [
     ),
     ('"""Gibt den Pfad zum Fernet-Key zurueck."""', '"""Return the path to the Fernet key."""'),
     (
-        '"""Erstellt oder laedt einen Fernet-Key fuer Verschluesselung.\n\n    Returns:\n        Fernet-Instanz oder None wenn cryptography nicht verfuegbar.\n    """',
-        '"""Create or load a Fernet key for encryption.\n\n    Returns:\n        Fernet instance or None if cryptography is not available.\n    """',
+        '"""Erstellt oder laedt einen Fernet-Key fuer Verschluesselung.\n\n    Returns:\n        Fernet-Instanz oder None wenn cryptography nicht verfuegbar.\n    """',  # noqa: E501
+        '"""Create or load a Fernet key for encryption.\n\n    Returns:\n        Fernet instance or None if cryptography is not available.\n    """',  # noqa: E501
     ),
     (
         '"""Laedt Integrationen aus der JSON-Datei (ggf. entschluesselt)."""',
@@ -53,16 +53,16 @@ TRANSLATIONS: list[tuple[str, str]] = [
     ),
     ("# Plaintext-Fallback mit Warnung", "# Plaintext fallback with warning"),
     (
-        '"""Liest das Credential aus der angegebenen Umgebungsvariable.\n\n    Returns:\n        Credential-String oder None.\n    """',
-        '"""Read the credential from the specified environment variable.\n\n    Returns:\n        Credential string or None.\n    """',
+        '"""Liest das Credential aus der angegebenen Umgebungsvariable.\n\n    Returns:\n        Credential-String oder None.\n    """',  # noqa: E501
+        '"""Read the credential from the specified environment variable.\n\n    Returns:\n        Credential string or None.\n    """',  # noqa: E501
     ),
     (
-        '"""Baut Authentifizierungs-Header basierend auf auth_type.\n\n    Returns:\n        Dict mit Auth-Headern.\n    """',
-        '"""Build authentication headers based on auth_type.\n\n    Returns:\n        Dict with auth headers.\n    """',
+        '"""Baut Authentifizierungs-Header basierend auf auth_type.\n\n    Returns:\n        Dict mit Auth-Headern.\n    """',  # noqa: E501
+        '"""Build authentication headers based on auth_type.\n\n    Returns:\n        Dict with auth headers.\n    """',  # noqa: E501
     ),
     (
-        '"""Baut Query-Parameter fuer API-Key-Auth.\n\n    Returns:\n        Dict mit Auth-Query-Parametern.\n    """',
-        '"""Build query parameters for API key auth.\n\n    Returns:\n        Dict with auth query parameters.\n    """',
+        '"""Baut Query-Parameter fuer API-Key-Auth.\n\n    Returns:\n        Dict mit Auth-Query-Parametern.\n    """',  # noqa: E501
+        '"""Build query parameters for API key auth.\n\n    Returns:\n        Dict with auth query parameters.\n    """',  # noqa: E501
     ),
     (
         '"""Kuerzt Text auf max_chars mit Hinweis."""',
@@ -73,22 +73,22 @@ TRANSLATIONS: list[tuple[str, str]] = [
         '"""Mask possible credentials in error messages."""',
     ),
     (
-        '"""API Integration Hub -- Persistente Verbindungen zu externen APIs. [B§5.3]\n\n    Verwaltet API-Konfigurationen und fuehrt authentifizierte Requests\n    durch. Credentials werden NIE gespeichert, nur Env-Var-Namen.\n    """',
-        '"""API Integration Hub -- Persistent connections to external APIs. [B§5.3]\n\n    Manages API configurations and performs authenticated requests.\n    Credentials are NEVER stored, only env var names.\n    """',
+        '"""API Integration Hub -- Persistente Verbindungen zu externen APIs. [B§5.3]\n\n    Verwaltet API-Konfigurationen und fuehrt authentifizierte Requests\n    durch. Credentials werden NIE gespeichert, nur Env-Var-Namen.\n    """',  # noqa: E501
+        '"""API Integration Hub -- Persistent connections to external APIs. [B§5.3]\n\n    Manages API configurations and performs authenticated requests.\n    Credentials are NEVER stored, only env var names.\n    """',  # noqa: E501
     ),
     (
         '"""Holt oder erstellt einen Rate-Limiter fuer eine Integration."""',
         '"""Get or create a rate limiter for an integration."""',
     ),
     (
-        '"""Listet konfigurierte API-Integrationen auf.\n\n        Returns:\n            Formatierte Liste von Integrationen und verfuegbaren Templates.\n        """',
-        '"""List configured API integrations.\n\n        Returns:\n            Formatted list of integrations and available templates.\n        """',
+        '"""Listet konfigurierte API-Integrationen auf.\n\n        Returns:\n            Formatierte Liste von Integrationen und verfuegbaren Templates.\n        """',  # noqa: E501
+        '"""List configured API integrations.\n\n        Returns:\n            Formatted list of integrations and available templates.\n        """',  # noqa: E501
     ),
     ("# Konfigurierte Integrationen", "# Configured integrations"),
     ("# Verfuegbare Templates", "# Available templates"),
     (
-        '"""Konfiguriert eine API-Integration.\n\n        Args:\n            name: Integrations-Name (z.B. "github").\n            base_url: API-Basis-URL (optional, nutzt Template-Default).\n            auth_type: Authentifizierungs-Typ (bearer/api_key/basic).\n            credential_env: Name der Umgebungsvariable mit dem Token/Key.\n            headers: Zusaetzliche HTTP-Header.\n\n        Returns:\n            Erfolgs-/Fehlermeldung mit Integrations-Details.\n        """',
-        '"""Configure an API integration.\n\n        Args:\n            name: Integration name (e.g. "github").\n            base_url: API base URL (optional, uses template default).\n            auth_type: Authentication type (bearer/api_key/basic).\n            credential_env: Name of the environment variable with the token/key.\n            headers: Additional HTTP headers.\n\n        Returns:\n            Success/error message with integration details.\n        """',
+        '"""Konfiguriert eine API-Integration.\n\n        Args:\n            name: Integrations-Name (z.B. "github").\n            base_url: API-Basis-URL (optional, nutzt Template-Default).\n            auth_type: Authentifizierungs-Typ (bearer/api_key/basic).\n            credential_env: Name der Umgebungsvariable mit dem Token/Key.\n            headers: Zusaetzliche HTTP-Header.\n\n        Returns:\n            Erfolgs-/Fehlermeldung mit Integrations-Details.\n        """',  # noqa: E501
+        '"""Configure an API integration.\n\n        Args:\n            name: Integration name (e.g. "github").\n            base_url: API base URL (optional, uses template default).\n            auth_type: Authentication type (bearer/api_key/basic).\n            credential_env: Name of the environment variable with the token/key.\n            headers: Additional HTTP headers.\n\n        Returns:\n            Success/error message with integration details.\n        """',  # noqa: E501
     ),
     ("# Template laden falls vorhanden", "# Load template if available"),
     ("# Werte mit Template-Defaults zusammenfuehren", "# Merge values with template defaults"),
@@ -98,8 +98,8 @@ TRANSLATIONS: list[tuple[str, str]] = [
     ("# Speichern", "# Save"),
     ("# Ergebnis", "# Result"),
     (
-        '"""Fuehrt einen authentifizierten API-Call aus.\n\n        Args:\n            integration: Name der Integration.\n            method: HTTP-Methode (GET/POST/PUT/DELETE/PATCH/HEAD).\n            endpoint: Pfad, wird an base_url angehaengt.\n            body: Request-Body (als JSON).\n            headers: Zusaetzliche Header.\n\n        Returns:\n            Status-Code + Response-Body.\n        """',
-        '"""Execute an authenticated API call.\n\n        Args:\n            integration: Name of the integration.\n            method: HTTP method (GET/POST/PUT/DELETE/PATCH/HEAD).\n            endpoint: Path appended to base_url.\n            body: Request body (as JSON).\n            headers: Additional headers.\n\n        Returns:\n            Status code + response body.\n        """',
+        '"""Fuehrt einen authentifizierten API-Call aus.\n\n        Args:\n            integration: Name der Integration.\n            method: HTTP-Methode (GET/POST/PUT/DELETE/PATCH/HEAD).\n            endpoint: Pfad, wird an base_url angehaengt.\n            body: Request-Body (als JSON).\n            headers: Zusaetzliche Header.\n\n        Returns:\n            Status-Code + Response-Body.\n        """',  # noqa: E501
+        '"""Execute an authenticated API call.\n\n        Args:\n            integration: Name of the integration.\n            method: HTTP method (GET/POST/PUT/DELETE/PATCH/HEAD).\n            endpoint: Path appended to base_url.\n            body: Request body (as JSON).\n            headers: Additional headers.\n\n        Returns:\n            Status code + response body.\n        """',  # noqa: E501
     ),
     ("# Method validieren", "# Validate method"),
     ("# URL zusammenbauen", "# Build URL"),
@@ -112,17 +112,17 @@ TRANSLATIONS: list[tuple[str, str]] = [
     ("# Antwort formatieren", "# Format response"),
     ("# JSON huebsch formatieren wenn moeglich", "# Pretty-print JSON if possible"),
     (
-        '"""Entfernt eine API-Integration.\n\n        Args:\n            name: Integrations-Name.\n\n        Returns:\n            Bestaetigung.\n        """',
-        '"""Remove an API integration.\n\n        Args:\n            name: Integration name.\n\n        Returns:\n            Confirmation.\n        """',
+        '"""Entfernt eine API-Integration.\n\n        Args:\n            name: Integrations-Name.\n\n        Returns:\n            Bestaetigung.\n        """',  # noqa: E501
+        '"""Remove an API integration.\n\n        Args:\n            name: Integration name.\n\n        Returns:\n            Confirmation.\n        """',  # noqa: E501
     ),
     ("# Rate-Limiter entfernen", "# Remove rate limiter"),
     (
-        '"""Fuehrt einen Health-Check gegen die API durch.\n\n        Returns:\n            Tuple (success, message).\n        """',
-        '"""Perform a health check against the API.\n\n        Returns:\n            Tuple (success, message).\n        """',
+        '"""Fuehrt einen Health-Check gegen die API durch.\n\n        Returns:\n            Tuple (success, message).\n        """',  # noqa: E501
+        '"""Perform a health check against the API.\n\n        Returns:\n            Tuple (success, message).\n        """',  # noqa: E501
     ),
     (
-        '"""Fuehrt den HTTP-Request via httpx aus.\n\n        Falls httpx nicht verfuegbar, Fallback auf urllib.\n\n        Returns:\n            Tuple (status_code, response_text).\n        """',
-        '"""Execute the HTTP request via httpx.\n\n        Falls back to urllib if httpx is not available.\n\n        Returns:\n            Tuple (status_code, response_text).\n        """',
+        '"""Fuehrt den HTTP-Request via httpx aus.\n\n        Falls httpx nicht verfuegbar, Fallback auf urllib.\n\n        Returns:\n            Tuple (status_code, response_text).\n        """',  # noqa: E501
+        '"""Execute the HTTP request via httpx.\n\n        Falls back to urllib if httpx is not available.\n\n        Returns:\n            Tuple (status_code, response_text).\n        """',  # noqa: E501
     ),
     ("# Versuche httpx (bevorzugt)", "# Try httpx (preferred)"),
     ("# Fallback: urllib (synchron, in Executor)", "# Fallback: urllib (synchronous, in executor)"),
@@ -132,15 +132,15 @@ TRANSLATIONS: list[tuple[str, str]] = [
         '"""HTTP request via urllib (synchronous, fallback)."""',
     ),
     (
-        '"""Registriert API-Hub-Tools beim MCP-Client.\n\n    Returns:\n        APIHub-Instanz.\n    """',
-        '"""Register API hub tools with the MCP client.\n\n    Returns:\n        APIHub instance.\n    """',
+        '"""Registriert API-Hub-Tools beim MCP-Client.\n\n    Returns:\n        APIHub-Instanz.\n    """',  # noqa: E501
+        '"""Register API hub tools with the MCP client.\n\n    Returns:\n        APIHub instance.\n    """',  # noqa: E501
     ),
     # ══════════════════════════════════════════════════════════════
     # bridge.py
     # ══════════════════════════════════════════════════════════════
     (
-        '"""MCP Bridge: Verbindet bestehende Builtin-Tools mit dem MCP-Server.\n\nDieses Modul ist die zentrale Brücke zwischen dem bestehenden\nregister_builtin_handler()-System und dem neuen MCP-Server-Modus.\n\nARCHITEKTUR:\n  - Ohne MCP-Server: Tools laufen wie bisher über register_builtin_handler()\n  - Mit MCP-Server: Tools werden ZUSÄTZLICH über den MCP-Server exponiert\n  - Der MCP-Server ist rein additiv -- er ersetzt nichts\n\nVerantwortlich für:\n  1. Bestehende Builtin-Handler in MCPToolDefs konvertieren\n  2. Tool-Annotations hinzufügen (readOnly, destructive, etc.)\n  3. Resources und Prompts beim Server registrieren\n  4. Discovery/Agent-Card aufbauen\n  5. HTTP-Endpoints bereitstellen (wenn HTTP-Modus aktiv)\n\nBibel-Referenz: §5.5.5 (MCP Bridge)\n"""',
-        '"""MCP Bridge: Connects existing builtin tools with the MCP server.\n\nThis module is the central bridge between the existing\nregister_builtin_handler() system and the new MCP server mode.\n\nARCHITECTURE:\n  - Without MCP server: Tools run as before via register_builtin_handler()\n  - With MCP server: Tools are ADDITIONALLY exposed via the MCP server\n  - The MCP server is purely additive -- it replaces nothing\n\nResponsible for:\n  1. Converting existing builtin handlers into MCPToolDefs\n  2. Adding tool annotations (readOnly, destructive, etc.)\n  3. Registering resources and prompts with the server\n  4. Building discovery/agent card\n  5. Providing HTTP endpoints (when HTTP mode is active)\n\nReference: §5.5.5 (MCP Bridge)\n"""',
+        '"""MCP Bridge: Verbindet bestehende Builtin-Tools mit dem MCP-Server.\n\nDieses Modul ist die zentrale Brücke zwischen dem bestehenden\nregister_builtin_handler()-System und dem neuen MCP-Server-Modus.\n\nARCHITEKTUR:\n  - Ohne MCP-Server: Tools laufen wie bisher über register_builtin_handler()\n  - Mit MCP-Server: Tools werden ZUSÄTZLICH über den MCP-Server exponiert\n  - Der MCP-Server ist rein additiv -- er ersetzt nichts\n\nVerantwortlich für:\n  1. Bestehende Builtin-Handler in MCPToolDefs konvertieren\n  2. Tool-Annotations hinzufügen (readOnly, destructive, etc.)\n  3. Resources und Prompts beim Server registrieren\n  4. Discovery/Agent-Card aufbauen\n  5. HTTP-Endpoints bereitstellen (wenn HTTP-Modus aktiv)\n\nBibel-Referenz: §5.5.5 (MCP Bridge)\n"""',  # noqa: E501
+        '"""MCP Bridge: Connects existing builtin tools with the MCP server.\n\nThis module is the central bridge between the existing\nregister_builtin_handler() system and the new MCP server mode.\n\nARCHITECTURE:\n  - Without MCP server: Tools run as before via register_builtin_handler()\n  - With MCP server: Tools are ADDITIONALLY exposed via the MCP server\n  - The MCP server is purely additive -- it replaces nothing\n\nResponsible for:\n  1. Converting existing builtin handlers into MCPToolDefs\n  2. Adding tool annotations (readOnly, destructive, etc.)\n  3. Registering resources and prompts with the server\n  4. Building discovery/agent card\n  5. Providing HTTP endpoints (when HTTP mode is active)\n\nReference: §5.5.5 (MCP Bridge)\n"""',  # noqa: E501
     ),
     (
         "# Welche Tools sind read-only (ändern nichts am System)?",
@@ -155,20 +155,20 @@ TRANSLATIONS: list[tuple[str, str]] = [
         "# Which tools are idempotent (calling multiple times = same result)?",
     ),
     (
-        "# Tools die im MCP-Server-Modus fuer externe Clients (VSCode etc.) sicher sind.\n# Kein Shell-Exec, kein Computer-Use, kein Remote-Shell, kein Docker-Run.",
-        "# Tools that are safe for external clients (VSCode etc.) in MCP server mode.\n# No shell exec, no computer use, no remote shell, no docker run.",
+        "# Tools die im MCP-Server-Modus fuer externe Clients (VSCode etc.) sicher sind.\n# Kein Shell-Exec, kein Computer-Use, kein Remote-Shell, kein Docker-Run.",  # noqa: E501
+        "# Tools that are safe for external clients (VSCode etc.) in MCP server mode.\n# No shell exec, no computer use, no remote shell, no docker run.",  # noqa: E501
     ),
     (
         '"""Erzeugt MCP-Annotations für ein Tool basierend auf seinem Namen."""',
         '"""Generate MCP annotations for a tool based on its name."""',
     ),
     (
-        '"""Zentrale Brücke zwischen Builtin-Handlers und MCP-Server.\n\n    Nutzung:\n        bridge = MCPBridge(config)\n        bridge.setup(mcp_client, memory_manager)\n        await bridge.start()  # Startet MCP-Server falls konfiguriert\n    """',
-        '"""Central bridge between builtin handlers and MCP server.\n\n    Usage:\n        bridge = MCPBridge(config)\n        bridge.setup(mcp_client, memory_manager)\n        await bridge.start()  # Starts MCP server if configured\n    """',
+        '"""Zentrale Brücke zwischen Builtin-Handlers und MCP-Server.\n\n    Nutzung:\n        bridge = MCPBridge(config)\n        bridge.setup(mcp_client, memory_manager)\n        await bridge.start()  # Startet MCP-Server falls konfiguriert\n    """',  # noqa: E501
+        '"""Central bridge between builtin handlers and MCP server.\n\n    Usage:\n        bridge = MCPBridge(config)\n        bridge.setup(mcp_client, memory_manager)\n        await bridge.start()  # Starts MCP server if configured\n    """',  # noqa: E501
     ),
     (
-        '"""Richtet den MCP-Server-Modus ein (falls konfiguriert).\n\n        Liest die MCP-Server-Config, konvertiert bestehende Builtin-Tools\n        in MCPToolDefs und registriert Resources + Prompts.\n\n        Args:\n            mcp_client: Der bestehende JarvisMCPClient mit registrierten Tools\n            memory: MemoryManager für Resource-Zugriff\n\n        Returns:\n            True wenn MCP-Server-Modus aktiviert wurde, False sonst.\n        """',
-        '"""Set up the MCP server mode (if configured).\n\n        Reads the MCP server config, converts existing builtin tools\n        into MCPToolDefs and registers resources + prompts.\n\n        Args:\n            mcp_client: The existing JarvisMCPClient with registered tools\n            memory: MemoryManager for resource access\n\n        Returns:\n            True if MCP server mode was activated, False otherwise.\n        """',
+        '"""Richtet den MCP-Server-Modus ein (falls konfiguriert).\n\n        Liest die MCP-Server-Config, konvertiert bestehende Builtin-Tools\n        in MCPToolDefs und registriert Resources + Prompts.\n\n        Args:\n            mcp_client: Der bestehende JarvisMCPClient mit registrierten Tools\n            memory: MemoryManager für Resource-Zugriff\n\n        Returns:\n            True wenn MCP-Server-Modus aktiviert wurde, False sonst.\n        """',  # noqa: E501
+        '"""Set up the MCP server mode (if configured).\n\n        Reads the MCP server config, converts existing builtin tools\n        into MCPToolDefs and registers resources + prompts.\n\n        Args:\n            mcp_client: The existing JarvisMCPClient with registered tools\n            memory: MemoryManager for resource access\n\n        Returns:\n            True if MCP server mode was activated, False otherwise.\n        """',  # noqa: E501
     ),
     ("# Server-Config aus Jarvis-Config laden", "# Load server config from Jarvis config"),
     ("# MCP-Server erstellen", "# Create MCP server"),
@@ -187,19 +187,19 @@ TRANSLATIONS: list[tuple[str, str]] = [
         '"""The discovery manager (for agent card endpoint)."""',
     ),
     (
-        '"""Konvertiert bestehende Builtin-Handler in MCPToolDefs.\n\n        Liest alle registrierten Tools aus dem MCP-Client und\n        erstellt für jeden eine MCPToolDef mit Annotations.\n\n        Returns:\n            Anzahl konvertierter Tools.\n        """',
-        '"""Convert existing builtin handlers into MCPToolDefs.\n\n        Reads all registered tools from the MCP client and\n        creates an MCPToolDef with annotations for each one.\n\n        Returns:\n            Number of converted tools.\n        """',
+        '"""Konvertiert bestehende Builtin-Handler in MCPToolDefs.\n\n        Liest alle registrierten Tools aus dem MCP-Client und\n        erstellt für jeden eine MCPToolDef mit Annotations.\n\n        Returns:\n            Anzahl konvertierter Tools.\n        """',  # noqa: E501
+        '"""Convert existing builtin handlers into MCPToolDefs.\n\n        Reads all registered tools from the MCP client and\n        creates an MCPToolDef with annotations for each one.\n\n        Returns:\n            Number of converted tools.\n        """',  # noqa: E501
     ),
     ("# Handler aus dem Client holen", "# Get handler from the client"),
     ("# MCPToolDef erstellen", "# Create MCPToolDef"),
     (
-        '"""Lädt die MCP-Server-Konfiguration.\n\n        Prüft zuerst die Jarvis-Config, dann die MCP-Config-YAML.\n        Default: DISABLED.\n        """',
-        '"""Load the MCP server configuration.\n\n        Checks the Jarvis config first, then the MCP config YAML.\n        Default: DISABLED.\n        """',
+        '"""Lädt die MCP-Server-Konfiguration.\n\n        Prüft zuerst die Jarvis-Config, dann die MCP-Config-YAML.\n        Default: DISABLED.\n        """',  # noqa: E501
+        '"""Load the MCP server configuration.\n\n        Checks the Jarvis config first, then the MCP config YAML.\n        Default: DISABLED.\n        """',  # noqa: E501
     ),
     ("# Aus MCP-Config-YAML laden", "# Load from MCP config YAML"),
     (
-        '"""Verarbeitet einen eingehenden MCP HTTP-Request.\n\n        Wird von config_routes.py aufgerufen.\n\n        Args:\n            body: JSON-RPC-Message(s)\n            auth_header: Authorization-Header-Wert\n\n        Returns:\n            JSON-RPC-Response(s)\n        """',
-        '"""Process an incoming MCP HTTP request.\n\n        Called by config_routes.py.\n\n        Args:\n            body: JSON-RPC message(s)\n            auth_header: Authorization header value\n\n        Returns:\n            JSON-RPC response(s)\n        """',
+        '"""Verarbeitet einen eingehenden MCP HTTP-Request.\n\n        Wird von config_routes.py aufgerufen.\n\n        Args:\n            body: JSON-RPC-Message(s)\n            auth_header: Authorization-Header-Wert\n\n        Returns:\n            JSON-RPC-Response(s)\n        """',  # noqa: E501
+        '"""Process an incoming MCP HTTP request.\n\n        Called by config_routes.py.\n\n        Args:\n            body: JSON-RPC message(s)\n            auth_header: Authorization header value\n\n        Returns:\n            JSON-RPC response(s)\n        """',  # noqa: E501
     ),
     ('# Token aus "Bearer xxx" extrahieren', '# Extract token from "Bearer xxx"'),
     (

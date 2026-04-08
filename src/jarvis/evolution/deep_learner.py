@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import shutil
-from collections.abc import Callable
 from datetime import UTC
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.evolution.horizon_scanner import HorizonScanner
 from jarvis.evolution.knowledge_builder import KnowledgeBuilder
@@ -16,6 +15,9 @@ from jarvis.evolution.research_agent import ResearchAgent
 from jarvis.evolution.schedule_manager import ScheduleManager
 from jarvis.evolution.strategy_planner import StrategyPlanner
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 log = get_logger(__name__)
 
@@ -204,9 +206,8 @@ class DeepLearner:
     def has_active_plans(self) -> bool:
         """Return True if any plan has actionable sub_goals."""
         for plan in self.list_plans():
-            if plan.status == "active":
-                if self.get_next_subgoal(plan.id) is not None:
-                    return True
+            if plan.status == "active" and self.get_next_subgoal(plan.id) is not None:
+                return True
         return False
 
     def is_complex_goal(self, goal: str) -> bool:

@@ -7,11 +7,14 @@ from __future__ import annotations
 import threading
 import time
 from collections import OrderedDict
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from jarvis.hashline.config import HashlineConfig
 from jarvis.hashline.models import CacheStats, HashlinedFile
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 

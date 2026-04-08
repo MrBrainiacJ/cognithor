@@ -9,9 +9,12 @@ import json
 import threading
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from jarvis.hashline.models import EditIntent, EditResult
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.hashline.models import EditIntent, EditResult
 
 log = get_logger(__name__)
 

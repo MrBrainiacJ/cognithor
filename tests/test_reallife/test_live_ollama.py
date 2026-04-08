@@ -82,7 +82,8 @@ class TestLiveAutonomousDetection:
 
         # Complex tasks
         assert orch.should_orchestrate(
-            "Recherchiere die aktuellen RTX 5090 Preise auf eBay und erstelle einen Vergleichsbericht"
+            "Recherchiere die aktuellen RTX 5090 Preise auf eBay"
+            " und erstelle einen Vergleichsbericht"
         )
         assert orch.should_orchestrate(
             "Monitor Facebook Marketplace for cheap GPUs and notify me daily"

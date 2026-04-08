@@ -127,7 +127,6 @@ class BrowserAgent:
                 from jarvis.browser.captcha.stealth import (
                     STEALTH_ARGS,
                     STEALTH_JS,
-                    get_stealth_context_opts,
                 )
 
                 launch_opts.setdefault("args", []).extend(STEALTH_ARGS)

@@ -6,6 +6,7 @@ Results cached to ~/.jarvis/system_profile.json.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import time
 from dataclasses import dataclass, field
@@ -398,8 +399,6 @@ class SystemDetector:
         # Volatile: GPU state, network, Ollama, LMStudio — always re-scan
         for key in ("gpu", "network", "ollama", "lmstudio"):
             detect_fn = getattr(self, f"detect_{key}")
-            try:
+            with contextlib.suppress(Exception):
                 profile.results[key] = detect_fn()
-            except Exception:
-                pass
         return profile

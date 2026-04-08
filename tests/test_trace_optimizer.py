@@ -1,4 +1,7 @@
-"""Tests for jarvis.learning.trace_optimizer — TraceOptimizer, ProposalStore, OptimizationProposal."""
+"""Tests for jarvis.learning.trace_optimizer.
+
+Covers TraceOptimizer, ProposalStore, and OptimizationProposal.
+"""
 
 from __future__ import annotations
 

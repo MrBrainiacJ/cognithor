@@ -188,7 +188,7 @@ class KanbanStore:
         if "labels" in fields and isinstance(fields["labels"], list):
             fields["labels"] = json.dumps(fields["labels"])
         sets = ", ".join(f"{k} = ?" for k in fields)
-        vals = list(fields.values()) + [task_id]
+        vals = [*list(fields.values()), task_id]
         self._get_conn().execute(f"UPDATE tasks SET {sets} WHERE id = ?", vals)
         self._get_conn().commit()
         return self.get(task_id)

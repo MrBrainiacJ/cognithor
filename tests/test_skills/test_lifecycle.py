@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from jarvis.skills.lifecycle import SkillHealthStatus, SkillLifecycleManager  # noqa: F401
 from jarvis.skills.registry import Skill, SkillRegistry
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture

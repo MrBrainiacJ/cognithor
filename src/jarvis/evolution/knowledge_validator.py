@@ -6,13 +6,15 @@ import json
 import re
 import time
 import uuid
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.security.encrypted_db import encrypted_connect
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+    from pathlib import Path
 
 # Claims matching these patterns are PDF/web artifacts — skip validation entirely.
 _GARBAGE_CLAIM_RE = re.compile(
@@ -76,7 +78,9 @@ Text:
 Antworte NUR mit JSON:
 {{
   "claims": [
-    {{"claim": "Die Widerrufsfrist nach §7 VVG betraegt 14 Tage.", "category": "law|fact|statistic|definition|opinion", "importance": "high|medium|low"}}
+    {{"claim": "Die Widerrufsfrist nach §7 VVG betraegt 14 Tage.",
+      "category": "law|fact|statistic|definition|opinion",
+      "importance": "high|medium|low"}}
   ]
 }}
 """

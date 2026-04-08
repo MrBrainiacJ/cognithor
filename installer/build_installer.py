@@ -261,7 +261,8 @@ def step_launcher() -> Path:
         "    set RETRIES=0\r\n"
         "    :wait_loop\r\n"
         "    timeout /t 2 /nobreak >NUL\r\n"
-        '    curl -s -o NUL -w "%%{http_code}" http://localhost:8741/api/v1/health 2>NUL | find "200" >NUL 2>NUL\r\n'
+        '    curl -s -o NUL -w "%%{http_code}"'
+        ' http://localhost:8741/api/v1/health 2>NUL | find "200" >NUL 2>NUL\r\n'
         "    if not errorlevel 1 (\r\n"
         "        echo Cognithor is ready.\r\n"
         '        start "" http://localhost:8741\r\n'
@@ -337,7 +338,8 @@ def step_inno_setup(
     installers = list(output_dir.glob("CognithorSetup-*.exe"))
     if installers:
         print(
-            f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
+            f"  [OK] Installer: {installers[0]}"
+            f" ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
         )
         return installers[0]
 

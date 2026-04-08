@@ -1240,8 +1240,11 @@ class Gateway:
             while True:
                 await asyncio.sleep(86400)  # 24 hours
                 try:
-                    if hasattr(self, "_audit_logger") and self._audit_logger:
-                        if hasattr(self._audit_logger, "cleanup_old_entries"):
+                    if (
+                        hasattr(self, "_audit_logger")
+                        and self._audit_logger
+                        and hasattr(self._audit_logger, "cleanup_old_entries")
+                    ):
                             removed = self._audit_logger.cleanup_old_entries()
                             log.info("audit_retention_cleanup", removed=removed)
                     if hasattr(self, "_bg_manager") and self._bg_manager:
@@ -1473,10 +1476,8 @@ class Gateway:
                             if ep_dir.exists():
                                 dates = []
                                 for f in ep_dir.glob("*.md"):
-                                    try:
+                                    with contextlib.suppress(ValueError):
                                         dates.append(date.fromisoformat(f.stem))
-                                    except ValueError:
-                                        pass
                                 compressible = compressor.identify_compressible(dates)
                                 if compressible:
                                     weeks = compressor.group_into_weeks(compressible)
@@ -2021,20 +2022,19 @@ class Gateway:
             not _is_system
             and msg.text
             and msg.text.strip().lower() in ("akzeptieren", "accept", "ja", "yes")
-        ):
-            if hasattr(self, "_consent_manager") and self._consent_manager:
-                _uid = msg.user_id or msg.session_id or "unknown"
-                _ch = msg.channel or "unknown"
-                if self._consent_manager.requires_consent(_uid, _ch):
-                    self._consent_manager.grant_consent(
-                        _uid, _ch, "data_processing", context=msg.session_id or ""
-                    )
-                    return OutgoingMessage(
-                        channel=msg.channel,
-                        text=t("gateway.consent_granted"),
-                        session_id=msg.session_id or msg.id or "consent",
-                        is_final=True,
-                    )
+        ) and hasattr(self, "_consent_manager") and self._consent_manager:
+            _uid = msg.user_id or msg.session_id or "unknown"
+            _ch = msg.channel or "unknown"
+            if self._consent_manager.requires_consent(_uid, _ch):
+                self._consent_manager.grant_consent(
+                    _uid, _ch, "data_processing", context=msg.session_id or ""
+                )
+                return OutgoingMessage(
+                    channel=msg.channel,
+                    text=t("gateway.consent_granted"),
+                    session_id=msg.session_id or msg.id or "consent",
+                    is_final=True,
+                )
 
         # GDPR compliance gate — check consent before processing
         if hasattr(self, "_compliance_engine") and self._compliance_engine:
@@ -2483,9 +2483,11 @@ class Gateway:
         # the 30-60s reflection LLM call.
         import asyncio as _aio_pp
 
-        _aio_pp.create_task(
+        _pp_task = _aio_pp.create_task(
             self._run_post_processing(session, wm, agent_result, active_skill, run_id)
         )
+        self._background_tasks.add(_pp_task)
+        _pp_task.add_done_callback(self._background_tasks.discard)
 
         # Complete explainability trail
         if getattr(self, "_explainability", None) and _expl_trail_id:
@@ -2963,9 +2965,9 @@ class Gateway:
             await _pipeline_cb("plan", "start", iteration=session.iteration_count)
 
             # Keepalive: send periodic status updates while planner works
-            _keepalive_running = True
+            _keepalive_event = asyncio.Event()
 
-            async def _thinking_keepalive() -> None:
+            async def _thinking_keepalive(stop: asyncio.Event) -> None:
                 """Send periodic status updates so the UI shows activity."""
                 _elapsed = 0
                 _messages = [
@@ -2975,16 +2977,18 @@ class Gateway:
                     t("gateway.status_creating_plan"),
                     t("gateway.status_working"),
                 ]
-                while _keepalive_running:
-                    await asyncio.sleep(5)
-                    if not _keepalive_running:
-                        break
+                while not stop.is_set():
+                    try:
+                        await asyncio.wait_for(stop.wait(), timeout=5)
+                        break  # stop was set
+                    except TimeoutError:
+                        pass
                     _elapsed += 5
                     _msg = _messages[min(_elapsed // 10, len(_messages) - 1)]
                     with contextlib.suppress(Exception):
                         await _status_cb("thinking", f"{_msg} ({_elapsed}s)")
 
-            _keepalive_task = asyncio.create_task(_thinking_keepalive())
+            _keepalive_task = asyncio.create_task(_thinking_keepalive(_keepalive_event))
             self._background_tasks.add(_keepalive_task)
 
             # Identity: enrich context before planning (first iteration only)
@@ -3025,7 +3029,7 @@ class Gateway:
                 )
 
             # Stop keepalive once planner responds
-            _keepalive_running = False
+            _keepalive_event.set()
             _keepalive_task.cancel()
             with contextlib.suppress(BaseException):
                 await _keepalive_task
@@ -3486,7 +3490,7 @@ class Gateway:
 
             # Explainability: record gatekeeper decision + execution outcome
             if getattr(self, "_explainability", None) and _expl_trail_id:
-                for step, decision, result in zip(
+                for _step, decision, result in zip(
                     plan.steps,
                     approved_decisions,
                     results,
@@ -4177,7 +4181,7 @@ class Gateway:
                         # Ensure uniqueness by appending short hash if file exists
                         _base_name = name
                         _proc_dir = getattr(procedural, "_dir", None)
-                        if _proc_dir is not None and isinstance(_proc_dir, (str, Path)):
+                        if _proc_dir is not None and isinstance(_proc_dir, str | Path):
                             _proc_dir = Path(_proc_dir)
                             if (_proc_dir / f"{name}.md").exists():
                                 _short = hashlib.sha256(

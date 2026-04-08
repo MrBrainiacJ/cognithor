@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -14,6 +14,9 @@ from jarvis.hashline.config import HashlineConfig
 from jarvis.hashline.formatter import HashlineFormatter
 from jarvis.hashline.hasher import LineHasher
 from jarvis.hashline.models import HashlinedFile, HashlinedLine
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture

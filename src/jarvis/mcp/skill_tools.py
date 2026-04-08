@@ -469,9 +469,8 @@ def register_skill_tools(
 
         # Find the skill file locally
         skill_file = None
-        _search_dirs = list(skills_dirs) + [
-            Path(__file__).parent.parent.parent / "data" / "procedures",
-        ]
+        _data_procedures = Path(__file__).parent.parent.parent / "data" / "procedures"
+        _search_dirs = [*list(skills_dirs), _data_procedures]
         for search_dir in _search_dirs:
             candidate = search_dir / f"{name}.md"
             if candidate.exists():

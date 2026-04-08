@@ -6,11 +6,14 @@ from __future__ import annotations
 
 import threading
 import time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from jarvis.hashline.cache import HashlineCache
 from jarvis.hashline.config import HashlineConfig
 from jarvis.hashline.models import HashlinedFile, HashlinedLine
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_file(path: Path, timestamp: float | None = None) -> HashlinedFile:

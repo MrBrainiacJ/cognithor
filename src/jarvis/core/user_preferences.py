@@ -7,6 +7,7 @@ Uses the same DB as SessionStore (~/.jarvis/sessions.db).
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import sqlite3
 import threading
@@ -21,7 +22,8 @@ from jarvis.security.encrypted_db import encrypted_connect
 try:
     from jarvis.security.encrypted_db import compatible_row_factory
 except ImportError:
-    compatible_row_factory = lambda: sqlite3.Row
+    def compatible_row_factory():
+        return sqlite3.Row
 
 log = logging.getLogger(__name__)
 
@@ -105,10 +107,8 @@ class UserPreferenceStore:
 
     def _reconnect(self) -> None:
         """Reconnect after corruption (MemoryError / malformed DB)."""
-        try:
+        with contextlib.suppress(Exception):
             self._conn.close()
-        except Exception:
-            pass
         self._conn = encrypted_connect(
             str(self._db_path),
             check_same_thread=False,

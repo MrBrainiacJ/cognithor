@@ -436,7 +436,8 @@ class MemoryTools:
         try:
             conn = self._memory.index.conn
             cursor = conn.execute(
-                "DELETE FROM relations WHERE source_entity = ? AND relation_type = ? AND target_entity = ?",
+                "DELETE FROM relations"
+                " WHERE source_entity = ? AND relation_type = ? AND target_entity = ?",
                 (source_id, relation_type, target_id),
             )
             conn.commit()

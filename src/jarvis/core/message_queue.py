@@ -29,7 +29,8 @@ from jarvis.security.encrypted_db import encrypted_connect
 try:
     from jarvis.security.encrypted_db import compatible_row_factory
 except ImportError:
-    compatible_row_factory = lambda: sqlite3.Row
+    def compatible_row_factory():
+        return sqlite3.Row
 
 logger = logging.getLogger(__name__)
 

@@ -59,7 +59,9 @@ def _silence_library_loggers() -> None:
 from jarvis import BANNER_ASCII, __version__
 
 if TYPE_CHECKING:
+    from starlette.requests import Request as _BootstrapRequest
     from starlette.requests import Request as _STRequest
+    from starlette.types import ASGIApp, Receive, Scope, Send
 
 # WebSocket/FastAPI types must be at module level so that
 # `from __future__ import annotations` (PEP 563) can resolve
@@ -149,13 +151,6 @@ def parse_args() -> argparse.Namespace:
 
 def _check_python_version() -> None:
     """Ensure Python >= 3.12 is running."""
-    if sys.version_info < (3, 12):
-        print(
-            f"[FAIL] Python >= 3.12 required, found {sys.version}.\n"
-            "       Please upgrade: https://python.org/downloads/",
-            file=sys.stderr,
-        )
-        raise SystemExit(1)
 
 
 async def _run_mcp_server_mode(config: Any) -> None:
@@ -627,7 +622,6 @@ def main() -> None:
                 import time as _time
                 from collections import defaultdict as _defaultdict
 
-                from starlette.types import ASGIApp, Receive, Scope, Send
 
                 _rate_limit = int(os.environ.get("JARVIS_API_RATE_LIMIT", "60"))
                 _rate_window = 60.0  # seconds
@@ -674,7 +668,10 @@ def main() -> None:
                             await send(
                                 {
                                     "type": "http.response.body",
-                                    "body": b'{"error":"Too many requests","retry_after_seconds":60}',
+                                    "body": (
+                                        b'{"error":"Too many requests",'
+                                        b'"retry_after_seconds":60}'
+                                    ),
                                 }
                             )
                             return
@@ -699,7 +696,6 @@ def main() -> None:
                 # This endpoint remains as a localhost-only fallback for
                 # non-browser clients (CLI tools, mobile apps).
                 # SECURITY (GHSA-cognithor-001): loopback-only + one-time.
-                from starlette.requests import Request as _BootstrapRequest
 
                 try:
                     from jarvis.utils.network import is_trusted_ip as _is_trusted_base
@@ -1130,8 +1126,7 @@ def main() -> None:
                                     ):
                                         break
                                     # On thumbs down: send follow-up question
-                                    if _fb_rating == -1:
-                                        if not await _ws_safe_send(
+                                    if _fb_rating == -1 and not await _ws_safe_send(
                                             websocket,
                                             {
                                                 "type": "feedback_followup",

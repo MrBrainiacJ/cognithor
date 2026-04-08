@@ -187,7 +187,7 @@ class KeyboardSolver:
                 block_grid[by, bx] = colors[np.argmax(counts)]
 
         # Determine walkable colors (not walls)
-        wall_color = block_grid[0, 0] if block_grid[0, 0] != 0 else 1
+        block_grid[0, 0] if block_grid[0, 0] != 0 else 1
         walkable = set(int(c) for c in np.unique(block_grid))
 
         start_block = (avatar_x // block_size, avatar_y // block_size)
@@ -235,10 +235,13 @@ class KeyboardSolver:
                 if action not in kb_actions:
                     continue
                 nx, ny = bx + dx, by + dy
-                if 0 <= nx < bw and 0 <= ny < bh and (nx, ny) not in closed:
-                    if block_grid[ny, nx] in walkable:
+                if (
+                    0 <= nx < bw and 0 <= ny < bh
+                    and (nx, ny) not in closed
+                    and block_grid[ny, nx] in walkable
+                ):
                         dist = abs(nx - goal_block[0]) + abs(ny - goal_block[1])
-                        heapq.heappush(open_set, (len(path) + 1 + dist, (nx, ny), path + [action]))
+                        heapq.heappush(open_set, (len(path) + 1 + dist, (nx, ny), [*path, action]))
 
         return None
 

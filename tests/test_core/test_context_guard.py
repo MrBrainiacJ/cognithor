@@ -66,7 +66,7 @@ class TestApplyContextGuard:
     def test_tier2_compaction(self):
         # Many tool results that together exceed 75%
         msgs = [{"role": "system", "content": "sys"}]
-        for i in range(20):
+        for _i in range(20):
             msgs.append({"role": "tool", "content": "R" * 10_000})
         result = apply_context_guard(msgs, context_window_tokens=20_000)
         assert result.compacted_tool_results > 0

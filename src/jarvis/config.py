@@ -1880,7 +1880,10 @@ class EvolutionConfig(BaseModel):
     )
     learning_goals: list[str] = Field(
         default_factory=list,
-        description="User-defined learning topics, e.g. ['Python async patterns', 'Kubernetes deployment']",
+        description=(
+            "User-defined learning topics, e.g."
+            " ['Python async patterns', 'Kubernetes deployment']"
+        ),
     )
     # Deep Learning (Phase 5)
     deep_learning_enabled: bool = Field(

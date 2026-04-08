@@ -136,7 +136,7 @@ class SmartExplorer:
 
                 # Check win
                 if obs.levels_completed > current_levels:
-                    solution = node.path_from_start + [action]
+                    solution = [*node.path_from_start, action]
                     log.info(
                         "arc.explorer_solved",
                         states=len(states),
@@ -161,7 +161,7 @@ class SmartExplorer:
 
                 if new_hash not in states:
                     # Discover new state
-                    new_path = node.path_from_start + [action]
+                    new_path = [*node.path_from_start, action]
 
                     # Detect click targets for new state (may differ)
                     new_clicks = self._find_click_targets(grid) if self._has_click else []
@@ -206,7 +206,7 @@ class SmartExplorer:
                 return h
 
             # Expand via known transitions
-            for action, next_h in node.tested.items():
+            for _action, next_h in node.tested.items():
                 if next_h is not None and next_h not in visited and next_h in states:
                     visited.add(next_h)
                     queue.append(next_h)
@@ -216,7 +216,8 @@ class SmartExplorer:
     def _find_click_targets(self, grid: np.ndarray) -> list[int]:
         """Find click targets via connected components. Prioritize small, salient objects.
 
-        Returns encoded click actions: x*1000 + y + 1000 (offset to avoid collision with action IDs).
+        Returns encoded click actions: x*1000 + y + 1000
+        (offset to avoid collision with action IDs).
         """
         from scipy import ndimage
 
@@ -249,7 +250,7 @@ class SmartExplorer:
         # Take top 8 targets max
         click_actions = []
         seen = set()
-        for size, cx, cy in targets[:12]:
+        for _size, cx, cy in targets[:12]:
             # Deduplicate nearby positions
             key = (cx // 4, cy // 4)
             if key in seen:

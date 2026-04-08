@@ -273,7 +273,8 @@ def _run_analyzer(game_id: str, reanalyze: bool, verbose: bool, config: Any) -> 
             for entry in result.strategy_log:
                 status = "WIN" if entry["won"] else "FAIL"
                 print(
-                    f"  Level {entry['level']}: {status} via {entry['strategy']} ({entry['steps']} steps)"
+                    f"  Level {entry['level']}: {status} via"
+                    f" {entry['strategy']} ({entry['steps']} steps)"
                 )
 
         except Exception as exc:

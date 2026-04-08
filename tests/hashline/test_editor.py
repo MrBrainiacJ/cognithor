@@ -4,17 +4,21 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
 from jarvis.hashline.editor import HashlineEditor
-from jarvis.hashline.hasher import LineHasher
 from jarvis.hashline.models import EditIntent
 from jarvis.hashline.tagger import HashlineTagger
 from jarvis.hashline.validator import HashlineValidator
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from jarvis.hashline.cache import HashlineCache
+    from jarvis.hashline.config import HashlineConfig
+    from jarvis.hashline.hasher import LineHasher
 
 
 @pytest.fixture

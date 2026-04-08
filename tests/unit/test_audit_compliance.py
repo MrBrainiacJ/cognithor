@@ -52,7 +52,7 @@ class TestHMACSignatures:
             risk_level=RiskLevel.GREEN,
             policy_name="p1",
         )
-        h1 = audit_trail.record(entry)
+        audit_trail.record(entry)
 
         # Recompute HMAC manually
         lines = audit_trail._log_path.read_text(encoding="utf-8").strip().split("\n")

@@ -4,7 +4,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import contextlib
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -17,6 +18,9 @@ from jarvis.hashline.models import EditIntent
 from jarvis.hashline.recovery import HashlineRecovery
 from jarvis.hashline.tagger import HashlineTagger
 from jarvis.hashline.validator import HashlineValidator
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -178,10 +182,8 @@ class TestFuzzyMatch:
         )
         # This may or may not succeed depending on fuzzy match threshold
         # The main point is it doesn't crash
-        try:
-            result = recovery.attempt_with_recovery(intent)
-        except MaxRetriesExceededError:
-            pass  # Expected if fuzzy match doesn't find it
+        with contextlib.suppress(MaxRetriesExceededError):
+            recovery.attempt_with_recovery(intent)
 
 
 class TestErrorContext:

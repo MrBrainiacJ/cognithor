@@ -61,7 +61,8 @@ DETECT_JS = """
         var cls = (img.className || '').toLowerCase();
         var src = (img.getAttribute('src') || '').toLowerCase();
         var alt = (img.getAttribute('alt') || '').toLowerCase();
-        if (cls.indexOf('captcha') !== -1 || src.indexOf('captcha') !== -1 || alt.indexOf('captcha') !== -1) {
+        if (cls.indexOf('captcha') !== -1 ||
+            src.indexOf('captcha') !== -1 || alt.indexOf('captcha') !== -1) {
             // Check that there is a nearby text input
             var parent = img.parentElement;
             var hasInput = parent && (
@@ -70,7 +71,8 @@ DETECT_JS = """
                 parent.querySelector('input[type="number"]')
             );
             if (hasInput) {
-                var selector = img.className ? 'img.' + img.className.trim().split(/\\s+/).join('.') : 'img';
+                var cls_parts = img.className.trim().split(/\\s+/).join('.');
+                var selector = img.className ? 'img.' + cls_parts : 'img';
                 results.push({type: 'text', selector: selector, sitekey: ''});
             }
         }

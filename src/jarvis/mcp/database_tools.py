@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import re
-import sqlite3
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -30,6 +29,8 @@ from jarvis.security.encrypted_db import (
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    import sqlite3
+
     from jarvis.config import JarvisConfig
 
 log = get_logger(__name__)

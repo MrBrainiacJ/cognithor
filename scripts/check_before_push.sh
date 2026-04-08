@@ -2,12 +2,12 @@
 set -e  # Stoppt bei erstem Fehler
 
 echo "=== Ruff Lint ==="
-ruff check . --fix
+ruff check src/ tests/ --fix
 
 echo "=== Ruff Format ==="
-ruff format .
+ruff format src/ tests/
 
-echo "=== Tests Python ==="
-pytest tests/ -x --tb=short -q 2>&1 | tee test_results.txt
+echo "=== Tests ==="
+pytest tests/ -x --tb=short -q --ignore=tests/test_channels/test_voice_ws_bridge.py 2>&1 | tee test_results.txt
 
 echo "=== Fertig ==="

@@ -64,9 +64,9 @@ def create_kanban_router(engine: KanbanEngine) -> APIRouter:
             )
             return task.to_dict()
         except TaskLimitExceeded as e:
-            raise HTTPException(status_code=429, detail=str(e))
+            raise HTTPException(status_code=429, detail=str(e)) from e
         except SubtaskDepthExceeded as e:
-            raise HTTPException(status_code=422, detail=str(e))
+            raise HTTPException(status_code=422, detail=str(e)) from e
 
     @router.get("/tasks")
     def list_tasks(
@@ -109,7 +109,7 @@ def create_kanban_router(engine: KanbanEngine) -> APIRouter:
         try:
             task = engine.update_task(task_id, changed_by="user", **fields)
         except InvalidTransition as e:
-            raise HTTPException(status_code=409, detail=str(e))
+            raise HTTPException(status_code=409, detail=str(e)) from e
         if task is None:
             raise HTTPException(status_code=404, detail="Task not found")
         return task.to_dict()
@@ -124,7 +124,7 @@ def create_kanban_router(engine: KanbanEngine) -> APIRouter:
         try:
             task = engine.move_task(task_id, req.status, req.sort_order, changed_by="user")
         except InvalidTransition as e:
-            raise HTTPException(status_code=409, detail=str(e))
+            raise HTTPException(status_code=409, detail=str(e)) from e
         if task is None:
             raise HTTPException(status_code=404, detail="Task not found")
         return task.to_dict()

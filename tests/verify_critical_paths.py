@@ -16,7 +16,7 @@ def _run(coro):
 
 def test_01_pipeline_callback_delivery():
     """Pipeline event reaches the channel with correct structure."""
-    cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+    JarvisConfig(jarvis_home=tempfile.mkdtemp())
     mock_channel = AsyncMock()
     mock_channel.send_pipeline_event = AsyncMock()
 

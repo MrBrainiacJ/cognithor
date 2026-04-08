@@ -29,7 +29,8 @@ from jarvis.security.encrypted_db import encrypted_connect
 try:
     from jarvis.security.encrypted_db import compatible_row_factory
 except ImportError:
-    compatible_row_factory = lambda: sqlite3.Row
+    def compatible_row_factory():
+        return sqlite3.Row
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -314,10 +315,8 @@ class BackgroundProcessManager:
             # Try OS-level kill
             pid = job.get("pid")
             if pid:
-                try:
+                with contextlib.suppress(OSError):
                     os.kill(pid, signal.SIGTERM)
-                except OSError:
-                    pass
 
         self._processes.pop(job_id, None)
         with self._conn() as conn:

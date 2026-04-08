@@ -200,7 +200,8 @@ class HIMAgent:
             return f"No data available for {request.target_name}."
         return (
             f"Investigation of '{request.target_name}' ({request.target_type}) "
-            f"based on {len(evidence)} evidence items from {len(set(e.source_type for e in evidence))} sources. "
+            f"based on {len(evidence)} evidence items from"
+            f" {len(set(e.source_type for e in evidence))} sources. "
             f"Trust Score: {trust_score.total}/100 ({trust_score.label}). "
             f"{confirmed}/{len(claims)} claims confirmed"
             + (f", {contradicted} contradicted" if contradicted else "")
@@ -211,7 +212,10 @@ class HIMAgent:
         if trust_score.label == "high":
             return "Credentials appear credible. Proceed with normal engagement."
         if trust_score.label == "mixed":
-            return "Some claims could not be fully verified. Request additional evidence before deep engagement."
+            return (
+                "Some claims could not be fully verified."
+                " Request additional evidence before deep engagement."
+            )
         return (
             "Significant credibility concerns. Verify claims independently before any commitment."
         )

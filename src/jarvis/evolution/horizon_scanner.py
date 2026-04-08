@@ -9,9 +9,10 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jarvis.evolution.models import LearningPlan
+if TYPE_CHECKING:
+    from jarvis.evolution.models import LearningPlan
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +128,10 @@ class HorizonScanner:
                 results.append(
                     {
                         "title": f"Vertiefe: {name}",
-                        "reason": f"Entity '{name}' has only {len(hits)} memory chunk(s) — coverage is shallow.",
+                        "reason": (
+                            f"Entity '{name}' has only {len(hits)} memory"
+                            " chunk(s) — coverage is shallow."
+                        ),
                         "source": "graph",
                     }
                 )

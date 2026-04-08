@@ -41,7 +41,7 @@ class TestInitialization:
         # RESET filtered out, 3 simple actions remain
         assert len(e.discovery_queue) == 3
         # All should be (action, {}) tuples
-        for action, data in e.discovery_queue:
+        for _action, data in e.discovery_queue:
             assert data == {}
 
     def test_initialize_discovery_with_complex(self):

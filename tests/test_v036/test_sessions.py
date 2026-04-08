@@ -39,7 +39,7 @@ class TestSessionCRUD:
 
     def test_session_list_ordered_by_last_active(self, sm):
         s1 = sm.create_session("Old")
-        s2 = sm.create_session("New")
+        sm.create_session("New")
         sm.touch_session(s1.id)  # Make s1 the most recent
 
         sessions = sm.list_sessions()

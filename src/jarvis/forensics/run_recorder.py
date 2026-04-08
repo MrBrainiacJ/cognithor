@@ -10,11 +10,10 @@ Architecture reference: Phase 2 Intelligence -- Run Recording + Replay.
 from __future__ import annotations
 
 import json
-import sqlite3
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.db import SQLITE_BUSY_TIMEOUT_MS
 from jarvis.models import (
@@ -27,6 +26,9 @@ from jarvis.models import (
 )
 from jarvis.security.encrypted_db import encrypted_connect
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    import sqlite3
 
 log = get_logger(__name__)
 

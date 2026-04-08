@@ -10,15 +10,19 @@ three complementary MCP tool calls:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jarvis.evolution.research_agent import FetchResult
 from jarvis.memory.consolidation import ContentDeduplicator
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from jarvis.evolution.research_agent import FetchResult
 
 log = get_logger(__name__)
 
@@ -74,7 +78,8 @@ _GARBAGE_PATTERNS = re.compile(
     r"|Letzte Änderungen"  # Wikipedia navigation
     r"|Kontakt"  # Generic site element
     r"|Hilfe"  # Generic site element
-    r"|Wiktionary|Wikibooks|Wikiquote|Wikisource|Wikiversity|Wikivoyage|Commons"  # Wikimedia siblings
+    r"|Wiktionary|Wikibooks|Wikiquote|Wikisource"  # Wikimedia siblings
+    r"|Wikiversity|Wikivoyage|Commons"  # Wikimedia siblings (cont.)
     r"|Wikimedia Foundation"  # Wikimedia meta
     r"|Wikipedia"  # Wikipedia itself (not useful as entity)
     r"|Catalog|Pages|Stream|Metadata"  # PDF internal structure objects
@@ -405,7 +410,7 @@ class KnowledgeBuilder:
 
         # 1. Vault save
         try:
-            vault_resp = await self._mcp.call_tool(
+            await self._mcp.call_tool(
                 "vault_save",
                 {
                     "title": fetch_result.title or fetch_result.url,
@@ -565,12 +570,10 @@ class KnowledgeBuilder:
                             },
                         )
                         if self._goal_index:
-                            try:
+                            with contextlib.suppress(Exception):
                                 self._goal_index.add_entity(
                                     entity["name"], entity["type"], attrs, ""
                                 )
-                            except Exception:
-                                pass
                     except Exception:
                         pass
                 for rel in relations:
@@ -585,12 +588,10 @@ class KnowledgeBuilder:
                             },
                         )
                         if self._goal_index:
-                            try:
+                            with contextlib.suppress(Exception):
                                 self._goal_index.add_relation(
                                     rel["source"], rel["relation"], rel["target"]
                                 )
-                            except Exception:
-                                pass
                     except Exception:
                         pass
                 processed += 1

@@ -29,7 +29,7 @@ class TestCreatePairingToken:
 
     def test_device_registered(self):
         mgr = _make_manager()
-        pt = mgr.create_pairing_token("Pixel 9")
+        mgr.create_pairing_token("Pixel 9")
         devices = mgr.list_devices()
         assert len(devices) == 1
         assert devices[0]["name"] == "Pixel 9"

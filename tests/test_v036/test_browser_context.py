@@ -62,8 +62,8 @@ class TestCheckpointRestore:
     @pytest.mark.asyncio
     async def test_tab_state_survives_checkpoint_restore(self):
         bridge = TabContextBridge()
-        h1 = await bridge.open_tab("https://a.com", "A")
-        h2 = await bridge.open_tab("https://b.com", "B")
+        await bridge.open_tab("https://a.com", "A")
+        await bridge.open_tab("https://b.com", "B")
 
         snap = bridge.snapshot()
 

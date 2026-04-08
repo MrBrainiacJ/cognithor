@@ -15,7 +15,9 @@ TERRY_CASE = {
         ],
         "target_type": "person",
         "depth": "standard",
-        "requester_justification": "Received collaboration request via GitHub, verifying credentials",
+        "requester_justification": (
+            "Received collaboration request via GitHub, verifying credentials"
+        ),
     },
     "expected": {
         "trust_score_range": [30, 70],

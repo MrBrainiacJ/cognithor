@@ -4,17 +4,22 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import shutil  # noqa: F401 — planned for copystat in safe_write
 import tempfile
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
-from jarvis.hashline.hasher import LineHasher
 from jarvis.hashline.models import EditIntent, EditResult
-from jarvis.hashline.validator import HashlineValidator
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from jarvis.hashline.cache import HashlineCache
+    from jarvis.hashline.config import HashlineConfig
+    from jarvis.hashline.hasher import LineHasher
+    from jarvis.hashline.validator import HashlineValidator
 
 log = get_logger(__name__)
 
@@ -234,9 +239,8 @@ class HashlineEditor:
         elif intent.operation == "insert_before":
             insert_pos = max(idx, 0)
             lines.insert(insert_pos, intent.new_content or "")
-        elif intent.operation == "delete":
-            if 0 <= idx < len(lines):
-                lines.pop(idx)
+        elif intent.operation == "delete" and 0 <= idx < len(lines):
+            lines.pop(idx)
 
         return lines
 
@@ -324,18 +328,14 @@ class HashlineEditor:
                 os.fsync(f.fileno())
             os.replace(tmp_path, str(path))
         except Exception:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
             raise
 
         # Restore permissions
         if has_stat:
-            try:
+            with contextlib.suppress(OSError):
                 os.chmod(str(path), original_stat.st_mode)
-            except OSError:
-                pass
 
     def _rebuild_cache(self, path: Path) -> None:
         """Re-read and cache the file after an edit."""

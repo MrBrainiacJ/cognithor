@@ -23,7 +23,7 @@ class TestAnalyzeWinCondition:
         mem.transitions.append(t)
         goals = gim.analyze_win_condition(mem)
         assert any(g.goal_type == GoalType.REACH_STATE for g in goals)
-        reach = [g for g in goals if g.goal_type == GoalType.REACH_STATE][0]
+        reach = next(g for g in goals if g.goal_type == GoalType.REACH_STATE)
         assert "ACTION3" in reach.description
 
     def test_game_over_produces_avoid(self):

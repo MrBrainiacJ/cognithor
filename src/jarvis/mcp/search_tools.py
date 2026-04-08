@@ -198,7 +198,7 @@ class SearchTools:
             return t("tools.search_pattern_required")
 
         root = self._get_search_root(path or None)
-        workspace_root = self._workspace.expanduser().resolve()
+        self._workspace.expanduser().resolve()
         max_results = max(1, min(max_results, 10000))
 
         if not root.exists():

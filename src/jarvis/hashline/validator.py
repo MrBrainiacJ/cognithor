@@ -5,13 +5,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
-from jarvis.hashline.hasher import LineHasher
-from jarvis.hashline.models import EditIntent, HashlinedFile
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from jarvis.hashline.cache import HashlineCache
+    from jarvis.hashline.config import HashlineConfig
+    from jarvis.hashline.hasher import LineHasher
+    from jarvis.hashline.models import EditIntent, HashlinedFile
 
 log = get_logger(__name__)
 

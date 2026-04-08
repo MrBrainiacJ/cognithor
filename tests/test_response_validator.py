@@ -222,7 +222,10 @@ def test_high_quality_response_passes():
     validator = ResponseValidator()
     results = [
         FakeToolResult(
-            content="Python 3.12 final release date was October 2 2023 according to the official schedule",
+            content=(
+                "Python 3.12 final release date was October 2 2023"
+                " according to the official schedule"
+            ),
         ),
     ]
     result = validator.validate(

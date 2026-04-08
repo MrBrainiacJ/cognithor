@@ -6,14 +6,17 @@ from __future__ import annotations
 
 import difflib
 import time
+from typing import TYPE_CHECKING
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
-from jarvis.hashline.editor import HashlineEditor
 from jarvis.hashline.exceptions import MaxRetriesExceededError
 from jarvis.hashline.models import EditIntent, EditResult, HashlinedFile
-from jarvis.hashline.tagger import HashlineTagger
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.hashline.cache import HashlineCache
+    from jarvis.hashline.config import HashlineConfig
+    from jarvis.hashline.editor import HashlineEditor
+    from jarvis.hashline.tagger import HashlineTagger
 
 log = get_logger(__name__)
 

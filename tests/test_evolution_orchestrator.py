@@ -324,7 +324,7 @@ class TestAutoRollbackOnDegradation:
 
         # Add traces AFTER the proposal was applied, showing degradation
         # Need at least MIN_SESSIONS_FOR_EVAL (15) traces for evaluation
-        now = time.time()
+        time.time()
         for i in range(16):
             trace_store.save_trace(
                 _make_trace(
@@ -413,7 +413,7 @@ class TestCycleHistoryCapped:
         # But we have 0 traces and the attributor will just return empty findings.
         # This is fine for testing the cap.
 
-        for i in range(_MAX_CYCLE_HISTORY + 10):
+        for _i in range(_MAX_CYCLE_HISTORY + 10):
             orch.run_evolution_cycle()
 
         assert len(orch._cycle_history) <= _MAX_CYCLE_HISTORY, (

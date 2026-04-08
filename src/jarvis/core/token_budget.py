@@ -229,10 +229,8 @@ class TokenBudgetManager:
             return "research"
         if _COMPLEX_PATTERNS.search(message):
             return "complex"
-        if _SIMPLE_PATTERNS.search(message):
-            # Short simple messages
-            if len(message.split()) <= 8:
-                return "simple"
+        if _SIMPLE_PATTERNS.search(message) and len(message.split()) <= 8:
+            return "simple"
 
         # Length heuristic
         word_count = len(message.split())

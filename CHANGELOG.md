@@ -5,6 +5,31 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.80.1] -- 2026-04-08
+
+### Fixed
+- **Full Ruff lint cleanup** — resolved all 299 lint errors across 143 files
+  - E501 (86): line-too-long — shortened or added noqa for string literals
+  - F841 (27): unused variables — removed or prefixed with underscore
+  - B904 (6): `raise ... from err` in except clauses
+  - SIM102 (7): collapsible nested if statements
+  - SIM105 (3): `contextlib.suppress()` instead of try/except/pass
+  - B007 (4): unused loop variables prefixed with underscore
+  - B023 (2): loop variable capture — replaced with `asyncio.Event` in gateway keepalive
+  - RUF006 (1): dangling asyncio task — stored reference in `_background_tasks`
+  - N817 (5): `Path as P` renamed to direct `Path` import
+  - F401 (3): removed unused imports
+  - TC001/TC002/TC003 (88): moved imports into/out of TYPE_CHECKING blocks
+  - E731 (22): replaced lambda assignments with def
+  - B015 (1): removed pointless comparison
+  - Plus RUF005, UP036, UP038, SIM118, RUF015, RUF046
+- **CI test fix** — `test_prints_manual_pull_commands` now accepts `if`-guarded ollama pull (user-confirmed)
+- **check_before_push.sh** — aligned with CI: scopes to `src/` and `tests/`, ignores voice_ws_bridge
+
+### Changed
+- `check_before_push.sh` now runs full ruff lint (all rules) instead of just critical errors
+- Gateway keepalive uses `asyncio.Event` instead of mutable boolean flag (race-condition safe)
+
 ## [0.74.0] -- 2026-04-05
 
 ### Added

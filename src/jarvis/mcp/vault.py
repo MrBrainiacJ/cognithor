@@ -86,7 +86,7 @@ class VaultTools:
         # Guard against MagicMock or other non-bool truthy values: only True/1/"true" count
         if isinstance(_raw_encrypt, bool):
             encrypt = _raw_encrypt
-        elif isinstance(_raw_encrypt, (int, float)):
+        elif isinstance(_raw_encrypt, int | float):
             encrypt = bool(_raw_encrypt)
         elif isinstance(_raw_encrypt, str):
             encrypt = _raw_encrypt.lower() in ("true", "1", "yes")

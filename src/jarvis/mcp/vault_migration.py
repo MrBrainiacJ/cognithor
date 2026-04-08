@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from jarvis.mcp.vault_db_backend import VaultDBBackend
-from jarvis.mcp.vault_file_backend import VaultFileBackend
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from jarvis.mcp.vault_db_backend import VaultDBBackend
+    from jarvis.mcp.vault_file_backend import VaultFileBackend
 
 log = get_logger(__name__)
 

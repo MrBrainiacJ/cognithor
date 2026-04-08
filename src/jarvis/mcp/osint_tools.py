@@ -106,7 +106,10 @@ def register_osint_tools(mcp_client: Any, config: Any = None) -> OsintTools:
     mcp_client.register_builtin_handler(
         "investigate_person",
         tools.investigate_person,
-        description="OSINT investigation of a person: collects evidence from GitHub, web, arXiv, cross-verifies claims, computes Trust Score (0-100)",
+        description=(
+            "OSINT investigation of a person: collects evidence from GitHub,"
+            " web, arXiv, cross-verifies claims, computes Trust Score (0-100)"
+        ),
         input_schema={
             "type": "object",
             "properties": {
@@ -142,7 +145,10 @@ def register_osint_tools(mcp_client: Any, config: Any = None) -> OsintTools:
     mcp_client.register_builtin_handler(
         "investigate_project",
         tools.investigate_project,
-        description="OSINT investigation of a project: checks GitHub repos, web mentions, funding claims",
+        description=(
+            "OSINT investigation of a project:"
+            " checks GitHub repos, web mentions, funding claims"
+        ),
         input_schema={
             "type": "object",
             "properties": {

@@ -41,7 +41,10 @@ def test_detect_complexity_moderate():
 
 def test_detect_complexity_complex():
     orch = AutonomousOrchestrator()
-    msg = "Recherchiere die aktuellen GPU-Preise und erstelle einen Vergleichsbericht mit Diagramm und ueberwache die Preise"
+    msg = (
+        "Recherchiere die aktuellen GPU-Preise und erstelle einen"
+        " Vergleichsbericht mit Diagramm und ueberwache die Preise"
+    )
     assert orch.detect_complexity(msg) in ("complex", "moderate")
 
 

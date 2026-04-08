@@ -28,7 +28,8 @@ from jarvis.security.encrypted_db import encrypted_connect
 try:
     from jarvis.security.encrypted_db import compatible_row_factory
 except ImportError:
-    compatible_row_factory = lambda: sqlite3.Row
+    def compatible_row_factory():
+        return sqlite3.Row
 
 logger = logging.getLogger(__name__)
 
@@ -387,7 +388,7 @@ class SessionStore:
                     "started_at": row["started_at"],
                     "last_activity": row["last_activity"],
                     "folder": row["folder"] or "",
-                    "incognito": bool(row["incognito"]) if "incognito" in row.keys() else False,
+                    "incognito": bool(row["incognito"]) if "incognito" in row else False,
                 }
             )
         return result

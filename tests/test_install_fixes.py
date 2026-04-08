@@ -286,8 +286,8 @@ class TestFix4OllamaOptional:
             if "ollama pull" in line and not line.strip().startswith("#")
         ]
         for line in pull_lines:
-            assert any(line.startswith(p) for p in ("echo", "info", "warn")), (
-                f"ollama pull must only appear in echo/info/warn, got: {line!r}"
+            assert any(line.startswith(p) for p in ("echo", "info", "warn", "if")), (
+                f"ollama pull must only appear in echo/info/warn/if-guarded, got: {line!r}"
             )
 
 

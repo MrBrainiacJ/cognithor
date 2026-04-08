@@ -187,7 +187,8 @@ class SmokeTest:
             manager = MemoryManager(config)
             stats = manager.initialize_sync()
             self._pass(
-                f"Memory initialisiert (Chunks: {stats.get('chunks', 0)}, Entities: {stats.get('entities', 0)})"
+                f"Memory initialisiert (Chunks: {stats.get('chunks', 0)},"
+                f" Entities: {stats.get('entities', 0)})"
             )
             manager.close_sync()
         except Exception as exc:

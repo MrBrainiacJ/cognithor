@@ -95,21 +95,20 @@ class TestStoreFromCognithorTags:
 
     def test_default_tags_without_parameter(self):
         """Without tags param, uses ['cognithor', memory_type] as before."""
-        tags_default = ["cognithor", "semantic"]
         tags = None
         memory_type = "semantic"
-        result = ["cognithor"] + tags if tags else ["cognithor", memory_type]
+        result = ["cognithor", *tags] if tags else ["cognithor", memory_type]
         assert result == ["cognithor", "semantic"]
 
     def test_custom_tags_prepends_cognithor(self):
         """Custom tags always get 'cognithor' prepended."""
         input_tags = ["versicherung", "vvg", "recht"]
-        result_tags = ["cognithor"] + input_tags
+        result_tags = ["cognithor", *input_tags]
         assert result_tags == ["cognithor", "versicherung", "vvg", "recht"]
 
     def test_none_tags_falls_back(self):
         """None tags falls back to default behavior."""
         memory_type = "semantic"
         tags = None
-        result_tags = ["cognithor"] + tags if tags else ["cognithor", memory_type]
+        result_tags = ["cognithor", *tags] if tags else ["cognithor", memory_type]
         assert result_tags == ["cognithor", "semantic"]

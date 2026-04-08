@@ -10,7 +10,7 @@ def _populated_memory():
     """Memory with enough data for analysis."""
     mem = EpisodeMemory()
     # Simulate ACTION1 causing changes 9/10 times
-    for i in range(9):
+    for _i in range(9):
         mem.action_effect_map["ACTION1"]["total"] += 1
         mem.action_effect_map["ACTION1"]["caused_change"] += 1
     mem.action_effect_map["ACTION1"]["total"] += 1  # 1 no-change

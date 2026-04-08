@@ -5,13 +5,14 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass
-from typing import Any
-
-import numpy as np
+from typing import TYPE_CHECKING, Any
 
 from jarvis.arc.error_handler import safe_frame_extract
 from jarvis.arc.game_analyzer import _grid_to_png_b64
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    import numpy as np
 
 __all__ = ["VisionAgent"]
 
@@ -213,7 +214,7 @@ class VisionAgent:
 
         # If vision says UP/DOWN but only LEFT/RIGHT available (or vice versa),
         # map to the first available keyboard action
-        for name, action_id in _NAME_TO_ACTION.items():
+        for name, _action_id in _NAME_TO_ACTION.items():
             if name in clean:
                 # Action not available — try first available keyboard action
                 for fallback in [1, 2, 3, 4, 5]:

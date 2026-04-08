@@ -491,7 +491,7 @@ class WebTools:
 
         # Score: cross-engine agreement (0.0-1.0) minus average rank penalty
         scored: list[tuple[float, dict[str, str]]] = []
-        for url, data in url_data.items():
+        for _url, data in url_data.items():
             cross_score = len(data["engines"]) / total_engines
             rank_penalty = data["rank_sum"] / (len(data["engines"]) * 10)
             final_score = cross_score - rank_penalty

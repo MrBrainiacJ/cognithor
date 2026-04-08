@@ -34,11 +34,11 @@ except ImportError:
     except ImportError:
         HTTPException = Exception  # type: ignore[assignment,misc]
 
+from pathlib import Path
+
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from jarvis.config_manager import ConfigManager
 
 log = get_logger(__name__)
@@ -2590,7 +2590,8 @@ def _register_security_routes(
             try:
                 # Get sessions for this user
                 sessions = session_store.conn.execute(
-                    "SELECT session_id, user_id, channel, agent_id, created_at FROM sessions WHERE user_id = ? LIMIT 100",
+                    "SELECT session_id, user_id, channel, agent_id, created_at"
+                    " FROM sessions WHERE user_id = ? LIMIT 100",
                     (user_id,),
                 ).fetchall()
                 export["sessions"] = [dict(s) for s in sessions] if sessions else []
@@ -2695,7 +2696,8 @@ def _register_security_routes(
                 indexer = memory_mgr.semantic._indexer
                 if hasattr(indexer, "_conn"):
                     rows = indexer._conn.execute(
-                        "SELECT source_entity, relation_type, target_entity FROM relations LIMIT 1000"
+                        "SELECT source_entity, relation_type, target_entity"
+                        " FROM relations LIMIT 1000"
                     ).fetchall()
                     export["relations"] = [
                         {
@@ -2942,7 +2944,8 @@ def _register_security_routes(
                             indexer = getattr(memory_mgr.semantic, "_indexer", None)
                             if indexer and hasattr(indexer, "_conn"):
                                 indexer._conn.execute(
-                                    "INSERT OR IGNORE INTO entities (name, entity_type) VALUES (?, ?)",
+                                    "INSERT OR IGNORE INTO entities"
+                                    " (name, entity_type) VALUES (?, ?)",
                                     (name, etype),
                                 )
                                 indexer._conn.commit()
@@ -2962,7 +2965,9 @@ def _register_security_routes(
                     for rel in relations:
                         try:
                             indexer._conn.execute(
-                                "INSERT OR IGNORE INTO relations (source_entity, relation_type, target_entity) VALUES (?, ?, ?)",
+                                "INSERT OR IGNORE INTO relations"
+                                " (source_entity, relation_type, target_entity)"
+                                " VALUES (?, ?, ?)",
                                 (
                                     rel.get("source", ""),
                                     rel.get("relation", ""),
@@ -2986,7 +2991,8 @@ def _register_security_routes(
                         if isinstance(pref, dict):
                             for k, v in pref.items():
                                 pref_store._conn.execute(
-                                    "INSERT OR REPLACE INTO user_preferences (key, value) VALUES (?, ?)",
+                                    "INSERT OR REPLACE INTO user_preferences"
+                                    " (key, value) VALUES (?, ?)",
                                     (str(k), str(v)),
                                 )
                             pref_store._conn.commit()
@@ -5344,11 +5350,9 @@ def _register_skill_registry_routes(
         file_path.write_text(content, encoding="utf-8")
 
         # Reload registry from the skill's parent directory
-        from pathlib import Path as P
-
         config = getattr(gateway, "_config", None)
-        jarvis_home = P(getattr(config, "jarvis_home", P.home() / ".jarvis"))
-        reg.load_from_directories([jarvis_home / "skills", P("data/procedures")])
+        jarvis_home = Path(getattr(config, "jarvis_home", Path.home() / ".jarvis"))
+        reg.load_from_directories([jarvis_home / "skills", Path("data/procedures")])
 
         return {"status": "updated", "slug": slug}
 
@@ -5372,11 +5376,9 @@ def _register_skill_registry_routes(
             file_path.unlink()
 
         # Reload registry
-        from pathlib import Path as P
-
         config = getattr(gateway, "_config", None)
-        jarvis_home = P(getattr(config, "jarvis_home", P.home() / ".jarvis"))
-        reg.load_from_directories([jarvis_home / "skills", P("data/procedures")])
+        jarvis_home = Path(getattr(config, "jarvis_home", Path.home() / ".jarvis"))
+        reg.load_from_directories([jarvis_home / "skills", Path("data/procedures")])
 
         return {"status": "deleted", "slug": slug}
 
@@ -5423,7 +5425,7 @@ def _register_skill_registry_routes(
             content = HermesCompatLayer.to_skill_md(hermes)
             return {"slug": slug, "skill_md": content}
         except Exception as e:
-            raise HTTPException(500, f"Export failed: {e}")
+            raise HTTPException(500, f"Export failed: {e}") from e
 
 
 def _register_hermes_routes(

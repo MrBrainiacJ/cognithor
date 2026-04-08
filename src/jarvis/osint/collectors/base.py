@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
-from jarvis.osint.models import Evidence
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.osint.models import Evidence
 
 log = get_logger(__name__)
 

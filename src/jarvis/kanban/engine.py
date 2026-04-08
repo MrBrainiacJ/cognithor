@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.kanban.models import (
     VALID_TRANSITIONS,
@@ -13,8 +13,10 @@ from jarvis.kanban.models import (
     TaskStatus,
     _now_iso,
 )
-from jarvis.kanban.store import KanbanStore
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.kanban.store import KanbanStore
 
 log = get_logger(__name__)
 

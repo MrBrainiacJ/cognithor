@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from jarvis.learning.causal_attributor import CausalAttributor
     from jarvis.learning.execution_trace import TraceStore
     from jarvis.learning.prompt_evolution import PromptEvolutionEngine
+    from jarvis.learning.reflexion import ReflexionMemory
     from jarvis.learning.session_analyzer import SessionAnalyzer
     from jarvis.learning.trace_optimizer import ProposalStore, TraceOptimizer
 
@@ -675,7 +676,6 @@ class EvolutionOrchestrator:
             return
         try:
             # Find the reflexion entry linked to this proposal
-            from jarvis.learning.reflexion import ReflexionMemory
 
             rm: ReflexionMemory = self._reflexion_memory
             task_key = f"proposal:{proposal.proposal_id}"

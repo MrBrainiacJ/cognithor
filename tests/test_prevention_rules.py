@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import time
 import uuid
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
@@ -21,6 +21,9 @@ from jarvis.learning.trace_optimizer import (
     ProposalStore,
     TraceOptimizer,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ── Fixtures ──────────────────────────────────────────────────────
 

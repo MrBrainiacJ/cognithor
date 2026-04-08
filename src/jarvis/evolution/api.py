@@ -60,7 +60,7 @@ def create_evolution_router(
             goal_manager.add_goal(goal)
             return {"status": "created", "id": goal.id, "title": goal.title}
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(e)) from e
 
     @router.patch("/goals/{goal_id}")
     def update_goal(goal_id: str, req: UpdateGoalRequest) -> dict[str, str]:
@@ -72,9 +72,8 @@ def create_evolution_router(
         elif req.status == "active":
             if hasattr(goal_manager, "resume_goal"):
                 goal_manager.resume_goal(goal_id)
-        elif req.status == "completed":
-            if hasattr(goal_manager, "complete_goal"):
-                goal_manager.complete_goal(goal_id)
+        elif req.status == "completed" and hasattr(goal_manager, "complete_goal"):
+            goal_manager.complete_goal(goal_id)
         if req.priority is not None:
             goal.priority = req.priority
             goal_manager.save()

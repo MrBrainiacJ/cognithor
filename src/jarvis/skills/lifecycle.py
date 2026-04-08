@@ -15,7 +15,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
@@ -23,6 +22,8 @@ import yaml
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from jarvis.skills.registry import SkillRegistry
 
 log = get_logger(__name__)
@@ -93,7 +94,7 @@ class SkillLifecycleManager:
             Liste von SkillHealthStatus fuer jeden Skill.
         """
         results: list[SkillHealthStatus] = []
-        for slug, skill in self._registry._skills.items():
+        for slug, _skill in self._registry._skills.items():
             status = self._audit_skill(slug)
             if status is not None:
                 results.append(status)
@@ -141,9 +142,12 @@ class SkillLifecycleManager:
                 status = "broken"
 
         # 5. Ungenutzt seit N Tagen?
-        if status == "healthy" and skill.total_uses == 0:
-            if self._is_older_than(skill, _UNUSED_THRESHOLD_DAYS):
-                status = "unused"
+        if (
+            status == "healthy"
+            and skill.total_uses == 0
+            and self._is_older_than(skill, _UNUSED_THRESHOLD_DAYS)
+        ):
+            status = "unused"
 
         return SkillHealthStatus(
             slug=slug,

@@ -7,6 +7,7 @@ Async-Methoden nutzen asyncio.to_thread um den Event Loop nicht zu blockieren.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import random
 import sqlite3
@@ -78,10 +79,8 @@ class SQLiteBackend:
             def _run_pragmas() -> None:
                 assert self._conn is not None
                 # Disable VirtualLock to prevent Windows quota exhaustion
-                try:
+                with contextlib.suppress(Exception):
                     self._conn.execute("PRAGMA cipher_memory_security = OFF")
-                except Exception:
-                    pass  # Not a SQLCipher connection — ignore
                 self._conn.execute("PRAGMA journal_mode=WAL")
                 self._conn.execute("PRAGMA synchronous=NORMAL")
                 self._conn.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")

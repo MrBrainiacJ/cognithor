@@ -7,9 +7,13 @@ purpose limitations, and privacy mode.
 
 from __future__ import annotations
 
-from jarvis.security.consent import ConsentManager
+from typing import TYPE_CHECKING
+
 from jarvis.security.gdpr import DataPurpose, ProcessingBasis
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.security.consent import ConsentManager
 
 log = get_logger(__name__)
 

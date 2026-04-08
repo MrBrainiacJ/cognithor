@@ -109,7 +109,11 @@ class GitHubCollector(BaseCollector):
                             Evidence(
                                 source=f"github_claim_match:{repo['name']}",
                                 source_type="github",
-                                content=f"Claim '{claim}' may relate to repo '{repo['name']}': {repo.get('description', '')}",
+                                content=(
+                                    f"Claim '{claim}' may relate to"
+                                    f" repo '{repo['name']}':"
+                                    f" {repo.get('description', '')}"
+                                ),
                                 confidence=0.7,
                                 collected_at=now,
                                 url=repo.get("html_url", ""),

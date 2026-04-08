@@ -319,7 +319,7 @@ class IdentityLayer:
             }
             mt = type_map.get(memory_type, MemoryType.EPISODIC)
 
-            record_tags = ["cognithor"] + tags if tags else ["cognithor", memory_type]
+            record_tags = ["cognithor", *tags] if tags else ["cognithor", memory_type]
 
             record = MemoryRecord(
                 content=content,

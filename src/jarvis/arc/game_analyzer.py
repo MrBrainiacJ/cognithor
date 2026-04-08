@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import io
 import json
 import re
@@ -236,7 +237,8 @@ class GameAnalyzer:
                     {
                         "role": "user",
                         "content": (
-                            f"64x64 pixel puzzle game. Available actions: {', '.join(action_desc)}.\n"
+                            f"64x64 pixel puzzle game. "
+                            f"Available actions: {', '.join(action_desc)}.\n"
                             "Analyze this game:\n"
                             "1. What type of game is this? (click, keyboard, or mixed)\n"
                             "2. What is the goal?\n"
@@ -364,10 +366,8 @@ class GameAnalyzer:
         # Extract target colors: prefer vision, fallback to sacrifice level toggle detection
         target_colors: list[int] = []
         if vision1 and vision1.get("target_color") is not None:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 target_colors = [int(vision1["target_color"])]
-            except (ValueError, TypeError):
-                pass  # Vision returned non-numeric like "green"
         if not target_colors and report.toggle_pairs:
             # Use source colors from detected toggle pairs (the color you click on)
             target_colors = list({src for src, _tgt in report.toggle_pairs})

@@ -1420,7 +1420,6 @@ class MediaPipeline:
         """Generate a simple PPTX from plain text (one slide per paragraph)."""
         try:
             from pptx import Presentation
-            from pptx.util import Inches, Pt
         except ImportError as exc:
             raise ImportError("python-pptx not installed. Run: pip install python-pptx") from exc
 
@@ -1692,7 +1691,7 @@ class MediaPipeline:
                     pdf.ln()
                     pdf.set_font(font_name, size=9)
                     for row in rows:
-                        for c_idx, cell_val in enumerate(row[: len(headers)]):
+                        for _c_idx, cell_val in enumerate(row[: len(headers)]):
                             pdf.cell(col_w, 6, str(cell_val)[:25], border=1)
                         pdf.ln()
                     # Ensure X is reset to left margin after table cells

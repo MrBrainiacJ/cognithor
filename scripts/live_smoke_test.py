@@ -49,7 +49,8 @@ if __name__ != "__main__":
         pass
     else:
         pytest.skip(
-            "Skipping live smoke tests during unit test runs; these require a running Ollama server and full installation.",
+            "Skipping live smoke tests during unit test runs;"
+            " these require a running Ollama server and full installation.",
             allow_module_level=True,
         )
 

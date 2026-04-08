@@ -46,7 +46,7 @@ class TrustScorer:
             + tr * _WEIGHTS["transparency"]
             + ar * _WEIGHTS["activity_recency"]
         )
-        total_int = max(0, min(100, int(round(total))))
+        total_int = max(0, min(100, round(total)))
 
         return TrustScore(
             total=total_int,
@@ -90,9 +90,8 @@ class TrustScorer:
             score += 25
         if "github" in sources and "stars" in contents:
             score += 20
-        if sources <= {"linkedin", "social", "web"}:
-            if "linkedin" in sources:
-                score = max(score, 5)
+        if sources <= {"linkedin", "social", "web"} and "linkedin" in sources:
+            score = max(score, 5)
         return min(100.0, score)
 
     def _transparency(self, claims: list[ClaimResult]) -> float:

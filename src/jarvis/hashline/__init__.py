@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from jarvis.hashline.exceptions import (
@@ -24,6 +23,8 @@ from jarvis.hashline.models import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from jarvis.hashline.audit import HashlineAuditor
     from jarvis.hashline.cache import HashlineCache
     from jarvis.hashline.config import HashlineConfig

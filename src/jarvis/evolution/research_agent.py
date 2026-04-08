@@ -6,10 +6,13 @@ import asyncio
 import re
 import time
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from urllib.parse import urljoin, urlparse
 
-from jarvis.evolution.models import SourceSpec
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.evolution.models import SourceSpec
 
 log = get_logger(__name__)
 

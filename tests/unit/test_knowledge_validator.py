@@ -28,7 +28,10 @@ _LLM_EXTRACT_JSON = json.dumps(
                 "importance": "high",
             },
             {
-                "claim": "Versicherungsnehmer koennen den Vertrag ohne Angabe von Gruenden widerrufen.",
+                "claim": (
+                    "Versicherungsnehmer koennen den Vertrag"
+                    " ohne Angabe von Gruenden widerrufen."
+                ),
                 "category": "law",
                 "importance": "medium",
             },
@@ -82,7 +85,7 @@ async def test_extract_claims_dedup(tmp_path):
     llm = AsyncMock(return_value=_LLM_EXTRACT_JSON)
     v = KnowledgeValidator(db_path=tmp_path / "kv.db", llm_fn=llm)
 
-    claims1 = await v.extract_claims(
+    await v.extract_claims(
         text="Erster Text...", source_url="https://a.com", goal_slug="ins"
     )
     claims2 = await v.extract_claims(

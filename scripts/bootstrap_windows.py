@@ -1065,7 +1065,8 @@ def quick_start(repo_root: str, *, skip_models: bool = False) -> bool:
         winget_available = shutil.which("winget") is not None
         if winget_available:
             try:
-                answer = input("  Ollama not found. Install now via winget? [Y/n]: ").strip().lower()
+                prompt = "  Ollama not found. Install now via winget? [Y/n]: "
+                answer = input(prompt).strip().lower()
             except EOFError:
                 answer = "n"
             if answer in ("", "j", "y", "ja", "yes"):

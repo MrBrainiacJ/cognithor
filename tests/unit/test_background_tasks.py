@@ -117,7 +117,7 @@ class TestProcessMonitor:
         monitor = ProcessMonitor(manager, on_status_change=on_change)
         import sys
 
-        job_id = await manager.start(
+        await manager.start(
             f"{sys.executable} -c \"print('done')\"",
             check_interval=1,
         )
@@ -139,7 +139,7 @@ class TestProcessMonitor:
         monitor = ProcessMonitor(manager, on_status_change=on_change)
         import sys
 
-        job_id = await manager.start(
+        await manager.start(
             f'{sys.executable} -c "import time; time.sleep(60)"',
             timeout_seconds=1,
             check_interval=1,

@@ -1036,7 +1036,10 @@ class EvolutionLoop:
                             if sg2:
                                 return [
                                     _LearningGoal(
-                                        query=f"[deep:{plan.id}:{sg2.id}] {sg2.title}: {sg2.description}",
+                                        query=(
+                                            f"[deep:{plan.id}:{sg2.id}]"
+                                            f" {sg2.title}: {sg2.description}"
+                                        ),
                                         source="deep_plan",
                                         target_skill=sg2.id,
                                     )
@@ -1144,7 +1147,10 @@ class EvolutionLoop:
                     elif uses == 0 and getattr(skill, "source", "") != "builtin":
                         tasks.append(
                             _LearningGoal(
-                                query=f"Test skill '{name}': never used — validate with sample queries",
+                                query=(
+                                    f"Test skill '{name}':"
+                                    " never used — validate with sample queries"
+                                ),
                                 source="self_analysis",
                                 target_skill=getattr(skill, "slug", name),
                             )
@@ -1322,8 +1328,11 @@ class EvolutionLoop:
                 context=research[:500],
             )
             # hybrid/online: pass LLM function for real skill generation
-            if self._operation_mode in ("hybrid", "online") and self._llm_fn:
-                if hasattr(self._skill_gen, "llm_fn"):
+            if (
+                self._operation_mode in ("hybrid", "online")
+                and self._llm_fn
+                and hasattr(self._skill_gen, "llm_fn")
+            ):
                     self._skill_gen.llm_fn = self._llm_fn
             result = await self._skill_gen.process_gap(skill_gap)
             if result and hasattr(result, "name"):

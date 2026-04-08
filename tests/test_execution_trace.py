@@ -181,7 +181,7 @@ class TestTraceStoreCRUD:
         try:
             now = time.time()
             s_ok = _make_step(tool_name="web_search", status="success")
-            s_err = _make_step(tool_name="shell_exec", status="error", error_detail="fail")
+            _make_step(tool_name="shell_exec", status="error", error_detail="fail")
             t1 = _make_trace(
                 success_score=0.9,
                 total_duration_ms=200,

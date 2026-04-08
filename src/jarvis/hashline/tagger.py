@@ -5,14 +5,18 @@
 from __future__ import annotations
 
 import time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
 from jarvis.hashline.exceptions import BinaryFileError, FileTooLargeError
-from jarvis.hashline.hasher import LineHasher
 from jarvis.hashline.models import HashlinedFile, HashlinedLine
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from jarvis.hashline.cache import HashlineCache
+    from jarvis.hashline.config import HashlineConfig
+    from jarvis.hashline.hasher import LineHasher
 
 log = get_logger(__name__)
 

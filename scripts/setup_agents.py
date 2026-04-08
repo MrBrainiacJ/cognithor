@@ -151,7 +151,8 @@ AGENTS = [
             "2. **Minimal und korrekt**: Kleinste Aenderung die das Problem loest.\n"
             "3. **Testen**: Schreibe Tests. Fuehre Tests aus. Fixe Fehler.\n"
             "4. **Iterativ**: Code schreiben -> testen -> fixen -> wiederholen bis gruen.\n"
-            "5. **Keine externen Tools**: Nur Python-Bibliotheken (pip install), keine Systemtools.\n\n"
+            "5. **Keine externen Tools**: Nur Python-Bibliotheken (pip install),"
+            " keine Systemtools.\n\n"
             "## Tool-Strategie\n\n"
             "- **Code ausfuehren**: run_python (sandboxed, mit Timeout)\n"
             "- **Dateien lesen/schreiben**: read_file, write_file, edit_file\n"
@@ -485,7 +486,8 @@ for a in agents:
     delegate = a.get("can_delegate_to", [])
     delegate_str = ", ".join(delegate) if delegate else "none"
     print(
-        f"  {a['name']:12s} | {a.get('display_name', ''):12s} | {tools_str:12s} | delegates to: {delegate_str}"
+        f"  {a['name']:12s} | {a.get('display_name', ''):12s}"
+        f" | {tools_str:12s} | delegates to: {delegate_str}"
     )
 
 print("\nDone!")

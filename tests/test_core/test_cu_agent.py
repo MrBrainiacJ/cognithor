@@ -243,7 +243,7 @@ class TestCUAgentExecuteLoop:
             MagicMock(),
             MagicMock(),
             {},
-            allowed_tools=CUAgentExecutor.CU_DEFAULT_ALLOWED_TOOLS + ["exec_command"],
+            allowed_tools=[*CUAgentExecutor.CU_DEFAULT_ALLOWED_TOOLS, "exec_command"],
         )
         result = await agent.execute(goal="Rechner oeffnen", initial_plan=initial_plan)
 

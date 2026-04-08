@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from jarvis.arc.error_handler import safe_frame_extract
-from jarvis.arc.game_profile import GameProfile
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from jarvis.arc.game_profile import GameProfile
 
 __all__ = ["BudgetSlot", "PerGameSolver", "SolveResult", "StrategyOutcome"]
 
@@ -325,7 +327,7 @@ class PerGameSolver:
         frame_history: list[np.ndarray] = []
         initial_levels = None
 
-        for step in range(max_actions):
+        for _step in range(max_actions):
             action_id, data = self._pick_action(strategy, frame_history)
             obs = env.step(action_id, data=data)
             grid = safe_frame_extract(obs)
@@ -415,7 +417,7 @@ class PerGameSolver:
         import time
 
         env = self._arcade.make(self._profile.game_id)
-        obs = env.reset()
+        env.reset()
 
         result = SolveResult(
             game_id=self._profile.game_id,
@@ -546,7 +548,7 @@ class PerGameSolver:
                 obs = env.step(6, data={"x": x, "y": y})
             return safe_frame_extract(obs)
 
-        base_grid = replay_and_get_grid()
+        replay_and_get_grid()
 
         # Scan every 2nd pixel
         raw_hits: list[tuple[int, int, int]] = []  # (x, y, puzzle_diff)
@@ -971,7 +973,7 @@ class PerGameSolver:
                 continue
 
             for cx, cy in valves:
-                new_seq = seq + [(cx, cy)]
+                new_seq = [*seq, (cx, cy)]
                 full_seq = replay_prefix + new_seq
 
                 obs = env.reset()
@@ -1045,7 +1047,7 @@ class PerGameSolver:
                     continue
 
                 for cx, cy in valves:
-                    new_seq = seq + [(cx, cy)]
+                    new_seq = [*seq, (cx, cy)]
                     full_seq = replay_prefix + new_seq
 
                     obs = env.reset()
@@ -1080,7 +1082,7 @@ class PerGameSolver:
                 break
 
             for tx, ty in triggers:
-                trigger_seq = pre_seq + [(tx, ty)]
+                trigger_seq = [*pre_seq, (tx, ty)]
                 full_trigger_seq = replay_prefix + trigger_seq
 
                 # Execute trigger
@@ -1194,9 +1196,8 @@ class PerGameSolver:
         # Round-robin index for cycling through valves
         valve_cycle_idx = 0
         stagnation_count = 0
-        last_levels = current_levels
 
-        for click_num in range(max_clicks):
+        for _click_num in range(max_clicks):
             if time.monotonic() - t0 > timeout:
                 break
 
@@ -1235,7 +1236,7 @@ class PerGameSolver:
                 stagnation_count += 1
 
                 # Re-measure effects from current state (they may change)
-                grid_now = safe_frame_extract(obs)
+                safe_frame_extract(obs)
                 new_effects: dict[tuple[int, int], int] = {}
                 for cx, cy in action_set:
                     if effects.get((cx, cy), 0) < 0:
@@ -1351,7 +1352,6 @@ class PerGameSolver:
                 marker_ys = np.concatenate([marker_ys, ys_m])
                 marker_xs = np.concatenate([marker_xs, xs_m])
 
-        has_markers = len(marker_ys) > 0
         teal_ys, teal_xs = marker_ys, marker_xs
 
         target_list: list[int] = []
@@ -1428,7 +1428,7 @@ class PerGameSolver:
                     continue
 
                 if obs.levels_completed > current_levels:
-                    solution = path + [(vx, vy)]
+                    solution = [*path, (vx, vy)]
                     log.info("arc.sim_astar_solved", clicks=len(solution), states=len(visited))
                     return solution
 
@@ -1443,7 +1443,7 @@ class PerGameSolver:
 
                 h = heuristic(new_heights)
                 # Prune: if heuristic increased compared to parent, lower priority
-                new_path = path + [(vx, vy)]
+                new_path = [*path, (vx, vy)]
                 heapq.heappush(pq, (new_depth + h, new_depth, new_heights, new_path))
 
         # Log reachable state range for debugging

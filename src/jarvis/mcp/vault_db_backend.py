@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from jarvis.i18n import t
 from jarvis.mcp.vault_backend import NoteData, VaultBackend, new_id, now_iso, parse_tags
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = get_logger(__name__)
 
@@ -98,15 +101,18 @@ class VaultDBBackend(VaultBackend):
         note_id = new_id()
         try:
             self._conn.execute(
-                "INSERT INTO notes (id, path, title, content, tags, folder, sources, backlinks, created_at, updated_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO notes"
+                " (id, path, title, content, tags, folder, sources,"
+                " backlinks, created_at, updated_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (note_id, path, title, content, tag_str, folder, sources, bl_json, now, now),
             )
             self._conn.commit()
         except Exception:
             # Path exists — update instead (catches both sqlite3 and sqlcipher3)
             self._conn.execute(
-                "UPDATE notes SET title=?, content=?, tags=?, folder=?, sources=?, backlinks=?, updated_at=? WHERE path=?",
+                "UPDATE notes SET title=?, content=?, tags=?, folder=?,"
+                " sources=?, backlinks=?, updated_at=? WHERE path=?",
                 (title, content, tag_str, folder, sources, bl_json, now, path),
             )
             self._conn.commit()

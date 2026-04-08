@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.browser.captcha.classifier import select_vision_model
 from jarvis.browser.captcha.detector import detect_captcha
 from jarvis.browser.captcha.models import CaptchaChallenge, CaptchaType, SolveResult
 from jarvis.browser.captcha.strategies import get_strategy
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 log = get_logger(__name__)
 

@@ -5,11 +5,13 @@ from __future__ import annotations
 import base64
 import re
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jarvis.browser.captcha.models import CaptchaChallenge, CaptchaType, SolveResult
 from jarvis.utils.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = [
     "build_image_grid_prompt",

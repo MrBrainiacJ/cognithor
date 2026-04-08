@@ -110,7 +110,7 @@ class TestEd25519Signatures:
 
     def test_verify_chain_with_ed25519(self, audit_trail, key_pair):
         """Chain verification still works when ed25519_sig is present."""
-        for i in range(3):
+        for _i in range(3):
             entry = self._make_entry()
             audit_trail.record(entry)
         valid, total, broken_at = audit_trail.verify_chain()
