@@ -462,6 +462,10 @@ class Planner:
         try:
             from jarvis.utils.circuit_breaker import CircuitBreakerOpen
 
+            # Pre-check circuit breaker state BEFORE creating the coroutine
+            # to avoid "coroutine was never awaited" RuntimeWarning (#76)
+            self._llm_circuit_breaker.check_open()
+
             response = await self._llm_circuit_breaker.call(
                 self._ollama.chat(
                     model=model,

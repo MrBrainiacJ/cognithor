@@ -394,7 +394,7 @@ class SessionStore:
                     "started_at": row["started_at"],
                     "last_activity": row["last_activity"],
                     "folder": row["folder"] or "",
-                    "incognito": bool(row["incognito"]) if "incognito" in row else False,
+                    "incognito": bool(row["incognito"]),
                 }
             )
         return result

@@ -101,6 +101,18 @@ class CircuitBreaker:
             "state_changes": self._state_changes,
         }
 
+    def check_open(self) -> None:
+        """Raise CircuitBreakerOpen if the circuit is currently open.
+
+        Use this BEFORE creating an expensive coroutine to avoid
+        'coroutine was never awaited' warnings when the circuit is open.
+        """
+        if self._state == CircuitState.open:
+            now = time.monotonic()
+            elapsed = now - self._opened_at
+            if elapsed < self._recovery_timeout:
+                raise CircuitBreakerOpen(self._name, self._recovery_timeout - elapsed)
+
     async def call(self, coro: Awaitable[T]) -> T:
         """Fuehrt eine async Operation unter Circuit-Breaker-Schutz aus.
 
