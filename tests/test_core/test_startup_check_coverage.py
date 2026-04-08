@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
@@ -14,9 +13,6 @@ from jarvis.core.startup_check import (
     _can_import,
     _import_name,
 )
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 @pytest.fixture()
@@ -224,25 +220,8 @@ class TestCheckModels:
         assert any("cloud" in p.lower() or "skipped" in p.lower() for p in report.checks_passed)
 
 
-# ============================================================================
-# check_node_modules
-# ============================================================================
-
-
-class TestCheckNodeModules:
-    def test_no_ui_dir(self, tmp_path: Path) -> None:
-        checker = StartupChecker(None)
-        report = checker.check_node_modules(tmp_path)
-        assert any("No UI" in p for p in report.checks_passed)
-
-    def test_node_modules_exist(self, tmp_path: Path) -> None:
-        ui_dir = tmp_path / "ui"
-        ui_dir.mkdir()
-        (ui_dir / "package.json").write_text("{}")
-        (ui_dir / "node_modules").mkdir()
-        checker = StartupChecker(None)
-        report = checker.check_node_modules(tmp_path)
-        assert any("node_modules present" in p for p in report.checks_passed)
+# TestCheckNodeModules removed — check_node_modules() was deleted
+# when the legacy React UI was removed in favor of Flutter (Phase 4).
 
 
 # ============================================================================

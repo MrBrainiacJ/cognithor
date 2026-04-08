@@ -228,7 +228,6 @@ class TestSourceLevelChecks:
 class TestCheckAndFixAllIntegration:
     """Prueft dass check_and_fix_all den auto_install-State respektiert."""
 
-    @patch("jarvis.core.startup_check.StartupChecker.check_node_modules")
     @patch("jarvis.core.startup_check.StartupChecker._find_repo_root", return_value=None)
     @patch("jarvis.core.startup_check.StartupChecker.check_directories")
     @patch("jarvis.core.startup_check.StartupChecker.check_models")
@@ -243,7 +242,6 @@ class TestCheckAndFixAllIntegration:
         mock_models: MagicMock,
         mock_dirs: MagicMock,
         mock_root: MagicMock,
-        mock_node: MagicMock,
     ) -> None:
         """check_and_fix_all ohne auto_install -> kein pip install."""
         mock_ollama.return_value = StartupReport()
