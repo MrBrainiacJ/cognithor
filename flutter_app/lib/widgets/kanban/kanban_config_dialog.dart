@@ -28,7 +28,7 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Dialog(

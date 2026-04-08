@@ -99,7 +99,7 @@ class _MainShellState extends State<MainShell> {
         label: l.identity,
         shortcut: '^5',
       ),
-      NavItem(
+      const NavItem(
         icon: Icons.view_kanban_outlined,
         selectedIcon: Icons.view_kanban,
         label: 'Kanban',

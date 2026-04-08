@@ -66,7 +66,7 @@ class _EvolutionGoalsPageState extends State<EvolutionGoalsPage>
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  value: priority,
+                  initialValue: priority,
                   decoration: const InputDecoration(
                     labelText: 'Priority',
                     border: OutlineInputBorder(),

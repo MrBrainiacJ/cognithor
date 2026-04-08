@@ -844,7 +844,7 @@ class _FeedbackFollowupBannerState extends State<_FeedbackFollowupBanner> {
                   backgroundColor: JarvisTheme.orange,
                   foregroundColor: Colors.white,
                 ),
-                child: Text(l?.send ?? 'Send'),
+                child: Text(l.send),
               ),
             ],
           ),

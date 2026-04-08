@@ -62,7 +62,7 @@ class _DeviceSettingsScreenState extends State<DeviceSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final device = context.watch<DeviceProvider>();

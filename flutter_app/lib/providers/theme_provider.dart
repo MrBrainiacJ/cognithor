@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../theme/jarvis_theme.dart';
+import 'package:jarvis_ui/theme/jarvis_theme.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeProvider() {

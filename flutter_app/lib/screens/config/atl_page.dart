@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_ui/providers/config_provider.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/widgets/form/form_widgets.dart';
 
 /// ATL (Autonomous Thinking Loop) configuration page.
@@ -16,26 +15,6 @@ class AtlPage extends StatefulWidget {
 }
 
 class _AtlPageState extends State<AtlPage> {
-  Map<String, dynamic>? _atlStatus;
-  bool _loadingStatus = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadStatus());
-  }
-
-  Future<void> _loadStatus() async {
-    setState(() => _loadingStatus = true);
-    try {
-      final api = context.read<ConnectionProvider>().api;
-      // Call the atl_status MCP tool via the chat API or a dedicated endpoint.
-      // For now, we read from config directly.
-      setState(() => _loadingStatus = false);
-    } catch (_) {
-      if (mounted) setState(() => _loadingStatus = false);
-    }
-  }
 
   Map<String, dynamic> _atl(ConfigProvider cfg) {
     final raw = cfg.cfg['atl'];

@@ -8,7 +8,6 @@ import 'package:jarvis_ui/providers/chat_provider.dart';
 import 'package:jarvis_ui/widgets/kanban/kanban_board.dart';
 import 'package:jarvis_ui/widgets/kanban/kanban_config_dialog.dart';
 import 'package:jarvis_ui/widgets/kanban/task_dialog.dart';
-import 'package:jarvis_ui/widgets/kanban/task_detail_sheet.dart';
 import 'package:jarvis_ui/widgets/observe/kanban_panel.dart';
 
 class KanbanScreen extends StatefulWidget {
@@ -63,7 +62,7 @@ class _KanbanScreenState extends State<KanbanScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
 
     return Consumer<KanbanProvider>(
       builder: (context, kanban, _) {

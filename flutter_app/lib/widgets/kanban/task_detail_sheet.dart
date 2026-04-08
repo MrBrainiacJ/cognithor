@@ -32,7 +32,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     final task = widget.task;
 
     return DraggableScrollableSheet(

@@ -27,7 +27,7 @@ class KanbanBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     final labels = _columnLabels(l);
 
     return Consumer<KanbanProvider>(

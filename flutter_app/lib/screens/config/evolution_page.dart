@@ -193,7 +193,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                     ),
                   ),
                   value: enabled,
-                  activeColor: JarvisTheme.green,
+                  activeThumbColor: JarvisTheme.green,
                   contentPadding: EdgeInsets.zero,
                   onChanged: (v) => cfg.set('evolution.enabled', v),
                 ),

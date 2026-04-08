@@ -16,7 +16,7 @@ class DocumentsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l.documentsTitle)),
       body: const Center(

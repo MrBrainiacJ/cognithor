@@ -54,7 +54,7 @@ class _TaskDialogState extends State<TaskDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(widget.initialTitle != null ? l.kanbanEditTask : l.kanbanNewTask),
       content: SizedBox(
@@ -85,7 +85,7 @@ class _TaskDialogState extends State<TaskDialog> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _priority,
+                      initialValue: _priority,
                       decoration: const InputDecoration(
                         labelText: 'Priority',
                         border: OutlineInputBorder(),
@@ -99,7 +99,7 @@ class _TaskDialogState extends State<TaskDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _agent,
+                      initialValue: _agent,
                       decoration: const InputDecoration(
                         labelText: 'Agent',
                         border: OutlineInputBorder(),
