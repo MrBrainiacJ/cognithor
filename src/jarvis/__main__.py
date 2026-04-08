@@ -1260,7 +1260,7 @@ def main() -> None:
                     getattr(_voice_cfg, "piper_length_scale", 1.0) if _voice_cfg else 1.0
                 )
 
-                @api_app.post("/api/v1/tts")
+                @api_app.post("/api/v1/tts", dependencies=[_Depends(_verify_cc_token)])
                 async def _cc_tts(body: dict[str, Any]) -> Any:
                     """Text-to-Speech via Piper TTS."""
                     from fastapi.responses import Response
@@ -1287,7 +1287,7 @@ def main() -> None:
                         log.error("tts_error", error=str(_tts_exc))
                         return {"error": "TTS-Fehler aufgetreten", "code": "TTS_ERROR"}
 
-                @api_app.get("/api/v1/tts/voices")
+                @api_app.get("/api/v1/tts/voices", dependencies=[_Depends(_verify_cc_token)])
                 async def _cc_tts_voices() -> dict[str, Any]:
                     """Listet verfuegbare Piper-Stimmen und die aktuell konfigurierte."""
                     voices_dir = Path(config.jarvis_home) / "voices"
@@ -1667,7 +1667,7 @@ def main() -> None:
                 log.info("cc_push_endpoints_registered")
 
                 # ── Identity Control API ────────────────────────────────
-                @api_app.get("/api/v1/identity/state")
+                @api_app.get("/api/v1/identity/state", dependencies=[_Depends(_verify_cc_token)])
                 async def _identity_state():
                     if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
                         return {"available": False}
@@ -1678,28 +1678,28 @@ def main() -> None:
                         log.debug("identity_api_error", exc_info=True)
                         return {"error": "Internal identity error", "code": "INTERNAL_ERROR"}
 
-                @api_app.post("/api/v1/identity/freeze")
+                @api_app.post("/api/v1/identity/freeze", dependencies=[_Depends(_verify_cc_token)])
                 async def _identity_freeze():
                     if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
                         return {"error": "Identity layer not available", "code": "NOT_AVAILABLE"}
                     gateway._identity_layer.freeze()
                     return {"status": "frozen"}
 
-                @api_app.post("/api/v1/identity/unfreeze")
+                @api_app.post("/api/v1/identity/unfreeze", dependencies=[_Depends(_verify_cc_token)])
                 async def _identity_unfreeze():
                     if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
                         return {"error": "Identity layer not available", "code": "NOT_AVAILABLE"}
                     gateway._identity_layer.unfreeze()
                     return {"status": "unfrozen"}
 
-                @api_app.post("/api/v1/identity/reset")
+                @api_app.post("/api/v1/identity/reset", dependencies=[_Depends(_verify_cc_token)])
                 async def _identity_reset():
                     if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
                         return {"error": "Identity layer not available", "code": "NOT_AVAILABLE"}
                     result = gateway._identity_layer.soft_reset()
                     return {"status": "reset", "details": result}
 
-                @api_app.post("/api/v1/identity/dream")
+                @api_app.post("/api/v1/identity/dream", dependencies=[_Depends(_verify_cc_token)])
                 async def _identity_dream():
                     if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
                         return {"error": "Identity layer not available", "code": "NOT_AVAILABLE"}
