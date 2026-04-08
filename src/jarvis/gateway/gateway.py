@@ -72,6 +72,21 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
+# ── Stalled-turn detection ──────────────────────────────────────
+MAX_STALLED_MODEL_TURNS: int = 20
+
+
+def advance_stalled_count(current: int, tool_calls: int, successful_calls: int) -> int:
+    """Return updated stalled-turn counter.
+
+    Resets to 0 when the model both called *and* succeeded at tools;
+    otherwise increments by 1.
+    """
+    if tool_calls > 0 and successful_calls > 0:
+        return 0
+    return current + 1
+
+
 # Presearch result markers — used to detect empty/failed search results
 _PRESEARCH_NO_RESULTS = "Keine Ergebnisse"
 _PRESEARCH_NO_ENGINE = "Keine Suchengine"
@@ -3515,6 +3530,36 @@ class Gateway:
                             "'Write a Pac-Man main.py' instead of 'Create a game'."
                         )
                     break
+
+            # ── Formal stalled-turn counter (session-scoped) ────────
+            _tool_call_count = len(results)
+            _successful_call_count = sum(1 for r in results if r.success)
+            session.stalled_turn_count = advance_stalled_count(
+                session.stalled_turn_count,
+                _tool_call_count,
+                _successful_call_count,
+            )
+            if session.stalled_turn_count >= MAX_STALLED_MODEL_TURNS:
+                log.warning(
+                    "pge_stalled_turn_limit",
+                    stalled_turns=session.stalled_turn_count,
+                    iterations=session.iteration_count,
+                )
+                if all_results and any(r.success for r in all_results):
+                    await _status_cb("finishing", "Composing response...")
+                    final_response = await self._formulate_response(
+                        msg.text,
+                        all_results,
+                        wm,
+                        stream_callback,
+                    )
+                else:
+                    final_response = (
+                        "The model has been unable to make progress for "
+                        f"{session.stalled_turn_count} consecutive turns. "
+                        "Please simplify your request or try a different approach."
+                    )
+                break
 
             # Check if the plan had MULTIPLE steps (multi-step task)
             _current_plan = all_plans[-1] if all_plans else None

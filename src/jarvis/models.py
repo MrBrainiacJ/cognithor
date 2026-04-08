@@ -345,6 +345,7 @@ class SessionContext(BaseModel):
     max_iterations: int = 10
     iteration_count: int = 0
     incognito: bool = False  # Inkognito-Modus: kein Memory, keine Persistierung
+    stalled_turn_count: int = 0  # Formal stalled-turn counter (reset on successful tool use)
     conversation_id: str = ""  # ConversationTree ID (for chat branching)
     active_leaf_id: str = ""  # Current leaf node in the tree
     # Session-Fork Provenance (Phase 2)
