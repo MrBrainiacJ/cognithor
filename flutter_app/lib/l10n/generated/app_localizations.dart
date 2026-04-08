@@ -4961,6 +4961,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatically save web research to vault'**
   String get vaultAutoSaveDesc;
+
+  /// No description provided for @kanbanBacklog.
+  ///
+  /// In en, this message translates to:
+  /// **'Backlog'**
+  String get kanbanBacklog;
+
+  /// No description provided for @kanbanInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get kanbanInProgress;
+
+  /// No description provided for @kanbanReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get kanbanReview;
+
+  /// No description provided for @kanbanDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get kanbanDone;
+
+  /// No description provided for @kanbanBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get kanbanBlocked;
+
+  /// No description provided for @kanbanArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get kanbanArchive;
+
+  /// No description provided for @kanbanSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanban Settings'**
+  String get kanbanSettings;
+
+  /// No description provided for @taskSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Sources'**
+  String get taskSources;
+
+  /// No description provided for @fromChat.
+  ///
+  /// In en, this message translates to:
+  /// **'From Chat'**
+  String get fromChat;
+
+  /// No description provided for @fromChatDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detect task creation in conversations'**
+  String get fromChatDesc;
+
+  /// No description provided for @fromCron.
+  ///
+  /// In en, this message translates to:
+  /// **'From Cron Jobs'**
+  String get fromCron;
+
+  /// No description provided for @fromCronDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Create tasks from scheduled job results'**
+  String get fromCronDesc;
+
+  /// No description provided for @fromEvolution.
+  ///
+  /// In en, this message translates to:
+  /// **'From Evolution Engine'**
+  String get fromEvolution;
+
+  /// No description provided for @fromEvolutionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks for detected improvement opportunities'**
+  String get fromEvolutionDesc;
+
+  /// No description provided for @fromAgents.
+  ///
+  /// In en, this message translates to:
+  /// **'From Agents'**
+  String get fromAgents;
+
+  /// No description provided for @fromAgentsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow agents to create tasks during execution'**
+  String get fromAgentsDesc;
+
+  /// No description provided for @guards.
+  ///
+  /// In en, this message translates to:
+  /// **'Guards'**
+  String get guards;
+
+  /// No description provided for @maxAutoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Max auto-tasks per session'**
+  String get maxAutoTasks;
+
+  /// No description provided for @maxSubtaskDepth.
+  ///
+  /// In en, this message translates to:
+  /// **'Max subtask depth'**
+  String get maxSubtaskDepth;
+
+  /// No description provided for @defaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults'**
+  String get defaults;
+
+  /// No description provided for @defaultPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Default priority'**
+  String get defaultPriority;
+
+  /// No description provided for @defaultAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Default agent'**
+  String get defaultAgent;
+
+  /// No description provided for @autoArchiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-archive after (days)'**
+  String get autoArchiveDays;
 }
 
 class _AppLocalizationsDelegate

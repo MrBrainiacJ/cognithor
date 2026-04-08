@@ -2524,4 +2524,75 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get vaultAutoSaveDesc =>
       'Web-Recherchen automatisch im Vault speichern';
+
+  @override
+  String get kanbanBacklog => 'Backlog';
+
+  @override
+  String get kanbanInProgress => 'In Bearbeitung';
+
+  @override
+  String get kanbanReview => 'Überprüfung';
+
+  @override
+  String get kanbanDone => 'Erledigt';
+
+  @override
+  String get kanbanBlocked => 'Blockiert';
+
+  @override
+  String get kanbanArchive => 'Archiv';
+
+  @override
+  String get kanbanSettings => 'Kanban-Einstellungen';
+
+  @override
+  String get taskSources => 'Aufgabenquellen';
+
+  @override
+  String get fromChat => 'Aus Chat';
+
+  @override
+  String get fromChatDesc => 'Aufgaben automatisch aus Gesprächen erkennen';
+
+  @override
+  String get fromCron => 'Aus Cron-Jobs';
+
+  @override
+  String get fromCronDesc => 'Aufgaben aus geplanten Job-Ergebnissen erstellen';
+
+  @override
+  String get fromEvolution => 'Aus Evolution-Engine';
+
+  @override
+  String get fromEvolutionDesc =>
+      'Aufgaben für erkannte Verbesserungsmöglichkeiten';
+
+  @override
+  String get fromAgents => 'Von Agenten';
+
+  @override
+  String get fromAgentsDesc =>
+      'Agenten dürfen während der Ausführung Aufgaben erstellen';
+
+  @override
+  String get guards => 'Grenzen';
+
+  @override
+  String get maxAutoTasks => 'Max Auto-Aufgaben pro Sitzung';
+
+  @override
+  String get maxSubtaskDepth => 'Max Unteraufgaben-Tiefe';
+
+  @override
+  String get defaults => 'Standards';
+
+  @override
+  String get defaultPriority => 'Standard-Priorität';
+
+  @override
+  String get defaultAgent => 'Standard-Agent';
+
+  @override
+  String get autoArchiveDays => 'Automatisch archivieren nach (Tagen)';
 }

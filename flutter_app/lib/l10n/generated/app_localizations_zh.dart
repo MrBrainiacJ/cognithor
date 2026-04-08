@@ -2076,7 +2076,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get expandLabel => '展开';
 
   @override
-  String get robotOffice => 'Robot Office';
+  String get robotOffice => '机器人办公室';
 
   @override
   String get copy => '复制';
@@ -2286,10 +2286,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get systemRescan => '重新扫描';
 
   @override
-  String get configPageBudget => 'Budget';
+  String get configPageBudget => '预算';
 
   @override
-  String get configPageEvolution => 'Evolution';
+  String get configPageEvolution => '进化引擎';
 
   @override
   String get kanbanNewTask => '新任务';
@@ -2495,4 +2495,73 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get vaultAutoSaveDesc => '自动将网络研究保存到保险库';
+
+  @override
+  String get kanbanBacklog => '待办';
+
+  @override
+  String get kanbanInProgress => '进行中';
+
+  @override
+  String get kanbanReview => '审核';
+
+  @override
+  String get kanbanDone => '完成';
+
+  @override
+  String get kanbanBlocked => '已阻塞';
+
+  @override
+  String get kanbanArchive => '归档';
+
+  @override
+  String get kanbanSettings => '看板设置';
+
+  @override
+  String get taskSources => '任务来源';
+
+  @override
+  String get fromChat => '来自聊天';
+
+  @override
+  String get fromChatDesc => '自动检测对话中的任务创建';
+
+  @override
+  String get fromCron => '来自定时任务';
+
+  @override
+  String get fromCronDesc => '从定时任务结果创建任务';
+
+  @override
+  String get fromEvolution => '来自进化引擎';
+
+  @override
+  String get fromEvolutionDesc => '检测到的改进机会的任务';
+
+  @override
+  String get fromAgents => '来自代理';
+
+  @override
+  String get fromAgentsDesc => '允许代理在执行期间创建任务';
+
+  @override
+  String get guards => '限制';
+
+  @override
+  String get maxAutoTasks => '每次会话最大自动任务数';
+
+  @override
+  String get maxSubtaskDepth => '最大子任务深度';
+
+  @override
+  String get defaults => '默认值';
+
+  @override
+  String get defaultPriority => '默认优先级';
+
+  @override
+  String get defaultAgent => '默认代理';
+
+  @override
+  String get autoArchiveDays => '自动归档天数';
 }

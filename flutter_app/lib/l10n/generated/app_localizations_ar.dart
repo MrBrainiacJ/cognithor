@@ -2086,7 +2086,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expandLabel => 'توسيع';
 
   @override
-  String get robotOffice => 'Robot Office';
+  String get robotOffice => 'مكتب الروبوت';
 
   @override
   String get copy => 'نسخ';
@@ -2299,10 +2299,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get systemRescan => 'إعادة المسح';
 
   @override
-  String get configPageBudget => 'Budget';
+  String get configPageBudget => 'الميزانية';
 
   @override
-  String get configPageEvolution => 'Evolution';
+  String get configPageEvolution => 'محرك التطور';
 
   @override
   String get kanbanNewTask => 'مهمة جديدة';
@@ -2510,4 +2510,73 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get vaultAutoSaveDesc => 'حفظ أبحاث الويب تلقائيًا في الخزنة';
+
+  @override
+  String get kanbanBacklog => 'قائمة الانتظار';
+
+  @override
+  String get kanbanInProgress => 'قيد التنفيذ';
+
+  @override
+  String get kanbanReview => 'مراجعة';
+
+  @override
+  String get kanbanDone => 'منجز';
+
+  @override
+  String get kanbanBlocked => 'محظور';
+
+  @override
+  String get kanbanArchive => 'أرشيف';
+
+  @override
+  String get kanbanSettings => 'إعدادات كانبان';
+
+  @override
+  String get taskSources => 'مصادر المهام';
+
+  @override
+  String get fromChat => 'من المحادثة';
+
+  @override
+  String get fromChatDesc => 'الكشف التلقائي عن إنشاء المهام في المحادثات';
+
+  @override
+  String get fromCron => 'من المهام المجدولة';
+
+  @override
+  String get fromCronDesc => 'إنشاء مهام من نتائج الوظائف المجدولة';
+
+  @override
+  String get fromEvolution => 'من محرك التطور';
+
+  @override
+  String get fromEvolutionDesc => 'مهام لفرص التحسين المكتشفة';
+
+  @override
+  String get fromAgents => 'من الوكلاء';
+
+  @override
+  String get fromAgentsDesc => 'السماح للوكلاء بإنشاء مهام أثناء التنفيذ';
+
+  @override
+  String get guards => 'حدود';
+
+  @override
+  String get maxAutoTasks => 'الحد الأقصى للمهام التلقائية لكل جلسة';
+
+  @override
+  String get maxSubtaskDepth => 'أقصى عمق للمهام الفرعية';
+
+  @override
+  String get defaults => 'الافتراضيات';
+
+  @override
+  String get defaultPriority => 'الأولوية الافتراضية';
+
+  @override
+  String get defaultAgent => 'الوكيل الافتراضي';
+
+  @override
+  String get autoArchiveDays => 'الأرشفة التلقائية بعد (أيام)';
 }

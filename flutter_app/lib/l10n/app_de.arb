@@ -881,5 +881,30 @@
   "vaultAlwaysEncrypted": "Immer verschluesselt (unabhaengig von diesem Toggle):",
   "vaultAlwaysEncryptedList": "  - 33 SQLite-Datenbanken (SQLCipher / AES-256)\n  - CORE.md (Agent-Persoenlichkeit)\n  - Episodische Erinnerungen (.md)\n  - Gelernte Prozeduren (.md)\n  - Lernplaene (.json)\n  - Credentials (Fernet / PBKDF2)\n  - Schluessel: OS Keyring (nicht auf der Festplatte)",
   "vaultAutoSave": "Auto-Save Recherchen",
-  "vaultAutoSaveDesc": "Web-Recherchen automatisch im Vault speichern"
+  "vaultAutoSaveDesc": "Web-Recherchen automatisch im Vault speichern",
+
+  "kanbanBacklog": "Backlog",
+  "kanbanInProgress": "In Bearbeitung",
+  "kanbanReview": "Überprüfung",
+  "kanbanDone": "Erledigt",
+  "kanbanBlocked": "Blockiert",
+  "kanbanArchive": "Archiv",
+
+  "kanbanSettings": "Kanban-Einstellungen",
+  "taskSources": "Aufgabenquellen",
+  "fromChat": "Aus Chat",
+  "fromChatDesc": "Aufgaben automatisch aus Gesprächen erkennen",
+  "fromCron": "Aus Cron-Jobs",
+  "fromCronDesc": "Aufgaben aus geplanten Job-Ergebnissen erstellen",
+  "fromEvolution": "Aus Evolution-Engine",
+  "fromEvolutionDesc": "Aufgaben für erkannte Verbesserungsmöglichkeiten",
+  "fromAgents": "Von Agenten",
+  "fromAgentsDesc": "Agenten dürfen während der Ausführung Aufgaben erstellen",
+  "guards": "Grenzen",
+  "maxAutoTasks": "Max Auto-Aufgaben pro Sitzung",
+  "maxSubtaskDepth": "Max Unteraufgaben-Tiefe",
+  "defaults": "Standards",
+  "defaultPriority": "Standard-Priorität",
+  "defaultAgent": "Standard-Agent",
+  "autoArchiveDays": "Automatisch archivieren nach (Tagen)"
 }

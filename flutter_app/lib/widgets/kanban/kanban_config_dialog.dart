@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 
 class KanbanConfigDialog extends StatefulWidget {
   const KanbanConfigDialog({super.key, this.availableAgents = const []});
@@ -27,6 +28,7 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Dialog(
@@ -34,7 +36,7 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Kanban Settings'),
+            title: Text(l.kanbanSettings),
             leading: IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => Navigator.pop(context),
@@ -42,7 +44,7 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, _buildConfig()),
-                child: const Text('Save'),
+                child: Text(l.save),
               ),
             ],
           ),
@@ -50,29 +52,29 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
             padding: const EdgeInsets.all(16),
             children: [
               // Task Sources
-              Text('Task Sources', style: theme.textTheme.titleMedium),
+              Text(l.taskSources, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               SwitchListTile(
-                title: const Text('From Chat'),
-                subtitle: const Text('Auto-detect task creation in conversations'),
+                title: Text(l.fromChat),
+                subtitle: Text(l.fromChatDesc),
                 value: _autoChat,
                 onChanged: (v) => setState(() => _autoChat = v),
               ),
               SwitchListTile(
-                title: const Text('From Cron Jobs'),
-                subtitle: const Text('Create tasks from scheduled job results'),
+                title: Text(l.fromCron),
+                subtitle: Text(l.fromCronDesc),
                 value: _autoCron,
                 onChanged: (v) => setState(() => _autoCron = v),
               ),
               SwitchListTile(
-                title: const Text('From Evolution Engine'),
-                subtitle: const Text('Tasks for detected improvement opportunities'),
+                title: Text(l.fromEvolution),
+                subtitle: Text(l.fromEvolutionDesc),
                 value: _autoEvolution,
                 onChanged: (v) => setState(() => _autoEvolution = v),
               ),
               SwitchListTile(
-                title: const Text('From Agents'),
-                subtitle: const Text('Allow agents to create tasks during execution'),
+                title: Text(l.fromAgents),
+                subtitle: Text(l.fromAgentsDesc),
                 value: _autoAgents,
                 onChanged: (v) => setState(() => _autoAgents = v),
               ),
@@ -80,10 +82,10 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
               const Divider(height: 32),
 
               // Guards
-              Text('Guards', style: theme.textTheme.titleMedium),
+              Text(l.guards, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               ListTile(
-                title: const Text('Max auto-tasks per session'),
+                title: Text(l.maxAutoTasks),
                 trailing: SizedBox(
                   width: 60,
                   child: DropdownButton<int>(
@@ -97,7 +99,7 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
                 ),
               ),
               ListTile(
-                title: const Text('Max subtask depth'),
+                title: Text(l.maxSubtaskDepth),
                 trailing: SizedBox(
                   width: 60,
                   child: DropdownButton<int>(
@@ -114,10 +116,10 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
               const Divider(height: 32),
 
               // Defaults
-              Text('Defaults', style: theme.textTheme.titleMedium),
+              Text(l.defaults, style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               ListTile(
-                title: const Text('Default priority'),
+                title: Text(l.defaultPriority),
                 trailing: DropdownButton<String>(
                   value: _defaultPriority,
                   items: _priorities.map((p) =>
@@ -127,7 +129,7 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
                 ),
               ),
               ListTile(
-                title: const Text('Default agent'),
+                title: Text(l.defaultAgent),
                 trailing: DropdownButton<String>(
                   value: _defaultAgent,
                   items: _agents.map((a) =>
@@ -137,7 +139,7 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
                 ),
               ),
               ListTile(
-                title: const Text('Auto-archive after (days)'),
+                title: Text(l.autoArchiveDays),
                 trailing: SizedBox(
                   width: 60,
                   child: DropdownButton<int>(

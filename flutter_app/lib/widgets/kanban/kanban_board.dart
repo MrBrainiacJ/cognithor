@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_ui/providers/kanban_provider.dart';
 import 'package:jarvis_ui/widgets/kanban/kanban_column.dart';
@@ -8,14 +9,6 @@ class KanbanBoard extends StatelessWidget {
 
   static const _columnOrder = ['todo', 'in_progress', 'verifying', 'done', 'blocked'];
 
-  static const _columnLabels = {
-    'todo': 'To Do',
-    'in_progress': 'In Progress',
-    'verifying': 'Verifying',
-    'done': 'Done',
-    'blocked': 'Blocked',
-  };
-
   static const _columnColors = {
     'todo': Colors.grey,
     'in_progress': Colors.blueAccent,
@@ -24,8 +17,19 @@ class KanbanBoard extends StatelessWidget {
     'blocked': Colors.red,
   };
 
+  Map<String, String> _columnLabels(AppLocalizations l) => {
+    'todo': l.toDo,
+    'in_progress': l.kanbanInProgress,
+    'verifying': l.verifying,
+    'done': l.kanbanDone,
+    'blocked': l.kanbanBlocked,
+  };
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final labels = _columnLabels(l);
+
     return Consumer<KanbanProvider>(
       builder: (context, kanban, _) {
         if (kanban.loading && kanban.tasks.isEmpty) {
@@ -44,7 +48,7 @@ class KanbanBoard extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 12),
                 child: KanbanColumn(
                   status: status,
-                  label: _columnLabels[status] ?? status,
+                  label: labels[status] ?? status,
                   color: _columnColors[status] ?? Colors.grey,
                   tasks: grouped[status] ?? [],
                 ),

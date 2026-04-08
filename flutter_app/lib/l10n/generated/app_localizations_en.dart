@@ -2517,4 +2517,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vaultAutoSaveDesc => 'Automatically save web research to vault';
+
+  @override
+  String get kanbanBacklog => 'Backlog';
+
+  @override
+  String get kanbanInProgress => 'In Progress';
+
+  @override
+  String get kanbanReview => 'Review';
+
+  @override
+  String get kanbanDone => 'Done';
+
+  @override
+  String get kanbanBlocked => 'Blocked';
+
+  @override
+  String get kanbanArchive => 'Archive';
+
+  @override
+  String get kanbanSettings => 'Kanban Settings';
+
+  @override
+  String get taskSources => 'Task Sources';
+
+  @override
+  String get fromChat => 'From Chat';
+
+  @override
+  String get fromChatDesc => 'Auto-detect task creation in conversations';
+
+  @override
+  String get fromCron => 'From Cron Jobs';
+
+  @override
+  String get fromCronDesc => 'Create tasks from scheduled job results';
+
+  @override
+  String get fromEvolution => 'From Evolution Engine';
+
+  @override
+  String get fromEvolutionDesc =>
+      'Tasks for detected improvement opportunities';
+
+  @override
+  String get fromAgents => 'From Agents';
+
+  @override
+  String get fromAgentsDesc => 'Allow agents to create tasks during execution';
+
+  @override
+  String get guards => 'Guards';
+
+  @override
+  String get maxAutoTasks => 'Max auto-tasks per session';
+
+  @override
+  String get maxSubtaskDepth => 'Max subtask depth';
+
+  @override
+  String get defaults => 'Defaults';
+
+  @override
+  String get defaultPriority => 'Default priority';
+
+  @override
+  String get defaultAgent => 'Default agent';
+
+  @override
+  String get autoArchiveDays => 'Auto-archive after (days)';
 }
