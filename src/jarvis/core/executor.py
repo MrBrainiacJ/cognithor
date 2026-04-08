@@ -159,6 +159,14 @@ class Executor:
         self._status_callback: Any = None
         # Tactical Memory (wired by gateway after init)
         self._tactical_memory: Any = None
+        # Tool-Loop-Detection (Phase 3)
+        self._loop_detector: Any = None
+        try:
+            from jarvis.core.loop_detector import ToolLoopDetector
+
+            self._loop_detector = ToolLoopDetector()
+        except Exception:
+            pass
         # Tool-Hook-System (Pre/Post Tool-Use)
         self._tool_hook_runner: Any = None
         try:
@@ -533,6 +541,27 @@ class Executor:
             except Exception:
                 pass  # Hook-Fehler blockieren nicht
 
+        # Tool-Loop-Detection: pruefen ob dieser Call eine Schleife waere
+        if self._loop_detector:
+            try:
+                _ld = self._loop_detector.detect(tool_name, params)
+                if _ld.stuck:
+                    log.warning(
+                        "tool_loop_detected",
+                        detector=_ld.detector,
+                        count=_ld.count,
+                        tool=tool_name,
+                    )
+                    return ToolResult(
+                        tool_name=tool_name,
+                        content=_ld.message,
+                        is_error=True,
+                        duration_ms=0,
+                        error_type="ToolLoop",
+                    )
+            except Exception:
+                pass
+
         for attempt in range(1, self._max_retries + 1):
             start = time.monotonic()
 
@@ -570,6 +599,12 @@ class Executor:
                     duration_ms=duration_ms,
                     truncated=truncated,
                 )
+                # Record for loop detection
+                if self._loop_detector:
+                    with contextlib.suppress(Exception):
+                        self._loop_detector.record(
+                            tool_name, params, content, is_error
+                        )
                 # Post-Tool-Use Hooks
                 if self._tool_hook_runner:
                     with contextlib.suppress(Exception):
