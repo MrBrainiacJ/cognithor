@@ -87,15 +87,16 @@ class UnifiedLLMClient:
                     backend=config.llm_backend_type,
                 )
             except Exception as exc:
-                log.warning(
+                log.error(
                     "llm_backend_creation_failed",
                     backend=config.llm_backend_type,
                     error=str(exc),
-                    fallback="ollama",
                 )
-                backend = None
-                # Backend-Erstellung fehlgeschlagen → Ollama als Fallback
-                ollama_client = OllamaClient(config)
+                raise OllamaError(
+                    f"LLM-Backend '{config.llm_backend_type}' konnte nicht "
+                    f"initialisiert werden: {exc}. "
+                    f"Bitte API-Key und Konfiguration pruefen."
+                ) from exc
         else:
             # Ollama-Modus: OllamaClient erstellen
             ollama_client = OllamaClient(config)
@@ -204,7 +205,12 @@ class UnifiedLLMClient:
                 if not hasattr(self, "_model_router_cache"):
                     from jarvis.core.model_router import ModelRouter
 
-                    self._model_router_cache = ModelRouter(self._config)
+                    if self._ollama is not None:
+                        self._model_router_cache = ModelRouter(self._config, self._ollama)
+                    else:
+                        self._model_router_cache = None
+                if self._model_router_cache is None:
+                    raise ImportError("No model router available")
                 _model_cfg = self._model_router_cache.get_model_config(model)
                 _ctx_window = _model_cfg.get("context_window", 0)
                 if _ctx_window > 0:
@@ -239,7 +245,12 @@ class UnifiedLLMClient:
         if effective_backend is None:
             # Direkt an OllamaClient weiterleiten
             if self._ollama is None:
-                raise OllamaError("Kein LLM-Backend verfügbar (weder API noch Ollama)")
+                _cfg_backend = getattr(self._config, "llm_backend_type", "ollama")
+                raise OllamaError(
+                    f"Kein LLM-Backend verfuegbar. "
+                    f"Backend-Typ: '{_cfg_backend}', Modell: '{model}'. "
+                    f"Bitte Backend-Konfiguration und API-Key pruefen."
+                )
             return await self._ollama.chat(
                 model=model,
                 messages=messages,
