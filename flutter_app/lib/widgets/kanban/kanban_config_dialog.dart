@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class KanbanConfigDialog extends StatefulWidget {
-  const KanbanConfigDialog({super.key});
+  const KanbanConfigDialog({super.key, this.availableAgents = const []});
+
+  final List<String> availableAgents;
 
   @override
   State<KanbanConfigDialog> createState() => _KanbanConfigDialogState();
@@ -19,7 +21,9 @@ class _KanbanConfigDialogState extends State<KanbanConfigDialog> {
   String _defaultAgent = 'jarvis';
 
   static const _priorities = ['low', 'medium', 'high', 'urgent'];
-  static const _agents = ['jarvis', 'researcher', 'coder', 'office', 'operator', 'frontier'];
+  List<String> get _agents => widget.availableAgents.isNotEmpty
+      ? widget.availableAgents
+      : ['jarvis'];
 
   @override
   Widget build(BuildContext context) {

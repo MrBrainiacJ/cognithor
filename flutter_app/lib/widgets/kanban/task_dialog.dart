@@ -8,6 +8,7 @@ class TaskDialog extends StatefulWidget {
   final String? initialPriority;
   final String? initialAgent;
   final List<String>? initialLabels;
+  final List<String> availableAgents;
 
   const TaskDialog({
     super.key,
@@ -16,6 +17,7 @@ class TaskDialog extends StatefulWidget {
     this.initialPriority,
     this.initialAgent,
     this.initialLabels,
+    this.availableAgents = const [],
   });
 
   @override
@@ -29,7 +31,7 @@ class _TaskDialogState extends State<TaskDialog> {
   String _priority = 'medium';
   String _agent = '';
 
-  static const _agents = ['', 'jarvis', 'researcher', 'coder', 'office', 'operator', 'frontier'];
+  List<String> get _agents => ['', ...widget.availableAgents];
   static const _priorities = ['low', 'medium', 'high', 'urgent'];
 
   @override

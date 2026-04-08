@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
+import 'package:jarvis_ui/providers/admin_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/providers/kanban_provider.dart';
 import 'package:jarvis_ui/providers/chat_provider.dart';
@@ -28,13 +29,25 @@ class _KanbanScreenState extends State<KanbanScreen> {
         kanban.setApiClient(conn.api);
       }
       kanban.fetchTasks();
+      // Load agents for the agent picker dropdowns
+      final admin = context.read<AdminProvider>();
+      admin.setApi(conn.api);
+      admin.loadAgents();
     });
+  }
+
+  List<String> get _agentNames {
+    final admin = context.read<AdminProvider>();
+    return admin.agents
+        .map((a) => (a as Map<String, dynamic>)['name']?.toString() ?? '')
+        .where((n) => n.isNotEmpty)
+        .toList();
   }
 
   Future<void> _createTask() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (_) => const TaskDialog(),
+      builder: (_) => TaskDialog(availableAgents: _agentNames),
     );
     if (result != null && mounted) {
       await context.read<KanbanProvider>().createTask(
@@ -113,7 +126,7 @@ class _KanbanScreenState extends State<KanbanScreen> {
                         onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (_) => const KanbanConfigDialog(),
+                            builder: (_) => KanbanConfigDialog(availableAgents: _agentNames),
                           );
                         },
                       ),
