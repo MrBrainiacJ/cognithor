@@ -175,11 +175,15 @@ class Executor:
                 ToolHookRunner,
                 audit_logging_hook,
                 secret_redacting_hook,
+                security_extension_hook,
             )
 
             self._tool_hook_runner = ToolHookRunner()
             self._tool_hook_runner.register(
                 _HE.PRE_TOOL_USE, "secret_redacting", secret_redacting_hook
+            )
+            self._tool_hook_runner.register(
+                _HE.PRE_TOOL_USE, "security_extension", security_extension_hook
             )
             self._tool_hook_runner.register(_HE.POST_TOOL_USE, "audit_logging", audit_logging_hook)
         except Exception:
@@ -602,9 +606,7 @@ class Executor:
                 # Record for loop detection
                 if self._loop_detector:
                     with contextlib.suppress(Exception):
-                        self._loop_detector.record(
-                            tool_name, params, content, is_error
-                        )
+                        self._loop_detector.record(tool_name, params, content, is_error)
                 # Post-Tool-Use Hooks
                 if self._tool_hook_runner:
                     with contextlib.suppress(Exception):

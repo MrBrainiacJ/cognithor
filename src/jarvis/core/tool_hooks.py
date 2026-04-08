@@ -172,3 +172,100 @@ def audit_logging_hook(
         output_len=len(tool_output) if tool_output else 0,
         success=True,
     )
+
+
+# ============================================================================
+# Security Extension Hook
+# ============================================================================
+
+# Patterns for dangerous file content (written via write_file / file_write)
+DANGEROUS_FILE_CONTENT_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\brm\s+-rf\s+/(\s|$)", re.I), "Destructive root delete in file content"),
+    (re.compile(r":\(\)\s*\{.*\};\s*:", re.I), "Fork-bomb in file content"),
+    (
+        re.compile(r"\bcurl\b[^\n|]*\|\s*(sh|bash|zsh)\b", re.I),
+        "Remote shell execution in file content",
+    ),
+]
+
+# Patterns for dangerous bash/shell commands (exfiltration)
+DANGEROUS_BASH_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(
+            r"\b(cat|sed|awk)\b[^|]*\.(env|pem|key|p12)\b[^|]*(\|\s*(curl|wget)|>\s*/dev/tcp)",
+            re.I,
+        ),
+        "Exfiltration of sensitive files",
+    ),
+    (
+        re.compile(
+            r"\b(printenv|env)\b[^|]*(\|\s*(curl|wget)|>\s*/dev/tcp)",
+            re.I,
+        ),
+        "Exfiltration of environment variables",
+    ),
+]
+
+# Binary office formats that must not be written as plain text
+BINARY_OFFICE_RE = re.compile(r"\.(docx|xlsx|pptx|pdf)$", re.I)
+
+# Tool names that execute shell commands
+_SHELL_TOOLS = frozenset({"exec_command", "shell_exec", "shell"})
+
+# Tool names that write file content
+_FILE_WRITE_TOOLS = frozenset({"write_file", "file_write", "create_file"})
+
+
+def security_extension_hook(tool_name: str, tool_input: dict[str, Any]) -> dict[str, Any] | None:
+    """PreToolUse: Blocks exfiltration, dangerous file content, and binary office writes.
+
+    Returns ``{"deny": True, "reason": "..."}`` when the call must be blocked,
+    or ``None`` when the call is safe to proceed.
+    """
+
+    # ── 1. Shell exfiltration detection ─────────────────────────────
+    if tool_name in _SHELL_TOOLS:
+        command = tool_input.get("command", "")
+        if isinstance(command, str):
+            for pattern, reason in DANGEROUS_BASH_PATTERNS:
+                if pattern.search(command):
+                    log.warning(
+                        "security_hook_blocked",
+                        tool=tool_name,
+                        reason=reason,
+                    )
+                    return {"deny": True, "reason": reason}
+
+    # ── 2. File-write checks ────────────────────────────────────────
+    if tool_name in _FILE_WRITE_TOOLS:
+        file_path = tool_input.get("path", "") or tool_input.get("file_path", "")
+        content = tool_input.get("content", "")
+
+        # 2a. Binary office file blocking
+        if isinstance(file_path, str) and BINARY_OFFICE_RE.search(file_path):
+            log.warning(
+                "security_hook_blocked",
+                tool=tool_name,
+                reason="Binary office format — use document_export tool instead",
+                path=file_path,
+            )
+            return {
+                "deny": True,
+                "reason": (
+                    f"Cannot write plain text to binary office file '{file_path}'. "
+                    "Use the document_export tool for .docx/.xlsx/.pptx/.pdf files."
+                ),
+            }
+
+        # 2b. Dangerous content patterns
+        if isinstance(content, str):
+            for pattern, reason in DANGEROUS_FILE_CONTENT_PATTERNS:
+                if pattern.search(content):
+                    log.warning(
+                        "security_hook_blocked",
+                        tool=tool_name,
+                        reason=reason,
+                    )
+                    return {"deny": True, "reason": reason}
+
+    return None

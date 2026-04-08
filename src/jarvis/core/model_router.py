@@ -17,6 +17,7 @@ Bible reference: §8 (Model Router)
 from __future__ import annotations
 
 import contextvars
+import dataclasses
 import json
 import time
 from typing import TYPE_CHECKING, Any
@@ -32,6 +33,45 @@ if TYPE_CHECKING:
     from jarvis.config import JarvisConfig
 
 log = get_logger(__name__)
+
+
+@dataclasses.dataclass(frozen=True)
+class ConciergeProfile:
+    """Urgency-based model selection profile.
+
+    Each profile maps a human-friendly urgency label to a concrete
+    Ollama model and a short description.
+    """
+
+    name: str
+    model: str
+    description: str
+
+
+# Default concierge profiles using local Ollama models.
+# The ``asap`` profile uses the largest model for maximum quality,
+# ``balanced`` trades off speed vs quality, and ``no_hurry`` picks the
+# smallest model for fast / low-resource responses.
+CONCIERGE_PROFILES: dict[str, ConciergeProfile] = {
+    "asap": ConciergeProfile(
+        name="asap",
+        model="qwen3:32b",
+        description="Maximum quality, largest model (planner-class)",
+    ),
+    "balanced": ConciergeProfile(
+        name="balanced",
+        model="qwen3:8b",
+        description="Good balance of speed and quality (executor-class)",
+    ),
+    "no_hurry": ConciergeProfile(
+        name="no_hurry",
+        model="qwen3:1.7b",
+        description="Fastest response, smallest model",
+    ),
+}
+
+# Per-task urgency override using ContextVar for concurrency safety.
+_urgency_var: contextvars.ContextVar[str | None] = contextvars.ContextVar("_urgency", default=None)
 
 # Per-task coding override using ContextVar for concurrency safety.
 # Each async task (asyncio.Task / contextvars.copy_context()) gets its own
@@ -400,6 +440,39 @@ class ModelRouter:
         # Keep instance attribute in sync for legacy callers.
         self._coding_override = None
 
+    def set_urgency(self, urgency: str) -> None:
+        """Set the concierge urgency level for model selection.
+
+        Valid values: ``"asap"``, ``"balanced"``, ``"no_hurry"``.
+        When set, :meth:`select_model` will prefer the profile's model
+        (except for embeddings and when a coding override is active).
+
+        Uses a ContextVar for concurrency safety, just like the coding
+        override.
+        """
+        if urgency not in CONCIERGE_PROFILES:
+            raise ValueError(
+                f"Unknown urgency '{urgency}'. Valid options: {sorted(CONCIERGE_PROFILES)}"
+            )
+        _urgency_var.set(urgency)
+        log.info("concierge_urgency_set", urgency=urgency)
+
+    def get_urgency(self) -> str | None:
+        """Return the current urgency level, or ``None`` if not set."""
+        return _urgency_var.get()
+
+    def clear_urgency(self) -> None:
+        """Remove the urgency override."""
+        current = _urgency_var.get()
+        if current:
+            log.info("concierge_urgency_cleared", urgency=current)
+        _urgency_var.set(None)
+
+    @staticmethod
+    def get_concierge_profile(urgency: str) -> ConciergeProfile | None:
+        """Look up a concierge profile by urgency name."""
+        return CONCIERGE_PROFILES.get(urgency)
+
     async def initialize(self) -> None:
         """Check which models are available.
 
@@ -443,6 +516,27 @@ class ModelRouter:
         _effective_override = _coding_override_var.get()
         if _effective_override and task_type != "embedding":
             return _effective_override
+
+        # Concierge routing: urgency-based model selection.
+        # When an urgency level is set, use the profile's model for all
+        # non-embedding tasks. Coding override takes precedence (above).
+        _effective_urgency = _urgency_var.get()
+        if _effective_urgency and task_type != "embedding":
+            profile = CONCIERGE_PROFILES.get(_effective_urgency)
+            if profile:
+                model_name = profile.model
+                # Still apply availability fallback
+                if self._available_models and model_name not in self._available_models:
+                    fallback = self._find_fallback(model_name)
+                    if fallback:
+                        log.warning(
+                            "concierge_model_fallback",
+                            urgency=_effective_urgency,
+                            requested=model_name,
+                            using=fallback,
+                        )
+                        return fallback
+                return model_name
 
         # Pruefe zunaechst, ob ein Override fuer den gegebenen task_type existiert.
         # Der Schluessel in model_overrides.skill_models kann den task_type
