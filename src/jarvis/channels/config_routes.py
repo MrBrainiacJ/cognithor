@@ -1045,6 +1045,56 @@ def _register_config_routes(
 
         return {"status": "ok", "revision_id": revision_id, "message": "Rollback applied"}
 
+    # -- Device Pairing (Mobile) ------------------------------------------------
+
+    @app.get("/api/v1/devices", dependencies=deps)
+    async def list_paired_devices() -> dict[str, Any]:
+        """List all paired devices."""
+        try:
+            from jarvis.security.device_pairing import DevicePairingManager
+
+            _secret = getattr(gateway, "_internal_api_token", "") if gateway else ""
+            mgr = DevicePairingManager(master_secret=_secret or "fallback")
+            return {"devices": mgr.list_devices()}
+        except Exception as exc:
+            return {"devices": [], "error": str(exc)}
+
+    @app.post("/api/v1/devices/pair", dependencies=deps)
+    async def pair_device(request: Request) -> dict[str, Any]:
+        """Create a new pairing token for a mobile device."""
+        body = await request.json()
+        device_name = body.get("name", "Unknown Device")
+        try:
+            from jarvis.security.device_pairing import DevicePairingManager
+
+            _secret = getattr(gateway, "_internal_api_token", "") if gateway else ""
+            mgr = DevicePairingManager(master_secret=_secret or "fallback")
+            pt = mgr.create_pairing_token(device_name)
+            _host = request.client.host if request.client else "127.0.0.1"
+            qr = mgr.qr_payload(pt, _host, getattr(request, "url", None) and request.url.port or 8741)
+            return {
+                "device_id": pt.device_id,
+                "token": pt.token,
+                "expires_at": pt.expires_at,
+                "qr_payload": qr,
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @app.delete("/api/v1/devices/{device_id}", dependencies=deps)
+    async def revoke_device(device_id: str) -> dict[str, Any]:
+        """Revoke a paired device."""
+        try:
+            from jarvis.security.device_pairing import DevicePairingManager
+
+            _secret = getattr(gateway, "_internal_api_token", "") if gateway else ""
+            mgr = DevicePairingManager(master_secret=_secret or "fallback")
+            if mgr.revoke_device(device_id):
+                return {"status": "revoked", "device_id": device_id}
+            return {"error": "Device not found", "status": 404}
+        except Exception as exc:
+            return {"error": str(exc)}
+
     # -- Config Section CRUD (AFTER presets to avoid {section} capturing "presets") --
 
     @app.get("/api/v1/config/{section}", dependencies=deps)
