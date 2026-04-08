@@ -1103,13 +1103,9 @@ def quick_start(repo_root: str, *, skip_models: bool = False) -> bool:
                 except Exception as e:
                     result.add_warn(f"Ollama installation failed: {e}")
             else:
-                result.add_warn(
-                    "Ollama not found. Please install: https://ollama.com/download"
-                )
+                result.add_warn("Ollama not found. Please install: https://ollama.com/download")
         else:
-            result.add_warn(
-                "Ollama not found. Please install: https://ollama.com/download"
-            )
+            result.add_warn("Ollama not found. Please install: https://ollama.com/download")
 
     # ── 2. Modelle pruefen ─────────────────────────────────────────────
     if skip_models:
@@ -1254,13 +1250,43 @@ def print_summary(result: BootResult, elapsed: float, first: bool = True) -> Non
 
 
 # ── Versions-Upgrade-Check ─────────────────────────────────────────────────
+def _parse_version(v: str) -> tuple[int, ...]:
+    """Parse version string to comparable tuple, e.g. '0.80.1' -> (0, 80, 1)."""
+    try:
+        return tuple(int(x) for x in v.split("."))
+    except (ValueError, AttributeError):
+        return (0, 0, 0)
+
+
 def needs_reinit(marker: dict) -> bool:
-    """Prueft ob Re-Initialisierung noetig ist (Version geaendert)."""
+    """Prueft ob Re-Initialisierung noetig ist (Version geaendert).
+
+    Downgrades werden erkannt und abgelehnt — der Installer darf
+    keine aeltere Version ueber eine neuere installieren.
+    """
     old_ver = marker.get("version", "0.0.0")
-    if old_ver != BOOTSTRAP_VERSION:
-        info(f"Version upgrade detected: {old_ver} -> {BOOTSTRAP_VERSION}")
-        return True
-    return False
+    if old_ver == BOOTSTRAP_VERSION:
+        return False
+
+    old_v = _parse_version(old_ver)
+    new_v = _parse_version(BOOTSTRAP_VERSION)
+
+    if new_v < old_v:
+        warn(
+            f"Downgrade detected: installed v{old_ver}, but this bootstrap is v{BOOTSTRAP_VERSION}."
+        )
+        warn(
+            "This is an older version than what is currently installed. "
+            "Re-initialization skipped to protect your data."
+        )
+        warn(
+            "If you really want to downgrade, delete "
+            "~/.jarvis/.cognithor_initialized and run again."
+        )
+        return False
+
+    info(f"Version upgrade detected: {old_ver} -> {BOOTSTRAP_VERSION}")
+    return True
 
 
 # ── Main ───────────────────────────────────────────────────────────────────

@@ -260,6 +260,7 @@ class _BackendSwitchDialogState extends State<_BackendSwitchDialog> {
       ('ollama', l.ollamaLocal, Icons.computer, JarvisTheme.matrix),
       ('openai', l.openaiApi, Icons.auto_awesome, JarvisTheme.sectionChat),
       ('anthropic', l.anthropicApi, Icons.key, const Color(0xFFAB68FF)),
+      ('openrouter', 'OpenRouter', Icons.cloud_queue, const Color(0xFF6366F1)),
     ];
 
     return AlertDialog(

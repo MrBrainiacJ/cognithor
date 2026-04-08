@@ -5793,6 +5793,13 @@ def _register_backend_routes(
                 "models": [],
             }
 
+            has_openrouter = bool(getattr(cfg, "openrouter_api_key", ""))
+            results["openrouter"] = {
+                "installed": True,
+                "authenticated": has_openrouter,
+                "models": [],
+            }
+
         # Current backend
         current = getattr(cfg, "llm_backend_type", "ollama") if cfg else "ollama"
 
@@ -5804,7 +5811,7 @@ def _register_backend_routes(
         body = await request.json()
         new_backend = body.get("backend", "")
 
-        valid = ["ollama", "openai", "anthropic", "claude-code"]
+        valid = ["ollama", "openai", "anthropic", "claude-code", "openrouter"]
         if new_backend not in valid:
             raise HTTPException(400, f"Invalid backend: {new_backend}. Valid: {valid}")
 

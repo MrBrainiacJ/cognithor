@@ -5,7 +5,7 @@
 ; Uses embedded Python (no system Python required).
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.75.0"
+  #define MyAppVersion "0.80.1"
 #endif
 
 #ifndef BuildDir
@@ -120,6 +120,92 @@ Type: files; Name: "{app}\agents.yaml.default"
 Type: files; Name: "{app}\config.yaml"
 
 [Code]
+// Compare version strings: returns -1, 0, or 1
+function CompareVersions(V1, V2: string): Integer;
+var
+  P1, P2: Integer;
+  N1, N2: Integer;
+  S1, S2: string;
+begin
+  S1 := V1;
+  S2 := V2;
+  Result := 0;
+  while (Length(S1) > 0) or (Length(S2) > 0) do
+  begin
+    // Extract next numeric part from S1
+    P1 := Pos('.', S1);
+    if P1 > 0 then begin
+      N1 := StrToIntDef(Copy(S1, 1, P1 - 1), 0);
+      S1 := Copy(S1, P1 + 1, Length(S1));
+    end else begin
+      N1 := StrToIntDef(S1, 0);
+      S1 := '';
+    end;
+    // Extract next numeric part from S2
+    P2 := Pos('.', S2);
+    if P2 > 0 then begin
+      N2 := StrToIntDef(Copy(S2, 1, P2 - 1), 0);
+      S2 := Copy(S2, P2 + 1, Length(S2));
+    end else begin
+      N2 := StrToIntDef(S2, 0);
+      S2 := '';
+    end;
+    if N1 < N2 then begin Result := -1; exit; end;
+    if N1 > N2 then begin Result := 1; exit; end;
+  end;
+end;
+
+// Block downgrades: check marker file for installed version
+function InitializeSetup(): Boolean;
+var
+  MarkerPath: string;
+  MarkerContent: string;
+  InstalledVer: string;
+  P1, P2: Integer;
+begin
+  Result := True;
+  MarkerPath := ExpandConstant('{userprofile}\.jarvis\.cognithor_initialized');
+  if FileExists(MarkerPath) then
+  begin
+    if LoadStringFromFile(MarkerPath, MarkerContent) then
+    begin
+      // Extract version from JSON: {"version": "X.Y.Z", ...}
+      P1 := Pos('"version"', MarkerContent);
+      if P1 > 0 then
+      begin
+        P2 := Pos(':', Copy(MarkerContent, P1, Length(MarkerContent)));
+        if P2 > 0 then
+        begin
+          InstalledVer := Copy(MarkerContent, P1 + P2, Length(MarkerContent));
+          // Strip to just the version string
+          P1 := Pos('"', InstalledVer);
+          if P1 > 0 then
+          begin
+            InstalledVer := Copy(InstalledVer, P1 + 1, Length(InstalledVer));
+            P2 := Pos('"', InstalledVer);
+            if P2 > 0 then
+              InstalledVer := Copy(InstalledVer, 1, P2 - 1);
+          end;
+
+          if CompareVersions('{#MyAppVersion}', InstalledVer) < 0 then
+          begin
+            if MsgBox(
+              'Downgrade detected!' + #13#10 + #13#10 +
+              'Currently installed: v' + InstalledVer + #13#10 +
+              'This installer: v{#MyAppVersion}' + #13#10 + #13#10 +
+              'Installing an older version may cause data loss.' + #13#10 +
+              'Do you want to continue anyway?',
+              mbConfirmation, MB_YESNO) = IDNO then
+            begin
+              Result := False;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 // Check if directory is already in PATH
 function NeedsAddPath(Param: string): boolean;
 var

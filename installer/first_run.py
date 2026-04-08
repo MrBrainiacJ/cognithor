@@ -331,11 +331,15 @@ def _write_yaml(data: dict, path: Path) -> None:
 
 def mark_initialized() -> None:
     """Create marker file so first-run doesn't run again."""
+    try:
+        from jarvis import __version__ as ver
+    except ImportError:
+        ver = "0.80.1"
     marker = JARVIS_HOME / ".cognithor_initialized"
     marker.write_text(
         json.dumps(
             {
-                "version": "0.75.0",
+                "version": ver,
                 "first_run": True,
             }
         )
