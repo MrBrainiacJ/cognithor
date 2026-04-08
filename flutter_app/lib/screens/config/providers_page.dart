@@ -54,12 +54,6 @@ class ProvidersPage extends StatelessWidget {
               onChangeBackend: () => _showBackendDialog(context, cfg),
             ),
             const SizedBox(height: 16),
-            // --- Prominent backend selector ---
-            _BackendSelector(
-              currentBackend: currentBackend,
-              onChanged: (v) => cfg.set('llm_backend_type', v),
-            ),
-            const SizedBox(height: 16),
             // --- Provider cards (active first) ---
             ...sorted.map(
               (p) => _ProviderCard(
@@ -255,21 +249,20 @@ class _BackendSwitchDialogState extends State<_BackendSwitchDialog> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
 
-    final options = <(String, String, IconData, Color)>[
-      ('claude-code', l.claudeSubscription, Icons.psychology, JarvisTheme.sectionChat),
-      ('ollama', l.ollamaLocal, Icons.computer, JarvisTheme.matrix),
-      ('openai', l.openaiApi, Icons.auto_awesome, JarvisTheme.sectionChat),
-      ('anthropic', l.anthropicApi, Icons.key, const Color(0xFFAB68FF)),
-      ('openrouter', 'OpenRouter', Icons.cloud_queue, const Color(0xFF6366F1)),
-    ];
+    // Build options from the full provider list
+    final options = ProvidersPage._providers
+        .map((p) => (p.$1, p.$2, p.$3, JarvisTheme.accent))
+        .toList();
 
     return AlertDialog(
       title: Text(l.chooseBackend),
       content: SizedBox(
         width: 400,
+        height: 480,
         child: _loading
             ? const Center(child: CircularProgressIndicator())
-            : Column(
+            : SingleChildScrollView(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: options.map((o) {
                   final (key, label, icon, tint) = o;
@@ -313,7 +306,7 @@ class _BackendSwitchDialogState extends State<_BackendSwitchDialog> {
                     ),
                   );
                 }).toList(),
-              ),
+              )),
       ),
       actions: [
         TextButton(

@@ -5811,7 +5811,25 @@ def _register_backend_routes(
         body = await request.json()
         new_backend = body.get("backend", "")
 
-        valid = ["ollama", "openai", "anthropic", "claude-code", "openrouter"]
+        valid = [
+            "ollama",
+            "openai",
+            "anthropic",
+            "claude-code",
+            "gemini",
+            "groq",
+            "deepseek",
+            "mistral",
+            "together",
+            "openrouter",
+            "xai",
+            "cerebras",
+            "github",
+            "bedrock",
+            "huggingface",
+            "moonshot",
+            "lmstudio",
+        ]
         if new_backend not in valid:
             raise HTTPException(400, f"Invalid backend: {new_backend}. Valid: {valid}")
 
