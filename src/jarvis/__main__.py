@@ -1764,7 +1764,6 @@ def main() -> None:
                     _repo_root / "flutter_app" / "build" / "web",
                     _install_root / "flutter_app" / "web",
                     _jarvis_home / "flutter_web",
-                    _repo_root / "ui" / "dist",
                 ]
                 _ui_dist = None
                 for _candidate in _ui_candidates:

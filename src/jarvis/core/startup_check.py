@@ -242,15 +242,7 @@ class StartupChecker:
             log.warning("startup_check_dirs_error", error=str(exc))
             report.errors.append(f"Directory check failed: {exc}")
 
-        # 5. Node modules (optional, only if UI directory exists)
-        try:
-            repo_root = self._find_repo_root()
-            if repo_root:
-                node_report = self.check_node_modules(repo_root)
-                report.merge(node_report)
-        except Exception as exc:
-            log.warning("startup_check_node_error", error=str(exc))
-            report.warnings.append(f"Node check skipped: {exc}")
+        # 5. Node modules — removed (legacy React UI replaced by Flutter)
 
         # Log summary (debug — clean startup output)
         log.debug(
@@ -553,57 +545,6 @@ class StartupChecker:
                 except Exception as exc:
                     report.errors.append(f"Cannot create {target}: {exc}")
                     log.warning("startup_dir_create_failed", path=str(target), error=str(exc))
-
-        return report
-
-    # ------------------------------------------------------------------
-    # 5. Node modules
-    # ------------------------------------------------------------------
-
-    def check_node_modules(self, repo_root: str | Path) -> StartupReport:
-        """Check Node.js dependencies if a ``ui/`` directory exists.
-
-        Only runs ``npm install`` if ``ui/package.json`` exists but
-        ``ui/node_modules`` does not.
-        """
-        report = StartupReport()
-
-        ui_dir = Path(repo_root) / "ui"
-        if not (ui_dir / "package.json").is_file():
-            report.checks_passed.append("No UI (no package.json)")
-            return report
-
-        node_modules = ui_dir / "node_modules"
-        if node_modules.is_dir():
-            report.checks_passed.append("node_modules present")
-            return report
-
-        # npm install
-        npm_cmd = "npm.cmd" if platform.system() == "Windows" else "npm"
-        if shutil.which(npm_cmd) is None and shutil.which("npm") is None:
-            report.warnings.append("npm not found -- cannot install UI dependencies")
-            return report
-
-        log.info("startup_npm_install", ui_dir=str(ui_dir))
-        try:
-            result = subprocess.run(
-                [npm_cmd, "install"],
-                capture_output=True,
-                text=True,
-                timeout=300,
-                cwd=str(ui_dir),
-            )
-            if result.returncode == 0:
-                report.fixes_applied.append("Ran npm install in ui/")
-                log.info("startup_npm_install_done")
-            else:
-                stderr = result.stderr.strip()[:200] if result.stderr else ""
-                report.warnings.append(f"npm install failed: {stderr}")
-                log.warning("startup_npm_install_failed", error=stderr)
-        except subprocess.TimeoutExpired:
-            report.warnings.append("npm install timed out (>300s)")
-        except Exception as exc:
-            report.warnings.append(f"npm install error: {exc}")
 
         return report
 
