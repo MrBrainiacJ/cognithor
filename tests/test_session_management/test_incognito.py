@@ -56,6 +56,28 @@ def test_non_incognito_default(tmp_path):
     assert loaded.incognito is False
 
 
+def test_incognito_survives_update(tmp_path):
+    """Incognito flag is preserved when session is updated (ON CONFLICT)."""
+    store = SessionStore(tmp_path / "sessions.db")
+    s = SessionContext(
+        session_id="incog00000000003",
+        user_id="web_user",
+        channel="webui",
+        agent_name="jarvis",
+        incognito=True,
+    )
+    store.save_session(s)
+
+    # Simulate an update (same session_id, new message count)
+    s.message_count = 5
+    store.save_session(s)
+
+    loaded = store.load_session("webui", "web_user")
+    assert loaded is not None
+    assert loaded.incognito is True
+    assert loaded.message_count == 5
+
+
 def test_incognito_field_in_model():
     """SessionContext has incognito field with default False."""
     s = SessionContext(session_id="test0000000000001")

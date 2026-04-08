@@ -45,7 +45,10 @@ CREATE TABLE IF NOT EXISTS sessions (
     last_activity REAL NOT NULL,
     message_count INTEGER DEFAULT 0,
     active        INTEGER DEFAULT 1,
-    max_iterations INTEGER DEFAULT 10
+    max_iterations INTEGER DEFAULT 10,
+    title         TEXT DEFAULT '',
+    folder        TEXT DEFAULT '',
+    incognito     INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS chat_history (
@@ -147,7 +150,8 @@ class SessionStore:
             ON CONFLICT(session_id) DO UPDATE SET
                 last_activity=excluded.last_activity,
                 message_count=excluded.message_count,
-                active=excluded.active
+                active=excluded.active,
+                incognito=excluded.incognito
             """,
             (
                 session.session_id,
