@@ -146,8 +146,7 @@ def register_osint_tools(mcp_client: Any, config: Any = None) -> OsintTools:
         "investigate_project",
         tools.investigate_project,
         description=(
-            "OSINT investigation of a project:"
-            " checks GitHub repos, web mentions, funding claims"
+            "OSINT investigation of a project: checks GitHub repos, web mentions, funding claims"
         ),
         input_schema={
             "type": "object",

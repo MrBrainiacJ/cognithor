@@ -1245,8 +1245,8 @@ class Gateway:
                         and self._audit_logger
                         and hasattr(self._audit_logger, "cleanup_old_entries")
                     ):
-                            removed = self._audit_logger.cleanup_old_entries()
-                            log.info("audit_retention_cleanup", removed=removed)
+                        removed = self._audit_logger.cleanup_old_entries()
+                        log.info("audit_retention_cleanup", removed=removed)
                     if hasattr(self, "_bg_manager") and self._bg_manager:
                         removed_logs = self._bg_manager.cleanup_old_logs()
                         log.info("background_log_cleanup", removed=removed_logs)
@@ -2019,10 +2019,14 @@ class Gateway:
         # Handle consent responses (works for all channels including WebUI)
         # Skip for system messages — they don't need consent
         if (
-            not _is_system
-            and msg.text
-            and msg.text.strip().lower() in ("akzeptieren", "accept", "ja", "yes")
-        ) and hasattr(self, "_consent_manager") and self._consent_manager:
+            (
+                not _is_system
+                and msg.text
+                and msg.text.strip().lower() in ("akzeptieren", "accept", "ja", "yes")
+            )
+            and hasattr(self, "_consent_manager")
+            and self._consent_manager
+        ):
             _uid = msg.user_id or msg.session_id or "unknown"
             _ch = msg.channel or "unknown"
             if self._consent_manager.requires_consent(_uid, _ch):

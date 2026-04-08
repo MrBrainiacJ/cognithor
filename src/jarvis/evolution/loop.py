@@ -1333,7 +1333,7 @@ class EvolutionLoop:
                 and self._llm_fn
                 and hasattr(self._skill_gen, "llm_fn")
             ):
-                    self._skill_gen.llm_fn = self._llm_fn
+                self._skill_gen.llm_fn = self._llm_fn
             result = await self._skill_gen.process_gap(skill_gap)
             if result and hasattr(result, "name"):
                 return result.name

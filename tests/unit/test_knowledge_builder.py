@@ -540,8 +540,7 @@ class TestParseLLMJson:
 _LLM_SUMMARY_JSON = json.dumps(
     {
         "summary": (
-            "Das VVG regelt die Rechtsbeziehungen"
-            " zwischen Versicherungsnehmer und Versicherer."
+            "Das VVG regelt die Rechtsbeziehungen zwischen Versicherungsnehmer und Versicherer."
         ),
         "memory_type": "semantic",
         "tags": ["versicherung", "vvg", "recht"],

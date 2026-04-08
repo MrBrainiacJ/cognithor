@@ -236,12 +236,13 @@ class KeyboardSolver:
                     continue
                 nx, ny = bx + dx, by + dy
                 if (
-                    0 <= nx < bw and 0 <= ny < bh
+                    0 <= nx < bw
+                    and 0 <= ny < bh
                     and (nx, ny) not in closed
                     and block_grid[ny, nx] in walkable
                 ):
-                        dist = abs(nx - goal_block[0]) + abs(ny - goal_block[1])
-                        heapq.heappush(open_set, (len(path) + 1 + dist, (nx, ny), [*path, action]))
+                    dist = abs(nx - goal_block[0]) + abs(ny - goal_block[1])
+                    heapq.heappush(open_set, (len(path) + 1 + dist, (nx, ny), [*path, action]))
 
         return None
 

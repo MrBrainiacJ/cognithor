@@ -15,8 +15,11 @@ from jarvis.security.encrypted_db import encrypted_connect
 try:
     from jarvis.security.encrypted_db import compatible_row_factory
 except ImportError:
+
     def compatible_row_factory():
         return sqlite3.Row
+
+
 from jarvis.utils.logging import get_logger
 
 if TYPE_CHECKING:

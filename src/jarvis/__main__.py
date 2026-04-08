@@ -622,7 +622,6 @@ def main() -> None:
                 import time as _time
                 from collections import defaultdict as _defaultdict
 
-
                 _rate_limit = int(os.environ.get("JARVIS_API_RATE_LIMIT", "60"))
                 _rate_window = 60.0  # seconds
                 _rate_exempt = {"/api/v1/health", "/api/v1/bootstrap"}
@@ -669,8 +668,7 @@ def main() -> None:
                                 {
                                     "type": "http.response.body",
                                     "body": (
-                                        b'{"error":"Too many requests",'
-                                        b'"retry_after_seconds":60}'
+                                        b'{"error":"Too many requests","retry_after_seconds":60}'
                                     ),
                                 }
                             )
@@ -1127,17 +1125,17 @@ def main() -> None:
                                         break
                                     # On thumbs down: send follow-up question
                                     if _fb_rating == -1 and not await _ws_safe_send(
-                                            websocket,
-                                            {
-                                                "type": "feedback_followup",
-                                                "feedback_id": _fb_id,
-                                                "question": (
-                                                    "Was hat an meiner Antwort nicht gepasst? "
-                                                    "Dein Feedback hilft mir, besser zu werden."
-                                                ),
-                                            },
-                                        ):
-                                            break
+                                        websocket,
+                                        {
+                                            "type": "feedback_followup",
+                                            "feedback_id": _fb_id,
+                                            "question": (
+                                                "Was hat an meiner Antwort nicht gepasst? "
+                                                "Dein Feedback hilft mir, besser zu werden."
+                                            ),
+                                        },
+                                    ):
+                                        break
                                 continue
 
                             if msg_type == "feedback_comment":
