@@ -23,7 +23,6 @@ import 'package:jarvis_ui/screens/config/cron_page.dart';
 import 'package:jarvis_ui/screens/config/database_page.dart';
 import 'package:jarvis_ui/screens/config/logging_page.dart';
 import 'package:jarvis_ui/screens/config/prompts_page.dart';
-import 'package:jarvis_ui/screens/config/agents_page.dart';
 import 'package:jarvis_ui/screens/config/bindings_page.dart';
 import 'package:jarvis_ui/screens/config/system_page.dart';
 import 'package:jarvis_ui/screens/config/system_profile_page.dart';
@@ -51,7 +50,7 @@ final _categories = [
     'channels',
   ]),
   _Category((l) => l.catKnowledge, Icons.storage, [
-    'memory', 'agents', 'bindings', 'web', 'vault',
+    'memory', 'bindings', 'web', 'vault',
   ]),
   _Category((l) => l.catSecurity, Icons.shield, [
     'security', 'tools', 'audit', 'database',
@@ -103,8 +102,6 @@ final _pageRegistry = <String, _SubPageDef>{
       Icons.article, (l) => l.configPageLogging, () => const LoggingPage()),
   'prompts': _SubPageDef(Icons.edit_note, (l) => l.configPagePrompts,
       () => const PromptsPage()),
-  'agents': _SubPageDef(Icons.smart_toy, (l) => l.configPageAgents,
-      () => const AgentsConfigPage()),
   'bindings': _SubPageDef(
       Icons.link, (l) => l.configPageBindings, () => const BindingsConfigPage()),
   'system_profile': _SubPageDef(Icons.memory,
