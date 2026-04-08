@@ -526,16 +526,31 @@ for m in data.get('models', []):
         fi
     done
 
-    # Summary of missing models
+    # Summary of missing models -- ask user
     if [[ ${#missing_required[@]} -gt 0 ]]; then
         echo ""
-        warn "Missing required models! Please download manually:"
+        warn "Missing ${#missing_required[@]} required model(s): ${missing_required[*]}"
         echo ""
-        for model in "${missing_required[@]}"; do
-            echo "    ollama pull $model"
-        done
-        echo ""
-        info "Installation will continue -- models can be downloaded later."
+        read -rp "  Download missing models now? [y/N] " _pull_answer
+        if [[ "$_pull_answer" =~ ^[yY]$ ]]; then
+            for model in "${missing_required[@]}"; do
+                info "Downloading $model..."
+                if ollama pull "$model"; then
+                    success "$model installed"
+                else
+                    warn "Failed to download $model"
+                    echo "    Manually: ollama pull $model"
+                fi
+            done
+        else
+            info "Download models later with:"
+            echo ""
+            for model in "${missing_required[@]}"; do
+                echo "    ollama pull $model"
+            done
+            echo ""
+            info "Installation will continue -- models can be downloaded later."
+        fi
         echo ""
     fi
 }

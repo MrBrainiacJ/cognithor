@@ -197,7 +197,11 @@ function Main {
 
     if (-not $ollamaPath) {
         Write-Warn "Ollama not found."
-        Write-Info "Attempting installation via winget ..."
+        $answer = Read-Host "  Install Ollama now via winget? [Y/n]"
+        if ($answer -eq "n" -or $answer -eq "no") {
+            Write-Host "  Please install manually: https://ollama.com/download" -ForegroundColor Yellow
+        } else {
+        Write-Info "Installing Ollama via winget ..."
         try {
             & winget install --id Ollama.Ollama -e --accept-source-agreements --accept-package-agreements --silent 2>&1 | Out-Null
             if ($LASTEXITCODE -eq 0) {
@@ -213,6 +217,7 @@ function Main {
             Write-Warn "winget not available."
             Write-Host "  Please install Ollama manually: https://ollama.com/download" -ForegroundColor Yellow
         }
+        } # end else (user said yes)
     }
 
     if ($ollamaPath) {
@@ -241,12 +246,22 @@ function Main {
     Write-Step "7/10" "Ollama Models"
     if ($ollamaReady -and $ollamaPath) {
         if ($Lite) {
-            Ensure-Model "qwen3:8b" $ollamaPath
-            Ensure-Model "nomic-embed-text" $ollamaPath
+            Write-Info "Required models: qwen3:8b, nomic-embed-text"
         } else {
-            Ensure-Model "qwen3:8b" $ollamaPath
-            Ensure-Model "qwen3:32b" $ollamaPath
-            Ensure-Model "nomic-embed-text" $ollamaPath
+            Write-Info "Required models: qwen3:8b, qwen3:32b, nomic-embed-text"
+        }
+        $pullAnswer = Read-Host "  Download missing models now? [Y/n]"
+        if ($pullAnswer -ne "n" -and $pullAnswer -ne "no") {
+            if ($Lite) {
+                Ensure-Model "qwen3:8b" $ollamaPath
+                Ensure-Model "nomic-embed-text" $ollamaPath
+            } else {
+                Ensure-Model "qwen3:8b" $ollamaPath
+                Ensure-Model "qwen3:32b" $ollamaPath
+                Ensure-Model "nomic-embed-text" $ollamaPath
+            }
+        } else {
+            Write-Info "Model download skipped by user."
         }
     } else {
         Write-Warn "Model download skipped (Ollama not ready)"

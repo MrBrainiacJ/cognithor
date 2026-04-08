@@ -374,14 +374,33 @@ def ensure_models(tier: str, result: BootResult, ollama_path: str) -> list[str]:
     installed_lower = [m.lower() for m in installed]
 
     pulled: list[str] = []
+    missing: list[str] = []
     for model in needed:
         # Pruefe ob bereits installiert (mit/ohne :latest Tag)
         model_base = model.lower().split(":")[0]
         if any(model.lower() == m or m.startswith(model_base + ":") for m in installed_lower):
             ok(f"Model available: {model}")
             pulled.append(model)
-            continue
+        else:
+            missing.append(model)
 
+    if not missing:
+        return pulled
+
+    # Ask user before downloading models
+    print()
+    info(f"Missing {len(missing)} model(s): {', '.join(missing)}")
+    try:
+        answer = input("  Download missing models now? [Y/n]: ").strip().lower()
+    except EOFError:
+        answer = "n"
+
+    if answer not in ("", "j", "y", "ja", "yes"):
+        info("Model download skipped by user.")
+        _print_model_pull_commands(tier)
+        return pulled
+
+    for model in missing:
         if pull_model(model, ollama_path):
             ok(f"Model installed: {model}")
             pulled.append(model)
@@ -1042,43 +1061,54 @@ def quick_start(repo_root: str, *, skip_models: bool = False) -> bool:
     elif ollama_is_running():
         result.add_pass("Ollama running")
     else:
-        # Auto-fix: Ollama nicht gefunden -- versuche Installation via winget
-        info("Ollama not found -- attempting installation via winget...")
-        try:
-            winget_proc = subprocess.run(
-                [
-                    "winget",
-                    "install",
-                    "--id",
-                    "Ollama.Ollama",
-                    "-e",
-                    "--accept-source-agreements",
-                    "--accept-package-agreements",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=600,
-            )
-            if winget_proc.returncode == 0:
-                result.add_pass("Ollama installed via winget")
-                ollama_path = find_ollama()
-                if ollama_path and not ollama_is_running():
-                    info("Starting Ollama...")
-                    if start_ollama(ollama_path):
-                        result.add_pass("Ollama started")
+        # Ollama not found -- ask user before installing
+        winget_available = shutil.which("winget") is not None
+        if winget_available:
+            try:
+                answer = input("  Ollama not found. Install now via winget? [Y/n]: ").strip().lower()
+            except EOFError:
+                answer = "n"
+            if answer in ("", "j", "y", "ja", "yes"):
+                info("Installing Ollama via winget...")
+                try:
+                    winget_proc = subprocess.run(
+                        [
+                            "winget",
+                            "install",
+                            "--id",
+                            "Ollama.Ollama",
+                            "-e",
+                            "--accept-source-agreements",
+                            "--accept-package-agreements",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=600,
+                    )
+                    if winget_proc.returncode == 0:
+                        result.add_pass("Ollama installed via winget")
+                        ollama_path = find_ollama()
+                        if ollama_path and not ollama_is_running():
+                            info("Starting Ollama...")
+                            if start_ollama(ollama_path):
+                                result.add_pass("Ollama started")
+                            else:
+                                result.add_warn("Ollama installed but could not be started")
                     else:
-                        result.add_warn("Ollama installed but could not be started")
+                        result.add_warn(
+                            "winget installation failed. "
+                            "Please install manually: https://ollama.com/download"
+                        )
+                except Exception as e:
+                    result.add_warn(f"Ollama installation failed: {e}")
             else:
                 result.add_warn(
-                    "Ollama could not be installed via winget. "
-                    "Please install manually: https://ollama.com/download"
+                    "Ollama not found. Please install: https://ollama.com/download"
                 )
-        except FileNotFoundError:
+        else:
             result.add_warn(
-                "winget not available. Please install Ollama manually: https://ollama.com/download"
+                "Ollama not found. Please install: https://ollama.com/download"
             )
-        except Exception as e:
-            result.add_warn(f"Ollama installation failed: {e}")
 
     # ── 2. Modelle pruefen ─────────────────────────────────────────────
     if skip_models:

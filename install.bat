@@ -393,9 +393,12 @@ if exist "%ProgramFiles%\Ollama\ollama.exe" (
     goto :ollama_found
 )
 
-:: Ollama nicht gefunden -> automatisch installieren
-echo   Ollama not found. Attempting automatic installation...
+:: Ollama nicht gefunden -> User fragen
+echo   Ollama not found.
 echo.
+set /p "INSTALL_OLLAMA=  Install Ollama now via winget? [Y/n]: "
+if /i "!INSTALL_OLLAMA!"=="n" goto :skip_ollama_install
+if /i "!INSTALL_OLLAMA!"=="no" goto :skip_ollama_install
 
 :: Versuch 1: winget
 where winget >nul 2>&1
@@ -425,10 +428,11 @@ if not errorlevel 1 (
     )
 )
 
+:skip_ollama_install
 :: Immer noch kein Ollama
 if "%OLLAMA_CMD%"=="" (
     echo.
-    echo   [WARNING] Could not install Ollama automatically.
+    echo   [WARNING] Ollama not installed.
     echo.
     echo   Please install manually: https://ollama.com/download
     echo   After installation, run this script again.
@@ -468,6 +472,17 @@ echo.
 echo   ----------------------------------------------------------
 echo     6/10  Ollama Models
 echo   ----------------------------------------------------------
+
+echo.
+if "%LITE%"=="1" (
+    echo   Required models: qwen3:8b, nomic-embed-text
+) else (
+    echo   Required models: qwen3:8b, qwen3:32b, nomic-embed-text
+)
+echo.
+set /p "PULL_MODELS=  Download missing models now? [Y/n]: "
+if /i "!PULL_MODELS!"=="n" goto :skip_models
+if /i "!PULL_MODELS!"=="no" goto :skip_models
 
 if "%LITE%"=="1" (
     call :ensure_model qwen3:8b
