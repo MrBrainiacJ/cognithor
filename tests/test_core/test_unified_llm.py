@@ -313,8 +313,10 @@ class TestFactory:
         assert client._backend is None
 
     @pytest.mark.asyncio
-    async def test_create_fallback_on_error(self) -> None:
-        """Wenn Backend-Erstellung fehlschlägt, Fallback auf Ollama."""
+    async def test_create_raises_on_backend_error(self) -> None:
+        """Wenn Backend-Erstellung fehlschlägt, wird ein Fehler geworfen (kein stilles Fallback)."""
+        from jarvis.core.model_router import OllamaError
+
         config = MagicMock()
         config.llm_backend_type = "openai"
         config.ollama = MagicMock()
@@ -323,10 +325,8 @@ class TestFactory:
         config.ollama.keep_alive = "5m"
 
         with patch("jarvis.core.llm_backend.create_backend", side_effect=ValueError("Bad key")):
-            client = UnifiedLLMClient.create(config)
-
-        assert client.backend_type == "ollama"
-        assert client._backend is None
+            with pytest.raises(OllamaError, match="konnte nicht initialisiert werden"):
+                UnifiedLLMClient.create(config)
 
 
 # ============================================================================

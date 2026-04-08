@@ -334,12 +334,11 @@ class TestUnifiedLLMFactory:
                 client = UnifiedLLMClient.create(config)
                 assert isinstance(client, UnifiedLLMClient)
 
-    def test_create_backend_failure_fallback_to_ollama(self, config: JarvisConfig) -> None:
-        """If backend creation fails, fallback to Ollama."""
+    def test_create_backend_failure_raises(self, config: JarvisConfig) -> None:
+        """If backend creation fails, raise OllamaError (no silent fallback)."""
+        from jarvis.core.model_router import OllamaError
+
         config.llm_backend_type = "openai"
-        with patch("jarvis.core.unified_llm.OllamaClient") as MockOllama:
-            MockOllama.return_value = MagicMock()
-            with patch("jarvis.core.llm_backend.create_backend", side_effect=Exception("fail")):
-                client = UnifiedLLMClient.create(config)
-                assert isinstance(client, UnifiedLLMClient)
-                assert client.backend_type == "ollama"
+        with patch("jarvis.core.llm_backend.create_backend", side_effect=Exception("fail")):
+            with pytest.raises(OllamaError, match="konnte nicht initialisiert werden"):
+                UnifiedLLMClient.create(config)
