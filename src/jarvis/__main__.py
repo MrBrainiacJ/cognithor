@@ -676,16 +676,19 @@ def main() -> None:
                         "uptime_seconds": _time.monotonic() - _api_start,
                     }
 
-                # ── Bootstrap: one-time token delivery for the UI ─────
-                # SECURITY: Only accessible from loopback addresses.
-                # Rejects requests from non-local IPs to prevent
-                # unauthenticated token disclosure (GHSA-cognithor-001).
+                # ── Bootstrap: DEPRECATED ─────────────────────────────
+                # Token is now embedded in index.html via <meta> tag.
+                # This endpoint remains as a localhost-only fallback for
+                # non-browser clients (CLI tools, mobile apps).
+                # SECURITY (GHSA-cognithor-001): loopback-only + one-time.
                 from starlette.requests import Request as _BootstrapRequest
 
                 _LOOPBACK_PREFIXES = ("127.", "::1", "localhost")
+                _bootstrap_consumed = False
 
                 @api_app.get("/api/v1/bootstrap")
                 async def _cc_bootstrap(request: _BootstrapRequest) -> dict[str, str]:
+                    nonlocal _bootstrap_consumed
                     client_ip = request.client.host if request.client else ""
                     if not any(client_ip.startswith(p) for p in _LOOPBACK_PREFIXES):
                         from fastapi.responses import JSONResponse as _JR
@@ -698,6 +701,14 @@ def main() -> None:
                             status_code=403,
                             content={"detail": "Bootstrap endpoint is localhost-only"},
                         )
+                    if _bootstrap_consumed:
+                        from fastapi.responses import JSONResponse as _JR
+
+                        return _JR(  # type: ignore[return-value]
+                            status_code=403,
+                            content={"detail": "Bootstrap token already consumed"},
+                        )
+                    _bootstrap_consumed = True
                     return {"token": _internal_api_token}
 
                 # ── Token verification dependency ─────────────────────
@@ -1731,9 +1742,33 @@ def main() -> None:
                         break
 
                 if _ui_dist is not None:
+                    from fastapi.responses import HTMLResponse as _HTMLResp
                     from fastapi.staticfiles import StaticFiles
 
-                    api_app.mount("/", StaticFiles(directory=str(_ui_dist), html=True), name="ui")
+                    # Inject auth token into index.html as <meta> tag so the
+                    # Flutter app can read it from the DOM instead of calling
+                    # /api/v1/bootstrap. This eliminates the unauthenticated
+                    # token-disclosure endpoint entirely (GHSA-cognithor-001).
+                    _index_html_raw = (_ui_dist / "index.html").read_text(
+                        encoding="utf-8"
+                    )
+                    _token_meta = (
+                        f'<meta name="cognithor-token" '
+                        f'content="{_internal_api_token}">'
+                    )
+                    _index_html_injected = _index_html_raw.replace(
+                        "<head>", f"<head>\n  {_token_meta}", 1
+                    )
+
+                    @api_app.get("/", response_class=_HTMLResp)
+                    @api_app.get("/index.html", response_class=_HTMLResp)
+                    async def _serve_index() -> _HTMLResp:
+                        return _HTMLResp(content=_index_html_injected)
+
+                    # All other static assets (JS, CSS, images) served normally
+                    api_app.mount(
+                        "/", StaticFiles(directory=str(_ui_dist), html=False), name="ui"
+                    )
                     log.info("prebuilt_ui_mounted", path=str(_ui_dist))
 
                 # TLS-Durchreichung

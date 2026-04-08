@@ -1,11 +1,18 @@
 /// Jarvis REST API client.
 ///
-/// Handles bootstrap token fetch, Bearer auth, and automatic
-/// 401 retry (re-fetch token, retry once).
+/// Reads the auth token from the HTML <meta name="cognithor-token"> tag
+/// (injected by the backend at page-serve time). Falls back to
+/// /api/v1/bootstrap for non-web clients (mobile, CLI).
 library;
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+
+// Conditional import: web DOM only available on web platform.
+import 'package:jarvis_ui/services/api_client_token_stub.dart'
+    if (dart.library.js_interop) 'package:jarvis_ui/services/api_client_token_web.dart'
+    as token_reader;
 
 class ApiClient {
   ApiClient({required this.baseUrl});
@@ -21,11 +28,25 @@ class ApiClient {
   // Token lifecycle
   // ---------------------------------------------------------------------------
 
-  /// Fetch the per-session token from /api/v1/bootstrap.
+  /// Obtain the session token.
+  ///
+  /// On web: reads from <meta name="cognithor-token"> in the DOM (no HTTP
+  /// request needed — token was injected by the backend into index.html).
+  /// On mobile/desktop: falls back to /api/v1/bootstrap (localhost-only).
   Future<String?> bootstrap() async {
+    if (_token != null) return _token;
     if (_fetching) return _token;
     _fetching = true;
     try {
+      // 1. Try DOM meta tag (web only, zero network)
+      if (kIsWeb) {
+        final metaToken = token_reader.readTokenFromMeta();
+        if (metaToken != null && metaToken.isNotEmpty) {
+          _token = metaToken;
+          return _token;
+        }
+      }
+      // 2. Fallback: API call (mobile, desktop, or meta tag missing)
       final res = await http
           .get(Uri.parse('$baseUrl/api/v1/bootstrap'))
           .timeout(const Duration(seconds: 10));
