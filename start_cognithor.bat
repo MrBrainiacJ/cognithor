@@ -16,16 +16,22 @@ color 0F
 call :start_services
 
 call :main
+set "MAIN_EXIT=%ERRORLEVEL%"
 
 :: Stop companion services on exit
 call :stop_services
 
 echo.
 echo   ============================================================
+if not "%MAIN_EXIT%"=="0" (
+    echo   Cognithor exited with errors. See output above.
+) else (
+    echo   Cognithor stopped normally.
+)
 echo   Press any key to close this window...
 echo   ============================================================
 pause >nul
-exit /b 0
+exit /b %MAIN_EXIT%
 
 :: ============================================================
 :main
@@ -35,13 +41,10 @@ exit /b 0
 chcp 65001 >nul 2>&1
 
 echo.
-echo    ____  ___   ____ _   _ ___ _____ _   _  ___  ____
-echo   / ___^|/ _ \ / ___^| \ ^| ^|_ _^|_   _^| ^| ^| ^|/ _ \^|  _ \
-echo  ^| ^|   ^| ^| ^| ^| ^|  _^|  \^| ^|^| ^|  ^| ^| ^| ^|_^| ^| ^| ^| ^| ^|_^) ^|
-echo  ^| ^|___^| ^|_^| ^| ^|_^| ^| ^|\  ^|^| ^|  ^| ^| ^|  _  ^| ^|_^| ^|  _ ^<
-echo   \____^|\___/ \____^|_^| \_^|___^| ^|_^| ^|_^| ^|_^|\___/^|_^| \_\
+echo     COGNITHOR - Agent OS
+echo     ============================
 echo.
-echo   v0.71.0 - Computer Use + ARC Redesign + Skill Lifecycle
+echo   v0.80.0 - Phase 3 + Evolution Phase 5
 echo.
 
 set "REPO_ROOT=%~dp0"
@@ -52,6 +55,9 @@ if "%REPO_ROOT:~-1%"=="\" set "REPO_ROOT=%REPO_ROOT:~0,-1%"
 ::  0. llama.cpp Server (falls konfiguriert + nicht schon laufend)
 :: ============================================================
 call :start_llama_server
+if errorlevel 1 (
+    echo   [WARN] llama-server start had issues, continuing anyway...
+)
 
 :: ============================================================
 ::  1. Python im PATH?
@@ -64,7 +70,7 @@ if "!PYTHON_CMD!"=="" (
     echo   https://www.python.org/downloads/
     echo.
     echo   IMPORTANT: Check "Add Python to PATH" during installation!
-    goto :eof
+    exit /b 1
 )
 
 :: ============================================================
@@ -78,7 +84,7 @@ if errorlevel 1 (
     echo.
     echo   Please upgrade Python:
     echo   https://www.python.org/downloads/
-    goto :eof
+    exit /b 1
 )
 
 :: ============================================================
@@ -102,7 +108,7 @@ if errorlevel 1 (
     echo.
     echo   [ERROR] Bootstrap failed!
     echo   Please check the output above for details.
-    goto :eof
+    exit /b 1
 )
 
 :: ============================================================
@@ -125,7 +131,7 @@ if errorlevel 1 (
     echo   [OK] Identity module available.
 )
 
-:: ── Desktop automation (Computer Use) ──
+:: -- Desktop automation (Computer Use) --
 %PYTHON_CMD% -c "import pyautogui, mss" >nul 2>&1
 if errorlevel 1 (
     echo   [INFO] Installing Desktop automation deps (Computer Use^)...
@@ -135,7 +141,7 @@ if errorlevel 1 (
     echo   [OK] Desktop automation available.
 )
 
-:: ── ARC-AGI-3 Benchmark Agent (optional) ──
+:: -- ARC-AGI-3 Benchmark Agent (optional) --
 %PYTHON_CMD% -c "import arc_agi" >nul 2>&1
 if errorlevel 1 (
     echo   [INFO] ARC-AGI-3 SDK not installed. Install with: pip install -e ".[arc]"
@@ -158,7 +164,7 @@ if exist "%REPO_ROOT%\flutter_app\build\web\index.html" (
     %PYTHON_CMD% -m jarvis --no-cli --api-host 0.0.0.0
     echo.
     echo   Cognithor stopped.
-    goto :eof
+    exit /b 0
 )
 
 :: --- Modus 2: Flutter SDK vorhanden -> Build + Start ---
@@ -191,7 +197,7 @@ if "!HAS_FLUTTER!"=="1" (
             %PYTHON_CMD% -m jarvis --no-cli --api-host 0.0.0.0
             echo.
             echo   Cognithor stopped.
-            goto :eof
+            exit /b 0
         ) else (
             echo   [WARNING] Flutter build failed.
         )
@@ -222,7 +228,7 @@ cd /d "%REPO_ROOT%"
 %PYTHON_CMD% -m jarvis --api-host 0.0.0.0
 echo.
 echo   Cognithor stopped.
-goto :eof
+exit /b 0
 
 :: ============================================================
 ::  SUBROUTINEN
