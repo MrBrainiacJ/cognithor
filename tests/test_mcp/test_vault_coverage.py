@@ -18,7 +18,8 @@ from jarvis.mcp.vault import (
     VaultTools,
     register_vault_tools,
 )
-from jarvis.mcp.vault_backend import now_iso as _now_iso, parse_tags as _parse_tags
+from jarvis.mcp.vault_backend import now_iso as _now_iso
+from jarvis.mcp.vault_backend import parse_tags as _parse_tags
 
 # ============================================================================
 # Fixtures
