@@ -413,12 +413,16 @@ def main() -> None:
             log.debug("created_path", path=path)
 
     # 5. System-Check -- startup banner (intentional CLI output)
-    try:
-        from jarvis.utils.network import get_primary_bind_host as _gpbh
+    _explicit_host = args.api_host or os.environ.get("JARVIS_API_HOST") or None
+    if _explicit_host:
+        _api_host = _explicit_host
+    else:
+        try:
+            from jarvis.core.network_endpoints import NetworkEndpointManager
 
-        _api_host = _gpbh(args.api_host or os.environ.get("JARVIS_API_HOST") or None)
-    except ImportError:
-        _api_host = args.api_host or os.environ.get("JARVIS_API_HOST", "127.0.0.1")
+            _api_host = NetworkEndpointManager().get_bind_host()
+        except Exception:
+            _api_host = "127.0.0.1"
     _print_banner(config, api_host=_api_host, api_port=args.api_port, lite=args.lite)
 
     # Phase 0 Checkpoint: Setup OK (logged at debug level — banner already shows this)
@@ -566,16 +570,16 @@ def main() -> None:
                 from jarvis.channels.config_routes import create_config_routes
                 from jarvis.config_manager import ConfigManager
 
-                try:
-                    from jarvis.utils.network import get_primary_bind_host as _gpbh2
+                _explicit_host2 = args.api_host or os.environ.get("JARVIS_API_HOST") or None
+                if _explicit_host2:
+                    api_host = _explicit_host2
+                else:
+                    try:
+                        from jarvis.core.network_endpoints import NetworkEndpointManager
 
-                    api_host = _gpbh2(
-                        args.api_host or os.environ.get("JARVIS_API_HOST") or None
-                    )
-                except ImportError:
-                    api_host = args.api_host or os.environ.get(
-                        "JARVIS_API_HOST", "127.0.0.1"
-                    )
+                        api_host = NetworkEndpointManager().get_bind_host()
+                    except Exception:
+                        api_host = "127.0.0.1"
 
                 # ── Internal session token ────────────────────────────────
                 # Always generate a per-session token.  An explicit env var
@@ -698,7 +702,19 @@ def main() -> None:
                 from starlette.requests import Request as _BootstrapRequest
 
                 try:
-                    from jarvis.utils.network import is_trusted_ip as _is_trusted
+                    from jarvis.utils.network import is_trusted_ip as _is_trusted_base
+
+                    # Also trust any IP that the user explicitly enabled
+                    try:
+                        from jarvis.core.network_endpoints import NetworkEndpointManager
+
+                        _active_ips = set(NetworkEndpointManager().get_active_ips())
+                    except Exception:
+                        _active_ips = set()
+
+                    def _is_trusted(ip: str) -> bool:
+                        return _is_trusted_base(ip) or ip in _active_ips
+
                 except ImportError:
 
                     def _is_trusted(ip: str) -> bool:
@@ -1705,7 +1721,9 @@ def main() -> None:
                     gateway._identity_layer.freeze()
                     return {"status": "frozen"}
 
-                @api_app.post("/api/v1/identity/unfreeze", dependencies=[_Depends(_verify_cc_token)])
+                @api_app.post(
+                    "/api/v1/identity/unfreeze", dependencies=[_Depends(_verify_cc_token)]
+                )
                 async def _identity_unfreeze():
                     if not hasattr(gateway, "_identity_layer") or gateway._identity_layer is None:
                         return {"error": "Identity layer not available", "code": "NOT_AVAILABLE"}
@@ -1769,13 +1787,8 @@ def main() -> None:
                     # Flutter app can read it from the DOM instead of calling
                     # /api/v1/bootstrap. This eliminates the unauthenticated
                     # token-disclosure endpoint entirely (GHSA-cognithor-001).
-                    _index_html_raw = (_ui_dist / "index.html").read_text(
-                        encoding="utf-8"
-                    )
-                    _token_meta = (
-                        f'<meta name="cognithor-token" '
-                        f'content="{_internal_api_token}">'
-                    )
+                    _index_html_raw = (_ui_dist / "index.html").read_text(encoding="utf-8")
+                    _token_meta = f'<meta name="cognithor-token" content="{_internal_api_token}">'
                     _index_html_injected = _index_html_raw.replace(
                         "<head>", f"<head>\n  {_token_meta}", 1
                     )
@@ -1786,9 +1799,7 @@ def main() -> None:
                         return _HTMLResp(content=_index_html_injected)
 
                     # All other static assets (JS, CSS, images) served normally
-                    api_app.mount(
-                        "/", StaticFiles(directory=str(_ui_dist), html=False), name="ui"
-                    )
+                    api_app.mount("/", StaticFiles(directory=str(_ui_dist), html=False), name="ui")
                     log.info("prebuilt_ui_mounted", path=str(_ui_dist))
 
                 # TLS-Durchreichung

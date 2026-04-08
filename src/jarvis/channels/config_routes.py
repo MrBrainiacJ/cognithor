@@ -1045,6 +1045,40 @@ def _register_config_routes(
 
         return {"status": "ok", "revision_id": revision_id, "message": "Rollback applied"}
 
+    # -- Network Endpoints -------------------------------------------------------
+
+    @app.get("/api/v1/network/interfaces", dependencies=deps)
+    async def list_network_interfaces() -> dict[str, Any]:
+        """Detected network interfaces with enable/disable status."""
+        try:
+            from jarvis.core.network_endpoints import NetworkEndpointManager
+
+            mgr = NetworkEndpointManager()
+            return {"interfaces": mgr.get_detected_interfaces()}
+        except Exception as exc:
+            return {"interfaces": [], "error": str(exc)}
+
+    @app.put("/api/v1/network/endpoints", dependencies=deps)
+    async def update_network_endpoints(request: Request) -> dict[str, Any]:
+        """Update which network interfaces are enabled for API binding."""
+        body = await request.json()
+        try:
+            from jarvis.core.network_endpoints import NetworkEndpointManager
+
+            mgr = NetworkEndpointManager()
+            if "enabled_ips" in body:
+                mgr.set_enabled_ips(body["enabled_ips"])
+            if "auto_detect" in body:
+                mgr.set_auto_detect(body["auto_detect"])
+            return {
+                "status": "ok",
+                "bind_host": mgr.get_bind_host(),
+                "active_ips": mgr.get_active_ips(),
+                "message": "Restart required for bind changes to take effect",
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
+
     # -- Device Pairing (Mobile) ------------------------------------------------
 
     @app.get("/api/v1/devices", dependencies=deps)

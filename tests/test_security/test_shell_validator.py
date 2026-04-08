@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from jarvis.security.shell_validator import (
     CommandIntent,
-    ValidationResult,
     ValidationVerdict,
     classify_command,
     extract_first_command,
     validate_command,
 )
-
 
 # ── extract_first_command ────────────────────────────────────────────
 

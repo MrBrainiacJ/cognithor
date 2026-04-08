@@ -54,9 +54,7 @@ class DevicePairingManager:
     ) -> None:
         self._master_secret = master_secret
         self._token_ttl_days = token_ttl_days
-        self._storage_path = storage_path or (
-            Path.home() / ".jarvis" / "paired_devices.json"
-        )
+        self._storage_path = storage_path or (Path.home() / ".jarvis" / "paired_devices.json")
         self._devices: dict[str, PairedDevice] = {}
         self._load()
 
@@ -64,9 +62,7 @@ class DevicePairingManager:
     # Public API
     # ------------------------------------------------------------------
 
-    def create_pairing_token(
-        self, device_name: str = "Unknown Device"
-    ) -> PairingToken:
+    def create_pairing_token(self, device_name: str = "Unknown Device") -> PairingToken:
         """Erstellt einen neuen Pairing-Token fuer ein Geraet.
 
         Returns:
@@ -93,9 +89,7 @@ class DevicePairingManager:
         self._save()
 
         log.info("device_paired", device_id=device_id, name=device_name)
-        return PairingToken(
-            token=token, device_id=device_id, expires_at=expires_at
-        )
+        return PairingToken(token=token, device_id=device_id, expires_at=expires_at)
 
     def verify_token(self, token: str, device_id: str) -> bool:
         """Prueft ob ein Token gueltig ist."""
@@ -187,12 +181,8 @@ class DevicePairingManager:
     def _save(self) -> None:
         try:
             self._storage_path.parent.mkdir(parents=True, exist_ok=True)
-            data = {
-                did: asdict(d) for did, d in self._devices.items()
-            }
-            self._storage_path.write_text(
-                json.dumps(data, indent=2), encoding="utf-8"
-            )
+            data = {did: asdict(d) for did, d in self._devices.items()}
+            self._storage_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
         except Exception as exc:
             log.warning("device_pairing_save_failed", error=str(exc))
 
@@ -200,9 +190,7 @@ class DevicePairingManager:
         if not self._storage_path.exists():
             return
         try:
-            data = json.loads(
-                self._storage_path.read_text(encoding="utf-8")
-            )
+            data = json.loads(self._storage_path.read_text(encoding="utf-8"))
             for did, d in data.items():
                 self._devices[did] = PairedDevice(**d)
         except Exception as exc:

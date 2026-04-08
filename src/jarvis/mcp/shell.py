@@ -253,6 +253,8 @@ class ShellTools:
         try:
             from jarvis.security.shell_validator import (
                 ValidationVerdict,
+            )
+            from jarvis.security.shell_validator import (
                 validate_command as validate_shell,
             )
 

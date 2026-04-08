@@ -124,11 +124,7 @@ def get_reachable_url(bind_host: str, port: int) -> str:
         ts_ip = get_tailscale_ip()
         if ts_ip:
             return f"http://{ts_ip}:{port}"
-        lan_ips = [
-            ip
-            for ip in get_local_ips()
-            if not is_loopback(ip) and not is_tailscale_ip(ip)
-        ]
+        lan_ips = [ip for ip in get_local_ips() if not is_loopback(ip) and not is_tailscale_ip(ip)]
         if lan_ips:
             return f"http://{lan_ips[0]}:{port}"
     if bind_host in ("127.0.0.1", "localhost", "::1"):
