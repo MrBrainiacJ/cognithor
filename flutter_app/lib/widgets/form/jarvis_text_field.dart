@@ -33,22 +33,34 @@ class JarvisTextField extends StatefulWidget {
 }
 
 class _JarvisTextFieldState extends State<JarvisTextField> {
+  static const _maskedDisplay = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'; // 24 bullets
+
   late final TextEditingController _ctrl;
   bool _obscured = true;
+
+  /// True when the field shows a backend-masked placeholder (not the real key).
+  bool get _isMasked => _ctrl.text == '***' || _ctrl.text == _maskedDisplay;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = TextEditingController(text: widget.value);
+    // Replace short '***' mask with a longer visual placeholder
+    final initial = (widget.isSecret && widget.value == '***')
+        ? _maskedDisplay
+        : widget.value;
+    _ctrl = TextEditingController(text: initial);
   }
 
   @override
   void didUpdateWidget(JarvisTextField old) {
     super.didUpdateWidget(old);
     // Only sync if the value changed externally (not from user typing)
-    if (old.value != widget.value && _ctrl.text != widget.value) {
+    final effective = (widget.isSecret && widget.value == '***')
+        ? _maskedDisplay
+        : widget.value;
+    if (old.value != widget.value && _ctrl.text != effective) {
       final sel = _ctrl.selection;
-      _ctrl.text = widget.value;
+      _ctrl.text = effective;
       // Restore cursor if possible
       if (sel.isValid && sel.baseOffset <= _ctrl.text.length) {
         _ctrl.selection = sel;
@@ -102,7 +114,7 @@ class _JarvisTextFieldState extends State<JarvisTextField> {
             obscureText: widget.isPassword && _obscured,
             onTap: () {
               // Clear masked placeholder so user can type a new value
-              if (_ctrl.text == '***') {
+              if (_isMasked) {
                 _ctrl.clear();
               }
             },
@@ -116,16 +128,14 @@ class _JarvisTextFieldState extends State<JarvisTextField> {
               isDense: true,
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              suffixIcon: widget.isPassword
+              // Hide eye button when value is backend-masked (not revealable)
+              suffixIcon: widget.isPassword && !_isMasked
                   ? IconButton(
                       icon: Icon(
                         _obscured ? Icons.visibility_off : Icons.visibility,
                         size: 18,
                       ),
-                      // Disable eye toggle when value is masked from backend
-                      onPressed: _ctrl.text == '***'
-                          ? null
-                          : () => setState(() => _obscured = !_obscured),
+                      onPressed: () => setState(() => _obscured = !_obscured),
                     )
                   : null,
             ),
