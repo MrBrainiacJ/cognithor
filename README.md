@@ -39,7 +39,7 @@
 
 Most AI assistants send your data to the cloud. Cognithor runs entirely on your machine — with Ollama or LM Studio, no API keys required. Cloud providers are optional, not mandatory.
 
-It replaces a patchwork of tools with one integrated system: 18 channels, 122+ MCP tools, 6-tier memory, knowledge vault, voice, browser automation, Computer Use, and more — all wired together from day one. 13,083 tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
+It replaces a patchwork of tools with one integrated system: 18 channels, 125+ MCP tools, 6-tier memory, knowledge vault, voice, browser automation, Computer Use, and more — all wired together from day one. 13,083 tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
 
 **In plain terms:** Cognithor is an AI assistant that lives entirely on your computer. You talk to it through your terminal, a web UI, Telegram, Discord, or any of 18 supported channels — and it talks back, remembers what you said last week, and acts on your behalf. It can search the web, write and edit files, run shell commands, control your browser, automate your desktop (clicking, typing, reading windows), manage your calendar, and learn new skills over time. Think of it as a local, private, self-improving Jarvis.
 
@@ -187,7 +187,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 ├─────────────┴──────────────┴──────────────────────────────────────┤
 │  DAG Workflow Engine · Workflow Adapter · Benchmark Suite             │
 ├───────────────────────────────────────────────────────────────────┤
-│                   MCP Tool Layer (122+ tools)                        │
+│                   MCP Tool Layer (125+ tools)                        │
 │   Filesystem · Shell · Memory · Web · Browser · Media · Vault      │
 │   Synthesis · Skills Marketplace · Remote Registry                  │
 ├───────────────────────────────────────────────────────────────────┤
@@ -584,7 +584,7 @@ python -m pytest tests/test_memory/ -v
 python -m pytest tests/test_channels/ -v
 ```
 
-Current status: **13,083 tests** · **100% pass rate** · **89% coverage** · **~199,000 LOC source** · **~162,000 LOC tests**
+Current status: **13,083 tests** · **100% pass rate** · **89% coverage** · **~201,000 LOC source** · **~163,000 LOC tests**
 
 Notable test suites: 183 Computer Use tests, 176 ARC tests.
 
@@ -713,7 +713,7 @@ print(t("error.timeout"))  # "The operation timed out..."
 3. Run `python -c "from jarvis.i18n import generate_pack_hash; generate_pack_hash('<locale>')"`
 4. Submit a PR
 
-**Metrics:** ~199,000 LOC source · ~162,000 LOC tests · 13,083 tests · 89% coverage · 0 lint errors · **Status: Beta**
+**Metrics:** ~201,000 LOC source · ~163,000 LOC tests · 13,083 tests · 89% coverage · 0 lint errors · **Status: Beta**
 
 ## Contributors
 

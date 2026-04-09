@@ -23,8 +23,8 @@ Cognithor uses a two-branch model:
 
 | Branch | Purpose | Releases |
 |--------|---------|----------|
-| `main` | **Stable** — production-ready code | Tagged releases (`v0.80.1`) published to PyPI |
-| `beta` | **Active development & testing** — new features land here first | Auto-generated pre-releases (`v0.80.1-beta`) on every push |
+| `main` | **Stable** — production-ready code | Tagged releases (`v0.84.0`) published to PyPI |
+| `beta` | **Active development & testing** — new features land here first | Auto-generated pre-releases (`v0.84.0-beta`) on every push |
 
 ### Workflow
 
@@ -35,16 +35,16 @@ Cognithor uses a two-branch model:
 
 ### Version Scheme
 
-- **Patch** (`0.80.1`): Bug fixes, small improvements
-- **Minor** (`0.81.0`): New features, non-breaking changes
+- **Patch** (`0.84.0`): Bug fixes, small improvements
+- **Minor** (`0.85.0`): New features, non-breaking changes
 - **Major** (`1.0.0`): Breaking changes (reserved for future)
-- **Beta tags** (`v0.80.1-beta`): Automatically created from the `beta` branch — not for production use
+- **Beta tags** (`v0.84.0-beta`): Automatically created from the `beta` branch — not for production use
 
 ### Installing the Beta
 
 ```bash
 # From the beta GitHub release:
-pip install https://github.com/Alex8791-cyber/cognithor/releases/download/v0.80.1-beta/cognithor-0.80.1-py3-none-any.whl
+pip install https://github.com/Alex8791-cyber/cognithor/releases/download/v0.84.0-beta/cognithor-0.84.0-py3-none-any.whl
 
 # Or from source:
 git clone -b beta https://github.com/Alex8791-cyber/cognithor.git

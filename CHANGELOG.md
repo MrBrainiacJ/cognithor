@@ -5,6 +5,118 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.84.0] -- 2026-04-09
+
+### Added
+- **Reddit Lead Hunter** — Full social listening system integrated into Cognithor
+  - `src/jarvis/social/` package: models, store, scanner, reply, service (5 modules)
+  - `src/jarvis/mcp/reddit_tools.py` — 3 MCP tools: `reddit_scan`, `reddit_leads`, `reddit_reply`
+  - `data/procedures/reddit-lead-hunter.md` — Skill file with interactive chat flow (asks for product + subreddits)
+  - `SocialConfig` in config.py — 8 fields for Reddit scanning configuration
+  - 6 REST endpoints: `/api/v1/leads/scan`, `/leads`, `/leads/{id}`, `/leads/{id}/reply`, `/leads/stats`
+  - Cron job registration for automatic scanning (configurable interval)
+  - No Reddit API key needed — uses public JSON feeds
+  - Hybrid reply posting: clipboard (default), browser open, Playwright auto-post (opt-in)
+  - SQLCipher-encrypted leads database with status workflow (new → reviewed → replied → archived)
+  - 34 tests across 6 test files
+- **Reddit Leads Flutter Tab** — 7th navigation tab (Ctrl+7)
+  - `LeadsScreen` with stats bar (New/Reviewed/Replied), filter row (SegmentedButton), lead list
+  - `LeadCard` widget with score badge, subreddit, status chip, action buttons
+  - `LeadDetailSheet` bottom sheet with editable reply editor, Post Reply / Copy / Open on Reddit / Archive
+  - `RedditLeadsProvider` with 30s polling, filtering, scan trigger
+  - Scan Now FAB with loading spinner
+  - 6 API client methods, 21 i18n keys in EN/DE/ZH/AR
+- **Social Listening Config Page** — Configuration > System > Social Listening
+  - Product name, description, subreddits, min score, scan interval, reply tone, auto-post
+  - Orange warning banner when required fields empty
+
+### Fixed
+- **3 showstopper bugs** found by deep code audit:
+  - MCP tools never registered (Phase D ran before Phase F created the service) — moved to post-init
+  - LLM function always None in scanner — wired `self._ollama.chat` post-init
+  - Gatekeeper blocked all reddit tools at ORANGE risk — added to GREEN/YELLOW sets
+- Default subreddits from SocialConfig now propagated to scan path
+- MCP tool `min_score=0` no longer silently overridden to 60
+- Flutter social config default min_score aligned to 60 (was 50)
+
+## [0.83.0] -- 2026-04-09
+
+### Added
+- **Reddit Lead Hunter Backend** — 7 backend modules (Plan A):
+  - Data models (Lead, LeadStatus, ScanResult, LeadStats)
+  - LeadStore (SQLite persistence with encryption)
+  - RedditScanner (JSON feed fetch + LLM scoring + reply drafting)
+  - ReplyPoster (clipboard/browser/auto posting)
+  - RedditLeadService (orchestrator)
+  - MCP tools + gateway wiring + skill file
+  - REST API (6 endpoints) + cron registration
+- **Social Listening Config Page** in Flutter
+- **Skill chat flow** — asks user for product/subreddits before scanning
+
+## [0.82.0] -- 2026-04-09
+
+### Added
+- **Robot Office Live Wiring** (#84) — 5 components:
+  - `RobotOfficeProvider` — aggregates WS events + REST polling (10s)
+  - Dynamic robots from real configured agents + PGE Trinity always present
+  - Real-time PGE state sync (Planner types when planning, Executor works when running tools)
+  - System metrics driving server rack LEDs, ceiling lights
+  - Kanban board with real colored dots + hover tooltips showing task titles
+  - System glow on PGE Trinity robots
+- **Deep Learning Upload Pipeline** (#89) — 6 components:
+  - Priority queue (High/Normal/Low) with background KnowledgeBuilder pipeline
+  - PDF vision (image-heavy pages analyzed via vision model)
+  - OCR fallback for scanned PDFs (Tesseract, when text < 100 chars)
+  - YouTube frame extraction (yt-dlp + ffmpeg for HIGH priority)
+  - Evolution Loop integration (`inject_user_material`)
+  - Flutter: priority dropdown on Teach screen, deep-learn queue panel
+  - Structured progress events in deep-learn pipeline
+- **Windows Uninstaller** (#78) — `uninstall.bat` with code-only or full removal modes
+
+### Fixed
+- **#79** — Removed duplicate Evolution settings page (1,199 lines)
+- **#80** — Translate Prompts via Ollama now actually sends prompts to backend
+- **#81/#82** — Missing i18n in admin pages, sidebar, toolbar (7 new keys)
+- **#83** — Logo fallback improved from plain "C" to brain icon with gradient
+- **#86** — Operation Mode now has description explaining each mode
+- **#87** — QR pairing screen fetches payload from server instead of manual input
+- **#88** — Robot Office task messages replaced with clearly playful text
+
+## [0.81.0] -- 2026-04-08
+
+### Added
+- **OpenRouter** in backend switch dialog + API status check + switch endpoint
+- **Installer downgrade protection** — bootstrap and Inno Setup detect version downgrades
+
+### Fixed
+- **299 Ruff lint errors** resolved across 143 files (all rules, zero remaining)
+- **19 Flutter analyze issues** resolved (unused code, deprecated APIs, null-safety)
+- **Fail-fast backend routing** — non-Ollama backends no longer silently fall back to Ollama
+- **Audit verify crash** (#66) — `config_manager` not passed to monitoring routes
+- **Search navigation** (#72) — Ctrl+K search navigates to correct config tab
+- **Save error detail** (#71) — shows actual error message per section
+- **API key display** (#64) — 24 bullet chars instead of "***", no eye button
+- **Incognito flag** (#76) — `sqlite3.Row` value check fix, schema + ON CONFLICT fix
+- **Duplicate pages removed** — Models (#62), Agents (#65)
+- **Backend selection unified** (#63) — all 17 providers, derived from config Literal
+- **Kanban agents dynamic** (#73) — dropdown from AdminProvider, not hardcoded
+- **Active models shown** (#74) — provider card shows planner/executor model names
+- **Kanban i18n** (#75) — 22 new keys, column names, config dialog
+- **Vault i18n** (#68) — 10 new keys
+- **Device pairing i18n** — 35 missing ZH/AR translations
+- **Incognito exit** (#67) — clickable badge + drawer toggle
+- **Agent delete** (#69) — delete button in Administration > Agents
+- **Token display** (#70) — model, backend, tokens, duration on chat messages
+- **Version fixes** (#85) — `__init__.py` synced, `first_run.py` reads dynamically
+- **Circuit breaker warning** (#76) — `check_open()` before coroutine creation
+
+### Changed
+- `check_before_push.sh` runs full ruff lint on `src/` and `tests/`
+- Gateway keepalive uses `asyncio.Event` instead of mutable boolean flag
+- Valid backends derived from `JarvisConfig.llm_backend_type` Literal type at runtime
+- Legacy React/Preact UI removed (`ui/`, `apps/pwa/`) — Flutter Migration Phase 4 complete
+- LOC counts updated: ~199k source, ~162k tests, ~55k Flutter
+
 ## [0.80.1] -- 2026-04-08
 
 ### Fixed
