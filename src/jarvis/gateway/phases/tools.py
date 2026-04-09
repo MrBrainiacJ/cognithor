@@ -206,12 +206,8 @@ async def init_tools(
             log.warning("browser_tools_not_registered", exc_info=True)
     result["browser_agent"] = browser_agent
 
-    # Reddit Lead Hunter tools
-    reddit_svc = getattr(gateway, "_reddit_lead_service", None) if gateway else None
-    if reddit_svc:
-        from jarvis.mcp.reddit_tools import register_reddit_tools
-
-        register_reddit_tools(mcp_client, reddit_svc)
+    # Reddit Lead Hunter tools — registered post-init in gateway.py
+    # (service is created in Phase F / advanced.py, after this Phase D)
 
     # Graph Orchestrator v18: DAG-based workflow engine (optional)
     graph_engine = None

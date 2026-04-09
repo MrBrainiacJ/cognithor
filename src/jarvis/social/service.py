@@ -28,6 +28,8 @@ class RedditLeadService:
         product_name: str = "",
         product_description: str = "",
         reply_tone: str = "helpful, technically credible, no sales pitch",
+        default_subreddits: list[str] | None = None,
+        min_score: int = 60,
         browser_agent: Any = None,
         notification_callback: Callable[[Lead], None] | None = None,
     ) -> None:
@@ -35,8 +37,10 @@ class RedditLeadService:
         self._scanner = RedditScanner(llm_fn=llm_fn)
         self._poster = ReplyPoster(browser_agent=browser_agent)
         self._notification_cb = notification_callback
+        self._default_subreddits = default_subreddits or []
         self._scan_config = ScanConfig(
             product_name=product_name,
+            min_score=min_score,
             product_description=product_description,
             reply_tone=reply_tone,
         )
@@ -48,7 +52,7 @@ class RedditLeadService:
         trigger: str = "chat",
     ) -> ScanResult:
         """Run a full scan cycle: fetch -> score -> draft -> store."""
-        subs = subreddits or []
+        subs = subreddits or self._default_subreddits
         config = ScanConfig(
             product_name=self._scan_config.product_name,
             product_description=self._scan_config.product_description,

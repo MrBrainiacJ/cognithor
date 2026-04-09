@@ -375,6 +375,21 @@ class Gateway:
             self._exploration_executor._memory = self._memory_manager
         if getattr(self, "_knowledge_ingest", None) and self._memory_manager:
             self._knowledge_ingest._memory = self._memory_manager
+
+        # Reddit Lead Hunter: register MCP tools + wire LLM (BUG 1+2 fix)
+        if getattr(self, "_reddit_lead_service", None):
+            if self._mcp_client:
+                try:
+                    from jarvis.mcp.reddit_tools import register_reddit_tools
+
+                    register_reddit_tools(self._mcp_client, self._reddit_lead_service)
+                    log.info("reddit_mcp_tools_registered")
+                except Exception:
+                    log.debug("reddit_mcp_tools_registration_failed", exc_info=True)
+            # Wire LLM function (was None during Phase F init)
+            if hasattr(self, "_ollama") and self._ollama is not None:
+                self._reddit_lead_service._scanner._llm_fn = self._ollama.chat
+
         if getattr(self, "_session_analyzer", None) and self._memory_manager:
             self._session_analyzer._memory_manager = self._memory_manager
 

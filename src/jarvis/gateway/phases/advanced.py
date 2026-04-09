@@ -351,6 +351,8 @@ async def init_advanced(
                 product_name=social_cfg.reddit_product_name,
                 product_description=social_cfg.reddit_product_description,
                 reply_tone=social_cfg.reddit_reply_tone,
+                default_subreddits=social_cfg.reddit_subreddits,
+                min_score=social_cfg.reddit_min_score,
             )
             log.info("reddit_lead_service_initialized")
     except Exception:

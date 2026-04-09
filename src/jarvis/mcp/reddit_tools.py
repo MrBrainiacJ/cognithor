@@ -22,12 +22,11 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
             return json.dumps({"error": "Reddit Lead Service not initialized"})
 
         subs = [s.strip() for s in subreddits.split(",") if s.strip()] if subreddits else None
-        config = lead_service._scan_config
-        effective_subs = subs or getattr(config, "subreddits", ["LocalLLaMA", "SaaS"])
-        effective_min = min_score or getattr(config, "min_score", 60)
+        # subs=None → service falls back to default_subreddits from config
+        effective_min = min_score if min_score > 0 else lead_service._scan_config.min_score
 
         result = await lead_service.scan(
-            subreddits=effective_subs,
+            subreddits=subs,
             min_score=effective_min,
             trigger="chat",
         )

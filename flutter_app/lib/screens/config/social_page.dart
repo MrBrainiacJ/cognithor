@@ -86,7 +86,7 @@ class SocialPage extends StatelessWidget {
             ),
             JarvisNumberField(
               label: l.minIntentScore,
-              value: (social['reddit_min_score'] as num?) ?? 50,
+              value: (social['reddit_min_score'] as num?) ?? 60,
               min: 0,
               max: 100,
               onChanged: (v) => cfg.set('social.reddit_min_score', v),
