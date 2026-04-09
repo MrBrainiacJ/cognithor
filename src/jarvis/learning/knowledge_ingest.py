@@ -109,10 +109,12 @@ class KnowledgeIngestService:
         memory: MemoryManager | None = None,
         knowledge_builder: Any | None = None,
         llm_fn: Any | None = None,
+        evolution_loop: Any | None = None,
     ) -> None:
         self._memory = memory
         self._knowledge_builder = knowledge_builder
         self._llm_fn = llm_fn
+        self._evolution_loop = evolution_loop
         self._results: list[IngestResult] = []
         self._queue = IngestQueue()
         self._worker_task: asyncio.Task | None = None
@@ -420,6 +422,17 @@ class KnowledgeIngestService:
         await self._knowledge_builder.build(fetch_result)
         self._update_result(item.result_id, "completed")
         log.info("deep_learn_completed", source=item.source, text_len=len(full_text))
+
+        # Also queue for Evolution Loop idle processing (if available)
+        if self._evolution_loop and hasattr(self._evolution_loop, "inject_user_material"):
+            try:
+                await self._evolution_loop.inject_user_material(
+                    full_text,
+                    source_name,
+                    goal_slug="user_upload",
+                )
+            except Exception:
+                log.debug("evolution_inject_failed", source=item.source)
 
     def _update_result(self, result_id: str, status: str, error: str = "") -> None:
         """Update deep_learn_status on a stored IngestResult."""

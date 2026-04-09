@@ -160,6 +160,80 @@ class EvolutionLoop:
         self._atl_knowledge_builders: dict[str, Any] = {}  # goal_id -> KnowledgeBuilder
         self._atl_persisted_queries: set[str] = set()
         self._last_thinking_time = time.monotonic()
+        self._user_material_queue: list[tuple[str, str, str]] = []  # (text, source, goal_slug)
+
+    async def inject_user_material(
+        self,
+        text: str,
+        source_name: str,
+        goal_slug: str = "user_upload",
+    ) -> bool:
+        """Queue user-uploaded material for processing during next idle cycle.
+
+        The material will be processed through a KnowledgeBuilder with the
+        given goal_slug, creating vault entries, entities, and identity
+        memory — the same pipeline as autonomous research results.
+
+        Args:
+            text: Extracted document text.
+            source_name: Display name (e.g. filename).
+            goal_slug: Goal context for the knowledge builder.
+
+        Returns:
+            True if queued successfully.
+        """
+        self._user_material_queue.append((text, source_name, goal_slug))
+        log.info(
+            "evolution_user_material_queued",
+            source=source_name,
+            goal=goal_slug,
+            queue_size=len(self._user_material_queue),
+        )
+        return True
+
+    async def _process_user_material(self) -> int:
+        """Process queued user material through KnowledgeBuilder.
+
+        Called at the start of each evolution cycle, before autonomous
+        research. Returns number of items processed.
+        """
+        if not self._user_material_queue:
+            return 0
+
+        processed = 0
+        while self._user_material_queue:
+            text, source, goal_slug = self._user_material_queue.pop(0)
+            try:
+                from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+                from jarvis.evolution.research_agent import FetchResult
+
+                builder = self._atl_knowledge_builders.get(goal_slug)
+                if builder is None and self._mcp_client and self._llm_fn:
+                    builder = KnowledgeBuilder(
+                        mcp_client=self._mcp_client,
+                        llm_fn=self._llm_fn,
+                        goal_slug=goal_slug,
+                        memory_manager=self._memory,
+                    )
+                    self._atl_knowledge_builders[goal_slug] = builder
+
+                if builder is None:
+                    log.debug("evolution_user_material_no_builder", source=source)
+                    continue
+
+                fetch = FetchResult(
+                    url=f"upload://{source}",
+                    text=text,
+                    title=source,
+                    source_type="user_upload",
+                )
+                await builder.build(fetch)
+                processed += 1
+                log.info("evolution_user_material_processed", source=source)
+            except Exception as exc:
+                log.warning("evolution_user_material_failed", source=source, error=str(exc))
+
+        return processed
 
     async def _synthesize_for_goal(
         self,
@@ -344,6 +418,11 @@ class EvolutionLoop:
             result.skipped = True
             result.reason = "budget_exhausted"
             return result
+
+        # Step 0: Process queued user material (priority over autonomous research)
+        user_processed = await self._process_user_material()
+        if user_processed:
+            result.steps_completed.append(f"user_material:{user_processed}")
 
         # Step 1: Scout — find knowledge gaps
         gaps = await self._scout()
