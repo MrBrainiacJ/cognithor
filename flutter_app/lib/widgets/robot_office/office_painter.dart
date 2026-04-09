@@ -171,6 +171,8 @@ class OfficePainter extends CustomPainter {
     this.memoryUsage = 0,
     this.activePhase = 0,
     this.systemLoad = 0,
+    this.kanbanCounts = const {},
+    this.kanbanTasks = const {},
   });
 
   final List<Robot> robots;
@@ -192,6 +194,12 @@ class OfficePainter extends CustomPainter {
 
   /// System load 0.0-1.0 — controls ceiling light brightness.
   final double systemLoad;
+
+  /// Kanban column counts by status (e.g. 'backlog': 3, 'in_progress': 2).
+  final Map<String, int> kanbanCounts;
+
+  /// Kanban task titles by status (e.g. 'backlog': ['Task 1', 'Task 2']).
+  final Map<String, List<String>> kanbanTasks;
 
   // ── Entry Point ────────────────────────────────────────────────────
 
@@ -225,7 +233,8 @@ class OfficePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant OfficePainter old) => true;
+  bool shouldRepaint(covariant OfficePainter old) =>
+      true; // animation-driven — always repaint
 
   // ── Helpers ────────────────────────────────────────────────────────
 
@@ -669,48 +678,59 @@ class OfficePainter extends CustomPainter {
         );
       }
 
-      // Sticky notes
-      final noteColors = [
-        const Color(0xFFFFEB3B),
-        const Color(0xFF81D4FA),
-        const Color(0xFFA5D6A7),
-        const Color(0xFFFFAB91),
-      ];
-      final noteCount = c == 0 ? 3 : (c == 1 ? 2 : 2);
-      final noteStartY = colHeaderY + colHeaderH + 2;
-      for (int n = 0; n < noteCount; n++) {
-        final ny = noteStartY + n * bh * 0.22;
-        final noteW = colW * 0.7;
-        final noteH = bh * 0.16;
-        final noteX = hx + (colW - noteW) / 2;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(noteX, ny, noteW, noteH),
-            const Radius.circular(1.5),
-          ),
-          Paint()..color = noteColors[(c * 3 + n) % noteColors.length].withValues(alpha: 0.85),
-        );
-        // Tiny text lines on sticky
-        for (int l = 0; l < 2; l++) {
-          canvas.drawLine(
-            Offset(noteX + 2, ny + 3 + l * 3.5),
-            Offset(noteX + noteW - 3, ny + 3 + l * 3.5),
-            Paint()
-              ..color = Colors.black26
-              ..strokeWidth = 0.5,
-          );
+      // Data-driven kanban dots
+      final statusKeys = c == 0
+          ? ['backlog']
+          : c == 1
+              ? ['in_progress']
+              : ['done', 'verifying'];
+      // Also include 'blocked' in column 1 (WIP)
+      final dotStatusColors = <String, Color>{
+        'backlog': const Color(0xFF9CA3AF),
+        'in_progress': const Color(0xFF3B82F6),
+        'verifying': const Color(0xFFF59E0B),
+        'done': const Color(0xFF22C55E),
+        'blocked': const Color(0xFFEF4444),
+      };
+      final dotStartY = colHeaderY + colHeaderH + 2;
+      final dotRadius = colW * 0.12;
+      final dotSpacingX = dotRadius * 2.8;
+      final dotSpacingY = dotRadius * 2.8;
+      int dotIndex = 0;
+      int totalForCol = 0;
+      for (final key in statusKeys) {
+        totalForCol += kanbanCounts[key] ?? 0;
+      }
+      const maxDots = 8;
+      for (final key in statusKeys) {
+        final count = kanbanCounts[key] ?? 0;
+        final color = dotStatusColors[key] ?? const Color(0xFF9CA3AF);
+        for (int d = 0; d < count && dotIndex < maxDots; d++) {
+          final col2 = dotIndex % 2;
+          final row2 = dotIndex ~/ 2;
+          final dx = hx + colW * 0.25 + col2 * dotSpacingX;
+          final dy = dotStartY + row2 * dotSpacingY;
+          canvas.drawCircle(Offset(dx, dy), dotRadius, Paint()..color = color);
+          dotIndex++;
         }
-        // Pin/thumbtack dot at top-center of sticky note
-        canvas.drawCircle(
-          Offset(noteX + noteW / 2, ny + 1),
-          1.3,
-          Paint()..color = const Color(0xFFDD3333),
-        );
-        // Pin highlight
-        canvas.drawCircle(
-          Offset(noteX + noteW / 2 - 0.3, ny + 0.6),
-          0.5,
-          Paint()..color = const Color(0xFFFF8888),
+      }
+      // Overflow indicator: "+N" if more than 8 tasks
+      if (totalForCol > maxDots) {
+        final overflow = totalForCol - maxDots;
+        final overflowTp = TextPainter(
+          text: TextSpan(
+            text: '+$overflow',
+            style: TextStyle(
+              color: _textCol(),
+              fontSize: 3.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        overflowTp.paint(
+          canvas,
+          Offset(hx + colW * 0.25 + 2 * dotSpacingX, dotStartY + (maxDots ~/ 2 - 1) * dotSpacingY - 1),
         );
       }
     }

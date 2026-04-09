@@ -389,6 +389,10 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
   // ── Tap-to-interact reaction cooldown ─────────────────────
   double _reactionCooldown = 0;
 
+  // ── Kanban hover tooltip ──────────────────────────────────
+  Offset? _hoverPosition;
+  String? _kanbanTooltip;
+
   // ── Lifecycle ───────────────────────────────────────────────
 
   @override
@@ -1759,6 +1763,64 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     }
   }
 
+  // ── Kanban tooltip hit-testing ──────────────────────────────
+
+  void _updateKanbanTooltip(Offset position) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final w = box.size.width;
+    final h = box.size.height;
+
+    // Kanban board bounds in widget coordinates (matches OfficePainter)
+    final bx = w * 0.04;
+    final by = h * 0.20;
+    final bw = w * 0.10;
+    final bh = h * 0.18;
+    final headerH = bh * 0.10;
+    final colHeaderH = bh * 0.10;
+    final contentTop = by + headerH + colHeaderH;
+    final colW = bw / 3;
+
+    // Check if pointer is inside kanban content area
+    if (position.dx < bx || position.dx > bx + bw ||
+        position.dy < contentTop || position.dy > by + bh) {
+      if (_kanbanTooltip != null) {
+        setState(() { _hoverPosition = null; _kanbanTooltip = null; });
+      }
+      return;
+    }
+
+    // Determine which column
+    final colIndex = ((position.dx - bx) / colW).floor().clamp(0, 2);
+    final statusKeys = colIndex == 0
+        ? ['backlog']
+        : colIndex == 1
+            ? ['in_progress']
+            : ['done', 'verifying'];
+
+    // Build tooltip from task titles
+    final titles = <String>[];
+    for (final key in statusKeys) {
+      titles.addAll(widget.kanbanTasks[key] ?? []);
+    }
+    if (titles.isEmpty) {
+      if (_kanbanTooltip != null) {
+        setState(() { _hoverPosition = null; _kanbanTooltip = null; });
+      }
+      return;
+    }
+
+    final colLabel = colIndex == 0 ? 'To Do' : colIndex == 1 ? 'WIP' : 'Done';
+    final display = titles.take(6).join('\n');
+    final extra = titles.length > 6 ? '\n+${titles.length - 6} more' : '';
+    final tooltip = '$colLabel:\n$display$extra';
+
+    setState(() {
+      _hoverPosition = position;
+      _kanbanTooltip = tooltip;
+    });
+  }
+
   // ── Build ───────────────────────────────────────────────────
 
   @override
@@ -1779,37 +1841,62 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: GestureDetector(
-        onTapDown: (details) => _onTap(details.localPosition, context),
-        child: Stack(
-          children: [
-            // Background: detailed office (walls, window, desks, lights)
-            CustomPaint(
-              painter: bg.OfficePainter(
-                robots: const [],
-                time: _elapsed,
-                isRunning: true,
-                brightness: Theme.of(context).brightness,
-                cpuUsage: widget.cpuUsage,
-                memoryUsage: widget.memoryUsage,
-                activePhase: widget.activePhase,
-                systemLoad: widget.systemLoad,
+      child: MouseRegion(
+        onHover: (event) => _updateKanbanTooltip(event.localPosition),
+        onExit: (_) => setState(() { _hoverPosition = null; _kanbanTooltip = null; }),
+        child: GestureDetector(
+          onTapDown: (details) => _onTap(details.localPosition, context),
+          child: Stack(
+            children: [
+              // Background: detailed office (walls, window, desks, lights)
+              CustomPaint(
+                painter: bg.OfficePainter(
+                  robots: const [],
+                  time: _elapsed,
+                  isRunning: true,
+                  brightness: Theme.of(context).brightness,
+                  cpuUsage: widget.cpuUsage,
+                  memoryUsage: widget.memoryUsage,
+                  activePhase: widget.activePhase,
+                  systemLoad: widget.systemLoad,
+                  kanbanCounts: widget.kanbanCounts,
+                  kanbanTasks: widget.kanbanTasks,
+                ),
+                child: const SizedBox.expand(),
               ),
-              child: const SizedBox.expand(),
-            ),
-            // Foreground: robots, pets, particles
-            CustomPaint(
-              painter: RobotOfficePainter(
-                robots: _robots,
-                furniture: officeFurniture,
-                elapsed: _elapsed,
-                dog: _dog,
-                cat: _cat,
-                particles: _particles,
+              // Foreground: robots, pets, particles
+              CustomPaint(
+                painter: RobotOfficePainter(
+                  robots: _robots,
+                  furniture: officeFurniture,
+                  elapsed: _elapsed,
+                  dog: _dog,
+                  cat: _cat,
+                  particles: _particles,
+                ),
+                child: const SizedBox.expand(),
               ),
-              child: const SizedBox.expand(),
-            ),
-          ],
+              // Kanban hover tooltip overlay
+              if (_kanbanTooltip != null && _hoverPosition != null)
+                Positioned(
+                  left: _hoverPosition!.dx + 10,
+                  top: _hoverPosition!.dy - 20,
+                  child: IgnorePointer(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _kanbanTooltip!,
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
