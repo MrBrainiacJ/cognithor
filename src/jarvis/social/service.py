@@ -10,9 +10,11 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
 from jarvis.social.models import Lead, LeadStats, LeadStatus, ScanResult
+from jarvis.social.refiner import ReplyRefiner
 from jarvis.social.reply import ReplyMode, ReplyPoster, ReplyResult
 from jarvis.social.scanner import RedditScanner, ScanConfig
 from jarvis.social.store import LeadStore
+from jarvis.social.templates import TemplateManager
 from jarvis.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -36,6 +38,8 @@ class RedditLeadService:
         self._store = LeadStore(db_path)
         self._scanner = RedditScanner(llm_fn=llm_fn)
         self._poster = ReplyPoster(browser_agent=browser_agent)
+        self._refiner = ReplyRefiner(llm_fn=llm_fn)
+        self._template_mgr = TemplateManager(self._store)
         self._notification_cb = notification_callback
         self._default_subreddits = default_subreddits or []
         self._scan_config = ScanConfig(
@@ -109,8 +113,17 @@ class RedditLeadService:
                     )
                     continue
 
-                # Draft reply
-                draft = await self._scanner.draft_reply(post, config)
+                # Fetch learning context for this subreddit
+                style_profile = self._store.get_profile(sub)
+                few_shot = self._store.get_top_performers(sub, limit=3) if style_profile else []
+
+                # 4. Reply-Draft with learning context
+                draft = await self._scanner.draft_reply(
+                    post,
+                    config,
+                    style_profile=style_profile,
+                    few_shot_examples=few_shot,
+                )
 
                 # Create and save lead
                 lead = Lead(
@@ -186,3 +199,52 @@ class RedditLeadService:
 
     def get_scan_history(self, limit: int = 20) -> list[dict[str, Any]]:
         return self._store.get_scan_history(limit=limit)
+
+    async def refine_reply(self, lead_id: str, hint: str = "", variants: int = 0) -> Any:
+        """Refine an existing reply draft or generate variants."""
+        lead = self._store.get_lead(lead_id)
+        if not lead:
+            return None
+        post = {"title": lead.title, "selftext": lead.body, "subreddit": lead.subreddit}
+        profile = self._store.get_profile(lead.subreddit)
+        few_shot = self._store.get_top_performers(lead.subreddit, limit=3)
+
+        if variants > 0:
+            return await self._refiner.generate_variants(
+                post,
+                self._scan_config.product_name,
+                count=variants,
+                style_profile=profile,
+            )
+        return await self._refiner.refine(
+            post,
+            lead.reply_final or lead.reply_draft,
+            self._scan_config.product_name,
+            user_hint=hint,
+            style_profile=profile,
+            few_shot_examples=few_shot,
+        )
+
+    def get_templates(self, subreddit: str = "") -> list[dict[str, Any]]:
+        """List reply templates, optionally filtered by subreddit."""
+        return self._template_mgr.list_for_subreddit(subreddit)
+
+    def apply_template(self, template_id: str, **variables: str) -> str:
+        """Apply a template with variable substitution."""
+        return self._template_mgr.apply(template_id, **variables)
+
+    def create_template(self, name: str, text: str, subreddit: str = "", style: str = "") -> str:
+        """Create a new reply template."""
+        return self._template_mgr.create(name, text, subreddit, style)
+
+    def delete_template(self, template_id: str) -> None:
+        """Delete a reply template."""
+        self._template_mgr.delete(template_id)
+
+    def set_feedback(self, lead_id: str, tag: str, note: str = "") -> None:
+        """Set feedback on a replied lead for learning."""
+        self._store.set_feedback(lead_id, tag, note)
+
+    def get_performance(self, lead_id: str) -> dict[str, Any] | None:
+        """Get performance metrics for a replied lead."""
+        return self._store.get_performance(lead_id)

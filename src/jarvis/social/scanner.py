@@ -48,7 +48,10 @@ Subreddit: r/{subreddit}
 Title: {title}
 Text: {body}
 
-Write a short, helpful Reddit reply (max 150 words):
+{style_context}
+{few_shot_context}
+
+Write a short, helpful Reddit reply (max {max_words} words):
 - Acknowledge the user's problem
 - Briefly explain how {product_name} can help
 - No hard sales pitch
@@ -149,17 +152,47 @@ class RedditScanner:
         self,
         post: dict[str, Any],
         config: ScanConfig,
+        *,
+        style_profile: dict[str, Any] | None = None,
+        few_shot_examples: list[dict[str, Any]] | None = None,
     ) -> str:
         """Draft a reply for a post via LLM."""
         if not self._llm_fn:
             return "[No LLM available for reply drafting]"
 
+        style_ctx = ""
+        if style_profile:
+            style_ctx = (
+                f"STYLE PROFILE for r/{post.get('subreddit', '')}:\n"
+                f"- What works: {style_profile.get('what_works', '')}\n"
+                f"- Avoid: {style_profile.get('what_fails', '')}\n"
+                f"- Optimal tone: {style_profile.get('optimal_tone', config.reply_tone)}"
+            )
+
+        few_shot_ctx = ""
+        if few_shot_examples:
+            lines = ["PROVEN REPLIES that performed well in this subreddit:"]
+            for i, ex in enumerate(few_shot_examples[:3], 1):
+                upv = ex.get("reply_upvotes", 0)
+                txt = ex.get("reply_text", "")[:150]
+                lines.append(f'{i}. [{upv} upvotes] "{txt}"')
+            few_shot_ctx = "\n".join(lines)
+
+        max_words = style_profile.get("optimal_length", 150) if style_profile else 150
+
         prompt = REPLY_PROMPT.format(
             product_name=config.product_name,
-            reply_tone=config.reply_tone,
+            reply_tone=(
+                style_profile.get("optimal_tone", config.reply_tone)
+                if style_profile
+                else config.reply_tone
+            ),
             subreddit=post.get("subreddit", ""),
             title=post.get("title", ""),
             body=(post.get("selftext") or "")[:1000],
+            style_context=style_ctx,
+            few_shot_context=few_shot_ctx,
+            max_words=max_words,
         )
         try:
             response = await self._llm_fn(
