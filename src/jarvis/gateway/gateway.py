@@ -389,6 +389,7 @@ class Gateway:
             # Wire LLM function (was None during Phase F init)
             if hasattr(self, "_ollama") and self._ollama is not None:
                 self._reddit_lead_service._scanner._llm_fn = self._ollama.chat
+                self._reddit_lead_service._refiner._llm_fn = self._ollama.chat
             # Wire BrowserAgent for auto-post (if available)
             browser_agent = getattr(self, "_browser_agent", None)
             if browser_agent:

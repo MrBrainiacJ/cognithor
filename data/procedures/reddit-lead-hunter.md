@@ -3,7 +3,7 @@ name: reddit-lead-hunter
 slug: reddit_lead_hunter
 description: Scannt Reddit nach High-Intent-Posts und generiert Reply-Drafts
 trigger_keywords: [Reddit, Lead, Leads scannen, Social Listening, Reddit Scan, Reddit Monitoring, Leads finden, Reddit suchen, Community Monitoring]
-tools_required: [reddit_scan, reddit_leads, reddit_reply]
+tools_required: [reddit_scan, reddit_leads, reddit_reply, reddit_refine, reddit_discover_subreddits, reddit_templates]
 category: marketing
 priority: 7
 enabled: true

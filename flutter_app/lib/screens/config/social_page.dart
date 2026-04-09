@@ -93,7 +93,7 @@ class SocialPage extends StatelessWidget {
             ),
             JarvisNumberField(
               label: l.scanInterval,
-              value: (social['reddit_scan_interval_minutes'] as num?) ?? 60,
+              value: (social['reddit_scan_interval_minutes'] as num?) ?? 30,
               min: 5,
               max: 1440,
               onChanged: (v) =>

@@ -55,11 +55,13 @@ def _find_our_reply(
             if isinstance(reply_data, dict):
                 children = reply_data.get("data", {}).get("children", [])
                 reply_count = len(children)
+            replies_list = children if isinstance(reply_data, dict) else []
             return {
                 "score": data.get("score", 0),
                 "reply_count": reply_count,
                 "author": data.get("author", ""),
                 "ratio": ratio,
+                "replies_data": replies_list,
             }
     return None
 

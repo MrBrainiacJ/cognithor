@@ -22,6 +22,7 @@ class _LeadWizardState extends State<LeadWizard> {
   int _skippedCount = 0;
   int _archivedCount = 0;
   late TextEditingController _replyCtrl;
+  final FocusNode _replyFocusNode = FocusNode();
   bool _posting = false;
   bool _showRefine = false;
 
@@ -38,6 +39,7 @@ class _LeadWizardState extends State<LeadWizard> {
   @override
   void dispose() {
     _replyCtrl.dispose();
+    _replyFocusNode.dispose();
     super.dispose();
   }
 
@@ -115,9 +117,11 @@ class _LeadWizardState extends State<LeadWizard> {
       body: KeyboardListener(
         focusNode: FocusNode()..requestFocus(),
         onKeyEvent: (event) {
-          if (event is KeyDownEvent) {
+          // Only handle shortcuts when reply TextField is NOT focused
+          if (event is KeyDownEvent && !_replyFocusNode.hasFocus) {
             if (event.logicalKey == LogicalKeyboardKey.keyA) _archive();
             if (event.logicalKey == LogicalKeyboardKey.keyS) _skip();
+            if (event.logicalKey == LogicalKeyboardKey.keyR && !_posting) _reply();
             if (event.logicalKey == LogicalKeyboardKey.keyI) setState(() => _showRefine = !_showRefine);
           }
         },
@@ -159,6 +163,7 @@ class _LeadWizardState extends State<LeadWizard> {
             // Reply editor
             TextField(
               controller: _replyCtrl,
+              focusNode: _replyFocusNode,
               maxLines: 6,
               decoration: InputDecoration(
                 labelText: l.editReply,
