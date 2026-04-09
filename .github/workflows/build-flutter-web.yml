@@ -1,0 +1,44 @@
+name: Build Flutter Web UI
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Flutter Web Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: stable
+
+      - name: Get dependencies
+        run: |
+          cd flutter_app
+          flutter pub get
+
+      - name: Build web release
+        run: |
+          cd flutter_app
+          flutter build web --release
+
+      - name: Package web build
+        run: |
+          cd flutter_app/build
+          tar czf ../../cognithor-flutter-web.tar.gz web/
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: cognithor-flutter-web.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

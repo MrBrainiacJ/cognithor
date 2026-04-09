@@ -17,6 +17,7 @@ except ImportError:
     def _row_factory_fn() -> type:  # type: ignore[misc]
         return sqlite3.Row
 
+
 log = get_logger(__name__)
 
 _SCHEMA = """

@@ -57,6 +57,31 @@ def _read_version() -> str:
 
 BOOTSTRAP_VERSION = _read_version()
 
+
+def _download_flutter_web(repo_root: str) -> bool:
+    """Download pre-built Flutter Web UI from GitHub Release."""
+    import tarfile
+    import urllib.request
+
+    url = (
+        f"https://github.com/Alex8791-cyber/cognithor/releases/download/"
+        f"v{BOOTSTRAP_VERSION}/cognithor-flutter-web.tar.gz"
+    )
+    target_dir = os.path.join(repo_root, "flutter_app", "build")
+    try:
+        os.makedirs(target_dir, exist_ok=True)
+        archive_path = os.path.join(target_dir, "flutter-web.tar.gz")
+        urllib.request.urlretrieve(url, archive_path)
+        with tarfile.open(archive_path, "r:gz") as tar:
+            tar.extractall(path=target_dir)
+        os.remove(archive_path)
+        index = os.path.join(target_dir, "web", "index.html")
+        return os.path.isfile(index)
+    except Exception:
+        pass  # Silently fail — warn is printed by caller
+        return False
+
+
 # ── Pfade ──────────────────────────────────────────────────────────────────
 JARVIS_HOME = Path(os.environ.get("JARVIS_HOME", Path.home() / ".jarvis"))
 MARKER_FILE = JARVIS_HOME / ".cognithor_initialized"
@@ -837,13 +862,32 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         "web",
         "index.html",
     )
+    # Check if build is outdated (sources newer than build)
+    _flutter_needs_rebuild = False
     if os.path.isfile(flutter_index):
-        ok("Flutter Web UI present (bundled)")
+        _build_mtime = os.path.getmtime(flutter_index)
+        _lib_dir = os.path.join(repo_root, "flutter_app", "lib")
+        if os.path.isdir(_lib_dir):
+            for _root, _dirs, _files in os.walk(_lib_dir):
+                for _f in _files:
+                    if _f.endswith(".dart"):
+                        _src_mtime = os.path.getmtime(os.path.join(_root, _f))
+                        if _src_mtime > _build_mtime:
+                            _flutter_needs_rebuild = True
+                            break
+                if _flutter_needs_rebuild:
+                    break
+
+    if os.path.isfile(flutter_index) and not _flutter_needs_rebuild:
+        ok("Flutter Web UI present (up to date)")
     else:
         # Try to build if Flutter SDK is available
         flutter_cmd = shutil.which("flutter")
         if flutter_cmd:
-            info("Building Flutter Web UI...")
+            if _flutter_needs_rebuild:
+                info("Flutter UI sources changed — rebuilding...")
+            else:
+                info("Building Flutter Web UI...")
             flutter_dir = os.path.join(repo_root, "flutter_app")
             build_proc = subprocess.run(
                 [flutter_cmd, "build", "web", "--release"],
@@ -857,10 +901,16 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
             else:
                 result.add_warn("Flutter build failed. UI will run in CLI mode.")
         else:
-            result.add_warn(
-                "Flutter Web UI not found (flutter_app/build/web/). "
-                "Re-clone the repo or install Flutter SDK to build."
-            )
+            # No Flutter SDK — try to download pre-built web UI from GitHub Release
+            info("No Flutter SDK found. Attempting to download pre-built UI...")
+            _downloaded = _download_flutter_web(repo_root)
+            if _downloaded:
+                ok("Flutter Web UI downloaded from release")
+            else:
+                result.add_warn(
+                    "Flutter Web UI not available. Install Flutter SDK "
+                    "or download cognithor-flutter-web.tar.gz from the release page."
+                )
 
     # ── 7. Verzeichnisstruktur ─────────────────────────────────────────
     header("7/14  Directory Structure")
