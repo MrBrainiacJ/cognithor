@@ -1,64 +1,128 @@
 ---
 name: morgen-briefing
-trigger_keywords: [Briefing, Morgen, Tagesplan, Überblick, Zusammenfassung, was steht an]
-tools_required: [get_recent_episodes, search_memory, list_directory, search_procedures]
+slug: morgen_briefing
+description: Umfassender Tagesplaner — kombiniert Episoden, Kanban-Tasks, Reddit-Leads, Memory und Prioritaeten zu einem strukturierten Plan
+trigger_keywords: [Briefing, Morgen, Tagesplan, Ueberblick, Zusammenfassung, was steht an, Plan meinen Tag, Tag planen, Daily Standup, Morning, Guten Morgen, heute, day plan, schedule]
+tools_required: [get_recent_episodes, search_memory, kanban_list_tasks, reddit_leads, web_search]
 category: productivity
 priority: 4
+enabled: true
 success_count: 0
 failure_count: 0
 total_uses: 0
 avg_score: 0.0
 last_used: null
 learned_from: [initial-setup]
+agent: ""
 ---
-# Morgen-Briefing
+
+# Morgen-Briefing & Tagesplaner
 
 ## Wann anwenden
-Wenn der Benutzer den Tag startet und einen Überblick haben möchte.
-Typische Trigger: "Was steht heute an?", "Morgen-Briefing", "Zusammenfassung",
-"Was war gestern?", "Überblick".
+Wenn der Benutzer den Tag startet, einen Ueberblick haben moechte, oder seinen Tag planen will.
 
-## Voraussetzungen
-- Keine besonderen Voraussetzungen (alles aus Memory abrufbar)
+## WICHTIG: Proaktiv und umfassend
+
+Sammle ALLE verfuegbaren Informationsquellen und praesentiere einen strukturierten Tagesplan.
+Frage NICHT zuerst — liefere sofort Ergebnisse und biete dann Anpassungen an.
 
 ## Ablauf
 
-1. **Gestrige Episoden laden** — Was wurde gestern gemacht?
-   Tool: `get_recent_episodes` mit count=2 (gestern + vorgestern für Kontext).
+### Phase 1: Daten sammeln (parallel wo moeglich)
 
-2. **Offene Punkte suchen** — Aus den Episoden offene Aufgaben extrahieren.
-   Tool: `search_memory` mit "offen TODO ausstehend nächster Schritt".
+1. **Gestrige Episoden** — Was wurde gestern gemacht?
+   Tool: `get_recent_episodes` mit count=3
+   Extrahiere: erledigte Aufgaben, offene Punkte, Erkenntnisse
 
-3. **Workspace prüfen** — Gibt es aktuelle Arbeitsdateien?
-   Tool: `list_directory` mit `~/.jarvis/workspace/`.
+2. **Offene Kanban-Tasks** — Was steht auf dem Board?
+   Tool: `kanban_list_tasks` mit status=in_progress
+   Tool: `kanban_list_tasks` mit status=backlog (nur high/urgent Priority)
+   Extrahiere: faellige Tasks, blockierte Tasks, High-Priority Items
 
-4. **Briefing formulieren** — Strukturierte Zusammenfassung:
-   - Was gestern erledigt wurde
-   - Was offen ist
-   - Vorschläge für heute
-   - Erinnerungen (Termine, Fristen, Deadlines)
+3. **Neue Reddit-Leads** — Gibt es neue Leads zum Bearbeiten?
+   Tool: `reddit_leads` mit status=new, min_score=60
+   Extrahiere: Anzahl neuer Leads, hoechster Score, wichtigste Subreddits
 
-## Format der Ausgabe
+4. **Memory-Suche** — Offene Todos, Fristen, Termine
+   Tool: `search_memory` mit "offen TODO ausstehend Frist Deadline Termin morgen heute"
+   Extrahiere: Termine, Fristen, Erinnerungen
+
+5. **Aktuelle Nachrichten** (optional, nur wenn Operation Mode = online/hybrid)
+   Tool: `web_search` mit relevanter Branchensuche
+   Extrahiere: 1-2 relevante Headlines
+
+### Phase 2: Strukturiertes Briefing praesentieren
+
+Formatiere die Ergebnisse als klaren, actionable Tagesplan:
 
 ```
-Guten Morgen.
+## Guten Morgen, [Owner Name]!
 
-**Gestern erledigt:**
-- [Zusammenfassung der gestrigen Aktivitäten]
+### Rueckblick Gestern
+- [Was erledigt wurde — max 3 Punkte]
+- [Offene Punkte die mitgenommen werden]
 
-**Offen:**
-- [Aufgaben die noch ausstehen]
+### Dein Tagesplan
 
-**Für heute:**
-- [Priorisierte Vorschläge]
+**Prioritaet 1 — Sofort erledigen**
+- [ ] [Dringendste Aufgabe aus Kanban/Memory]
+- [ ] [Zweite dringende Aufgabe]
+
+**Prioritaet 2 — Heute angehen**
+- [ ] [Wichtige aber nicht dringende Tasks]
+- [ ] [Offene Punkte von gestern]
+
+**Prioritaet 3 — Wenn Zeit bleibt**
+- [ ] [Backlog-Items]
+- [ ] [Nice-to-haves]
+
+### Reddit-Leads
+[X] neue Leads gefunden (hoechster Score: [N])
+→ "Willst du die Leads jetzt durchgehen?"
+
+### Erinnerungen
+- [Termine/Fristen die heute relevant sind]
+
+### Tipp
+[Ein hilfreicher Vorschlag basierend auf den Daten]
 ```
+
+### Phase 3: Follow-up anbieten
+
+Nach dem Briefing, biete an:
+- "Soll ich die Reddit-Leads jetzt scannen/durchgehen?"
+- "Soll ich Task X als erstes angehen?"
+- "Soll ich den Tagesplan als Kanban-Tasks anlegen?"
+- "Moechtest du mehr Details zu einem Punkt?"
+
+## Personalisierung
+
+- Nutze den Owner-Namen aus der Config (config.owner_name)
+- Passe den Ton an die Tageszeit an (Morgen: motivierend, Nachmittag: fokussiert)
+- Wenn der User regelmaessig Briefings nutzt, erwaehne Fortschritt
+- Lerne aus Feedback welche Sektionen der User ueberspringt
+
+## Wenn Daten fehlen
+
+- Kein Kanban: Ueberspringe die Task-Sektion
+- Keine Reddit-Leads: Ueberspringe, erwaehne "Social Listening ist nicht konfiguriert"
+- Keine Episoden: "Erster Tag? Willkommen!"
+- Keine Memory-Treffer: Sektion weglassen
+
+## Cron-Integration
+
+Wenn als Cron-Job eingerichtet (z.B. jeden Morgen um 7:00):
+- Automatisches Briefing an den konfigurierten Channel
+- Kompakteres Format (keine Follow-up Fragen)
+- Endet mit: "Antworte fuer Details oder sage 'Plan anpassen'"
 
 ## Bekannte Fallstricke
 - Am Montag: Freitag statt "gestern" als Referenz
 - Wenn keine Episoden vorhanden: Ehrlich sagen, nicht erfinden
-- Nicht zu lang — Briefing soll schnell erfassbar sein
+- Nicht zu lang — Briefing soll schnell erfassbar sein (max 300 Woerter)
 
-## Qualitätskriterien
-- Maximal 200 Wörter
+## Qualitaetskriterien
+- Maximal 300 Woerter
 - Offene Punkte priorisiert
-- Konkrete Handlungsvorschläge
+- Konkrete Handlungsvorschlaege
+- Jede Sektion hat mindestens einen actionable Punkt
