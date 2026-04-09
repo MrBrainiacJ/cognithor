@@ -32,28 +32,28 @@ class _RobotMessages {
   }
 
   static const _taskMessagesEn = [
-    'Loading context...', 'Calling API...', 'Parsing data...',
-    'Creating plan...', 'Executing tool...', 'Checking response...',
-    'Saving memory...', 'Validating result...', 'Counting tokens...',
-    'Building chain...', 'Optimizing prompt...', 'Writing logs...',
+    'Thinking hard...', 'Filing papers...', 'Daydreaming...',
+    'Refilling coffee...', 'Organizing desk...', 'Stretching circuits...',
+    'Browsing memes...', 'Watering plants...', 'Feeding the dog...',
+    'Checking the clock...', 'Doodling...', 'Stacking boxes...',
   ];
   static const _taskMessagesDe = [
-    'Kontext laden...', 'API aufrufen...', 'Daten parsen...',
-    'Plan erstellen...', 'Tool ausfuehren...', 'Antwort pruefen...',
-    'Memory speichern...', 'Ergebnis validieren...', 'Tokens zaehlen...',
-    'Chain bauen...', 'Prompt optimieren...', 'Logs schreiben...',
+    'Nachdenken...', 'Akten sortieren...', 'Tagtraeumen...',
+    'Kaffee nachfuellen...', 'Schreibtisch aufraeumen...', 'Schaltkreise dehnen...',
+    'Memes durchstoebern...', 'Pflanzen giessen...', 'Hund fuettern...',
+    'Auf die Uhr schauen...', 'Kritzeln...', 'Kisten stapeln...',
   ];
   static const _taskMessagesZh = [
-    '\u52A0\u8F7D\u4E0A\u4E0B\u6587...', '\u8C03\u7528API...', '\u89E3\u6790\u6570\u636E...',
-    '\u521B\u5EFA\u8BA1\u5212...', '\u6267\u884C\u5DE5\u5177...', '\u68C0\u67E5\u54CD\u5E94...',
-    '\u4FDD\u5B58\u8BB0\u5FC6...', '\u9A8C\u8BC1\u7ED3\u679C...', '\u8BA1\u7B97Token...',
-    '\u6784\u5EFA\u94FE...', '\u4F18\u5316\u63D0\u793A\u8BCD...', '\u5199\u5165\u65E5\u5FD7...',
+    '\u601D\u8003\u4E2D...', '\u6574\u7406\u6587\u4EF6...', '\u767D\u65E5\u68A6...',
+    '\u7EED\u676F\u5496\u5561...', '\u6574\u7406\u684C\u9762...', '\u62C9\u4F38\u7535\u8DEF...',
+    '\u770B\u8868\u60C5\u5305...', '\u6D47\u82B1...', '\u5582\u72D7...',
+    '\u770B\u65F6\u95F4...', '\u6D82\u9E26...', '\u5806\u7BB1\u5B50...',
   ];
   static const _taskMessagesAr = [
-    '\u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0633\u064A\u0627\u0642...', '\u0627\u0633\u062A\u062F\u0639\u0627\u0621 API...', '\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A...',
-    '\u0625\u0646\u0634\u0627\u0621 \u062E\u0637\u0629...', '\u062A\u0646\u0641\u064A\u0630 \u0623\u062F\u0627\u0629...', '\u0641\u062D\u0635 \u0627\u0644\u0627\u0633\u062A\u062C\u0627\u0628\u0629...',
-    '\u062D\u0641\u0638 \u0627\u0644\u0630\u0627\u0643\u0631\u0629...', '\u0627\u0644\u062A\u062D\u0642\u0642 \u0645\u0646 \u0627\u0644\u0646\u062A\u064A\u062C\u0629...', '\u0639\u062F \u0627\u0644\u0631\u0645\u0648\u0632...',
-    '\u0628\u0646\u0627\u0621 \u0627\u0644\u0633\u0644\u0633\u0644\u0629...', '\u062A\u062D\u0633\u064A\u0646 \u0627\u0644\u0645\u0648\u062C\u0647...', '\u0643\u062A\u0627\u0628\u0629 \u0627\u0644\u0633\u062C\u0644\u0627\u062A...',
+    '\u062A\u0641\u0643\u064A\u0631 \u0639\u0645\u064A\u0642...', '\u062A\u0631\u062A\u064A\u0628 \u0627\u0644\u0623\u0648\u0631\u0627\u0642...', '\u0623\u062D\u0644\u0627\u0645 \u064A\u0642\u0638\u0629...',
+    '\u0625\u0639\u0627\u062F\u0629 \u0645\u0644\u0621 \u0627\u0644\u0642\u0647\u0648\u0629...', '\u062A\u0631\u062A\u064A\u0628 \u0627\u0644\u0645\u0643\u062A\u0628...', '\u062A\u0645\u062F\u064A\u062F \u0627\u0644\u062F\u0648\u0627\u0626\u0631...',
+    '\u062A\u0635\u0641\u062D \u0627\u0644\u0645\u064A\u0645\u0632...', '\u0633\u0642\u064A \u0627\u0644\u0646\u0628\u0627\u062A\u0627\u062A...', '\u0625\u0637\u0639\u0627\u0645 \u0627\u0644\u0643\u0644\u0628...',
+    '\u0627\u0644\u0646\u0638\u0631 \u0644\u0644\u0633\u0627\u0639\u0629...', '\u0631\u0633\u0645 \u0639\u0634\u0648\u0627\u0626\u064A...', '\u062A\u0643\u062F\u064A\u0633 \u0627\u0644\u0635\u0646\u0627\u062F\u064A\u0642...',
   ];
 
   // ── Chat messages (robot-to-robot banter) ──────────────────────────────
