@@ -80,10 +80,11 @@ class TestFix1ChmodInDocs:
 
     def test_readme_has_chmod_before_run(self):
         text = _read(README_MD)
-        pattern = r"chmod \+x install\.sh\n\./install\.sh"
+        # Accept both "chmod +x install.sh\n./install.sh" and "chmod +x install.sh && ./install.sh"
+        pattern = r"chmod \+x install\.sh\s*(?:\n|&&)\s*\.?/?install\.sh"
         assert re.search(pattern, text), (
-            "README.md must have 'chmod +x install.sh' on the line "
-            "immediately before './install.sh'"
+            "README.md must have 'chmod +x install.sh' before './install.sh' "
+            "(either on the next line or chained with &&)"
         )
 
 

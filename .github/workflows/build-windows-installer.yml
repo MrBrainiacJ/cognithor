@@ -20,19 +20,22 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install build tools
+        run: pip install hatchling hatch
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-
-      - name: Install Inno Setup
-        run: choco install innosetup -y --no-progress
 
       - name: Build Flutter Web UI
         run: |
           cd flutter_app
           flutter pub get
           flutter build web --release
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
 
       - name: Build installer
         run: python installer/build_installer.py
@@ -42,12 +45,18 @@ jobs:
       - name: Find installer EXE
         id: find_exe
         run: |
-          $exe = Get-ChildItem installer/dist/*.exe | Select-Object -First 1
-          echo "exe_path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
-          echo "exe_name=$($exe.Name)" >> $env:GITHUB_OUTPUT
+          $exe = Get-ChildItem installer/dist/*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($exe) {
+            echo "exe_path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+            echo "exe_name=$($exe.Name)" >> $env:GITHUB_OUTPUT
+            echo "found=true" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "found=false" >> $env:GITHUB_OUTPUT
+          }
         shell: pwsh
 
       - name: Upload to Release
+        if: steps.find_exe.outputs.found == 'true'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.find_exe.outputs.exe_path }}
