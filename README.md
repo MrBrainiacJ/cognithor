@@ -313,47 +313,57 @@ python demo.py --fast    # Speed run (~15 seconds)
 
 ## Quick Start
 
-**Time: under 5 minutes from clone to running agent.**
+**Under 5 minutes from download to running agent.**
 
-### Prerequisites
+### Option A: Windows Installer (recommended for Windows users)
 
-- Python >= 3.12
-- **LLM Backend** (one of):
-  - [Ollama](https://ollama.ai) — local, free, GDPR-compliant (recommended)
-  - [LM Studio](https://lmstudio.ai) — local, OpenAI-compatible API on port 1234
-  - Any of the 14 cloud providers listed above (just an API key)
-- Optional: `playwright` for browser automation, `faster-whisper` for voice
+1. **Download** `CognithorSetup-{version}.exe` from the [latest release](https://github.com/Alex8791-cyber/cognithor/releases/latest)
+2. **Run the installer** — it bundles Python, Ollama, Flutter UI, and all dependencies
+3. **Launch** via Desktop shortcut or Start Menu
+4. **Done** — browser opens at `http://localhost:8741`
 
-### Step 1: Clone and Install (~2 min)
+> The installer auto-detects your GPU, downloads the right models, and runs a health check. No prerequisites needed.
+
+### Option B: Linux / macOS / Source Install
 
 ```bash
-# Option A: Install from PyPI (simplest)
-pip install cognithor          # Core features
-pip install cognithor[all]     # All features (recommended)
-pip install cognithor[full]    # Everything including voice + PostgreSQL
-
-# Option B: Clone the repository (for development / latest changes)
+# Clone
 git clone https://github.com/Alex8791-cyber/cognithor.git
 cd cognithor
 
-# Recommended: Interactive installation (venv, Ollama check, systemd, smoke test)
-chmod +x install.sh
-./install.sh
+# Linux/macOS: Interactive installer (venv, Ollama, models, systemd)
+chmod +x install.sh && ./install.sh
 
-# Or: Manual installation (no C compiler needed)
+# Windows (from source): Double-click install.bat
+
+# Or manual: pip install
 pip install -e ".[all,dev]"
-
-# Individual feature groups (install only what you need)
-pip install -e ".[telegram,voice,web,cron]"
 ```
 
-> **Windows One-Click:** Run `install.bat` (double-click) or `.\install.ps1` in PowerShell. Both handle Python, venv, Ollama, and model downloads automatically.
+### Option C: PyPI (any platform)
 
-> **No git?** [Download the ZIP](https://github.com/Alex8791-cyber/cognithor/archive/refs/heads/main.zip) instead, extract it, and open a terminal in the extracted folder.
+```bash
+pip install cognithor[all]     # All features
+ollama pull qwen3:8b           # Pull a model
+cognithor                      # Start
+```
 
-> **`[all]` vs `[full]`:** `[all]` installs all features that work out of the box on any platform without a C compiler. `[full]` additionally includes `voice` (faster-whisper, piper-tts, sounddevice) and `postgresql` (psycopg, pgvector) which may require build tools on some systems.
+### Prerequisites (Option B/C only)
 
-The installer offers five modes: `--minimal` (core only), `--full` (all features), `--use-uv` (10x faster installs with [uv](https://docs.astral.sh/uv/)), `--systemd` (+ service installation), `--uninstall` (removal). Without flags, it starts in interactive mode. If `uv` is installed, it is auto-detected and preferred over pip.
+- Python >= 3.12
+- [Ollama](https://ollama.ai) (local, free) **or** any cloud LLM API key (OpenAI, Anthropic, Gemini, etc.)
+
+### After Installation: Pull Models
+
+```bash
+ollama pull qwen3:32b              # Planner (20 GB VRAM)
+ollama pull qwen3:8b               # Executor (6 GB VRAM)
+ollama pull qwen3-embedding:0.6b   # Embeddings (500 MB VRAM)
+```
+
+No GPU? Use `qwen3:8b` for both, or set a cloud API key — models are auto-configured.
+
+> **Uninstall:** Windows: run `uninstall.bat`. Linux: `./install.sh --uninstall`. PyPI: `pip uninstall cognithor`.
 
 ### Step 2: Pull an LLM (~2 min)
 
