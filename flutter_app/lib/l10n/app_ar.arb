@@ -903,5 +903,6 @@
   "priorityHigh": "عالي (تعلم بأولوية)",
   "deepLearningQueued": "التعلم العميق في الانتظار",
   "deepLearningSkipped": "مفهرس فقط",
-  "learnPriority": "الأولوية"
+  "learnPriority": "الأولوية",
+  "deepLearningQueue": "قائمة التعلم العميق"
 }

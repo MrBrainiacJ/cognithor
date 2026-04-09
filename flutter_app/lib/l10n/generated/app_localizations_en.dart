@@ -2605,4 +2605,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get learnPriority => 'Priority';
+
+  @override
+  String get deepLearningQueue => 'Deep Learning Queue';
 }

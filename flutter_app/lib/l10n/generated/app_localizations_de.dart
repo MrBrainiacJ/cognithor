@@ -2613,4 +2613,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get learnPriority => 'Prioritaet';
+
+  @override
+  String get deepLearningQueue => 'Deep-Learning Warteschlange';
 }

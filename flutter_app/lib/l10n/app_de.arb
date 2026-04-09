@@ -912,5 +912,6 @@
   "priorityHigh": "Hoch (Prioritaet-Lernen)",
   "deepLearningQueued": "Deep-Learning eingereiht",
   "deepLearningSkipped": "Nur indexiert",
-  "learnPriority": "Prioritaet"
+  "learnPriority": "Prioritaet",
+  "deepLearningQueue": "Deep-Learning Warteschlange"
 }

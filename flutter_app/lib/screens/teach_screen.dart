@@ -38,6 +38,9 @@ class _TeachScreenState extends State<TeachScreen> {
   String? _youtubeResult;
   bool? _youtubeSuccess;
 
+  // Queue
+  List<Map<String, dynamic>> _queue = [];
+
   // History
   List<Map<String, dynamic>> _history = [];
   bool _historyLoading = false;
@@ -47,6 +50,7 @@ class _TeachScreenState extends State<TeachScreen> {
   void initState() {
     super.initState();
     _loadHistory();
+    _loadQueue();
   }
 
   @override
@@ -69,6 +73,20 @@ class _TeachScreenState extends State<TeachScreen> {
     } catch (_) {
       setState(() => _historyLoading = false);
     }
+  }
+
+  Future<void> _loadQueue() async {
+    try {
+      final api = context.read<ConnectionProvider>().api;
+      final res = await api.getLearnQueue();
+      if (mounted) {
+        setState(() {
+          _queue = (res['queue'] as List<dynamic>?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ?? [];
+        });
+      }
+    } catch (_) {}
   }
 
   // ---------------------------------------------------------------------------
@@ -119,6 +137,7 @@ class _TeachScreenState extends State<TeachScreen> {
           _fileSuccess = true;
         });
         _loadHistory();
+        _loadQueue();
       }
     } catch (e) {
       setState(() {
@@ -167,6 +186,7 @@ class _TeachScreenState extends State<TeachScreen> {
         });
         _urlController.clear();
         _loadHistory();
+        _loadQueue();
       }
     } catch (e) {
       setState(() {
@@ -203,6 +223,7 @@ class _TeachScreenState extends State<TeachScreen> {
         });
         _youtubeController.clear();
         _loadHistory();
+        _loadQueue();
       }
     } catch (e) {
       setState(() {
@@ -257,6 +278,22 @@ class _TeachScreenState extends State<TeachScreen> {
             _buildUrlCard(l),
             const SizedBox(height: JarvisTheme.spacing),
             _buildYoutubeCard(l),
+          ],
+
+          // Queue section
+          if (_queue.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(l.deepLearningQueue, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            ..._queue.map((item) => ListTile(
+              dense: true,
+              leading: const Icon(Icons.hourglass_top, size: 18),
+              title: Text(item['source']?.toString() ?? '', overflow: TextOverflow.ellipsis),
+              trailing: Chip(
+                label: Text(item['priority']?.toString() ?? '', style: const TextStyle(fontSize: 10)),
+                visualDensity: VisualDensity.compact,
+              ),
+            )),
           ],
 
           const SizedBox(height: JarvisTheme.spacingLg),

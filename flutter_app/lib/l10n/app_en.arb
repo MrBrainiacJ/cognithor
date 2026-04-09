@@ -1502,5 +1502,7 @@
   "deepLearningSkipped": "Indexed only",
   "@deepLearningSkipped": {},
   "learnPriority": "Priority",
-  "@learnPriority": {}
+  "@learnPriority": {},
+  "deepLearningQueue": "Deep Learning Queue",
+  "@deepLearningQueue": {}
 }

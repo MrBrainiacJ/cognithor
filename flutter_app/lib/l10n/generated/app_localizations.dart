@@ -5135,6 +5135,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Priority'**
   String get learnPriority;
+
+  /// No description provided for @deepLearningQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Learning Queue'**
+  String get deepLearningQueue;
 }
 
 class _AppLocalizationsDelegate

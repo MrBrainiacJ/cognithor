@@ -903,5 +903,6 @@
   "priorityHigh": "高（优先学习）",
   "deepLearningQueued": "深度学习已排队",
   "deepLearningSkipped": "仅索引",
-  "learnPriority": "优先级"
+  "learnPriority": "优先级",
+  "deepLearningQueue": "深度学习队列"
 }

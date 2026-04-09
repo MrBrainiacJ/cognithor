@@ -2582,4 +2582,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get learnPriority => '优先级';
+
+  @override
+  String get deepLearningQueue => '深度学习队列';
 }

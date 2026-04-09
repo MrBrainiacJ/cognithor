@@ -563,6 +563,7 @@ class ApiClient {
 
   Future<Map<String, dynamic>> getLearnHistory() => get('learn/history');
   Future<Map<String, dynamic>> getLearnStats() => get('learn/stats');
+  Future<Map<String, dynamic>> getLearnQueue() => get('learn/queue');
 
   // ---------------------------------------------------------------------------
   // Backend Status

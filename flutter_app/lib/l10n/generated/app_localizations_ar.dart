@@ -2597,4 +2597,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get learnPriority => 'الأولوية';
+
+  @override
+  String get deepLearningQueue => 'قائمة التعلم العميق';
 }
