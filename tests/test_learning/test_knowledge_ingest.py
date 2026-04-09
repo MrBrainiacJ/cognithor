@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -299,3 +299,54 @@ class TestPdfVision:
         assert fetch.url == "upload://doc.pdf"
         # Result status updated
         assert svc._results[0].deep_learn_status == "completed"
+
+
+class TestOcrPdf:
+    def test_ocr_returns_empty_without_deps(self):
+        """OCR gracefully returns empty when pytesseract/pdf2image not installed."""
+        svc = KnowledgeIngestService()
+        with patch.dict("sys.modules", {"pytesseract": None}):
+            result = svc._ocr_pdf(b"%PDF-1.4 fake")
+            assert result == ""
+
+    def test_ocr_returns_empty_on_invalid_pdf(self):
+        """OCR returns empty for non-PDF content."""
+        svc = KnowledgeIngestService()
+        # pdf2image will fail on invalid content
+        result = svc._ocr_pdf(b"not a pdf at all")
+        assert result == ""
+
+    @pytest.mark.asyncio
+    async def test_extract_text_uses_ocr_fallback_for_sparse_pdf(self):
+        """If PDF text extraction yields < 100 chars, OCR fallback is tried."""
+        svc = KnowledgeIngestService()
+        # Mock TextExtractor to return sparse text
+        with patch("jarvis.memory.ingest.TextExtractor") as MockExtractor:
+            mock_inst = MagicMock()
+            mock_inst.extract = AsyncMock(return_value="ab")  # < 100 chars
+            MockExtractor.return_value = mock_inst
+            with patch.object(svc, "_ocr_pdf", return_value="OCR extracted full text here"):
+                text = await svc._extract_text(b"%PDF-1.4", "scan.pdf")
+                assert text == "OCR extracted full text here"
+
+
+class TestYoutubeFrames:
+    def test_no_ffmpeg_returns_empty(self):
+        """Without ffmpeg binary, returns empty list."""
+        svc = KnowledgeIngestService()
+        with patch("shutil.which", return_value=None):
+            result = svc._extract_youtube_frames("dQw4w9WgXcQ")
+            assert result == []
+
+    def test_no_ytdl_returns_empty(self):
+        """Without yt-dlp/youtube-dl, returns empty list."""
+        svc = KnowledgeIngestService()
+
+        def _which(name: str) -> str | None:
+            if name == "ffmpeg":
+                return "/usr/bin/ffmpeg"
+            return None
+
+        with patch("shutil.which", side_effect=_which):
+            result = svc._extract_youtube_frames("dQw4w9WgXcQ")
+            assert result == []

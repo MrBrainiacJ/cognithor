@@ -280,17 +280,18 @@ class KnowledgeIngestService:
             result.text_length = len(text)
             result.priority = priority
 
-            # Queue for deep learning
+            # Queue for deep learning (with optional video frame extraction)
             if priority == Priority.LOW:
                 result.deep_learn_status = "skipped"
             else:
                 result.deep_learn_status = "queued"
+                frames = self._extract_youtube_frames(video_id) if priority == Priority.HIGH else []
                 item = _QueueItem(
                     result_id=result.id,
                     text=text,
                     source=f"youtube://{video_id}",
                     priority=priority,
-                    page_images=[],
+                    page_images=frames,
                 )
                 self._queue.enqueue(item)
                 self._ensure_worker()
@@ -303,7 +304,12 @@ class KnowledgeIngestService:
         return result
 
     async def _extract_text(self, content: bytes, filename: str) -> str:
-        """Extract text from file content."""
+        """Extract text from file content.
+
+        For images: uses vision model.
+        For PDFs: uses TextExtractor, then falls back to OCR if text is sparse.
+        For other documents: uses TextExtractor.
+        """
         import tempfile
 
         suffix = Path(filename).suffix.lower()
@@ -316,9 +322,132 @@ class KnowledgeIngestService:
             from jarvis.memory.ingest import TextExtractor
 
             extractor = TextExtractor()
-            return await extractor.extract(tmp_path)
+            text = await extractor.extract(tmp_path)
+
+            # OCR fallback for scanned PDFs: if extracted text is very sparse
+            if suffix == ".pdf" and len((text or "").strip()) < 100:
+                ocr_text = self._ocr_pdf(content)
+                if ocr_text and len(ocr_text) > len(text or ""):
+                    log.info("ocr_fallback_used", file=filename, ocr_len=len(ocr_text))
+                    return ocr_text
+
+            return text
         finally:
             tmp_path.unlink(missing_ok=True)
+
+    def _ocr_pdf(self, content: bytes) -> str:
+        """OCR a scanned PDF using Tesseract. Returns empty string on failure."""
+        try:
+            from pdf2image import convert_from_bytes
+            from pytesseract import image_to_string
+        except ImportError:
+            return ""
+
+        try:
+            images = convert_from_bytes(content, dpi=200, fmt="png")
+            pages: list[str] = []
+            for img in images[:50]:  # Cap at 50 pages
+                text = image_to_string(img, lang="eng+deu")
+                if text and text.strip():
+                    pages.append(text.strip())
+            return "\n\n".join(pages)
+        except Exception as exc:
+            log.debug("ocr_pdf_failed", error=str(exc))
+            return ""
+
+    def _extract_youtube_frames(self, video_id: str, max_frames: int = 5) -> list[Path]:
+        """Extract key frames from a YouTube video using yt-dlp + ffmpeg.
+
+        Downloads a low-res version, extracts frames at regular intervals.
+        Returns list of PNG paths. Gracefully returns [] if tools missing.
+        """
+        try:
+            import shutil
+            import subprocess
+            import tempfile
+
+            if not shutil.which("ffmpeg"):
+                log.debug("youtube_frames_no_ffmpeg")
+                return []
+
+            # Try yt-dlp first, then youtube-dl
+            ytdl = shutil.which("yt-dlp") or shutil.which("youtube-dl")
+            if not ytdl:
+                log.debug("youtube_frames_no_ytdl")
+                return []
+
+            tmp_dir = Path(tempfile.mkdtemp(prefix="cognithor_yt_"))
+            video_path = tmp_dir / "video.mp4"
+
+            # Download lowest quality video (small + fast)
+            dl_result = subprocess.run(
+                [
+                    ytdl,
+                    "-f",
+                    "worst[ext=mp4]",
+                    "--no-playlist",
+                    "--max-filesize",
+                    "50M",
+                    "-o",
+                    str(video_path),
+                    f"https://www.youtube.com/watch?v={video_id}",
+                ],
+                capture_output=True,
+                timeout=120,
+            )
+            if dl_result.returncode != 0 or not video_path.exists():
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                return []
+
+            # Extract frames at regular intervals using ffmpeg
+            frames_dir = tmp_dir / "frames"
+            frames_dir.mkdir()
+            # Get video duration via ffprobe
+            probe = subprocess.run(
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-show_entries",
+                    "format=duration",
+                    "-of",
+                    "csv=p=0",
+                    str(video_path),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            duration = float(probe.stdout.strip()) if probe.returncode == 0 else 60.0
+            interval = max(duration / (max_frames + 1), 5.0)
+
+            # Extract frames
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i",
+                    str(video_path),
+                    "-vf",
+                    f"fps=1/{interval:.0f}",
+                    "-frames:v",
+                    str(max_frames),
+                    "-q:v",
+                    "2",
+                    str(frames_dir / "frame_%03d.png"),
+                ],
+                capture_output=True,
+                timeout=60,
+            )
+
+            # Collect frame paths, clean up video
+            video_path.unlink(missing_ok=True)
+            paths = sorted(frames_dir.glob("*.png"))[:max_frames]
+            log.info("youtube_frames_extracted", video_id=video_id, frames=len(paths))
+            return paths
+
+        except Exception as exc:
+            log.debug("youtube_frames_failed", video_id=video_id, error=str(exc))
+            return []
 
     def _extract_page_images(self, content: bytes, suffix: str) -> list[Path]:
         """Extract image-heavy pages from a PDF as PNG files.
