@@ -164,7 +164,7 @@ var
   P1, P2: Integer;
 begin
   Result := True;
-  MarkerPath := ExpandConstant('{userprofile}\.jarvis\.cognithor_initialized');
+  MarkerPath := ExpandConstant('{%USERPROFILE}\.jarvis\.cognithor_initialized');
   if FileExists(MarkerPath) then
   begin
     if LoadStringFromFile(MarkerPath, MarkerContent) then
@@ -249,7 +249,7 @@ begin
     Exec('taskkill', '/F /IM ollama.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 
     // Ask user: remove user data?
-    JarvisHome := ExpandConstant('{userprofile}\.jarvis');
+    JarvisHome := ExpandConstant('{%USERPROFILE}\.jarvis');
     if DirExists(JarvisHome) then
     begin
       if MsgBox(

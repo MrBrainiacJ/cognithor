@@ -352,6 +352,10 @@ class _BreathingLogoState extends State<_BreathingLogo>
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
       child: Row(
+        mainAxisAlignment: widget.expanded
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Animated logo
           AnimatedBuilder(

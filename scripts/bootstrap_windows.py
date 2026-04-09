@@ -61,6 +61,7 @@ BOOTSTRAP_VERSION = _read_version()
 def _download_flutter_web(repo_root: str) -> bool:
     """Download pre-built Flutter Web UI from GitHub Release."""
     import tarfile
+    import time
     import urllib.request
 
     url = (
@@ -68,17 +69,41 @@ def _download_flutter_web(repo_root: str) -> bool:
         f"v{BOOTSTRAP_VERSION}/cognithor-flutter-web.tar.gz"
     )
     target_dir = os.path.join(repo_root, "flutter_app", "build")
+
+    def _progress_hook(block_num: int, block_size: int, total_size: int) -> None:
+        downloaded = block_num * block_size
+        if total_size > 0:
+            pct = min(100, downloaded * 100 // total_size)
+            dl_mb = downloaded / (1024 * 1024)
+            total_mb = total_size / (1024 * 1024)
+            bar_len = 30
+            filled = bar_len * pct // 100
+            bar = "#" * filled + "-" * (bar_len - filled)
+            print(
+                f"\r           [{bar}] {pct}% ({dl_mb:.1f}/{total_mb:.1f} MB)",
+                end="", flush=True,
+            )
+        else:
+            dl_mb = downloaded / (1024 * 1024)
+            print(f"\r           Downloaded {dl_mb:.1f} MB ...", end="", flush=True)
+
     try:
         os.makedirs(target_dir, exist_ok=True)
         archive_path = os.path.join(target_dir, "flutter-web.tar.gz")
-        urllib.request.urlretrieve(url, archive_path)
+        print(f"           Downloading Flutter Web UI from GitHub Release ...", flush=True)
+        t0 = time.time()
+        urllib.request.urlretrieve(url, archive_path, reporthook=_progress_hook)
+        elapsed = time.time() - t0
+        size_mb = os.path.getsize(archive_path) / (1024 * 1024)
+        print(f"\n           Download complete: {size_mb:.1f} MB in {elapsed:.1f}s", flush=True)
+        print(f"           Extracting ...", flush=True)
         with tarfile.open(archive_path, "r:gz") as tar:
             tar.extractall(path=target_dir)
         os.remove(archive_path)
         index = os.path.join(target_dir, "web", "index.html")
         return os.path.isfile(index)
     except Exception:
-        pass  # Silently fail — warn is printed by caller
+        print("")  # Newline after partial progress line
         return False
 
 
