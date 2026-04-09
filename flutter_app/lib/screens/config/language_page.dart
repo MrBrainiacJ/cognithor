@@ -20,18 +20,59 @@ class _LanguagePageState extends State<LanguagePage> {
   Future<void> _translatePrompts(String targetLocale) async {
     setState(() => _translating = true);
     final api = context.read<ConnectionProvider>().api;
-    await api.translatePrompts({
+    final cfg = context.read<ConfigProvider>();
+
+    // Collect current prompts to send for translation
+    final prompts = <String, String>{};
+    for (final key in ['plannerSystem', 'replanPrompt', 'escalationPrompt']) {
+      final val = (cfg.prompts[key] ?? '').toString();
+      if (val.isNotEmpty) prompts[key] = val;
+    }
+
+    // If no custom prompts, fetch defaults from backend first
+    if (prompts.isEmpty) {
+      try {
+        final defaults = await api.get('config/prompts');
+        for (final key in ['plannerSystem', 'replanPrompt', 'escalationPrompt']) {
+          final val = (defaults[key] ?? '').toString();
+          if (val.isNotEmpty) prompts[key] = val;
+        }
+      } catch (_) {}
+    }
+
+    if (prompts.isEmpty) {
+      setState(() => _translating = false);
+      if (mounted) {
+        JarvisToast.show(context, 'No prompts to translate', type: ToastType.warning);
+      }
+      return;
+    }
+
+    final res = await api.translatePrompts({
       'target_locale': targetLocale,
       'method': 'ollama',
+      'prompts': prompts,
     });
+
     setState(() => _translating = false);
-    if (mounted) {
-      final l = AppLocalizations.of(context);
+    if (!mounted) return;
+
+    final l = AppLocalizations.of(context);
+    if (res.containsKey('error')) {
       JarvisToast.show(
         context,
-        l.promptsTranslated,
-        type: ToastType.success,
+        res['error'].toString(),
+        type: ToastType.error,
+        duration: const Duration(seconds: 5),
       );
+    } else {
+      // Apply translated prompts back to config
+      final translations = res['translations'] as Map<String, dynamic>? ?? {};
+      for (final entry in translations.entries) {
+        cfg.prompts[entry.key] = entry.value.toString();
+      }
+      cfg.notify();
+      JarvisToast.show(context, l.promptsTranslated, type: ToastType.success);
     }
   }
 
