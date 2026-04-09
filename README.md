@@ -14,16 +14,16 @@
     <a href="https://github.com/Alex8791-cyber/cognithor/stargazers"><img src="https://img.shields.io/github/stars/Alex8791-cyber/cognithor?style=flat-square&color=yellow" alt="GitHub Stars"></a>
     <img src="https://img.shields.io/badge/status-Beta%20%2F%20Experimental-orange?style=flat-square" alt="Status: Beta">
     <a href="#quick-start"><img src="https://img.shields.io/badge/python-%3E%3D3.12-blue?style=flat-square" alt="Python"></a>
-    <a href="#tests"><img src="https://img.shields.io/badge/tests-13%2C083%20passing-brightgreen?style=flat-square" alt="Tests"></a>
+    <a href="#tests"><img src="https://img.shields.io/badge/tests-13%2C117%20passing-brightgreen?style=flat-square" alt="Tests"></a>
     <a href="#tests"><img src="https://img.shields.io/badge/coverage-89%25-brightgreen?style=flat-square" alt="Coverage"></a>
     <a href="#tests"><img src="https://img.shields.io/badge/lint-0%20errors-brightgreen?style=flat-square" alt="Lint"></a>
-    <img src="https://img.shields.io/badge/version-v0.84.0-blue?style=flat-square" alt="v0.84.0">
+    <img src="https://img.shields.io/badge/version-v0.85.0-blue?style=flat-square" alt="v0.85.0">
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License"></a>
     <a href="https://github.com/Alex8791-cyber/cognithor/releases"><img src="https://img.shields.io/github/v/release/Alex8791-cyber/cognithor?style=flat-square&color=blue" alt="Release"></a>
   </p>
 </p>
 
-> **Note:** Cognithor is in **active development (Beta)**. While the test suite is extensive (13,083 tests, 89% coverage), the project has not been battle-tested in production environments. Expect rough edges, breaking changes between versions, and some German-language strings in system prompts and error messages. Contributions, bug reports, and feedback are very welcome. See [Status & Maturity](#status--maturity) for details. For non technical users, wait until version 1.0.0 for stable long term support. 
+> **Note:** Cognithor is in **active development (Beta)**. While the test suite is extensive (13,117 tests, 89% coverage), the project has not been battle-tested in production environments. Expect rough edges, breaking changes between versions, and some German-language strings in system prompts and error messages. Contributions, bug reports, and feedback are very welcome. See [Status & Maturity](#status--maturity) for details. For non technical users, wait until version 1.0.0 for stable long term support. 
 
   [![clawdboard](https://clawdboard.ai/api/badge/Alex8791-cyber)](https://clawdboard.ai/user/Alex8791-cyber)
 
@@ -31,7 +31,7 @@
   <a href="https://clawdboard.ai/recap/6fd37b26-7e41-4b0f-958a-3f2580427ccf"><strong>Weekly Recap: Rank #1 | $1,644 spent vibe-engineering</strong></a>
 </p>
 
-> **Vibe-Engineered, not vibe-coded.** Cognithor is not a weekend hack held together by AI-generated spaghetti. Every module follows a deliberate architecture (PGE-Trinity, 6-phase gateway init, 3-layer security), backed by 13,083 tests, structured plans, spec compliance reviews, and code quality gates. The AI writes the code — but a human engineers the system. There's a difference.
+> **Vibe-Engineered, not vibe-coded.** Cognithor is not a weekend hack held together by AI-generated spaghetti. Every module follows a deliberate architecture (PGE-Trinity, 6-phase gateway init, 3-layer security), backed by 13,117 tests, structured plans, spec compliance reviews, and code quality gates. The AI writes the code — but a human engineers the system. There's a difference.
 
 ---
 
@@ -39,7 +39,7 @@
 
 Most AI assistants send your data to the cloud. Cognithor runs entirely on your machine — with Ollama or LM Studio, no API keys required. Cloud providers are optional, not mandatory.
 
-It replaces a patchwork of tools with one integrated system: 18 channels, 125+ MCP tools, 6-tier memory, knowledge vault, voice, browser automation, Computer Use, and more — all wired together from day one. 13,083 tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
+It replaces a patchwork of tools with one integrated system: 18 channels, 125+ MCP tools, 6-tier memory, knowledge vault, voice, browser automation, Computer Use, and more — all wired together from day one. 13,117 tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
 
 **In plain terms:** Cognithor is an AI assistant that lives entirely on your computer. You talk to it through your terminal, a web UI, Telegram, Discord, or any of 18 supported channels — and it talks back, remembers what you said last week, and acts on your behalf. It can search the web, write and edit files, run shell commands, control your browser, automate your desktop (clicking, typing, reading windows), manage your calendar, and learn new skills over time. Think of it as a local, private, self-improving Jarvis.
 
@@ -77,7 +77,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 | **Encryption at Rest** | Stable — SQLCipher (AES-256) for all databases, Fernet for files, OS Keyring key management |
 | **OSINT / HIM Module** | Beta — person/project/org investigation with trust scoring |
 
-**What the test suite covers:** Unit tests, integration tests, real-life scenario tests, and live Ollama tests for all modules. The 13,083 tests verify code correctness in controlled environments.
+**What the test suite covers:** Unit tests, integration tests, real-life scenario tests, and live Ollama tests for all modules. The 13,117 tests verify code correctness in controlled environments.
 
 **What the test suite does NOT cover:** Real-world deployment scenarios, network edge cases, long-running stability, multi-user load, hardware-specific voice/GPU issues, or actual LLM response quality.
 
@@ -155,7 +155,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 - **Agent SDK** — Decorator-based agent registration (`@agent`, `@tool`, `@hook`), project scaffolding
 - **Plugin Remote Registry** — Remote manifests with SHA-256 checksums, dependency resolution, install/update/rollback
 - **uv Installer Support** — Automatic uv detection for 10x faster installs, transparent pip fallback
-- **13,083 tests** · **89% coverage** · **0 lint errors** · **0 CodeQL alerts**
+- **13,117 tests** · **89% coverage** · **0 lint errors** · **0 CodeQL alerts**
 
 ## Architecture
 
@@ -594,7 +594,7 @@ python -m pytest tests/test_memory/ -v
 python -m pytest tests/test_channels/ -v
 ```
 
-Current status: **13,083 tests** · **100% pass rate** · **89% coverage** · **~201,000 LOC source** · **~163,000 LOC tests**
+Current status: **13,117 tests** · **100% pass rate** · **89% coverage** · **~201,000 LOC source** · **~163,000 LOC tests**
 
 Notable test suites: 183 Computer Use tests, 176 ARC tests.
 
@@ -723,7 +723,7 @@ print(t("error.timeout"))  # "The operation timed out..."
 3. Run `python -c "from jarvis.i18n import generate_pack_hash; generate_pack_hash('<locale>')"`
 4. Submit a PR
 
-**Metrics:** ~201,000 LOC source · ~163,000 LOC tests · 13,083 tests · 89% coverage · 0 lint errors · **Status: Beta**
+**Metrics:** ~201,000 LOC source · ~163,000 LOC tests · 13,117 tests · 89% coverage · 0 lint errors · **Status: Beta**
 
 ## Contributors
 
@@ -763,7 +763,7 @@ Copyright 2026 Alexander Soellner
 - **Deep Learning Upload Pipeline** — Hybrid: immediate chunk-indexing + background KnowledgeBuilder pipeline (Vault, entities, identity memory). Priority queue, PDF vision, OCR fallback, YouTube frames.
 - **20+ Bug Fixes** — Issues #62-#89 resolved: duplicate UI pages removed, i18n gaps filled, audit verify crash, incognito flag, translate prompts, QR pairing, operation mode description, logo fallback, and more.
 - **Flutter Auto-Rebuild** — Bootstrap detects outdated builds, auto-rebuilds or downloads pre-built UI from release.
-- **13,083 tests passing** across Python 3.12/3.13 x Ubuntu/Windows
+- **13,117 tests passing** across Python 3.12/3.13 x Ubuntu/Windows
 
 ### v0.80.1 (2026-04-08)
 - **Full Lint Cleanup** — 299 Ruff lint errors resolved (E501, F841, B904, SIM102, RUF006, etc.), zero errors across all rules
@@ -777,7 +777,7 @@ Copyright 2026 Alexander Soellner
 - **Computer Use Phase 2** — Vision-guided clicking and screen change detection
 - **Windows Installer** — Inno Setup with embedded Python, Ollama, Flutter UI, health-check polling
 - **Android APK + iOS IPA** — Automated mobile builds via GitHub Actions
-- **13,083 tests passing** across Python 3.12/3.13 × Ubuntu/Windows
+- **13,117 tests passing** across Python 3.12/3.13 × Ubuntu/Windows
 
 ### What's New in v0.74.0
 
