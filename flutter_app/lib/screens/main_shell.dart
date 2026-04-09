@@ -11,6 +11,7 @@ import 'package:jarvis_ui/screens/config_screen.dart';
 import 'package:jarvis_ui/screens/dashboard_screen.dart';
 import 'package:jarvis_ui/screens/identity_screen.dart';
 import 'package:jarvis_ui/screens/kanban_screen.dart';
+import 'package:jarvis_ui/screens/reddit_leads_screen.dart';
 import 'package:jarvis_ui/screens/skills_screen.dart';
 import 'package:jarvis_ui/widgets/global_search_dialog.dart';
 import 'package:jarvis_ui/widgets/responsive_scaffold.dart';
@@ -31,6 +32,7 @@ class _MainShellState extends State<MainShell> {
     AdminHubScreen(),
     IdentityScreen(),
     KanbanScreen(),
+    RedditLeadsScreen(),
   ];
 
   void _openSearch() {
@@ -105,6 +107,12 @@ class _MainShellState extends State<MainShell> {
         label: l.kanban,
         shortcut: '^6',
       ),
+      NavItem(
+        icon: Icons.track_changes_outlined,
+        selectedIcon: Icons.track_changes,
+        label: l.redditLeads,
+        shortcut: '^7',
+      ),
     ];
 
     final pipProvider = context.watch<PipProvider>();
@@ -125,6 +133,8 @@ class _MainShellState extends State<MainShell> {
             () => _navigateTab(4),
         const SingleActivator(LogicalKeyboardKey.digit6, control: true):
             () => _navigateTab(5),
+        const SingleActivator(LogicalKeyboardKey.digit7, control: true):
+            () => _navigateTab(6),
       },
       child: Focus(
         autofocus: true,
