@@ -25,7 +25,6 @@ const _fieldIndex = <(String, String, List<String>)>[
   ('MCP', 'mcp', ['mcp', 'server', 'a2a', 'protocol']),
   ('System Profile', 'system_profile', ['system', 'profile', 'hardware', 'gpu', 'vram']),
   ('Budget', 'budget', ['budget', 'token', 'cost', 'limit']),
-  ('Evolution', 'evolution', ['evolution', 'learning', 'autonomous', 'goal']),
   ('System', 'system', ['system', 'restart', 'export', 'import', 'reset', 'factory']),
 ];
 
