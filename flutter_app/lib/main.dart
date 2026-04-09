@@ -23,6 +23,7 @@ import 'package:jarvis_ui/providers/workflow_provider.dart';
 import 'package:jarvis_ui/providers/kanban_provider.dart';
 import 'package:jarvis_ui/providers/evolution_provider.dart';
 import 'package:jarvis_ui/providers/robot_office_provider.dart';
+import 'package:jarvis_ui/providers/reddit_leads_provider.dart';
 import 'package:jarvis_ui/screens/splash_screen.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
 
@@ -58,6 +59,7 @@ class JarvisApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => KanbanProvider()),
         ChangeNotifierProvider(create: (_) => EvolutionProvider()),
         ChangeNotifierProvider(create: (_) => RobotOfficeProvider()),
+        ChangeNotifierProvider(create: (_) => RedditLeadsProvider()),
       ],
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, _) {
