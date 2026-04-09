@@ -9,6 +9,7 @@ import 'package:jarvis_ui/widgets/jarvis_empty_state.dart';
 import 'package:jarvis_ui/widgets/jarvis_stat.dart';
 import 'package:jarvis_ui/widgets/leads/lead_card.dart';
 import 'package:jarvis_ui/widgets/leads/lead_detail_sheet.dart';
+import 'package:jarvis_ui/widgets/leads/lead_wizard.dart';
 
 class RedditLeadsScreen extends StatefulWidget {
   const RedditLeadsScreen({super.key});
@@ -44,6 +45,16 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
     await context.read<RedditLeadsProvider>().scanNow();
   }
 
+  void _openWizard() {
+    final provider = context.read<RedditLeadsProvider>();
+    final newLeads = provider.leads.where((l) => l.status == 'new').toList()
+      ..sort((a, b) => b.intentScore.compareTo(a.intentScore));
+    if (newLeads.isEmpty) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LeadWizard(leads: newLeads)),
+    ).then((_) => provider.fetchLeads());
+  }
+
   void _archiveLead(String id) {
     context.read<RedditLeadsProvider>().updateLead(id, status: 'archived');
   }
@@ -62,7 +73,7 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
           body: Column(
             children: [
               // Stats bar
-              _StatsBar(provider: provider),
+              _StatsBar(provider: provider, onProcessQueue: _openWizard),
               // Filter row
               _FilterRow(provider: provider),
               // Lead list
@@ -109,11 +120,13 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
 }
 
 class _StatsBar extends StatelessWidget {
-  const _StatsBar({required this.provider});
+  const _StatsBar({required this.provider, this.onProcessQueue});
   final RedditLeadsProvider provider;
+  final VoidCallback? onProcessQueue;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Wrap(
@@ -138,6 +151,13 @@ class _StatsBar extends StatelessWidget {
             icon: Icons.reply,
             color: JarvisTheme.green,
           ),
+          if (provider.newCount > 0 && onProcessQueue != null)
+            ElevatedButton.icon(
+              onPressed: onProcessQueue,
+              icon: const Icon(Icons.playlist_play, size: 18),
+              label: Text(l.processQueue),
+              style: ElevatedButton.styleFrom(backgroundColor: JarvisTheme.accent),
+            ),
         ],
       ),
     );
