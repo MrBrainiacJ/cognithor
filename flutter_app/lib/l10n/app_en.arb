@@ -1506,5 +1506,19 @@
   "deepLearningQueue": "Deep Learning Queue",
   "@deepLearningQueue": {},
   "operationModeDesc": "Auto: detect from API keys. Offline: local Ollama only, no web tools. Online: cloud LLM + web search. Hybrid: Ollama + cloud fallback.",
-  "@operationModeDesc": {}
+  "@operationModeDesc": {},
+  "copyQrPayload": "Copy QR Payload",
+  "@copyQrPayload": {},
+  "copyToken": "Copy Token",
+  "@copyToken": {},
+  "newLearningGoal": "New Learning Goal",
+  "@newLearningGoal": {},
+  "create": "Create",
+  "@create": {},
+  "evolutionEngine": "Evolution Engine",
+  "@evolutionEngine": {},
+  "searchLabel": "Search",
+  "@searchLabel": {},
+  "hideRobotOffice": "Hide Office",
+  "@hideRobotOffice": {}
 }

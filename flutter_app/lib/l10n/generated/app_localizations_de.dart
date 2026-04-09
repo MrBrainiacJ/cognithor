@@ -2620,4 +2620,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get operationModeDesc =>
       'Auto: erkennt API-Keys. Offline: nur lokales Ollama, keine Web-Tools. Online: Cloud-LLM + Web-Suche. Hybrid: Ollama + Cloud-Fallback.';
+
+  @override
+  String get copyQrPayload => 'QR-Payload kopieren';
+
+  @override
+  String get copyToken => 'Token kopieren';
+
+  @override
+  String get newLearningGoal => 'Neues Lernziel';
+
+  @override
+  String get create => 'Erstellen';
+
+  @override
+  String get evolutionEngine => 'Evolution-Engine';
+
+  @override
+  String get searchLabel => 'Suche';
+
+  @override
+  String get hideRobotOffice => 'Office ausblenden';
 }

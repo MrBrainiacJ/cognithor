@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/navigation_provider.dart';
 import 'package:jarvis_ui/providers/pip_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
@@ -187,6 +188,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
 
   Widget _buildSideLayout(BuildContext context, {required bool expanded}) {
     final isDark = widget.isDark;
+    final l = AppLocalizations.of(context);
     final nav = context.watch<NavigationProvider>();
 
     // On desktop, sidebar width morphs based on the active section
@@ -253,7 +255,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                       children: [
                         _RailActionButton(
                           icon: Icons.search,
-                          label: 'Search',
+                          label: l.searchLabel,
                           expanded: expanded && nav.sidebarWidth > 80,
                           glowColor: nav.sectionColor,
                           onTap: widget.onSearchTap ?? () {},
@@ -261,7 +263,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                         const SizedBox(height: 4),
                         _RailActionButton(
                           icon: isDark ? Icons.light_mode : Icons.dark_mode,
-                          label: isDark ? 'Light' : 'Dark',
+                          label: isDark ? l.lightMode : l.darkMode,
                           expanded: expanded && nav.sidebarWidth > 80,
                           glowColor: JarvisTheme.orange,
                           onTap: widget.onThemeToggle ?? () {},
@@ -272,8 +274,8 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                             return _RailActionButton(
                               icon: Icons.smart_toy,
                               label: pip.visible
-                                  ? 'Hide Office'
-                                  : 'Robot Office',
+                                  ? l.hideRobotOffice
+                                  : l.robotOffice,
                               expanded: expanded && nav.sidebarWidth > 80,
                               glowColor: JarvisTheme.purple,
                               onTap: () => pip.toggle(),

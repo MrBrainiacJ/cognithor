@@ -5147,6 +5147,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto: detect from API keys. Offline: local Ollama only, no web tools. Online: cloud LLM + web search. Hybrid: Ollama + cloud fallback.'**
   String get operationModeDesc;
+
+  /// No description provided for @copyQrPayload.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy QR Payload'**
+  String get copyQrPayload;
+
+  /// No description provided for @copyToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Token'**
+  String get copyToken;
+
+  /// No description provided for @newLearningGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'New Learning Goal'**
+  String get newLearningGoal;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @evolutionEngine.
+  ///
+  /// In en, this message translates to:
+  /// **'Evolution Engine'**
+  String get evolutionEngine;
+
+  /// No description provided for @searchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchLabel;
+
+  /// No description provided for @hideRobotOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Office'**
+  String get hideRobotOffice;
 }
 
 class _AppLocalizationsDelegate

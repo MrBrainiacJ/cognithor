@@ -2589,4 +2589,25 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get operationModeDesc =>
       'Auto：根据API密钥自动检测。Offline：仅本地Ollama，无网络工具。Online：云端LLM+网络搜索。Hybrid：Ollama+云端备用。';
+
+  @override
+  String get copyQrPayload => '复制QR数据';
+
+  @override
+  String get copyToken => '复制令牌';
+
+  @override
+  String get newLearningGoal => '新学习目标';
+
+  @override
+  String get create => '创建';
+
+  @override
+  String get evolutionEngine => '进化引擎';
+
+  @override
+  String get searchLabel => '搜索';
+
+  @override
+  String get hideRobotOffice => '隐藏办公室';
 }

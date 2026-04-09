@@ -905,5 +905,12 @@
   "deepLearningSkipped": "مفهرس فقط",
   "learnPriority": "الأولوية",
   "deepLearningQueue": "قائمة التعلم العميق",
-  "operationModeDesc": "Auto: يكتشف من مفاتيح API. Offline: Ollama محلي فقط، بدون أدوات ويب. Online: LLM سحابي + بحث ويب. Hybrid: Ollama + احتياطي سحابي."
+  "operationModeDesc": "Auto: يكتشف من مفاتيح API. Offline: Ollama محلي فقط، بدون أدوات ويب. Online: LLM سحابي + بحث ويب. Hybrid: Ollama + احتياطي سحابي.",
+  "copyQrPayload": "نسخ بيانات QR",
+  "copyToken": "نسخ الرمز",
+  "newLearningGoal": "هدف تعلم جديد",
+  "create": "إنشاء",
+  "evolutionEngine": "محرك التطور",
+  "searchLabel": "بحث",
+  "hideRobotOffice": "إخفاء المكتب"
 }

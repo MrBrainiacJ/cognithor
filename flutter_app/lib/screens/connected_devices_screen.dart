@@ -256,7 +256,7 @@ class _ConnectedDevicesScreenState extends State<ConnectedDevicesScreen> {
                       );
                     },
                     icon: const Icon(Icons.copy, size: 16),
-                    label: const Text('Copy QR Payload'),
+                    label: Text(l.copyQrPayload),
                   ),
                   const SizedBox(width: 8),
                   TextButton.icon(
@@ -267,7 +267,7 @@ class _ConnectedDevicesScreenState extends State<ConnectedDevicesScreen> {
                       );
                     },
                     icon: const Icon(Icons.key, size: 16),
-                    label: const Text('Copy Token'),
+                    label: Text(l.copyToken),
                   ),
                 ],
               ),

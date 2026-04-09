@@ -2604,4 +2604,25 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get operationModeDesc =>
       'Auto: يكتشف من مفاتيح API. Offline: Ollama محلي فقط، بدون أدوات ويب. Online: LLM سحابي + بحث ويب. Hybrid: Ollama + احتياطي سحابي.';
+
+  @override
+  String get copyQrPayload => 'نسخ بيانات QR';
+
+  @override
+  String get copyToken => 'نسخ الرمز';
+
+  @override
+  String get newLearningGoal => 'هدف تعلم جديد';
+
+  @override
+  String get create => 'إنشاء';
+
+  @override
+  String get evolutionEngine => 'محرك التطور';
+
+  @override
+  String get searchLabel => 'بحث';
+
+  @override
+  String get hideRobotOffice => 'إخفاء المكتب';
 }

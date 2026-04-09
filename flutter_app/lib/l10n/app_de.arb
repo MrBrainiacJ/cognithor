@@ -914,5 +914,12 @@
   "deepLearningSkipped": "Nur indexiert",
   "learnPriority": "Prioritaet",
   "deepLearningQueue": "Deep-Learning Warteschlange",
-  "operationModeDesc": "Auto: erkennt API-Keys. Offline: nur lokales Ollama, keine Web-Tools. Online: Cloud-LLM + Web-Suche. Hybrid: Ollama + Cloud-Fallback."
+  "operationModeDesc": "Auto: erkennt API-Keys. Offline: nur lokales Ollama, keine Web-Tools. Online: Cloud-LLM + Web-Suche. Hybrid: Ollama + Cloud-Fallback.",
+  "copyQrPayload": "QR-Payload kopieren",
+  "copyToken": "Token kopieren",
+  "newLearningGoal": "Neues Lernziel",
+  "create": "Erstellen",
+  "evolutionEngine": "Evolution-Engine",
+  "searchLabel": "Suche",
+  "hideRobotOffice": "Office ausblenden"
 }

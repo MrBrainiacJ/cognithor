@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/evolution_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
 
@@ -33,6 +34,7 @@ class _EvolutionGoalsPageState extends State<EvolutionGoalsPage>
   }
 
   Future<void> _createGoal() async {
+    final l = AppLocalizations.of(context);
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     int priority = 3;
@@ -41,7 +43,7 @@ class _EvolutionGoalsPageState extends State<EvolutionGoalsPage>
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('New Learning Goal'),
+          title: Text(l.newLearningGoal),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -85,11 +87,11 @@ class _EvolutionGoalsPageState extends State<EvolutionGoalsPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(l.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Create'),
+              child: Text(l.create),
             ),
           ],
         ),
@@ -109,9 +111,10 @@ class _EvolutionGoalsPageState extends State<EvolutionGoalsPage>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Evolution Engine'),
+        title: Text(l.evolutionEngine),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
