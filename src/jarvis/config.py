@@ -2088,6 +2088,36 @@ class KanbanConfig(BaseModel):
 
 
 # ============================================================================
+# Social Listening
+# ============================================================================
+
+
+class SocialConfig(BaseModel):
+    """Reddit Lead Hunter configuration."""
+
+    reddit_scan_enabled: bool = Field(default=False, description="Enable automatic Reddit scanning")
+    reddit_subreddits: list[str] = Field(
+        default_factory=lambda: ["LocalLLaMA", "SaaS"],
+        description="Subreddits to scan (without r/ prefix)",
+    )
+    reddit_min_score: int = Field(
+        default=60, ge=0, le=100, description="Minimum intent score for leads"
+    )
+    reddit_scan_interval_minutes: int = Field(default=30, ge=5, description="Cron scan interval")
+    reddit_product_name: str = Field(default="", description="Product name for scoring prompts")
+    reddit_product_description: str = Field(
+        default="", description="One-sentence product description"
+    )
+    reddit_reply_tone: str = Field(
+        default="helpful, technically credible, no sales pitch",
+        description="Tone instruction for reply drafts",
+    )
+    reddit_auto_post: bool = Field(
+        default=False, description="Enable Playwright auto-posting (requires login)"
+    )
+
+
+# ============================================================================
 # Haupt-Konfiguration
 # ============================================================================
 
@@ -2251,6 +2281,7 @@ class JarvisConfig(BaseModel):
     evolution: EvolutionConfig = Field(default_factory=EvolutionConfig)
     arc: ArcConfig = Field(default_factory=ArcConfig)
     kanban: KanbanConfig = Field(default_factory=KanbanConfig)
+    social: SocialConfig = Field(default_factory=SocialConfig)
     atl: dict[str, Any] = Field(
         default_factory=dict,
         description="ATL (Autonomous Thinking Loop) config — parsed into ATLConfig at runtime",

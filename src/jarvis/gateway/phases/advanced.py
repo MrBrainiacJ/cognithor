@@ -325,10 +325,36 @@ async def init_advanced(
         from jarvis.learning.knowledge_ingest import KnowledgeIngestService
 
         mm = getattr(config, "_memory_manager", None)
-        result["knowledge_ingest"] = KnowledgeIngestService(memory=mm)
+        kb = result.get("knowledge_builder")
+        llm_fn = result.get("llm_fn")
+        result["knowledge_ingest"] = KnowledgeIngestService(
+            memory=mm,
+            knowledge_builder=kb,
+            llm_fn=llm_fn,
+        )
         log.info("knowledge_ingest_initialized")
     except Exception:
         log.debug("knowledge_ingest_init_skipped", exc_info=True)
+
+    # RedditLeadService (social listening)
+    try:
+        from jarvis.social.service import RedditLeadService
+
+        social_cfg = getattr(config, "social", None)
+        if social_cfg and social_cfg.reddit_product_name:
+            jarvis_home = getattr(config, "jarvis_home", None) or Path.home() / ".jarvis"
+            leads_db = str(Path(jarvis_home) / "leads.db")
+            llm_fn = result.get("llm_fn")
+            result["reddit_lead_service"] = RedditLeadService(
+                db_path=leads_db,
+                llm_fn=llm_fn,
+                product_name=social_cfg.reddit_product_name,
+                product_description=social_cfg.reddit_product_description,
+                reply_tone=social_cfg.reddit_reply_tone,
+            )
+            log.info("reddit_lead_service_initialized")
+    except Exception:
+        log.debug("reddit_lead_service_init_skipped", exc_info=True)
 
     # ReplayEngine (needs Gatekeeper for policy re-evaluation)
     if gatekeeper is not None:

@@ -1,0 +1,157 @@
+"""MCP tools for Reddit Lead Hunter — exposes scan, leads, reply to the Planner."""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from jarvis.utils.logging import get_logger
+
+log = get_logger(__name__)
+
+
+def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
+    """Register Reddit Lead Hunter MCP tools."""
+
+    async def _reddit_scan(
+        subreddits: str = "",
+        min_score: int = 0,
+    ) -> str:
+        """Scan Reddit for leads. Subreddits as comma-separated string."""
+        if lead_service is None:
+            return json.dumps({"error": "Reddit Lead Service not initialized"})
+
+        subs = [s.strip() for s in subreddits.split(",") if s.strip()] if subreddits else None
+        config = lead_service._scan_config
+        effective_subs = subs or getattr(config, "subreddits", ["LocalLLaMA", "SaaS"])
+        effective_min = min_score or getattr(config, "min_score", 60)
+
+        result = await lead_service.scan(
+            subreddits=effective_subs,
+            min_score=effective_min,
+            trigger="chat",
+        )
+
+        leads_summary = []
+        for lead in lead_service.get_leads(min_score=effective_min, limit=10):
+            if lead.scan_id == result.id:
+                leads_summary.append(
+                    {
+                        "score": lead.intent_score,
+                        "subreddit": lead.subreddit,
+                        "title": lead.title[:80],
+                        "url": lead.url,
+                        "author": lead.author,
+                    }
+                )
+
+        return json.dumps(
+            {
+                "summary": result.summary(),
+                "leads_found": result.leads_found,
+                "posts_checked": result.posts_checked,
+                "leads": leads_summary,
+            },
+            ensure_ascii=False,
+        )
+
+    async def _reddit_leads(
+        status: str = "",
+        min_score: int = 0,
+        limit: int = 20,
+    ) -> str:
+        """List current Reddit leads with optional filters."""
+        if lead_service is None:
+            return json.dumps({"error": "Reddit Lead Service not initialized"})
+
+        from jarvis.social.models import LeadStatus
+
+        status_filter = (
+            LeadStatus(status) if status and status in LeadStatus.__members__.values() else None
+        )
+        leads = lead_service.get_leads(status=status_filter, min_score=min_score, limit=limit)
+
+        return json.dumps(
+            {
+                "count": len(leads),
+                "leads": [
+                    {
+                        "id": l.id,
+                        "score": l.intent_score,
+                        "subreddit": l.subreddit,
+                        "title": l.title[:80],
+                        "status": l.status.value if hasattr(l.status, "value") else l.status,
+                        "url": l.url,
+                        "reply_draft": l.reply_draft[:100] + "..."
+                        if len(l.reply_draft) > 100
+                        else l.reply_draft,
+                    }
+                    for l in leads
+                ],
+            },
+            ensure_ascii=False,
+        )
+
+    async def _reddit_reply(
+        lead_id: str = "",
+        mode: str = "clipboard",
+    ) -> str:
+        """Post a reply to a Reddit lead. Mode: clipboard, browser, or auto."""
+        if lead_service is None:
+            return json.dumps({"error": "Reddit Lead Service not initialized"})
+
+        if not lead_id:
+            return json.dumps({"error": "lead_id is required"})
+
+        result = lead_service.post_reply(lead_id, mode=mode)
+        return json.dumps(
+            {
+                "success": result.success,
+                "mode": result.mode.value,
+                "error": result.error,
+            }
+        )
+
+    mcp_client.register_builtin_handler(
+        "reddit_scan",
+        _reddit_scan,
+        description=(
+            "Scan Reddit subreddits for high-intent leads. Returns scored posts with reply drafts."
+        ),
+        parameters={
+            "subreddits": {
+                "type": "string",
+                "description": "Comma-separated subreddit names (default: config)",
+            },
+            "min_score": {
+                "type": "integer",
+                "description": "Minimum intent score 0-100 (default: config)",
+            },
+        },
+    )
+    mcp_client.register_builtin_handler(
+        "reddit_leads",
+        _reddit_leads,
+        description="List current Reddit leads with filters.",
+        parameters={
+            "status": {
+                "type": "string",
+                "description": "Filter: new, reviewed, replied, archived",
+            },
+            "min_score": {"type": "integer", "description": "Minimum score filter"},
+            "limit": {"type": "integer", "description": "Max results (default 20)"},
+        },
+    )
+    mcp_client.register_builtin_handler(
+        "reddit_reply",
+        _reddit_reply,
+        description="Post a reply to a Reddit lead. Copies to clipboard and opens browser.",
+        parameters={
+            "lead_id": {"type": "string", "description": "Lead ID to reply to"},
+            "mode": {
+                "type": "string",
+                "description": "clipboard (default), browser, or auto",
+            },
+        },
+    )
+    log.info("reddit_tools_registered", tools=3)
