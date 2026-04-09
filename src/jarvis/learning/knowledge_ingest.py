@@ -6,6 +6,7 @@ Supports: PDF, DOCX, images (via vision), websites (via trafilatura), YouTube (v
 
 from __future__ import annotations
 
+import asyncio
 import enum
 import heapq
 import re
@@ -103,11 +104,25 @@ class IngestQueue:
 class KnowledgeIngestService:
     """Processes files, URLs, and YouTube links into Jarvis memory."""
 
-    def __init__(self, memory: MemoryManager | None = None) -> None:
+    def __init__(
+        self,
+        memory: MemoryManager | None = None,
+        knowledge_builder: Any | None = None,
+        llm_fn: Any | None = None,
+    ) -> None:
         self._memory = memory
+        self._knowledge_builder = knowledge_builder
+        self._llm_fn = llm_fn
         self._results: list[IngestResult] = []
+        self._queue = IngestQueue()
+        self._worker_task: asyncio.Task | None = None
 
-    async def ingest_file(self, filename: str, content: bytes) -> IngestResult:
+    async def ingest_file(
+        self,
+        filename: str,
+        content: bytes,
+        priority: Priority = Priority.NORMAL,
+    ) -> IngestResult:
         """Ingest a file (PDF, DOCX, TXT, MD, images)."""
         result = IngestResult(
             id=str(uuid4()),
@@ -116,29 +131,7 @@ class KnowledgeIngestService:
             status="processing",
         )
         try:
-            import tempfile
-
-            suffix = Path(filename).suffix.lower()
-
-            # Write to temp file for extraction
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
-                f.write(content)
-                tmp_path = Path(f.name)
-
-            text = ""
-
-            # Image: use vision analysis
-            if suffix in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"):
-                text = await self._extract_image_text(tmp_path)
-            else:
-                # Use TextExtractor for documents
-                from jarvis.memory.ingest import TextExtractor
-
-                extractor = TextExtractor()
-                text = await extractor.extract(tmp_path)
-
-            # Clean up temp file
-            tmp_path.unlink(missing_ok=True)
+            text = await self._extract_text(content, filename)
 
             if not text or not text.strip():
                 result.status = "failed"
@@ -154,6 +147,24 @@ class KnowledgeIngestService:
             result.status = "success"
             result.chunks_created = chunks
             result.text_length = len(text)
+            result.priority = priority
+
+            # Queue for deep learning
+            if priority == Priority.LOW:
+                result.deep_learn_status = "skipped"
+            else:
+                result.deep_learn_status = "queued"
+                suffix = Path(filename).suffix.lower()
+                page_images = self._extract_page_images(content, suffix)
+                item = _QueueItem(
+                    result_id=result.id,
+                    text=text,
+                    source=f"upload://{filename}",
+                    priority=priority,
+                    page_images=page_images,
+                )
+                self._queue.enqueue(item)
+                self._ensure_worker()
 
         except Exception as exc:
             result.status = "failed"
@@ -163,7 +174,11 @@ class KnowledgeIngestService:
         self._results.append(result)
         return result
 
-    async def ingest_url(self, url: str) -> IngestResult:
+    async def ingest_url(
+        self,
+        url: str,
+        priority: Priority = Priority.NORMAL,
+    ) -> IngestResult:
         """Ingest a website URL (extracts main content via trafilatura)."""
         result = IngestResult(
             id=str(uuid4()),
@@ -174,7 +189,7 @@ class KnowledgeIngestService:
         try:
             # Check if YouTube
             if _is_youtube_url(url):
-                return await self.ingest_youtube(url)
+                return await self.ingest_youtube(url, priority=priority)
 
             # Fetch and extract
             text = await self._fetch_url_text(url)
@@ -192,6 +207,22 @@ class KnowledgeIngestService:
             result.status = "success"
             result.chunks_created = chunks
             result.text_length = len(text)
+            result.priority = priority
+
+            # Queue for deep learning
+            if priority == Priority.LOW:
+                result.deep_learn_status = "skipped"
+            else:
+                result.deep_learn_status = "queued"
+                item = _QueueItem(
+                    result_id=result.id,
+                    text=text,
+                    source=f"web://{url}",
+                    priority=priority,
+                    page_images=[],
+                )
+                self._queue.enqueue(item)
+                self._ensure_worker()
 
         except Exception as exc:
             result.status = "failed"
@@ -200,7 +231,11 @@ class KnowledgeIngestService:
         self._results.append(result)
         return result
 
-    async def ingest_youtube(self, url: str) -> IngestResult:
+    async def ingest_youtube(
+        self,
+        url: str,
+        priority: Priority = Priority.NORMAL,
+    ) -> IngestResult:
         """Ingest a YouTube video (extracts transcript/captions)."""
         result = IngestResult(
             id=str(uuid4()),
@@ -231,6 +266,22 @@ class KnowledgeIngestService:
             result.status = "success"
             result.chunks_created = chunks
             result.text_length = len(text)
+            result.priority = priority
+
+            # Queue for deep learning
+            if priority == Priority.LOW:
+                result.deep_learn_status = "skipped"
+            else:
+                result.deep_learn_status = "queued"
+                item = _QueueItem(
+                    result_id=result.id,
+                    text=text,
+                    source=f"youtube://{video_id}",
+                    priority=priority,
+                    page_images=[],
+                )
+                self._queue.enqueue(item)
+                self._ensure_worker()
 
         except Exception as exc:
             result.status = "failed"
@@ -238,6 +289,146 @@ class KnowledgeIngestService:
 
         self._results.append(result)
         return result
+
+    async def _extract_text(self, content: bytes, filename: str) -> str:
+        """Extract text from file content."""
+        import tempfile
+
+        suffix = Path(filename).suffix.lower()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
+            f.write(content)
+            tmp_path = Path(f.name)
+        try:
+            if suffix in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"):
+                return await self._extract_image_text(tmp_path)
+            from jarvis.memory.ingest import TextExtractor
+
+            extractor = TextExtractor()
+            return await extractor.extract(tmp_path)
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    def _extract_page_images(self, content: bytes, suffix: str) -> list[Path]:
+        """Extract image-heavy pages from a PDF as PNG files.
+
+        Uses pypdf to detect pages with embedded images, then renders
+        those pages via pdf2image (if available). Falls back gracefully
+        if pdf2image or poppler is not installed.
+        """
+        if suffix != ".pdf":
+            return []
+
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            return []
+
+        import io
+        import tempfile
+
+        try:
+            reader = PdfReader(io.BytesIO(content))
+        except Exception:
+            return []
+
+        image_pages: list[int] = []
+        for i, page in enumerate(reader.pages):
+            resources = page.get("/Resources")
+            if resources is None:
+                continue
+            xobjects = resources.get("/XObject")
+            if xobjects and len(xobjects) > 0:
+                image_pages.append(i)
+
+        if not image_pages:
+            return []
+
+        # Render image-heavy pages as PNG
+        try:
+            from pdf2image import convert_from_bytes
+
+            images = convert_from_bytes(
+                content,
+                first_page=min(image_pages) + 1,
+                last_page=max(image_pages) + 1,
+                dpi=150,
+                fmt="png",
+            )
+
+            paths: list[Path] = []
+            for _idx, img in enumerate(images):
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+                img.save(tmp.name, "PNG")
+                paths.append(Path(tmp.name))
+                if len(paths) >= 10:  # Cap at 10 images
+                    break
+
+            return paths
+
+        except ImportError:
+            log.debug("pdf2image_not_available_for_vision")
+            return []
+        except Exception as exc:
+            log.debug("pdf_image_extraction_failed", error=str(exc))
+            return []
+
+    def _ensure_worker(self) -> None:
+        """Start the background worker if not running."""
+        if self._worker_task is None or self._worker_task.done():
+            self._worker_task = asyncio.create_task(self._worker_loop())
+
+    async def _worker_loop(self) -> None:
+        """Process queued deep-learn items."""
+        while not self._queue.empty:
+            item = self._queue.dequeue()
+            try:
+                await self._deep_learn(item)
+            except Exception as exc:
+                log.warning("deep_learn_failed", source=item.source, error=str(exc))
+                self._update_result(item.result_id, "failed", error=str(exc))
+
+    async def _deep_learn(self, item: _QueueItem) -> None:
+        """Run full KnowledgeBuilder pipeline on queued item."""
+        if self._knowledge_builder is None:
+            log.debug("deep_learn_skipped_no_builder", source=item.source)
+            self._update_result(item.result_id, "skipped")
+            return
+
+        from jarvis.evolution.research_agent import FetchResult
+
+        # Vision analysis for page images
+        vision_text = ""
+        for img_path in item.page_images:
+            try:
+                desc = await self._extract_image_text(img_path)
+                if desc:
+                    vision_text += f"\n[Image description: {desc}]\n"
+            except Exception:
+                pass
+            finally:
+                img_path.unlink(missing_ok=True)
+
+        full_text = item.text + vision_text if vision_text else item.text
+
+        source_name = item.source.split("://", 1)[-1] if "://" in item.source else item.source
+        fetch_result = FetchResult(
+            url=item.source,
+            text=full_text,
+            title=source_name,
+            source_type="user_upload",
+        )
+        await self._knowledge_builder.build(fetch_result)
+        self._update_result(item.result_id, "completed")
+        log.info("deep_learn_completed", source=item.source, text_len=len(full_text))
+
+    def _update_result(self, result_id: str, status: str, error: str = "") -> None:
+        """Update deep_learn_status on a stored IngestResult."""
+        for r in self._results:
+            if r.id == result_id:
+                r.deep_learn_status = status
+                if error:
+                    r.error = error
+                break
 
     async def _extract_image_text(self, path: Path) -> str:
         """Extract text from image using vision LLM."""

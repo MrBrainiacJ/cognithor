@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from jarvis.learning.knowledge_ingest import IngestResult, Priority
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+from jarvis.learning.knowledge_ingest import (
+    IngestResult,
+    KnowledgeIngestService,
+    Priority,
+    _QueueItem,
+)
 
 # ---------------------------------------------------------------------------
 # Priority enum
@@ -160,3 +169,133 @@ class TestIngestQueue:
         assert pending[0]["id"] == "b"  # HIGH first
         assert pending[0]["priority"] == "HIGH"
         assert pending[1]["id"] == "a"
+
+
+# ---------------------------------------------------------------------------
+# Deep-learn integration (Task 3)
+# ---------------------------------------------------------------------------
+
+
+class TestDeepLearn:
+    @pytest.mark.asyncio
+    async def test_ingest_file_queues_deep_learn(self):
+        memory = MagicMock()
+        memory.index_text = MagicMock(return_value=3)
+        svc = KnowledgeIngestService(memory=memory)
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(svc, "_extract_text", AsyncMock(return_value="Hello world content"))
+            mp.setattr(svc, "_ensure_worker", MagicMock())
+            result = await svc.ingest_file(
+                "test.txt",
+                b"Hello world content",
+                priority=Priority.NORMAL,
+            )
+        assert result.status == "success"
+        assert result.chunks == 3
+        assert result.deep_learn_status == "queued"
+        assert len(svc._queue) == 1
+
+    @pytest.mark.asyncio
+    async def test_ingest_file_low_priority_skips(self):
+        memory = MagicMock()
+        memory.index_text = MagicMock(return_value=2)
+        svc = KnowledgeIngestService(memory=memory)
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(svc, "_extract_text", AsyncMock(return_value="Some text"))
+            result = await svc.ingest_file("test.txt", b"Some text", priority=Priority.LOW)
+        assert result.deep_learn_status == "skipped"
+        assert len(svc._queue) == 0
+
+    @pytest.mark.asyncio
+    async def test_deep_learn_calls_builder(self):
+        builder = AsyncMock()
+        builder.build = AsyncMock()
+        svc = KnowledgeIngestService(knowledge_builder=builder)
+        svc._results.append(
+            IngestResult(id="v1", source_type="file", source_name="test.pdf", status="success")
+        )
+        item = _QueueItem(
+            result_id="v1",
+            text="Original text",
+            source="upload://test.pdf",
+            priority=Priority.HIGH,
+            page_images=[],
+        )
+        await svc._deep_learn(item)
+        builder.build.assert_called_once()
+        assert builder.build.call_args[0][0].text == "Original text"
+        assert builder.build.call_args[0][0].source_type == "user_upload"
+
+    @pytest.mark.asyncio
+    async def test_deep_learn_skipped_without_builder(self):
+        svc = KnowledgeIngestService()
+        svc._results.append(
+            IngestResult(id="v2", source_type="file", source_name="t.pdf", status="success")
+        )
+        item = _QueueItem(
+            result_id="v2",
+            text="text",
+            source="upload://t.pdf",
+            priority=Priority.NORMAL,
+            page_images=[],
+        )
+        await svc._deep_learn(item)
+        assert svc._results[0].deep_learn_status == "skipped"
+
+
+# ---------------------------------------------------------------------------
+# PDF Vision pipeline (Task 5)
+# ---------------------------------------------------------------------------
+
+
+class TestPdfVision:
+    def test_extract_page_images_non_pdf(self):
+        """Non-PDF files return empty list."""
+        svc = KnowledgeIngestService()
+        result = svc._extract_page_images(b"not a pdf", ".txt")
+        assert result == []
+
+    def test_extract_page_images_invalid_pdf(self):
+        """Invalid PDF content returns empty list gracefully."""
+        svc = KnowledgeIngestService()
+        result = svc._extract_page_images(b"not a real pdf", ".pdf")
+        assert result == []
+
+    def test_extract_page_images_no_pypdf(self):
+        """Graceful fallback when pypdf is not installed."""
+        from unittest.mock import patch
+
+        svc = KnowledgeIngestService()
+        with patch.dict("sys.modules", {"pypdf": None}):
+            result = svc._extract_page_images(b"%PDF-1.4", ".pdf")
+            assert result == []
+
+    @pytest.mark.asyncio
+    async def test_deep_learn_calls_builder_with_correct_fetch_result(self):
+        """Deep learn creates FetchResult with user_upload source_type."""
+        builder = AsyncMock()
+        builder.build = AsyncMock()
+        svc = KnowledgeIngestService(knowledge_builder=builder)
+        svc._results.append(
+            IngestResult(
+                id="dl1",
+                source_type="file",
+                source_name="doc.pdf",
+                status="success",
+            )
+        )
+        item = _QueueItem(
+            result_id="dl1",
+            text="Document content here",
+            source="upload://doc.pdf",
+            priority=Priority.HIGH,
+            page_images=[],
+        )
+        await svc._deep_learn(item)
+        builder.build.assert_called_once()
+        fetch = builder.build.call_args[0][0]
+        assert fetch.text == "Document content here"
+        assert fetch.source_type == "user_upload"
+        assert fetch.url == "upload://doc.pdf"
+        # Result status updated
+        assert svc._results[0].deep_learn_status == "completed"
