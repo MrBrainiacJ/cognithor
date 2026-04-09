@@ -153,7 +153,7 @@ class _TeachScreenState extends State<TeachScreen> {
     });
     try {
       final api = context.read<ConnectionProvider>().api;
-      final res = await api.learnFromUrl(url);
+      final res = await api.learnFromUrl(url, priority: _priority);
       if (res.containsKey('error')) {
         setState(() {
           _urlResult = res['error'] as String;
@@ -188,7 +188,7 @@ class _TeachScreenState extends State<TeachScreen> {
     });
     try {
       final api = context.read<ConnectionProvider>().api;
-      final res = await api.learnFromYoutube(url);
+      final res = await api.learnFromYoutube(url, priority: _priority);
       if (res.containsKey('error')) {
         setState(() {
           _youtubeResult = res['error'] as String;
@@ -438,6 +438,22 @@ class _TeachScreenState extends State<TeachScreen> {
               ),
             ),
             ),
+            const SizedBox(height: JarvisTheme.spacingSm),
+            Row(
+              children: [
+                Text(l.learnPriority, style: theme.textTheme.bodySmall),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: _priority,
+                  items: [
+                    DropdownMenuItem(value: 'low', child: Text(l.priorityLow)),
+                    DropdownMenuItem(value: 'normal', child: Text(l.priorityNormal)),
+                    DropdownMenuItem(value: 'high', child: Text(l.priorityHigh)),
+                  ],
+                  onChanged: (v) => setState(() => _priority = v ?? 'normal'),
+                ),
+              ],
+            ),
 
             // Result
             if (_urlResult != null) ...[
@@ -499,6 +515,22 @@ class _TeachScreenState extends State<TeachScreen> {
                     ? l.processingContent
                     : l.learnFromYoutube,
               ),
+            ),
+            const SizedBox(height: JarvisTheme.spacingSm),
+            Row(
+              children: [
+                Text(l.learnPriority, style: theme.textTheme.bodySmall),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: _priority,
+                  items: [
+                    DropdownMenuItem(value: 'low', child: Text(l.priorityLow)),
+                    DropdownMenuItem(value: 'normal', child: Text(l.priorityNormal)),
+                    DropdownMenuItem(value: 'high', child: Text(l.priorityHigh)),
+                  ],
+                  onChanged: (v) => setState(() => _priority = v ?? 'normal'),
+                ),
+              ],
             ),
 
             // Result
