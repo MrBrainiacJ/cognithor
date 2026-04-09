@@ -636,6 +636,28 @@ class Gateway:
             except Exception:
                 log.debug("reddit_cron_registration_failed", exc_info=True)
 
+            # Reddit Reply Performance Tracker (every 6h)
+            try:
+                self._cron_engine.add_system_job(
+                    name="reddit_reply_tracker",
+                    schedule="0 */6 * * *",
+                    callback=self._track_reddit_replies,
+                )
+                log.info("reddit_tracker_cron_registered")
+            except Exception:
+                log.debug("reddit_tracker_cron_failed", exc_info=True)
+
+            # Reddit Style Learner (weekly, Sunday 3am)
+            try:
+                self._cron_engine.add_system_job(
+                    name="reddit_style_learner",
+                    schedule="0 3 * * 0",
+                    callback=self._run_reddit_learner,
+                )
+                log.info("reddit_learner_cron_registered")
+            except Exception:
+                log.debug("reddit_learner_cron_failed", exc_info=True)
+
         # --- Autonomous Orchestrator (connects PGE + SkillGenerator + Reflector) ---
         self._autonomous_orchestrator = AutonomousOrchestrator(
             gateway=self,
@@ -5252,3 +5274,30 @@ class Gateway:
                 log.info("user_rejected_action", tool=step.tool)
 
         return result
+
+    # ------------------------------------------------------------------
+    # Reddit v2 cron callbacks
+    # ------------------------------------------------------------------
+
+    async def _track_reddit_replies(self) -> None:
+        svc = getattr(self, "_reddit_lead_service", None)
+        if not svc:
+            return
+        from jarvis.social.tracker import PerformanceTracker
+
+        tracker = PerformanceTracker(store=svc._store)
+        try:
+            result = await tracker.track_all()
+            log.info("reddit_tracking_complete", **result)
+        finally:
+            tracker.close()
+
+    async def _run_reddit_learner(self) -> None:
+        svc = getattr(self, "_reddit_lead_service", None)
+        if not svc:
+            return
+        from jarvis.social.learner import ReplyLearner
+
+        learner = ReplyLearner(store=svc._store, llm_fn=svc._scanner._llm_fn)
+        result = await learner.run_learning_cycle()
+        log.info("reddit_learning_complete", **result)

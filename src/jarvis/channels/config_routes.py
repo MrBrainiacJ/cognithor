@@ -6086,6 +6086,65 @@ def _register_social_routes(
             "recent_scans": history,
         }
 
+    @app.post("/api/v1/leads/discover-subreddits", dependencies=deps)
+    async def discover_subreddits(request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        from jarvis.social.discovery import SubredditDiscovery
+
+        discovery = SubredditDiscovery(llm_fn=svc._scanner._llm_fn)
+        name = body.get("product_name", svc._scan_config.product_name)
+        desc = body.get("product_description", svc._scan_config.product_description)
+        results = await discovery.discover(name, desc)
+        discovery.close()
+        return {
+            "suggestions": [
+                {
+                    "name": s.name,
+                    "subscribers": s.subscribers,
+                    "posts_per_day": s.posts_per_day,
+                    "relevance_score": s.relevance_score,
+                    "reasoning": s.reasoning,
+                    "sample_posts": s.sample_posts,
+                }
+                for s in results
+            ]
+        }
+
+    @app.get("/api/v1/leads/templates", dependencies=deps)
+    async def list_templates(subreddit: str = "") -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        return {"templates": svc.get_templates(subreddit)}
+
+    @app.post("/api/v1/leads/templates", dependencies=deps)
+    async def create_template(request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        body = await request.json()
+        tid = svc.create_template(
+            name=body.get("name", ""),
+            text=body.get("text", ""),
+            subreddit=body.get("subreddit", ""),
+            style=body.get("style", ""),
+        )
+        return {"id": tid, "status": "created"}
+
+    @app.delete("/api/v1/leads/templates/{template_id}", dependencies=deps)
+    async def delete_template(template_id: str) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        svc.delete_template(template_id)
+        return {"status": "deleted"}
+
     @app.get("/api/v1/leads/{lead_id}", dependencies=deps)
     async def get_lead(lead_id: str) -> dict[str, Any]:
         svc = _get_service()
@@ -6127,3 +6186,48 @@ def _register_social_routes(
             "mode": result.mode.value if hasattr(result.mode, "value") else result.mode,
             "error": result.error,
         }
+
+    @app.post("/api/v1/leads/{lead_id}/refine", dependencies=deps)
+    async def refine_lead(lead_id: str, request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        hint = body.get("hint", "")
+        variants = body.get("variants", 0)
+        result = await svc.refine_reply(lead_id, hint=hint, variants=variants)
+        if result is None:
+            raise HTTPException(404, "Lead not found")
+        if isinstance(result, list):
+            return {"variants": [{"text": r.text, "style": r.style} for r in result]}
+        return {"text": result.text, "style": result.style, "changes": result.changes_summary}
+
+    @app.get("/api/v1/leads/{lead_id}/performance", dependencies=deps)
+    async def get_lead_performance(lead_id: str) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        perf = svc.get_performance(lead_id)
+        if perf is None:
+            return {"performance": None}
+        from jarvis.social.tracker import engagement_score
+
+        perf["engagement_score"] = engagement_score(
+            perf.get("reply_upvotes", 0),
+            perf.get("reply_replies", 0),
+            bool(perf.get("author_replied", 0)),
+            perf.get("feedback_tag", ""),
+        )
+        return {"performance": perf}
+
+    @app.patch("/api/v1/leads/{lead_id}/feedback", dependencies=deps)
+    async def set_lead_feedback(lead_id: str, request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        body = await request.json()
+        svc.set_feedback(lead_id, tag=body.get("tag", ""), note=body.get("note", ""))
+        return {"status": "ok"}

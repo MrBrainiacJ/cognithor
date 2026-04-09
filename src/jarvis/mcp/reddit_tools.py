@@ -153,4 +153,116 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
             },
         },
     )
-    log.info("reddit_tools_registered", tools=3)
+
+    async def _reddit_refine(lead_id: str = "", hint: str = "", variants: int = 0) -> str:
+        if lead_service is None:
+            return json.dumps({"error": "Reddit Lead Service not initialized"})
+        if not lead_id:
+            return json.dumps({"error": "lead_id is required"})
+        result = await lead_service.refine_reply(lead_id, hint=hint, variants=variants)
+        if result is None:
+            return json.dumps({"error": "Lead not found"})
+        if isinstance(result, list):
+            return json.dumps(
+                {"variants": [{"text": r.text, "style": r.style} for r in result]},
+                ensure_ascii=False,
+            )
+        return json.dumps(
+            {"text": result.text, "style": result.style, "changes": result.changes_summary},
+            ensure_ascii=False,
+        )
+
+    async def _reddit_discover_subreddits(
+        product_name: str = "", product_description: str = ""
+    ) -> str:
+        if lead_service is None:
+            return json.dumps({"error": "Reddit Lead Service not initialized"})
+        from jarvis.social.discovery import SubredditDiscovery
+
+        discovery = SubredditDiscovery(llm_fn=lead_service._scanner._llm_fn)
+        name = product_name or lead_service._scan_config.product_name
+        desc = product_description or lead_service._scan_config.product_description
+        results = await discovery.discover(name, desc)
+        discovery.close()
+        return json.dumps(
+            {
+                "suggestions": [
+                    {
+                        "name": s.name,
+                        "subscribers": s.subscribers,
+                        "posts_per_day": s.posts_per_day,
+                        "relevance_score": s.relevance_score,
+                        "reasoning": s.reasoning,
+                        "sample_posts": s.sample_posts,
+                    }
+                    for s in results
+                ]
+            },
+            ensure_ascii=False,
+        )
+
+    async def _reddit_templates(
+        action: str = "list",
+        subreddit: str = "",
+        name: str = "",
+        text: str = "",
+        template_id: str = "",
+    ) -> str:
+        if lead_service is None:
+            return json.dumps({"error": "Reddit Lead Service not initialized"})
+        if action == "list":
+            return json.dumps(
+                {"templates": lead_service.get_templates(subreddit)}, ensure_ascii=False
+            )
+        elif action == "create":
+            tid = lead_service.create_template(name, text, subreddit)
+            return json.dumps({"id": tid, "status": "created"})
+        elif action == "delete":
+            lead_service.delete_template(template_id)
+            return json.dumps({"status": "deleted"})
+        return json.dumps({"error": f"Unknown action: {action}"})
+
+    mcp_client.register_builtin_handler(
+        "reddit_refine",
+        _reddit_refine,
+        description="Refine a reply draft via LLM. Set variants>0 to generate multiple options.",
+        parameters={
+            "lead_id": {"type": "string", "description": "Lead ID"},
+            "hint": {"type": "string", "description": "Optional: direction for refinement"},
+            "variants": {
+                "type": "integer",
+                "description": "Generate N variants (0=refine only)",
+            },
+        },
+    )
+    mcp_client.register_builtin_handler(
+        "reddit_discover_subreddits",
+        _reddit_discover_subreddits,
+        description="Discover relevant subreddits for a product via LLM + Reddit validation.",
+        parameters={
+            "product_name": {
+                "type": "string",
+                "description": "Product name (default: config)",
+            },
+            "product_description": {
+                "type": "string",
+                "description": "Product description (default: config)",
+            },
+        },
+    )
+    mcp_client.register_builtin_handler(
+        "reddit_templates",
+        _reddit_templates,
+        description="Manage reply templates. Actions: list, create, delete.",
+        parameters={
+            "action": {"type": "string", "description": "list, create, or delete"},
+            "subreddit": {
+                "type": "string",
+                "description": "Filter by subreddit (list) or assign (create)",
+            },
+            "name": {"type": "string", "description": "Template name (create)"},
+            "text": {"type": "string", "description": "Template text (create)"},
+            "template_id": {"type": "string", "description": "Template ID (delete)"},
+        },
+    )
+    log.info("reddit_tools_registered", tools=6)
