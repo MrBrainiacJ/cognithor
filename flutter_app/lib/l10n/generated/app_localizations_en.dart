@@ -2730,4 +2730,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterAll => 'All';
+
+  @override
+  String get processQueue => 'Process Queue';
+
+  @override
+  String get wizardComplete => 'Queue Complete';
+
+  @override
+  String wizardSummary(int replied, int skipped, int archived) {
+    return '$replied replied, $skipped skipped, $archived archived';
+  }
+
+  @override
+  String get improve => 'Improve';
+
+  @override
+  String get variants => 'Variants';
+
+  @override
+  String get useTemplate => 'Use Template';
+
+  @override
+  String get skipLead => 'Skip';
+
+  @override
+  String get noTemplates => 'No templates saved yet';
+
+  @override
+  String get feedbackTitle => 'How did this reply perform?';
+
+  @override
+  String get feedbackConverted => 'Converted (user tried product)';
+
+  @override
+  String get feedbackConversation => 'Conversation started';
+
+  @override
+  String get feedbackIgnored => 'Ignored (no reaction)';
+
+  @override
+  String get feedbackNegative => 'Negative (downvoted)';
+
+  @override
+  String get feedbackDeleted => 'Deleted by moderator';
+
+  @override
+  String get engagementScore => 'Engagement';
+
+  @override
+  String get discoverSubreddits => 'Discover Subreddits';
+
+  @override
+  String get discovering => 'Discovering...';
 }

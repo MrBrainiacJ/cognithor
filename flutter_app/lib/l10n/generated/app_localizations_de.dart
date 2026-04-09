@@ -2738,4 +2738,57 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get filterAll => 'Alle';
+
+  @override
+  String get processQueue => 'Queue abarbeiten';
+
+  @override
+  String get wizardComplete => 'Queue abgeschlossen';
+
+  @override
+  String wizardSummary(int replied, int skipped, int archived) {
+    return '$replied beantwortet, $skipped uebersprungen, $archived archiviert';
+  }
+
+  @override
+  String get improve => 'Verbessern';
+
+  @override
+  String get variants => 'Varianten';
+
+  @override
+  String get useTemplate => 'Vorlage nutzen';
+
+  @override
+  String get skipLead => 'Ueberspringen';
+
+  @override
+  String get noTemplates => 'Noch keine Vorlagen gespeichert';
+
+  @override
+  String get feedbackTitle => 'Wie hat diese Antwort performt?';
+
+  @override
+  String get feedbackConverted => 'Konvertiert (User hat Produkt getestet)';
+
+  @override
+  String get feedbackConversation => 'Gespraech entstanden';
+
+  @override
+  String get feedbackIgnored => 'Ignoriert (keine Reaktion)';
+
+  @override
+  String get feedbackNegative => 'Negativ (Downvotes)';
+
+  @override
+  String get feedbackDeleted => 'Vom Moderator geloescht';
+
+  @override
+  String get engagementScore => 'Engagement';
+
+  @override
+  String get discoverSubreddits => 'Subreddits entdecken';
+
+  @override
+  String get discovering => 'Entdecke...';
 }

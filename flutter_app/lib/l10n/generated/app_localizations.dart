@@ -5375,6 +5375,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All'**
   String get filterAll;
+
+  /// No description provided for @processQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Process Queue'**
+  String get processQueue;
+
+  /// No description provided for @wizardComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue Complete'**
+  String get wizardComplete;
+
+  /// No description provided for @wizardSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{replied} replied, {skipped} skipped, {archived} archived'**
+  String wizardSummary(int replied, int skipped, int archived);
+
+  /// No description provided for @improve.
+  ///
+  /// In en, this message translates to:
+  /// **'Improve'**
+  String get improve;
+
+  /// No description provided for @variants.
+  ///
+  /// In en, this message translates to:
+  /// **'Variants'**
+  String get variants;
+
+  /// No description provided for @useTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Template'**
+  String get useTemplate;
+
+  /// No description provided for @skipLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skipLead;
+
+  /// No description provided for @noTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'No templates saved yet'**
+  String get noTemplates;
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How did this reply perform?'**
+  String get feedbackTitle;
+
+  /// No description provided for @feedbackConverted.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted (user tried product)'**
+  String get feedbackConverted;
+
+  /// No description provided for @feedbackConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation started'**
+  String get feedbackConversation;
+
+  /// No description provided for @feedbackIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignored (no reaction)'**
+  String get feedbackIgnored;
+
+  /// No description provided for @feedbackNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative (downvoted)'**
+  String get feedbackNegative;
+
+  /// No description provided for @feedbackDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted by moderator'**
+  String get feedbackDeleted;
+
+  /// No description provided for @engagementScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Engagement'**
+  String get engagementScore;
+
+  /// No description provided for @discoverSubreddits.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover Subreddits'**
+  String get discoverSubreddits;
+
+  /// No description provided for @discovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovering...'**
+  String get discovering;
 }
 
 class _AppLocalizationsDelegate

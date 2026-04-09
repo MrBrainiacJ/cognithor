@@ -1586,5 +1586,51 @@
   "leadStats": "Lead Statistics",
   "@leadStats": {},
   "filterAll": "All",
-  "@filterAll": {}
+  "@filterAll": {},
+  "processQueue": "Process Queue",
+  "@processQueue": {},
+  "wizardComplete": "Queue Complete",
+  "@wizardComplete": {},
+  "wizardSummary": "{replied} replied, {skipped} skipped, {archived} archived",
+  "@wizardSummary": {
+    "placeholders": {
+      "replied": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "archived": {
+        "type": "int"
+      }
+    }
+  },
+  "improve": "Improve",
+  "@improve": {},
+  "variants": "Variants",
+  "@variants": {},
+  "useTemplate": "Use Template",
+  "@useTemplate": {},
+  "skipLead": "Skip",
+  "@skipLead": {},
+  "noTemplates": "No templates saved yet",
+  "@noTemplates": {},
+  "feedbackTitle": "How did this reply perform?",
+  "@feedbackTitle": {},
+  "feedbackConverted": "Converted (user tried product)",
+  "@feedbackConverted": {},
+  "feedbackConversation": "Conversation started",
+  "@feedbackConversation": {},
+  "feedbackIgnored": "Ignored (no reaction)",
+  "@feedbackIgnored": {},
+  "feedbackNegative": "Negative (downvoted)",
+  "@feedbackNegative": {},
+  "feedbackDeleted": "Deleted by moderator",
+  "@feedbackDeleted": {},
+  "engagementScore": "Engagement",
+  "@engagementScore": {},
+  "discoverSubreddits": "Discover Subreddits",
+  "@discoverSubreddits": {},
+  "discovering": "Discovering...",
+  "@discovering": {}
 }

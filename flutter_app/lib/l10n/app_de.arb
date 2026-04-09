@@ -954,5 +954,22 @@
   "intentScore": "Intent-Score",
   "scoreReason": "Begruendung",
   "leadStats": "Lead-Statistiken",
-  "filterAll": "Alle"
+  "filterAll": "Alle",
+  "processQueue": "Queue abarbeiten",
+  "wizardComplete": "Queue abgeschlossen",
+  "wizardSummary": "{replied} beantwortet, {skipped} uebersprungen, {archived} archiviert",
+  "improve": "Verbessern",
+  "variants": "Varianten",
+  "useTemplate": "Vorlage nutzen",
+  "skipLead": "Ueberspringen",
+  "noTemplates": "Noch keine Vorlagen gespeichert",
+  "feedbackTitle": "Wie hat diese Antwort performt?",
+  "feedbackConverted": "Konvertiert (User hat Produkt getestet)",
+  "feedbackConversation": "Gespraech entstanden",
+  "feedbackIgnored": "Ignoriert (keine Reaktion)",
+  "feedbackNegative": "Negativ (Downvotes)",
+  "feedbackDeleted": "Vom Moderator geloescht",
+  "engagementScore": "Engagement",
+  "discoverSubreddits": "Subreddits entdecken",
+  "discovering": "Entdecke..."
 }

@@ -945,5 +945,22 @@
   "intentScore": "درجة النية",
   "scoreReason": "السبب",
   "leadStats": "إحصائيات العملاء",
-  "filterAll": "الكل"
+  "filterAll": "الكل",
+  "processQueue": "معالجة الطابور",
+  "wizardComplete": "اكتمل الطابور",
+  "wizardSummary": "{replied} تم الرد, {skipped} تم التخطي, {archived} تم الأرشفة",
+  "improve": "تحسين",
+  "variants": "متغيرات",
+  "useTemplate": "استخدام قالب",
+  "skipLead": "تخطي",
+  "noTemplates": "لا توجد قوالب محفوظة بعد",
+  "feedbackTitle": "كيف كان أداء هذا الرد؟",
+  "feedbackConverted": "تحويل (جرّب المستخدم المنتج)",
+  "feedbackConversation": "بدأت محادثة",
+  "feedbackIgnored": "تم التجاهل (بدون رد فعل)",
+  "feedbackNegative": "سلبي (تصويت سلبي)",
+  "feedbackDeleted": "حذفه المشرف",
+  "engagementScore": "المشاركة",
+  "discoverSubreddits": "اكتشاف المنتديات",
+  "discovering": "جارٍ الاكتشاف..."
 }

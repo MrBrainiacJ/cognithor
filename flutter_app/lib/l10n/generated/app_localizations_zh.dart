@@ -2705,4 +2705,57 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filterAll => '全部';
+
+  @override
+  String get processQueue => '处理队列';
+
+  @override
+  String get wizardComplete => '队列完成';
+
+  @override
+  String wizardSummary(int replied, int skipped, int archived) {
+    return '$replied已回复, $skipped已跳过, $archived已归档';
+  }
+
+  @override
+  String get improve => '改进';
+
+  @override
+  String get variants => '变体';
+
+  @override
+  String get useTemplate => '使用模板';
+
+  @override
+  String get skipLead => '跳过';
+
+  @override
+  String get noTemplates => '尚无保存的模板';
+
+  @override
+  String get feedbackTitle => '这条回复表现如何?';
+
+  @override
+  String get feedbackConverted => '转化（用户试用了产品）';
+
+  @override
+  String get feedbackConversation => '产生了对话';
+
+  @override
+  String get feedbackIgnored => '被忽略（无反应）';
+
+  @override
+  String get feedbackNegative => '负面（被踩）';
+
+  @override
+  String get feedbackDeleted => '被版主删除';
+
+  @override
+  String get engagementScore => '参与度';
+
+  @override
+  String get discoverSubreddits => '发现子版块';
+
+  @override
+  String get discovering => '发现中...';
 }

@@ -190,4 +190,52 @@ class RedditLeadsProvider extends ChangeNotifier {
     } catch (_) {}
     return false;
   }
+
+  Future<Map<String, dynamic>> refineLead(String id, {String hint = '', int variants = 0}) async {
+    if (_api == null) return {};
+    try {
+      return await _api!.refineRedditLead(id, hint: hint, variants: variants);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<Map<String, dynamic>> getPerformance(String id) async {
+    if (_api == null) return {};
+    try {
+      return await _api!.getRedditLeadPerformance(id);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<bool> setFeedback(String id, {required String tag, String note = ''}) async {
+    if (_api == null) return false;
+    try {
+      await _api!.setRedditLeadFeedback(id, tag: tag, note: note);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> discoverSubreddits() async {
+    if (_api == null) return [];
+    try {
+      final resp = await _api!.discoverSubreddits();
+      return (resp['suggestions'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getTemplates({String subreddit = ''}) async {
+    if (_api == null) return [];
+    try {
+      final resp = await _api!.getRedditTemplates(subreddit: subreddit);
+      return (resp['templates'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+    } catch (_) {
+      return [];
+    }
+  }
 }

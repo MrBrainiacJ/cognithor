@@ -945,5 +945,22 @@
   "intentScore": "意图分数",
   "scoreReason": "原因",
   "leadStats": "潜在客户统计",
-  "filterAll": "全部"
+  "filterAll": "全部",
+  "processQueue": "处理队列",
+  "wizardComplete": "队列完成",
+  "wizardSummary": "{replied}已回复, {skipped}已跳过, {archived}已归档",
+  "improve": "改进",
+  "variants": "变体",
+  "useTemplate": "使用模板",
+  "skipLead": "跳过",
+  "noTemplates": "尚无保存的模板",
+  "feedbackTitle": "这条回复表现如何?",
+  "feedbackConverted": "转化（用户试用了产品）",
+  "feedbackConversation": "产生了对话",
+  "feedbackIgnored": "被忽略（无反应）",
+  "feedbackNegative": "负面（被踩）",
+  "feedbackDeleted": "被版主删除",
+  "engagementScore": "参与度",
+  "discoverSubreddits": "发现子版块",
+  "discovering": "发现中..."
 }

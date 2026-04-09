@@ -639,6 +639,29 @@ class ApiClient {
 
   Future<Map<String, dynamic>> getRedditLeadStats() => get('leads/stats');
 
+  Future<Map<String, dynamic>> refineRedditLead(String id, {String hint = '', int variants = 0}) =>
+      post('leads/$id/refine', {'hint': hint, 'variants': variants});
+
+  Future<Map<String, dynamic>> getRedditLeadPerformance(String id) =>
+      get('leads/$id/performance');
+
+  Future<Map<String, dynamic>> setRedditLeadFeedback(String id, {required String tag, String note = ''}) =>
+      patch('leads/$id/feedback', {'tag': tag, 'note': note});
+
+  Future<Map<String, dynamic>> discoverSubreddits([Map<String, dynamic>? body]) =>
+      post('leads/discover-subreddits', body ?? {});
+
+  Future<Map<String, dynamic>> getRedditTemplates({String subreddit = ''}) {
+    final params = subreddit.isNotEmpty ? '?subreddit=$subreddit' : '';
+    return get('leads/templates$params');
+  }
+
+  Future<Map<String, dynamic>> createRedditTemplate(Map<String, dynamic> body) =>
+      post('leads/templates', body);
+
+  Future<Map<String, dynamic>> deleteRedditTemplate(String id) =>
+      delete('leads/templates/$id');
+
   // ---------------------------------------------------------------------------
   // Internal
   // ---------------------------------------------------------------------------

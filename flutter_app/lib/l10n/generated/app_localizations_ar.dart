@@ -2722,4 +2722,57 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filterAll => 'الكل';
+
+  @override
+  String get processQueue => 'معالجة الطابور';
+
+  @override
+  String get wizardComplete => 'اكتمل الطابور';
+
+  @override
+  String wizardSummary(int replied, int skipped, int archived) {
+    return '$replied تم الرد, $skipped تم التخطي, $archived تم الأرشفة';
+  }
+
+  @override
+  String get improve => 'تحسين';
+
+  @override
+  String get variants => 'متغيرات';
+
+  @override
+  String get useTemplate => 'استخدام قالب';
+
+  @override
+  String get skipLead => 'تخطي';
+
+  @override
+  String get noTemplates => 'لا توجد قوالب محفوظة بعد';
+
+  @override
+  String get feedbackTitle => 'كيف كان أداء هذا الرد؟';
+
+  @override
+  String get feedbackConverted => 'تحويل (جرّب المستخدم المنتج)';
+
+  @override
+  String get feedbackConversation => 'بدأت محادثة';
+
+  @override
+  String get feedbackIgnored => 'تم التجاهل (بدون رد فعل)';
+
+  @override
+  String get feedbackNegative => 'سلبي (تصويت سلبي)';
+
+  @override
+  String get feedbackDeleted => 'حذفه المشرف';
+
+  @override
+  String get engagementScore => 'المشاركة';
+
+  @override
+  String get discoverSubreddits => 'اكتشاف المنتديات';
+
+  @override
+  String get discovering => 'جارٍ الاكتشاف...';
 }
