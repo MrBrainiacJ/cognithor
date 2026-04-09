@@ -923,5 +923,6 @@
   "scanInterval": "扫描间隔（分钟）",
   "autoScan": "自动扫描",
   "autoPost": "自动发布",
-  "autoPostHint": "需要在浏览器中一次性登录Reddit"
+  "autoPostHint": "需要在浏览器中一次性登录Reddit",
+  "socialSetupRequired": "请设置产品名称和至少一个子版块以开始搜索潜在客户。"
 }

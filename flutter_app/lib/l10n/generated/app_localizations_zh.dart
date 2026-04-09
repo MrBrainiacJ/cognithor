@@ -2643,4 +2643,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autoPostHint => '需要在浏览器中一次性登录Reddit';
+
+  @override
+  String get socialSetupRequired => '请设置产品名称和至少一个子版块以开始搜索潜在客户。';
 }

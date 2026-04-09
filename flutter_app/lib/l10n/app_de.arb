@@ -932,5 +932,6 @@
   "scanInterval": "Scan-Intervall (Minuten)",
   "autoScan": "Auto-Scan",
   "autoPost": "Auto-Post (Playwright)",
-  "autoPostHint": "Erfordert einmaligen Reddit-Login im Browser"
+  "autoPostHint": "Erfordert einmaligen Reddit-Login im Browser",
+  "socialSetupRequired": "Gib einen Produktnamen und mindestens ein Subreddit ein, um nach Leads zu suchen."
 }

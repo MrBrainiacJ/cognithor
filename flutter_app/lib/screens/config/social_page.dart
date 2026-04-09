@@ -13,9 +13,37 @@ class SocialPage extends StatelessWidget {
     return Consumer<ConfigProvider>(
       builder: (context, cfg, _) {
         final social = cfg.cfg['social'] as Map<String, dynamic>? ?? {};
+        final productName = (social['reddit_product_name'] ?? '').toString();
+        final hasSubs = (social['reddit_subreddits'] as List<dynamic>?)?.isNotEmpty ?? false;
+        final isConfigured = productName.isNotEmpty && hasSubs;
+
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (!isConfigured)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber, color: Colors.orange[300], size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l.socialSetupRequired,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.orange[300],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             JarvisToggleField(
               label: l.autoScan,
               value: social['reddit_scan_enabled'] == true,

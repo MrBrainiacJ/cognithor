@@ -2658,4 +2658,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get autoPostHint => 'يتطلب تسجيل دخول لمرة واحدة في Reddit';
+
+  @override
+  String get socialSetupRequired =>
+      'أدخل اسم المنتج وعلى الأقل منتدى فرعي واحد لبدء البحث عن عملاء محتملين.';
 }

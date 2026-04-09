@@ -2666,4 +2666,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoPostHint => 'Requires one-time Reddit login in browser';
+
+  @override
+  String get socialSetupRequired =>
+      'Set a product name and at least one subreddit to start scanning for leads.';
 }

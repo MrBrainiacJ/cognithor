@@ -1542,5 +1542,7 @@
   "autoPost": "Auto-Post (Playwright)",
   "@autoPost": {},
   "autoPostHint": "Requires one-time Reddit login in browser",
-  "@autoPostHint": {}
+  "@autoPostHint": {},
+  "socialSetupRequired": "Set a product name and at least one subreddit to start scanning for leads.",
+  "@socialSetupRequired": {}
 }

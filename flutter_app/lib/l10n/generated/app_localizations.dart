@@ -5255,6 +5255,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Requires one-time Reddit login in browser'**
   String get autoPostHint;
+
+  /// No description provided for @socialSetupRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a product name and at least one subreddit to start scanning for leads.'**
+  String get socialSetupRequired;
 }
 
 class _AppLocalizationsDelegate
