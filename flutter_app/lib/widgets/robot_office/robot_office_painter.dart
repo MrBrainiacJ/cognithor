@@ -106,6 +106,15 @@ class RobotOfficePainter extends CustomPainter {
       Paint()..color = Colors.white.withValues(alpha: 0.12),
     );
 
+    // System glow (PGE Trinity robots: Planner, Executor, Gatekeeper)
+    if (r.isSystem) {
+      final glowAlpha = 0.15 + 0.05 * sin(elapsed * 2);
+      final glowPaint = Paint()
+        ..color = r.color.withValues(alpha: glowAlpha)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawCircle(const Offset(0, -12), 18, glowPaint);
+    }
+
     // Head
     const headRect = Rect.fromLTWH(-8, -22, 16, 14);
     canvas.drawRRect(
