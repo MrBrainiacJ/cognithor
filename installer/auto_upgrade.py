@@ -1,4 +1,4 @@
-"""Auto-upgrade Cognithor if a source tree with a newer version is found.
+r"""Auto-upgrade Cognithor if a source tree with a newer version is found.
 
 Checked locations (in order):
   1. COGNITHOR_DEV environment variable
@@ -6,15 +6,15 @@ Checked locations (in order):
   3. D:\Jarvis\jarvis complete v20
   4. %USERPROFILE%\cognithor
 
-If a pyproject.toml with a higher version is found, upgrades via pip install
-(--no-deps to avoid breaking the embedded environment).
+If src/jarvis/ with a higher version is found, copies the package
+directly into site-packages (no pip/build tools needed).
 """
 
 from __future__ import annotations
 
 import os
 import re
-import subprocess
+import shutil
 import sys
 from pathlib import Path
 
@@ -54,6 +54,15 @@ def _compare_versions(a: str, b: str) -> int:
     return len(pa) - len(pb)
 
 
+def _find_site_packages() -> Path | None:
+    """Find the site-packages directory for the current Python."""
+    for p in sys.path:
+        pp = Path(p)
+        if pp.name == "site-packages" and pp.is_dir():
+            return pp
+    return None
+
+
 def main() -> None:
     candidates = []
 
@@ -78,7 +87,8 @@ def main() -> None:
 
     for candidate in candidates:
         toml = candidate / "pyproject.toml"
-        if not toml.exists():
+        src_jarvis = candidate / "src" / "jarvis"
+        if not toml.exists() or not src_jarvis.is_dir():
             continue
 
         dev_ver = _read_version_from_toml(toml)
@@ -88,24 +98,31 @@ def main() -> None:
         if _compare_versions(dev_ver, cur) > 0:
             print(f"  [UPGRADE] Source v{dev_ver} found at {candidate}")
             print(f"            Installed v{cur} -- upgrading...")
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "install",
-                    str(candidate),
-                    "--no-deps",
-                    "--quiet",
-                    "--disable-pip-version-check",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0:
+
+            site_packages = _find_site_packages()
+            if site_packages is None:
+                print("  [WARN] Could not find site-packages directory")
+                print(f"         Continuing with v{cur}")
+                return
+
+            dest = site_packages / "jarvis"
+            try:
+                # Remove old package
+                if dest.exists():
+                    shutil.rmtree(dest)
+                # Copy new source
+                shutil.copytree(src_jarvis, dest)
+                # Copy data/procedures to ~/.jarvis/data/procedures
+                src_data = candidate / "data" / "procedures"
+                jarvis_home = Path.home() / ".jarvis"
+                dest_data = jarvis_home / "data" / "procedures"
+                if src_data.is_dir():
+                    dest_data.mkdir(parents=True, exist_ok=True)
+                    for f in src_data.glob("*.md"):
+                        shutil.copy2(f, dest_data / f.name)
                 print(f"  [OK] Upgraded to v{dev_ver}")
-            else:
-                print(f"  [WARN] Upgrade failed: {result.stderr.strip()[:200]}")
+            except Exception as exc:
+                print(f"  [WARN] Upgrade failed: {exc}")
                 print(f"         Continuing with v{cur}")
             return  # Only upgrade once
 
