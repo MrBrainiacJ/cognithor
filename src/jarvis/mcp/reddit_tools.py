@@ -21,6 +21,11 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         if lead_service is None:
             return json.dumps({"error": "Reddit Lead Service not initialized"})
 
+        if not lead_service._scan_config.product_name:
+            return json.dumps({
+                "error": "Reddit product not configured. Set social.reddit_product_name in config or Flutter UI (Administration > Social).",
+            })
+
         subs = [s.strip() for s in subreddits.split(",") if s.strip()] if subreddits else None
         # subs=None → service falls back to default_subreddits from config
         effective_min = min_score if min_score > 0 else lead_service._scan_config.min_score

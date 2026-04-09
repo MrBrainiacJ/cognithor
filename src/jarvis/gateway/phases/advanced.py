@@ -336,25 +336,24 @@ async def init_advanced(
     except Exception:
         log.debug("knowledge_ingest_init_skipped", exc_info=True)
 
-    # RedditLeadService (social listening)
+    # RedditLeadService (social listening) — always init so MCP tools are available
     try:
         from jarvis.social.service import RedditLeadService
 
         social_cfg = getattr(config, "social", None)
-        if social_cfg and social_cfg.reddit_product_name:
-            jarvis_home = getattr(config, "jarvis_home", None) or Path.home() / ".jarvis"
-            leads_db = str(Path(jarvis_home) / "leads.db")
-            llm_fn = result.get("llm_fn")
-            result["reddit_lead_service"] = RedditLeadService(
-                db_path=leads_db,
-                llm_fn=llm_fn,
-                product_name=social_cfg.reddit_product_name,
-                product_description=social_cfg.reddit_product_description,
-                reply_tone=social_cfg.reddit_reply_tone,
-                default_subreddits=social_cfg.reddit_subreddits,
-                min_score=social_cfg.reddit_min_score,
-            )
-            log.info("reddit_lead_service_initialized")
+        jarvis_home = getattr(config, "jarvis_home", None) or Path.home() / ".jarvis"
+        leads_db = str(Path(jarvis_home) / "leads.db")
+        llm_fn = result.get("llm_fn")
+        result["reddit_lead_service"] = RedditLeadService(
+            db_path=leads_db,
+            llm_fn=llm_fn,
+            product_name=getattr(social_cfg, "reddit_product_name", "") if social_cfg else "",
+            product_description=getattr(social_cfg, "reddit_product_description", "") if social_cfg else "",
+            reply_tone=getattr(social_cfg, "reddit_reply_tone", "") if social_cfg else "",
+            default_subreddits=getattr(social_cfg, "reddit_subreddits", []) if social_cfg else [],
+            min_score=getattr(social_cfg, "reddit_min_score", 60) if social_cfg else 60,
+        )
+        log.info("reddit_lead_service_initialized")
     except Exception:
         log.debug("reddit_lead_service_init_skipped", exc_info=True)
 
