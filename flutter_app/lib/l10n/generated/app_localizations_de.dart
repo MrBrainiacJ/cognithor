@@ -354,7 +354,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get scanMemory => 'Scannen';
 
   @override
-  String get scanning => 'Wird gescannt...';
+  String get scanning => 'Scanne...';
 
   @override
   String get explainability => 'Erklaerbarkeit';
@@ -2678,4 +2678,64 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get socialSetupRequired =>
       'Gib einen Produktnamen und mindestens ein Subreddit ein, um nach Leads zu suchen.';
+
+  @override
+  String get redditLeads => 'Leads';
+
+  @override
+  String get noLeadsFound => 'Noch keine Leads gefunden';
+
+  @override
+  String get noLeadsHint =>
+      'Konfiguriere Produkt und Subreddits in den Einstellungen, dann scanne Reddit';
+
+  @override
+  String leadScore(int score) {
+    return 'Score: $score';
+  }
+
+  @override
+  String get leadNew => 'Neu';
+
+  @override
+  String get leadReviewed => 'Geprueft';
+
+  @override
+  String get leadReplied => 'Beantwortet';
+
+  @override
+  String get leadArchived => 'Archiviert';
+
+  @override
+  String get draftReply => 'Antwortentwurf';
+
+  @override
+  String get editReply => 'Antwort bearbeiten';
+
+  @override
+  String get postReply => 'Antwort posten';
+
+  @override
+  String get copyReply => 'Antwort kopieren';
+
+  @override
+  String get openOnReddit => 'Auf Reddit oeffnen';
+
+  @override
+  String get markReviewed => 'Als geprueft markieren';
+
+  @override
+  String get archiveLead => 'Archivieren';
+
+  @override
+  String get intentScore => 'Intent-Score';
+
+  @override
+  String get scoreReason => 'Begruendung';
+
+  @override
+  String get leadStats => 'Lead-Statistiken';
+
+  @override
+  String get filterAll => 'Alle';
 }

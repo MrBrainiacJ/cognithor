@@ -609,6 +609,37 @@ class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
+  // Reddit Leads
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> scanRedditLeads([Map<String, dynamic>? body]) =>
+      post('leads/scan', body ?? {});
+
+  Future<Map<String, dynamic>> getRedditLeads({
+    String? status,
+    int? minScore,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final params = <String>['limit=$limit', 'offset=$offset'];
+    if (status != null && status.isNotEmpty) params.add('status=$status');
+    if (minScore != null) params.add('min_score=$minScore');
+    return get('leads?${params.join('&')}');
+  }
+
+  Future<Map<String, dynamic>> getRedditLead(String id) => get('leads/$id');
+
+  Future<Map<String, dynamic>> updateRedditLead(
+          String id, Map<String, dynamic> body) =>
+      patch('leads/$id', body);
+
+  Future<Map<String, dynamic>> replyToRedditLead(String id,
+          {String mode = 'clipboard'}) =>
+      post('leads/$id/reply', {'mode': mode});
+
+  Future<Map<String, dynamic>> getRedditLeadStats() => get('leads/stats');
+
+  // ---------------------------------------------------------------------------
   // Internal
   // ---------------------------------------------------------------------------
 

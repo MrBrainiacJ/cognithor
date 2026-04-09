@@ -2646,4 +2646,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get socialSetupRequired => '请设置产品名称和至少一个子版块以开始搜索潜在客户。';
+
+  @override
+  String get redditLeads => '潜在客户';
+
+  @override
+  String get noLeadsFound => '尚未发现潜在客户';
+
+  @override
+  String get noLeadsHint => '在设置中配置产品和子版块，然后扫描Reddit';
+
+  @override
+  String leadScore(int score) {
+    return '分数: $score';
+  }
+
+  @override
+  String get leadNew => '新';
+
+  @override
+  String get leadReviewed => '已审核';
+
+  @override
+  String get leadReplied => '已回复';
+
+  @override
+  String get leadArchived => '已归档';
+
+  @override
+  String get draftReply => '回复草稿';
+
+  @override
+  String get editReply => '编辑回复';
+
+  @override
+  String get postReply => '发布回复';
+
+  @override
+  String get copyReply => '复制回复';
+
+  @override
+  String get openOnReddit => '在Reddit上打开';
+
+  @override
+  String get markReviewed => '标记为已审核';
+
+  @override
+  String get archiveLead => '归档';
+
+  @override
+  String get intentScore => '意图分数';
+
+  @override
+  String get scoreReason => '原因';
+
+  @override
+  String get leadStats => '潜在客户统计';
+
+  @override
+  String get filterAll => '全部';
 }

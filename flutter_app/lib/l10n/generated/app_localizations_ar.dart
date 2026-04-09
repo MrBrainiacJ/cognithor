@@ -353,7 +353,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scanMemory => 'فحص';
 
   @override
-  String get scanning => 'جارٍ الفحص...';
+  String get scanning => 'جارٍ المسح...';
 
   @override
   String get explainability => 'قابلية التفسير';
@@ -877,7 +877,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get totalVaults => 'إجمالي الخزائن';
 
   @override
-  String get scanNow => 'فحص الآن';
+  String get scanNow => 'مسح الآن';
 
   @override
   String get startConversation => 'ابدأ محادثة';
@@ -2662,4 +2662,64 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get socialSetupRequired =>
       'أدخل اسم المنتج وعلى الأقل منتدى فرعي واحد لبدء البحث عن عملاء محتملين.';
+
+  @override
+  String get redditLeads => 'العملاء المحتملون';
+
+  @override
+  String get noLeadsFound => 'لم يتم العثور على عملاء محتملين بعد';
+
+  @override
+  String get noLeadsHint =>
+      'قم بتكوين المنتج والمنتديات في الإعدادات، ثم امسح Reddit';
+
+  @override
+  String leadScore(int score) {
+    return 'النتيجة: $score';
+  }
+
+  @override
+  String get leadNew => 'جديد';
+
+  @override
+  String get leadReviewed => 'تمت المراجعة';
+
+  @override
+  String get leadReplied => 'تم الرد';
+
+  @override
+  String get leadArchived => 'مؤرشف';
+
+  @override
+  String get draftReply => 'مسودة الرد';
+
+  @override
+  String get editReply => 'تعديل الرد';
+
+  @override
+  String get postReply => 'نشر الرد';
+
+  @override
+  String get copyReply => 'نسخ الرد';
+
+  @override
+  String get openOnReddit => 'فتح في Reddit';
+
+  @override
+  String get markReviewed => 'تعيين كمراجع';
+
+  @override
+  String get archiveLead => 'أرشفة';
+
+  @override
+  String get intentScore => 'درجة النية';
+
+  @override
+  String get scoreReason => 'السبب';
+
+  @override
+  String get leadStats => 'إحصائيات العملاء';
+
+  @override
+  String get filterAll => 'الكل';
 }

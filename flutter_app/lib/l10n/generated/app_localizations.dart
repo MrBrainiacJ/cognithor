@@ -5261,6 +5261,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set a product name and at least one subreddit to start scanning for leads.'**
   String get socialSetupRequired;
+
+  /// No description provided for @redditLeads.
+  ///
+  /// In en, this message translates to:
+  /// **'Leads'**
+  String get redditLeads;
+
+  /// No description provided for @noLeadsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No leads found yet'**
+  String get noLeadsFound;
+
+  /// No description provided for @noLeadsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your product and subreddits in Settings, then scan Reddit'**
+  String get noLeadsHint;
+
+  /// No description provided for @leadScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Score: {score}'**
+  String leadScore(int score);
+
+  /// No description provided for @leadNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get leadNew;
+
+  /// No description provided for @leadReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed'**
+  String get leadReviewed;
+
+  /// No description provided for @leadReplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Replied'**
+  String get leadReplied;
+
+  /// No description provided for @leadArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get leadArchived;
+
+  /// No description provided for @draftReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft Reply'**
+  String get draftReply;
+
+  /// No description provided for @editReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Reply'**
+  String get editReply;
+
+  /// No description provided for @postReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Post Reply'**
+  String get postReply;
+
+  /// No description provided for @copyReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Reply'**
+  String get copyReply;
+
+  /// No description provided for @openOnReddit.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on Reddit'**
+  String get openOnReddit;
+
+  /// No description provided for @markReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Reviewed'**
+  String get markReviewed;
+
+  /// No description provided for @archiveLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveLead;
+
+  /// No description provided for @intentScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Intent Score'**
+  String get intentScore;
+
+  /// No description provided for @scoreReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get scoreReason;
+
+  /// No description provided for @leadStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Lead Statistics'**
+  String get leadStats;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
 }
 
 class _AppLocalizationsDelegate

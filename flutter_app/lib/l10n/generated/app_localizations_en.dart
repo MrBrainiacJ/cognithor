@@ -2670,4 +2670,64 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get socialSetupRequired =>
       'Set a product name and at least one subreddit to start scanning for leads.';
+
+  @override
+  String get redditLeads => 'Leads';
+
+  @override
+  String get noLeadsFound => 'No leads found yet';
+
+  @override
+  String get noLeadsHint =>
+      'Configure your product and subreddits in Settings, then scan Reddit';
+
+  @override
+  String leadScore(int score) {
+    return 'Score: $score';
+  }
+
+  @override
+  String get leadNew => 'New';
+
+  @override
+  String get leadReviewed => 'Reviewed';
+
+  @override
+  String get leadReplied => 'Replied';
+
+  @override
+  String get leadArchived => 'Archived';
+
+  @override
+  String get draftReply => 'Draft Reply';
+
+  @override
+  String get editReply => 'Edit Reply';
+
+  @override
+  String get postReply => 'Post Reply';
+
+  @override
+  String get copyReply => 'Copy Reply';
+
+  @override
+  String get openOnReddit => 'Open on Reddit';
+
+  @override
+  String get markReviewed => 'Mark Reviewed';
+
+  @override
+  String get archiveLead => 'Archive';
+
+  @override
+  String get intentScore => 'Intent Score';
+
+  @override
+  String get scoreReason => 'Reason';
+
+  @override
+  String get leadStats => 'Lead Statistics';
+
+  @override
+  String get filterAll => 'All';
 }
