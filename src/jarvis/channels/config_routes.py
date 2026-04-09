@@ -100,6 +100,7 @@ def create_config_routes(
     _register_backend_routes(app, deps, config_manager, gateway)
     _register_autonomous_routes(app, deps, gateway)
     _register_feedback_routes(app, deps, gateway)
+    _register_social_routes(app, deps, gateway)
 
 
 # ======================================================================
@@ -5050,7 +5051,11 @@ def _register_ingest_routes(
             if hasattr(file_field, "filename") and file_field.filename:
                 filename = file_field.filename
 
-            result = await svc.ingest_file(filename, file_bytes)
+            priority_str = str(form.get("priority", "normal") or "normal")
+            from jarvis.learning.knowledge_ingest import Priority
+
+            priority = Priority.from_string(priority_str)
+            result = await svc.ingest_file(filename, file_bytes, priority=priority)
 
             return {
                 "id": result.id,
@@ -5074,7 +5079,7 @@ def _register_ingest_routes(
     async def learn_url(request: Request) -> dict[str, Any]:
         """Ingest a website URL.
 
-        JSON body: {"url": "https://...", "description": "optional"}
+        JSON body: {"url": "https://...", "description": "optional", "priority": "normal"}
         """
         svc = _get_ingest()
         if not svc:
@@ -5086,7 +5091,11 @@ def _register_ingest_routes(
             if not url:
                 return {"error": "Field 'url' is required", "code": "MISSING_FIELD"}
 
-            result = await svc.ingest_url(url)
+            priority_str = body.get("priority", "normal")
+            from jarvis.learning.knowledge_ingest import Priority
+
+            priority = Priority.from_string(priority_str)
+            result = await svc.ingest_url(url, priority=priority)
 
             return {
                 "id": result.id,
@@ -5110,7 +5119,7 @@ def _register_ingest_routes(
     async def learn_youtube(request: Request) -> dict[str, Any]:
         """Ingest a YouTube video transcript.
 
-        JSON body: {"url": "https://youtube.com/watch?v=..."}
+        JSON body: {"url": "https://youtube.com/watch?v=...", "priority": "normal"}
         """
         svc = _get_ingest()
         if not svc:
@@ -5122,7 +5131,11 @@ def _register_ingest_routes(
             if not url:
                 return {"error": "Field 'url' is required", "code": "MISSING_FIELD"}
 
-            result = await svc.ingest_youtube(url)
+            priority_str = body.get("priority", "normal")
+            from jarvis.learning.knowledge_ingest import Priority
+
+            priority = Priority.from_string(priority_str)
+            result = await svc.ingest_youtube(url, priority=priority)
 
             return {
                 "id": result.id,
@@ -5139,6 +5152,16 @@ def _register_ingest_routes(
         except Exception as exc:
             log.error("learn_youtube_error", error=str(exc))
             return {"error": "YouTube ingestion failed", "code": "INTERNAL_ERROR"}
+
+    # -- Queue status -------------------------------------------------------
+
+    @app.get("/api/v1/learn/queue", dependencies=deps)
+    async def learn_queue() -> dict[str, Any]:
+        """Show pending deep-learn tasks."""
+        svc = _get_ingest()
+        if not svc:
+            return {"error": "Knowledge ingest service not initialized", "status": 503}
+        return {"queue": svc._queue.pending(), "size": len(svc._queue)}
 
     # -- History & Stats ----------------------------------------------------
 
@@ -5980,4 +6003,127 @@ def _register_feedback_routes(
         return {
             "node_id": node_id,
             "branch_index": tree.get_branch_index(node_id),
+        }
+
+
+# ======================================================================
+# Social / Reddit Lead Hunter routes
+# ======================================================================
+
+
+def _register_social_routes(
+    app: Any,
+    deps: list[Any],
+    gateway: Any,
+) -> None:
+    """REST endpoints for Reddit Lead Hunter."""
+
+    def _get_service() -> Any:
+        return getattr(gateway, "_reddit_lead_service", None) if gateway else None
+
+    @app.post("/api/v1/leads/scan", dependencies=deps)
+    async def scan_leads(request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        subreddits = body.get("subreddits")
+        min_score = body.get("min_score", 0)
+        result = await svc.scan(
+            subreddits=subreddits,
+            min_score=min_score or 0,
+            trigger="ui",
+        )
+        return {
+            "id": result.id,
+            "summary": result.summary(),
+            "posts_checked": result.posts_checked,
+            "leads_found": result.leads_found,
+        }
+
+    @app.get("/api/v1/leads", dependencies=deps)
+    async def list_leads(
+        status: str | None = None,
+        min_score: int = 0,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        from jarvis.social.models import LeadStatus
+
+        status_filter = None
+        if status and status in [s.value for s in LeadStatus]:
+            status_filter = LeadStatus(status)
+        leads = svc.get_leads(status=status_filter, min_score=min_score, limit=limit, offset=offset)
+        return {
+            "leads": [l.to_dict() for l in leads],
+            "count": len(leads),
+        }
+
+    @app.get("/api/v1/leads/stats", dependencies=deps)
+    async def lead_stats() -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        stats = svc.get_stats()
+        history = svc.get_scan_history(limit=10)
+        return {
+            "stats": {
+                "total": stats.total,
+                "new": stats.new,
+                "reviewed": stats.reviewed,
+                "replied": stats.replied,
+                "archived": stats.archived,
+                "avg_score": stats.avg_score,
+                "top_subreddits": stats.top_subreddits,
+                "total_scans": stats.total_scans,
+            },
+            "recent_scans": history,
+        }
+
+    @app.get("/api/v1/leads/{lead_id}", dependencies=deps)
+    async def get_lead(lead_id: str) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        lead = svc.get_lead(lead_id)
+        if lead is None:
+            raise HTTPException(404, "Lead not found")
+        return lead.to_dict()
+
+    @app.patch("/api/v1/leads/{lead_id}", dependencies=deps)
+    async def update_lead(lead_id: str, request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        body = await request.json()
+        from jarvis.social.models import LeadStatus
+
+        status = LeadStatus(body["status"]) if "status" in body else None
+        reply_final = body.get("reply_final")
+        lead = svc.update_lead(lead_id, status=status, reply_final=reply_final)
+        if lead is None:
+            raise HTTPException(404, "Lead not found")
+        return lead.to_dict()
+
+    @app.post("/api/v1/leads/{lead_id}/reply", dependencies=deps)
+    async def reply_to_lead(lead_id: str, request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Reddit Lead Service not initialized", "status": 503}
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        mode = body.get("mode", "clipboard")
+        result = svc.post_reply(lead_id, mode=mode)
+        return {
+            "success": result.success,
+            "mode": result.mode.value if hasattr(result.mode, "value") else result.mode,
+            "error": result.error,
         }

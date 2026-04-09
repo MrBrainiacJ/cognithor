@@ -595,6 +595,32 @@ class Gateway:
             except Exception:
                 log.debug("gdpr_retention_cron_failed", exc_info=True)
 
+        # Reddit Lead Scanner (if enabled)
+        _social_cfg = getattr(self._config, "social", None)
+        if (
+            _social_cfg
+            and _social_cfg.reddit_scan_enabled
+            and getattr(self, "_reddit_lead_service", None)
+        ):
+            try:
+                from jarvis.cron.jobs import CronJob
+
+                self._cron_engine.add_runtime_job(
+                    CronJob(
+                        name="reddit_lead_scan",
+                        schedule=f"*/{_social_cfg.reddit_scan_interval_minutes} * * * *",
+                        prompt="[CRON:reddit_lead_scan] Scan Reddit for leads",
+                        channel=getattr(self._config, "default_channel", "webui") or "webui",
+                        enabled=True,
+                    )
+                )
+                log.info(
+                    "reddit_cron_registered",
+                    interval=_social_cfg.reddit_scan_interval_minutes,
+                )
+            except Exception:
+                log.debug("reddit_cron_registration_failed", exc_info=True)
+
         # --- Autonomous Orchestrator (connects PGE + SkillGenerator + Reflector) ---
         self._autonomous_orchestrator = AutonomousOrchestrator(
             gateway=self,
