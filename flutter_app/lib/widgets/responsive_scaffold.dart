@@ -373,18 +373,25 @@ class _BreathingLogoState extends State<_BreathingLogo>
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: JarvisTheme.accent,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        JarvisTheme.accent,
+                        JarvisTheme.accent.withValues(alpha: 0.7),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: JarvisTheme.accent.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: const Center(
-                    child: Text(
-                      'C',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                      ),
-                    ),
+                    child: Icon(Icons.psychology, color: Colors.white, size: 22),
                   ),
                 ),
               ),
