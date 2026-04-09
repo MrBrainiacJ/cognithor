@@ -897,5 +897,11 @@
   "defaults": "默认值",
   "defaultPriority": "默认优先级",
   "defaultAgent": "默认代理",
-  "autoArchiveDays": "自动归档天数"
+  "autoArchiveDays": "自动归档天数",
+  "priorityLow": "低（仅索引）",
+  "priorityNormal": "正常",
+  "priorityHigh": "高（优先学习）",
+  "deepLearningQueued": "深度学习已排队",
+  "deepLearningSkipped": "仅索引",
+  "learnPriority": "优先级"
 }

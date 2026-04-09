@@ -2564,4 +2564,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autoArchiveDays => '自动归档天数';
+
+  @override
+  String get priorityLow => '低（仅索引）';
+
+  @override
+  String get priorityNormal => '正常';
+
+  @override
+  String get priorityHigh => '高（优先学习）';
+
+  @override
+  String get deepLearningQueued => '深度学习已排队';
+
+  @override
+  String get deepLearningSkipped => '仅索引';
+
+  @override
+  String get learnPriority => '优先级';
 }

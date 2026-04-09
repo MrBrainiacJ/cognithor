@@ -5099,6 +5099,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto-archive after (days)'**
   String get autoArchiveDays;
+
+  /// No description provided for @priorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low (index only)'**
+  String get priorityLow;
+
+  /// No description provided for @priorityNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get priorityNormal;
+
+  /// No description provided for @priorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High (priority learning)'**
+  String get priorityHigh;
+
+  /// No description provided for @deepLearningQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep learning queued'**
+  String get deepLearningQueued;
+
+  /// No description provided for @deepLearningSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexed only'**
+  String get deepLearningSkipped;
+
+  /// No description provided for @learnPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get learnPriority;
 }
 
 class _AppLocalizationsDelegate

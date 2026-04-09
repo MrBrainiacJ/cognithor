@@ -26,6 +26,7 @@ class _TeachScreenState extends State<TeachScreen> {
   String? _selectedFilename;
   List<int>? _selectedFileBytes;
   bool _fileUploading = false;
+  String _priority = 'normal';
   bool _urlProcessing = false;
   bool _youtubeProcessing = false;
 
@@ -102,7 +103,7 @@ class _TeachScreenState extends State<TeachScreen> {
     });
     try {
       final api = context.read<ConnectionProvider>().api;
-      final res = await api.learnFromFile(_selectedFileBytes!, _selectedFilename!);
+      final res = await api.learnFromFile(_selectedFileBytes!, _selectedFilename!, priority: _priority);
       if (res.containsKey('error')) {
         setState(() {
           _fileResult = res['error'] as String;
@@ -110,8 +111,11 @@ class _TeachScreenState extends State<TeachScreen> {
         });
       } else {
         final chunks = res['chunks'] ?? res['chunk_count'] ?? '?';
+        final deepStatus = res['deep_learn_status'] ?? '';
         setState(() {
-          _fileResult = '$chunks';
+          _fileResult = deepStatus == 'queued'
+              ? '${AppLocalizations.of(context).deepLearningQueued} ($chunks chunks)'
+              : '$chunks chunks';
           _fileSuccess = true;
         });
         _loadHistory();
@@ -349,6 +353,22 @@ class _TeachScreenState extends State<TeachScreen> {
                   FilledButton.tonal(
                     onPressed: _fileUploading ? null : _uploadFile,
                     child: Text(l.uploadFile),
+                  ),
+                ],
+              ),
+              const SizedBox(height: JarvisTheme.spacingSm),
+              Row(
+                children: [
+                  Text(l.learnPriority, style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: _priority,
+                    items: [
+                      DropdownMenuItem(value: 'low', child: Text(l.priorityLow)),
+                      DropdownMenuItem(value: 'normal', child: Text(l.priorityNormal)),
+                      DropdownMenuItem(value: 'high', child: Text(l.priorityHigh)),
+                    ],
+                    onChanged: (v) => setState(() => _priority = v ?? 'normal'),
                   ),
                 ],
               ),

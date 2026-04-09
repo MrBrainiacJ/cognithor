@@ -541,20 +541,25 @@ class ApiClient {
     List<int> bytes,
     String filename, {
     String? description,
+    String priority = 'normal',
   }) =>
       uploadFile('learn/file', 'file', bytes, filename,
-          fields:
-              description != null ? {'description': description} : null);
+          fields: {
+            if (description != null) 'description': description,
+            'priority': priority,
+          });
 
   Future<Map<String, dynamic>> learnFromUrl(String url,
-          {String? description}) =>
+          {String? description, String priority = 'normal'}) =>
       post('learn/url', {
         'url': url,
         if (description != null) 'description': description,
+        'priority': priority,
       });
 
-  Future<Map<String, dynamic>> learnFromYoutube(String url) =>
-      post('learn/youtube', {'url': url});
+  Future<Map<String, dynamic>> learnFromYoutube(String url,
+          {String priority = 'normal'}) =>
+      post('learn/youtube', {'url': url, 'priority': priority});
 
   Future<Map<String, dynamic>> getLearnHistory() => get('learn/history');
   Future<Map<String, dynamic>> getLearnStats() => get('learn/stats');

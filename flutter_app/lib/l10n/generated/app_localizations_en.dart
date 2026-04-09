@@ -2587,4 +2587,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoArchiveDays => 'Auto-archive after (days)';
+
+  @override
+  String get priorityLow => 'Low (index only)';
+
+  @override
+  String get priorityNormal => 'Normal';
+
+  @override
+  String get priorityHigh => 'High (priority learning)';
+
+  @override
+  String get deepLearningQueued => 'Deep learning queued';
+
+  @override
+  String get deepLearningSkipped => 'Indexed only';
+
+  @override
+  String get learnPriority => 'Priority';
 }

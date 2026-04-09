@@ -2579,4 +2579,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get autoArchiveDays => 'الأرشفة التلقائية بعد (أيام)';
+
+  @override
+  String get priorityLow => 'منخفض (فهرسة فقط)';
+
+  @override
+  String get priorityNormal => 'عادي';
+
+  @override
+  String get priorityHigh => 'عالي (تعلم بأولوية)';
+
+  @override
+  String get deepLearningQueued => 'التعلم العميق في الانتظار';
+
+  @override
+  String get deepLearningSkipped => 'مفهرس فقط';
+
+  @override
+  String get learnPriority => 'الأولوية';
 }

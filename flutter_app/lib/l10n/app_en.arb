@@ -1490,5 +1490,17 @@
   "defaultAgent": "Default agent",
   "@defaultAgent": {},
   "autoArchiveDays": "Auto-archive after (days)",
-  "@autoArchiveDays": {}
+  "@autoArchiveDays": {},
+  "priorityLow": "Low (index only)",
+  "@priorityLow": {},
+  "priorityNormal": "Normal",
+  "@priorityNormal": {},
+  "priorityHigh": "High (priority learning)",
+  "@priorityHigh": {},
+  "deepLearningQueued": "Deep learning queued",
+  "@deepLearningQueued": {},
+  "deepLearningSkipped": "Indexed only",
+  "@deepLearningSkipped": {},
+  "learnPriority": "Priority",
+  "@learnPriority": {}
 }

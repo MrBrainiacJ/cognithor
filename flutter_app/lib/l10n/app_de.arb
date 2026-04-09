@@ -906,5 +906,11 @@
   "defaults": "Standards",
   "defaultPriority": "Standard-Priorität",
   "defaultAgent": "Standard-Agent",
-  "autoArchiveDays": "Automatisch archivieren nach (Tagen)"
+  "autoArchiveDays": "Automatisch archivieren nach (Tagen)",
+  "priorityLow": "Niedrig (nur Index)",
+  "priorityNormal": "Normal",
+  "priorityHigh": "Hoch (Prioritaet-Lernen)",
+  "deepLearningQueued": "Deep-Learning eingereiht",
+  "deepLearningSkipped": "Nur indexiert",
+  "learnPriority": "Prioritaet"
 }

@@ -897,5 +897,11 @@
   "defaults": "الافتراضيات",
   "defaultPriority": "الأولوية الافتراضية",
   "defaultAgent": "الوكيل الافتراضي",
-  "autoArchiveDays": "الأرشفة التلقائية بعد (أيام)"
+  "autoArchiveDays": "الأرشفة التلقائية بعد (أيام)",
+  "priorityLow": "منخفض (فهرسة فقط)",
+  "priorityNormal": "عادي",
+  "priorityHigh": "عالي (تعلم بأولوية)",
+  "deepLearningQueued": "التعلم العميق في الانتظار",
+  "deepLearningSkipped": "مفهرس فقط",
+  "learnPriority": "الأولوية"
 }
