@@ -7,6 +7,7 @@ Supports: PDF, DOCX, images (via vision), websites (via trafilatura), YouTube (v
 from __future__ import annotations
 
 import enum
+import heapq
 import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -56,6 +57,47 @@ class IngestResult:
     def chunks(self) -> int:
         """Alias for chunks_created — Flutter compat."""
         return self.chunks_created
+
+
+@dataclass
+class _QueueItem:
+    """Item in the deep-learn priority queue."""
+
+    result_id: str
+    text: str
+    source: str
+    priority: Priority
+    page_images: list[Path]
+
+    def __lt__(self, other: _QueueItem) -> bool:
+        return self.priority < other.priority
+
+
+class IngestQueue:
+    """Priority queue for background deep-learning tasks."""
+
+    def __init__(self) -> None:
+        self._heap: list[_QueueItem] = []
+
+    def enqueue(self, item: _QueueItem) -> None:
+        heapq.heappush(self._heap, item)
+
+    def dequeue(self) -> _QueueItem:
+        return heapq.heappop(self._heap)
+
+    @property
+    def empty(self) -> bool:
+        return len(self._heap) == 0
+
+    def __len__(self) -> int:
+        return len(self._heap)
+
+    def pending(self) -> list[dict[str, str]]:
+        """Return queue contents for the API (without consuming)."""
+        return [
+            {"id": item.result_id, "source": item.source, "priority": item.priority.name}
+            for item in sorted(self._heap)
+        ]
 
 
 class KnowledgeIngestService:

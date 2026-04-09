@@ -90,3 +90,73 @@ class TestIngestResult:
         for status in ("queued", "skipped", "completed", "failed"):
             result = self._make(deep_learn_status=status)
             assert result.deep_learn_status == status
+
+
+# ---------------------------------------------------------------------------
+# IngestQueue
+# ---------------------------------------------------------------------------
+
+
+class TestIngestQueue:
+    def test_enqueue_dequeue_priority_order(self):
+        from jarvis.learning.knowledge_ingest import IngestQueue, _QueueItem
+
+        q = IngestQueue()
+        q.enqueue(
+            _QueueItem(
+                result_id="low1", text="low", source="f1.pdf", priority=Priority.LOW, page_images=[]
+            )
+        )
+        q.enqueue(
+            _QueueItem(
+                result_id="high1",
+                text="high",
+                source="f2.pdf",
+                priority=Priority.HIGH,
+                page_images=[],
+            )
+        )
+        q.enqueue(
+            _QueueItem(
+                result_id="norm1",
+                text="norm",
+                source="f3.pdf",
+                priority=Priority.NORMAL,
+                page_images=[],
+            )
+        )
+        assert not q.empty
+        assert q.dequeue().result_id == "high1"
+        assert q.dequeue().result_id == "norm1"
+        assert q.dequeue().result_id == "low1"
+        assert q.empty
+
+    def test_queue_size(self):
+        from jarvis.learning.knowledge_ingest import IngestQueue, _QueueItem
+
+        q = IngestQueue()
+        assert len(q) == 0
+        q.enqueue(
+            _QueueItem(
+                result_id="x", text="t", source="s", priority=Priority.NORMAL, page_images=[]
+            )
+        )
+        assert len(q) == 1
+
+    def test_pending_returns_sorted_list(self):
+        from jarvis.learning.knowledge_ingest import IngestQueue, _QueueItem
+
+        q = IngestQueue()
+        q.enqueue(
+            _QueueItem(
+                result_id="a", text="t", source="s1", priority=Priority.NORMAL, page_images=[]
+            )
+        )
+        q.enqueue(
+            _QueueItem(result_id="b", text="t", source="s2", priority=Priority.HIGH, page_images=[])
+        )
+        pending = q.pending()
+        assert len(pending) == 2
+        assert pending[0]["id"] == "b"  # HIGH first
+        assert pending[0]["priority"] == "HIGH"
+        assert pending[1]["id"] == "a"
