@@ -6,6 +6,7 @@ import json
 import sqlite3
 import time
 from typing import Any
+from uuid import uuid4
 
 from jarvis.social.models import Lead, LeadStats, LeadStatus, ScanResult
 from jarvis.utils.logging import get_logger
@@ -56,6 +57,45 @@ CREATE TABLE IF NOT EXISTS lead_scans (
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(intent_score DESC);
 CREATE INDEX IF NOT EXISTS idx_leads_post_id ON leads(post_id);
+
+CREATE TABLE IF NOT EXISTS reply_performance (
+    lead_id           TEXT PRIMARY KEY,
+    reply_text        TEXT NOT NULL,
+    subreddit         TEXT NOT NULL,
+    reply_upvotes     INTEGER DEFAULT 0,
+    reply_replies     INTEGER DEFAULT 0,
+    author_replied    INTEGER DEFAULT 0,
+    post_upvotes_delta INTEGER DEFAULT 0,
+    feedback_tag      TEXT DEFAULT '',
+    feedback_note     TEXT DEFAULT '',
+    first_tracked_at  REAL NOT NULL,
+    last_tracked_at   REAL NOT NULL,
+    tracking_count    INTEGER DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS reply_templates (
+    id            TEXT PRIMARY KEY,
+    name          TEXT NOT NULL,
+    template_text TEXT NOT NULL,
+    subreddit     TEXT DEFAULT '',
+    style         TEXT DEFAULT '',
+    use_count     INTEGER DEFAULT 0,
+    avg_engagement REAL DEFAULT 0,
+    created_from_lead TEXT DEFAULT '',
+    created_at    REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS subreddit_profiles (
+    subreddit       TEXT PRIMARY KEY,
+    what_works      TEXT DEFAULT '',
+    what_fails      TEXT DEFAULT '',
+    optimal_length  INTEGER DEFAULT 0,
+    optimal_tone    TEXT DEFAULT '',
+    best_openings   TEXT DEFAULT '[]',
+    avoid_patterns  TEXT DEFAULT '[]',
+    sample_size     INTEGER DEFAULT 0,
+    updated_at      REAL NOT NULL
+);
 """
 
 
@@ -235,6 +275,190 @@ class LeadStore:
             "SELECT * FROM lead_scans ORDER BY started_at DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
+
+    # ------------------------------------------------------------------
+    # reply_performance methods
+    # ------------------------------------------------------------------
+
+    def save_performance(self, lead_id: str, reply_text: str, subreddit: str) -> None:
+        """Insert or update a reply_performance record."""
+        now = time.time()
+        self.conn.execute(
+            """INSERT INTO reply_performance
+                (lead_id, reply_text, subreddit, first_tracked_at, last_tracked_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(lead_id) DO UPDATE SET
+                last_tracked_at=?, tracking_count=tracking_count+1""",
+            (lead_id, reply_text, subreddit, now, now, now),
+        )
+        self.conn.commit()
+
+    def get_performance(self, lead_id: str) -> dict[str, Any] | None:
+        """Fetch a single reply_performance record by lead_id."""
+        row = self.conn.execute(
+            "SELECT * FROM reply_performance WHERE lead_id = ?", (lead_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+    def update_performance(
+        self,
+        lead_id: str,
+        *,
+        reply_upvotes: int | None = None,
+        reply_replies: int | None = None,
+        author_replied: bool | None = None,
+        post_upvotes_delta: int | None = None,
+    ) -> None:
+        """Update engagement metrics for a tracked reply."""
+        sets: list[str] = []
+        params: list[Any] = []
+        if reply_upvotes is not None:
+            sets.append("reply_upvotes = ?")
+            params.append(reply_upvotes)
+        if reply_replies is not None:
+            sets.append("reply_replies = ?")
+            params.append(reply_replies)
+        if author_replied is not None:
+            sets.append("author_replied = ?")
+            params.append(int(author_replied))
+        if post_upvotes_delta is not None:
+            sets.append("post_upvotes_delta = ?")
+            params.append(post_upvotes_delta)
+        sets.append("last_tracked_at = ?")
+        params.append(time.time())
+        params.append(lead_id)
+        if sets:
+            self.conn.execute(
+                f"UPDATE reply_performance SET {', '.join(sets)} WHERE lead_id = ?", params
+            )
+            self.conn.commit()
+
+    def set_feedback(self, lead_id: str, tag: str, note: str = "") -> None:
+        """Attach a feedback tag and optional note to a reply_performance record."""
+        self.conn.execute(
+            "UPDATE reply_performance SET feedback_tag = ?, feedback_note = ? WHERE lead_id = ?",
+            (tag, note, lead_id),
+        )
+        self.conn.commit()
+
+    def get_top_performers(self, subreddit: str, limit: int = 5) -> list[dict[str, Any]]:
+        """Return top-performing replies for a subreddit, ranked by composite score."""
+        rows = self.conn.execute(
+            """SELECT * FROM reply_performance WHERE subreddit = ?
+            ORDER BY (reply_upvotes * 3 + reply_replies * 5 + author_replied * 10) DESC
+            LIMIT ?""",
+            (subreddit, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_replied_leads_for_tracking(self, max_age_days: int = 7) -> list[dict[str, Any]]:
+        """Return recently-replied leads that still need performance tracking."""
+        cutoff = time.time() - (max_age_days * 86400)
+        rows = self.conn.execute(
+            """SELECT l.* FROM leads l
+            LEFT JOIN reply_performance rp ON l.id = rp.lead_id
+            WHERE l.status = 'replied' AND l.replied_at > ?
+            AND (rp.lead_id IS NULL OR rp.tracking_count < 10)""",
+            (cutoff,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    # ------------------------------------------------------------------
+    # reply_templates methods
+    # ------------------------------------------------------------------
+
+    def save_template(
+        self,
+        name: str,
+        template_text: str,
+        subreddit: str = "",
+        style: str = "",
+        created_from_lead: str = "",
+    ) -> str:
+        """Insert a new reply template and return its UUID."""
+        tid = str(uuid4())
+        self.conn.execute(
+            """INSERT INTO reply_templates
+                (id, name, template_text, subreddit, style, created_from_lead, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (tid, name, template_text, subreddit, style, created_from_lead, time.time()),
+        )
+        self.conn.commit()
+        return tid
+
+    def list_templates(self, subreddit: str | None = None) -> list[dict[str, Any]]:
+        """Return all templates, optionally filtered to a subreddit (includes universal ones)."""
+        if subreddit:
+            rows = self.conn.execute(
+                "SELECT * FROM reply_templates WHERE subreddit = ? OR subreddit = ''"
+                " ORDER BY use_count DESC",
+                (subreddit,),
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM reply_templates ORDER BY use_count DESC"
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def delete_template(self, template_id: str) -> None:
+        """Delete a reply template by its UUID."""
+        self.conn.execute("DELETE FROM reply_templates WHERE id = ?", (template_id,))
+        self.conn.commit()
+
+    def increment_template_use(self, template_id: str) -> None:
+        """Increment the use_count for a template."""
+        self.conn.execute(
+            "UPDATE reply_templates SET use_count = use_count + 1 WHERE id = ?",
+            (template_id,),
+        )
+        self.conn.commit()
+
+    # ------------------------------------------------------------------
+    # subreddit_profiles methods
+    # ------------------------------------------------------------------
+
+    def save_profile(
+        self,
+        subreddit: str,
+        what_works: str = "",
+        what_fails: str = "",
+        optimal_length: int = 0,
+        optimal_tone: str = "",
+        best_openings: str = "[]",
+        avoid_patterns: str = "[]",
+        sample_size: int = 0,
+    ) -> None:
+        """Insert or fully replace a subreddit style profile."""
+        self.conn.execute(
+            """INSERT INTO subreddit_profiles
+                (subreddit, what_works, what_fails, optimal_length, optimal_tone,
+                 best_openings, avoid_patterns, sample_size, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(subreddit) DO UPDATE SET
+                what_works=excluded.what_works, what_fails=excluded.what_fails,
+                optimal_length=excluded.optimal_length, optimal_tone=excluded.optimal_tone,
+                best_openings=excluded.best_openings, avoid_patterns=excluded.avoid_patterns,
+                sample_size=excluded.sample_size, updated_at=excluded.updated_at""",
+            (
+                subreddit,
+                what_works,
+                what_fails,
+                optimal_length,
+                optimal_tone,
+                best_openings,
+                avoid_patterns,
+                sample_size,
+                time.time(),
+            ),
+        )
+        self.conn.commit()
+
+    def get_profile(self, subreddit: str) -> dict[str, Any] | None:
+        """Fetch a subreddit style profile, or None if not found."""
+        row = self.conn.execute(
+            "SELECT * FROM subreddit_profiles WHERE subreddit = ?", (subreddit,)
+        ).fetchone()
+        return dict(row) if row else None
 
     def close(self) -> None:
         """Close the database connection."""
