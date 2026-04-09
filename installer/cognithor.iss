@@ -159,7 +159,7 @@ end;
 function InitializeSetup(): Boolean;
 var
   MarkerPath: string;
-  MarkerContent: string;
+  MarkerContent: AnsiString;
   InstalledVer: string;
   P1, P2: Integer;
 begin
