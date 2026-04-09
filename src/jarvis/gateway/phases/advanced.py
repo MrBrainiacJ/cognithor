@@ -348,7 +348,9 @@ async def init_advanced(
             db_path=leads_db,
             llm_fn=llm_fn,
             product_name=getattr(social_cfg, "reddit_product_name", "") if social_cfg else "",
-            product_description=getattr(social_cfg, "reddit_product_description", "") if social_cfg else "",
+            product_description=getattr(social_cfg, "reddit_product_description", "")
+            if social_cfg
+            else "",
             reply_tone=getattr(social_cfg, "reddit_reply_tone", "") if social_cfg else "",
             default_subreddits=getattr(social_cfg, "reddit_subreddits", []) if social_cfg else [],
             min_score=getattr(social_cfg, "reddit_min_score", 60) if social_cfg else 60,

@@ -163,9 +163,7 @@ def create_kanban_router(engine: KanbanEngine) -> APIRouter:
             task_id = item.get("id", "")
             sort_order = item.get("sort_order", 0)
             if task_id:
-                task = engine.update_task(
-                    task_id, changed_by="user", sort_order=sort_order
-                )
+                task = engine.update_task(task_id, changed_by="user", sort_order=sort_order)
                 if task is not None:
                     updated += 1
         return {"updated": updated}

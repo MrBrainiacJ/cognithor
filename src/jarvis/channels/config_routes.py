@@ -4325,16 +4325,18 @@ def _register_ui_routes(
             result = []
             for j in jobs.values():
                 nr = next_runs.get(j.name)
-                result.append({
-                    "name": j.name,
-                    "schedule": j.schedule,
-                    "prompt": j.prompt,
-                    "channel": j.channel,
-                    "model": j.model,
-                    "enabled": j.enabled,
-                    "agent": j.agent,
-                    "next_run": nr.isoformat() if nr else None,
-                })
+                result.append(
+                    {
+                        "name": j.name,
+                        "schedule": j.schedule,
+                        "prompt": j.prompt,
+                        "channel": j.channel,
+                        "model": j.model,
+                        "enabled": j.enabled,
+                        "agent": j.agent,
+                        "next_run": nr.isoformat() if nr else None,
+                    }
+                )
             return {"jobs": result}
         except Exception as exc:
             log.error("cron_jobs_enriched_failed", error=str(exc))
