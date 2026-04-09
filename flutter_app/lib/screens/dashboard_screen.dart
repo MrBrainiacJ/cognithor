@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:jarvis_ui/providers/connection_provider.dart';
 import 'package:jarvis_ui/providers/pip_provider.dart';
+import 'package:jarvis_ui/providers/robot_office_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
 import 'package:jarvis_ui/widgets/glass_panel.dart';
 import 'package:jarvis_ui/widgets/jarvis_empty_state.dart';
@@ -29,7 +30,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _dashboard;
   List<dynamic>? _events;
-  Map<String, dynamic>? _status;
   bool _loading = true;
   String? _error;
   Timer? _refreshTimer;
@@ -56,12 +56,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadData() async {
     try {
-      final api = context.read<ConnectionProvider>().api;
+      final conn = context.read<ConnectionProvider>();
+      final api = conn.api;
+
+      // Initialize RobotOfficeProvider once we have a live connection.
+      if (conn.state == JarvisConnectionState.connected) {
+        final roProvider = context.read<RobotOfficeProvider>();
+        if (roProvider.isUninitialized) {
+          roProvider.init(conn.api, conn.ws);
+        }
+      }
       final results = await Future.wait([
         api.getMonitoringDashboard(),
         api.getMonitoringEvents(n: 10),
         api.getModelStats(),
-        api.getSystemStatus(),
       ]);
 
       if (!mounted) return;
@@ -69,7 +77,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final dashboard = results[0];
       final eventsResult = results[1];
       // results[2] (model stats) intentionally unused.
-      final statusResult = results[3];
 
       if (dashboard.containsKey('error')) {
         setState(() {
@@ -82,7 +89,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _dashboard = dashboard;
         _events = eventsResult['events'] as List<dynamic>? ?? [];
-        _status = statusResult;
         _loading = false;
         _error = null;
       });
@@ -127,9 +133,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final rtNorm = (rtValue / 2000).clamp(0.0, 1.0); // 2000ms = max
     final tokenNorm = (tokenValue / 10000).clamp(0.0, 1.0); // 10k = max
 
-    // System load = average of CPU and memory
-    final systemLoad = ((cpuNorm + memNorm) / 2).clamp(0.0, 1.0);
-
     return RefreshIndicator(
       onRefresh: _loadData,
       color: JarvisTheme.sectionDashboard,
@@ -153,18 +156,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     borderRadius: BorderRadius.circular(16),
                     child: Stack(
                       children: [
-                        RobotOfficeWidget(
-                          isRunning: true,
-                          cpuUsage: cpuNorm,
-                          memoryUsage: memNorm,
-                          activePhase: _activePhaseFromStatus(),
-                          systemLoad: systemLoad,
-                          onStateChanged: (task, count) {
-                            setState(() {
-                              _robotCurrentTask = task;
-                              _robotTaskCount = count;
-                            });
-                          },
+                        Consumer<RobotOfficeProvider>(
+                          builder: (context, ro, _) => RobotOfficeWidget(
+                            isRunning: true,
+                            cpuUsage: ro.metrics.cpu,
+                            memoryUsage: ro.metrics.memory,
+                            activePhase: ro.activePhaseInt,
+                            systemLoad: ro.metrics.load,
+                            agentNames: ro.agents.map((a) => a.name).toList(),
+                            pgePhase: ro.activePhaseInt,
+                            plannerTask: ro.plannerTask,
+                            executorTask: ro.executorTask,
+                            gatekeeperTask: ro.gatekeeperTask,
+                            agentTasks: {
+                              for (final a in ro.agents)
+                                if (a.currentTask.isNotEmpty) a.name: a.currentTask,
+                            },
+                            kanbanCounts: ro.kanbanCounts,
+                            kanbanTasks: ro.kanbanTasks,
+                            onStateChanged: (task, count) {
+                              if (mounted) {
+                                setState(() {
+                                  _robotCurrentTask = task;
+                                  _robotTaskCount = count;
+                                });
+                              }
+                            },
+                          ),
                         ),
                         // Glass reflection overlay
                         Positioned.fill(
@@ -249,18 +267,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// Maps system status to a pipeline phase index (0-4).
-  int _activePhaseFromStatus() {
-    final phase = _status?['phase']?.toString().toLowerCase() ?? '';
-    return switch (phase) {
-      'plan' || 'planning' => 0,
-      'gate' || 'gatekeeper' => 1,
-      'execute' || 'executing' => 2,
-      'replan' || 'replanning' => 3,
-      'complete' || 'done' => 4,
-      _ => 0,
-    };
-  }
 }
 
 // ---------------------------------------------------------------------------

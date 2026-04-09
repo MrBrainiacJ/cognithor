@@ -213,6 +213,9 @@ class RobotOfficeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// True if [init] has not yet been called (no API client wired up).
+  bool get isUninitialized => _api == null;
+
   /// True if no WS events received for 30+ seconds.
   bool get isSystemIdle =>
       DateTime.now().difference(_lastEventTime).inSeconds > 30;
