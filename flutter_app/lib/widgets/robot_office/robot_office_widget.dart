@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 import 'package:jarvis_ui/widgets/robot_office/furniture.dart';
@@ -302,6 +303,14 @@ class RobotOfficeWidget extends StatefulWidget {
     this.memoryUsage = 0,
     this.activePhase = 0,
     this.systemLoad = 0,
+    this.agentNames = const [],
+    this.pgePhase = 0,
+    this.plannerTask = '',
+    this.executorTask = '',
+    this.gatekeeperTask = '',
+    this.agentTasks = const {},
+    this.kanbanCounts = const {},
+    this.kanbanTasks = const {},
   });
 
   final bool isRunning;
@@ -321,6 +330,30 @@ class RobotOfficeWidget extends StatefulWidget {
 
   /// System load 0.0-1.0 — controls ceiling light brightness.
   final double systemLoad;
+
+  /// Names of dynamically configured agents (non-Trinity).
+  final List<String> agentNames;
+
+  /// Current PGE pipeline phase (0=planning, 1=gating, 2=executing, 3=streaming, 4=idle).
+  final int pgePhase;
+
+  /// Current task description for the Planner robot.
+  final String plannerTask;
+
+  /// Current task description for the Executor robot.
+  final String executorTask;
+
+  /// Current task description for the Gatekeeper robot.
+  final String gatekeeperTask;
+
+  /// Map of agent name -> current task description for user agents.
+  final Map<String, String> agentTasks;
+
+  /// Kanban column counts by status (e.g. 'backlog': 3, 'in_progress': 2).
+  final Map<String, int> kanbanCounts;
+
+  /// Kanban task titles by status (e.g. 'backlog': ['Task 1', 'Task 2']).
+  final Map<String, List<String>> kanbanTasks;
 
   @override
   State<RobotOfficeWidget> createState() => _RobotOfficeWidgetState();
@@ -389,6 +422,11 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     // Keep animation running always (robots animate in idle too)
     if (!_controller.isAnimating) _controller.repeat();
 
+    // Rebuild robots when agent list changes
+    if (!listEquals(oldWidget.agentNames, widget.agentNames)) {
+      _robots = _createRobots();
+    }
+
     // WAKE UP! When switching from idle to active, all robots rush to work
     if (widget.isRunning && !oldWidget.isRunning) {
       _wakeUpAll();
@@ -422,78 +460,147 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
 
   // ── Robot factory ───────────────────────────────────────────
 
+  static const _agentColors = [
+    Color(0xFF8b5cf6), // violet
+    Color(0xFFf59e0b), // amber
+    Color(0xFF06b6d4), // cyan
+    Color(0xFFec4899), // pink
+    Color(0xFF84cc16), // lime
+    Color(0xFFf97316), // orange
+    Color(0xFF14b8a6), // teal
+    Color(0xFFa855f7), // purple
+  ];
+
+  static const _agentEyeColors = [
+    Color(0xFFc4b5fd),
+    Color(0xFFfcd34d),
+    Color(0xFF67e8f9),
+    Color(0xFFf9a8d4),
+    Color(0xFFbef264),
+    Color(0xFFfdba74),
+    Color(0xFF5eead4),
+    Color(0xFFd8b4fe),
+  ];
+
   List<Robot> _createRobots() {
-    // Place robots at different positions, each with staggered timers
-    // so they don't all start acting simultaneously
     final l = _locale;
-    return [
+    final robots = <Robot>[
+      // PGE Trinity — always present
       Robot(
         id: 'planner', name: 'Planner',
         color: const Color(0xFF6366f1), eyeColor: const Color(0xFFa5b4fc),
-        role: _RobotMessages.role('planner', l), hasAntenna: true,
+        role: _RobotMessages.role('planner', l), hasAntenna: true, isSystem: true,
         x: 0.18, y: 0.72,
-        state: RobotState.working, typing: true,
+        state: RobotState.idle,
         stateTimer: 3.0 + _rng.nextDouble() * 3,
       ),
       Robot(
         id: 'executor', name: 'Executor',
         color: const Color(0xFF10b981), eyeColor: const Color(0xFF6ee7b7),
-        role: _RobotMessages.role('executor', l),
+        role: _RobotMessages.role('executor', l), isSystem: true,
         x: 0.45, y: 0.58,
-        state: RobotState.working, typing: true,
+        state: RobotState.idle,
         stateTimer: 2.0 + _rng.nextDouble() * 4,
-      ),
-      Robot(
-        id: 'researcher', name: 'Researcher',
-        color: const Color(0xFFf59e0b), eyeColor: const Color(0xFFfcd34d),
-        role: _RobotMessages.role('researcher', l), hasAntenna: true,
-        x: 0.72, y: 0.75,
-        state: RobotState.working, typing: true,
-        stateTimer: 1.5 + _rng.nextDouble() * 2,
       ),
       Robot(
         id: 'gatekeeper', name: 'Gatekeeper',
         color: const Color(0xFFef4444), eyeColor: const Color(0xFFfca5a5),
-        role: _RobotMessages.role('gatekeeper', l),
+        role: _RobotMessages.role('gatekeeper', l), isSystem: true,
         x: 0.88, y: 0.42,
         state: RobotState.idle,
         stateTimer: 0.5 + _rng.nextDouble(),
       ),
-      Robot(
-        id: 'coder', name: 'Coder',
-        color: const Color(0xFF8b5cf6), eyeColor: const Color(0xFFc4b5fd),
-        role: _RobotMessages.role('coder', l),
-        x: 0.30, y: 0.52,
-        state: RobotState.walking,
-        stateTimer: 1.0 + _rng.nextDouble() * 2,
-        targetX: 0.72, targetY: 0.75,
-      ),
-      Robot(
-        id: 'analyst', name: 'Analyst',
-        color: const Color(0xFF06b6d4), eyeColor: const Color(0xFF67e8f9),
-        role: _RobotMessages.role('analyst', l), hasAntenna: true,
-        x: 0.08, y: 0.35,
-        state: RobotState.thinking,
-        stateTimer: 2.0 + _rng.nextDouble() * 2,
-      ),
-      Robot(
-        id: 'memory', name: 'Memory',
-        color: const Color(0xFFec4899), eyeColor: const Color(0xFFf9a8d4),
-        role: _RobotMessages.role('memory', l),
-        x: 0.58, y: 0.28,
-        state: RobotState.coffeeBreak,
-        stateTimer: 3.0 + _rng.nextDouble() * 2,
-      ),
-      Robot(
-        id: 'ops', name: 'DevOps',
-        color: const Color(0xFF84cc16), eyeColor: const Color(0xFFbef264),
-        role: _RobotMessages.role('ops', l), hasAntenna: true,
-        x: 0.60, y: 0.80,
-        state: RobotState.walking,
-        stateTimer: 1.0 + _rng.nextDouble(),
-        targetX: 0.88, targetY: 0.42,
-      ),
     ];
+
+    // Dynamic user agents
+    final names = widget.agentNames;
+    final positions = _agentPositions(names.length);
+    for (var i = 0; i < names.length; i++) {
+      final colorIdx = i % _agentColors.length;
+      final pos = positions[i];
+      robots.add(Robot(
+        id: 'agent_$i', name: names[i],
+        color: _agentColors[colorIdx], eyeColor: _agentEyeColors[colorIdx],
+        role: names[i],
+        x: pos.dx, y: pos.dy,
+        state: RobotState.idle,
+        stateTimer: 1.0 + _rng.nextDouble() * 3,
+      ));
+    }
+
+    return robots;
+  }
+
+  /// Generate evenly distributed positions for N user agents.
+  List<Offset> _agentPositions(int count) {
+    if (count == 0) return [];
+    // Available floor positions (avoiding Trinity positions and furniture)
+    const slots = [
+      Offset(0.30, 0.52), Offset(0.72, 0.75), Offset(0.08, 0.35),
+      Offset(0.58, 0.28), Offset(0.60, 0.80), Offset(0.35, 0.35),
+      Offset(0.78, 0.58), Offset(0.15, 0.50), Offset(0.50, 0.42),
+    ];
+    return [for (var i = 0; i < count && i < slots.length; i++) slots[i]];
+  }
+
+  // ── PGE state synchronization ───────────────────────────────
+
+  void _syncPgeStates() {
+    final planner = _robots.firstWhere((r) => r.id == 'planner', orElse: () => _robots.first);
+    final executor = _robots.firstWhere((r) => r.id == 'executor', orElse: () => _robots.first);
+    final gatekeeper = _robots.firstWhere((r) => r.id == 'gatekeeper', orElse: () => _robots.first);
+
+    switch (widget.pgePhase) {
+      case 0: // planning
+        if (planner.state != RobotState.working) {
+          planner.state = RobotState.working;
+          planner.typing = true;
+          planner.stateTimer = 30.0;
+        }
+        planner.taskMsg = widget.plannerTask;
+        planner.msgTimer = 5.0;
+      case 1: // gating
+        if (gatekeeper.state != RobotState.working) {
+          gatekeeper.state = RobotState.working;
+          gatekeeper.stateTimer = 30.0;
+        }
+        gatekeeper.taskMsg = widget.gatekeeperTask;
+        gatekeeper.msgTimer = 5.0;
+      case 2: // executing
+        if (executor.state != RobotState.working) {
+          executor.state = RobotState.working;
+          executor.typing = true;
+          executor.stateTimer = 30.0;
+        }
+        executor.taskMsg = widget.executorTask;
+        executor.msgTimer = 5.0;
+      case 3: // streaming
+        if (executor.state != RobotState.working) {
+          executor.state = RobotState.working;
+          executor.typing = true;
+          executor.stateTimer = 30.0;
+        }
+        executor.taskMsg = widget.executorTask;
+        executor.msgTimer = 5.0;
+      default: // idle (4)
+        // Let normal idle behavior take over — don't force states
+        break;
+    }
+
+    // User agents: working if assigned to in-progress task
+    for (final r in _robots) {
+      if (r.isSystem) continue;
+      final task = widget.agentTasks[r.name] ?? '';
+      if (task.isNotEmpty) {
+        if (r.state == RobotState.idle || r.state == RobotState.coffeeBreak) {
+          r.state = RobotState.working;
+          r.typing = true;
+          r.stateTimer = 30.0;
+        }
+        r.taskMsg = 'Processing: ${task.length > 25 ? '${task.substring(0, 25)}...' : task}';
+        r.msgTimer = 5.0;
+      }
+    }
   }
 
   // ── Per-frame update ────────────────────────────────────────
@@ -506,6 +613,9 @@ class _RobotOfficeWidgetState extends State<RobotOfficeWidget>
     final dt = (now.difference(_lastTick).inMicroseconds / 1e6).clamp(0.0, 0.1);
     _lastTick = now;
     _elapsed += dt;
+
+    // Sync PGE pipeline states to Trinity robots before updates
+    _syncPgeStates();
 
     // Decrement tap reaction cooldown
     _reactionCooldown = (_reactionCooldown - dt).clamp(0.0, double.infinity);

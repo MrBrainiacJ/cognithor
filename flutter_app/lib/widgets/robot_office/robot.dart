@@ -27,6 +27,7 @@ class Robot {
     required this.eyeColor,
     required this.role,
     this.hasAntenna = false,
+    this.isSystem = false,
     required this.x,
     required this.y,
     double? targetX,
@@ -51,6 +52,7 @@ class Robot {
   final Color eyeColor;
   String role;
   final bool hasAntenna;
+  final bool isSystem;
 
   double x;
   double y;
