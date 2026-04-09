@@ -1504,5 +1504,7 @@
   "learnPriority": "Priority",
   "@learnPriority": {},
   "deepLearningQueue": "Deep Learning Queue",
-  "@deepLearningQueue": {}
+  "@deepLearningQueue": {},
+  "operationModeDesc": "Auto: detect from API keys. Offline: local Ollama only, no web tools. Online: cloud LLM + web search. Hybrid: Ollama + cloud fallback.",
+  "@operationModeDesc": {}
 }

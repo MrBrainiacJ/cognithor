@@ -904,5 +904,6 @@
   "deepLearningQueued": "深度学习已排队",
   "deepLearningSkipped": "仅索引",
   "learnPriority": "优先级",
-  "deepLearningQueue": "深度学习队列"
+  "deepLearningQueue": "深度学习队列",
+  "operationModeDesc": "Auto：根据API密钥自动检测。Offline：仅本地Ollama，无网络工具。Online：云端LLM+网络搜索。Hybrid：Ollama+云端备用。"
 }

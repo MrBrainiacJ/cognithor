@@ -2616,4 +2616,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deepLearningQueue => 'Deep-Learning Warteschlange';
+
+  @override
+  String get operationModeDesc =>
+      'Auto: erkennt API-Keys. Offline: nur lokales Ollama, keine Web-Tools. Online: Cloud-LLM + Web-Suche. Hybrid: Ollama + Cloud-Fallback.';
 }

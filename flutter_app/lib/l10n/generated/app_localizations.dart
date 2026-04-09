@@ -5141,6 +5141,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deep Learning Queue'**
   String get deepLearningQueue;
+
+  /// No description provided for @operationModeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto: detect from API keys. Offline: local Ollama only, no web tools. Online: cloud LLM + web search. Hybrid: Ollama + cloud fallback.'**
+  String get operationModeDesc;
 }
 
 class _AppLocalizationsDelegate

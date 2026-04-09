@@ -2600,4 +2600,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deepLearningQueue => 'قائمة التعلم العميق';
+
+  @override
+  String get operationModeDesc =>
+      'Auto: يكتشف من مفاتيح API. Offline: Ollama محلي فقط، بدون أدوات ويب. Online: LLM سحابي + بحث ويب. Hybrid: Ollama + احتياطي سحابي.';
 }

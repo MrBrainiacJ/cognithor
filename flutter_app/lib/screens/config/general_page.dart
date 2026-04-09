@@ -31,6 +31,7 @@ class GeneralPage extends StatelessWidget {
             ),
             JarvisSelectField.fromStrings(
               label: l.fieldOperationMode,
+              description: l.operationModeDesc,
               value: (cfg.cfg['operation_mode'] ?? 'auto').toString(),
               options: const ['auto', 'offline', 'online', 'hybrid'],
               onChanged: (v) => cfg.set('operation_mode', v),

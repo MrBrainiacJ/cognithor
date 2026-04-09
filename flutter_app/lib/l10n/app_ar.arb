@@ -904,5 +904,6 @@
   "deepLearningQueued": "التعلم العميق في الانتظار",
   "deepLearningSkipped": "مفهرس فقط",
   "learnPriority": "الأولوية",
-  "deepLearningQueue": "قائمة التعلم العميق"
+  "deepLearningQueue": "قائمة التعلم العميق",
+  "operationModeDesc": "Auto: يكتشف من مفاتيح API. Offline: Ollama محلي فقط، بدون أدوات ويب. Online: LLM سحابي + بحث ويب. Hybrid: Ollama + احتياطي سحابي."
 }

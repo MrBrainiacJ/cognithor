@@ -913,5 +913,6 @@
   "deepLearningQueued": "Deep-Learning eingereiht",
   "deepLearningSkipped": "Nur indexiert",
   "learnPriority": "Prioritaet",
-  "deepLearningQueue": "Deep-Learning Warteschlange"
+  "deepLearningQueue": "Deep-Learning Warteschlange",
+  "operationModeDesc": "Auto: erkennt API-Keys. Offline: nur lokales Ollama, keine Web-Tools. Online: Cloud-LLM + Web-Suche. Hybrid: Ollama + Cloud-Fallback."
 }

@@ -2585,4 +2585,8 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deepLearningQueue => '深度学习队列';
+
+  @override
+  String get operationModeDesc =>
+      'Auto：根据API密钥自动检测。Offline：仅本地Ollama，无网络工具。Online：云端LLM+网络搜索。Hybrid：Ollama+云端备用。';
 }
