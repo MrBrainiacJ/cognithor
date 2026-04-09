@@ -2633,4 +2633,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hideRobotOffice => 'Hide Office';
+
+  @override
+  String get socialListening => 'Social Listening';
+
+  @override
+  String get productName => 'Product Name';
+
+  @override
+  String get productDescription => 'Product Description';
+
+  @override
+  String get replyTone => 'Reply Tone';
+
+  @override
+  String get subreddits => 'Subreddits';
+
+  @override
+  String get subredditsHint => 'Comma-separated, without r/ prefix';
+
+  @override
+  String get minIntentScore => 'Minimum Intent Score';
+
+  @override
+  String get scanInterval => 'Scan Interval (minutes)';
+
+  @override
+  String get autoScan => 'Auto-Scan';
+
+  @override
+  String get autoPost => 'Auto-Post (Playwright)';
+
+  @override
+  String get autoPostHint => 'Requires one-time Reddit login in browser';
 }

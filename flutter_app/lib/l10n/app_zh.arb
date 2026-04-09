@@ -912,5 +912,16 @@
   "create": "创建",
   "evolutionEngine": "进化引擎",
   "searchLabel": "搜索",
-  "hideRobotOffice": "隐藏办公室"
+  "hideRobotOffice": "隐藏办公室",
+  "socialListening": "社交监听",
+  "productName": "产品名称",
+  "productDescription": "产品描述",
+  "replyTone": "回复语气",
+  "subreddits": "子版块",
+  "subredditsHint": "逗号分隔，不含r/",
+  "minIntentScore": "最低意图分数",
+  "scanInterval": "扫描间隔（分钟）",
+  "autoScan": "自动扫描",
+  "autoPost": "自动发布",
+  "autoPostHint": "需要在浏览器中一次性登录Reddit"
 }

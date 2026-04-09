@@ -2641,4 +2641,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get hideRobotOffice => 'Office ausblenden';
+
+  @override
+  String get socialListening => 'Social Listening';
+
+  @override
+  String get productName => 'Produktname';
+
+  @override
+  String get productDescription => 'Produktbeschreibung';
+
+  @override
+  String get replyTone => 'Antwort-Ton';
+
+  @override
+  String get subreddits => 'Subreddits';
+
+  @override
+  String get subredditsHint => 'Kommagetrennt, ohne r/';
+
+  @override
+  String get minIntentScore => 'Mindest-Intent-Score';
+
+  @override
+  String get scanInterval => 'Scan-Intervall (Minuten)';
+
+  @override
+  String get autoScan => 'Auto-Scan';
+
+  @override
+  String get autoPost => 'Auto-Post (Playwright)';
+
+  @override
+  String get autoPostHint => 'Erfordert einmaligen Reddit-Login im Browser';
 }

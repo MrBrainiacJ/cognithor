@@ -31,6 +31,7 @@ import 'package:jarvis_ui/screens/config/tools_page.dart';
 import 'package:jarvis_ui/screens/config/audit_page.dart';
 import 'package:jarvis_ui/screens/config/vault_page.dart';
 import 'package:jarvis_ui/screens/config/atl_page.dart';
+import 'package:jarvis_ui/screens/config/social_page.dart';
 
 // ── Category definition ──────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ final _categories = [
     'security', 'tools', 'audit', 'database',
   ]),
   _Category((l) => l.catSystem, Icons.settings, [
-    'general', 'language', 'logging', 'cron', 'mcp', 'system_profile', 'budget', 'system',
+    'general', 'language', 'logging', 'cron', 'mcp', 'system_profile', 'budget', 'social', 'system',
   ]),
 ];
 
@@ -111,6 +112,8 @@ final _pageRegistry = <String, _SubPageDef>{
       (l) => 'Autonomous Thinking', () => const AtlPage()),
   'vault': _SubPageDef(
       Icons.lock_outlined, (l) => 'Vault', () => const VaultPage()),
+  'social': _SubPageDef(Icons.track_changes, (l) => l.socialListening,
+      () => const SocialPage()),
   'system': _SubPageDef(
       Icons.build, (l) => l.configPageSystem, () => const SystemConfigPage()),
 };

@@ -25,6 +25,7 @@ const _fieldIndex = <(String, String, List<String>)>[
   ('MCP', 'mcp', ['mcp', 'server', 'a2a', 'protocol']),
   ('System Profile', 'system_profile', ['system', 'profile', 'hardware', 'gpu', 'vram']),
   ('Budget', 'budget', ['budget', 'token', 'cost', 'limit']),
+  ('Social Listening', 'social', ['reddit', 'lead', 'social', 'scan', 'subreddit', 'intent', 'score']),
   ('System', 'system', ['system', 'restart', 'export', 'import', 'reset', 'factory']),
 ];
 

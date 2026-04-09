@@ -2610,4 +2610,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get hideRobotOffice => '隐藏办公室';
+
+  @override
+  String get socialListening => '社交监听';
+
+  @override
+  String get productName => '产品名称';
+
+  @override
+  String get productDescription => '产品描述';
+
+  @override
+  String get replyTone => '回复语气';
+
+  @override
+  String get subreddits => '子版块';
+
+  @override
+  String get subredditsHint => '逗号分隔，不含r/';
+
+  @override
+  String get minIntentScore => '最低意图分数';
+
+  @override
+  String get scanInterval => '扫描间隔（分钟）';
+
+  @override
+  String get autoScan => '自动扫描';
+
+  @override
+  String get autoPost => '自动发布';
+
+  @override
+  String get autoPostHint => '需要在浏览器中一次性登录Reddit';
 }

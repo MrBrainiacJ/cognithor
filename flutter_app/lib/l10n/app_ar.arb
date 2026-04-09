@@ -912,5 +912,16 @@
   "create": "إنشاء",
   "evolutionEngine": "محرك التطور",
   "searchLabel": "بحث",
-  "hideRobotOffice": "إخفاء المكتب"
+  "hideRobotOffice": "إخفاء المكتب",
+  "socialListening": "الاستماع الاجتماعي",
+  "productName": "اسم المنتج",
+  "productDescription": "وصف المنتج",
+  "replyTone": "نبرة الرد",
+  "subreddits": "المنتديات الفرعية",
+  "subredditsHint": "مفصولة بفواصل، بدون r/",
+  "minIntentScore": "الحد الأدنى لدرجة النية",
+  "scanInterval": "فترة المسح (دقائق)",
+  "autoScan": "المسح التلقائي",
+  "autoPost": "النشر التلقائي",
+  "autoPostHint": "يتطلب تسجيل دخول لمرة واحدة في Reddit"
 }

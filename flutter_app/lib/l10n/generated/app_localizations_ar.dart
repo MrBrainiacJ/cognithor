@@ -2625,4 +2625,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hideRobotOffice => 'إخفاء المكتب';
+
+  @override
+  String get socialListening => 'الاستماع الاجتماعي';
+
+  @override
+  String get productName => 'اسم المنتج';
+
+  @override
+  String get productDescription => 'وصف المنتج';
+
+  @override
+  String get replyTone => 'نبرة الرد';
+
+  @override
+  String get subreddits => 'المنتديات الفرعية';
+
+  @override
+  String get subredditsHint => 'مفصولة بفواصل، بدون r/';
+
+  @override
+  String get minIntentScore => 'الحد الأدنى لدرجة النية';
+
+  @override
+  String get scanInterval => 'فترة المسح (دقائق)';
+
+  @override
+  String get autoScan => 'المسح التلقائي';
+
+  @override
+  String get autoPost => 'النشر التلقائي';
+
+  @override
+  String get autoPostHint => 'يتطلب تسجيل دخول لمرة واحدة في Reddit';
 }

@@ -921,5 +921,16 @@
   "create": "Erstellen",
   "evolutionEngine": "Evolution-Engine",
   "searchLabel": "Suche",
-  "hideRobotOffice": "Office ausblenden"
+  "hideRobotOffice": "Office ausblenden",
+  "socialListening": "Social Listening",
+  "productName": "Produktname",
+  "productDescription": "Produktbeschreibung",
+  "replyTone": "Antwort-Ton",
+  "subreddits": "Subreddits",
+  "subredditsHint": "Kommagetrennt, ohne r/",
+  "minIntentScore": "Mindest-Intent-Score",
+  "scanInterval": "Scan-Intervall (Minuten)",
+  "autoScan": "Auto-Scan",
+  "autoPost": "Auto-Post (Playwright)",
+  "autoPostHint": "Erfordert einmaligen Reddit-Login im Browser"
 }

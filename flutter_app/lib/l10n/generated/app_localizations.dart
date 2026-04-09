@@ -5189,6 +5189,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide Office'**
   String get hideRobotOffice;
+
+  /// No description provided for @socialListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Listening'**
+  String get socialListening;
+
+  /// No description provided for @productName.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Name'**
+  String get productName;
+
+  /// No description provided for @productDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Description'**
+  String get productDescription;
+
+  /// No description provided for @replyTone.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply Tone'**
+  String get replyTone;
+
+  /// No description provided for @subreddits.
+  ///
+  /// In en, this message translates to:
+  /// **'Subreddits'**
+  String get subreddits;
+
+  /// No description provided for @subredditsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated, without r/ prefix'**
+  String get subredditsHint;
+
+  /// No description provided for @minIntentScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum Intent Score'**
+  String get minIntentScore;
+
+  /// No description provided for @scanInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Interval (minutes)'**
+  String get scanInterval;
+
+  /// No description provided for @autoScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Scan'**
+  String get autoScan;
+
+  /// No description provided for @autoPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Post (Playwright)'**
+  String get autoPost;
+
+  /// No description provided for @autoPostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires one-time Reddit login in browser'**
+  String get autoPostHint;
 }
 
 class _AppLocalizationsDelegate
