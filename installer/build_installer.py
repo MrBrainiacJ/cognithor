@@ -236,6 +236,11 @@ def step_launcher() -> Path:
         "    exit /b 1\r\n"
         ")\r\n"
         "\r\n"
+        "REM Auto-upgrade: detect source tree with newer version\r\n"
+        'if exist "%COGNITHOR_HOME%auto_upgrade.py" (\r\n'
+        '    "%PYTHON%" "%COGNITHOR_HOME%auto_upgrade.py"\r\n'
+        ")\r\n"
+        "\r\n"
         "REM First-run setup (downloads skills, installs default agents)\r\n"
         'if not exist "%USERPROFILE%\\.jarvis\\.cognithor_initialized" (\r\n'
         '    if exist "%COGNITHOR_HOME%first_run.py" (\r\n'

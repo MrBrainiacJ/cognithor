@@ -82,6 +82,9 @@ Source: "{#BuildDir}\flutter_web\*"; DestDir: "{app}\flutter_app\web"; Component
 ; First-run setup script
 Source: "{#ProjectRoot}\installer\first_run.py"; DestDir: "{app}"; Components: core; Flags: ignoreversion
 
+; Auto-upgrade script (syncs installed version with source tree)
+Source: "{#ProjectRoot}\installer\auto_upgrade.py"; DestDir: "{app}"; Components: core; Flags: ignoreversion
+
 ; Default agents config
 Source: "{#ProjectRoot}\installer\agents.yaml.default"; DestDir: "{app}"; Components: core; Flags: ignoreversion
 
