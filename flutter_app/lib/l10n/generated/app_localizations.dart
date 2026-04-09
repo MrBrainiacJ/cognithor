@@ -5477,6 +5477,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discovering...'**
   String get discovering;
+
+  /// No description provided for @scheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get scheduled;
+
+  /// No description provided for @noScheduledTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled tasks'**
+  String get noScheduledTasks;
+
+  /// No description provided for @scheduledTasksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure cron jobs in Administration to schedule recurring tasks.'**
+  String get scheduledTasksHint;
+
+  /// No description provided for @activeJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeJobs;
+
+  /// No description provided for @pausedJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get pausedJobs;
+
+  /// No description provided for @nextRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nextRun;
 }
 
 class _AppLocalizationsDelegate

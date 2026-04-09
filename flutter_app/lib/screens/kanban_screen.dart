@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/admin_provider.dart';
 import 'package:jarvis_ui/providers/connection_provider.dart';
+import 'package:jarvis_ui/providers/cron_provider.dart';
 import 'package:jarvis_ui/providers/kanban_provider.dart';
 import 'package:jarvis_ui/providers/chat_provider.dart';
 import 'package:jarvis_ui/widgets/kanban/kanban_board.dart';
 import 'package:jarvis_ui/widgets/kanban/kanban_config_dialog.dart';
+import 'package:jarvis_ui/widgets/kanban/scheduled_panel.dart';
 import 'package:jarvis_ui/widgets/kanban/task_dialog.dart';
 import 'package:jarvis_ui/widgets/observe/kanban_panel.dart';
 
@@ -17,15 +19,21 @@ class KanbanScreen extends StatefulWidget {
   State<KanbanScreen> createState() => _KanbanScreenState();
 }
 
+enum _KanbanView { board, pipeline, scheduled }
+
 class _KanbanScreenState extends State<KanbanScreen> {
+  _KanbanView _view = _KanbanView.board;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final conn = context.read<ConnectionProvider>();
       final kanban = context.read<KanbanProvider>();
+      final cron = context.read<CronProvider>();
       if (conn.state == JarvisConnectionState.connected) {
         kanban.setApiClient(conn.api);
+        cron.setApiClient(conn.api);
       }
       kanban.fetchTasks();
       // Load agents for the agent picker dropdowns
@@ -81,14 +89,19 @@ class _KanbanScreenState extends State<KanbanScreen> {
                 ),
                 child: Row(
                   children: [
-                    // Toggle
-                    SegmentedButton<bool>(
+                    // Toggle — 3 segments
+                    SegmentedButton<_KanbanView>(
                       segments: [
-                        ButtonSegment(value: false, label: Text(l.kanbanMyTasks)),
-                        ButtonSegment(value: true, label: Text(l.kanbanLivePipeline)),
+                        ButtonSegment(value: _KanbanView.board, label: Text(l.kanbanMyTasks)),
+                        ButtonSegment(value: _KanbanView.pipeline, label: Text(l.kanbanLivePipeline)),
+                        ButtonSegment(
+                          value: _KanbanView.scheduled,
+                          icon: const Icon(Icons.schedule, size: 16),
+                          label: Text(l.scheduled),
+                        ),
                       ],
-                      selected: {kanban.pipelineMode},
-                      onSelectionChanged: (s) => kanban.togglePipelineMode(),
+                      selected: {_view},
+                      onSelectionChanged: (s) => setState(() => _view = s.first),
                       style: ButtonStyle(
                         visualDensity: VisualDensity.compact,
                         textStyle: WidgetStateProperty.all(
@@ -97,7 +110,7 @@ class _KanbanScreenState extends State<KanbanScreen> {
                       ),
                     ),
                     const Spacer(),
-                    if (!kanban.pipelineMode) ...[
+                    if (_view == _KanbanView.board) ...[
                       // Stats badge
                       if (kanban.tasks.isNotEmpty)
                         Padding(
@@ -133,23 +146,25 @@ class _KanbanScreenState extends State<KanbanScreen> {
                   ],
                 ),
               ),
-              // Board
+              // Content
               Expanded(
-                child: kanban.pipelineMode
-                    ? Consumer<ChatProvider>(
-                        builder: (context, chat, _) {
-                          return KanbanPanel(
-                            entries: chat.pipeline
-                                .map((p) => {
-                                      'phase': p.phase,
-                                      'status': p.status,
-                                      'elapsed_ms': p.elapsedMs,
-                                    })
-                                .toList(),
-                          );
-                        },
-                      )
-                    : const KanbanBoard(),
+                child: switch (_view) {
+                  _KanbanView.board => const KanbanBoard(),
+                  _KanbanView.pipeline => Consumer<ChatProvider>(
+                      builder: (context, chat, _) {
+                        return KanbanPanel(
+                          entries: chat.pipeline
+                              .map((p) => {
+                                    'phase': p.phase,
+                                    'status': p.status,
+                                    'elapsed_ms': p.elapsedMs,
+                                  })
+                              .toList(),
+                        );
+                      },
+                    ),
+                  _KanbanView.scheduled => const ScheduledPanel(),
+                },
               ),
             ],
           ),

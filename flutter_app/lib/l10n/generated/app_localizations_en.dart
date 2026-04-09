@@ -2783,4 +2783,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discovering => 'Discovering...';
+
+  @override
+  String get scheduled => 'Scheduled';
+
+  @override
+  String get noScheduledTasks => 'No scheduled tasks';
+
+  @override
+  String get scheduledTasksHint =>
+      'Configure cron jobs in Administration to schedule recurring tasks.';
+
+  @override
+  String get activeJobs => 'Active';
+
+  @override
+  String get pausedJobs => 'Paused';
+
+  @override
+  String get nextRun => 'Next';
 }

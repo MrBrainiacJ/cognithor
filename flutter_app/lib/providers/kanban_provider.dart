@@ -303,6 +303,17 @@ class KanbanProvider extends ChangeNotifier {
     return [];
   }
 
+  Future<void> reorderTasks(List<Map<String, dynamic>> batch) async {
+    if (_api == null || batch.isEmpty) return;
+    // Optimistic: already updated in-memory by caller
+    notifyListeners();
+    try {
+      await _api!.post('/kanban/tasks/reorder', {'items': batch});
+    } catch (_) {
+      await fetchTasks();
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // WebSocket handler
   // ---------------------------------------------------------------------------

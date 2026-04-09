@@ -4279,6 +4279,67 @@ def _register_ui_routes(
             log.error("cron_jobs_put_failed", error=str(exc))
             return {"error": "Cron-Jobs konnten nicht gespeichert werden", "status": 400}
 
+    # -- 3.7b: Cron-Jobs toggle + enriched list ---------------------------
+
+    @app.patch("/api/v1/cron-jobs/{job_name}/toggle", dependencies=deps)
+    async def ui_toggle_cron_job(job_name: str) -> dict[str, Any]:
+        """Toggle a cron job enabled/disabled."""
+        try:
+            from jarvis.cron.jobs import JobStore
+
+            store = JobStore(config_manager.config.cron_config_file)
+            store.load()
+            if job_name not in store.jobs:
+                return {"error": f"Job '{job_name}' not found", "status": 404}
+            new_enabled = not store.jobs[job_name].enabled
+            store.toggle_job(job_name, new_enabled)
+            # Also update the live scheduler if available
+            gw = getattr(config_manager, "_gateway", None)
+            cron_engine = getattr(gw, "_cron_engine", None) if gw else None
+            if cron_engine and hasattr(cron_engine, "job_store"):
+                cron_engine.job_store.jobs[job_name] = store.jobs[job_name]
+            return {"name": job_name, "enabled": new_enabled}
+        except Exception as exc:
+            log.error("cron_job_toggle_failed", error=str(exc))
+            return {"error": str(exc), "status": 500}
+
+    @app.get("/api/v1/cron-jobs/enriched", dependencies=deps)
+    async def ui_get_cron_jobs_enriched() -> dict[str, Any]:
+        """Returns cron jobs with next_run times and last_run info."""
+        try:
+            from jarvis.cron.jobs import JobStore
+
+            store = JobStore(config_manager.config.cron_config_file)
+            jobs = store.load()
+
+            # Try to get next_run from live engine
+            gw = getattr(config_manager, "_gateway", None)
+            cron_engine = getattr(gw, "_cron_engine", None) if gw else None
+            next_runs: dict[str, Any] = {}
+            if cron_engine:
+                try:
+                    next_runs = cron_engine.get_next_run_times()
+                except Exception:
+                    pass
+
+            result = []
+            for j in jobs.values():
+                nr = next_runs.get(j.name)
+                result.append({
+                    "name": j.name,
+                    "schedule": j.schedule,
+                    "prompt": j.prompt,
+                    "channel": j.channel,
+                    "model": j.model,
+                    "enabled": j.enabled,
+                    "agent": j.agent,
+                    "next_run": nr.isoformat() if nr else None,
+                })
+            return {"jobs": result}
+        except Exception as exc:
+            log.error("cron_jobs_enriched_failed", error=str(exc))
+            return {"jobs": [], "error": str(exc)}
+
     # -- 3.8: MCP Servers GET / PUT --------------------------------------
 
     @app.get("/api/v1/mcp-servers", dependencies=deps)

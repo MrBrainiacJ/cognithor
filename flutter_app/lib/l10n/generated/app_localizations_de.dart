@@ -2791,4 +2791,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get discovering => 'Entdecke...';
+
+  @override
+  String get scheduled => 'Geplant';
+
+  @override
+  String get noScheduledTasks => 'Keine geplanten Aufgaben';
+
+  @override
+  String get scheduledTasksHint =>
+      'Konfiguriere Cron-Jobs unter Administration, um wiederkehrende Aufgaben zu planen.';
+
+  @override
+  String get activeJobs => 'Aktiv';
+
+  @override
+  String get pausedJobs => 'Pausiert';
+
+  @override
+  String get nextRun => 'Naechste';
 }

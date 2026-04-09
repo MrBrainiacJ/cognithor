@@ -24,6 +24,7 @@ import 'package:jarvis_ui/providers/kanban_provider.dart';
 import 'package:jarvis_ui/providers/evolution_provider.dart';
 import 'package:jarvis_ui/providers/robot_office_provider.dart';
 import 'package:jarvis_ui/providers/reddit_leads_provider.dart';
+import 'package:jarvis_ui/providers/cron_provider.dart';
 import 'package:jarvis_ui/screens/splash_screen.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
 
@@ -57,6 +58,7 @@ class JarvisApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SessionsProvider()),
         ChangeNotifierProvider(create: (_) => TreeProvider()),
         ChangeNotifierProvider(create: (_) => KanbanProvider()),
+        ChangeNotifierProvider(create: (_) => CronProvider()),
         ChangeNotifierProvider(create: (_) => EvolutionProvider()),
         ChangeNotifierProvider(create: (_) => RobotOfficeProvider()),
         ChangeNotifierProvider(create: (_) => RedditLeadsProvider()),

@@ -2758,4 +2758,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get discovering => '发现中...';
+
+  @override
+  String get scheduled => '计划任务';
+
+  @override
+  String get noScheduledTasks => '没有计划任务';
+
+  @override
+  String get scheduledTasksHint => '在管理中配置定时任务以安排周期性任务。';
+
+  @override
+  String get activeJobs => '活跃';
+
+  @override
+  String get pausedJobs => '已暂停';
+
+  @override
+  String get nextRun => '下次';
 }

@@ -2775,4 +2775,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get discovering => 'جارٍ الاكتشاف...';
+
+  @override
+  String get scheduled => 'المهام المجدولة';
+
+  @override
+  String get noScheduledTasks => 'لا توجد مهام مجدولة';
+
+  @override
+  String get scheduledTasksHint =>
+      'قم بتكوين المهام المتكررة في الإدارة لجدولة المهام الدورية.';
+
+  @override
+  String get activeJobs => 'نشط';
+
+  @override
+  String get pausedJobs => 'متوقف مؤقتاً';
+
+  @override
+  String get nextRun => 'التالي';
 }

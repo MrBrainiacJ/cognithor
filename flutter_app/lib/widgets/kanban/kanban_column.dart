@@ -17,6 +17,21 @@ class KanbanColumn extends StatelessWidget {
     required this.tasks,
   });
 
+  void _onReorder(BuildContext context, int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) newIndex -= 1;
+    final reordered = List<KanbanTask>.from(tasks);
+    final item = reordered.removeAt(oldIndex);
+    reordered.insert(newIndex, item);
+    // Batch-update sort_order
+    final provider = context.read<KanbanProvider>();
+    final batch = <Map<String, dynamic>>[];
+    for (int i = 0; i < reordered.length; i++) {
+      reordered[i].sortOrder = i;
+      batch.add({'id': reordered[i].id, 'sort_order': i});
+    }
+    provider.reorderTasks(batch);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -86,7 +101,7 @@ class KanbanColumn extends StatelessWidget {
               const SizedBox(height: 8),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              // Task cards
+              // Task cards — reorderable within column
               if (tasks.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
@@ -101,10 +116,36 @@ class KanbanColumn extends StatelessWidget {
                   ),
                 )
               else
-                ...tasks.map((task) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: KanbanCard(task: task, columnColor: color),
-                    )),
+                ReorderableListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  buildDefaultDragHandles: false,
+                  itemCount: tasks.length,
+                  onReorder: (oldIdx, newIdx) => _onReorder(context, oldIdx, newIdx),
+                  proxyDecorator: (child, index, animation) {
+                    return AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, child) => Material(
+                        elevation: 4,
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        child: child,
+                      ),
+                      child: child,
+                    );
+                  },
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return ReorderableDragStartListener(
+                      key: ValueKey(task.id),
+                      index: index,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: KanbanCard(task: task, columnColor: color),
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
         );

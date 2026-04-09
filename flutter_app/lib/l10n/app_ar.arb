@@ -962,5 +962,12 @@
   "feedbackDeleted": "حذفه المشرف",
   "engagementScore": "المشاركة",
   "discoverSubreddits": "اكتشاف المنتديات",
-  "discovering": "جارٍ الاكتشاف..."
+  "discovering": "جارٍ الاكتشاف...",
+
+  "scheduled": "المهام المجدولة",
+  "noScheduledTasks": "لا توجد مهام مجدولة",
+  "scheduledTasksHint": "قم بتكوين المهام المتكررة في الإدارة لجدولة المهام الدورية.",
+  "activeJobs": "نشط",
+  "pausedJobs": "متوقف مؤقتاً",
+  "nextRun": "التالي"
 }

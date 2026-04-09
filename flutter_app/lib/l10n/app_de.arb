@@ -971,5 +971,12 @@
   "feedbackDeleted": "Vom Moderator geloescht",
   "engagementScore": "Engagement",
   "discoverSubreddits": "Subreddits entdecken",
-  "discovering": "Entdecke..."
+  "discovering": "Entdecke...",
+
+  "scheduled": "Geplant",
+  "noScheduledTasks": "Keine geplanten Aufgaben",
+  "scheduledTasksHint": "Konfiguriere Cron-Jobs unter Administration, um wiederkehrende Aufgaben zu planen.",
+  "activeJobs": "Aktiv",
+  "pausedJobs": "Pausiert",
+  "nextRun": "Naechste"
 }

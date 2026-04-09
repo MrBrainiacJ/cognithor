@@ -1632,5 +1632,18 @@
   "discoverSubreddits": "Discover Subreddits",
   "@discoverSubreddits": {},
   "discovering": "Discovering...",
-  "@discovering": {}
+  "@discovering": {},
+
+  "scheduled": "Scheduled",
+  "@scheduled": {},
+  "noScheduledTasks": "No scheduled tasks",
+  "@noScheduledTasks": {},
+  "scheduledTasksHint": "Configure cron jobs in Administration to schedule recurring tasks.",
+  "@scheduledTasksHint": {},
+  "activeJobs": "Active",
+  "@activeJobs": {},
+  "pausedJobs": "Paused",
+  "@pausedJobs": {},
+  "nextRun": "Next",
+  "@nextRun": {}
 }

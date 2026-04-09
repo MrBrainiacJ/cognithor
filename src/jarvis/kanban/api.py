@@ -149,4 +149,25 @@ def create_kanban_router(engine: KanbanEngine) -> APIRouter:
     def get_stats() -> dict[str, Any]:
         return engine.stats()
 
+    class ReorderRequest(BaseModel):
+        items: list[dict[str, Any]]
+
+    @router.post("/tasks/reorder")
+    def reorder_tasks(req: ReorderRequest) -> dict[str, Any]:
+        """Batch-update sort_order for tasks within a column.
+
+        Body: {"items": [{"id": "abc", "sort_order": 0}, ...]}
+        """
+        updated = 0
+        for item in req.items:
+            task_id = item.get("id", "")
+            sort_order = item.get("sort_order", 0)
+            if task_id:
+                task = engine.update_task(
+                    task_id, changed_by="user", sort_order=sort_order
+                )
+                if task is not None:
+                    updated += 1
+        return {"updated": updated}
+
     return router
