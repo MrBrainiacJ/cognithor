@@ -7,6 +7,7 @@ Supports: PDF, DOCX, images (via vision), websites (via trafilatura), YouTube (v
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import enum
 import heapq
 import re
@@ -110,14 +111,23 @@ class KnowledgeIngestService:
         knowledge_builder: Any | None = None,
         llm_fn: Any | None = None,
         evolution_loop: Any | None = None,
+        on_progress: Any | None = None,
     ) -> None:
         self._memory = memory
         self._knowledge_builder = knowledge_builder
         self._llm_fn = llm_fn
         self._evolution_loop = evolution_loop
+        self._on_progress = on_progress
         self._results: list[IngestResult] = []
         self._queue = IngestQueue()
         self._worker_task: asyncio.Task | None = None
+
+    async def _notify(self, event: str, source: str, **kwargs: Any) -> None:
+        """Fire progress callback and emit a structured log entry."""
+        log.info(event, source=source, **kwargs)
+        if self._on_progress:
+            with contextlib.suppress(Exception):
+                await self._on_progress(event, source, **kwargs)
 
     async def ingest_file(
         self,
@@ -383,6 +393,11 @@ class KnowledgeIngestService:
         """Process queued deep-learn items."""
         while not self._queue.empty:
             item = self._queue.dequeue()
+            log.info(
+                "deep_learn_worker_processing",
+                source=item.source,
+                queue_remaining=len(self._queue),
+            )
             try:
                 await self._deep_learn(item)
             except Exception as exc:
@@ -398,21 +413,26 @@ class KnowledgeIngestService:
 
         from jarvis.evolution.research_agent import FetchResult
 
+        await self._notify("deep_learn_start", item.source, priority=item.priority.name)
+
         # Vision analysis for page images
         vision_text = ""
-        for img_path in item.page_images:
-            try:
-                desc = await self._extract_image_text(img_path)
-                if desc:
-                    vision_text += f"\n[Image description: {desc}]\n"
-            except Exception:
-                pass
-            finally:
-                img_path.unlink(missing_ok=True)
+        if item.page_images:
+            await self._notify("deep_learn_vision", item.source, images=len(item.page_images))
+            for img_path in item.page_images:
+                try:
+                    desc = await self._extract_image_text(img_path)
+                    if desc:
+                        vision_text += f"\n[Image description: {desc}]\n"
+                except Exception:
+                    pass
+                finally:
+                    img_path.unlink(missing_ok=True)
 
         full_text = item.text + vision_text if vision_text else item.text
 
         source_name = item.source.split("://", 1)[-1] if "://" in item.source else item.source
+        await self._notify("deep_learn_building", item.source)
         fetch_result = FetchResult(
             url=item.source,
             text=full_text,
@@ -421,7 +441,7 @@ class KnowledgeIngestService:
         )
         await self._knowledge_builder.build(fetch_result)
         self._update_result(item.result_id, "completed")
-        log.info("deep_learn_completed", source=item.source, text_len=len(full_text))
+        await self._notify("deep_learn_complete", item.source, text_len=len(full_text))
 
         # Also queue for Evolution Loop idle processing (if available)
         if self._evolution_loop and hasattr(self._evolution_loop, "inject_user_material"):
