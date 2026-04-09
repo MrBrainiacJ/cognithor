@@ -6,6 +6,7 @@ Supports: PDF, DOCX, images (via vision), websites (via trafilatura), YouTube (v
 
 from __future__ import annotations
 
+import enum
 import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -21,6 +22,21 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
+class Priority(enum.IntEnum):
+    """Upload learning priority."""
+
+    HIGH = 0
+    NORMAL = 1
+    LOW = 2
+
+    @classmethod
+    def from_string(cls, s: str) -> Priority:
+        try:
+            return cls[s.upper()]
+        except KeyError:
+            return cls.NORMAL
+
+
 @dataclass
 class IngestResult:
     """Result of a single knowledge ingestion operation."""
@@ -33,6 +49,13 @@ class IngestResult:
     text_length: int = 0
     error: str = ""
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    priority: Priority = Priority.NORMAL
+    deep_learn_status: str = "pending"  # pending, queued, skipped, completed, failed
+
+    @property
+    def chunks(self) -> int:
+        """Alias for chunks_created — Flutter compat."""
+        return self.chunks_created
 
 
 class KnowledgeIngestService:
