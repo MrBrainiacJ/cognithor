@@ -6,6 +6,9 @@ import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
 import 'package:jarvis_ui/providers/reddit_leads_provider.dart';
 import 'package:jarvis_ui/theme/jarvis_theme.dart';
 import 'package:jarvis_ui/widgets/jarvis_toast.dart';
+import 'package:jarvis_ui/widgets/leads/performance_badge.dart';
+import 'package:jarvis_ui/widgets/leads/feedback_dialog.dart';
+import 'package:jarvis_ui/widgets/leads/refine_panel.dart';
 
 class LeadDetailSheet extends StatefulWidget {
   const LeadDetailSheet({super.key, required this.lead});
@@ -171,6 +174,12 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                   hintText: l.draftReply,
                 ),
               ),
+              const SizedBox(height: 8),
+              RefinePanel(
+                leadId: lead.id,
+                currentDraft: _replyCtrl.text,
+                onAccept: (text) => setState(() => _replyCtrl.text = text),
+              ),
               const SizedBox(height: 16),
 
               // Action buttons
@@ -226,6 +235,45 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                   ],
                 ),
               ),
+
+              // Performance + feedback (replied leads only)
+              if (lead.status == 'replied') ...[
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    Text(l.engagementScore, style: theme.textTheme.titleSmall),
+                    const SizedBox(width: 8),
+                    FutureBuilder<Map<String, dynamic>>(
+                      future: context.read<RedditLeadsProvider>().getPerformance(lead.id),
+                      builder: (context, snap) {
+                        if (!snap.hasData) return const SizedBox.shrink();
+                        final perf = snap.data?['performance'] as Map<String, dynamic>?;
+                        if (perf == null) return const Text('Not tracked yet');
+                        final score = (perf['engagement_score'] as num?)?.toInt() ?? 0;
+                        return PerformanceBadge(score: score);
+                      },
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () async {
+                        final provider = context.read<RedditLeadsProvider>();
+                        final tag = await showDialog<String>(
+                          context: context,
+                          builder: (_) => const FeedbackDialog(),
+                        );
+                        if (tag != null && mounted) {
+                          await provider.setFeedback(lead.id, tag: tag);
+                          if (!mounted) return;
+                          // ignore: use_build_context_synchronously
+                          JarvisToast.show(context, 'Feedback saved', type: ToastType.success);
+                        }
+                      },
+                      icon: const Icon(Icons.feedback, size: 16),
+                      label: Text(l.feedbackTitle, style: const TextStyle(fontSize: 11)),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         );
