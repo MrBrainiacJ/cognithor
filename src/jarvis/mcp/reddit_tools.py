@@ -122,42 +122,59 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         "reddit_scan",
         _reddit_scan,
         description=(
-            "Scan Reddit subreddits for high-intent leads. Returns scored posts with reply drafts."
+            "Reddit nach Leads scannen. Scannt Subreddits nach Posts mit hohem Intent "
+            "und erstellt Reply-Drafts. Kein API-Key noetig (nutzt oeffentliche JSON-Feeds)."
         ),
         input_schema={
-            "subreddits": {
-                "type": "string",
-                "description": "Comma-separated subreddit names (default: config)",
-            },
-            "min_score": {
-                "type": "integer",
-                "description": "Minimum intent score 0-100 (default: config)",
+            "type": "object",
+            "properties": {
+                "subreddits": {
+                    "type": "string",
+                    "description": "Kommagetrennte Subreddit-Namen, z.B. 'LocalLLaMA,SaaS'",
+                },
+                "min_score": {
+                    "type": "integer",
+                    "description": "Minimum Intent-Score 0-100 (Default: Config)",
+                    "default": 0,
+                },
             },
         },
     )
     mcp_client.register_builtin_handler(
         "reddit_leads",
         _reddit_leads,
-        description="List current Reddit leads with filters.",
+        description="Gespeicherte Reddit-Leads auflisten mit optionalen Filtern.",
         input_schema={
-            "status": {
-                "type": "string",
-                "description": "Filter: new, reviewed, replied, archived",
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "Filter: new, reviewed, replied, archived",
+                },
+                "min_score": {"type": "integer", "description": "Minimum Score Filter"},
+                "limit": {
+                    "type": "integer",
+                    "description": "Max Ergebnisse (Default: 20)",
+                    "default": 20,
+                },
             },
-            "min_score": {"type": "integer", "description": "Minimum score filter"},
-            "limit": {"type": "integer", "description": "Max results (default 20)"},
         },
     )
     mcp_client.register_builtin_handler(
         "reddit_reply",
         _reddit_reply,
-        description="Post a reply to a Reddit lead. Copies to clipboard and opens browser.",
+        description="Antwort auf einen Reddit-Lead erstellen. Kopiert in Zwischenablage und oeffnet Browser.",
         input_schema={
-            "lead_id": {"type": "string", "description": "Lead ID to reply to"},
-            "mode": {
-                "type": "string",
-                "description": "clipboard (default), browser, or auto",
+            "type": "object",
+            "properties": {
+                "lead_id": {"type": "string", "description": "Lead-ID zum Antworten"},
+                "mode": {
+                    "type": "string",
+                    "description": "clipboard (Default), browser, oder auto",
+                    "default": "clipboard",
+                },
             },
+            "required": ["lead_id"],
         },
     )
 
@@ -232,44 +249,55 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
     mcp_client.register_builtin_handler(
         "reddit_refine",
         _reddit_refine,
-        description="Refine a reply draft via LLM. Set variants>0 to generate multiple options.",
+        description="Reply-Draft per LLM verbessern. variants>0 erzeugt mehrere Optionen.",
         input_schema={
-            "lead_id": {"type": "string", "description": "Lead ID"},
-            "hint": {"type": "string", "description": "Optional: direction for refinement"},
-            "variants": {
-                "type": "integer",
-                "description": "Generate N variants (0=refine only)",
+            "type": "object",
+            "properties": {
+                "lead_id": {"type": "string", "description": "Lead-ID"},
+                "hint": {"type": "string", "description": "Optional: Richtung fuer Verbesserung"},
+                "variants": {
+                    "type": "integer",
+                    "description": "Anzahl Varianten (0=nur verfeinern)",
+                    "default": 0,
+                },
             },
+            "required": ["lead_id"],
         },
     )
     mcp_client.register_builtin_handler(
         "reddit_discover_subreddits",
         _reddit_discover_subreddits,
-        description="Discover relevant subreddits for a product via LLM + Reddit validation.",
+        description="Relevante Subreddits fuer ein Produkt entdecken via LLM + Reddit-Validierung.",
         input_schema={
-            "product_name": {
-                "type": "string",
-                "description": "Product name (default: config)",
-            },
-            "product_description": {
-                "type": "string",
-                "description": "Product description (default: config)",
+            "type": "object",
+            "properties": {
+                "product_name": {
+                    "type": "string",
+                    "description": "Produktname (Default: Config)",
+                },
+                "product_description": {
+                    "type": "string",
+                    "description": "Produktbeschreibung (Default: Config)",
+                },
             },
         },
     )
     mcp_client.register_builtin_handler(
         "reddit_templates",
         _reddit_templates,
-        description="Manage reply templates. Actions: list, create, delete.",
+        description="Reply-Templates verwalten. Aktionen: list, create, delete.",
         input_schema={
-            "action": {"type": "string", "description": "list, create, or delete"},
-            "subreddit": {
-                "type": "string",
-                "description": "Filter by subreddit (list) or assign (create)",
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "description": "list, create, oder delete"},
+                "subreddit": {
+                    "type": "string",
+                    "description": "Filtern nach Subreddit (list) oder zuweisen (create)",
+                },
+                "name": {"type": "string", "description": "Template-Name (create)"},
+                "text": {"type": "string", "description": "Template-Text (create)"},
+                "template_id": {"type": "string", "description": "Template-ID (delete)"},
             },
-            "name": {"type": "string", "description": "Template name (create)"},
-            "text": {"type": "string", "description": "Template text (create)"},
-            "template_id": {"type": "string", "description": "Template ID (delete)"},
         },
     )
     log.info("reddit_tools_registered", tools=6)
