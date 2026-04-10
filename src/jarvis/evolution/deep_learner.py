@@ -260,16 +260,16 @@ class DeepLearner:
         )
 
         # ── Iterative deep research loop ──────────────────────────────
-        # Keep researching until 90% coverage. NO max rounds — the system
-        # researches until the topic is actually covered, period.
+        # Research until coverage threshold met or max rounds reached.
         # Each round: new search query → new sources → fetch → build.
-        required_coverage = 0.9
+        required_coverage = getattr(self._config, "coverage_threshold", 0.8)
         max_pages = getattr(self._config, "max_pages_per_crawl", 50)
+        max_rounds = max(10, max_pages // 3)  # Safety limit
         fetched_urls: set[str] = set()
         research_round = 0
 
-        while True:
-            # Check if coverage is sufficient (90%)
+        while research_round < max_rounds:
+            # Check if coverage is sufficient
             coverage = self._quality_assessor.check_coverage(subgoal)
             if coverage >= required_coverage:
                 log.info(
@@ -289,18 +289,20 @@ class DeepLearner:
                 plan.save(str(self._plans_dir))
                 return False
 
-            # Vary search queries per round to get diverse sources
+            # Dynamic search queries — context-aware, not domain-specific
+            _base = subgoal.title
+            _plan_ctx = plan.goal[:60]
             query_variants = [
-                f"{subgoal.title} {subgoal.description}",
-                f"{subgoal.title} Gesetz Paragraph Details",
-                f"{subgoal.title} Beispiele Praxis Anwendung",
-                f"{subgoal.title} aktuelle Rechtsprechung Urteile",
-                f"{subgoal.title} Fachliteratur Kommentar Erlaeuterung",
-                f"{subgoal.title} Definitionen Begriffe Grundlagen",
-                f"{subgoal.title} Statistiken Zahlen Fakten",
-                f"{subgoal.title} Kritik Probleme Reformbedarf",
-                f"{subgoal.title} Vergleich international EU",
-                f"{subgoal.title} FAQ haeufige Fragen Antworten",
+                f"{_base} {subgoal.description}",
+                f"{_plan_ctx} {_base} overview guide",
+                f"{_base} tutorial examples how to",
+                f"{_base} comparison alternatives pros cons",
+                f"{_base} best practices recommendations",
+                f"{_plan_ctx} {_base} community discussion",
+                f"{_base} latest news updates 2025 2026",
+                f"{_base} open source GitHub projects",
+                f"{_base} architecture design patterns",
+                f"{_plan_ctx} FAQ common questions",
             ]
             query = query_variants[research_round % len(query_variants)][:200]
 
@@ -313,12 +315,6 @@ class DeepLearner:
 
             if not sources:
                 log.info("deep_learner_no_more_sources", round=research_round, coverage=coverage)
-                # Wait and retry with next query variant — don't give up
-                if research_round > 20:
-                    log.warning(
-                        "deep_learner_exhausted_search_variants", subgoal=subgoal.title[:40]
-                    )
-                    break
                 research_round += 1
                 continue
 
