@@ -400,8 +400,16 @@ class Gateway:
                     )
             # Wire LLM function (was None during Phase F init)
             if hasattr(self, "_ollama") and self._ollama is not None:
-                self._reddit_lead_service._scanner._llm_fn = self._ollama.chat
-                self._reddit_lead_service._refiner._llm_fn = self._ollama.chat
+                _fast_model = (
+                    self._config.models.fast.name if hasattr(self._config, "models") else "qwen3:8b"
+                )
+                _ollama_ref = self._ollama
+
+                async def _reddit_llm_fn(**kwargs: Any) -> dict[str, Any]:
+                    return await _ollama_ref.chat(model=_fast_model, **kwargs)
+
+                self._reddit_lead_service._scanner._llm_fn = _reddit_llm_fn
+                self._reddit_lead_service._refiner._llm_fn = _reddit_llm_fn
             # Wire BrowserAgent for auto-post (if available)
             browser_agent = getattr(self, "_browser_agent", None)
             if browser_agent:
