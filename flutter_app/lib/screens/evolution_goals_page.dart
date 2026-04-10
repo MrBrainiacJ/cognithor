@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/evolution_provider.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/evolution_provider.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
 
 class EvolutionGoalsPage extends StatefulWidget {
   const EvolutionGoalsPage({super.key});

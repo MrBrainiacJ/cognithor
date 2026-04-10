@@ -2,11 +2,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/neon_card.dart';
-import 'package:jarvis_ui/widgets/neon_glow.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/neon_card.dart';
+import 'package:cognithor_ui/widgets/neon_glow.dart';
 
 /// "Teach Cognithor" screen -- lets users upload files, paste URLs, and submit
 /// YouTube links so the assistant can learn from them.

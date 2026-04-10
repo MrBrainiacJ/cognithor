@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.skills.circles import (
+from cognithor.skills.circles import (
     CircleManager,
     CircleMember,
     CircleRole,

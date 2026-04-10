@@ -8,7 +8,7 @@ from __future__ import annotations
 # ============================================================================
 # 1. Impact Assessment & Partizipative Governance
 # ============================================================================
-from jarvis.audit.impact_assessment import (
+from cognithor.audit.impact_assessment import (
     DimensionScore,
     EthicsBoard,
     ImpactAssessor,
@@ -230,7 +230,7 @@ class TestImpactAssessor:
 # 2. Automatisierte Code-Analyse
 # ============================================================================
 
-from jarvis.security.code_audit import (
+from cognithor.security.code_audit import (
     CodeAuditor,
     PatternScanner,
     PatternSeverity,
@@ -381,7 +381,7 @@ def run_command(cmd):
 # 3. Endnutzer-Portal
 # ============================================================================
 
-from jarvis.core.user_portal import (
+from cognithor.core.user_portal import (
     ConsentManager,
     ConsentPurpose,
     ConsentStatus,

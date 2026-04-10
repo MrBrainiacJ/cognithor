@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.model_router import (
+from cognithor.config import JarvisConfig
+from cognithor.core.model_router import (
     CONCIERGE_PROFILES,
     ConciergeProfile,
     ModelRouter,

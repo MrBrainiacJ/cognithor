@@ -8,7 +8,7 @@ from __future__ import annotations
 # ============================================================================
 # 1. CI/CD Security Gate & Continuous Red-Team
 # ============================================================================
-from jarvis.security.cicd_gate import (
+from cognithor.security.cicd_gate import (
     ContinuousRedTeam,
     GatePolicy,
     GateVerdict,
@@ -163,7 +163,7 @@ class TestScanScheduler:
         assert scheduler.schedule_count == 3
 
     def test_add_remove(self) -> None:
-        from jarvis.security.cicd_gate import ScanSchedule
+        from cognithor.security.cicd_gate import ScanSchedule
 
         scheduler = ScanScheduler(schedules=[])
         scheduler.add(ScanSchedule("s1", "Test", "0 * * * *"))
@@ -180,7 +180,7 @@ class TestScanScheduler:
 # 2. Sandbox Isolation & Multi-Tenant
 # ============================================================================
 
-from jarvis.security.sandbox_isolation import (
+from cognithor.security.sandbox_isolation import (
     AdminManager,
     AdminRole,
     IsolationEnforcer,
@@ -370,7 +370,7 @@ class TestIsolationEnforcer:
 # 3. Memory Integrity & Explainability
 # ============================================================================
 
-from jarvis.memory.integrity import (
+from cognithor.memory.integrity import (
     ContradictionDetector,
     DecisionExplainer,
     DuplicateDetector,
@@ -529,7 +529,7 @@ class TestDecisionExplainer:
 # 4. EU AI Act Compliance Export
 # ============================================================================
 
-from jarvis.audit.ai_act_export import (
+from cognithor.audit.ai_act_export import (
     ComplianceExporter,
     MitigationStatus,
     MitigationTracker,
@@ -629,7 +629,7 @@ class TestComplianceExporter:
 # 5. Ecosystem Control & Security Training
 # ============================================================================
 
-from jarvis.skills.ecosystem_control import (
+from cognithor.skills.ecosystem_control import (
     CurationStatus,
     EcosystemController,
     EmergencyUpdater,

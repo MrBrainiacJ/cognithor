@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.gateway.config_api import (
+from cognithor.gateway.config_api import (
     AgentProfileDTO,
     BindingRuleDTO,
     ConfigManager,

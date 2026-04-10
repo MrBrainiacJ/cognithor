@@ -21,7 +21,7 @@ _had_httpx = "httpx" in sys.modules
 _orig_httpx = sys.modules.get("httpx")
 sys.modules["httpx"] = _httpx_mock
 
-from jarvis.channels.whatsapp import MAX_TEXT_LENGTH, WhatsAppChannel
+from cognithor.channels.whatsapp import MAX_TEXT_LENGTH, WhatsAppChannel
 
 # Restore original state so we don't leak the mock
 if _had_httpx:
@@ -213,7 +213,7 @@ class TestWhatsAppLifecycle:
     async def test_send_without_running(self, wa: WhatsAppChannel) -> None:
         """Senden ohne _running ist ein No-Op."""
         wa._running = False
-        from jarvis.models import OutgoingMessage
+        from cognithor.models import OutgoingMessage
 
         msg = OutgoingMessage(channel="whatsapp", text="test", session_id="s1")
         await wa.send(msg)  # Should not raise

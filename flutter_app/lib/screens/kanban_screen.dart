@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/admin_provider.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
-import 'package:jarvis_ui/providers/cron_provider.dart';
-import 'package:jarvis_ui/providers/kanban_provider.dart';
-import 'package:jarvis_ui/providers/chat_provider.dart';
-import 'package:jarvis_ui/widgets/kanban/kanban_board.dart';
-import 'package:jarvis_ui/widgets/kanban/kanban_config_dialog.dart';
-import 'package:jarvis_ui/widgets/kanban/scheduled_panel.dart';
-import 'package:jarvis_ui/widgets/kanban/task_dialog.dart';
-import 'package:jarvis_ui/widgets/observe/kanban_panel.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/admin_provider.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/providers/cron_provider.dart';
+import 'package:cognithor_ui/providers/kanban_provider.dart';
+import 'package:cognithor_ui/providers/chat_provider.dart';
+import 'package:cognithor_ui/widgets/kanban/kanban_board.dart';
+import 'package:cognithor_ui/widgets/kanban/kanban_config_dialog.dart';
+import 'package:cognithor_ui/widgets/kanban/scheduled_panel.dart';
+import 'package:cognithor_ui/widgets/kanban/task_dialog.dart';
+import 'package:cognithor_ui/widgets/observe/kanban_panel.dart';
 
 class KanbanScreen extends StatefulWidget {
   const KanbanScreen({super.key});

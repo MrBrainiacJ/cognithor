@@ -8,7 +8,7 @@ Tests:
 
 from __future__ import annotations
 
-from jarvis.core.channel_flags import (
+from cognithor.core.channel_flags import (
     CHANNEL_PROFILES,
     ChannelFlags,
     get_channel_flags,

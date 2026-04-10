@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.utils.network import (
+from cognithor.utils.network import (
     get_primary_bind_host,
     get_reachable_url,
     is_loopback,

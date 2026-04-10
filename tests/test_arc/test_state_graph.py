@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from jarvis.arc.state_graph import StateGraphNavigator
+from cognithor.arc.state_graph import StateGraphNavigator
 
 
 def _grid(val: int) -> np.ndarray:

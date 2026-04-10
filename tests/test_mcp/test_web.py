@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import httpx
 import pytest
 
-from jarvis.mcp.web import (
+from cognithor.mcp.web import (
     WebError,
     WebTools,
     _extract_text_from_html,
@@ -586,7 +586,7 @@ class TestHttpRequest:
 
         with (
             patch.object(web, "_validate_url", return_value="https://api.example.com/data"),
-            patch("jarvis.mcp.web.httpx.AsyncClient", return_value=mock_client),
+            patch("cognithor.mcp.web.httpx.AsyncClient", return_value=mock_client),
         ):
             result = await web.http_request("https://api.example.com/data")
 
@@ -608,7 +608,7 @@ class TestHttpRequest:
 
         with (
             patch.object(web, "_validate_url", return_value="https://api.example.com/items"),
-            patch("jarvis.mcp.web.httpx.AsyncClient", return_value=mock_client),
+            patch("cognithor.mcp.web.httpx.AsyncClient", return_value=mock_client),
         ):
             result = await web.http_request(
                 "https://api.example.com/items",
@@ -645,16 +645,16 @@ class TestHttpRequest:
 
         with (
             patch.object(web, "_validate_url", return_value="https://slow.example.com"),
-            patch("jarvis.mcp.web.httpx.AsyncClient", return_value=mock_client),
+            patch("cognithor.mcp.web.httpx.AsyncClient", return_value=mock_client),
         ):
             with pytest.raises(WebError, match="Timeout"):
                 await web.http_request("https://slow.example.com", timeout_seconds=1)
 
     def test_http_request_gatekeeper_orange(self, tmp_path) -> None:
         """_classify_risk() → ORANGE für http_request."""
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction, RiskLevel
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction, RiskLevel
 
         config = JarvisConfig(jarvis_home=tmp_path)
         gk = Gatekeeper(config)
@@ -665,7 +665,7 @@ class TestHttpRequest:
 
     def test_http_request_config_values(self, tmp_path) -> None:
         """http_request nutzt Config-Werte für Limits."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         config = JarvisConfig(
             jarvis_home=tmp_path,
@@ -683,7 +683,7 @@ class TestHttpRequest:
     @pytest.mark.asyncio
     async def test_http_request_body_too_large_uses_config(self, tmp_path) -> None:
         """Body-Limit wird aus Config geladen."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         config = JarvisConfig(
             jarvis_home=tmp_path,

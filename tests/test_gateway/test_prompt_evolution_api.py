@@ -26,10 +26,10 @@ pytestmark = pytest.mark.skipif(
 @pytest.fixture()
 def app_and_gateway(tmp_path):
     """Create a minimal FastAPI app with prompt-evolution routes."""
-    from jarvis.channels.config_routes import create_config_routes
-    from jarvis.config import JarvisConfig, PromptEvolutionConfig
-    from jarvis.config_manager import ConfigManager
-    from jarvis.learning.prompt_evolution import PromptEvolutionEngine
+    from cognithor.channels.config_routes import create_config_routes
+    from cognithor.config import JarvisConfig, PromptEvolutionConfig
+    from cognithor.config_manager import ConfigManager
+    from cognithor.learning.prompt_evolution import PromptEvolutionEngine
 
     app = FastAPI()
 
@@ -94,7 +94,7 @@ class TestPromptEvolutionEvolve:
 
     def test_evolve_gate_blocked(self, app_and_gateway):
         app, gateway, engine = app_and_gateway
-        from jarvis.governance.improvement_gate import GateVerdict
+        from cognithor.governance.improvement_gate import GateVerdict
 
         gate = MagicMock()
         gate.check.return_value = GateVerdict.BLOCKED

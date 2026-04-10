@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from jarvis.mcp.web import (
+from cognithor.mcp.web import (
     WebError,
     WebTools,
     _extract_text_from_html,
@@ -776,7 +776,7 @@ class TestWebFetchAdditional:
                 mock_instance.__aexit__ = AsyncMock(return_value=False)
                 mock_client.return_value = mock_instance
 
-                with patch("jarvis.mcp.web._extract_text_from_html", return_value="Short"):
+                with patch("cognithor.mcp.web._extract_text_from_html", return_value="Short"):
                     with patch.object(
                         web,
                         "_fetch_via_jina",
@@ -802,7 +802,7 @@ class TestWebFetchAdditional:
                 mock_instance.__aexit__ = AsyncMock(return_value=False)
                 mock_client.return_value = mock_instance
 
-                with patch("jarvis.mcp.web._extract_text_from_html", return_value="Short"):
+                with patch("cognithor.mcp.web._extract_text_from_html", return_value="Short"):
                     with patch.object(web, "_fetch_via_jina", side_effect=WebError("Jina down")):
                         result = await web.web_fetch("https://example.com", reader_mode="auto")
                         assert "Short" in result

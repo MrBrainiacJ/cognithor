@@ -6,8 +6,8 @@ import sys
 
 import pytest
 
-from jarvis.core.agent_router import AgentProfile
-from jarvis.core.roles import (
+from cognithor.core.agent_router import AgentProfile
+from cognithor.core.roles import (
     AgentSpawnError,
     WriteBlockedError,
     can_spawn,

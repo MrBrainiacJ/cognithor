@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.skills.lifecycle import SkillHealthStatus, SkillLifecycleManager  # noqa: F401
-from jarvis.skills.registry import Skill, SkillRegistry
+from cognithor.skills.lifecycle import SkillHealthStatus, SkillLifecycleManager  # noqa: F401
+from cognithor.skills.registry import Skill, SkillRegistry
 
 if TYPE_CHECKING:
     from pathlib import Path

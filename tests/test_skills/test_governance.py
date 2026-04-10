@@ -9,7 +9,7 @@ Prüft:
 
 from __future__ import annotations
 
-from jarvis.skills.governance import (
+from cognithor.skills.governance import (
     AbuseReporter,
     GovernancePolicy,
     GovernanceRule,

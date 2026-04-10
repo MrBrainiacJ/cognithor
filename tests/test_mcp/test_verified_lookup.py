@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.mcp.verified_lookup import (
+from cognithor.mcp.verified_lookup import (
     ExtractedFact,
     SourceResult,
     VerificationResult,
@@ -32,7 +32,7 @@ from jarvis.mcp.verified_lookup import (
 
 @pytest.fixture()
 def config(tmp_path):
-    from jarvis.config import JarvisConfig
+    from cognithor.config import JarvisConfig
 
     return JarvisConfig(jarvis_home=tmp_path)
 

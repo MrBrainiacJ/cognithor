@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from jarvis.security.sanitizer import InjectionPattern, InputSanitizer
+from cognithor.security.sanitizer import InjectionPattern, InputSanitizer
 
 # ============================================================================
 # Fixtures

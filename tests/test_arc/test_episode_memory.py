@@ -1,6 +1,6 @@
 import numpy as np
 
-from jarvis.arc.episode_memory import EpisodeMemory, Hypothesis
+from cognithor.arc.episode_memory import EpisodeMemory, Hypothesis
 
 
 def _make_obs(grid=None, game_state="NOT_FINISHED", changed_pixels=0, level=0):

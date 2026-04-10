@@ -10,8 +10,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 // Conditional import: web DOM only available on web platform.
-import 'package:jarvis_ui/services/api_client_token_stub.dart'
-    if (dart.library.js_interop) 'package:jarvis_ui/services/api_client_token_web.dart'
+import 'package:cognithor_ui/services/api_client_token_stub.dart'
+    if (dart.library.js_interop) 'package:cognithor_ui/services/api_client_token_web.dart'
     as token_reader;
 
 class ApiClient {

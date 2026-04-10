@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 import yaml
 
-from jarvis.governance.policy_patcher import PolicyPatcher
-from jarvis.models import PolicyChange
+from cognithor.governance.policy_patcher import PolicyPatcher
+from cognithor.models import PolicyChange
 
 
 @pytest.fixture()

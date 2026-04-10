@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from jarvis.hashline.config import HashlineConfig
+from cognithor.hashline.config import HashlineConfig
 
 
 class TestConfigDefault:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.telemetry.cost_tracker import CostTracker
+from cognithor.telemetry.cost_tracker import CostTracker
 
 
 @pytest.fixture()

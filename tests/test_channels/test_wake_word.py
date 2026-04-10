@@ -6,7 +6,7 @@ import struct
 
 import pytest
 
-from jarvis.channels.wake_word import WakeWordDetector
+from cognithor.channels.wake_word import WakeWordDetector
 
 
 class TestWakeWordDetector:

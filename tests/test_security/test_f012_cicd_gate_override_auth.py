@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.cicd_gate import GateVerdict, SecurityGate
+from cognithor.security.cicd_gate import GateVerdict, SecurityGate
 
 
 def _make_gate_with_fail() -> tuple[SecurityGate, str]:

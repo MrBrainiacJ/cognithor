@@ -23,15 +23,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.core.executor import Executor
-from jarvis.core.gatekeeper import Gatekeeper
-from jarvis.core.planner import Planner
-from jarvis.gateway.gateway import Gateway
-from jarvis.mcp.client import JarvisMCPClient
-from jarvis.mcp.filesystem import register_fs_tools
-from jarvis.mcp.shell import register_shell_tools
-from jarvis.models import (
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.core.executor import Executor
+from cognithor.core.gatekeeper import Gatekeeper
+from cognithor.core.planner import Planner
+from cognithor.gateway.gateway import Gateway
+from cognithor.mcp.client import JarvisMCPClient
+from cognithor.mcp.filesystem import register_fs_tools
+from cognithor.mcp.shell import register_shell_tools
+from cognithor.models import (
     IncomingMessage,
     PlannedAction,
 )
@@ -54,9 +54,9 @@ def sandbox(tmp_path: Path) -> Path:
 @pytest.fixture()
 def config(tmp_path: Path, sandbox: Path) -> JarvisConfig:
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(
-            allowed_paths=[str(sandbox), str(tmp_path / ".jarvis")],
+            allowed_paths=[str(sandbox), str(tmp_path / ".cognithor")],
             max_iterations=5,
         ),
     )

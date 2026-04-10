@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.slack import SlackChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.slack import SlackChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -175,7 +175,7 @@ class TestSlackSend:
     @pytest.mark.asyncio
     async def test_send_rich_no_client(self, ch: SlackChannel) -> None:
         ch._client = None
-        from jarvis.channels.interactive import SlackMessageBuilder
+        from cognithor.channels.interactive import SlackMessageBuilder
 
         builder = MagicMock(spec=SlackMessageBuilder)
         await ch.send_rich(builder)  # no crash
@@ -183,7 +183,7 @@ class TestSlackSend:
     @pytest.mark.asyncio
     async def test_send_card_no_client(self, ch: SlackChannel) -> None:
         ch._client = None
-        from jarvis.channels.interactive import AdaptiveCard
+        from cognithor.channels.interactive import AdaptiveCard
 
         card = MagicMock(spec=AdaptiveCard)
         await ch.send_card(card)  # no crash
@@ -191,7 +191,7 @@ class TestSlackSend:
     @pytest.mark.asyncio
     async def test_send_progress_no_client(self, ch: SlackChannel) -> None:
         ch._client = None
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         tracker = MagicMock(spec=ProgressTracker)
         await ch.send_progress(tracker)  # no crash
@@ -252,7 +252,7 @@ class TestSlackStop:
 class TestSlackSendRich:
     @pytest.mark.asyncio
     async def test_send_rich_success(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import SlackMessageBuilder
+        from cognithor.channels.interactive import SlackMessageBuilder
 
         ch._client = AsyncMock()
         builder = MagicMock(spec=SlackMessageBuilder)
@@ -262,7 +262,7 @@ class TestSlackSendRich:
 
     @pytest.mark.asyncio
     async def test_send_rich_no_target(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import SlackMessageBuilder
+        from cognithor.channels.interactive import SlackMessageBuilder
 
         ch._client = AsyncMock()
         ch.default_channel = ""
@@ -271,7 +271,7 @@ class TestSlackSendRich:
 
     @pytest.mark.asyncio
     async def test_send_rich_with_thread(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import SlackMessageBuilder
+        from cognithor.channels.interactive import SlackMessageBuilder
 
         ch._client = AsyncMock()
         builder = MagicMock(spec=SlackMessageBuilder)
@@ -282,7 +282,7 @@ class TestSlackSendRich:
 
     @pytest.mark.asyncio
     async def test_send_rich_exception(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import SlackMessageBuilder
+        from cognithor.channels.interactive import SlackMessageBuilder
 
         ch._client = AsyncMock()
         ch._client.chat_postMessage = AsyncMock(side_effect=RuntimeError("fail"))
@@ -294,7 +294,7 @@ class TestSlackSendRich:
 class TestSlackSendCard:
     @pytest.mark.asyncio
     async def test_send_card_success(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import AdaptiveCard
+        from cognithor.channels.interactive import AdaptiveCard
 
         ch._client = AsyncMock()
         card = MagicMock(spec=AdaptiveCard)
@@ -304,7 +304,7 @@ class TestSlackSendCard:
 
     @pytest.mark.asyncio
     async def test_send_card_no_target(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import AdaptiveCard
+        from cognithor.channels.interactive import AdaptiveCard
 
         ch._client = AsyncMock()
         ch.default_channel = ""
@@ -313,7 +313,7 @@ class TestSlackSendCard:
 
     @pytest.mark.asyncio
     async def test_send_card_exception(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import AdaptiveCard
+        from cognithor.channels.interactive import AdaptiveCard
 
         ch._client = AsyncMock()
         ch._client.chat_postMessage = AsyncMock(side_effect=RuntimeError("fail"))
@@ -325,7 +325,7 @@ class TestSlackSendCard:
 class TestSlackSendProgress:
     @pytest.mark.asyncio
     async def test_send_progress_success(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         ch._client = AsyncMock()
         tracker = MagicMock(spec=ProgressTracker)
@@ -336,7 +336,7 @@ class TestSlackSendProgress:
 
     @pytest.mark.asyncio
     async def test_send_progress_no_target(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         ch._client = AsyncMock()
         ch.default_channel = ""
@@ -345,7 +345,7 @@ class TestSlackSendProgress:
 
     @pytest.mark.asyncio
     async def test_send_progress_exception(self, ch: SlackChannel) -> None:
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         ch._client = AsyncMock()
         ch._client.chat_postMessage = AsyncMock(side_effect=RuntimeError("fail"))
@@ -382,7 +382,7 @@ class TestSlackStart:
         handler = AsyncMock()
         with (
             patch.dict("sys.modules", {"slack_sdk.web.async_client": mock_sdk}),
-            patch("jarvis.channels.slack.AsyncWebClient", mock_sdk.AsyncWebClient, create=True),
+            patch("cognithor.channels.slack.AsyncWebClient", mock_sdk.AsyncWebClient, create=True),
         ):
             await ch_no_app.start(handler)
 
@@ -419,7 +419,7 @@ class TestSlackApprovalTimeout:
         ch.default_channel = "C123"
 
         action = PlannedAction(tool="test", params={})
-        with patch("jarvis.channels.slack.asyncio.wait_for", side_effect=asyncio.TimeoutError):
+        with patch("cognithor.channels.slack.asyncio.wait_for", side_effect=asyncio.TimeoutError):
             result = await ch.request_approval("s1", action, "reason")
         assert result is False
 
@@ -451,5 +451,5 @@ class TestSlackStreaming:
         ch._client = AsyncMock()
         ch.default_channel = "C123"
 
-        with patch("jarvis.channels.slack.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.slack.asyncio.sleep", new_callable=AsyncMock):
             await ch.send_streaming_token("s1", "hello ")

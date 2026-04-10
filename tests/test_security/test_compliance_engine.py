@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.compliance_engine import ComplianceEngine, ComplianceViolation
-from jarvis.security.consent import ConsentManager
-from jarvis.security.gdpr import DataPurpose, ProcessingBasis
+from cognithor.security.compliance_engine import ComplianceEngine, ComplianceViolation
+from cognithor.security.consent import ConsentManager
+from cognithor.security.gdpr import DataPurpose, ProcessingBasis
 
 
 @pytest.fixture

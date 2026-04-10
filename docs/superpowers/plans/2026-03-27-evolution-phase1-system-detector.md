@@ -4,7 +4,7 @@
 
 **Goal:** Comprehensive hardware/software detection at startup (GPU via nvidia-smi, CPU, RAM, disk, network, Ollama, LM Studio) with structured SystemProfile, mode recommendation, REST API, and Flutter visualization page.
 
-**Architecture:** New `src/jarvis/system/` module with `SystemDetector` class that runs 8 detection targets. Results stored as `SystemProfile` dataclass, cached to `~/.jarvis/system_profile.json`, exposed via `GET /api/v1/system/profile`. Flutter shows hardware details with color-coded status badges. Existing `HardwareDetector` in `installer.py` is NOT modified — SystemDetector is a clean replacement used at runtime.
+**Architecture:** New `src/jarvis/system/` module with `SystemDetector` class that runs 8 detection targets. Results stored as `SystemProfile` dataclass, cached to `~/.cognithor/system_profile.json`, exposed via `GET /api/v1/system/profile`. Flutter shows hardware details with color-coded status badges. Existing `HardwareDetector` in `installer.py` is NOT modified — SystemDetector is a clean replacement used at runtime.
 
 **Tech Stack:** Python 3.12+ (psutil, subprocess, platform, shutil, urllib), pytest
 
@@ -155,7 +155,7 @@ Create `src/jarvis/system/detector.py` with DetectionResult, SystemProfile (data
 """System Detector — comprehensive hardware and software profiling.
 
 Detects CPU, RAM, GPU, disk, network, Ollama, LM Studio at startup.
-Results cached to ~/.jarvis/system_profile.json.
+Results cached to ~/.cognithor/system_profile.json.
 """
 
 from __future__ import annotations
@@ -440,7 +440,7 @@ class SystemDetector:
     def detect_disk(self) -> DetectionResult:
         import shutil
         from pathlib import Path
-        home = Path.home() / ".jarvis"
+        home = Path.home() / ".cognithor"
         usage = shutil.disk_usage(str(home.parent))
         free_gb = round(usage.free / (1024**3), 1)
         total_gb = round(usage.total / (1024**3), 1)

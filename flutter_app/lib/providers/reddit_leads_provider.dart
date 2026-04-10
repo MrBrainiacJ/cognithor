@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:jarvis_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/api_client.dart';
 
 /// A single Reddit lead.
 class RedditLead {

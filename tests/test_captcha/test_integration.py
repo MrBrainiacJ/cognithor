@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.browser.captcha.models import CaptchaType
-from jarvis.browser.captcha.solver import CaptchaConfig, CaptchaSolver
-from jarvis.browser.captcha.stealth import STEALTH_ARGS, STEALTH_JS
+from cognithor.browser.captcha.models import CaptchaType
+from cognithor.browser.captcha.solver import CaptchaConfig, CaptchaSolver
+from cognithor.browser.captcha.stealth import STEALTH_ARGS, STEALTH_JS
 
 
 @pytest.mark.asyncio

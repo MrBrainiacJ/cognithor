@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from jarvis.arc.visual_encoder import VisualStateEncoder
+from cognithor.arc.visual_encoder import VisualStateEncoder
 
 
 class TestEncodeForLLM:

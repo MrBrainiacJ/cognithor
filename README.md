@@ -392,14 +392,14 @@ Double-click  start_cognithor.bat  ->  Browser opens  ->  Click "Power On"  ->  
 
 ```bash
 cognithor                          # Interactive CLI
-python -m jarvis                   # Same thing (always works, no PATH needed)
+python -m cognithor                   # Same thing (always works, no PATH needed)
 
-python -m jarvis --lite            # Lite mode: qwen3:8b only (6 GB VRAM)
-python -m jarvis --no-cli          # Headless mode (API only)
+python -m cognithor --lite            # Lite mode: qwen3:8b only (6 GB VRAM)
+python -m cognithor --no-cli          # Headless mode (API only)
 JARVIS_HOME=~/my-cognithor cognithor  # Custom home directory
 ```
 
-> **Windows:** If `cognithor` is not recognized after `pip install`, use `python -m jarvis` instead — this always works regardless of PATH configuration. Alternatively, add Python's `Scripts` directory to your PATH (typically `%APPDATA%\Python\PythonXY\Scripts` or the `Scripts` folder inside your venv).
+> **Windows:** If `cognithor` is not recognized after `pip install`, use `python -m cognithor` instead — this always works regardless of PATH configuration. Alternatively, add Python's `Scripts` directory to your PATH (typically `%APPDATA%\Python\PythonXY\Scripts` or the `Scripts` folder inside your venv).
 
 **Option C: Flutter Command Center (Development)**
 
@@ -410,7 +410,7 @@ flutter run       # Desktop, or:
 flutter run -d chrome  # Web
 ```
 
-The Flutter Command Center connects to the Python backend on port 8741. Start the backend first (`python -m jarvis --no-cli`), then launch the Flutter app. The **Chat page** opens as the default start page — start talking to Jarvis immediately, or activate **Voice Mode** for hands-free conversation. The Sci-Fi aesthetic features dark translucent panels, neon accents, and GEPA pipeline visualization.
+The Flutter Command Center connects to the Python backend on port 8741. Start the backend first (`python -m cognithor --no-cli`), then launch the Flutter app. The **Chat page** opens as the default start page — start talking to Jarvis immediately, or activate **Voice Mode** for hands-free conversation. The Sci-Fi aesthetic features dark translucent panels, neon accents, and GEPA pipeline visualization.
 
 All configuration — agents, prompts, cron jobs, MCP servers, A2A settings — can be edited and saved through the dashboard. Changes persist to YAML files under `~/.jarvis/`.
 
@@ -690,13 +690,13 @@ Cognithor ships with a **JSON-based i18n language pack system** (since v0.33.0).
 ### How It Works
 
 ```python
-from jarvis.i18n import t, set_locale
+from cognithor.i18n import t, set_locale
 
 set_locale("en")  # or "de"
 print(t("error.timeout"))  # "The operation timed out..."
 ```
 
-- **Language packs**: JSON files in `src/jarvis/i18n/locales/` (e.g., `en.json`, `de.json`)
+- **Language packs**: JSON files in `src/cognithor/i18n/locales/` (e.g., `en.json`, `de.json`)
 - **Dot-notation keys**: `{"error": {"timeout": "..."}}` → `t("error.timeout")`
 - **Fallback chain**: Current locale → English → raw key
 - **SHA-256 integrity**: Optional `.sha256` sidecar files for community pack verification
@@ -719,9 +719,9 @@ print(t("error.timeout"))  # "The operation timed out..."
 
 ### Contributing Translations
 
-1. Copy `src/jarvis/i18n/locales/en.json` to `<locale>.json` (e.g., `zh.json`, `fr.json`)
+1. Copy `src/cognithor/i18n/locales/en.json` to `<locale>.json` (e.g., `zh.json`, `fr.json`)
 2. Translate all ~250 string values
-3. Run `python -c "from jarvis.i18n import generate_pack_hash; generate_pack_hash('<locale>')"`
+3. Run `python -c "from cognithor.i18n import generate_pack_hash; generate_pack_hash('<locale>')"`
 4. Submit a PR
 
 **Metrics:** ~201,000 LOC source · ~163,000 LOC tests · 13,000+ tests · 89% coverage · 0 lint errors · **Status: Beta**
@@ -904,10 +904,10 @@ Inspired by the [3rd-place ARC-AGI-3 Preview solution](https://arxiv.org/abs/251
 
 ### What's New in v0.67.0
 
-**ARC-AGI-3 Benchmark Integration** — Cognithor can now compete in the [ARC Prize 2026](https://arcprize.org/competitions/2026) ($2M+ prize pool). New `src/jarvis/arc/` module with 14 files implements a hybrid agent (algorithmic exploration + optional LLM planning + optional CNN prediction) for interactive reasoning benchmarks.
+**ARC-AGI-3 Benchmark Integration** — Cognithor can now compete in the [ARC Prize 2026](https://arcprize.org/competitions/2026) ($2M+ prize pool). New `src/cognithor/arc/` module with 14 files implements a hybrid agent (algorithmic exploration + optional LLM planning + optional CNN prediction) for interactive reasoning benchmarks.
 
 - **3 new MCP tools**: `arc_play`, `arc_status`, `arc_replay` — playable from any Cognithor channel
-- **CLI**: `python -m jarvis.arc --game ls20 [--mode benchmark|swarm]`
+- **CLI**: `python -m cognithor.arc --game ls20 [--mode benchmark|swarm]`
 - **105 new tests** covering all ARC subsystems
 - **Dependency groups**: `pip install cognithor[arc]` or `cognithor[arc-gpu]`
 
@@ -1100,7 +1100,7 @@ Inspired by the [3rd-place ARC-AGI-3 Preview solution](https://arxiv.org/abs/251
 - React UI deprecated, Flutter auto-download from GitHub release
 
 **Code Quality**
-- `ruff check src/jarvis/` — 0 errors (was 204)
+- `ruff check src/cognithor/` — 0 errors (was 204)
 - `flutter analyze` — 0 issues
 - All tests passing
 

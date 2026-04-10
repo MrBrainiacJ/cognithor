@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.multitenant import (
+from cognithor.core.multitenant import (
     EmergencyAction,
     EmergencyController,
     EmergencyEvent,

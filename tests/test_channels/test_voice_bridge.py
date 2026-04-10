@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.voice_bridge import AudioAccumulator, VoiceWebSocketBridge
+from cognithor.channels.voice_bridge import AudioAccumulator, VoiceWebSocketBridge
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -83,7 +83,7 @@ class TestBridgeInit:
         mock_model = MagicMock()
 
         with patch(
-            "jarvis.channels.voice_bridge.WhisperModel", return_value=mock_model, create=True
+            "cognithor.channels.voice_bridge.WhisperModel", return_value=mock_model, create=True
         ):
             # Manuell initialisieren ohne echten Import
             bridge._stt_engine = mock_model

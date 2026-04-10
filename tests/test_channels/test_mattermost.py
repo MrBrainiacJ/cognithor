@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.mattermost import MattermostChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.mattermost import MattermostChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 class TestMattermostChannel:

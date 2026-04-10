@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.core.cu_agent import (
+from cognithor.core.cu_agent import (
     CUAgentConfig,
     CUAgentExecutor,
     CUAgentResult,
@@ -16,7 +16,7 @@ from jarvis.core.cu_agent import (
     CUTaskDecomposer,
     CUTaskPlan,
 )
-from jarvis.models import ActionPlan, PlannedAction
+from cognithor.models import ActionPlan, PlannedAction
 
 
 class TestCUAgentConfig:
@@ -1256,7 +1256,7 @@ class TestRedditScenarioIntegration:
 
 class TestCUAllowedToolsConfig:
     def test_default_allowed_tools(self):
-        from jarvis.config import ToolsConfig
+        from cognithor.config import ToolsConfig
 
         cfg = ToolsConfig()
         assert "computer_screenshot" in cfg.computer_use_allowed_tools
@@ -1334,11 +1334,11 @@ class TestThinkStripExtractText:
         mcp._builtin_handlers = {}
         agent = CUAgentExecutor(planner, mcp, MagicMock(), MagicMock(), {})
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             mock_ss.return_value = ("b64data", 1920, 1080, 1.0)
-            with patch("jarvis.core.cu_agent.build_vision_message") as mock_bvm:
+            with patch("cognithor.core.cu_agent.build_vision_message") as mock_bvm:
                 mock_bvm.return_value = {"role": "user", "content": "test"}
-                with patch("jarvis.core.cu_agent.format_for_backend") as mock_fmt:
+                with patch("cognithor.core.cu_agent.format_for_backend") as mock_fmt:
                     mock_fmt.return_value = {"role": "user", "content": "test"}
                     text = await agent._extract_text_from_screen()
 
@@ -1519,15 +1519,15 @@ class TestOscillationDetection:
 
 class TestContentLimit:
     def test_extracted_content_capped(self):
-        from jarvis.core.cu_agent import _MAX_EXTRACTED_CONTENT
+        from cognithor.core.cu_agent import _MAX_EXTRACTED_CONTENT
 
         assert _MAX_EXTRACTED_CONTENT == 512_000
 
     @pytest.mark.asyncio
     async def test_extraction_stops_appending_at_limit(self):
         """When extracted_content exceeds limit, new text is not appended."""
-        from jarvis.core.cu_agent import _MAX_EXTRACTED_CONTENT
-        from jarvis.models import ActionPlan
+        from cognithor.core.cu_agent import _MAX_EXTRACTED_CONTENT
+        from cognithor.models import ActionPlan
 
         # Generate enough extract calls to exceed the limit
         # Each extraction returns ~10KB, limit is 512KB, so ~55 extractions to exceed

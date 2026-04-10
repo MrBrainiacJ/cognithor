@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import tempfile
 
-from jarvis.security.trust_resolver import TrustConfig, TrustResolver
+from cognithor.security.trust_resolver import TrustConfig, TrustResolver
 
 
 class TestTrustResolver:

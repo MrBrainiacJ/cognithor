@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.channels.slack import SlackChannel
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.channels.slack import SlackChannel
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 # ============================================================================
 # Fixtures

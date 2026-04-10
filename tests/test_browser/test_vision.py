@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.browser.vision import (
+from cognithor.browser.vision import (
     VisionAnalysisResult,
     VisionAnalyzer,
     VisionConfig,
@@ -369,7 +369,7 @@ class TestVisionPageContent:
 
 import json
 
-from jarvis.browser.vision import _parse_desktop_elements, _validate_elements
+from cognithor.browser.vision import _parse_desktop_elements, _validate_elements
 
 
 class TestParseDesktopElements:

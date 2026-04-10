@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.base import Channel, StatusType
+from cognithor.channels.base import Channel, StatusType
 
 
 class TestStatusType:
@@ -70,7 +70,7 @@ class TestCliChannelSendStatus:
 
     @pytest.mark.asyncio
     async def test_cli_send_status_prints(self) -> None:
-        from jarvis.channels.cli import CliChannel
+        from cognithor.channels.cli import CliChannel
 
         channel = CliChannel()
         channel._console = MagicMock()
@@ -87,7 +87,7 @@ class TestGatewayStatusCallback:
 
     @pytest.mark.asyncio
     async def test_callback_calls_channel_send_status(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gateway = Gateway.__new__(Gateway)
         gateway._channels = {}
@@ -103,7 +103,7 @@ class TestGatewayStatusCallback:
 
     @pytest.mark.asyncio
     async def test_callback_no_channel_no_error(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gateway = Gateway.__new__(Gateway)
         gateway._channels = {}
@@ -114,7 +114,7 @@ class TestGatewayStatusCallback:
 
     @pytest.mark.asyncio
     async def test_callback_handles_exception(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gateway = Gateway.__new__(Gateway)
         gateway._channels = {}
@@ -132,19 +132,19 @@ class TestDiscordMessageSplitting:
     """Tests für Discord Message-Splitting."""
 
     def test_short_message_no_split(self) -> None:
-        from jarvis.channels.discord import _split_discord_message
+        from cognithor.channels.discord import _split_discord_message
 
         result = _split_discord_message("Hello")
         assert result == ["Hello"]
 
     def test_empty_message(self) -> None:
-        from jarvis.channels.discord import _split_discord_message
+        from cognithor.channels.discord import _split_discord_message
 
         result = _split_discord_message("")
         assert result == [""]
 
     def test_long_message_splits(self) -> None:
-        from jarvis.channels.discord import _split_discord_message
+        from cognithor.channels.discord import _split_discord_message
 
         text = "A" * 3000
         result = _split_discord_message(text, limit=2000)
@@ -153,7 +153,7 @@ class TestDiscordMessageSplitting:
         assert "".join(result) == text
 
     def test_splits_at_newline(self) -> None:
-        from jarvis.channels.discord import _split_discord_message
+        from cognithor.channels.discord import _split_discord_message
 
         text = "A" * 1500 + "\n" + "B" * 1500
         result = _split_discord_message(text, limit=2000)
@@ -161,14 +161,14 @@ class TestDiscordMessageSplitting:
         assert result[0] == "A" * 1500
 
     def test_splits_at_space(self) -> None:
-        from jarvis.channels.discord import _split_discord_message
+        from cognithor.channels.discord import _split_discord_message
 
         text = " ".join(["word"] * 500)
         result = _split_discord_message(text, limit=2000)
         assert all(len(c) <= 2000 for c in result)
 
     def test_three_way_split(self) -> None:
-        from jarvis.channels.discord import _split_discord_message
+        from cognithor.channels.discord import _split_discord_message
 
         text = "X" * 5000
         result = _split_discord_message(text, limit=2000)
@@ -179,7 +179,7 @@ class TestToolStatusMap:
     """Tests für die Tool-Status-Map im Gateway."""
 
     def test_common_tools_mapped(self) -> None:
-        from jarvis.gateway.gateway import _TOOL_STATUS_KEYS
+        from cognithor.gateway.gateway import _TOOL_STATUS_KEYS
 
         assert "web_search" in _TOOL_STATUS_KEYS
         assert "exec_command" in _TOOL_STATUS_KEYS
@@ -187,7 +187,7 @@ class TestToolStatusMap:
         assert len(_TOOL_STATUS_KEYS) >= 10
 
     def test_status_keys_are_i18n_keys(self) -> None:
-        from jarvis.gateway.gateway import _TOOL_STATUS_KEYS
+        from cognithor.gateway.gateway import _TOOL_STATUS_KEYS
 
         for tool, key in _TOOL_STATUS_KEYS.items():
             assert key.startswith("gateway.status_"), f"{tool}: '{key}'"
@@ -197,7 +197,7 @@ class TestExecutorStatusCallback:
     """Tests für Executor set_status_callback."""
 
     def test_set_status_callback(self) -> None:
-        from jarvis.core.executor import Executor
+        from cognithor.core.executor import Executor
 
         cfg = MagicMock()
         cfg.executor = None

@@ -23,7 +23,7 @@ class TestParseArgs:
     def test_no_args_defaults(self) -> None:
         """Ohne Argumente: alle Defaults."""
         with patch("sys.argv", ["jarvis"]):
-            from jarvis.__main__ import parse_args
+            from cognithor.__main__ import parse_args
 
             args = parse_args()
         assert args.config is None
@@ -34,7 +34,7 @@ class TestParseArgs:
         """--config setzt den Pfad."""
         cfg_path = str(tmp_path / "custom.yaml")
         with patch("sys.argv", ["jarvis", "--config", cfg_path]):
-            from jarvis.__main__ import parse_args
+            from cognithor.__main__ import parse_args
 
             args = parse_args()
         assert args.config == Path(cfg_path)
@@ -42,7 +42,7 @@ class TestParseArgs:
     def test_log_level_debug(self) -> None:
         """--log-level DEBUG."""
         with patch("sys.argv", ["jarvis", "--log-level", "DEBUG"]):
-            from jarvis.__main__ import parse_args
+            from cognithor.__main__ import parse_args
 
             args = parse_args()
         assert args.log_level == "DEBUG"
@@ -51,14 +51,14 @@ class TestParseArgs:
         """Ungültiger Log-Level wird abgelehnt."""
         with patch("sys.argv", ["jarvis", "--log-level", "INVALID"]):
             with pytest.raises(SystemExit):
-                from jarvis.__main__ import parse_args
+                from cognithor.__main__ import parse_args
 
                 parse_args()
 
     def test_init_only_flag(self) -> None:
         """--init-only Flag."""
         with patch("sys.argv", ["jarvis", "--init-only"]):
-            from jarvis.__main__ import parse_args
+            from cognithor.__main__ import parse_args
 
             args = parse_args()
         assert args.init_only is True
@@ -67,7 +67,7 @@ class TestParseArgs:
         """--version zeigt Version und beendet."""
         with patch("sys.argv", ["jarvis", "--version"]):
             with pytest.raises(SystemExit) as exc_info:
-                from jarvis.__main__ import parse_args
+                from cognithor.__main__ import parse_args
 
                 parse_args()
             assert exc_info.value.code == 0
@@ -78,7 +78,7 @@ class TestParseArgs:
         with patch(
             "sys.argv", ["jarvis", "--config", cfg, "--log-level", "WARNING", "--init-only"]
         ):
-            from jarvis.__main__ import parse_args
+            from cognithor.__main__ import parse_args
 
             args = parse_args()
         assert args.config == Path(cfg)
@@ -98,21 +98,21 @@ class TestMainInitOnly:
         config_file = jarvis_home / "config.yaml"
 
         with patch("sys.argv", ["jarvis", "--init-only", "--config", str(config_file)]):
-            from jarvis.__main__ import main
-            from jarvis.config import JarvisConfig
+            from cognithor.__main__ import main
+            from cognithor.config import JarvisConfig
 
             mock_config = JarvisConfig(jarvis_home=jarvis_home)
 
             with (
-                patch("jarvis.config.load_config", return_value=mock_config),
+                patch("cognithor.config.load_config", return_value=mock_config),
                 patch(
-                    "jarvis.config.ensure_directory_structure",
+                    "cognithor.config.ensure_directory_structure",
                     return_value=[
                         str(jarvis_home / "logs"),
                         str(jarvis_home / "memory"),
                     ],
                 ) as mock_ensure,
-                patch("jarvis.utils.logging.setup_logging"),
+                patch("cognithor.utils.logging.setup_logging"),
             ):
                 main()
 
@@ -123,17 +123,17 @@ class TestMainInitOnly:
         jarvis_home = tmp_path / ".jarvis_test"
 
         with patch("sys.argv", ["jarvis", "--init-only"]):
-            from jarvis.__main__ import main
-            from jarvis.config import JarvisConfig
+            from cognithor.__main__ import main
+            from cognithor.config import JarvisConfig
 
             mock_config = JarvisConfig(jarvis_home=jarvis_home)
             mock_logger = MagicMock()
 
             with (
-                patch("jarvis.config.load_config", return_value=mock_config),
-                patch("jarvis.config.ensure_directory_structure", return_value=["path1", "path2"]),
-                patch("jarvis.utils.logging.setup_logging"),
-                patch("jarvis.utils.logging.get_logger", return_value=mock_logger),
+                patch("cognithor.config.load_config", return_value=mock_config),
+                patch("cognithor.config.ensure_directory_structure", return_value=["path1", "path2"]),
+                patch("cognithor.utils.logging.setup_logging"),
+                patch("cognithor.utils.logging.get_logger", return_value=mock_logger),
             ):
                 main()
 
@@ -153,15 +153,15 @@ class TestMainStartup:
         jarvis_home = tmp_path / ".jarvis_test"
 
         with patch("sys.argv", ["jarvis"]):
-            from jarvis.__main__ import main
-            from jarvis.config import JarvisConfig
+            from cognithor.__main__ import main
+            from cognithor.config import JarvisConfig
 
             mock_config = JarvisConfig(jarvis_home=jarvis_home)
 
             with (
-                patch("jarvis.config.load_config", return_value=mock_config),
-                patch("jarvis.config.ensure_directory_structure", return_value=[]),
-                patch("jarvis.utils.logging.setup_logging"),
+                patch("cognithor.config.load_config", return_value=mock_config),
+                patch("cognithor.config.ensure_directory_structure", return_value=[]),
+                patch("cognithor.utils.logging.setup_logging"),
                 patch("asyncio.run"),
             ):
                 main()
@@ -176,15 +176,15 @@ class TestMainStartup:
         jarvis_home = tmp_path / ".jarvis_test"
 
         with patch("sys.argv", ["jarvis"]):
-            from jarvis.__main__ import main
-            from jarvis.config import JarvisConfig
+            from cognithor.__main__ import main
+            from cognithor.config import JarvisConfig
 
             mock_config = JarvisConfig(jarvis_home=jarvis_home)
 
             with (
-                patch("jarvis.config.load_config", return_value=mock_config),
-                patch("jarvis.config.ensure_directory_structure", return_value=[]),
-                patch("jarvis.utils.logging.setup_logging"),
+                patch("cognithor.config.load_config", return_value=mock_config),
+                patch("cognithor.config.ensure_directory_structure", return_value=[]),
+                patch("cognithor.utils.logging.setup_logging"),
                 patch("asyncio.run") as mock_asyncio_run,
             ):
                 main()
@@ -196,17 +196,17 @@ class TestMainStartup:
         jarvis_home = tmp_path / ".jarvis_test"
 
         with patch("sys.argv", ["jarvis"]):
-            from jarvis.__main__ import main
-            from jarvis.config import JarvisConfig
+            from cognithor.__main__ import main
+            from cognithor.config import JarvisConfig
 
             mock_config = JarvisConfig(jarvis_home=jarvis_home)
             mock_logger = MagicMock()
 
             with (
-                patch("jarvis.config.load_config", return_value=mock_config),
-                patch("jarvis.config.ensure_directory_structure", return_value=[]),
-                patch("jarvis.utils.logging.setup_logging"),
-                patch("jarvis.utils.logging.get_logger", return_value=mock_logger),
+                patch("cognithor.config.load_config", return_value=mock_config),
+                patch("cognithor.config.ensure_directory_structure", return_value=[]),
+                patch("cognithor.utils.logging.setup_logging"),
+                patch("cognithor.utils.logging.get_logger", return_value=mock_logger),
                 patch("asyncio.run", side_effect=KeyboardInterrupt),
             ):
                 main()  # Sollte NICHT crashen
@@ -220,15 +220,15 @@ class TestMainStartup:
         jarvis_home = tmp_path / ".jarvis_test"
 
         with patch("sys.argv", ["jarvis", "--log-level", "DEBUG", "--init-only"]):
-            from jarvis.__main__ import main
-            from jarvis.config import JarvisConfig
+            from cognithor.__main__ import main
+            from cognithor.config import JarvisConfig
 
             mock_config = JarvisConfig(jarvis_home=jarvis_home)
 
             with (
-                patch("jarvis.config.load_config", return_value=mock_config),
-                patch("jarvis.config.ensure_directory_structure", return_value=[]),
-                patch("jarvis.utils.logging.setup_logging") as mock_setup_log,
+                patch("cognithor.config.load_config", return_value=mock_config),
+                patch("cognithor.config.ensure_directory_structure", return_value=[]),
+                patch("cognithor.utils.logging.setup_logging") as mock_setup_log,
             ):
                 main()
 
@@ -261,7 +261,7 @@ class TestVersion:
     def test_version_matches_config(self) -> None:
         """Config.version stimmt mit __version__ überein."""
         from jarvis import __version__
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         cfg = JarvisConfig()
         assert cfg.version == __version__

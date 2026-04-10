@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.memory.embeddings import EmbeddingClient, EmbeddingResult, cosine_similarity
+from cognithor.memory.embeddings import EmbeddingClient, EmbeddingResult, cosine_similarity
 
 
 class TestCosineSimilarity:

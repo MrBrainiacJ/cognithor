@@ -18,8 +18,8 @@ Neues Modul `mcp/background_tasks.py` mit `BackgroundProcessManager` + `ProcessM
 
 **BackgroundProcessManager:**
 - Startet Shell-Befehle als detached Subprocess
-- Schreibt stdout+stderr in Log-Datei (`~/.jarvis/workspace/background_logs/{job_id}.log`)
-- Speichert Job-Metadaten in SQLite (`~/.jarvis/background_jobs.db`)
+- Schreibt stdout+stderr in Log-Datei (`~/.cognithor/workspace/background_logs/{job_id}.log`)
+- Speichert Job-Metadaten in SQLite (`~/.cognithor/background_jobs.db`)
 - Verwaltet Lifecycle: running -> completed | failed | killed | timeout
 
 **ProcessMonitor (Hybrid-Ansatz):**

@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.voice import (
+from cognithor.channels.voice import (
     STTBackend,
     STTEngine,
     TTSBackend,
@@ -27,7 +27,7 @@ from jarvis.channels.voice import (
     VoiceChannel,
     VoiceConfig,
 )
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 def _make_pcm_silence(duration_ms: int = 100, sample_rate: int = 16000) -> bytes:
@@ -192,7 +192,7 @@ class TestTTSEngineAdvanced:
         )
         engine = TTSEngine(config)
 
-        with patch("jarvis.channels.voice.TTSEngine._load_elevenlabs", new_callable=AsyncMock):
+        with patch("cognithor.channels.voice.TTSEngine._load_elevenlabs", new_callable=AsyncMock):
             await engine.load()
 
     @pytest.mark.asyncio
@@ -442,7 +442,7 @@ class TestVoiceChannelAdvanced:
                 ch._audio_buffer.add_chunk(_make_pcm_tone(700))
             await _original_sleep(0)  # yield control
 
-        with patch("jarvis.channels.voice.asyncio.sleep", side_effect=_fake_sleep):
+        with patch("cognithor.channels.voice.asyncio.sleep", side_effect=_fake_sleep):
             result = await ch.listen_once(timeout=5.0)
         assert result == "Hello World"
         assert not ch.is_listening

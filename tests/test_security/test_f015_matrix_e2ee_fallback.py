@@ -40,7 +40,7 @@ sys.modules.setdefault("faster_whisper", MagicMock())
 
 from typing import TYPE_CHECKING
 
-from jarvis.channels.matrix import MatrixChannel
+from cognithor.channels.matrix import MatrixChannel
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -84,7 +84,7 @@ class TestOlmNotAvailable:
         """Warnung muss geloggt werden wenn olm fehlt."""
         ch = _make_ch(tmp_path)
 
-        with patch("jarvis.channels.matrix.logger") as mock_logger:
+        with patch("cognithor.channels.matrix.logger") as mock_logger:
             with patch.dict("sys.modules", {"olm": None}):
                 with patch.object(ch, "_sync_loop", new_callable=AsyncMock):
                     await ch.start(AsyncMock())
@@ -101,7 +101,7 @@ class TestOlmNotAvailable:
         """Bei require_e2ee=True und fehlendem olm: Start abgebrochen."""
         ch = _make_ch(tmp_path, require_e2ee=True)
 
-        with patch("jarvis.channels.matrix.logger") as mock_logger:
+        with patch("cognithor.channels.matrix.logger") as mock_logger:
             with patch.dict("sys.modules", {"olm": None}):
                 with patch.object(ch, "_sync_loop", new_callable=AsyncMock):
                     await ch.start(AsyncMock())
@@ -136,7 +136,7 @@ class TestOlmAvailable:
         ch = _make_ch(tmp_path)
 
         fake_olm = MagicMock()
-        with patch("jarvis.channels.matrix.logger") as mock_logger:
+        with patch("cognithor.channels.matrix.logger") as mock_logger:
             with patch.dict("sys.modules", {"olm": fake_olm}):
                 with patch.object(ch, "_sync_loop", new_callable=AsyncMock):
                     await ch.start(AsyncMock())

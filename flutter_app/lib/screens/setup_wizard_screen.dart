@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/glass_panel.dart';
-import 'package:jarvis_ui/widgets/gradient_background.dart';
-import 'package:jarvis_ui/widgets/neon_card.dart';
-import 'package:jarvis_ui/screens/main_shell.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/glass_panel.dart';
+import 'package:cognithor_ui/widgets/gradient_background.dart';
+import 'package:cognithor_ui/widgets/neon_card.dart';
+import 'package:cognithor_ui/screens/main_shell.dart';
 
 /// First-run setup wizard -- 3-step onboarding shown once on initial launch.
 ///

@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.models import (
+from cognithor.config import JarvisConfig
+from cognithor.models import (
     AuditEntry,
     GateStatus,
     PlannedAction,
@@ -40,9 +40,9 @@ class TestGatekeeperParamMatching:
 
     @pytest.fixture()
     def gatekeeper(self, tmp_path: Path):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -168,9 +168,9 @@ class TestGatekeeperCommandCheck:
 
     @pytest.fixture()
     def gatekeeper(self, tmp_path: Path):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -208,9 +208,9 @@ class TestGatekeeperCredentialScan:
 
     @pytest.fixture()
     def gatekeeper(self, tmp_path: Path):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -234,9 +234,9 @@ class TestGatekeeperPolicyLoading:
 
     @pytest.fixture()
     def gatekeeper_with_policy(self, tmp_path: Path):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
         # Custom Policy YAML erstellen
@@ -294,9 +294,9 @@ rules:
 
     def test_invalid_policy_yaml(self, tmp_path: Path):
         """Ungültige YAML wird übersprungen."""
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
         policy_dir = config.policies_dir
@@ -313,9 +313,9 @@ class TestGatekeeperEvaluate:
 
     @pytest.fixture()
     def gatekeeper(self, tmp_path: Path):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -380,7 +380,7 @@ class TestAuditQuery:
 
     @pytest.fixture()
     def audit(self, tmp_path: Path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         log_dir = tmp_path / "audit_logs"
         return AuditTrail(log_dir)
@@ -469,7 +469,7 @@ class TestAuditLogEvent:
 
     @pytest.fixture()
     def audit(self, tmp_path: Path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         log_dir = tmp_path / "audit_logs"
         return AuditTrail(log_dir)
@@ -516,7 +516,7 @@ class TestAuditChainVerify:
 
     @pytest.fixture()
     def audit(self, tmp_path: Path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         log_dir = tmp_path / "audit_logs"
         return AuditTrail(log_dir)
@@ -587,7 +587,7 @@ class TestAuditRecord:
 
     @pytest.fixture()
     def audit(self, tmp_path: Path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         log_dir = tmp_path / "audit_logs"
         return AuditTrail(log_dir)
@@ -661,7 +661,7 @@ class TestMCPClientConnections:
 
     @pytest.fixture()
     def mcp(self, tmp_path: Path):
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         config = JarvisConfig(jarvis_home=tmp_path)
         return JarvisMCPClient(config)
@@ -669,8 +669,8 @@ class TestMCPClientConnections:
     @pytest.mark.asyncio()
     async def test_call_tool_server_not_connected(self, mcp):
         """Tool auf nicht-verbundenem Server gibt Fehler."""
-        from jarvis.mcp.client import ServerConnection
-        from jarvis.models import MCPServerConfig, MCPToolInfo
+        from cognithor.mcp.client import ServerConnection
+        from cognithor.models import MCPServerConfig, MCPToolInfo
 
         # Server registriert aber nicht verbunden
         server_config = MCPServerConfig(command="echo", args=["test"])
@@ -708,7 +708,7 @@ class TestMCPClientConnections:
     @pytest.mark.asyncio()
     async def test_get_tool_schemas_mixed(self, mcp):
         """Tool-Schemas enthält Builtin + registrierte MCP-Tools."""
-        from jarvis.models import MCPToolInfo
+        from cognithor.models import MCPToolInfo
 
         mcp.register_builtin_handler(
             "builtin_1",
@@ -730,8 +730,8 @@ class TestMCPClientConnections:
     @pytest.mark.asyncio()
     async def test_disconnect_with_active_servers(self, mcp):
         """disconnect_all schließt aktive Server-Verbindungen."""
-        from jarvis.mcp.client import ServerConnection
-        from jarvis.models import MCPServerConfig
+        from cognithor.mcp.client import ServerConnection
+        from cognithor.models import MCPServerConfig
 
         mock_process = MagicMock()
         mock_process.terminate = MagicMock()

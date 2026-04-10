@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.memory.enhanced_retrieval import (
+from cognithor.memory.enhanced_retrieval import (
     CompressedEpisode,
     CorrectiveRAG,
     EnhancedSearchPipeline,
@@ -26,7 +26,7 @@ from jarvis.memory.enhanced_retrieval import (
     QueryDecomposer,
     reciprocal_rank_fusion,
 )
-from jarvis.models import Chunk, MemorySearchResult, MemoryTier
+from cognithor.models import Chunk, MemorySearchResult, MemoryTier
 
 # ============================================================================
 # Helpers

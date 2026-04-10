@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from jarvis.gateway.session_store import SessionStore
-from jarvis.models import Message, MessageRole, SessionContext
+from cognithor.gateway.session_store import SessionStore
+from cognithor.models import Message, MessageRole, SessionContext
 
 
 def test_export_session_json(tmp_path):

@@ -6,7 +6,7 @@
 # Nutzung:
 #   docker build -t jarvis .
 #   docker run -it --name jarvis \
-#     -e JARVIS_OLLAMA_BASE_URL=http://host.docker.internal:11434 \
+#     -e COGNITHOR_OLLAMA_BASE_URL=http://host.docker.internal:11434 \
 #     -v jarvis-data:/home/jarvis/.jarvis \
 #     jarvis
 #
@@ -63,9 +63,9 @@ VOLUME ["/home/jarvis/.jarvis"]
 # Environment
 ENV PYTHONPATH=/app/src \
     PYTHONUNBUFFERED=1 \
-    JARVIS_HOME=/home/jarvis/.jarvis \
-    JARVIS_LOGGING_LEVEL=INFO \
-    JARVIS_OLLAMA_BASE_URL=http://host.docker.internal:11434
+    COGNITHOR_HOME=/home/jarvis/.jarvis \
+    COGNITHOR_LOGGING_LEVEL=INFO \
+    COGNITHOR_OLLAMA_BASE_URL=http://host.docker.internal:11434
 
 # Health-Check
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \

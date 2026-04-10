@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/jarvis_confirmation_dialog.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/jarvis_confirmation_dialog.dart';
 
 /// Sidebar drawer showing past chat sessions grouped by folder.
 class ChatHistoryDrawer extends StatefulWidget {

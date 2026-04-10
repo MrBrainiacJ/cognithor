@@ -34,7 +34,7 @@ def _setup_app_with_mcp_file(mcp_data: dict) -> tuple:
     config_manager.config.mcp_config_file = Path(tmpfile.name)
     gateway = MagicMock()
 
-    from jarvis.channels.config_routes import create_config_routes
+    from cognithor.channels.config_routes import create_config_routes
 
     create_config_routes(app, config_manager, gateway=gateway)
     return app, Path(tmpfile.name)

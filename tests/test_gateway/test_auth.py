@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.gateway.auth import (
+from cognithor.gateway.auth import (
     AuthGateway,
 )
 

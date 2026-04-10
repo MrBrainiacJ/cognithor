@@ -12,9 +12,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.config_manager import ConfigManager
-from jarvis.core.workflows import (
+from cognithor.config import JarvisConfig
+from cognithor.config_manager import ConfigManager
+from cognithor.core.workflows import (
     TemplateLibrary,
     WorkflowEngine,
 )
@@ -73,7 +73,7 @@ class FakeRequest:
 
 @pytest.fixture
 def tmp_home(tmp_path: Path) -> Path:
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     home.mkdir(parents=True, exist_ok=True)
     return home
 
@@ -114,7 +114,7 @@ def gateway(workflow_engine: WorkflowEngine, template_library: TemplateLibrary) 
 
 @pytest.fixture
 def registered_app(app: FakeApp, config_manager: ConfigManager, gateway: MagicMock) -> FakeApp:
-    from jarvis.channels.config_routes import create_config_routes
+    from cognithor.channels.config_routes import create_config_routes
 
     create_config_routes(app, config_manager, gateway=gateway)
     return app
@@ -167,7 +167,7 @@ class TestTemplateEndpoints:
         gw._workflow_engine = None
         gw._template_library = None
         gw._dag_workflow_engine = None
-        from jarvis.channels.config_routes import create_config_routes
+        from cognithor.channels.config_routes import create_config_routes
 
         create_config_routes(app, config_manager, gateway=gw)
         handler = app.routes["GET /api/v1/workflows/templates"]
@@ -271,7 +271,7 @@ class TestDagRunEndpoints:
         gw._template_library = None
         gw._dag_workflow_engine = dag_engine
 
-        from jarvis.channels.config_routes import create_config_routes
+        from cognithor.channels.config_routes import create_config_routes
 
         create_config_routes(app, config_manager, gateway=gw)
 
@@ -305,7 +305,7 @@ class TestDagRunEndpoints:
         gw._template_library = None
         gw._dag_workflow_engine = dag_engine
 
-        from jarvis.channels.config_routes import create_config_routes
+        from cognithor.channels.config_routes import create_config_routes
 
         create_config_routes(app, config_manager, gateway=gw)
 
@@ -359,7 +359,7 @@ class TestStatsEndpoint:
         gw._template_library = TemplateLibrary(load_builtins=True)
         gw._dag_workflow_engine = dag_engine
 
-        from jarvis.channels.config_routes import create_config_routes
+        from cognithor.channels.config_routes import create_config_routes
 
         create_config_routes(app, config_manager, gateway=gw)
 

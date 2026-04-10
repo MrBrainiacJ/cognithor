@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.mcp.media import (
+from cognithor.mcp.media import (
     MEDIA_TOOL_SCHEMAS,
     MediaPipeline,
     MediaResult,
@@ -295,7 +295,7 @@ class TestResizeImageCoverage:
         mock_img.height = 384
 
         with patch.dict("sys.modules", {}):
-            with patch("jarvis.mcp.media.MediaPipeline.resize_image") as mock_resize:
+            with patch("cognithor.mcp.media.MediaPipeline.resize_image") as mock_resize:
                 mock_resize.return_value = MediaResult(
                     success=True,
                     text="Bild skaliert auf 512x384: /out.png",
@@ -313,7 +313,7 @@ class TestResizeImageCoverage:
         mock_image_mod = MagicMock()
         mock_image_mod.open.side_effect = Exception("Corrupt image")
         with patch.dict("sys.modules", {"PIL": MagicMock(), "PIL.Image": mock_image_mod}):
-            with patch("jarvis.mcp.media.MediaPipeline.resize_image") as mock_resize:
+            with patch("cognithor.mcp.media.MediaPipeline.resize_image") as mock_resize:
                 mock_resize.return_value = MediaResult(
                     success=False,
                     error="Bildskalierung fehlgeschlagen: Corrupt image",
@@ -376,7 +376,7 @@ class TestGeneratePdfDocx:
         out = workspace / "out.pdf"
         mock_pdf = MagicMock()
         MagicMock(return_value=mock_pdf)
-        with patch("jarvis.mcp.media.MediaPipeline._generate_pdf") as mock_gen:
+        with patch("cognithor.mcp.media.MediaPipeline._generate_pdf") as mock_gen:
             mock_gen.return_value = None
             pipeline._generate_pdf = mock_gen
             pipeline._generate_pdf(out, "Inhalt\n\nAbsatz2", "Titel", "Autor")
@@ -384,7 +384,7 @@ class TestGeneratePdfDocx:
 
     def test_generate_docx_success(self, pipeline: MediaPipeline, workspace: Path) -> None:
         out = workspace / "out.docx"
-        with patch("jarvis.mcp.media.MediaPipeline._generate_docx") as mock_gen:
+        with patch("cognithor.mcp.media.MediaPipeline._generate_docx") as mock_gen:
             mock_gen.return_value = None
             pipeline._generate_docx = mock_gen
             pipeline._generate_docx(out, "Inhalt", "Titel", "Autor")

@@ -13,19 +13,19 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.audit import AuditCategory, AuditLogger
-from jarvis.core.agent_router import AgentProfile, AgentRouter
-from jarvis.core.executor import Executor
-from jarvis.cron.engine import CronEngine
-from jarvis.models import GateDecision, GateStatus, PlannedAction
-from jarvis.proactive import (
+from cognithor.audit import AuditCategory, AuditLogger
+from cognithor.core.agent_router import AgentProfile, AgentRouter
+from cognithor.core.executor import Executor
+from cognithor.cron.engine import CronEngine
+from cognithor.models import GateDecision, GateStatus, PlannedAction
+from cognithor.proactive import (
     ApprovalMode,
     EventType,
     HeartbeatScheduler,
     ProactiveTask,
     TaskStatus,
 )
-from jarvis.security.monitor import RuntimeMonitor
+from cognithor.security.monitor import RuntimeMonitor
 
 # ============================================================================
 # Fixtures

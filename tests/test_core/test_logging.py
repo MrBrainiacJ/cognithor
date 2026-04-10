@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from jarvis.utils.logging import (
+from cognithor.utils.logging import (
     bind_context,
     clear_context,
     get_logger,
@@ -49,7 +49,7 @@ class TestLoggingSetup:
         log.info("file_event", path=str(tmp_path))
 
         # Log-Datei sollte existieren
-        log_file = log_dir / "jarvis.jsonl"
+        log_file = log_dir / "cognithor.jsonl"
         assert log_file.exists()
 
 

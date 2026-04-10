@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:jarvis_ui/providers/chat_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/glass_panel.dart';
+import 'package:cognithor_ui/providers/chat_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/glass_panel.dart';
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({

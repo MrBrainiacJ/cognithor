@@ -17,19 +17,19 @@ from unittest.mock import MagicMock
 class TestChannelsWiring:
     def test_slack_importable_from_channels(self) -> None:
         """SlackChannel kann aus jarvis.channels importiert werden."""
-        from jarvis.channels import SlackChannel
+        from cognithor.channels import SlackChannel
 
         assert SlackChannel is not None
 
     def test_discord_importable_from_channels(self) -> None:
         """DiscordChannel kann aus jarvis.channels importiert werden."""
-        from jarvis.channels import DiscordChannel
+        from cognithor.channels import DiscordChannel
 
         assert DiscordChannel is not None
 
     def test_slack_channel_is_channel(self) -> None:
         """SlackChannel implementiert das Channel-Interface."""
-        from jarvis.channels import Channel, SlackChannel
+        from cognithor.channels import Channel, SlackChannel
 
         ch = SlackChannel(token="test")
         assert isinstance(ch, Channel)
@@ -37,7 +37,7 @@ class TestChannelsWiring:
 
     def test_discord_channel_is_channel(self) -> None:
         """DiscordChannel implementiert das Channel-Interface."""
-        from jarvis.channels import Channel, DiscordChannel
+        from cognithor.channels import Channel, DiscordChannel
 
         ch = DiscordChannel(token="test", channel_id=123)
         assert isinstance(ch, Channel)
@@ -45,7 +45,7 @@ class TestChannelsWiring:
 
     def test_slack_bidirectional_property(self) -> None:
         """SlackChannel hat is_bidirectional Property."""
-        from jarvis.channels import SlackChannel
+        from cognithor.channels import SlackChannel
 
         ch = SlackChannel(token="t", app_token="xapp-test")
         assert hasattr(ch, "is_bidirectional")
@@ -53,7 +53,7 @@ class TestChannelsWiring:
 
     def test_discord_bidirectional_property(self) -> None:
         """DiscordChannel hat is_bidirectional Property."""
-        from jarvis.channels import DiscordChannel
+        from cognithor.channels import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=1)
         assert hasattr(ch, "is_bidirectional")
@@ -67,8 +67,8 @@ class TestChannelsWiring:
 class TestSkillExchangeCirclesWiring:
     def test_exchange_has_circles_property(self, tmp_path: Path) -> None:
         """SkillExchange hat circles-Property → CircleManager."""
-        from jarvis.skills.circles import CircleManager
-        from jarvis.skills.p2p import SkillExchange
+        from cognithor.skills.circles import CircleManager
+        from cognithor.skills.p2p import SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         assert hasattr(exchange, "circles")
@@ -76,7 +76,7 @@ class TestSkillExchangeCirclesWiring:
 
     def test_exchange_circles_can_create_circle(self, tmp_path: Path) -> None:
         """CircleManager über SkillExchange ist voll funktionsfähig."""
-        from jarvis.skills.p2p import SkillExchange
+        from cognithor.skills.p2p import SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         circle = exchange.circles.create_circle(
@@ -89,7 +89,7 @@ class TestSkillExchangeCirclesWiring:
 
     def test_exchange_stats_include_circles(self, tmp_path: Path) -> None:
         """stats() enthält Circle-Daten."""
-        from jarvis.skills.p2p import SkillExchange
+        from cognithor.skills.p2p import SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         exchange.circles.create_circle("C1", "p1")
@@ -103,7 +103,7 @@ class TestSkillExchangeCirclesWiring:
 
     def test_exchange_search_with_trust_filter(self, tmp_path: Path) -> None:
         """search(trust_filter=True) nutzt CircleManager."""
-        from jarvis.skills.p2p import PeerNode, SkillExchange
+        from cognithor.skills.p2p import PeerNode, SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         exchange.set_identity(PeerNode(peer_id="me", display_name="Alex"))
@@ -121,13 +121,13 @@ class TestSkillExchangeCirclesWiring:
 class TestSkillsPackageExport:
     def test_circle_manager_from_skills(self) -> None:
         """CircleManager kann aus jarvis.skills importiert werden."""
-        from jarvis.skills import CircleManager
+        from cognithor.skills import CircleManager
 
         assert CircleManager is not None
 
     def test_trusted_circle_from_skills(self) -> None:
         """TrustedCircle kann aus jarvis.skills importiert werden."""
-        from jarvis.skills import TrustedCircle
+        from cognithor.skills import TrustedCircle
 
         assert TrustedCircle is not None
 
@@ -140,7 +140,7 @@ class TestSkillsPackageExport:
 class TestConfigAPIWiring:
     def test_config_api_importable(self) -> None:
         """config_api Module sind importierbar."""
-        from jarvis.gateway.config_api import (
+        from cognithor.gateway.config_api import (
             AgentProfileDTO,
             ConfigManager,
         )
@@ -150,7 +150,7 @@ class TestConfigAPIWiring:
 
     def test_config_manager_works_with_mock_config(self) -> None:
         """ConfigManager akzeptiert eine Config-Instanz."""
-        from jarvis.gateway.config_api import ConfigManager
+        from cognithor.gateway.config_api import ConfigManager
 
         config = MagicMock()
         config.version = "1.0"
@@ -181,7 +181,7 @@ class TestConfigAPIWiring:
 class TestConfigRoutesWiring:
     def test_config_routes_importable(self) -> None:
         """config_routes Modul ist importierbar."""
-        from jarvis.channels.config_routes import create_config_routes
+        from cognithor.channels.config_routes import create_config_routes
 
         assert create_config_routes is not None
 
@@ -189,7 +189,7 @@ class TestConfigRoutesWiring:
         """config_routes nutzt die neue config_api."""
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         # Prüfe, dass die neuen Endpoints referenziert werden
@@ -201,15 +201,15 @@ class TestConfigRoutesWiring:
     def test_config_routes_imports_config_api(self) -> None:
         """config_routes kann config_api importieren."""
         # Simuliert was config_routes intern tut
-        from jarvis.gateway.config_api import BindingRuleDTO
-        from jarvis.gateway.config_api import ConfigManager as CfgMgr
+        from cognithor.gateway.config_api import BindingRuleDTO
+        from cognithor.gateway.config_api import ConfigManager as CfgMgr
 
         assert CfgMgr is not None
         assert BindingRuleDTO is not None
 
     def test_config_routes_imports_circles(self) -> None:
         """config_routes kann circles importieren."""
-        from jarvis.skills.circles import CircleManager
+        from cognithor.skills.circles import CircleManager
 
         assert CircleManager is not None
 
@@ -222,8 +222,8 @@ class TestConfigRoutesWiring:
 class TestFullWiringChain:
     def test_circle_through_exchange_through_stats(self, tmp_path: Path) -> None:
         """Komplette Kette: Circle → Exchange → Stats → Sichtbar."""
-        from jarvis.skills.circles import CircleRole, ReviewVerdict
-        from jarvis.skills.p2p import PeerNode, SkillExchange
+        from cognithor.skills.circles import CircleRole, ReviewVerdict
+        from cognithor.skills.p2p import PeerNode, SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         exchange.set_identity(PeerNode(peer_id="alex", display_name="Alex"))
@@ -256,7 +256,7 @@ class TestFullWiringChain:
 
     def test_config_overview_through_config_manager(self) -> None:
         """Komplette Kette: JarvisConfig → ConfigManager → Overview."""
-        from jarvis.gateway.config_api import AgentProfileDTO, BindingRuleDTO, ConfigManager
+        from cognithor.gateway.config_api import AgentProfileDTO, BindingRuleDTO, ConfigManager
 
         config = MagicMock()
         config.version = "0.9"
@@ -310,7 +310,7 @@ class TestFullWiringChain:
 
 class TestMonitoringWiring:
     def test_monitoring_hub_importable(self) -> None:
-        from jarvis.gateway.monitoring import MonitoringHub
+        from cognithor.gateway.monitoring import MonitoringHub
 
         hub = MonitoringHub()
         assert hub.events is not None
@@ -319,14 +319,14 @@ class TestMonitoringWiring:
         assert hub.heartbeat is not None
 
     def test_gateway_has_monitoring_hub(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway()
         assert hasattr(gw, "_monitoring_hub")
         # MonitoringHub is deferred (Enterprise) — attribute exists but may be None
 
     def test_monitoring_emit_creates_event_and_metric(self) -> None:
-        from jarvis.gateway.monitoring import EventType, MonitoringHub
+        from cognithor.gateway.monitoring import EventType, MonitoringHub
 
         hub = MonitoringHub()
         hub.emit(EventType.MESSAGE_RECEIVED, source="test")
@@ -334,7 +334,7 @@ class TestMonitoringWiring:
         assert hub.metrics.get_counter("events.message_received") == 1.0
 
     def test_dashboard_snapshot_structure(self) -> None:
-        from jarvis.gateway.monitoring import MonitoringHub
+        from cognithor.gateway.monitoring import MonitoringHub
 
         hub = MonitoringHub()
         snap = hub.dashboard_snapshot()
@@ -346,7 +346,7 @@ class TestMonitoringWiring:
     def test_config_routes_has_monitoring_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "monitoring_dashboard" in source
@@ -362,7 +362,7 @@ class TestMonitoringWiring:
 
 class TestIsolationWiring:
     def test_isolation_classes_importable(self) -> None:
-        from jarvis.core.isolation import (
+        from cognithor.core.isolation import (
             MultiUserIsolation,
             WorkspaceGuard,
         )
@@ -371,27 +371,27 @@ class TestIsolationWiring:
         assert MultiUserIsolation is not None
 
     def test_isolation_exported_from_core(self) -> None:
-        from jarvis.core import MultiUserIsolation, WorkspaceGuard
+        from cognithor.core import MultiUserIsolation, WorkspaceGuard
 
         assert WorkspaceGuard is not None
         assert MultiUserIsolation is not None
 
     def test_gateway_has_isolation(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway()
         assert hasattr(gw, "_isolation")
         # MultiUserIsolation is Enterprise-deferred — attribute exists but may be None
 
     def test_multiuser_isolation_creates_scopes(self) -> None:
-        from jarvis.core.isolation import MultiUserIsolation
+        from cognithor.core.isolation import MultiUserIsolation
 
         iso = MultiUserIsolation()
         scope = iso.get_or_create_scope("user_alex", "agent_coder")
         assert scope.scope_key == "user_alex:agent_coder"
 
     def test_workspace_guard_enforces_paths(self, tmp_path: Path) -> None:
-        from jarvis.core.isolation import WorkspaceGuard
+        from cognithor.core.isolation import WorkspaceGuard
 
         guard = WorkspaceGuard(workspace_root=tmp_path)
         policy = guard.register_agent("agent_1")
@@ -404,7 +404,7 @@ class TestIsolationWiring:
     def test_config_routes_has_isolation_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "isolation_stats" in source
@@ -419,18 +419,18 @@ class TestIsolationWiring:
 
 class TestMarketplaceWiring:
     def test_marketplace_importable(self) -> None:
-        from jarvis.skills.marketplace import SkillMarketplace
+        from cognithor.skills.marketplace import SkillMarketplace
 
         mp = SkillMarketplace()
         assert mp is not None
 
     def test_marketplace_exported_from_skills(self) -> None:
-        from jarvis.skills import SkillMarketplace
+        from cognithor.skills import SkillMarketplace
 
         assert SkillMarketplace is not None
 
     def test_exchange_has_marketplace(self, tmp_path: Path) -> None:
-        from jarvis.skills.p2p import SkillExchange
+        from cognithor.skills.p2p import SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         assert hasattr(exchange, "marketplace")
@@ -439,7 +439,7 @@ class TestMarketplaceWiring:
     def test_config_routes_has_marketplace_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "marketplace_feed" in source
@@ -456,7 +456,7 @@ class TestMarketplaceWiring:
 
 class TestInteractiveWiring:
     def test_interactive_importable(self) -> None:
-        from jarvis.channels.interactive import (
+        from cognithor.channels.interactive import (
             AdaptiveCard,
             SlackMessageBuilder,
         )
@@ -465,7 +465,7 @@ class TestInteractiveWiring:
         assert AdaptiveCard is not None
 
     def test_interactive_exported_from_channels(self) -> None:
-        from jarvis.channels import (
+        from cognithor.channels import (
             SlackMessageBuilder,
         )
 
@@ -474,7 +474,7 @@ class TestInteractiveWiring:
     def test_slack_imports_interactive(self) -> None:
         import inspect
 
-        from jarvis.channels import slack
+        from cognithor.channels import slack
 
         source = inspect.getsource(slack)
         assert "SlackMessageBuilder" in source
@@ -484,7 +484,7 @@ class TestInteractiveWiring:
     def test_discord_imports_interactive(self) -> None:
         import inspect
 
-        from jarvis.channels import discord
+        from cognithor.channels import discord
 
         source = inspect.getsource(discord)
         assert "DiscordMessageBuilder" in source
@@ -492,19 +492,19 @@ class TestInteractiveWiring:
         assert "ProgressTracker" in source
 
     def test_slack_has_send_rich_method(self) -> None:
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="test")
         assert hasattr(ch, "send_rich")
 
     def test_discord_has_send_rich_method(self) -> None:
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="test", channel_id=123)
         assert hasattr(ch, "send_rich")
 
     def test_adaptive_card_cross_platform(self) -> None:
-        from jarvis.channels.interactive import AdaptiveCard
+        from cognithor.channels.interactive import AdaptiveCard
 
         card = AdaptiveCard(title="Test", body="Inhalt")
         slack_output = card.to_slack()
@@ -521,20 +521,20 @@ class TestInteractiveWiring:
 
 class TestAuthWiring:
     def test_auth_importable(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         assert gw is not None
 
     def test_gateway_has_auth(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway()
         assert hasattr(gw, "_auth_gateway")
         # AuthGateway is Enterprise-deferred
 
     def test_sso_login_creates_sessions(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         result = gw.login("alex", ["coder", "researcher"])
@@ -543,7 +543,7 @@ class TestAuthWiring:
     def test_config_routes_has_auth_endpoint(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "auth_stats" in source
@@ -556,18 +556,18 @@ class TestAuthWiring:
 
 class TestAgentHeartbeatWiring:
     def test_agent_heartbeat_importable(self) -> None:
-        from jarvis.core.agent_heartbeat import AgentHeartbeatScheduler
+        from cognithor.core.agent_heartbeat import AgentHeartbeatScheduler
 
         sched = AgentHeartbeatScheduler()
         assert sched is not None
 
     def test_exported_from_core(self) -> None:
-        from jarvis.core import AgentHeartbeatScheduler
+        from cognithor.core import AgentHeartbeatScheduler
 
         assert AgentHeartbeatScheduler is not None
 
     def test_gateway_has_agent_heartbeat(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway()
         assert hasattr(gw, "_agent_heartbeat")
@@ -576,7 +576,7 @@ class TestAgentHeartbeatWiring:
     def test_config_routes_has_heartbeat_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "agent_heartbeat_dashboard" in source
@@ -590,18 +590,18 @@ class TestAgentHeartbeatWiring:
 
 class TestUpdaterWiring:
     def test_updater_importable(self) -> None:
-        from jarvis.skills.updater import SkillUpdater
+        from cognithor.skills.updater import SkillUpdater
 
         u = SkillUpdater()
         assert u is not None
 
     def test_exported_from_skills(self) -> None:
-        from jarvis.skills import SkillUpdater
+        from cognithor.skills import SkillUpdater
 
         assert SkillUpdater is not None
 
     def test_exchange_has_updater(self, tmp_path: Path) -> None:
-        from jarvis.skills.p2p import SkillExchange
+        from cognithor.skills.p2p import SkillExchange
 
         exchange = SkillExchange(skills_dir=tmp_path, require_signatures=False)
         assert hasattr(exchange, "updater")
@@ -610,7 +610,7 @@ class TestUpdaterWiring:
     def test_config_routes_has_updater_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "updater_stats" in source
@@ -626,7 +626,7 @@ class TestUpdaterWiring:
 
 class TestCommandsWiring:
     def test_commands_importable(self) -> None:
-        from jarvis.channels.commands import (
+        from cognithor.channels.commands import (
             CommandRegistry,
             FallbackRenderer,
             InteractionStore,
@@ -637,12 +637,12 @@ class TestCommandsWiring:
         assert InteractionStore is not None
 
     def test_exported_from_channels(self) -> None:
-        from jarvis.channels import CommandRegistry
+        from cognithor.channels import CommandRegistry
 
         assert CommandRegistry is not None
 
     def test_gateway_has_commands(self) -> None:
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway()
         assert hasattr(gw, "_command_registry")
@@ -652,7 +652,7 @@ class TestCommandsWiring:
     def test_config_routes_has_command_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "list_commands" in source
@@ -660,7 +660,7 @@ class TestCommandsWiring:
         assert "commands_discord" in source
 
     def test_default_commands_registered(self) -> None:
-        from jarvis.channels.commands import CommandRegistry
+        from cognithor.channels.commands import CommandRegistry
 
         reg = CommandRegistry()
         assert reg.command_count >= 7
@@ -676,13 +676,13 @@ class TestCommandsWiring:
 
 class TestWizardsRBACWiring:
     def test_wizards_importable(self) -> None:
-        from jarvis.gateway.wizards import WizardRegistry
+        from cognithor.gateway.wizards import WizardRegistry
 
         reg = WizardRegistry()
         assert reg.wizard_count == 3
 
     def test_rbac_importable(self) -> None:
-        from jarvis.gateway.wizards import RBACManager, UserRole
+        from cognithor.gateway.wizards import RBACManager, UserRole
 
         rbac = RBACManager()
         rbac.add_user("admin", "Admin", UserRole.ADMIN)
@@ -691,7 +691,7 @@ class TestWizardsRBACWiring:
     def test_config_routes_has_wizard_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "list_wizards" in source
@@ -701,38 +701,38 @@ class TestWizardsRBACWiring:
     def test_config_routes_has_rbac_endpoints(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "rbac_roles" in source
         assert "rbac_check" in source
 
     def test_slash_commands_exported(self) -> None:
-        from jarvis.channels import SlashCommandRegistry
+        from cognithor.channels import SlashCommandRegistry
 
         reg = SlashCommandRegistry()
         reg.register("/test", "Test command")
         assert reg.command_count == 1
 
     def test_modal_handler_exported(self) -> None:
-        from jarvis.channels import ModalHandler
+        from cognithor.channels import ModalHandler
 
         mh = ModalHandler()
         assert mh.handler_count == 0
 
     def test_fallback_renderer_exported(self) -> None:
-        from jarvis.channels import FallbackRenderer
+        from cognithor.channels import FallbackRenderer
 
         assert FallbackRenderer is not None
 
     def test_signature_verifier_exported(self) -> None:
-        from jarvis.channels import SignatureVerifier
+        from cognithor.channels import SignatureVerifier
 
         v = SignatureVerifier()
         assert not v.has_slack_secret
 
     def test_interaction_state_exported(self) -> None:
-        from jarvis.channels import InteractionStateStore
+        from cognithor.channels import InteractionStateStore
 
         store = InteractionStateStore()
         state = store.create("id1", "u1", "approval")
@@ -748,7 +748,7 @@ class TestNewEndpointsWiring:
     def test_sse_endpoint_exists(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "monitoring_sse_stream" in source
@@ -757,7 +757,7 @@ class TestNewEndpointsWiring:
     def test_wizard_endpoints_exist(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "list_wizards" in source
@@ -768,14 +768,14 @@ class TestNewEndpointsWiring:
     def test_rbac_endpoints_exist(self) -> None:
         import inspect
 
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         source = inspect.getsource(config_routes)
         assert "rbac_roles" in source
         assert "rbac_check" in source
 
     def test_marketplace_verification_exists(self) -> None:
-        from jarvis.skills.marketplace import SkillMarketplace
+        from cognithor.skills.marketplace import SkillMarketplace
 
         mp = SkillMarketplace()
         assert hasattr(mp, "verify_publisher")
@@ -784,13 +784,13 @@ class TestNewEndpointsWiring:
         assert hasattr(mp, "set_scan_result")
 
     def test_gateway_exports_monitoring(self) -> None:
-        from jarvis.gateway import MonitoringHub
+        from cognithor.gateway import MonitoringHub
 
         hub = MonitoringHub()
         assert hub is not None
 
     def test_gateway_exports_wizards(self) -> None:
-        from jarvis.gateway import RBACManager, WizardRegistry
+        from cognithor.gateway import RBACManager, WizardRegistry
 
         assert WizardRegistry is not None
         assert RBACManager is not None

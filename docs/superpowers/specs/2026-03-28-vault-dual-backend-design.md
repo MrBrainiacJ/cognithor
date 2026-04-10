@@ -101,7 +101,7 @@ CREATE TRIGGER notes_au AFTER UPDATE ON notes BEGIN
 END;
 ```
 
-Database file: `~/.jarvis/vault/vault.db` (encrypted via `encrypted_connect()`)
+Database file: `~/.cognithor/vault/vault.db` (encrypted via `encrypted_connect()`)
 
 ## 4. FileBackend
 
@@ -129,7 +129,7 @@ This is a refactor of existing code into the interface, not new logic.
 ## 6. Migration
 
 ### Marker file
-`~/.jarvis/vault/.vault_mode` contains `"file"` or `"db"`.
+`~/.cognithor/vault/.vault_mode` contains `"file"` or `"db"`.
 
 ### On VaultTools init:
 ```python

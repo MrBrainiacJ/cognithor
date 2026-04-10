@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.memory.search import HybridSearch, recency_decay
+from cognithor.memory.search import HybridSearch, recency_decay
 
 # ============================================================================
 # recency_decay
@@ -67,7 +67,7 @@ def mock_embeddings() -> MagicMock:
 
 @pytest.fixture
 def mock_config() -> MagicMock:
-    from jarvis.config import MemoryConfig
+    from cognithor.config import MemoryConfig
 
     cfg = MemoryConfig()
     return cfg
@@ -123,7 +123,7 @@ class TestSearch:
 
     @pytest.mark.asyncio
     async def test_bm25_only(self, hybrid_search: HybridSearch, mock_index: MagicMock) -> None:
-        from jarvis.models import Chunk, MemoryTier
+        from cognithor.models import Chunk, MemoryTier
 
         chunk = Chunk(
             id="c1",
@@ -146,7 +146,7 @@ class TestSearch:
 
     @pytest.mark.asyncio
     async def test_core_no_decay(self, hybrid_search: HybridSearch, mock_index: MagicMock) -> None:
-        from jarvis.models import Chunk, MemoryTier
+        from cognithor.models import Chunk, MemoryTier
 
         chunk = Chunk(
             id="c1",
@@ -175,7 +175,7 @@ class TestSearchBm25Only:
         assert results == []
 
     def test_with_results(self, hybrid_search: HybridSearch, mock_index: MagicMock) -> None:
-        from jarvis.models import Chunk, MemoryTier
+        from cognithor.models import Chunk, MemoryTier
 
         chunk = Chunk(
             id="c1",

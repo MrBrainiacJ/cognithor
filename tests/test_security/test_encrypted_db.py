@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.security.encrypted_db import encrypted_connect, is_encryption_available
+from cognithor.security.encrypted_db import encrypted_connect, is_encryption_available
 
 
 def test_fallback_to_sqlite3(tmp_path):

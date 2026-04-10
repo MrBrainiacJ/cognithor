@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
-from jarvis.arc.keyboard_solver import KeyboardSolver
+from cognithor.arc.keyboard_solver import KeyboardSolver
 
 
 def _make_grid(avatar_pos=(5, 5), size=16):

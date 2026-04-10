@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import httpx
 import pytest
 
-from jarvis.core.llm_backend import (
+from cognithor.core.llm_backend import (
     AnthropicBackend,
     ChatResponse,
     EmbedResponse,

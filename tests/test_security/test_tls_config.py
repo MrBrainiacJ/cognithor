@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.security.token_store import create_ssl_context
+from cognithor.security.token_store import create_ssl_context
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -101,7 +101,7 @@ class TestTLSSecurityConfig:
 
     def test_security_config_has_ssl_fields(self) -> None:
         """SecurityConfig hat ssl_certfile und ssl_keyfile Felder."""
-        from jarvis.config import SecurityConfig
+        from cognithor.config import SecurityConfig
 
         cfg = SecurityConfig()
         assert cfg.ssl_certfile == ""
@@ -109,7 +109,7 @@ class TestTLSSecurityConfig:
 
     def test_security_config_accepts_ssl_values(self) -> None:
         """SecurityConfig akzeptiert SSL-Pfade."""
-        from jarvis.config import SecurityConfig
+        from cognithor.config import SecurityConfig
 
         cfg = SecurityConfig(
             ssl_certfile="/path/to/cert.pem",

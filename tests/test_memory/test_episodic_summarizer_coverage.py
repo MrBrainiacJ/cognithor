@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.memory.episodic_summarizer import EpisodicSummarizer
+from cognithor.memory.episodic_summarizer import EpisodicSummarizer
 
 
 @pytest.fixture

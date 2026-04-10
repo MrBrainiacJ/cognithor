@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.mcp.media import (
+from cognithor.mcp.media import (
     MAX_AUDIO_FILE_SIZE,
     MAX_EXTRACT_FILE_SIZE,
     MAX_EXTRACT_LENGTH,
@@ -200,9 +200,9 @@ class TestTranscribeAudio:
         mock_model = MagicMock()
         mock_model.transcribe.return_value = ([mock_segment], mock_info)
 
-        with patch("jarvis.mcp.media.WhisperModel", return_value=mock_model, create=True):
+        with patch("cognithor.mcp.media.WhisperModel", return_value=mock_model, create=True):
             # Wir mocken den Import direkt
-            import jarvis.mcp.media as media_mod
+            import cognithor.mcp.media as media_mod
 
             original_transcribe = media_mod.MediaPipeline.transcribe_audio
 

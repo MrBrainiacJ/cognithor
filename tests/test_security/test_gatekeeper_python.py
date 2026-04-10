@@ -15,9 +15,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.core.gatekeeper import Gatekeeper
-from jarvis.models import (
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.core.gatekeeper import Gatekeeper
+from cognithor.models import (
     GateStatus,
     PlannedAction,
     RiskLevel,

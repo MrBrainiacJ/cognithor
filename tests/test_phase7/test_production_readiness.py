@@ -32,7 +32,7 @@ class TestHealthcheck:
 
     def test_healthy_status(self):
         """Gesundes System meldet 'healthy'."""
-        from jarvis.healthcheck import health_status
+        from cognithor.healthcheck import health_status
 
         result = health_status(
             ollama_available=True,
@@ -49,7 +49,7 @@ class TestHealthcheck:
 
     def test_degraded_without_ollama(self):
         """Ohne Ollama: Status 'degraded'."""
-        from jarvis.healthcheck import health_status
+        from cognithor.healthcheck import health_status
 
         result = health_status(ollama_available=False)
         assert result["status"] == "degraded"
@@ -57,7 +57,7 @@ class TestHealthcheck:
 
     def test_degraded_with_errors(self):
         """Mit expliziten Fehlern: Status 'degraded'."""
-        from jarvis.healthcheck import health_status
+        from cognithor.healthcheck import health_status
 
         result = health_status(
             ollama_available=True,
@@ -68,14 +68,14 @@ class TestHealthcheck:
 
     def test_uptime_is_positive(self):
         """Uptime ist immer >= 0."""
-        from jarvis.healthcheck import health_status
+        from cognithor.healthcheck import health_status
 
         result = health_status(ollama_available=True)
         assert result["uptime_seconds"] >= 0
 
     def test_timestamp_is_iso8601(self):
         """Timestamps sind ISO 8601 konform."""
-        from jarvis.healthcheck import health_status
+        from cognithor.healthcheck import health_status
 
         result = health_status(ollama_available=True)
         # Einfacher ISO-Check
@@ -131,13 +131,13 @@ class TestDeploymentFiles:
     """Deployment-Dateien sind vorhanden und korrekt formatiert."""
 
     def test_systemd_service_exists(self):
-        """jarvis.service existiert."""
-        service = PROJECT_ROOT / "deploy" / "jarvis.service"
+        """cognithor.service existiert."""
+        service = PROJECT_ROOT / "deploy" / "cognithor.service"
         assert service.exists()
 
     def test_systemd_service_format(self):
-        """jarvis.service hat korrektes systemd-Format."""
-        service = PROJECT_ROOT / "deploy" / "jarvis.service"
+        """cognithor.service hat korrektes systemd-Format."""
+        service = PROJECT_ROOT / "deploy" / "cognithor.service"
         content = service.read_text(encoding="utf-8")
 
         # Pflicht-Sektionen
@@ -153,14 +153,14 @@ class TestDeploymentFiles:
 
     def test_systemd_restart_policy(self):
         """Service startet bei Absturz automatisch neu."""
-        service = PROJECT_ROOT / "deploy" / "jarvis.service"
+        service = PROJECT_ROOT / "deploy" / "cognithor.service"
         content = service.read_text(encoding="utf-8")
         assert "Restart=on-failure" in content
         assert "RestartSec=" in content
 
     def test_systemd_security_hardening(self):
         """Service hat Sicherheits-Härtung."""
-        service = PROJECT_ROOT / "deploy" / "jarvis.service"
+        service = PROJECT_ROOT / "deploy" / "cognithor.service"
         content = service.read_text(encoding="utf-8")
         assert "NoNewPrivileges=true" in content
         assert "ProtectSystem=" in content
@@ -216,19 +216,19 @@ class TestPlannerPrompts:
 
     def test_system_prompt_has_tools_placeholder(self):
         """System-Prompt enthält {tools_section} Placeholder."""
-        from jarvis.core.planner import SYSTEM_PROMPT
+        from cognithor.core.planner import SYSTEM_PROMPT
 
         assert "{tools_section}" in SYSTEM_PROMPT
 
     def test_system_prompt_has_context_placeholder(self):
         """System-Prompt enthält {context_section} Placeholder."""
-        from jarvis.core.planner import SYSTEM_PROMPT
+        from cognithor.core.planner import SYSTEM_PROMPT
 
         assert "{context_section}" in SYSTEM_PROMPT
 
     def test_system_prompt_mentions_json_format(self):
         """System-Prompt erklärt JSON-Output-Format."""
-        from jarvis.core.planner import SYSTEM_PROMPT
+        from cognithor.core.planner import SYSTEM_PROMPT
 
         assert "json" in SYSTEM_PROMPT.lower()
         assert '"goal"' in SYSTEM_PROMPT
@@ -237,7 +237,7 @@ class TestPlannerPrompts:
 
     def test_system_prompt_explains_direct_answer(self):
         """System-Prompt erklärt direkte Antwort-Option."""
-        from jarvis.core.planner import SYSTEM_PROMPT
+        from cognithor.core.planner import SYSTEM_PROMPT
 
         lower = SYSTEM_PROMPT.lower()
         assert "direkt" in lower
@@ -245,21 +245,21 @@ class TestPlannerPrompts:
 
     def test_system_prompt_is_german(self):
         """System-Prompt ist auf Deutsch."""
-        from jarvis.core.planner import SYSTEM_PROMPT
+        from cognithor.core.planner import SYSTEM_PROMPT
 
         # Deutsche Schlüsselwörter
         assert "Deutsch" in SYSTEM_PROMPT or "deutsch" in SYSTEM_PROMPT
 
     def test_replan_prompt_has_placeholders(self):
         """Replan-Prompt enthält nötige Placeholders."""
-        from jarvis.core.planner import REPLAN_PROMPT
+        from cognithor.core.planner import REPLAN_PROMPT
 
         assert "{results_section}" in REPLAN_PROMPT
         assert "{original_goal}" in REPLAN_PROMPT
 
     def test_escalation_prompt_has_placeholders(self):
         """Escalation-Prompt enthält {tool} und {reason}."""
-        from jarvis.core.planner import ESCALATION_PROMPT
+        from cognithor.core.planner import ESCALATION_PROMPT
 
         assert "{tool}" in ESCALATION_PROMPT
         assert "{reason}" in ESCALATION_PROMPT
@@ -268,8 +268,8 @@ class TestPlannerPrompts:
         """Planner kann JSON aus ```json ... ``` Blöcken extrahieren."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from jarvis.config import JarvisConfig
-        from jarvis.core.planner import Planner
+        from cognithor.config import JarvisConfig
+        from cognithor.core.planner import Planner
 
         config = JarvisConfig()
         planner = Planner(config, AsyncMock(), MagicMock())
@@ -302,8 +302,8 @@ class TestPlannerPrompts:
         """Planner erkennt direkte Antwort (kein JSON)."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from jarvis.config import JarvisConfig
-        from jarvis.core.planner import Planner
+        from cognithor.config import JarvisConfig
+        from cognithor.core.planner import Planner
 
         config = JarvisConfig()
         planner = Planner(config, AsyncMock(), MagicMock())
@@ -317,8 +317,8 @@ class TestPlannerPrompts:
         """Planner überlebt kaputtes JSON gracefully."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from jarvis.config import JarvisConfig
-        from jarvis.core.planner import Planner
+        from cognithor.config import JarvisConfig
+        from cognithor.core.planner import Planner
 
         config = JarvisConfig()
         planner = Planner(config, AsyncMock(), MagicMock())
@@ -339,7 +339,7 @@ class TestProjectIntegrity:
 
     def test_all_init_files_exist(self):
         """Alle Python-Packages haben __init__.py."""
-        src = PROJECT_ROOT / "src" / "jarvis"
+        src = PROJECT_ROOT / "src" / "cognithor"
         packages = [
             src,
             src / "channels",
@@ -378,15 +378,15 @@ class TestProjectIntegrity:
     def test_no_circular_imports(self):
         """Keine zirkulären Imports in den Kern-Modulen."""
         modules = [
-            "jarvis.config",
-            "jarvis.models",
-            "jarvis.utils.logging",
-            "jarvis.core.planner",
-            "jarvis.core.gatekeeper",
-            "jarvis.core.executor",
-            "jarvis.memory.manager",
-            "jarvis.security.audit",
-            "jarvis.healthcheck",
+            "cognithor.config",
+            "cognithor.models",
+            "cognithor.utils.logging",
+            "cognithor.core.planner",
+            "cognithor.core.gatekeeper",
+            "cognithor.core.executor",
+            "cognithor.memory.manager",
+            "cognithor.security.audit",
+            "cognithor.healthcheck",
         ]
         for mod in modules:
             result = subprocess.run(

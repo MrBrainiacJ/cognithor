@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.evolution.cycle_controller import CycleController, CycleState, ExamResult
+from cognithor.evolution.cycle_controller import CycleController, CycleState, ExamResult
 
 
 class TestEvolutionE2E:

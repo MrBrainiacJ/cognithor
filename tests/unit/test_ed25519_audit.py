@@ -28,15 +28,15 @@ class TestEd25519Signatures:
 
     @pytest.fixture
     def audit_trail(self, tmp_path, key_pair):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         private_bytes, _ = key_pair
         return AuditTrail(log_path=tmp_path / "ed25519_audit.jsonl", ed25519_key=private_bytes)
 
     @staticmethod
     def _make_entry():
-        from jarvis.models import AuditEntry as GateAuditEntry
-        from jarvis.models import GateStatus, RiskLevel
+        from cognithor.models import AuditEntry as GateAuditEntry
+        from cognithor.models import GateStatus, RiskLevel
 
         return GateAuditEntry(
             session_id="s1",
@@ -57,7 +57,7 @@ class TestEd25519Signatures:
         assert len(record["ed25519_sig"]) == 128  # 64 bytes hex
 
     def test_signature_verifiable_with_public_key(self, audit_trail, key_pair):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         _, public_bytes = key_pair
         entry = self._make_entry()
@@ -67,7 +67,7 @@ class TestEd25519Signatures:
         assert AuditTrail.verify_signature(record, public_bytes) is True
 
     def test_tampered_entry_fails_verification(self, audit_trail, key_pair):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         _, public_bytes = key_pair
         entry = self._make_entry()
@@ -82,7 +82,7 @@ class TestEd25519Signatures:
             Ed25519PrivateKey,
         )
 
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         entry = self._make_entry()
         audit_trail.record(entry)
@@ -92,7 +92,7 @@ class TestEd25519Signatures:
         assert AuditTrail.verify_signature(record, wrong_pub) is False
 
     def test_no_sig_when_key_is_none(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_path=tmp_path / "no_ed25519.jsonl", ed25519_key=None)
         entry = self._make_entry()
@@ -102,7 +102,7 @@ class TestEd25519Signatures:
         assert "ed25519_sig" not in record
 
     def test_verify_signature_missing_fields(self):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         assert AuditTrail.verify_signature({}, b"\x00" * 32) is False
         assert AuditTrail.verify_signature({"hash": "abc"}, b"\x00" * 32) is False

@@ -12,13 +12,13 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.telemetry.instrumentation import (
+from cognithor.telemetry.instrumentation import (
     TelemetryHub,
     measure,
     trace,
 )
-from jarvis.telemetry.metrics import MetricsProvider
-from jarvis.telemetry.tracer import (
+from cognithor.telemetry.metrics import MetricsProvider
+from cognithor.telemetry.tracer import (
     AlwaysOffSampler,
     AlwaysOnSampler,
     BatchProcessor,
@@ -31,7 +31,7 @@ from jarvis.telemetry.tracer import (
     TracerProvider,
     _NoOpSpan,
 )
-from jarvis.telemetry.types import (
+from cognithor.telemetry.types import (
     HistogramDataPoint,
     MetricDataPoint,
     MetricDefinition,

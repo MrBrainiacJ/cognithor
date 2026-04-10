@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.learning.strategy_memory import (
+from cognithor.learning.strategy_memory import (
     StrategyMemory,
     StrategyRecord,
     classify_task_type,

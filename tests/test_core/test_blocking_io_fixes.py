@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from jarvis.core.user_preferences import UserPreferenceStore
+from cognithor.core.user_preferences import UserPreferenceStore
 
 # ── UserPreferenceStore: Persistente Connection ──────────────────────────
 
@@ -77,7 +77,7 @@ class TestGatekeeperAuditBuffer:
 
     def test_has_audit_buffer(self) -> None:
         """Gatekeeper hat einen _audit_buffer."""
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = MagicMock()
         config.logs_dir = Path(tempfile.gettempdir()) / "test_logs"
@@ -93,7 +93,7 @@ class TestGatekeeperAuditBuffer:
 
     def test_flush_writes_all_entries(self, tmp_path: Path) -> None:
         """_flush_audit_buffer schreibt alle Einträge auf Disk."""
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = MagicMock()
         config.logs_dir = tmp_path
@@ -115,7 +115,7 @@ class TestGatekeeperAuditBuffer:
 
     def test_flush_empty_buffer_noop(self, tmp_path: Path) -> None:
         """Leerer Buffer → keine Datei geschrieben."""
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = MagicMock()
         config.logs_dir = tmp_path
@@ -140,7 +140,7 @@ class TestMCPServerSyncHandlerExecutor:
         """Der MCP-Server-Code enthält run_in_executor für sync-Handler."""
         import inspect
 
-        from jarvis.mcp.server import JarvisMCPServer
+        from cognithor.mcp.server import JarvisMCPServer
 
         source = inspect.getsource(JarvisMCPServer.handle_tools_call)
         # Verifiziere dass run_in_executor im else-Zweig (sync handler) steht

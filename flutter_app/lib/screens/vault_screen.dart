@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-import 'package:jarvis_ui/providers/admin_provider.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/neon_card.dart';
-import 'package:jarvis_ui/widgets/jarvis_empty_state.dart';
-import 'package:jarvis_ui/widgets/jarvis_list_tile.dart';
-import 'package:jarvis_ui/widgets/jarvis_loading_skeleton.dart';
-import 'package:jarvis_ui/widgets/jarvis_section.dart';
-import 'package:jarvis_ui/widgets/jarvis_stat.dart';
+import 'package:cognithor_ui/providers/admin_provider.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/neon_card.dart';
+import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/jarvis_list_tile.dart';
+import 'package:cognithor_ui/widgets/jarvis_loading_skeleton.dart';
+import 'package:cognithor_ui/widgets/jarvis_section.dart';
+import 'package:cognithor_ui/widgets/jarvis_stat.dart';
 
 class VaultScreen extends StatefulWidget {
   const VaultScreen({super.key});

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.evolution.action_queue import ActionQueue, ATLAction
+from cognithor.evolution.action_queue import ActionQueue, ATLAction
 
 
 def test_enqueue_and_dequeue():

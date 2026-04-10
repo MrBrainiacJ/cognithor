@@ -6,7 +6,7 @@ und SecurityScanner auf korrekte Erkennung und Reporting.
 
 from __future__ import annotations
 
-from jarvis.security.redteam import (
+from cognithor.security.redteam import (
     AttackCategory,
     AttackPayload,
     MemoryPoisonSimulator,
@@ -58,7 +58,7 @@ class TestVulnerabilityReport:
         assert r.calculate_risk_score() == 0.0
 
     def test_risk_score_capped_at_100(self) -> None:
-        from jarvis.security.redteam import SecurityFinding
+        from cognithor.security.redteam import SecurityFinding
 
         findings = [
             SecurityFinding(

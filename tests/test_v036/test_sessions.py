@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.ui.session_manager import (
+from cognithor.ui.session_manager import (
     CORE_MEMORY_MAX_TOKENS,
     SessionManager,
 )
@@ -90,7 +90,7 @@ class TestCoreMemory:
 class TestCLIFallback:
     def test_cli_selector_fallback_on_dumb_terminal(self):
         """CLI should fall back to plain input() on dumb terminals."""
-        from jarvis.utils.platform import supports_curses
+        from cognithor.utils.platform import supports_curses
 
         # We just verify the function exists and returns a bool
         result = supports_curses()

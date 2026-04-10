@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.google_chat import GoogleChatChannel
-from jarvis.models import OutgoingMessage
+from cognithor.channels.google_chat import GoogleChatChannel
+from cognithor.models import OutgoingMessage
 
 
 class TestGoogleChatChannel:

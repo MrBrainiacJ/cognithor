@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.sentiment import (
+from cognithor.core.sentiment import (
     Sentiment,
     SentimentResult,
     detect_sentiment,

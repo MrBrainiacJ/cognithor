@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.config import ImprovementGovernanceConfig
-from jarvis.governance.improvement_gate import (
+from cognithor.config import ImprovementGovernanceConfig
+from cognithor.governance.improvement_gate import (
     CATEGORY_DOMAIN_MAP,
     GateVerdict,
     ImprovementDomain,
@@ -139,7 +139,7 @@ class TestImprovementGate:
 
 class TestGateIntegration:
     def test_governor_approve_checks_gate_allowed(self, tmp_path):
-        from jarvis.governance.governor import GovernanceAgent
+        from cognithor.governance.governor import GovernanceAgent
 
         config = ImprovementGovernanceConfig()
         gate = ImprovementGate(config)
@@ -161,7 +161,7 @@ class TestGateIntegration:
         gov.close()
 
     def test_governor_approve_checks_gate_blocked(self, tmp_path):
-        from jarvis.governance.governor import GovernanceAgent
+        from cognithor.governance.governor import GovernanceAgent
 
         config = ImprovementGovernanceConfig(
             blocked_domains=["model_selection"],
@@ -182,7 +182,7 @@ class TestGateIntegration:
         gov.close()
 
     def test_governor_approve_checks_gate_cooldown(self, tmp_path):
-        from jarvis.governance.governor import GovernanceAgent
+        from cognithor.governance.governor import GovernanceAgent
 
         config = ImprovementGovernanceConfig()
         gate = ImprovementGate(config)
@@ -204,7 +204,7 @@ class TestGateIntegration:
         gov.close()
 
     def test_governor_approve_without_gate_works(self, tmp_path):
-        from jarvis.governance.governor import GovernanceAgent
+        from cognithor.governance.governor import GovernanceAgent
 
         db = str(tmp_path / "gov.db")
         gov = GovernanceAgent(db_path=db)  # No gate
@@ -222,7 +222,7 @@ class TestGateIntegration:
         gov.close()
 
     def test_governor_approve_needs_approval_passes_through(self, tmp_path):
-        from jarvis.governance.governor import GovernanceAgent
+        from cognithor.governance.governor import GovernanceAgent
 
         # MODEL_SELECTION is hitl by default, which maps to NEEDS_APPROVAL
         config = ImprovementGovernanceConfig()

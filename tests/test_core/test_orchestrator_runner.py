@@ -13,13 +13,13 @@ import asyncio
 
 import pytest
 
-from jarvis.models import AgentResult, AgentType, IncomingMessage, SubAgentConfig
+from cognithor.models import AgentResult, AgentType, IncomingMessage, SubAgentConfig
 
 
 class TestSetRunner:
     def test_set_runner_stores_callback(self) -> None:
         """set_runner() setzt _runner."""
-        from jarvis.core.orchestrator import Orchestrator
+        from cognithor.core.orchestrator import Orchestrator
 
         orch = Orchestrator.__new__(Orchestrator)
         orch._runner = None
@@ -42,7 +42,7 @@ class TestRunnerMessage:
         async def mock_handle_message(msg: IncomingMessage):
             nonlocal captured_msg
             captured_msg = msg
-            from jarvis.models import OutgoingMessage
+            from cognithor.models import OutgoingMessage
 
             return OutgoingMessage(channel="sub_agent", user_id="test", text="done")
 
@@ -111,8 +111,8 @@ class TestDelegationUsesRunner:
     @pytest.mark.asyncio
     async def test_delegation_uses_runner(self) -> None:
         """_execute_delegation() liefert nicht-leeren String wenn Runner gesetzt."""
-        from jarvis.core.delegation import DelegationEngine
-        from jarvis.core.orchestrator import Orchestrator
+        from cognithor.core.delegation import DelegationEngine
+        from cognithor.core.orchestrator import Orchestrator
 
         orch = Orchestrator.__new__(Orchestrator)
         orch._runner = None

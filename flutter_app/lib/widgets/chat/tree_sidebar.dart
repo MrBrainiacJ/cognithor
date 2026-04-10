@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/models/chat_node.dart';
-import 'package:jarvis_ui/providers/tree_provider.dart';
+import 'package:cognithor_ui/models/chat_node.dart';
+import 'package:cognithor_ui/providers/tree_provider.dart';
 
 /// Resizable sidebar showing the full conversation tree.
 /// Nodes are clickable — clicking scrolls the chat to that message.

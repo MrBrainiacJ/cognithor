@@ -10,7 +10,7 @@ import pytest
 # ============================================================================
 # 1. Skill CLI
 # ============================================================================
-from jarvis.tools.skill_cli import (
+from cognithor.tools.skill_cli import (
     LintSeverity,
     PublishStatus,
     RewardSystem,
@@ -57,7 +57,7 @@ class TestSkillLinter:
             "SKILL.md": (
                 "# My Skill\n\n## Beschreibung\nEin toller Skill der viel kann und gut ist."
             ),
-            "skill.py": "from jarvis.skills.base import BaseSkill\nclass MySkill(BaseSkill): pass",
+            "skill.py": "from cognithor.skills.base import BaseSkill\nclass MySkill(BaseSkill): pass",
             "manifest.json": '{"name": "my", "version": "0.1.0", "permissions": []}',
             "test_skill.py": "def test_it(): pass",
         }
@@ -84,7 +84,7 @@ class TestSkillLinter:
         linter = SkillLinter()
         files = {
             "SKILL.md": "# X\n## Beschreibung\nAusführliche Beschreibung des Skills",
-            "skill.py": "from jarvis.skills.base import BaseSkill\nclass X(BaseSkill): pass",
+            "skill.py": "from cognithor.skills.base import BaseSkill\nclass X(BaseSkill): pass",
             "manifest.json": '{"name": "x", "version": "0.1", "permissions": []}',
         }
         issues = linter.lint(files)
@@ -167,7 +167,7 @@ class TestSkillCLI:
         files = {
             "SKILL.md": "# Test\n## Beschreibung\nEin vollwertiger Test-Skill für alles",
             "skill.py": (
-                "from jarvis.skills.base import BaseSkill\nclass TestSkill(BaseSkill): pass"
+                "from cognithor.skills.base import BaseSkill\nclass TestSkill(BaseSkill): pass"
             ),
             "manifest.json": '{"name": "test", "version": "0.1.0", "permissions": []}',
             "test_skill.py": "def test_one(): pass",
@@ -181,7 +181,7 @@ class TestSkillCLI:
 # 2. Installer / Setup Wizard
 # ============================================================================
 
-from jarvis.core.installer import (
+from cognithor.core.installer import (
     PRESETS,
     ChannelConfigurator,
     ChannelType,
@@ -314,7 +314,7 @@ class TestSetupWizard:
 # 3. Performance
 # ============================================================================
 
-from jarvis.core.performance import (
+from cognithor.core.performance import (
     Backend,
     BalancingStrategy,
     CloudFallback,

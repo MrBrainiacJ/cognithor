@@ -26,8 +26,8 @@ echo.
 echo                    -- Installer --
 echo.
 
-set "JARVIS_HOME=%USERPROFILE%\.jarvis"
-set "VENV_DIR=%JARVIS_HOME%\venv"
+set "COGNITHOR_HOME=%USERPROFILE%\.jarvis"
+set "VENV_DIR=%COGNITHOR_HOME%\venv"
 set "MODE=all"
 set "LITE=0"
 set "FORCE_LITE=0"
@@ -87,8 +87,8 @@ if "%REPO_ROOT%"=="" (
 
 :: Pruefen ob bereits geclont
 if "%REPO_ROOT%"=="" (
-    if exist "%JARVIS_HOME%\cognithor\pyproject.toml" (
-        set "REPO_ROOT=%JARVIS_HOME%\cognithor"
+    if exist "%COGNITHOR_HOME%\cognithor\pyproject.toml" (
+        set "REPO_ROOT=%COGNITHOR_HOME%\cognithor"
         echo   [OK] Existing repo: !REPO_ROOT!
     )
 )
@@ -102,10 +102,10 @@ if "%REPO_ROOT%"=="" (
     where git >nul 2>&1
     if not errorlevel 1 (
         echo   Cloning via git ...
-        if not exist "%JARVIS_HOME%" mkdir "%JARVIS_HOME%"
-        git clone https://github.com/Alex8791-cyber/cognithor.git "%JARVIS_HOME%\cognithor" --quiet 2>nul
+        if not exist "%COGNITHOR_HOME%" mkdir "%COGNITHOR_HOME%"
+        git clone https://github.com/Alex8791-cyber/cognithor.git "%COGNITHOR_HOME%\cognithor" --quiet 2>nul
         if not errorlevel 1 (
-            set "REPO_ROOT=%JARVIS_HOME%\cognithor"
+            set "REPO_ROOT=%COGNITHOR_HOME%\cognithor"
             echo   [OK] Repository cloned: !REPO_ROOT!
         ) else (
             echo   [WARNING] git clone failed.
@@ -115,11 +115,11 @@ if "%REPO_ROOT%"=="" (
     :: Versuch 2: PowerShell ZIP-Download
     if "!REPO_ROOT!"=="" (
         echo   Downloading repository as ZIP ...
-        if not exist "%JARVIS_HOME%" mkdir "%JARVIS_HOME%"
-        powershell -NoProfile -Command "try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/Alex8791-cyber/cognithor/archive/refs/heads/main.zip' -OutFile '%JARVIS_HOME%\cognithor.zip' -UseBasicParsing; Expand-Archive -Path '%JARVIS_HOME%\cognithor.zip' -DestinationPath '%JARVIS_HOME%' -Force; if (Test-Path '%JARVIS_HOME%\cognithor-main') { if (Test-Path '%JARVIS_HOME%\cognithor') { Remove-Item '%JARVIS_HOME%\cognithor' -Recurse -Force }; Rename-Item '%JARVIS_HOME%\cognithor-main' 'cognithor' }; Remove-Item '%JARVIS_HOME%\cognithor.zip' -Force; exit 0 } catch { Write-Host $_.Exception.Message; exit 1 }" 2>nul
+        if not exist "%COGNITHOR_HOME%" mkdir "%COGNITHOR_HOME%"
+        powershell -NoProfile -Command "try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/Alex8791-cyber/cognithor/archive/refs/heads/main.zip' -OutFile '%COGNITHOR_HOME%\cognithor.zip' -UseBasicParsing; Expand-Archive -Path '%COGNITHOR_HOME%\cognithor.zip' -DestinationPath '%COGNITHOR_HOME%' -Force; if (Test-Path '%COGNITHOR_HOME%\cognithor-main') { if (Test-Path '%COGNITHOR_HOME%\cognithor') { Remove-Item '%COGNITHOR_HOME%\cognithor' -Recurse -Force }; Rename-Item '%COGNITHOR_HOME%\cognithor-main' 'cognithor' }; Remove-Item '%COGNITHOR_HOME%\cognithor.zip' -Force; exit 0 } catch { Write-Host $_.Exception.Message; exit 1 }" 2>nul
         if not errorlevel 1 (
-            if exist "%JARVIS_HOME%\cognithor\pyproject.toml" (
-                set "REPO_ROOT=%JARVIS_HOME%\cognithor"
+            if exist "%COGNITHOR_HOME%\cognithor\pyproject.toml" (
+                set "REPO_ROOT=%COGNITHOR_HOME%\cognithor"
                 echo   [OK] Repository downloaded: !REPO_ROOT!
             )
         )
@@ -301,7 +301,7 @@ if "%LITE%"=="1" (
 ) else (
     echo   Mode: STANDARD ^(recommended^)
 )
-echo   Home:  %JARVIS_HOME%
+echo   Home:  %COGNITHOR_HOME%
 echo.
 
 :: ============================================================
@@ -321,7 +321,7 @@ echo   ----------------------------------------------------------
 echo     3/10  Virtual Environment
 echo   ----------------------------------------------------------
 
-if not exist "%JARVIS_HOME%" mkdir "%JARVIS_HOME%"
+if not exist "%COGNITHOR_HOME%" mkdir "%COGNITHOR_HOME%"
 
 if exist "%VENV_DIR%\Scripts\activate.bat" (
     echo   [OK] venv already exists: %VENV_DIR%
@@ -509,9 +509,9 @@ if "%LITE%"=="1" (
     python -m jarvis --init-only >nul 2>&1
 )
 if errorlevel 1 (
-    if not exist "%JARVIS_HOME%\memory" mkdir "%JARVIS_HOME%\memory"
-    if not exist "%JARVIS_HOME%\logs" mkdir "%JARVIS_HOME%\logs"
-    if not exist "%JARVIS_HOME%\cache" mkdir "%JARVIS_HOME%\cache"
+    if not exist "%COGNITHOR_HOME%\memory" mkdir "%COGNITHOR_HOME%\memory"
+    if not exist "%COGNITHOR_HOME%\logs" mkdir "%COGNITHOR_HOME%\logs"
+    if not exist "%COGNITHOR_HOME%\cache" mkdir "%COGNITHOR_HOME%\cache"
     echo   [OK] Directories created manually
 ) else (
     echo   [OK] Directory structure initialized
@@ -599,10 +599,10 @@ if "%LITE%"=="1" (
 )
 echo.
 echo   Directories:
-echo     %JARVIS_HOME%\              Home
-echo     %JARVIS_HOME%\config.yaml   Configuration
-echo     %JARVIS_HOME%\memory\       Memory
-echo     %JARVIS_HOME%\logs\         Logs
+echo     %COGNITHOR_HOME%\              Home
+echo     %COGNITHOR_HOME%\config.yaml   Configuration
+echo     %COGNITHOR_HOME%\memory\       Memory
+echo     %COGNITHOR_HOME%\logs\         Logs
 echo.
 
 pause
@@ -642,7 +642,7 @@ echo     - Virtual Environment (%VENV_DIR%)
 echo     - Desktop shortcut
 echo.
 echo   NOT removed:
-echo     - Your data in %JARVIS_HOME% (memory, logs, config)
+echo     - Your data in %COGNITHOR_HOME% (memory, logs, config)
 echo     - Ollama and models
 echo.
 set /p "CONFIRM=Continue? [y/N] "
@@ -672,8 +672,8 @@ if not "%DESKTOP_PATH%"=="" (
 
 echo.
 echo   [OK] Uninstallation complete.
-echo   Data in %JARVIS_HOME% was NOT deleted.
-echo   To fully remove: rmdir /s /q "%JARVIS_HOME%"
+echo   Data in %COGNITHOR_HOME% was NOT deleted.
+echo   To fully remove: rmdir /s /q "%COGNITHOR_HOME%"
 echo.
 pause
 exit /b 0

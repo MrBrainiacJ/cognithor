@@ -24,7 +24,7 @@ Three trigger paths:
 
 ### Component 1: Skill File + MCP Tools
 
-**Skill file** `~/.jarvis/skills/reddit-lead-hunter.md` — installed from skill-registry. Trigger keywords: Reddit, Lead, Leads scannen, Social Listening, Reddit Scan. Body instructs Planner to use the MCP tools.
+**Skill file** `~/.cognithor/skills/reddit-lead-hunter.md` — installed from skill-registry. Trigger keywords: Reddit, Lead, Leads scannen, Social Listening, Reddit Scan. Body instructs Planner to use the MCP tools.
 
 **3 new MCP tools** in `src/jarvis/mcp/reddit_tools.py`:
 

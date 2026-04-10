@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.tts_elevenlabs import ElevenLabsConfig, ElevenLabsTTS
+from cognithor.channels.tts_elevenlabs import ElevenLabsConfig, ElevenLabsTTS
 
 
 @pytest.fixture

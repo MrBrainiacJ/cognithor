@@ -33,7 +33,7 @@ if "aiohttp" not in sys.modules:
     sys.modules["aiohttp"] = _mock_aiohttp
     sys.modules["aiohttp.web"] = _mock_aiohttp_web
 
-from jarvis.channels.telegram import TelegramChannel
+from cognithor.channels.telegram import TelegramChannel
 
 # ============================================================================
 # Initialization with webhook parameters

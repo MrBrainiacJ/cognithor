@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from jarvis.core.scheduler import AgentScheduler, ScheduledAgent
+from cognithor.core.scheduler import AgentScheduler, ScheduledAgent
 
 
 class TestPriority:

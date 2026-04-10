@@ -6,7 +6,7 @@ deduplication, confidence scoring, and edge cases.
 
 from __future__ import annotations
 
-from jarvis.memory.ner import (
+from cognithor.memory.ner import (
     CONFIDENCE_SCORES,
     ConfidenceSource,
     EntityDeduplicator,

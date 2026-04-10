@@ -7,7 +7,7 @@ import json
 import tempfile
 from unittest.mock import AsyncMock, MagicMock
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import JarvisConfig, ensure_directory_structure
 
 
 def _run(coro):
@@ -20,7 +20,7 @@ def test_01_pipeline_callback_delivery():
     mock_channel = AsyncMock()
     mock_channel.send_pipeline_event = AsyncMock()
 
-    from jarvis.gateway.gateway import Gateway
+    from cognithor.gateway.gateway import Gateway
 
     gw = Gateway.__new__(Gateway)
     gw._channels = {"webui": mock_channel}
@@ -39,7 +39,7 @@ def test_01_pipeline_callback_delivery():
 
 def test_02_non_webui_channel_noop():
     """Non-WebUI channel ignores pipeline events without crash."""
-    from jarvis.channels.base import Channel
+    from cognithor.channels.base import Channel
 
     class DummyChannel(Channel):
         @property
@@ -68,7 +68,7 @@ def test_02_non_webui_channel_noop():
 def test_03_verified_lookup_full_pipeline():
     """Verified Lookup returns answer with confidence from mocked sources."""
     cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
-    from jarvis.mcp.verified_lookup import VerifiedWebLookup
+    from cognithor.mcp.verified_lookup import VerifiedWebLookup
 
     vl = VerifiedWebLookup(cfg)
     web = AsyncMock()
@@ -98,7 +98,7 @@ def test_04_locked_enforcement():
     """sync_from_mcp preserves locked tool descriptions but updates schema."""
     from pathlib import Path
 
-    from jarvis.mcp.tool_registry_db import ToolRegistryDB
+    from cognithor.mcp.tool_registry_db import ToolRegistryDB
 
     db = ToolRegistryDB(Path(tempfile.mkdtemp()) / "test.db")
     db.upsert_tool(name="my_tool", description_en="Original", category="web")
@@ -119,8 +119,8 @@ def test_04_locked_enforcement():
 def test_05_auto_cross_check():
     """Executor injects cross_check=True for fact questions."""
     cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
-    from jarvis.core.executor import Executor, _fact_question_var
-    from jarvis.models import GateDecision, GateStatus, PlannedAction, RiskLevel
+    from cognithor.core.executor import Executor, _fact_question_var
+    from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel
 
     mock_mcp = AsyncMock()
     mock_mcp.call_tool = AsyncMock(return_value=MagicMock(content="ok", is_error=False))
@@ -147,7 +147,7 @@ def test_05_auto_cross_check():
 
 def test_06_sanitizer():
     """Sanitizer strips JSON artifacts, preserves text."""
-    from jarvis.gateway.gateway import _sanitize_broken_llm_output
+    from cognithor.gateway.gateway import _sanitize_broken_llm_output
 
     assert '"goal"' not in _sanitize_broken_llm_output('{"goal": "x", "steps": []}')
 
@@ -161,7 +161,7 @@ def test_07_extract_plan_false_positives():
     """Braces alone dont trigger parse_failed, JSON keys do."""
     cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
     ensure_directory_structure(cfg)
-    from jarvis.core.planner import Planner
+    from cognithor.core.planner import Planner
 
     planner = Planner(
         cfg,
@@ -182,7 +182,7 @@ def test_07_extract_plan_false_positives():
 
 def test_08_i18n_all_keys():
     """All new i18n keys resolve in en/de/zh."""
-    from jarvis.i18n import set_locale, t
+    from cognithor.i18n import set_locale, t
 
     keys = [
         "verified_lookup.no_webtools",
@@ -202,8 +202,8 @@ def test_08_i18n_all_keys():
 def test_09_gatekeeper_green():
     """verified_web_lookup is classified as GREEN."""
     cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
-    from jarvis.core.gatekeeper import Gatekeeper
-    from jarvis.models import PlannedAction, RiskLevel
+    from cognithor.core.gatekeeper import Gatekeeper
+    from cognithor.models import PlannedAction, RiskLevel
 
     gk = Gatekeeper(cfg)
     action = PlannedAction(tool="verified_web_lookup", params={"query": "test"})
@@ -212,7 +212,7 @@ def test_09_gatekeeper_green():
 
 def test_10_tool_registry_maps():
     """verified_web_lookup in all registry maps."""
-    from jarvis.mcp.tool_registry_db import (
+    from cognithor.mcp.tool_registry_db import (
         _TOOL_DESCRIPTIONS_DE,
         _TOOL_DESCRIPTIONS_ZH,
         DEFAULT_EXAMPLES,

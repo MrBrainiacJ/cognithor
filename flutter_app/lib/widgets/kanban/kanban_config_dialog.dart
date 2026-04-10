@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 
 class KanbanConfigDialog extends StatefulWidget {
   const KanbanConfigDialog({super.key, this.availableAgents = const []});

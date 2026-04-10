@@ -8,13 +8,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from jarvis.telemetry.recorder import (
+from cognithor.telemetry.recorder import (
     EventType,
     ExecutionEvent,
     ExecutionRecorder,
     ExecutionRecording,
 )
-from jarvis.telemetry.replay import (
+from cognithor.telemetry.replay import (
     DiffEntry,
     DiffType,
     ReplayDiff,

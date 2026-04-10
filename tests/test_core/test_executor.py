@@ -19,9 +19,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.executor import Executor
-from jarvis.models import (
+from cognithor.config import JarvisConfig
+from cognithor.core.executor import Executor
+from cognithor.models import (
     GateDecision,
     GateStatus,
     PlannedAction,
@@ -203,7 +203,7 @@ class TestErrorHandling:
 
     @pytest.mark.asyncio
     async def test_mismatched_lists_raises(self, executor: Executor) -> None:
-        from jarvis.core.executor import ExecutionError
+        from cognithor.core.executor import ExecutionError
 
         with pytest.raises(ExecutionError):
             await executor.execute(
@@ -242,7 +242,7 @@ class TestAgentContext:
     tatsächlich an Tool-Params weiterleitet — kein Platzhalter."""
 
     def test_set_and_clear(self, executor: Executor) -> None:
-        from jarvis.core.executor import _agent_sandbox_var, _agent_workspace_var
+        from cognithor.core.executor import _agent_sandbox_var, _agent_workspace_var
 
         executor.set_agent_context(
             workspace_dir=str(Path(tempfile.gettempdir()) / "agent" / "coder"),
@@ -436,7 +436,7 @@ class TestParallelExecution:
 class TestMaxParallelFromConfig:
     def test_max_parallel_from_config(self, tmp_path) -> None:
         """max_parallel_tools wird aus ExecutorConfig gelesen."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         config = JarvisConfig(jarvis_home=tmp_path)
         config.executor.max_parallel_tools = 8
@@ -445,7 +445,7 @@ class TestMaxParallelFromConfig:
 
     def test_max_parallel_default(self, tmp_path) -> None:
         """Default max_parallel_tools ist 4."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         config = JarvisConfig(jarvis_home=tmp_path)
         executor = Executor(config, AsyncMock())
@@ -530,7 +530,7 @@ class TestFactQuestionCrossCheck:
 
     def test_set_and_clear_fact_context(self, executor: Executor) -> None:
         """Fact-Kontext wird korrekt gesetzt und aufgeraeumt."""
-        from jarvis.core.executor import _fact_question_var
+        from cognithor.core.executor import _fact_question_var
 
         assert _fact_question_var.get() is False  # Default
         executor.set_fact_question_context(True)

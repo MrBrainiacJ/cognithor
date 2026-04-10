@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/services/voice_service.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/services/voice_service.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 class VoiceIndicator extends StatefulWidget {
   const VoiceIndicator({super.key, required this.state});

@@ -17,8 +17,8 @@ from typing import TYPE_CHECKING, Any
 import pytest
 import yaml
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.mcp.client import JarvisMCPClient, ToolCallResult
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.mcp.client import JarvisMCPClient, ToolCallResult
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 @pytest.fixture()
 def config(tmp_path: Path) -> JarvisConfig:
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),
     )
     ensure_directory_structure(cfg)
@@ -331,7 +331,7 @@ class TestBuiltinIntegration:
     @pytest.mark.asyncio
     async def test_filesystem_via_client(self, config: JarvisConfig) -> None:
         """FileSystem-Tools über den MCP-Client aufrufen."""
-        from jarvis.mcp.filesystem import register_fs_tools
+        from cognithor.mcp.filesystem import register_fs_tools
 
         client = JarvisMCPClient(config)
         register_fs_tools(client, config)
@@ -381,7 +381,7 @@ class TestBuiltinIntegration:
     @pytest.mark.asyncio
     async def test_shell_via_client(self, config: JarvisConfig) -> None:
         """Shell-Tool über den MCP-Client aufrufen."""
-        from jarvis.mcp.shell import register_shell_tools
+        from cognithor.mcp.shell import register_shell_tools
 
         client = JarvisMCPClient(config)
         register_shell_tools(client, config)
@@ -393,8 +393,8 @@ class TestBuiltinIntegration:
     @pytest.mark.asyncio
     async def test_all_tools_combined(self, config: JarvisConfig) -> None:
         """Alle Tools zusammen registriert und nutzbar."""
-        from jarvis.mcp.filesystem import register_fs_tools
-        from jarvis.mcp.shell import register_shell_tools
+        from cognithor.mcp.filesystem import register_fs_tools
+        from cognithor.mcp.shell import register_shell_tools
 
         client = JarvisMCPClient(config)
         register_fs_tools(client, config)

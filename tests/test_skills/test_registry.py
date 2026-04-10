@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.skills.registry import Skill, SkillRegistry
+from cognithor.skills.registry import Skill, SkillRegistry
 
 # ============================================================================
 # Fixtures

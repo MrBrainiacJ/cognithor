@@ -1,6 +1,6 @@
 """Tests fuer SearchWeightOptimizer."""
 
-from jarvis.memory.weight_optimizer import SearchWeightOptimizer
+from cognithor.memory.weight_optimizer import SearchWeightOptimizer
 
 
 class TestSearchWeightOptimizer:

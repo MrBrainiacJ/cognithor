@@ -21,8 +21,8 @@ services:
     volumes:
       - jarvis-data:/home/jarvis/.jarvis
     environment:
-      - JARVIS_OLLAMA_BASE_URL=${JARVIS_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - JARVIS_LOGGING_LEVEL=${JARVIS_LOGGING_LEVEL:-INFO}
+      - COGNITHOR_OLLAMA_BASE_URL=${COGNITHOR_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - COGNITHOR_LOGGING_LEVEL=${COGNITHOR_LOGGING_LEVEL:-INFO}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     stdin_open: true    # Für CLI-Interaktion
@@ -44,12 +44,12 @@ services:
     entrypoint: ["python", "-m", "uvicorn"]
     command: ["jarvis.channels.webui:create_app", "--host", "0.0.0.0", "--port", "8080", "--factory"]
     ports:
-      - "${JARVIS_WEBUI_PORT:-8080}:8080"
+      - "${COGNITHOR_WEBUI_PORT:-8080}:8080"
     volumes:
       - jarvis-data:/home/jarvis/.jarvis
     environment:
-      - JARVIS_OLLAMA_BASE_URL=${JARVIS_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - JARVIS_CHANNELS_WEBUI_ENABLED=true
+      - COGNITHOR_OLLAMA_BASE_URL=${COGNITHOR_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - COGNITHOR_CHANNELS_WEBUI_ENABLED=true
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

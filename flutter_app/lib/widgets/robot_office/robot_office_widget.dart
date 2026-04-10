@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
-import 'package:jarvis_ui/widgets/robot_office/furniture.dart';
-import 'package:jarvis_ui/widgets/robot_office/robot.dart';
-import 'package:jarvis_ui/widgets/robot_office/office_painter.dart' as bg;
-import 'package:jarvis_ui/widgets/robot_office/robot_office_painter.dart';
+import 'package:cognithor_ui/widgets/robot_office/furniture.dart';
+import 'package:cognithor_ui/widgets/robot_office/robot.dart';
+import 'package:cognithor_ui/widgets/robot_office/office_painter.dart' as bg;
+import 'package:cognithor_ui/widgets/robot_office/robot_office_painter.dart';
 
 // ---------------------------------------------------------------------------
 // Robot Office Widget — animated isometric office with robot agents

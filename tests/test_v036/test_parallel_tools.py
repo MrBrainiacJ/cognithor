@@ -7,13 +7,13 @@ import time
 
 import pytest
 
-from jarvis.tools.parallel_executor import (
+from cognithor.tools.parallel_executor import (
     ToolCall,
     execute_single,
     execute_tool_calls,
     partition_calls,
 )
-from jarvis.tools.parallel_policy import is_parallelizable
+from cognithor.tools.parallel_policy import is_parallelizable
 
 
 class TestParallelPolicy:

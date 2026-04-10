@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.evolution.models import LearningPlan, ScheduleSpec
-from jarvis.evolution.schedule_manager import ScheduleManager, _normalize_cron
+from cognithor.evolution.models import LearningPlan, ScheduleSpec
+from cognithor.evolution.schedule_manager import ScheduleManager, _normalize_cron
 
 
 def _make_plan(

@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from jarvis.config import JarvisConfig
+from cognithor.config import JarvisConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -29,7 +29,7 @@ class TestOllamaClientChat:
 
     @pytest.fixture()
     def client(self):
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         config = JarvisConfig()
         c = OllamaClient(config)
@@ -109,7 +109,7 @@ class TestOllamaClientChat:
     @pytest.mark.asyncio()
     async def test_chat_http_error(self, client):
         """HTTP-Fehler wirft OllamaError mit Status-Code."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
 
@@ -124,7 +124,7 @@ class TestOllamaClientChat:
     @pytest.mark.asyncio()
     async def test_chat_timeout(self, client):
         """Timeout wirft OllamaError."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
         mock_http.post.side_effect = httpx.TimeoutException("Timeout")
@@ -135,7 +135,7 @@ class TestOllamaClientChat:
     @pytest.mark.asyncio()
     async def test_chat_connect_error(self, client):
         """Connection-Fehler wirft OllamaError."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
         mock_http.post.side_effect = httpx.ConnectError("Connection refused")
@@ -149,7 +149,7 @@ class TestOllamaClientEmbed:
 
     @pytest.fixture()
     def client(self):
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         config = JarvisConfig()
         c = OllamaClient(config)
@@ -176,7 +176,7 @@ class TestOllamaClientEmbed:
     @pytest.mark.asyncio()
     async def test_embed_empty_response(self, client):
         """Leere Embedding-Antwort wirft OllamaError."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
 
@@ -191,7 +191,7 @@ class TestOllamaClientEmbed:
     @pytest.mark.asyncio()
     async def test_embed_http_error(self, client):
         """HTTP-Fehler bei Embedding."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
 
@@ -205,7 +205,7 @@ class TestOllamaClientEmbed:
     @pytest.mark.asyncio()
     async def test_embed_timeout(self, client):
         """Embedding-Timeout."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
         mock_http.post.side_effect = httpx.TimeoutException("Timeout")
@@ -231,7 +231,7 @@ class TestOllamaClientEmbed:
     @pytest.mark.asyncio()
     async def test_embed_batch_http_error(self, client):
         """Batch-Embedding HTTP-Fehler."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
 
@@ -245,7 +245,7 @@ class TestOllamaClientEmbed:
     @pytest.mark.asyncio()
     async def test_embed_batch_timeout(self, client):
         """Batch-Embedding Timeout."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         c, mock_http = client
         mock_http.post.side_effect = httpx.TimeoutException("Timeout")
@@ -258,14 +258,14 @@ class TestOllamaError:
     """Testet OllamaError-Klasse."""
 
     def test_error_with_status_code(self):
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         err = OllamaError("Test error", status_code=503)
         assert err.status_code == 503
         assert "Test error" in str(err)
 
     def test_error_without_status_code(self):
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         err = OllamaError("Connection lost")
         assert err.status_code is None
@@ -277,7 +277,7 @@ class TestModelRouterExtended:
     @pytest.fixture(autouse=True)
     def _reset_coding_override(self):
         """Reset ContextVar before/after each test to prevent cross-test contamination."""
-        from jarvis.core.model_router import _coding_override_var
+        from cognithor.core.model_router import _coding_override_var
 
         _coding_override_var.set(None)
         yield
@@ -289,7 +289,7 @@ class TestModelRouterExtended:
 
     @pytest.fixture()
     def router(self, config):
-        from jarvis.core.model_router import ModelRouter
+        from cognithor.core.model_router import ModelRouter
 
         mock_ollama = MagicMock()
         return ModelRouter(config, mock_ollama)
@@ -344,8 +344,8 @@ class TestMessagesToOllama:
     """Testet die messages_to_ollama Konvertierung."""
 
     def test_convert_messages(self):
-        from jarvis.core.model_router import messages_to_ollama
-        from jarvis.models import Message, MessageRole
+        from cognithor.core.model_router import messages_to_ollama
+        from cognithor.models import Message, MessageRole
 
         messages = [
             Message(role=MessageRole.USER, content="Hallo", channel="cli"),
@@ -368,7 +368,7 @@ class TestMCPClientServerPaths:
 
     @pytest.fixture()
     def mcp(self, tmp_path: Path):
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         config = JarvisConfig(jarvis_home=tmp_path)
         config.ensure_directories()
@@ -385,8 +385,8 @@ class TestMCPClientServerPaths:
     @pytest.mark.asyncio()
     async def test_call_tool_server_not_connected(self, mcp):
         """Tool auf nicht verbundenem Server gibt Fehler."""
-        from jarvis.mcp.client import ServerConnection
-        from jarvis.models import MCPServerConfig, MCPToolInfo
+        from cognithor.mcp.client import ServerConnection
+        from cognithor.models import MCPServerConfig, MCPToolInfo
 
         # Registriere Tool das auf einem Server liegt
         mcp._tool_registry["remote_tool"] = MCPToolInfo(
@@ -410,7 +410,7 @@ class TestMCPClientServerPaths:
     @pytest.mark.asyncio()
     async def test_call_tool_server_not_found(self, mcp):
         """Tool auf nicht existierendem Server gibt Fehler."""
-        from jarvis.models import MCPToolInfo
+        from cognithor.models import MCPToolInfo
 
         mcp._tool_registry["orphan_tool"] = MCPToolInfo(
             name="orphan_tool",
@@ -426,8 +426,8 @@ class TestMCPClientServerPaths:
     @pytest.mark.asyncio()
     async def test_call_tool_on_connected_server(self, mcp):
         """Tool auf verbundenem Server delegiert an Session."""
-        from jarvis.mcp.client import ServerConnection
-        from jarvis.models import MCPServerConfig, MCPToolInfo
+        from cognithor.mcp.client import ServerConnection
+        from cognithor.models import MCPServerConfig, MCPToolInfo
 
         mock_session = AsyncMock()
         mock_block = MagicMock()
@@ -459,8 +459,8 @@ class TestMCPClientServerPaths:
     @pytest.mark.asyncio()
     async def test_call_tool_server_exception(self, mcp):
         """Server-Session-Exception wird als Fehler zurückgegeben."""
-        from jarvis.mcp.client import ServerConnection
-        from jarvis.models import MCPServerConfig, MCPToolInfo
+        from cognithor.mcp.client import ServerConnection
+        from cognithor.models import MCPServerConfig, MCPToolInfo
 
         mock_session = AsyncMock()
         mock_session.call_tool.side_effect = RuntimeError("Server crashed")
@@ -486,8 +486,8 @@ class TestMCPClientServerPaths:
     @pytest.mark.asyncio()
     async def test_call_tool_server_non_text_block(self, mcp):
         """Server-Response mit Non-Text-Block wird stringifiziert."""
-        from jarvis.mcp.client import ServerConnection
-        from jarvis.models import MCPServerConfig, MCPToolInfo
+        from cognithor.mcp.client import ServerConnection
+        from cognithor.models import MCPServerConfig, MCPToolInfo
 
         class BinaryBlock:
             """Mock block without .text attribute."""
@@ -523,7 +523,7 @@ class TestMCPClientConfigLoading:
 
     @pytest.fixture()
     def mcp_with_config(self, tmp_path: Path):
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         config = JarvisConfig(jarvis_home=tmp_path)
         config.ensure_directories()
@@ -536,12 +536,12 @@ class TestMCPClientConfigLoading:
 servers:
   file_server:
     command: python
-    args: ["-m", "jarvis.mcp.filesystem"]
+    args: ["-m", "cognithor.mcp.filesystem"]
     enabled: true
     transport: stdio
   disabled_server:
     command: python
-    args: ["-m", "jarvis.mcp.shell"]
+    args: ["-m", "cognithor.mcp.shell"]
     enabled: false
     transport: stdio
 """,
@@ -560,7 +560,7 @@ servers:
 
     def test_load_server_configs_missing_file(self, tmp_path):
         """Fehlende Config-Datei gibt leeres Dict."""
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         config = JarvisConfig(jarvis_home=tmp_path / "nonexistent")
         mcp = JarvisMCPClient(config)
@@ -569,7 +569,7 @@ servers:
 
     def test_load_server_configs_invalid_yaml(self, tmp_path):
         """Ungültige Config gibt leeres Dict."""
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         config = JarvisConfig(jarvis_home=tmp_path)
         config.ensure_directories()
@@ -582,7 +582,7 @@ servers:
 
     def test_load_server_configs_no_servers_key(self, tmp_path):
         """Config ohne 'servers' Key gibt leeres Dict."""
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         config = JarvisConfig(jarvis_home=tmp_path)
         config.ensure_directories()
@@ -626,8 +626,8 @@ class TestMCPClientDisconnect:
 
     @pytest.fixture()
     def mcp_with_servers(self, tmp_path: Path):
-        from jarvis.mcp.client import JarvisMCPClient, ServerConnection
-        from jarvis.models import MCPServerConfig
+        from cognithor.mcp.client import JarvisMCPClient, ServerConnection
+        from cognithor.models import MCPServerConfig
 
         config = JarvisConfig(jarvis_home=tmp_path)
         mcp = JarvisMCPClient(config)
@@ -673,8 +673,8 @@ class TestMCPClientDisconnect:
     @pytest.mark.asyncio()
     async def test_disconnect_already_stopped_process(self, tmp_path):
         """disconnect_all mit bereits gestopptem Prozess."""
-        from jarvis.mcp.client import JarvisMCPClient, ServerConnection
-        from jarvis.models import MCPServerConfig
+        from cognithor.mcp.client import JarvisMCPClient, ServerConnection
+        from cognithor.models import MCPServerConfig
 
         config = JarvisConfig(jarvis_home=tmp_path)
         mcp = JarvisMCPClient(config)
@@ -696,8 +696,8 @@ class TestMCPClientDisconnect:
     @pytest.mark.asyncio()
     async def test_disconnect_no_process(self, tmp_path):
         """disconnect_all mit Server ohne Prozess."""
-        from jarvis.mcp.client import JarvisMCPClient, ServerConnection
-        from jarvis.models import MCPServerConfig
+        from cognithor.mcp.client import JarvisMCPClient, ServerConnection
+        from cognithor.models import MCPServerConfig
 
         config = JarvisConfig(jarvis_home=tmp_path)
         mcp = JarvisMCPClient(config)

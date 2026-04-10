@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.performance import (
+from cognithor.core.performance import (
     Backend,
     BalancingStrategy,
     CloudFallback,
@@ -323,14 +323,14 @@ class TestCloudFallback:
         assert cf.should_fallback(local_latency_ms=10.0, local_load_percent=10.0) is False
 
     def test_should_fallback_true_on_high_load(self) -> None:
-        from jarvis.core.performance import FallbackConfig
+        from cognithor.core.performance import FallbackConfig
 
         cfg = FallbackConfig(enabled=True, trigger_load_percent=80)
         cf = CloudFallback(config=cfg)
         assert cf.should_fallback(local_latency_ms=10.0, local_load_percent=95.0) is True
 
     def test_should_fallback_high_latency(self) -> None:
-        from jarvis.core.performance import FallbackConfig
+        from cognithor.core.performance import FallbackConfig
 
         cfg = FallbackConfig(enabled=True, trigger_latency_ms=1000)
         cf = CloudFallback(config=cfg)

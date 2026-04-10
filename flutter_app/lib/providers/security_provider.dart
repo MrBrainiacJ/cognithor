@@ -2,7 +2,7 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:jarvis_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/api_client.dart';
 
 class SecurityProvider extends ChangeNotifier {
   ApiClient? _api;

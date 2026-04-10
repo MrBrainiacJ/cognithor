@@ -19,7 +19,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
+from cognithor.config import JarvisConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -32,7 +32,7 @@ def calendar_config(tmp_path: Path) -> JarvisConfig:
     """JarvisConfig with calendar enabled."""
     ics_path = tmp_path / "test_calendar.ics"
     return JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         calendar={
             "enabled": True,
             "ics_path": str(ics_path),
@@ -45,14 +45,14 @@ def calendar_config(tmp_path: Path) -> JarvisConfig:
 def calendar_config_disabled(tmp_path: Path) -> JarvisConfig:
     """JarvisConfig with calendar disabled."""
     return JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
     )
 
 
 @pytest.fixture
 def calendar_tools(calendar_config: JarvisConfig):
     """CalendarTools instance."""
-    from jarvis.mcp.calendar_tools import CalendarTools
+    from cognithor.mcp.calendar_tools import CalendarTools
 
     return CalendarTools(calendar_config)
 
@@ -70,7 +70,7 @@ class TestIcsParsing:
     """Tests for manual ICS parser."""
 
     def test_parse_simple_event(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         content = (
             "BEGIN:VCALENDAR\n"
@@ -93,7 +93,7 @@ class TestIcsParsing:
         assert ev.uid == "test-1"
 
     def test_parse_all_day_event(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         content = (
             "BEGIN:VCALENDAR\n"
@@ -111,7 +111,7 @@ class TestIcsParsing:
         assert events[0].summary == "Holiday"
 
     def test_parse_multiple_events(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         content = (
             "BEGIN:VCALENDAR\n"
@@ -131,13 +131,13 @@ class TestIcsParsing:
         assert len(events) == 2
 
     def test_parse_empty_content(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         events = _parse_ics_manual("")
         assert events == []
 
     def test_parse_event_without_dtstart(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         content = (
             "BEGIN:VCALENDAR\n"
@@ -151,7 +151,7 @@ class TestIcsParsing:
         assert len(events) == 0
 
     def test_parse_folded_lines(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         content = (
             "BEGIN:VCALENDAR\n"
@@ -168,7 +168,7 @@ class TestIcsParsing:
         assert "long summary" in events[0].summary
 
     def test_parse_with_tzid(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         content = (
             "BEGIN:VCALENDAR\n"
@@ -184,7 +184,7 @@ class TestIcsParsing:
         assert events[0].dtstart is not None
 
     def test_parse_rrule(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_manual
+        from cognithor.mcp.calendar_tools import _parse_ics_manual
 
         content = (
             "BEGIN:VCALENDAR\n"
@@ -209,7 +209,7 @@ class TestIcsDatetimeParsing:
     """Tests for _parse_ics_datetime."""
 
     def test_utc_datetime(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_datetime
+        from cognithor.mcp.calendar_tools import _parse_ics_datetime
 
         dt = _parse_ics_datetime("20240115T103000Z")
         assert dt.year == 2024
@@ -220,14 +220,14 @@ class TestIcsDatetimeParsing:
         assert dt.tzinfo == UTC
 
     def test_local_datetime(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_datetime
+        from cognithor.mcp.calendar_tools import _parse_ics_datetime
 
         dt = _parse_ics_datetime("20240115T103000")
         assert dt.year == 2024
         assert dt.hour == 10
 
     def test_date_only(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_datetime
+        from cognithor.mcp.calendar_tools import _parse_ics_datetime
 
         dt = _parse_ics_datetime("20240115")
         assert dt.year == 2024
@@ -235,13 +235,13 @@ class TestIcsDatetimeParsing:
         assert dt.day == 15
 
     def test_with_tzid_prefix(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_ics_datetime
+        from cognithor.mcp.calendar_tools import _parse_ics_datetime
 
         dt = _parse_ics_datetime("TZID=Europe/Berlin:20240115T103000")
         assert dt.year == 2024
 
     def test_invalid_format(self) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError, _parse_ics_datetime
+        from cognithor.mcp.calendar_tools import CalendarError, _parse_ics_datetime
 
         with pytest.raises(CalendarError):
             _parse_ics_datetime("not-a-date")
@@ -254,7 +254,7 @@ class TestRRuleRecurrence:
     """Tests for recurring event generation."""
 
     def test_daily_recurrence(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_rrule_instances, _VEvent
+        from cognithor.mcp.calendar_tools import _parse_rrule_instances, _VEvent
 
         event = _VEvent(
             uid="daily",
@@ -270,7 +270,7 @@ class TestRRuleRecurrence:
         assert len(instances) == 5
 
     def test_weekly_recurrence(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_rrule_instances, _VEvent
+        from cognithor.mcp.calendar_tools import _parse_rrule_instances, _VEvent
 
         event = _VEvent(
             uid="weekly",
@@ -286,7 +286,7 @@ class TestRRuleRecurrence:
         assert len(instances) == 3
 
     def test_monthly_recurrence(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_rrule_instances, _VEvent
+        from cognithor.mcp.calendar_tools import _parse_rrule_instances, _VEvent
 
         event = _VEvent(
             uid="monthly",
@@ -302,7 +302,7 @@ class TestRRuleRecurrence:
         assert len(instances) == 3
 
     def test_recurrence_with_until(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_rrule_instances, _VEvent
+        from cognithor.mcp.calendar_tools import _parse_rrule_instances, _VEvent
 
         event = _VEvent(
             uid="until",
@@ -318,7 +318,7 @@ class TestRRuleRecurrence:
         assert len(instances) == 4  # 15, 16, 17, 18
 
     def test_no_rrule_single_event(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_rrule_instances, _VEvent
+        from cognithor.mcp.calendar_tools import _parse_rrule_instances, _VEvent
 
         event = _VEvent(
             uid="single",
@@ -333,7 +333,7 @@ class TestRRuleRecurrence:
         assert len(instances) == 1
 
     def test_recurrence_with_interval(self) -> None:
-        from jarvis.mcp.calendar_tools import _parse_rrule_instances, _VEvent
+        from cognithor.mcp.calendar_tools import _parse_rrule_instances, _VEvent
 
         event = _VEvent(
             uid="bi-weekly",
@@ -368,7 +368,7 @@ class TestCalendarToday:
         start = now.replace(hour=10, minute=0, second=0, microsecond=0)
         end = now.replace(hour=11, minute=0, second=0, microsecond=0)
 
-        from jarvis.mcp.calendar_tools import _format_ics_datetime
+        from cognithor.mcp.calendar_tools import _format_ics_datetime
 
         event_str = (
             "BEGIN:VEVENT\n"
@@ -398,7 +398,7 @@ class TestCalendarToday:
         assert "Jan 15 Event" in result
 
     async def test_today_invalid_date(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         with pytest.raises(CalendarError, match="Ungültiges Datum"):
             await calendar_tools.calendar_today(date="not-a-date")
@@ -417,7 +417,7 @@ class TestCalendarUpcoming:
         start = tomorrow.replace(hour=14, minute=0, second=0, microsecond=0)
         end = tomorrow.replace(hour=15, minute=0, second=0, microsecond=0)
 
-        from jarvis.mcp.calendar_tools import _format_ics_datetime
+        from cognithor.mcp.calendar_tools import _format_ics_datetime
 
         event_str = (
             "BEGIN:VEVENT\n"
@@ -488,25 +488,25 @@ class TestCalendarCreateEvent:
         assert "Ort: Conference Room B" in result
 
     async def test_create_event_missing_title(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         with pytest.raises(CalendarError, match="Titel"):
             await calendar_tools.calendar_create_event(title="", start="2024-06-15T10:00:00")
 
     async def test_create_event_missing_start(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         with pytest.raises(CalendarError, match="Startzeit"):
             await calendar_tools.calendar_create_event(title="Test", start="")
 
     async def test_create_event_invalid_start(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         with pytest.raises(CalendarError, match="Ungültige Startzeit"):
             await calendar_tools.calendar_create_event(title="Test", start="not-a-date")
 
     async def test_create_event_invalid_end(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         with pytest.raises(CalendarError, match="Ungültige Endzeit"):
             await calendar_tools.calendar_create_event(
@@ -537,7 +537,7 @@ class TestCalendarAvailability:
         now = calendar_tools._now()
         day = now.replace(hour=10, minute=0, second=0, microsecond=0)
 
-        from jarvis.mcp.calendar_tools import _format_ics_datetime
+        from cognithor.mcp.calendar_tools import _format_ics_datetime
 
         start = day
         end = day.replace(hour=12)
@@ -566,7 +566,7 @@ class TestCalendarAvailability:
         day_start = now.replace(hour=9, minute=0, second=0, microsecond=0)
         day_end = now.replace(hour=17, minute=0, second=0, microsecond=0)
 
-        from jarvis.mcp.calendar_tools import _format_ics_datetime
+        from cognithor.mcp.calendar_tools import _format_ics_datetime
 
         event_str = (
             "BEGIN:VEVENT\n"
@@ -591,13 +591,13 @@ class TestCalendarAvailability:
         )
 
     async def test_availability_invalid_date(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         with pytest.raises(CalendarError, match="Ungültiges Datum"):
             await calendar_tools.calendar_check_availability(date="bad")
 
     async def test_availability_invalid_work_hours(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         now = calendar_tools._now()
         date_str = now.strftime("%Y-%m-%d")
@@ -609,7 +609,7 @@ class TestCalendarAvailability:
             )
 
     async def test_availability_end_before_start(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import CalendarError
+        from cognithor.mcp.calendar_tools import CalendarError
 
         now = calendar_tools._now()
         date_str = now.strftime("%Y-%m-%d")
@@ -628,7 +628,7 @@ class TestIcsFileManagement:
     """Tests for ICS file creation and management."""
 
     def test_ics_file_created_on_init(self, calendar_config: JarvisConfig) -> None:
-        from jarvis.mcp.calendar_tools import CalendarTools
+        from cognithor.mcp.calendar_tools import CalendarTools
 
         tools = CalendarTools(calendar_config)
         assert tools._ics_path.exists()
@@ -641,7 +641,7 @@ class TestIcsFileManagement:
         assert events == []
 
     def test_append_event(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import _VEvent
+        from cognithor.mcp.calendar_tools import _VEvent
 
         event = _VEvent(
             uid="append-test",
@@ -656,7 +656,7 @@ class TestIcsFileManagement:
         assert "append-test" in content
 
     def test_append_preserves_existing(self, calendar_tools: Any) -> None:
-        from jarvis.mcp.calendar_tools import _VEvent
+        from cognithor.mcp.calendar_tools import _VEvent
 
         event1 = _VEvent(
             uid="first",
@@ -686,7 +686,7 @@ class TestVEventToIcs:
     """Tests for VEvent.to_ics_block."""
 
     def test_basic_event_block(self) -> None:
-        from jarvis.mcp.calendar_tools import _VEvent
+        from cognithor.mcp.calendar_tools import _VEvent
 
         event = _VEvent(
             uid="block-test",
@@ -701,7 +701,7 @@ class TestVEventToIcs:
         assert "SUMMARY:Test Event" in block
 
     def test_all_day_event_block(self) -> None:
-        from jarvis.mcp.calendar_tools import _VEvent
+        from cognithor.mcp.calendar_tools import _VEvent
 
         event = _VEvent(
             uid="allday-block",
@@ -713,7 +713,7 @@ class TestVEventToIcs:
         assert "VALUE=DATE" in block
 
     def test_event_with_description(self) -> None:
-        from jarvis.mcp.calendar_tools import _VEvent
+        from cognithor.mcp.calendar_tools import _VEvent
 
         event = _VEvent(
             uid="desc-test",
@@ -726,7 +726,7 @@ class TestVEventToIcs:
         assert "\\n" in block  # Escaped newline
 
     def test_event_to_dict(self) -> None:
-        from jarvis.mcp.calendar_tools import _VEvent
+        from cognithor.mcp.calendar_tools import _VEvent
 
         event = _VEvent(
             uid="dict-test",
@@ -748,25 +748,25 @@ class TestTimezoneHandling:
     """Tests for timezone configuration and handling."""
 
     def test_utc_timezone(self) -> None:
-        from jarvis.mcp.calendar_tools import _get_configured_timezone
+        from cognithor.mcp.calendar_tools import _get_configured_timezone
 
         tz = _get_configured_timezone("UTC")
         assert tz == UTC or tz.utcoffset(None) == timedelta(0)
 
     def test_empty_timezone_returns_local(self) -> None:
-        from jarvis.mcp.calendar_tools import _get_configured_timezone
+        from cognithor.mcp.calendar_tools import _get_configured_timezone
 
         tz = _get_configured_timezone("")
         assert tz is not None  # Should return system timezone
 
     def test_utc_offset_format(self) -> None:
-        from jarvis.mcp.calendar_tools import _get_configured_timezone
+        from cognithor.mcp.calendar_tools import _get_configured_timezone
 
         tz = _get_configured_timezone("UTC+2")
         assert tz.utcoffset(None) == timedelta(hours=2)
 
     def test_utc_negative_offset(self) -> None:
-        from jarvis.mcp.calendar_tools import _get_configured_timezone
+        from cognithor.mcp.calendar_tools import _get_configured_timezone
 
         tz = _get_configured_timezone("UTC-5")
         assert tz.utcoffset(None) == timedelta(hours=-5)
@@ -779,7 +779,7 @@ class TestRegistration:
     """Tests for register_calendar_tools."""
 
     def test_register_when_enabled(self, calendar_config: JarvisConfig) -> None:
-        from jarvis.mcp.calendar_tools import register_calendar_tools
+        from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()
         result = register_calendar_tools(mcp, calendar_config)
@@ -787,7 +787,7 @@ class TestRegistration:
         assert mcp.register_builtin_handler.call_count == 4
 
     def test_register_when_disabled(self, calendar_config_disabled: JarvisConfig) -> None:
-        from jarvis.mcp.calendar_tools import register_calendar_tools
+        from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()
         result = register_calendar_tools(mcp, calendar_config_disabled)
@@ -795,7 +795,7 @@ class TestRegistration:
         assert mcp.register_builtin_handler.call_count == 0
 
     def test_registered_tool_names(self, calendar_config: JarvisConfig) -> None:
-        from jarvis.mcp.calendar_tools import register_calendar_tools
+        from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()
         register_calendar_tools(mcp, calendar_config)
@@ -807,7 +807,7 @@ class TestRegistration:
         assert "calendar_check_availability" in registered_names
 
     def test_register_creates_ics_file(self, calendar_config: JarvisConfig) -> None:
-        from jarvis.mcp.calendar_tools import register_calendar_tools
+        from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()
         result = register_calendar_tools(mcp, calendar_config)

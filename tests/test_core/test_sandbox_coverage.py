@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from jarvis.core.sandbox import (
+from cognithor.core.sandbox import (
     BwrapSandbox,
     FirejailSandbox,
     NetworkPolicy,

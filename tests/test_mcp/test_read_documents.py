@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.mcp.media import MediaPipeline
+from cognithor.mcp.media import MediaPipeline
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -207,14 +207,14 @@ class TestReadDocx:
 
 class TestToolSchemas:
     def test_schemas_include_new_tools(self) -> None:
-        from jarvis.mcp.media import MEDIA_TOOL_SCHEMAS
+        from cognithor.mcp.media import MEDIA_TOOL_SCHEMAS
 
         assert "read_pdf" in MEDIA_TOOL_SCHEMAS
         assert "read_ppt" in MEDIA_TOOL_SCHEMAS
         assert "read_docx" in MEDIA_TOOL_SCHEMAS
 
     def test_schema_count(self) -> None:
-        from jarvis.mcp.media import MEDIA_TOOL_SCHEMAS
+        from cognithor.mcp.media import MEDIA_TOOL_SCHEMAS
 
         # 8 original + 3 read_* + 5 new
         # (typst_render, template_list, template_render, read_xlsx, read_ppt) = 16

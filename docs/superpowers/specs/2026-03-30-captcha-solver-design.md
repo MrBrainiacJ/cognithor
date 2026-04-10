@@ -345,7 +345,7 @@ tactical.record_outcome(
 
 ### 10.6 Skill
 
-`~/.jarvis/skills/generated/captcha_solver.md` — beschreibt wann und wie
+`~/.cognithor/skills/generated/captcha_solver.md` — beschreibt wann und wie
 der Solver eingesetzt wird, damit der Planner ihn korrekt aufruft.
 
 ---

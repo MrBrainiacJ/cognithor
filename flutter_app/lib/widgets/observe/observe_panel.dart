@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/observe/agent_log_panel.dart';
-import 'package:jarvis_ui/widgets/observe/kanban_panel.dart';
-import 'package:jarvis_ui/widgets/observe/live_dag_panel.dart';
-import 'package:jarvis_ui/widgets/plan_detail_panel.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/observe/agent_log_panel.dart';
+import 'package:cognithor_ui/widgets/observe/kanban_panel.dart';
+import 'package:cognithor_ui/widgets/observe/live_dag_panel.dart';
+import 'package:cognithor_ui/widgets/plan_detail_panel.dart';
 
 class ObservePanel extends StatefulWidget {
   const ObservePanel({

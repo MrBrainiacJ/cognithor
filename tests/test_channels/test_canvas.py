@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.channels.canvas import CanvasManager, CanvasState
+from cognithor.channels.canvas import CanvasManager, CanvasState
 
 
 class TestCanvasManager:

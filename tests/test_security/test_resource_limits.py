@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import time
 
-from jarvis.security.resource_limits import (
+from cognithor.security.resource_limits import (
     BUILTIN_PROFILES,
     DEFAULT_PROFILE,
     DiskPermission,

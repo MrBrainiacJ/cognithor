@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.token_budget import (
+from cognithor.core.token_budget import (
     CHANNEL_MULTIPLIERS,
     COMPLEXITY_BUDGETS,
     PHASE_RATIOS,

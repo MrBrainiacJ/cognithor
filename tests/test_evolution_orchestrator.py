@@ -5,13 +5,13 @@ from __future__ import annotations
 import time
 import uuid
 
-from jarvis.learning.causal_attributor import CausalAttributor
-from jarvis.learning.evolution_orchestrator import (
+from cognithor.learning.causal_attributor import CausalAttributor
+from cognithor.learning.evolution_orchestrator import (
     _MAX_CYCLE_HISTORY,
     EvolutionOrchestrator,
 )
-from jarvis.learning.execution_trace import ExecutionTrace, TraceStep, TraceStore
-from jarvis.learning.trace_optimizer import (
+from cognithor.learning.execution_trace import ExecutionTrace, TraceStep, TraceStore
+from cognithor.learning.trace_optimizer import (
     OptimizationProposal,
     ProposalStore,
     TraceOptimizer,

@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.irc import IRCChannel
+from cognithor.channels.irc import IRCChannel
 
 
 class TestSecureDefaults:

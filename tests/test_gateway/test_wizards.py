@@ -6,7 +6,7 @@ RBAC (UserRole, Permission, RBACManager), WizardRegistry.
 
 from __future__ import annotations
 
-from jarvis.gateway.wizards import (
+from cognithor.gateway.wizards import (
     AgentWizard,
     BaseWizard,
     BindingWizard,

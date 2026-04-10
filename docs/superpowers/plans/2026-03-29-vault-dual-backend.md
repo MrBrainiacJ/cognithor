@@ -1093,7 +1093,7 @@ def __init__(self, config: JarvisConfig | None = None) -> None:
     if vault_cfg and getattr(vault_cfg, "path", ""):
         self._vault_root = Path(vault_cfg.path).expanduser().resolve()
     else:
-        self._vault_root = Path.home() / ".jarvis" / "vault"
+        self._vault_root = Path.home() / ".cognithor" / "vault"
 
     self._vault_root.mkdir(parents=True, exist_ok=True)
     encrypt = bool(getattr(vault_cfg, "encrypt_files", False) if vault_cfg else False)

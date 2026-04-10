@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.db.sqlite_backend import SQLiteBackend
+from cognithor.db.sqlite_backend import SQLiteBackend
 
 
 def _make_flaky_conn(real_conn: sqlite3.Connection, fail_count: int):

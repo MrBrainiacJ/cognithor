@@ -9,20 +9,20 @@ import pytest
 
 class TestIdleDetector:
     def test_not_idle_initially(self):
-        from jarvis.evolution.idle_detector import IdleDetector
+        from cognithor.evolution.idle_detector import IdleDetector
 
         d = IdleDetector(idle_threshold_seconds=5)
         assert d.is_idle is False
 
     def test_idle_after_threshold(self):
-        from jarvis.evolution.idle_detector import IdleDetector
+        from cognithor.evolution.idle_detector import IdleDetector
 
         d = IdleDetector(idle_threshold_seconds=0)
         # Threshold 0 = immediately idle
         assert d.is_idle is True
 
     def test_activity_resets_idle(self):
-        from jarvis.evolution.idle_detector import IdleDetector
+        from cognithor.evolution.idle_detector import IdleDetector
 
         d = IdleDetector(idle_threshold_seconds=0)
         d._last_activity = time.time() - 100  # Force old
@@ -33,7 +33,7 @@ class TestIdleDetector:
         assert d.idle_seconds < 1
 
     def test_idle_seconds(self):
-        from jarvis.evolution.idle_detector import IdleDetector
+        from cognithor.evolution.idle_detector import IdleDetector
 
         d = IdleDetector(idle_threshold_seconds=10)
         d._last_activity = time.time() - 30
@@ -43,7 +43,7 @@ class TestIdleDetector:
 class TestEvolutionLoop:
     @pytest.fixture
     def idle_detector(self):
-        from jarvis.evolution.idle_detector import IdleDetector
+        from cognithor.evolution.idle_detector import IdleDetector
 
         d = IdleDetector(idle_threshold_seconds=0)
         d._last_activity = time.time() - 100  # Force idle
@@ -51,14 +51,14 @@ class TestEvolutionLoop:
 
     @pytest.fixture
     def loop(self, idle_detector):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         return EvolutionLoop(idle_detector=idle_detector)
 
     @pytest.mark.asyncio
     async def test_cycle_skips_when_not_idle(self):
-        from jarvis.evolution.idle_detector import IdleDetector
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.idle_detector import IdleDetector
+        from cognithor.evolution.loop import EvolutionLoop
 
         d = IdleDetector(idle_threshold_seconds=9999)
         loop = EvolutionLoop(idle_detector=d)
@@ -102,7 +102,7 @@ class TestCooperativeScheduling:
 
     @pytest.fixture
     def idle_detector(self):
-        from jarvis.evolution.idle_detector import IdleDetector
+        from cognithor.evolution.idle_detector import IdleDetector
 
         d = IdleDetector(idle_threshold_seconds=0)
         d._last_activity = time.time() - 100
@@ -110,8 +110,8 @@ class TestCooperativeScheduling:
 
     @pytest.mark.asyncio
     async def test_cycle_skips_when_system_busy(self, idle_detector):
-        from jarvis.evolution.loop import EvolutionLoop
-        from jarvis.system.resource_monitor import ResourceMonitor, ResourceSnapshot
+        from cognithor.evolution.loop import EvolutionLoop
+        from cognithor.system.resource_monitor import ResourceMonitor, ResourceSnapshot
 
         monitor = ResourceMonitor()
         # Inject a busy snapshot
@@ -125,8 +125,8 @@ class TestCooperativeScheduling:
 
     @pytest.mark.asyncio
     async def test_cycle_proceeds_when_resources_ok(self, idle_detector):
-        from jarvis.evolution.loop import EvolutionLoop
-        from jarvis.system.resource_monitor import ResourceMonitor, ResourceSnapshot
+        from cognithor.evolution.loop import EvolutionLoop
+        from cognithor.system.resource_monitor import ResourceMonitor, ResourceSnapshot
 
         monitor = ResourceMonitor()
         monitor._last_snapshot = ResourceSnapshot(cpu_percent=30.0, is_busy=False)
@@ -140,8 +140,8 @@ class TestCooperativeScheduling:
 
     @pytest.mark.asyncio
     async def test_cycle_skips_when_budget_exhausted(self, idle_detector):
-        from jarvis.evolution.loop import EvolutionLoop
-        from jarvis.models import AgentBudgetStatus
+        from cognithor.evolution.loop import EvolutionLoop
+        from cognithor.models import AgentBudgetStatus
 
         mock_tracker = MagicMock()
         mock_tracker.check_agent_budget.return_value = AgentBudgetStatus(
@@ -167,8 +167,8 @@ class TestCooperativeScheduling:
 
     @pytest.mark.asyncio
     async def test_cycle_ok_when_budget_available(self, idle_detector):
-        from jarvis.evolution.loop import EvolutionLoop
-        from jarvis.models import AgentBudgetStatus
+        from cognithor.evolution.loop import EvolutionLoop
+        from cognithor.models import AgentBudgetStatus
 
         mock_tracker = MagicMock()
         mock_tracker.check_agent_budget.return_value = AgentBudgetStatus(
@@ -191,8 +191,8 @@ class TestCooperativeScheduling:
         assert result.reason == "no_gaps"
 
     def test_stats_includes_resources(self, idle_detector):
-        from jarvis.evolution.loop import EvolutionLoop
-        from jarvis.system.resource_monitor import ResourceMonitor, ResourceSnapshot
+        from cognithor.evolution.loop import EvolutionLoop
+        from cognithor.system.resource_monitor import ResourceMonitor, ResourceSnapshot
 
         monitor = ResourceMonitor()
         monitor._last_snapshot = ResourceSnapshot(
@@ -205,7 +205,7 @@ class TestCooperativeScheduling:
         assert stats["resources"]["available"] is True
 
     def test_stats_resources_without_monitor(self, idle_detector):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         loop = EvolutionLoop(idle_detector=idle_detector)
         stats = loop.stats()
@@ -228,7 +228,7 @@ class TestATLGoalMatching:
         return _Goal(title=title, id=goal_id or title[:10])
 
     def test_matches_by_keyword_overlap(self):
-        from jarvis.evolution.loop import _match_goal_for_action
+        from cognithor.evolution.loop import _match_goal_for_action
 
         goals = [
             self._make_goal("Werde Experte fuer Cybersecurity und Pentesting"),
@@ -248,7 +248,7 @@ class TestATLGoalMatching:
         assert "Cybersecurity" in result.title
 
     def test_matches_query_param_too(self):
-        from jarvis.evolution.loop import _match_goal_for_action
+        from cognithor.evolution.loop import _match_goal_for_action
 
         goals = [
             self._make_goal("Werde Experte fuer AI Agent Architektur"),
@@ -268,7 +268,7 @@ class TestATLGoalMatching:
         assert "AI Agent" in result.title
 
     def test_returns_none_on_no_match(self):
-        from jarvis.evolution.loop import _match_goal_for_action
+        from cognithor.evolution.loop import _match_goal_for_action
 
         goals = [self._make_goal("Werde Experte fuer Kochen")]
         action = type("A", (), {"rationale": "quantum physics research", "params": {}})()
@@ -277,7 +277,7 @@ class TestATLGoalMatching:
         assert result is None
 
     def test_explicit_goal_id_in_params(self):
-        from jarvis.evolution.loop import _match_goal_for_action
+        from cognithor.evolution.loop import _match_goal_for_action
 
         goals = [
             self._make_goal("Cybersecurity", goal_id="cyber-1"),
@@ -295,7 +295,7 @@ class TestATLSynthesis:
 
     @pytest.mark.asyncio
     async def test_synthesis_returns_structured_note(self):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         async def mock_llm(prompt: str) -> str:
             return (
@@ -319,7 +319,7 @@ class TestATLSynthesis:
 
     @pytest.mark.asyncio
     async def test_synthesis_returns_none_for_irrelevant(self):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         async def mock_llm(prompt: str) -> str:
             return "KEINE_RELEVANZ"
@@ -337,7 +337,7 @@ class TestATLSynthesis:
 
     @pytest.mark.asyncio
     async def test_synthesis_returns_none_on_llm_error(self):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         async def mock_llm(prompt: str) -> str:
             raise RuntimeError("LLM timeout")
@@ -355,7 +355,7 @@ class TestATLSynthesis:
 
     @pytest.mark.asyncio
     async def test_synthesis_without_llm_returns_none(self):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         loop = EvolutionLoop.__new__(EvolutionLoop)
         loop._llm_fn = None
@@ -375,7 +375,7 @@ class TestATLAutoPersist:
     @pytest.mark.asyncio
     async def test_research_result_persisted(self):
         """search_and_read result flows through synthesis -> KnowledgeBuilder."""
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         loop = EvolutionLoop.__new__(EvolutionLoop)
         loop._llm_fn = AsyncMock(
@@ -423,7 +423,7 @@ class TestATLAutoPersist:
 
     @pytest.mark.asyncio
     async def test_dedup_prevents_double_persist(self):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         loop = EvolutionLoop.__new__(EvolutionLoop)
         loop._llm_fn = AsyncMock(return_value="## Note\n- Fact 1\n")
@@ -451,7 +451,7 @@ class TestATLAutoPersist:
 
     @pytest.mark.asyncio
     async def test_no_persist_when_synthesis_returns_none(self):
-        from jarvis.evolution.loop import EvolutionLoop
+        from cognithor.evolution.loop import EvolutionLoop
 
         loop = EvolutionLoop.__new__(EvolutionLoop)
         loop._llm_fn = AsyncMock(return_value="KEINE_RELEVANZ")

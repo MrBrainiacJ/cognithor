@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.talk_mode import TalkMode
-from jarvis.channels.wake_word import WakeWordDetector
+from cognithor.channels.talk_mode import TalkMode
+from cognithor.channels.wake_word import WakeWordDetector
 
 
 class TestTalkMode:

@@ -139,7 +139,7 @@ class TestSourceLevelChecks:
     @pytest.fixture(autouse=True)
     def _load_source(self) -> None:
         """Laedt den relevanten Source-Code."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         # Lese die gesamte Datei als Text
         self._source = inspect.getsource(main_mod)

@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture
 def jarvis_home(tmp_path):
     """Temporary Jarvis home directory."""
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     home.mkdir()
     (home / "workspace").mkdir()
     (home / "memory").mkdir()

@@ -8,7 +8,7 @@ library;
 
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:jarvis_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/api_client.dart';
 
 class ConfigProvider extends ChangeNotifier {
   ApiClient? _api;

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.memory.ingest import (
+from cognithor.memory.ingest import (
     IngestConfig,
     IngestPipeline,
     IngestResult,

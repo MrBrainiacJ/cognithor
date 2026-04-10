@@ -7,8 +7,8 @@ import tempfile
 
 import pytest
 
-from jarvis.forensics.run_recorder import RunRecorder
-from jarvis.models import (
+from cognithor.forensics.run_recorder import RunRecorder
+from cognithor.models import (
     ActionPlan,
     GateDecision,
     GateStatus,

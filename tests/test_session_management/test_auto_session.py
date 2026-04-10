@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 def test_session_config_defaults():
     """SessionConfig has correct defaults."""
-    from jarvis.config import JarvisConfig
+    from cognithor.config import JarvisConfig
 
     config = JarvisConfig()
     assert hasattr(config, "session")
@@ -17,8 +17,8 @@ def test_session_config_defaults():
 
 def test_should_create_new_session_stale(tmp_path):
     """Stale session (>timeout) -> should create new."""
-    from jarvis.gateway.session_store import SessionStore
-    from jarvis.models import SessionContext
+    from cognithor.gateway.session_store import SessionStore
+    from cognithor.models import SessionContext
 
     store = SessionStore(tmp_path / "sessions.db")
     old = SessionContext(
@@ -42,8 +42,8 @@ def test_should_create_new_session_stale(tmp_path):
 
 def test_should_create_new_session_recent(tmp_path):
     """Recent session (<timeout) -> should resume."""
-    from jarvis.gateway.session_store import SessionStore
-    from jarvis.models import SessionContext
+    from cognithor.gateway.session_store import SessionStore
+    from cognithor.models import SessionContext
 
     store = SessionStore(tmp_path / "sessions.db")
     recent = SessionContext(
@@ -67,7 +67,7 @@ def test_should_create_new_session_recent(tmp_path):
 
 def test_should_create_new_session_no_sessions(tmp_path):
     """No sessions exist -> should create new."""
-    from jarvis.gateway.session_store import SessionStore
+    from cognithor.gateway.session_store import SessionStore
 
     store = SessionStore(tmp_path / "sessions.db")
     assert (
@@ -81,7 +81,7 @@ def test_should_create_new_session_no_sessions(tmp_path):
 
 def test_chat_history_limit_default():
     """Chat history limit defaults to 100."""
-    from jarvis.config import JarvisConfig
+    from cognithor.config import JarvisConfig
 
     config = JarvisConfig()
     assert config.session.chat_history_limit == 100

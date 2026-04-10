@@ -1,6 +1,6 @@
 """Jarvis Skill: Test."""
 
-from jarvis.skills.base import BaseSkill
+from cognithor.skills.base import BaseSkill
 
 
 class TestSkill(BaseSkill):

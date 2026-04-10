@@ -11,7 +11,7 @@ class TestBackgroundProcessManager:
 
     @pytest.fixture
     def manager(self, tmp_path):
-        from jarvis.mcp.background_tasks import BackgroundProcessManager
+        from cognithor.mcp.background_tasks import BackgroundProcessManager
 
         return BackgroundProcessManager(
             db_path=tmp_path / "jobs.db",
@@ -98,7 +98,7 @@ class TestProcessMonitor:
 
     @pytest.fixture
     def manager(self, tmp_path):
-        from jarvis.mcp.background_tasks import BackgroundProcessManager
+        from cognithor.mcp.background_tasks import BackgroundProcessManager
 
         return BackgroundProcessManager(
             db_path=tmp_path / "jobs.db",
@@ -107,7 +107,7 @@ class TestProcessMonitor:
 
     @pytest.mark.asyncio
     async def test_monitor_detects_completion(self, manager):
-        from jarvis.mcp.background_tasks import ProcessMonitor
+        from cognithor.mcp.background_tasks import ProcessMonitor
 
         notifications = []
 
@@ -129,7 +129,7 @@ class TestProcessMonitor:
 
     @pytest.mark.asyncio
     async def test_monitor_detects_timeout(self, manager):
-        from jarvis.mcp.background_tasks import ProcessMonitor
+        from cognithor.mcp.background_tasks import ProcessMonitor
 
         notifications = []
 

@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:jarvis_ui/providers/admin_provider.dart';
-import 'package:jarvis_ui/providers/chat_provider.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart'
+import 'package:cognithor_ui/providers/admin_provider.dart';
+import 'package:cognithor_ui/providers/chat_provider.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart'
     show ConnectionProvider, JarvisConnectionState;
-import 'package:jarvis_ui/providers/memory_provider.dart';
-import 'package:jarvis_ui/providers/security_provider.dart';
-import 'package:jarvis_ui/providers/sessions_provider.dart';
-import 'package:jarvis_ui/providers/skills_provider.dart';
-import 'package:jarvis_ui/providers/workflow_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/screens/main_shell.dart';
-import 'package:jarvis_ui/screens/settings_screen.dart';
-import 'package:jarvis_ui/screens/setup_wizard_screen.dart';
+import 'package:cognithor_ui/providers/memory_provider.dart';
+import 'package:cognithor_ui/providers/security_provider.dart';
+import 'package:cognithor_ui/providers/sessions_provider.dart';
+import 'package:cognithor_ui/providers/skills_provider.dart';
+import 'package:cognithor_ui/providers/workflow_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/screens/main_shell.dart';
+import 'package:cognithor_ui/screens/settings_screen.dart';
+import 'package:cognithor_ui/screens/setup_wizard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

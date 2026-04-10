@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 
-from jarvis.learning.reflexion import ReflexionMemory
+from cognithor.learning.reflexion import ReflexionMemory
 
 
 class TestRecordAndLookup:

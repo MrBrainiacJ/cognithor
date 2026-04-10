@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.voice_bridge import AudioAccumulator, VoiceWebSocketBridge
+from cognithor.channels.voice_bridge import AudioAccumulator, VoiceWebSocketBridge
 
 if TYPE_CHECKING:
     from pathlib import Path

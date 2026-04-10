@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.aacs.config import AACSConfig, AACSFeatureFlags
+from cognithor.aacs.config import AACSConfig, AACSFeatureFlags
 
 
 def test_config_defaults():

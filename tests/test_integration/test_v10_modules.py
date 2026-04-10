@@ -11,7 +11,7 @@ from __future__ import annotations
 # ============================================================================
 # 1. AI Agent Security Framework
 # ============================================================================
-from jarvis.security.framework import (
+from cognithor.security.framework import (
     IncidentCategory,
     IncidentSeverity,
     IncidentStatus,
@@ -221,7 +221,7 @@ class TestPostureScorer:
 # 2. Cross-Agent Interoperability
 # ============================================================================
 
-from jarvis.core.interop import (
+from cognithor.core.interop import (
     AgentCapability,
     AgentIdentity,
     CapabilityRegistry,
@@ -431,7 +431,7 @@ class TestInteropProtocol:
 # 3. Ethics & Economic Governance
 # ============================================================================
 
-from jarvis.audit.ethics import (
+from cognithor.audit.ethics import (
     BiasCategory,
     BiasDetector,
     BudgetManager,

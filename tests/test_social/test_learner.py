@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.social.learner import ReplyLearner
-from jarvis.social.store import LeadStore
+from cognithor.social.learner import ReplyLearner
+from cognithor.social.store import LeadStore
 
 if TYPE_CHECKING:
     from pathlib import Path

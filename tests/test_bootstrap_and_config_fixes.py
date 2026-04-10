@@ -116,7 +116,7 @@ class TestSafeMkdirPermission:
     """_safe_mkdir must raise PermissionError with user-friendly fix command."""
 
     def test_permission_error_contains_fix(self, tmp_path):
-        from jarvis.config import _safe_mkdir
+        from cognithor.config import _safe_mkdir
 
         target = tmp_path / "no_access" / "sub" / "deep"
 
@@ -125,7 +125,7 @@ class TestSafeMkdirPermission:
                 _safe_mkdir(target)
 
     def test_permission_error_contains_mkdir_fix(self, tmp_path):
-        from jarvis.config import _safe_mkdir
+        from cognithor.config import _safe_mkdir
 
         target = tmp_path / "blocked"
 
@@ -136,7 +136,7 @@ class TestSafeMkdirPermission:
     def test_permission_error_mentions_path(self, tmp_path):
         import re as _re
 
-        from jarvis.config import _safe_mkdir
+        from cognithor.config import _safe_mkdir
 
         target = tmp_path / "test_dir"
 
@@ -145,7 +145,7 @@ class TestSafeMkdirPermission:
                 _safe_mkdir(target)
 
     def test_normal_mkdir_succeeds(self, tmp_path):
-        from jarvis.config import _safe_mkdir
+        from cognithor.config import _safe_mkdir
 
         target = tmp_path / "good_dir" / "sub"
         _safe_mkdir(target)
@@ -161,7 +161,7 @@ class TestSafeMkdirDiskFull:
     """_safe_mkdir must handle ENOSPC (disk full) with user-friendly message."""
 
     def test_disk_full_error(self, tmp_path):
-        from jarvis.config import _safe_mkdir
+        from cognithor.config import _safe_mkdir
 
         target = tmp_path / "full_disk"
         exc = OSError(errno.ENOSPC, "No space left on device")
@@ -171,7 +171,7 @@ class TestSafeMkdirDiskFull:
                 _safe_mkdir(target)
 
     def test_disk_full_mentions_df(self, tmp_path):
-        from jarvis.config import _safe_mkdir
+        from cognithor.config import _safe_mkdir
 
         target = tmp_path / "full_disk"
         exc = OSError(errno.ENOSPC, "No space left on device")
@@ -181,7 +181,7 @@ class TestSafeMkdirDiskFull:
                 _safe_mkdir(target)
 
     def test_other_oserror_reraises(self, tmp_path):
-        from jarvis.config import _safe_mkdir
+        from cognithor.config import _safe_mkdir
 
         target = tmp_path / "other"
         exc = OSError(errno.EACCES, "other os error")
@@ -199,7 +199,7 @@ class TestSafeWrite:
     """_safe_write must handle PermissionError and disk-full."""
 
     def test_permission_error_on_write(self, tmp_path):
-        from jarvis.config import _safe_write
+        from cognithor.config import _safe_write
 
         target = tmp_path / "readonly.txt"
         target.touch()
@@ -209,7 +209,7 @@ class TestSafeWrite:
                 _safe_write(target, "content")
 
     def test_disk_full_on_write(self, tmp_path):
-        from jarvis.config import _safe_write
+        from cognithor.config import _safe_write
 
         target = tmp_path / "full.txt"
         exc = OSError(errno.ENOSPC, "No space left on device")
@@ -219,7 +219,7 @@ class TestSafeWrite:
                 _safe_write(target, "content")
 
     def test_normal_write_succeeds(self, tmp_path):
-        from jarvis.config import _safe_write
+        from cognithor.config import _safe_write
 
         target = tmp_path / "ok.txt"
         _safe_write(target, "hello")
@@ -235,14 +235,14 @@ class TestEnsureDirectoryStructureErrors:
     """ensure_directory_structure must propagate the user-friendly errors."""
 
     def test_propagates_permission_error(self, tmp_path):
-        from jarvis.config import JarvisConfig, ensure_directory_structure
+        from cognithor.config import JarvisConfig, ensure_directory_structure
 
         cfg = JarvisConfig(jarvis_home=tmp_path / "jarvis")
 
         # Patch _safe_mkdir to simulate permission error on first call
         with (
             patch(
-                "jarvis.config._safe_mkdir",
+                "cognithor.config._safe_mkdir",
                 side_effect=PermissionError("sudo chown fix"),
             ),
             pytest.raises(PermissionError, match="sudo chown"),
@@ -250,13 +250,13 @@ class TestEnsureDirectoryStructureErrors:
             ensure_directory_structure(cfg)
 
     def test_propagates_disk_full_error(self, tmp_path):
-        from jarvis.config import JarvisConfig, ensure_directory_structure
+        from cognithor.config import JarvisConfig, ensure_directory_structure
 
         cfg = JarvisConfig(jarvis_home=tmp_path / "jarvis")
 
         with (
             patch(
-                "jarvis.config._safe_mkdir",
+                "cognithor.config._safe_mkdir",
                 side_effect=OSError("Festplatte voll"),
             ),
             pytest.raises(OSError, match="Festplatte voll"),

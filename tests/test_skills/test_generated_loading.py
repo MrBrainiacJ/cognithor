@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from jarvis.skills.registry import Skill, SkillRegistry
+from cognithor.skills.registry import Skill, SkillRegistry
 
 # ---------------------------------------------------------------------------
 # Helpers

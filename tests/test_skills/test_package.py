@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.skills.package import (
+from cognithor.skills.package import (
     AnalysisVerdict,
     CodeAnalyzer,
     PackageBuilder,

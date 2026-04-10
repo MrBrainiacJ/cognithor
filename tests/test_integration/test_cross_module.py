@@ -21,20 +21,20 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import (
+from cognithor.config import (
     JarvisConfig,
     SecurityConfig,
     ensure_directory_structure,
 )
-from jarvis.core.executor import Executor
-from jarvis.core.gatekeeper import Gatekeeper
-from jarvis.gateway.gateway import Gateway
-from jarvis.mcp.client import JarvisMCPClient
-from jarvis.mcp.filesystem import register_fs_tools
-from jarvis.mcp.shell import register_shell_tools
-from jarvis.memory.core_memory import CoreMemory
-from jarvis.memory.manager import MemoryManager
-from jarvis.models import (
+from cognithor.core.executor import Executor
+from cognithor.core.gatekeeper import Gatekeeper
+from cognithor.gateway.gateway import Gateway
+from cognithor.mcp.client import JarvisMCPClient
+from cognithor.mcp.filesystem import register_fs_tools
+from cognithor.mcp.shell import register_shell_tools
+from cognithor.memory.core_memory import CoreMemory
+from cognithor.memory.manager import MemoryManager
+from cognithor.models import (
     ActionPlan,
     AuditEntry,
     GateDecision,
@@ -47,9 +47,9 @@ from jarvis.models import (
     SessionContext,
     WorkingMemory,
 )
-from jarvis.security.audit import AuditTrail
-from jarvis.security.credentials import CredentialStore
-from jarvis.security.sanitizer import InputSanitizer
+from cognithor.security.audit import AuditTrail
+from cognithor.security.credentials import CredentialStore
+from cognithor.security.sanitizer import InputSanitizer
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -65,7 +65,7 @@ class TestMemoryPipeline:
     @pytest.fixture()
     def memory_env(self, tmp_path: Path):
         """Komplette Memory-Umgebung mit allen Tiers."""
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         ensure_directory_structure(config)
         return config
 
@@ -280,7 +280,7 @@ class TestSecurityChain:
     @pytest.fixture()
     def sec_env(self, tmp_path: Path):
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             security=SecurityConfig(
                 allowed_paths=[str(tmp_path)],
                 max_iterations=5,
@@ -473,7 +473,7 @@ class TestGatewayLifecycle:
     @pytest.fixture()
     def gateway_config(self, tmp_path: Path) -> JarvisConfig:
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             security=SecurityConfig(
                 allowed_paths=[str(tmp_path)],
                 max_iterations=3,
@@ -595,9 +595,9 @@ class TestPGEToolExecution:
         sandbox = tmp_path / "sandbox"
         sandbox.mkdir()
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             security=SecurityConfig(
-                allowed_paths=[str(sandbox), str(tmp_path / ".jarvis")],
+                allowed_paths=[str(sandbox), str(tmp_path / ".cognithor")],
                 max_iterations=5,
             ),
         )
@@ -723,7 +723,7 @@ class TestMemoryGatewayIntegration:
     @pytest.fixture()
     def mem_gw_env(self, tmp_path: Path):
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             security=SecurityConfig(allowed_paths=[str(tmp_path)]),
         )
         ensure_directory_structure(config)
@@ -780,7 +780,7 @@ class TestSanitizerGatekeeperScenarios:
     @pytest.fixture()
     def env(self, tmp_path: Path):
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             security=SecurityConfig(allowed_paths=[str(tmp_path)]),
         )
         ensure_directory_structure(config)
@@ -933,7 +933,7 @@ class TestCrossModuleErrorHandling:
     @pytest.fixture()
     def env(self, tmp_path: Path):
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             security=SecurityConfig(allowed_paths=[str(tmp_path)]),
         )
         ensure_directory_structure(config)

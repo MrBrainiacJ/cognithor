@@ -2,8 +2,8 @@
 
 import pytest
 
-from jarvis.memory.episodic_store import EpisodicStore
-from jarvis.memory.episodic_summarizer import EpisodicSummarizer
+from cognithor.memory.episodic_store import EpisodicStore
+from cognithor.memory.episodic_summarizer import EpisodicSummarizer
 
 
 class TestEpisodicStore:

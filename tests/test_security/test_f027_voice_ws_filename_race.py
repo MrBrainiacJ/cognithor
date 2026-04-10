@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import inspect
 
-from jarvis.channels.voice_ws_bridge import VoiceMessageHandler
+from cognithor.channels.voice_ws_bridge import VoiceMessageHandler
 
 # ============================================================================
 # Unique Filenames
@@ -116,7 +116,7 @@ class TestSourceLevelChecks:
 
     def test_uuid_imported(self) -> None:
         """uuid Modul wird importiert."""
-        import jarvis.channels.voice_ws_bridge as mod
+        import cognithor.channels.voice_ws_bridge as mod
 
         source = inspect.getsource(mod)
         assert "import uuid" in source

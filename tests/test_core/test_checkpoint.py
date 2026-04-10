@@ -1,7 +1,7 @@
 """Tests fuer CheckpointManager."""
 
-from jarvis.core.checkpoint import CheckpointManager
-from jarvis.models import KernelState, ToolResult
+from cognithor.core.checkpoint import CheckpointManager
+from cognithor.models import KernelState, ToolResult
 
 
 class TestCheckpointManager:

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.monitor import (
+from cognithor.security.monitor import (
     PolicyRule,
     RateLimit,
     RateLimiter,

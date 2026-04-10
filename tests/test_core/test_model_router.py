@@ -15,13 +15,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.model_router import (
+from cognithor.config import JarvisConfig
+from cognithor.core.model_router import (
     ModelRouter,
     OllamaClient,
     messages_to_ollama,
 )
-from jarvis.models import Message, MessageRole
+from cognithor.models import Message, MessageRole
 
 
 @pytest.fixture()

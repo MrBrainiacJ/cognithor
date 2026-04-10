@@ -20,8 +20,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.mcp.docker_tools import (
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.mcp.docker_tools import (
     DockerTools,
     _is_blocked_mount,
     _parse_docker_error,
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 @pytest.fixture()
 def config(tmp_path: Path) -> JarvisConfig:
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(tmp_path)],
         ),
@@ -206,32 +206,32 @@ class TestDockerPs:
         table_output = (
             "CONTAINER ID\tNAMES\tIMAGE\tSTATUS\tPORTS\nabc123\tweb\tnginx\tUp 2 hours\t80/tcp"
         )
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, table_output, "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, table_output, "")):
             result = await docker.docker_ps()
             assert "abc123" in result
             assert "nginx" in result
 
     async def test_ps_all(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
             await docker.docker_ps(all=True)
             # Verify -a flag was passed
             call_args = mock.call_args[0]
             assert "-a" in call_args
 
     async def test_ps_with_filter(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
             await docker.docker_ps(filter="name=web")
             call_args = mock.call_args[0]
             assert "--filter" in call_args
             assert "name=web" in call_args
 
     async def test_ps_empty(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "", "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "", "")):
             result = await docker.docker_ps()
             assert "No containers" in result
 
     async def test_ps_error(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(1, "", "Cannot connect")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(1, "", "Cannot connect")):
             result = await docker.docker_ps()
             assert "Error" in result
 
@@ -241,20 +241,20 @@ class TestDockerLogs:
 
     async def test_logs_basic(self, docker: DockerTools) -> None:
         with patch(
-            "jarvis.mcp.docker_tools._run_docker", return_value=(0, "log line 1\nlog line 2", "")
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "log line 1\nlog line 2", "")
         ):
             result = await docker.docker_logs(container="web")
             assert "log line 1" in result
 
     async def test_logs_with_tail(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
             await docker.docker_logs(container="web", tail=50)
             call_args = mock.call_args[0]
             assert "--tail" in call_args
             assert "50" in call_args
 
     async def test_logs_with_since(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
             await docker.docker_logs(container="web", since="1h")
             call_args = mock.call_args[0]
             assert "--since" in call_args
@@ -267,14 +267,14 @@ class TestDockerLogs:
 
     async def test_logs_follow_ignored(self, docker: DockerTools) -> None:
         """follow=True should be silently ignored."""
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
             await docker.docker_logs(container="web", follow=True)
             call_args = mock.call_args[0]
             assert "--follow" not in call_args
             assert "-f" not in call_args
 
     async def test_logs_tail_clamped(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
             await docker.docker_logs(container="web", tail=999999)
             call_args = mock.call_args[0]
             assert "10000" in call_args  # Clamped to max
@@ -285,19 +285,19 @@ class TestDockerInspect:
 
     async def test_inspect_basic(self, docker: DockerTools) -> None:
         json_output = '[{"Id": "abc123", "State": {"Status": "running"}}]'
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, json_output, "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, json_output, "")):
             result = await docker.docker_inspect(target="web")
             assert "abc123" in result
 
     async def test_inspect_with_format(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "running", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "running", "")) as mock:
             await docker.docker_inspect(target="web", format="{{.State.Status}}")
             call_args = mock.call_args[0]
             assert "--format" in call_args
 
     async def test_inspect_image_with_slash(self, docker: DockerTools) -> None:
         """Image names like library/nginx should be accepted."""
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "{}", "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "{}", "")):
             result = await docker.docker_inspect(target="library/nginx:latest")
             assert "Error" not in result
 
@@ -310,17 +310,17 @@ class TestDockerRun:
     """Tests fuer docker_run -- inkl. Security-Checks."""
 
     async def test_run_basic(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "abc123def456\n", "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123def456\n", "")):
             result = await docker.docker_run(image="nginx:latest")
             assert "started successfully" in result.lower() or "abc123" in result
 
     async def test_run_with_name(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")):
             result = await docker.docker_run(image="nginx", name="web-server")
             assert "web-server" in result
 
     async def test_run_with_ports(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")) as mock:
             await docker.docker_run(image="nginx", ports=["8080:80"])
             call_args = mock.call_args[0]
             assert "-p" in call_args
@@ -332,7 +332,7 @@ class TestDockerRun:
         assert "Invalid port" in result
 
     async def test_run_with_env(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")) as mock:
             await docker.docker_run(image="nginx", env={"NODE_ENV": "production"})
             call_args = mock.call_args[0]
             assert "-e" in call_args
@@ -371,7 +371,7 @@ class TestDockerRun:
 
     async def test_run_docker_error(self, docker: DockerTools) -> None:
         with patch(
-            "jarvis.mcp.docker_tools._run_docker", return_value=(1, "", "No such image: foo")
+            "cognithor.mcp.docker_tools._run_docker", return_value=(1, "", "No such image: foo")
         ):
             result = await docker.docker_run(image="foo")
             assert "Error" in result
@@ -381,12 +381,12 @@ class TestDockerStop:
     """Tests fuer docker_stop."""
 
     async def test_stop_basic(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "web\n", "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "web\n", "")):
             result = await docker.docker_stop(container="web")
             assert "stopped" in result.lower()
 
     async def test_stop_with_timeout(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "", "")) as mock:
             await docker.docker_stop(container="web", timeout=30)
             call_args = mock.call_args[0]
             assert "-t" in call_args
@@ -397,14 +397,14 @@ class TestDockerStop:
         assert "Error" in result
 
     async def test_stop_timeout_clamped(self, docker: DockerTools) -> None:
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, "", "")) as mock:
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "", "")) as mock:
             await docker.docker_stop(container="web", timeout=99999)
             call_args = mock.call_args[0]
             assert "300" in call_args  # Clamped to max
 
     async def test_stop_error(self, docker: DockerTools) -> None:
         with patch(
-            "jarvis.mcp.docker_tools._run_docker", return_value=(1, "", "No such container")
+            "cognithor.mcp.docker_tools._run_docker", return_value=(1, "", "No such container")
         ):
             result = await docker.docker_stop(container="nonexistent")
             assert "Error" in result
@@ -421,7 +421,7 @@ class TestRegistration:
     def test_registration_when_docker_available(
         self, mock_mcp_client: MagicMock, config: JarvisConfig
     ) -> None:
-        with patch("jarvis.mcp.docker_tools._docker_available", return_value=True):
+        with patch("cognithor.mcp.docker_tools._docker_available", return_value=True):
             result = register_docker_tools(mock_mcp_client, config)
             assert result is not None
             assert isinstance(result, DockerTools)
@@ -442,7 +442,7 @@ class TestRegistration:
         mock_mcp_client: MagicMock,
         config: JarvisConfig,
     ) -> None:
-        with patch("jarvis.mcp.docker_tools._docker_available", return_value=False):
+        with patch("cognithor.mcp.docker_tools._docker_available", return_value=False):
             result = register_docker_tools(mock_mcp_client, config)
             assert result is None
             assert mock_mcp_client.register_builtin_handler.call_count == 0
@@ -458,7 +458,7 @@ class TestOutputTruncation:
 
     async def test_long_output_truncated(self, docker: DockerTools) -> None:
         long_output = "x" * 60_000
-        with patch("jarvis.mcp.docker_tools._run_docker", return_value=(0, long_output, "")):
+        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, long_output, "")):
             result = await docker.docker_ps()
             assert len(result) <= 50_100  # 50000 + truncation message
             assert "truncated" in result.lower() or "gekürzt" in result.lower()

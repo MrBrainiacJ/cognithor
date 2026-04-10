@@ -12,7 +12,7 @@ class TestHMACSignatures:
 
     @pytest.fixture
     def audit_trail(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         return AuditTrail(
             log_path=tmp_path / "test_audit.jsonl",
@@ -20,8 +20,8 @@ class TestHMACSignatures:
         )
 
     def test_record_includes_hmac_field(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry
-        from jarvis.models import GateStatus, RiskLevel
+        from cognithor.models import AuditEntry as GateAuditEntry
+        from cognithor.models import GateStatus, RiskLevel
 
         entry = GateAuditEntry(
             session_id="test-session",
@@ -40,8 +40,8 @@ class TestHMACSignatures:
         assert len(record["hmac"]) == 64  # SHA-256 hex digest
 
     def test_hmac_is_deterministic(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry
-        from jarvis.models import GateStatus, RiskLevel
+        from cognithor.models import AuditEntry as GateAuditEntry
+        from cognithor.models import GateStatus, RiskLevel
 
         entry = GateAuditEntry(
             session_id="s1",
@@ -66,9 +66,9 @@ class TestHMACSignatures:
         assert record["hmac"] == expected
 
     def test_no_hmac_when_key_is_none(self, tmp_path):
-        from jarvis.models import AuditEntry as GateAuditEntry
-        from jarvis.models import GateStatus, RiskLevel
-        from jarvis.security.audit import AuditTrail
+        from cognithor.models import AuditEntry as GateAuditEntry
+        from cognithor.models import GateStatus, RiskLevel
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_path=tmp_path / "no_hmac.jsonl", hmac_key=None)
         entry = GateAuditEntry(
@@ -86,8 +86,8 @@ class TestHMACSignatures:
         assert "hmac" not in record
 
     def test_verify_chain_with_hmac(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry
-        from jarvis.models import GateStatus, RiskLevel
+        from cognithor.models import AuditEntry as GateAuditEntry
+        from cognithor.models import GateStatus, RiskLevel
 
         for i in range(5):
             entry = GateAuditEntry(
@@ -112,13 +112,13 @@ class TestBlockchainAnchoring:
 
     @pytest.fixture
     def audit_trail(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         return AuditTrail(log_path=tmp_path / "bc_audit.jsonl")
 
     def test_get_anchor_returns_hash_and_count(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry
-        from jarvis.models import GateStatus, RiskLevel
+        from cognithor.models import AuditEntry as GateAuditEntry
+        from cognithor.models import GateStatus, RiskLevel
 
         for i in range(3):
             entry = GateAuditEntry(
@@ -138,8 +138,8 @@ class TestBlockchainAnchoring:
         assert "timestamp" in anchor
 
     def test_anchor_changes_after_new_entry(self, audit_trail):
-        from jarvis.models import AuditEntry as GateAuditEntry
-        from jarvis.models import GateStatus, RiskLevel
+        from cognithor.models import AuditEntry as GateAuditEntry
+        from cognithor.models import GateStatus, RiskLevel
 
         entry = GateAuditEntry(
             session_id="s1",
@@ -171,7 +171,7 @@ class TestUserDataExport:
     """GDPR Art. 15 — user can export their audit data."""
 
     def test_export_filters_by_channel(self, tmp_path):
-        from jarvis.audit import AuditLogger
+        from cognithor.audit import AuditLogger
 
         logger = AuditLogger(log_dir=tmp_path)
         logger.log_tool_call("tool1", agent_name="jarvis", result="ok")
@@ -182,7 +182,7 @@ class TestUserDataExport:
         assert len(entries) >= 1
 
     def test_export_returns_all_without_filter(self, tmp_path):
-        from jarvis.audit import AuditLogger
+        from cognithor.audit import AuditLogger
 
         logger = AuditLogger(log_dir=tmp_path)
         logger.log_tool_call("tool1", result="ok")
@@ -196,12 +196,12 @@ class TestBreachDetector:
 
     @pytest.fixture
     def detector(self, tmp_path):
-        from jarvis.audit.breach_detector import BreachDetector
+        from cognithor.audit.breach_detector import BreachDetector
 
         return BreachDetector(state_path=tmp_path / "breach_state.json", cooldown_hours=0)
 
     def test_no_breach_on_normal_entries(self, detector, tmp_path):
-        from jarvis.audit import AuditLogger
+        from cognithor.audit import AuditLogger
 
         logger = AuditLogger(log_dir=tmp_path)
         logger.log_tool_call("read_file", result="ok")
@@ -209,7 +209,7 @@ class TestBreachDetector:
         assert len(breaches) == 0
 
     def test_detects_security_critical_event(self, detector, tmp_path):
-        from jarvis.audit import AuditLogger, AuditSeverity
+        from cognithor.audit import AuditLogger, AuditSeverity
 
         logger = AuditLogger(log_dir=tmp_path)
         logger.log_security("Unauthorized access attempt detected", severity=AuditSeverity.CRITICAL)
@@ -218,8 +218,8 @@ class TestBreachDetector:
         assert breaches[0]["severity"] == "critical"
 
     def test_cooldown_prevents_duplicate(self, tmp_path):
-        from jarvis.audit import AuditLogger, AuditSeverity
-        from jarvis.audit.breach_detector import BreachDetector
+        from cognithor.audit import AuditLogger, AuditSeverity
+        from cognithor.audit.breach_detector import BreachDetector
 
         detector = BreachDetector(state_path=tmp_path / "breach_state.json", cooldown_hours=24)
         logger = AuditLogger(log_dir=tmp_path)
@@ -230,7 +230,7 @@ class TestBreachDetector:
         assert len(breaches2) == 0
 
     def test_breach_report_format(self, detector, tmp_path):
-        from jarvis.audit import AuditLogger, AuditSeverity
+        from cognithor.audit import AuditLogger, AuditSeverity
 
         logger = AuditLogger(log_dir=tmp_path)
         logger.log_security("Data exfiltration attempt", severity=AuditSeverity.CRITICAL)

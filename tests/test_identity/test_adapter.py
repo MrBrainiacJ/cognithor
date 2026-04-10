@@ -10,13 +10,13 @@ class TestIdentityLayerBasics:
 
     def test_import(self) -> None:
         """IdentityLayer can be imported."""
-        from jarvis.identity import IdentityLayer
+        from cognithor.identity import IdentityLayer
 
         assert IdentityLayer is not None
 
     def test_genesis_anchors(self) -> None:
         """Genesis anchors are accessible."""
-        from jarvis.identity.cognitio.engine import GENESIS_ANCHOR_CONTENTS
+        from cognithor.identity.cognitio.engine import GENESIS_ANCHOR_CONTENTS
 
         assert len(GENESIS_ANCHOR_CONTENTS) == 7
         assert "AI" in GENESIS_ANCHOR_CONTENTS[0]
@@ -27,7 +27,7 @@ class TestIdentityLayerBasics:
 
     def test_empty_enrichment(self) -> None:
         """Empty enrichment returns correct structure."""
-        from jarvis.identity.adapter import IdentityLayer
+        from cognithor.identity.adapter import IdentityLayer
 
         result = IdentityLayer._empty_enrichment()
         assert "cognitive_context" in result
@@ -41,31 +41,31 @@ class TestLLMBridge:
     """Tests for the CognithorLLMBridge."""
 
     def test_import(self) -> None:
-        from jarvis.identity.llm_bridge import CognithorLLMBridge
+        from cognithor.identity.llm_bridge import CognithorLLMBridge
 
         assert CognithorLLMBridge is not None
 
     def test_parse_json_safe_direct(self) -> None:
-        from jarvis.identity.llm_bridge import CognithorLLMBridge
+        from cognithor.identity.llm_bridge import CognithorLLMBridge
 
         result = CognithorLLMBridge._parse_json_safe('{"key": "value"}')
         assert result == {"key": "value"}
 
     def test_parse_json_safe_markdown(self) -> None:
-        from jarvis.identity.llm_bridge import CognithorLLMBridge
+        from cognithor.identity.llm_bridge import CognithorLLMBridge
 
         text = 'Some text\n```json\n{"key": "value"}\n```\nMore text'
         result = CognithorLLMBridge._parse_json_safe(text)
         assert result == {"key": "value"}
 
     def test_parse_json_safe_broken(self) -> None:
-        from jarvis.identity.llm_bridge import CognithorLLMBridge
+        from cognithor.identity.llm_bridge import CognithorLLMBridge
 
         result = CognithorLLMBridge._parse_json_safe("not json at all", ["a", "b"])
         assert result == {"a": None, "b": None}
 
     def test_parse_json_safe_with_defaults(self) -> None:
-        from jarvis.identity.llm_bridge import CognithorLLMBridge
+        from cognithor.identity.llm_bridge import CognithorLLMBridge
 
         result = CognithorLLMBridge._parse_json_safe('{"a": 1}', ["a", "b"])
         assert result["a"] == 1
@@ -77,7 +77,7 @@ class TestMCPIdentityTools:
 
     def test_register(self) -> None:
         """Tools can be registered."""
-        from jarvis.mcp.identity_tools import register_identity_tools
+        from cognithor.mcp.identity_tools import register_identity_tools
 
         mcp = MagicMock()
         identity = MagicMock()

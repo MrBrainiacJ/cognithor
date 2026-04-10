@@ -42,7 +42,7 @@ def _make_audit_file(audit_dir: Path, name: str = "audit_2026-03-25.jsonl") -> P
 
 @pytest.fixture()
 def jarvis_home(tmp_path: Path) -> Path:
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     home.mkdir()
     return home
 
@@ -59,8 +59,8 @@ def audit_dir(tmp_path: Path) -> Path:
 # ---------------------------------------------------------------------------
 
 
-@patch("jarvis.audit.worm._HAS_BOTO3", True)
-@patch("jarvis.audit.worm.boto3")
+@patch("cognithor.audit.worm._HAS_BOTO3", True)
+@patch("cognithor.audit.worm.boto3")
 def test_upload_daily_with_mock_s3(
     mock_boto3: MagicMock,
     jarvis_home: Path,
@@ -70,7 +70,7 @@ def test_upload_daily_with_mock_s3(
     mock_client = MagicMock()
     mock_boto3.client.return_value = mock_client
 
-    from jarvis.audit.worm import WORMUploader
+    from cognithor.audit.worm import WORMUploader
 
     cfg = _FakeAuditConfig(worm_backend="s3", worm_bucket="my-audit")
     uploader = WORMUploader(cfg, jarvis_home)
@@ -100,8 +100,8 @@ def test_upload_daily_with_mock_s3(
 # ---------------------------------------------------------------------------
 
 
-@patch("jarvis.audit.worm._HAS_BOTO3", True)
-@patch("jarvis.audit.worm.boto3")
+@patch("cognithor.audit.worm._HAS_BOTO3", True)
+@patch("cognithor.audit.worm.boto3")
 def test_skip_already_uploaded(
     mock_boto3: MagicMock,
     jarvis_home: Path,
@@ -111,7 +111,7 @@ def test_skip_already_uploaded(
     mock_client = MagicMock()
     mock_boto3.client.return_value = mock_client
 
-    from jarvis.audit.worm import WORMUploader
+    from cognithor.audit.worm import WORMUploader
 
     cfg = _FakeAuditConfig()
     uploader = WORMUploader(cfg, jarvis_home)
@@ -136,8 +136,8 @@ def test_skip_already_uploaded(
 # ---------------------------------------------------------------------------
 
 
-@patch("jarvis.audit.worm._HAS_BOTO3", True)
-@patch("jarvis.audit.worm.boto3")
+@patch("cognithor.audit.worm._HAS_BOTO3", True)
+@patch("cognithor.audit.worm.boto3")
 def test_list_uploaded(
     mock_boto3: MagicMock,
     jarvis_home: Path,
@@ -147,7 +147,7 @@ def test_list_uploaded(
     mock_client = MagicMock()
     mock_boto3.client.return_value = mock_client
 
-    from jarvis.audit.worm import WORMUploader
+    from cognithor.audit.worm import WORMUploader
 
     cfg = _FakeAuditConfig()
     uploader = WORMUploader(cfg, jarvis_home)
@@ -172,8 +172,8 @@ def test_graceful_without_boto3(jarvis_home: Path, audit_dir: Path) -> None:
     """No crash when boto3 is missing — upload_daily returns []."""
     _make_audit_file(audit_dir)
 
-    with patch("jarvis.audit.worm._HAS_BOTO3", False):
-        from jarvis.audit.worm import WORMUploader
+    with patch("cognithor.audit.worm._HAS_BOTO3", False):
+        from cognithor.audit.worm import WORMUploader
 
         cfg = _FakeAuditConfig(worm_backend="s3")
         uploader = WORMUploader(cfg, jarvis_home)
@@ -187,8 +187,8 @@ def test_graceful_without_boto3(jarvis_home: Path, audit_dir: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-@patch("jarvis.audit.worm._HAS_BOTO3", True)
-@patch("jarvis.audit.worm.boto3")
+@patch("cognithor.audit.worm._HAS_BOTO3", True)
+@patch("cognithor.audit.worm.boto3")
 def test_minio_uses_custom_endpoint(
     mock_boto3: MagicMock,
     jarvis_home: Path,
@@ -200,7 +200,7 @@ def test_minio_uses_custom_endpoint(
     mock_client = MagicMock()
     mock_boto3.client.return_value = mock_client
 
-    from jarvis.audit.worm import WORMUploader
+    from cognithor.audit.worm import WORMUploader
 
     cfg = _FakeAuditConfig(worm_backend="minio", worm_bucket="minio-audit")
     _uploader = WORMUploader(cfg, jarvis_home)

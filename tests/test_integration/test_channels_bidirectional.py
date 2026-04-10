@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 # ============================================================================
 # 1. Slack-Channel Tests
@@ -29,14 +29,14 @@ class TestSlackChannelBidirectional:
 
     def test_slack_has_bidirectional_property(self) -> None:
         """SlackChannel hat is_bidirectional Property."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test", app_token="xapp-test")
         assert ch.is_bidirectional is False  # Vor start()
 
     def test_slack_accepts_app_token(self) -> None:
         """Konstruktor akzeptiert app_token für Socket Mode."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(
             token="xoxb-test",
@@ -48,7 +48,7 @@ class TestSlackChannelBidirectional:
 
     def test_slack_backward_compatible_without_app_token(self) -> None:
         """Ohne app_token funktioniert SlackChannel wie bisher."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test")
         assert ch.app_token == ""
@@ -57,7 +57,7 @@ class TestSlackChannelBidirectional:
     @pytest.mark.asyncio
     async def test_slack_on_message_ignores_bot(self) -> None:
         """Eigene Bot-Nachrichten werden ignoriert."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test")
         ch._bot_user_id = "U_BOT"
@@ -75,7 +75,7 @@ class TestSlackChannelBidirectional:
     @pytest.mark.asyncio
     async def test_slack_on_message_forwards_to_handler(self) -> None:
         """Eingehende User-Nachrichten werden an handler weitergeleitet."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test")
         ch._bot_user_id = "U_BOT"
@@ -101,7 +101,7 @@ class TestSlackChannelBidirectional:
     @pytest.mark.asyncio
     async def test_slack_on_message_strips_mention(self) -> None:
         """Bot-Mention wird aus dem Text entfernt."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test")
         ch._bot_user_id = "U_BOT"
@@ -125,7 +125,7 @@ class TestSlackChannelBidirectional:
     @pytest.mark.asyncio
     async def test_slack_approval_buttons_structure(self) -> None:
         """Approval sendet Block Kit mit Buttons."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test", app_token="xapp-x", default_channel="C1")
         ch._client = AsyncMock()
@@ -157,7 +157,7 @@ class TestSlackChannelBidirectional:
     @pytest.mark.asyncio
     async def test_slack_approval_resolves_on_click(self) -> None:
         """Approval-Future wird aufgelöst wenn Button geklickt wird."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test", app_token="xapp-x", default_channel="C1")
         ch._client = AsyncMock()
@@ -183,7 +183,7 @@ class TestSlackChannelBidirectional:
     @pytest.mark.asyncio
     async def test_slack_send_only_without_app_token(self) -> None:
         """Ohne Socket Mode: request_approval gibt False zurück."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test")  # kein app_token
         ch._client = AsyncMock()
@@ -196,7 +196,7 @@ class TestSlackChannelBidirectional:
     @pytest.mark.asyncio
     async def test_slack_send_uses_thread(self) -> None:
         """send() antwortet im Thread wenn thread_ts in Metadata."""
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.slack import SlackChannel
 
         ch = SlackChannel(token="xoxb-test")
         ch._client = AsyncMock()
@@ -224,7 +224,7 @@ class TestDiscordChannelBidirectional:
 
     def test_discord_has_bidirectional_property(self) -> None:
         """DiscordChannel hat is_bidirectional Property."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="discord-token", channel_id=123456)
         assert ch.is_bidirectional is False
@@ -232,7 +232,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_on_message_ignores_own(self) -> None:
         """Eigene Nachrichten werden ignoriert."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         bot_user = MagicMock()
@@ -250,7 +250,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_on_message_ignores_other_bots(self) -> None:
         """Bot-Nachrichten werden ignoriert."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         ch._client = MagicMock()
@@ -268,7 +268,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_on_message_from_target_channel(self) -> None:
         """Nachrichten im konfigurierten Channel werden verarbeitet."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         ch._client = MagicMock()
@@ -302,7 +302,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_on_message_ignores_other_channels(self) -> None:
         """Nachrichten in anderen Channels werden ignoriert (keine DM, kein Mention)."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         ch._client = MagicMock()
@@ -324,7 +324,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_on_message_handles_dm(self) -> None:
         """DMs werden immer verarbeitet (guild=None)."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         ch._client = MagicMock()
@@ -353,7 +353,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_approval_reaction(self) -> None:
         """Approval-Future wird durch ✅ Reaction aufgelöst."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         ch._client = MagicMock()
@@ -379,7 +379,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_approval_reject(self) -> None:
         """Approval-Future wird durch ❌ Reaction abgelehnt."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         ch._client = MagicMock()
@@ -404,7 +404,7 @@ class TestDiscordChannelBidirectional:
     @pytest.mark.asyncio
     async def test_discord_approval_ignores_bot_reaction(self) -> None:
         """Bot-eigene Reactions werden bei Approvals ignoriert."""
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.discord import DiscordChannel
 
         ch = DiscordChannel(token="t", channel_id=100)
         bot_user = MagicMock()
@@ -434,16 +434,16 @@ class TestChannelInterfaceCompliance:
     """Beide Channels erfüllen das Channel-Interface vollständig."""
 
     def test_slack_implements_channel(self) -> None:
-        from jarvis.channels.base import Channel
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.base import Channel
+        from cognithor.channels.slack import SlackChannel
 
         assert issubclass(SlackChannel, Channel)
         ch = SlackChannel(token="t")
         assert ch.name == "slack"
 
     def test_discord_implements_channel(self) -> None:
-        from jarvis.channels.base import Channel
-        from jarvis.channels.discord import DiscordChannel
+        from cognithor.channels.base import Channel
+        from cognithor.channels.discord import DiscordChannel
 
         assert issubclass(DiscordChannel, Channel)
         ch = DiscordChannel(token="t", channel_id=1)
@@ -451,8 +451,8 @@ class TestChannelInterfaceCompliance:
 
     def test_both_channels_have_required_methods(self) -> None:
         """Beide Channels haben alle abstrakten Methoden."""
-        from jarvis.channels.discord import DiscordChannel
-        from jarvis.channels.slack import SlackChannel
+        from cognithor.channels.discord import DiscordChannel
+        from cognithor.channels.slack import SlackChannel
 
         for cls in (SlackChannel, DiscordChannel):
             for method in ("start", "stop", "send", "request_approval", "send_streaming_token"):

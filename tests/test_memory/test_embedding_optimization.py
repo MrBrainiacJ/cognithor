@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.indexer import MemoryIndex
+from cognithor.memory.indexer import MemoryIndex
 
 if TYPE_CHECKING:
     from pathlib import Path

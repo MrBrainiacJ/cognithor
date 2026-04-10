@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/reddit_leads_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/jarvis_toast.dart';
-import 'package:jarvis_ui/widgets/leads/performance_badge.dart';
-import 'package:jarvis_ui/widgets/leads/feedback_dialog.dart';
-import 'package:jarvis_ui/widgets/leads/refine_panel.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/widgets/leads/performance_badge.dart';
+import 'package:cognithor_ui/widgets/leads/feedback_dialog.dart';
+import 'package:cognithor_ui/widgets/leads/refine_panel.dart';
 
 class LeadDetailSheet extends StatefulWidget {
   const LeadDetailSheet({super.key, required this.lead});

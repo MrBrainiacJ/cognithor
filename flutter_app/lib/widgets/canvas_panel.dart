@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// Slide-up panel that renders HTML content from canvas_push messages.
 class CanvasPanel extends StatelessWidget {

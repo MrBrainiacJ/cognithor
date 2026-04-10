@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/reddit_leads_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/leads/refine_panel.dart';
-import 'package:jarvis_ui/widgets/leads/template_picker.dart';
-import 'package:jarvis_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/leads/refine_panel.dart';
+import 'package:cognithor_ui/widgets/leads/template_picker.dart';
+import 'package:cognithor_ui/widgets/jarvis_toast.dart';
 
 class LeadWizard extends StatefulWidget {
   const LeadWizard({super.key, required this.leads});

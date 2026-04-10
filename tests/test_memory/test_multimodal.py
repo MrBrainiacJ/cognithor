@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.memory.multimodal import (
+from cognithor.memory.multimodal import (
     MediaAsset,
     MediaType,
     MultimodalMemory,

@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.browser.vision import VisionAnalysisResult
-from jarvis.mcp.computer_use import ComputerUseTools
+from cognithor.browser.vision import VisionAnalysisResult
+from cognithor.mcp.computer_use import ComputerUseTools
 
 
 class TestComputerScreenshotWithVision:
@@ -36,7 +36,7 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
         ):
             result = await tools.computer_screenshot()
 
@@ -51,7 +51,7 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=None)
 
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
         ):
             result = await tools.computer_screenshot()
 
@@ -72,7 +72,7 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
         ):
             result = await tools.computer_screenshot()
 
@@ -94,7 +94,7 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
         ):
             await tools.computer_screenshot(task_context="Reddit oeffnen")
 
@@ -106,9 +106,9 @@ class TestGatekeeperCUClassification:
     """Verify security classification hasn't regressed."""
 
     def test_screenshot_green_actions_yellow(self):
-        from jarvis.config import JarvisConfig, ToolsConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction
+        from cognithor.config import JarvisConfig, ToolsConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction
 
         config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=True))
         gk = Gatekeeper(config)
@@ -127,8 +127,8 @@ class TestGatewayCUDetection:
     """Tests for _is_cu_plan detection."""
 
     def test_cu_plan_with_computer_click(self):
-        from jarvis.gateway.gateway import Gateway
-        from jarvis.models import ActionPlan, PlannedAction
+        from cognithor.gateway.gateway import Gateway
+        from cognithor.models import ActionPlan, PlannedAction
 
         plan = ActionPlan(
             goal="test",
@@ -144,8 +144,8 @@ class TestGatewayCUDetection:
         assert Gateway._is_cu_plan(plan) is True
 
     def test_non_cu_plan(self):
-        from jarvis.gateway.gateway import Gateway
-        from jarvis.models import ActionPlan, PlannedAction
+        from cognithor.gateway.gateway import Gateway
+        from cognithor.models import ActionPlan, PlannedAction
 
         plan = ActionPlan(
             goal="test",
@@ -154,8 +154,8 @@ class TestGatewayCUDetection:
         assert Gateway._is_cu_plan(plan) is False
 
     def test_direct_response_not_cu(self):
-        from jarvis.gateway.gateway import Gateway
-        from jarvis.models import ActionPlan
+        from cognithor.gateway.gateway import Gateway
+        from cognithor.models import ActionPlan
 
         plan = ActionPlan(goal="test", direct_response="Hello!")
         assert Gateway._is_cu_plan(plan) is False
@@ -167,7 +167,7 @@ class TestCoordinateScaling:
         tools = ComputerUseTools()
         tools._last_scale_factor = 0.5
 
-        with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
+        with patch("cognithor.mcp.computer_use._get_pyautogui") as mock_gui:
             mock_pag = MagicMock()
             mock_gui.return_value = mock_pag
             await tools.computer_click(x=100, y=200)
@@ -180,7 +180,7 @@ class TestCoordinateScaling:
         tools = ComputerUseTools()
         tools._last_scale_factor = 1.0
 
-        with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
+        with patch("cognithor.mcp.computer_use._get_pyautogui") as mock_gui:
             mock_pag = MagicMock()
             mock_gui.return_value = mock_pag
             await tools.computer_click(x=100, y=200)
@@ -192,7 +192,7 @@ class TestCoordinateScaling:
         tools = ComputerUseTools()
         assert tools._last_scale_factor == 1.0
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             mock_ss.return_value = ("base64data", 2560, 1440, 0.667)
             await tools.computer_screenshot()
             assert tools._last_scale_factor == 0.667
@@ -202,7 +202,7 @@ class TestCoordinateScaling:
         tools = ComputerUseTools()
         tools._last_scale_factor = 0.5
 
-        with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
+        with patch("cognithor.mcp.computer_use._get_pyautogui") as mock_gui:
             mock_pag = MagicMock()
             mock_gui.return_value = mock_pag
             await tools.computer_drag(start_x=100, start_y=200, end_x=300, end_y=400)
@@ -237,7 +237,7 @@ class TestUIAIntegration:
         mock_vision.analyze_desktop = AsyncMock(return_value=mock_vision_result)
 
         tools = ComputerUseTools(vision_analyzer=mock_vision, uia_provider=mock_uia)
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             mock_ss.return_value = ("b64data", 1920, 1080, 1.0)
             result = await tools.computer_screenshot()
 
@@ -259,7 +259,7 @@ class TestUIAIntegration:
         mock_vision.analyze_desktop = AsyncMock(return_value=mock_vision_result)
 
         tools = ComputerUseTools(vision_analyzer=mock_vision, uia_provider=mock_uia)
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             mock_ss.return_value = ("b64data", 1920, 1080, 1.0)
             result = await tools.computer_screenshot()
 
@@ -275,7 +275,7 @@ class TestUIAIntegration:
         mock_vision.analyze_desktop = AsyncMock(return_value=mock_vision_result)
 
         tools = ComputerUseTools(vision_analyzer=mock_vision)
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             mock_ss.return_value = ("b64data", 1920, 1080, 1.0)
             result = await tools.computer_screenshot()
 
@@ -293,7 +293,7 @@ class TestUIAIntegration:
         mock_vision.analyze_desktop = AsyncMock(return_value=mock_vision_result)
 
         tools = ComputerUseTools(vision_analyzer=mock_vision, uia_provider=mock_uia)
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             mock_ss.return_value = ("b64data", 1920, 1080, 1.0)
             result = await tools.computer_screenshot()
 
@@ -305,7 +305,7 @@ class TestWaitForStableScreen:
     async def test_returns_on_stable_screen(self):
         tools = ComputerUseTools()
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             mock_ss.return_value = ("same_image_data", 1920, 1080, 1.0)
             await tools._wait_for_stable_screen(
                 min_delay_ms=10, poll_interval_ms=10, timeout_ms=5000
@@ -321,7 +321,7 @@ class TestWaitForStableScreen:
             counter["n"] += 1
             return (f"different_image_{counter['n']}", 1920, 1080, 1.0)
 
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64", side_effect=changing_screenshot):
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64", side_effect=changing_screenshot):
             import time as _time
 
             start = _time.monotonic()

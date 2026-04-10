@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.documents.templates import TemplateManager
-from jarvis.mcp.media import MediaPipeline
+from cognithor.documents.templates import TemplateManager
+from cognithor.mcp.media import MediaPipeline
 
 
 @pytest.fixture()

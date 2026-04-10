@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.evolution.goal_index import GoalScopedIndex, IndexedChunk
+from cognithor.evolution.goal_index import GoalScopedIndex, IndexedChunk
 
 
 class TestGoalScopedIndex:

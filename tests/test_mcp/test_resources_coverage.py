@@ -8,8 +8,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.mcp.resources import JarvisResourceProvider
-from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPToolDef
+from cognithor.mcp.resources import JarvisResourceProvider
+from cognithor.mcp.server import JarvisMCPServer, MCPServerConfig, MCPToolDef
 
 
 @pytest.fixture

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.db.sqlite_backend import SQLiteBackend
+from cognithor.db.sqlite_backend import SQLiteBackend
 
 if TYPE_CHECKING:
     from pathlib import Path

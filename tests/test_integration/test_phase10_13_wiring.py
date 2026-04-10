@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-from jarvis.audit.compliance import (
+from cognithor.audit.compliance import (
     ComplianceFramework,
     DecisionLog,
     DecisionRecord,
@@ -21,14 +21,14 @@ from jarvis.audit.compliance import (
     RemediationTracker,
     ReportExporter,
 )
-from jarvis.core.explainability import (
+from cognithor.core.explainability import (
     ExplainabilityEngine,
     SourceReference,
     SourceType,
     StepType,
 )
-from jarvis.memory.hygiene import MemoryHygieneEngine
-from jarvis.security.redteam import (
+from cognithor.memory.hygiene import MemoryHygieneEngine
+from cognithor.security.redteam import (
     ScanPolicy,
     SecurityScanner,
 )

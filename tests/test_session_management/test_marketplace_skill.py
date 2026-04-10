@@ -7,7 +7,7 @@ from pathlib import Path
 
 def test_marketplace_skill_loadable():
     """The marketplace-monitor skill should be loadable from data/procedures/."""
-    from jarvis.skills.registry import SkillRegistry
+    from cognithor.skills.registry import SkillRegistry
 
     registry = SkillRegistry()
 
@@ -30,7 +30,7 @@ def test_marketplace_skill_loadable():
 
 def test_marketplace_skill_matching():
     """Skill should match marketplace-related queries."""
-    from jarvis.skills.registry import SkillRegistry
+    from cognithor.skills.registry import SkillRegistry
 
     registry = SkillRegistry()
     procedures_dir = Path(__file__).parent.parent.parent / "data" / "procedures"
@@ -49,7 +49,7 @@ def test_marketplace_skill_matching():
 
 def test_autonomous_detects_marketplace_monitoring():
     """Autonomous orchestrator should detect marketplace monitoring as orchestration-worthy."""
-    from jarvis.core.autonomous_orchestrator import AutonomousOrchestrator
+    from cognithor.core.autonomous_orchestrator import AutonomousOrchestrator
 
     orch = AutonomousOrchestrator()
 

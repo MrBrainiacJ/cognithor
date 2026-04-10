@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.social.store import LeadStore
+from cognithor.social.store import LeadStore
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -56,7 +56,7 @@ class TestReplyPerformance:
     def test_get_replied_leads_for_tracking(self, store: LeadStore):
         import time
 
-        from jarvis.social.models import Lead, LeadStatus
+        from cognithor.social.models import Lead, LeadStatus
 
         lead = Lead(
             post_id="tr1",

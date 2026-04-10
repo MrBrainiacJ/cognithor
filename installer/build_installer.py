@@ -242,7 +242,7 @@ def step_launcher() -> Path:
         ")\r\n"
         "\r\n"
         "REM First-run setup (downloads skills, installs default agents)\r\n"
-        'if not exist "%USERPROFILE%\\.jarvis\\.cognithor_initialized" (\r\n'
+        'if not exist "%USERPROFILE%\\.cognithor\\.cognithor_initialized" (\r\n'
         '    if exist "%COGNITHOR_HOME%first_run.py" (\r\n'
         "        echo Running first-time setup...\r\n"
         '        "%PYTHON%" "%COGNITHOR_HOME%first_run.py"\r\n'

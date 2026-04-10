@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.channels.commands import (
+from cognithor.channels.commands import (
     CommandRegistry,
     CommandScope,
     FallbackRenderer,

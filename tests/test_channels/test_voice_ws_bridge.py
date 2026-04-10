@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.voice_ws_bridge import VoiceWebSocketBridge
+from cognithor.channels.voice_ws_bridge import VoiceWebSocketBridge
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ class TestTranscribeVoiceMessage:
     @pytest.mark.asyncio
     async def test_transcribe_with_mock(self, bridge: VoiceWebSocketBridge) -> None:
         """Erfolgreiche Transkription mit gemockter MediaPipeline."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_bytes = b"\x00" * 100
         audio_b64 = base64.b64encode(audio_bytes).decode()
@@ -71,7 +71,7 @@ class TestTranscribeVoiceMessage:
     @pytest.mark.asyncio
     async def test_transcribe_empty_result(self, bridge: VoiceWebSocketBridge) -> None:
         """Leere Transkription gibt None zurück."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
 
@@ -87,7 +87,7 @@ class TestTranscribeVoiceMessage:
     @pytest.mark.asyncio
     async def test_transcribe_failure(self, bridge: VoiceWebSocketBridge) -> None:
         """Fehlgeschlagene Transkription gibt None zurück."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\xff" * 50).decode()
 
@@ -116,7 +116,7 @@ class TestSynthesizeResponse:
 
     @pytest.mark.asyncio
     async def test_synthesis_success(self, bridge: VoiceWebSocketBridge, workspace: Path) -> None:
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         # TTS-Mock: erstellt die Datei unter dem uebergebenen output_path
         async def fake_tts(text: str, output_path: str, voice: str = "") -> MediaResult:
@@ -135,7 +135,7 @@ class TestSynthesizeResponse:
 
     @pytest.mark.asyncio
     async def test_synthesis_failure(self, bridge: VoiceWebSocketBridge) -> None:
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         mock_media = MagicMock()
         mock_media.text_to_speech = AsyncMock(
@@ -181,7 +181,7 @@ class TestHandleWSVoiceMessage:
 
     @pytest.mark.asyncio
     async def test_successful_transcription(self, bridge: VoiceWebSocketBridge) -> None:
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
 
@@ -205,7 +205,7 @@ class TestHandleWSVoiceMessage:
 
     @pytest.mark.asyncio
     async def test_no_speech_detected(self, bridge: VoiceWebSocketBridge) -> None:
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
 

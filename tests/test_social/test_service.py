@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 import pytest
 
-from jarvis.social.models import LeadStatus
-from jarvis.social.service import RedditLeadService
+from cognithor.social.models import LeadStatus
+from cognithor.social.service import RedditLeadService
 
 
 @pytest.fixture()
@@ -127,7 +127,7 @@ class TestRedditLeadService:
         assert stats.total == 0
 
     def test_update_lead(self, service: RedditLeadService):
-        from jarvis.social.models import Lead
+        from cognithor.social.models import Lead
 
         lead = Lead(post_id="x", subreddit="S", title="T", url="u", intent_score=70)
         service._store.save_lead(lead)

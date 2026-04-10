@@ -13,7 +13,7 @@ import asyncio
 
 import pytest
 
-from jarvis.utils.circuit_breaker import (
+from cognithor.utils.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerOpen,
     CircuitState,

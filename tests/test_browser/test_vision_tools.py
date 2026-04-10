@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.browser.tools import register_browser_use_tools
+from cognithor.browser.tools import register_browser_use_tools
 
 # ============================================================================
 # Tool-Registrierung
@@ -177,7 +177,7 @@ class TestVisionFindTool:
         mock_vision.is_enabled = True
         agent = register_browser_use_tools(mcp_mock, vision_analyzer=mock_vision)
 
-        from jarvis.browser.types import ActionResult
+        from cognithor.browser.types import ActionResult
 
         agent._running = True
         agent.find_and_click_with_vision = AsyncMock(
@@ -204,7 +204,7 @@ class TestVisionScreenshotTool:
 
         mcp_mock.register_builtin_handler = mock_register
 
-        from jarvis.browser.vision import VisionAnalysisResult
+        from cognithor.browser.vision import VisionAnalysisResult
 
         mock_vision = MagicMock()
         mock_vision.is_enabled = True
@@ -214,7 +214,7 @@ class TestVisionScreenshotTool:
 
         agent = register_browser_use_tools(mcp_mock, vision_analyzer=mock_vision)
 
-        from jarvis.browser.types import ActionResult
+        from cognithor.browser.types import ActionResult
 
         agent._running = True
         agent.screenshot = AsyncMock(

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from jarvis.core.workflow_adapter import action_plan_to_workflow
-from jarvis.core.workflow_schema import NodeType, WorkflowDefinition
-from jarvis.models import ActionPlan, PlannedAction
+from cognithor.core.workflow_adapter import action_plan_to_workflow
+from cognithor.core.workflow_schema import NodeType, WorkflowDefinition
+from cognithor.models import ActionPlan, PlannedAction
 
 
 class TestActionPlanToWorkflow:

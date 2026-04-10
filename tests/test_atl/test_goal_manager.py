@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.evolution.goal_manager import Goal, GoalManager
+from cognithor.evolution.goal_manager import Goal, GoalManager
 
 
 @pytest.fixture

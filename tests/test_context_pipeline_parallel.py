@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import ContextPipelineConfig
-from jarvis.core.context_pipeline import ContextPipeline, ContextResult
-from jarvis.models import Chunk, MemorySearchResult, WorkingMemory
+from cognithor.config import ContextPipelineConfig
+from cognithor.core.context_pipeline import ContextPipeline, ContextResult
+from cognithor.models import Chunk, MemorySearchResult, WorkingMemory
 
 # ── Fixtures ──────────────────────────────────────────────────────
 

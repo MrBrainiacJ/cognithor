@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.llm_backend import (
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.core.llm_backend import (
     AnthropicBackend,
     ChatResponse,
     EmbedResponse,

@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.google_chat import GoogleChatChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.google_chat import GoogleChatChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -419,7 +419,7 @@ class TestGoogleChatApprovalFlow:
 
         action = PlannedAction(tool="test", params={})
         with patch(
-            "jarvis.channels.google_chat.asyncio.wait_for", side_effect=asyncio.TimeoutError
+            "cognithor.channels.google_chat.asyncio.wait_for", side_effect=asyncio.TimeoutError
         ):
             result = await ch.request_approval("s1", action, "reason")
         assert result is False

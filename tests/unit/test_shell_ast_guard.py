@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.shell_ast_guard import ShellViolation, analyse_shell, is_safe_shell
+from cognithor.security.shell_ast_guard import ShellViolation, analyse_shell, is_safe_shell
 
 
 class TestSafeCommands:

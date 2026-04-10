@@ -6,7 +6,7 @@ ContradictionChecker, IntegrityVerifier und MemoryHygieneEngine.
 
 from __future__ import annotations
 
-from jarvis.memory.hygiene import (
+from cognithor.memory.hygiene import (
     ContradictionChecker,
     CredentialLeakDetector,
     FactAssertion,

@@ -13,10 +13,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.core.planner import Planner
-from jarvis.core.reflector import Reflector
-from jarvis.learning.reward import RewardCalculator
-from jarvis.models import (
+from cognithor.core.planner import Planner
+from cognithor.core.reflector import Reflector
+from cognithor.learning.reward import RewardCalculator
+from cognithor.models import (
     ActionPlan,
     AgentResult,
     PlannedAction,

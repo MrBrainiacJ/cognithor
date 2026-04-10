@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.core.llm_backend import LLMBackendError
-from jarvis.core.llm_retry import (
+from cognithor.core.llm_backend import LLMBackendError
+from cognithor.core.llm_retry import (
     BASE_DELAY_MS,
     is_retryable_error,
     retry_llm_call,

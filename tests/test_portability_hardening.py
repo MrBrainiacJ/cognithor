@@ -70,7 +70,7 @@ class TestFix1AllExtraEntschaerft:
 
     def test_startup_check_voice_group_no_webrtcvad(self) -> None:
         """startup_check.OPTIONAL_GROUPS['voice'] must not list webrtcvad."""
-        from jarvis.core.startup_check import OPTIONAL_GROUPS
+        from cognithor.core.startup_check import OPTIONAL_GROUPS
 
         voice_pkgs = OPTIONAL_GROUPS.get("voice", [])
         assert "webrtcvad" not in voice_pkgs, "webrtcvad must be removed from startup_check"
@@ -100,20 +100,20 @@ class TestFix2ModelNotFound404:
 
     @pytest.fixture()
     def config(self, tmp_path: Path) -> Any:
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         return JarvisConfig(jarvis_home=tmp_path)
 
     @pytest.fixture()
     def client(self, config: Any) -> Any:
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         return OllamaClient(config)
 
     @pytest.mark.asyncio
     async def test_chat_404_raises_specific_message(self, client: Any) -> None:
         """OllamaClient.chat() on 404 must mention 'ollama pull'."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         mock_response = MagicMock()
         mock_response.status_code = 404
@@ -137,7 +137,7 @@ class TestFix2ModelNotFound404:
     @pytest.mark.asyncio
     async def test_chat_500_still_raises_generic(self, client: Any) -> None:
         """Non-404 errors must still use the generic error format."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         mock_response = MagicMock()
         mock_response.status_code = 500
@@ -159,8 +159,8 @@ class TestFix2ModelNotFound404:
 
     def test_error_messages_classifies_ollama_404(self) -> None:
         """classify_error_for_user must handle OllamaError with status_code=404."""
-        from jarvis.core.model_router import OllamaError
-        from jarvis.utils.error_messages import classify_error_for_user
+        from cognithor.core.model_router import OllamaError
+        from cognithor.utils.error_messages import classify_error_for_user
 
         exc = OllamaError("Modell 'qwen3:32b' nicht gefunden", status_code=404)
         msg = classify_error_for_user(exc)
@@ -168,8 +168,8 @@ class TestFix2ModelNotFound404:
 
     def test_error_messages_classifies_ollama_connection(self) -> None:
         """classify_error_for_user must handle OllamaError connection failures."""
-        from jarvis.core.model_router import OllamaError
-        from jarvis.utils.error_messages import classify_error_for_user
+        from cognithor.core.model_router import OllamaError
+        from cognithor.utils.error_messages import classify_error_for_user
 
         exc = OllamaError("Ollama nicht erreichbar unter http://localhost:11434")
         msg = classify_error_for_user(exc)
@@ -178,9 +178,9 @@ class TestFix2ModelNotFound404:
     @pytest.mark.asyncio
     async def test_planner_404_returns_pull_hint(self, config: Any) -> None:
         """Planner must return a direct_response with 'ollama pull' on 404."""
-        from jarvis.core.model_router import ModelRouter, OllamaClient, OllamaError
-        from jarvis.core.planner import Planner
-        from jarvis.models import WorkingMemory
+        from cognithor.core.model_router import ModelRouter, OllamaClient, OllamaError
+        from cognithor.core.planner import Planner
+        from cognithor.models import WorkingMemory
 
         mock_ollama = AsyncMock(spec=OllamaClient)
         mock_ollama.chat.side_effect = OllamaError(
@@ -219,7 +219,7 @@ class TestFix3WindowsUtf8Stdout:
         """main() source must contain the stream.reconfigure() block."""
         import inspect
 
-        from jarvis.__main__ import main
+        from cognithor.__main__ import main
 
         source = inspect.getsource(main)
         assert "reconfigure" in source
@@ -265,7 +265,7 @@ class TestFix4LlmUnreachableWarning:
     @pytest.mark.asyncio
     async def test_warning_printed_when_llm_unavailable(self, tmp_path: Path) -> None:
         """When _llm.is_available() returns False, a visible warning must appear."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         config = JarvisConfig(jarvis_home=tmp_path)
 
@@ -317,7 +317,7 @@ class TestFix4LlmUnreachableWarning:
         """The __main__.py run() must contain the LLM availability check."""
         import inspect
 
-        from jarvis.__main__ import main
+        from cognithor.__main__ import main
 
         source = inspect.getsource(main)
         assert "is_available" in source

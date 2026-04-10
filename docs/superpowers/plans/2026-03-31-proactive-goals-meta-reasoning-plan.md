@@ -301,7 +301,7 @@ In `src/jarvis/gateway/phases/advanced.py`, after the existing GEPA block, add:
 # StrategyMemory (Meta-Reasoning)
 try:
     from jarvis.learning.strategy_memory import StrategyMemory
-    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".jarvis")
+    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".cognithor")
     strat_db = Path(jarvis_home) / "index" / "strategy_memory.db"
     result["strategy_memory"] = StrategyMemory(db_path=strat_db)
     log.info("strategy_memory_initialized", db=str(strat_db))

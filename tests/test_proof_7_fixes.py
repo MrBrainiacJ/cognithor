@@ -21,8 +21,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.models import (
+from cognithor.config import JarvisConfig
+from cognithor.models import (
     ActionPlan,
     GateDecision,
     GateStatus,
@@ -75,8 +75,8 @@ class TestProofFix1_WorkflowEngineActive:
 
     def test_adapter_produces_valid_workflow(self) -> None:
         """ActionPlan → WorkflowDefinition → Engine.validate() → 0 Fehler."""
-        from jarvis.core.workflow_adapter import action_plan_to_workflow
-        from jarvis.core.workflow_engine import WorkflowEngine
+        from cognithor.core.workflow_adapter import action_plan_to_workflow
+        from cognithor.core.workflow_engine import WorkflowEngine
 
         plan = ActionPlan(
             goal="Proof: Adapter works",
@@ -105,7 +105,7 @@ class TestProofFix1_WorkflowEngineActive:
 
     def test_gateway_has_execute_workflow_method(self) -> None:
         """Gateway besitzt execute_workflow() und execute_action_plan_as_workflow()."""
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         assert hasattr(Gateway, "execute_workflow")
         assert hasattr(Gateway, "execute_action_plan_as_workflow")
@@ -128,7 +128,7 @@ class TestProofFix2_BlockedInCompletedIds:
 
     @pytest.mark.asyncio
     async def test_dependent_runs_despite_blocked_parent(self, tmp_path) -> None:
-        from jarvis.core.executor import Executor
+        from cognithor.core.executor import Executor
 
         config = JarvisConfig(jarvis_home=tmp_path)
         mcp = AsyncMock()
@@ -167,7 +167,7 @@ class TestProofFix3_WebToolRegistration:
     """
 
     def test_all_five_web_tools_registered_with_schemas(self) -> None:
-        from jarvis.mcp.web import register_web_tools
+        from cognithor.mcp.web import register_web_tools
 
         class MockClient:
             def __init__(self):
@@ -251,7 +251,7 @@ class TestProofFix5_LiveReload:
 
     def test_executor_reload_updates_all_limits(self, tmp_path) -> None:
         """Executor.reload_config() aendert tatsaechlich runtime-Werte."""
-        from jarvis.core.executor import Executor
+        from cognithor.core.executor import Executor
 
         config1 = JarvisConfig(jarvis_home=tmp_path)
         executor = Executor(config1, AsyncMock())
@@ -280,7 +280,7 @@ class TestProofFix5_LiveReload:
 
     def test_webtools_reload_updates_domain_lists(self, tmp_path) -> None:
         """WebTools.reload_config() aendert Domain-Listen und Limits."""
-        from jarvis.mcp.web import WebTools
+        from cognithor.mcp.web import WebTools
 
         config1 = JarvisConfig(jarvis_home=tmp_path)
         web = WebTools(config=config1)
@@ -300,7 +300,7 @@ class TestProofFix5_LiveReload:
 
     def test_reload_components_config_calls_executor_reload(self, tmp_path) -> None:
         """reload_components(config=True) ruft Executor.reload_config() auf."""
-        from jarvis.core.executor import Executor
+        from cognithor.core.executor import Executor
 
         config = JarvisConfig(jarvis_home=tmp_path)
         executor = Executor(config, AsyncMock())
@@ -394,7 +394,7 @@ class TestProofFix7_SecretMasking:
 
     def test_all_web_api_keys_are_secrets(self) -> None:
         """Alle Web-API-Keys werden durch _is_secret_field erkannt."""
-        from jarvis.config_manager import _is_secret_field
+        from cognithor.config_manager import _is_secret_field
 
         web_api_keys = [
             "google_cse_api_key",
@@ -407,7 +407,7 @@ class TestProofFix7_SecretMasking:
 
     def test_non_secret_web_fields_are_not_masked(self) -> None:
         """Nicht-geheime Web-Felder werden NICHT maskiert."""
-        from jarvis.config_manager import _is_secret_field
+        from cognithor.config_manager import _is_secret_field
 
         non_secrets = [
             "google_cse_cx",  # CSE-ID, nicht geheim
@@ -421,7 +421,7 @@ class TestProofFix7_SecretMasking:
 
     def test_config_manager_read_masks_web_keys(self, tmp_path) -> None:
         """ConfigManager.read() maskiert google_cse_api_key mit '***'."""
-        from jarvis.config_manager import ConfigManager
+        from cognithor.config_manager import ConfigManager
 
         config = JarvisConfig(jarvis_home=tmp_path)
         # Set a real API key

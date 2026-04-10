@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.core.startup_check import (
+from cognithor.core.startup_check import (
     OPTIONAL_GROUPS,
     StartupChecker,
     StartupReport,
@@ -161,7 +161,7 @@ class TestCanImport:
     def test_non_importable_module(self) -> None:
         assert _can_import("nonexistent_module_xyz_12345") is False
 
-    @patch("jarvis.core.startup_check.importlib.import_module", side_effect=ImportError)
+    @patch("cognithor.core.startup_check.importlib.import_module", side_effect=ImportError)
     def test_import_error(self, _mock: MagicMock) -> None:
         assert _can_import("anything") is False
 
@@ -174,7 +174,7 @@ class TestCanImport:
 class TestPipInstall:
     """Tests for the _pip_install helper (mocked subprocess)."""
 
-    @patch("jarvis.core.startup_check.subprocess.run")
+    @patch("cognithor.core.startup_check.subprocess.run")
     def test_successful_install(self, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=0, stderr="")
         success, stderr = _pip_install(["numpy"])
@@ -188,7 +188,7 @@ class TestPipInstall:
         assert "install" in args
         assert "numpy" in args
 
-    @patch("jarvis.core.startup_check.subprocess.run")
+    @patch("cognithor.core.startup_check.subprocess.run")
     def test_failed_install(self, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=1, stderr="No matching distribution")
         success, stderr = _pip_install(["bogus-package"])
@@ -196,7 +196,7 @@ class TestPipInstall:
         assert "No matching distribution" in stderr
 
     @patch(
-        "jarvis.core.startup_check.subprocess.run",
+        "cognithor.core.startup_check.subprocess.run",
         side_effect=subprocess.TimeoutExpired(cmd="pip", timeout=300),
     )
     def test_timeout(self, _mock: MagicMock) -> None:
@@ -204,7 +204,7 @@ class TestPipInstall:
         assert success is False
         assert "timed out" in stderr
 
-    @patch("jarvis.core.startup_check.subprocess.run", side_effect=OSError("boom"))
+    @patch("cognithor.core.startup_check.subprocess.run", side_effect=OSError("boom"))
     def test_os_error(self, _mock: MagicMock) -> None:
         success, stderr = _pip_install(["pkg"])
         assert success is False
@@ -219,7 +219,7 @@ class TestPipInstall:
 class TestHttpGetJson:
     """Tests for the _http_get_json helper."""
 
-    @patch("jarvis.core.startup_check.urllib.request.urlopen")
+    @patch("cognithor.core.startup_check.urllib.request.urlopen")
     def test_success(self, mock_urlopen: MagicMock) -> None:
         body = json.dumps({"models": [{"name": "qwen3:8b"}]}).encode()
         ctx = MagicMock()
@@ -230,7 +230,7 @@ class TestHttpGetJson:
         assert result is not None
         assert "models" in result
 
-    @patch("jarvis.core.startup_check.urllib.request.urlopen", side_effect=Exception("refused"))
+    @patch("cognithor.core.startup_check.urllib.request.urlopen", side_effect=Exception("refused"))
     def test_connection_error(self, _mock: MagicMock) -> None:
         result = _http_get_json("http://localhost:99999/api/tags")
         assert result is None
@@ -244,15 +244,15 @@ class TestHttpGetJson:
 class TestCheckPythonPackages:
     """Tests for StartupChecker.check_python_packages()."""
 
-    @patch("jarvis.core.startup_check._can_import", return_value=True)
+    @patch("cognithor.core.startup_check._can_import", return_value=True)
     def test_all_packages_present(self, _mock: MagicMock, checker: StartupChecker) -> None:
         report = checker.check_python_packages()
         assert len(report.fixes_applied) == 0
         assert len(report.warnings) == 0
         assert len(report.checks_passed) > 0
 
-    @patch("jarvis.core.startup_check._pip_install", return_value=(True, ""))
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install", return_value=(True, ""))
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
     def test_missing_packages_auto_installed(
         self, _mock_import: MagicMock, _mock_pip: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -263,7 +263,7 @@ class TestCheckPythonPackages:
         # Should have attempted pip install for each group
         assert _mock_pip.call_count == len(OPTIONAL_GROUPS)
 
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
     def test_missing_packages_without_auto_install_warns(
         self, _mock_import: MagicMock, checker: StartupChecker
     ) -> None:
@@ -272,8 +272,8 @@ class TestCheckPythonPackages:
         assert len(report.warnings) > 0
         assert len(report.fixes_applied) == 0
 
-    @patch("jarvis.core.startup_check._pip_install", return_value=(False, "error"))
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install", return_value=(False, "error"))
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
     def test_install_failure_creates_warning(
         self, _mock_import: MagicMock, _mock_pip: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -282,7 +282,7 @@ class TestCheckPythonPackages:
         assert len(report.warnings) > 0
         assert len(report.fixes_applied) == 0
 
-    @patch("jarvis.core.startup_check._can_import")
+    @patch("cognithor.core.startup_check._can_import")
     def test_partial_missing(self, mock_import: MagicMock, checker: StartupChecker) -> None:
         """Only some packages in a group are missing."""
         # First call True (present), rest False (missing)
@@ -295,7 +295,7 @@ class TestCheckPythonPackages:
 
         mock_import.side_effect = side_effect
 
-        with patch("jarvis.core.startup_check._pip_install", return_value=(True, "")):
+        with patch("cognithor.core.startup_check._pip_install", return_value=(True, "")):
             report = checker.check_python_packages()
             # Some groups had missing packages, some didn't
             assert len(report.checks_passed) > 0
@@ -374,7 +374,7 @@ class TestCheckOllama:
 class TestCheckModels:
     """Tests for StartupChecker.check_models()."""
 
-    @patch("jarvis.core.startup_check._http_get_json")
+    @patch("cognithor.core.startup_check._http_get_json")
     def test_all_models_present(self, mock_http: MagicMock, checker: StartupChecker) -> None:
         mock_http.return_value = {
             "models": [
@@ -391,7 +391,7 @@ class TestCheckModels:
 
     @patch.object(StartupChecker, "_pull_model", return_value=True)
     @patch.object(StartupChecker, "_find_ollama", return_value="/usr/bin/ollama")
-    @patch("jarvis.core.startup_check._http_get_json")
+    @patch("cognithor.core.startup_check._http_get_json")
     def test_missing_model_auto_pulled(
         self,
         mock_http: MagicMock,
@@ -408,7 +408,7 @@ class TestCheckModels:
 
     @patch.object(StartupChecker, "_pull_model", return_value=False)
     @patch.object(StartupChecker, "_find_ollama", return_value="/usr/bin/ollama")
-    @patch("jarvis.core.startup_check._http_get_json")
+    @patch("cognithor.core.startup_check._http_get_json")
     def test_model_pull_failed(
         self,
         mock_http: MagicMock,
@@ -422,7 +422,7 @@ class TestCheckModels:
         assert len(report.warnings) > 0
         assert any("Failed to pull" in w for w in report.warnings)
 
-    @patch("jarvis.core.startup_check._http_get_json", return_value=None)
+    @patch("cognithor.core.startup_check._http_get_json", return_value=None)
     def test_ollama_unreachable(self, _mock: MagicMock, checker: StartupChecker) -> None:
         report = checker.check_models()
         assert len(report.warnings) == 1
@@ -434,7 +434,7 @@ class TestCheckModels:
         assert "No config" in report.warnings[0]
 
     @patch.object(StartupChecker, "_find_ollama", return_value=None)
-    @patch("jarvis.core.startup_check._http_get_json")
+    @patch("cognithor.core.startup_check._http_get_json")
     def test_missing_model_no_ollama_binary(
         self, mock_http: MagicMock, _mock_find: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -632,14 +632,14 @@ class TestCheckAndFixAll:
 class TestFindOllama:
     """Tests for _find_ollama static method."""
 
-    @patch("jarvis.core.startup_check.shutil.which", return_value="/usr/local/bin/ollama")
+    @patch("cognithor.core.startup_check.shutil.which", return_value="/usr/local/bin/ollama")
     def test_found_on_path(self, _mock: MagicMock) -> None:
         assert StartupChecker._find_ollama() == "/usr/local/bin/ollama"
 
-    @patch("jarvis.core.startup_check.os.path.isfile", return_value=False)
-    @patch("jarvis.core.startup_check.shutil.which", return_value=None)
+    @patch("cognithor.core.startup_check.os.path.isfile", return_value=False)
+    @patch("cognithor.core.startup_check.shutil.which", return_value=None)
     def test_not_found(self, _mock_which: MagicMock, _mock_isfile: MagicMock) -> None:
-        with patch("jarvis.core.startup_check.platform.system", return_value="Linux"):
+        with patch("cognithor.core.startup_check.platform.system", return_value="Linux"):
             result = StartupChecker._find_ollama()
             assert result is None
 
@@ -652,18 +652,18 @@ class TestFindOllama:
 class TestPullModel:
     """Tests for _pull_model static method."""
 
-    @patch("jarvis.core.startup_check.subprocess.run")
+    @patch("cognithor.core.startup_check.subprocess.run")
     def test_success(self, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=0)
         assert StartupChecker._pull_model("qwen3:8b", "/usr/bin/ollama") is True
 
-    @patch("jarvis.core.startup_check.subprocess.run")
+    @patch("cognithor.core.startup_check.subprocess.run")
     def test_failure(self, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=1)
         assert StartupChecker._pull_model("qwen3:8b", "/usr/bin/ollama") is False
 
     @patch(
-        "jarvis.core.startup_check.subprocess.run",
+        "cognithor.core.startup_check.subprocess.run",
         side_effect=subprocess.TimeoutExpired("cmd", 1800),
     )
     def test_timeout(self, _mock: MagicMock) -> None:

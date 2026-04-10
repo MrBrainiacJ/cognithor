@@ -5,8 +5,8 @@ from __future__ import annotations
 import time
 import uuid
 
-from jarvis.learning.causal_attributor import CausalAttributor, CausalFinding
-from jarvis.learning.execution_trace import ExecutionTrace, TraceStep
+from cognithor.learning.causal_attributor import CausalAttributor, CausalFinding
+from cognithor.learning.execution_trace import ExecutionTrace, TraceStep
 
 # ---------------------------------------------------------------------------
 # Helpers

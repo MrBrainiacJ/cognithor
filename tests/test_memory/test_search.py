@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.embeddings import EmbeddingClient
-from jarvis.memory.indexer import MemoryIndex
-from jarvis.memory.search import HybridSearch, recency_decay
-from jarvis.models import Chunk, MemoryTier
+from cognithor.memory.embeddings import EmbeddingClient
+from cognithor.memory.indexer import MemoryIndex
+from cognithor.memory.search import HybridSearch, recency_decay
+from cognithor.models import Chunk, MemoryTier
 
 if TYPE_CHECKING:
     from pathlib import Path

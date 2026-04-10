@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.core.delegation import (
+from cognithor.core.delegation import (
     AgentCapability,
     AgentRegistry,
     DelegationEngine,

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.skills.manager import (
+from cognithor.skills.manager import (
     _slugify,
     create_skill,
     install_remote_skill,
@@ -155,7 +155,7 @@ class TestSearchRemoteSkills:
         )
 
         # Monkey-patch the module to look at our directory
-        import jarvis.skills.manager as mgr
+        import cognithor.skills.manager as mgr
 
         Path(mgr.__file__).resolve()
         # Since the path resolution depends on parents, we test differently:

@@ -15,7 +15,7 @@ import inspect
 import json
 from typing import TYPE_CHECKING
 
-from jarvis.skills.remote_registry import InstalledPlugin, RemoteRegistry
+from cognithor.skills.remote_registry import InstalledPlugin, RemoteRegistry
 
 if TYPE_CHECKING:
     from pathlib import Path

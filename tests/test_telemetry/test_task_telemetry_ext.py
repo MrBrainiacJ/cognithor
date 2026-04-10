@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from jarvis.telemetry.task_telemetry import TaskTelemetryCollector
+from cognithor.telemetry.task_telemetry import TaskTelemetryCollector
 
 
 class TestToolStats:

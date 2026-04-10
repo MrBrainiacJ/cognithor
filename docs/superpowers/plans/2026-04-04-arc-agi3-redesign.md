@@ -1555,7 +1555,7 @@ class CognithorArcAgent:
 
         # Try common ARC dataset locations
         for base in [
-            Path.home() / ".jarvis" / "arc" / "tasks",
+            Path.home() / ".cognithor" / "arc" / "tasks",
             Path("data") / "arc",
         ]:
             task_file = base / f"{self.game_id}.json"

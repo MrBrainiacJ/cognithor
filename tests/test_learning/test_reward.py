@@ -1,6 +1,6 @@
 """Tests fuer RewardCalculator."""
 
-from jarvis.learning.reward import RewardCalculator
+from cognithor.learning.reward import RewardCalculator
 
 
 class TestRewardCalculator:

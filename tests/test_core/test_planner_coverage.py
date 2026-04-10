@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.planner import Planner
-from jarvis.models import ActionPlan, WorkingMemory
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.core.planner import Planner
+from cognithor.models import ActionPlan, WorkingMemory
 
 
 @pytest.fixture()
@@ -123,7 +123,7 @@ class TestPlannerReplan:
         planner = Planner(config, ollama, _mock_router())
         wm = WorkingMemory(session_id="test")
 
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         results = [ToolResult(tool_name="calc", content="42", is_error=False)]
 
@@ -148,7 +148,7 @@ class TestFormulateResponse:
         ollama = _mock_ollama(content)
         planner = Planner(config, ollama, _mock_router())
 
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         results = [ToolResult(tool_name="web_search", content="Python ist toll", is_error=False)]
         wm = WorkingMemory(session_id="test")
@@ -192,7 +192,7 @@ class TestPlannerLLMError:
     @pytest.mark.asyncio
     async def test_plan_llm_error(self, config: JarvisConfig) -> None:
         """OllamaError from ollama.chat -> should return error plan with confidence=0.0."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         ollama = AsyncMock()
         ollama.chat = AsyncMock(side_effect=OllamaError("connection refused"))
@@ -212,7 +212,7 @@ class TestPlannerLLMError:
     @pytest.mark.asyncio
     async def test_plan_llm_error_with_audit_logger(self, config: JarvisConfig) -> None:
         """OllamaError with audit_logger -> audit_logger.log_tool_call called with success=False."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         ollama = AsyncMock()
         ollama.chat = AsyncMock(side_effect=OllamaError("timeout"))
@@ -297,8 +297,8 @@ class TestReplanExtended:
     @pytest.mark.asyncio
     async def test_replan_llm_error(self, config: JarvisConfig) -> None:
         """OllamaError during replan -> fallback plan with confidence=0.0."""
-        from jarvis.core.model_router import OllamaError
-        from jarvis.models import ToolResult
+        from cognithor.core.model_router import OllamaError
+        from cognithor.models import ToolResult
 
         ollama = AsyncMock()
         ollama.chat = AsyncMock(side_effect=OllamaError("model not found"))
@@ -320,7 +320,7 @@ class TestReplanExtended:
     @pytest.mark.asyncio
     async def test_replan_with_multiple_results(self, config: JarvisConfig) -> None:
         """Replan with mixed success/error results -> planner receives formatted results."""
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         content = "Basierend auf den Ergebnissen: Datei gelesen, aber Suche fehlgeschlagen."
         ollama = _mock_ollama(content)
@@ -353,7 +353,7 @@ class TestReplanExtended:
     @pytest.mark.asyncio
     async def test_replan_returns_new_steps(self, config: JarvisConfig) -> None:
         """LLM returns JSON with new steps after replan."""
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         content = (
             '```json\n{"goal":"Zweiter Versuch","steps":'
@@ -386,7 +386,7 @@ class TestFormulateResponseExtended:
     @pytest.mark.asyncio
     async def test_formulate_with_search_results(self, config: JarvisConfig) -> None:
         """Results from web_search tool -> should trigger search-specific prompt."""
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         content = "Laut den Suchergebnissen ist Python eine Programmiersprache."
         ollama = _mock_ollama(content)
@@ -420,7 +420,7 @@ class TestFormulateResponseExtended:
     @pytest.mark.asyncio
     async def test_formulate_with_non_search_results(self, config: JarvisConfig) -> None:
         """Results from read_file -> normal prompt (not search-specific)."""
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         content = "Die Datei enthaelt Konfigurationseinstellungen."
         ollama = _mock_ollama(content)
@@ -450,8 +450,8 @@ class TestFormulateResponseExtended:
     @pytest.mark.asyncio
     async def test_formulate_llm_error(self, config: JarvisConfig) -> None:
         """OllamaError during formulate_response -> fallback text."""
-        from jarvis.core.model_router import OllamaError
-        from jarvis.models import ToolResult
+        from cognithor.core.model_router import OllamaError
+        from cognithor.models import ToolResult
 
         ollama = AsyncMock()
         ollama.chat = AsyncMock(side_effect=OllamaError("model unavailable"))
@@ -473,7 +473,7 @@ class TestFormulateResponseExtended:
     @pytest.mark.asyncio
     async def test_formulate_with_core_memory(self, config: JarvisConfig) -> None:
         """WorkingMemory with core_memory_text set -> injected as system message."""
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         content = "Antwort mit Kontext aus dem Gedaechtnis."
         ollama = _mock_ollama(content)
@@ -508,7 +508,7 @@ class TestGenerateEscalationExtended:
     @pytest.mark.asyncio
     async def test_escalation_llm_error_fallback(self, config: JarvisConfig) -> None:
         """OllamaError during escalation -> fallback message containing tool name and reason."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         ollama = AsyncMock()
         ollama.chat = AsyncMock(side_effect=OllamaError("LLM down"))
@@ -701,7 +701,7 @@ class TestTryParseJson:
 class TestFormatResults:
     def test_format_success_and_error(self, config: JarvisConfig) -> None:
         """Mix of successful and error results -> correct status markers."""
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         ollama = _mock_ollama("test")
         planner = Planner(config, ollama, _mock_router())
@@ -727,7 +727,7 @@ class TestFormatResults:
 
     def test_format_search_results_full_content(self, config: JarvisConfig) -> None:
         """web_search results get 4000 chars limit (HIGH_CONTEXT_TOOLS)."""
-        from jarvis.models import ToolResult
+        from cognithor.models import ToolResult
 
         ollama = _mock_ollama("test")
         planner = Planner(config, ollama, _mock_router())
@@ -805,7 +805,7 @@ class TestSanitizeBrokenLlmOutput:
 
     def test_pure_json_removed(self) -> None:
         """Reines JSON wird komplett entfernt."""
-        from jarvis.gateway.gateway import _sanitize_broken_llm_output
+        from cognithor.gateway.gateway import _sanitize_broken_llm_output
 
         text = '{"goal": "etwas", "steps": [{"tool": "x"}]}'
         result = _sanitize_broken_llm_output(text)
@@ -814,7 +814,7 @@ class TestSanitizeBrokenLlmOutput:
 
     def test_mixed_text_preserved(self) -> None:
         """Freitext wird beibehalten, JSON-Artefakte entfernt."""
-        from jarvis.gateway.gateway import _sanitize_broken_llm_output
+        from cognithor.gateway.gateway import _sanitize_broken_llm_output
 
         text = 'Ich werde das recherchieren. ```json\n{"goal": "broken\nDie Antwort ist 42.'
         result = _sanitize_broken_llm_output(text)
@@ -824,14 +824,14 @@ class TestSanitizeBrokenLlmOutput:
 
     def test_empty_input(self) -> None:
         """Leerer Input gibt leeren String zurueck."""
-        from jarvis.gateway.gateway import _sanitize_broken_llm_output
+        from cognithor.gateway.gateway import _sanitize_broken_llm_output
 
         assert _sanitize_broken_llm_output("") == ""
         assert _sanitize_broken_llm_output("   ") == ""
 
     def test_clean_text_unchanged(self) -> None:
         """Normaler Text ohne JSON bleibt unveraendert."""
-        from jarvis.gateway.gateway import _sanitize_broken_llm_output
+        from cognithor.gateway.gateway import _sanitize_broken_llm_output
 
         text = "Das ist eine ganz normale Antwort auf Deutsch."
         result = _sanitize_broken_llm_output(text)
@@ -839,7 +839,7 @@ class TestSanitizeBrokenLlmOutput:
 
     def test_code_block_removed(self) -> None:
         """JSON-Codeblock wird entfernt."""
-        from jarvis.gateway.gateway import _sanitize_broken_llm_output
+        from cognithor.gateway.gateway import _sanitize_broken_llm_output
 
         text = 'Hier: ```json\n{"goal": "test", "steps": []}\n``` Ende.'
         result = _sanitize_broken_llm_output(text)

@@ -11,13 +11,13 @@ import sqlite3
 import time
 from pathlib import Path
 
-from jarvis.config import ImprovementGovernanceConfig, PromptEvolutionConfig
-from jarvis.governance.improvement_gate import (
+from cognithor.config import ImprovementGovernanceConfig, PromptEvolutionConfig
+from cognithor.governance.improvement_gate import (
     GateVerdict,
     ImprovementDomain,
     ImprovementGate,
 )
-from jarvis.learning.prompt_evolution import (
+from cognithor.learning.prompt_evolution import (
     PromptEvolutionEngine,
     _version_id,
 )
@@ -237,7 +237,7 @@ class TestConfigCrossPlatform:
         assert config.max_concurrent_tests == 1
 
     def test_jarvis_config_includes_new_fields(self):
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         config = JarvisConfig()
         assert hasattr(config, "improvement")

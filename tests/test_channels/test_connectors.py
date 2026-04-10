@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from jarvis.channels.connectors import (
+from cognithor.channels.connectors import (
     ConnectorRegistry,
     ConnectorScope,
     ConnectorStatus,

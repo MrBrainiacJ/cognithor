@@ -167,7 +167,7 @@ var
   P1, P2: Integer;
 begin
   Result := True;
-  MarkerPath := ExpandConstant('{%USERPROFILE}\.jarvis\.cognithor_initialized');
+  MarkerPath := ExpandConstant('{%USERPROFILE}\.cognithor\.cognithor_initialized');
   if FileExists(MarkerPath) then
   begin
     if LoadStringFromFile(MarkerPath, MarkerContent) then

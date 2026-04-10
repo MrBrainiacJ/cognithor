@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.core.collaboration import (
+from cognithor.core.collaboration import (
     ROLE_DEFAULTS,
     AgentRole,
     CollaborationEngine,

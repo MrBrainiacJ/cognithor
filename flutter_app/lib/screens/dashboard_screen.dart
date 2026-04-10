@@ -2,19 +2,19 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-import 'package:jarvis_ui/providers/connection_provider.dart';
-import 'package:jarvis_ui/providers/pip_provider.dart';
-import 'package:jarvis_ui/providers/robot_office_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/glass_panel.dart';
-import 'package:jarvis_ui/widgets/jarvis_empty_state.dart';
-import 'package:jarvis_ui/widgets/radial_gauge.dart';
-import 'package:jarvis_ui/widgets/robot_office/robot_office_widget.dart';
-import 'package:jarvis_ui/widgets/robot_office/glass_reflection_painter.dart';
-import 'package:jarvis_ui/widgets/shimmer_loading.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/providers/pip_provider.dart';
+import 'package:cognithor_ui/providers/robot_office_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/glass_panel.dart';
+import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/radial_gauge.dart';
+import 'package:cognithor_ui/widgets/robot_office/robot_office_widget.dart';
+import 'package:cognithor_ui/widgets/robot_office/glass_reflection_painter.dart';
+import 'package:cognithor_ui/widgets/shimmer_loading.dart';
 
 // ---------------------------------------------------------------------------
 // Dashboard Screen — Command Center

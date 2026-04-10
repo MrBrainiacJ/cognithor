@@ -5,7 +5,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from jarvis.core.network_endpoints import (
+from cognithor.core.network_endpoints import (
     InterfaceType,
     NetworkEndpointManager,
     classify_ip,

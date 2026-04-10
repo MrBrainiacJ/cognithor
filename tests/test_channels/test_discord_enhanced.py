@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.discord import DiscordChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.discord import DiscordChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -295,7 +295,7 @@ class TestDiscordSend:
 
     @pytest.mark.asyncio
     async def test_send_circuit_breaker_open(self, ch: DiscordChannel) -> None:
-        from jarvis.utils.circuit_breaker import CircuitBreakerOpen
+        from cognithor.utils.circuit_breaker import CircuitBreakerOpen
 
         ch._running = True
         ch._client = MagicMock()
@@ -322,14 +322,14 @@ class TestDiscordSend:
     @pytest.mark.asyncio
     async def test_send_rich_not_running(self, ch: DiscordChannel) -> None:
         ch._running = False
-        from jarvis.channels.interactive import DiscordMessageBuilder
+        from cognithor.channels.interactive import DiscordMessageBuilder
 
         builder = MagicMock(spec=DiscordMessageBuilder)
         await ch.send_rich(builder)  # no crash
 
     @pytest.mark.asyncio
     async def test_send_rich_success(self, ch: DiscordChannel) -> None:
-        from jarvis.channels.interactive import DiscordMessageBuilder
+        from cognithor.channels.interactive import DiscordMessageBuilder
 
         ch._running = True
         ch._client = MagicMock()
@@ -345,7 +345,7 @@ class TestDiscordSend:
 
     @pytest.mark.asyncio
     async def test_send_rich_channel_not_found(self, ch: DiscordChannel) -> None:
-        from jarvis.channels.interactive import DiscordMessageBuilder
+        from cognithor.channels.interactive import DiscordMessageBuilder
 
         ch._running = True
         ch._client = MagicMock()
@@ -357,7 +357,7 @@ class TestDiscordSend:
 
     @pytest.mark.asyncio
     async def test_send_rich_exception(self, ch: DiscordChannel) -> None:
-        from jarvis.channels.interactive import DiscordMessageBuilder
+        from cognithor.channels.interactive import DiscordMessageBuilder
 
         ch._running = True
         ch._client = MagicMock()
@@ -373,7 +373,7 @@ class TestDiscordSend:
     @pytest.mark.asyncio
     async def test_send_card_not_running(self, ch: DiscordChannel) -> None:
         ch._running = False
-        from jarvis.channels.interactive import AdaptiveCard
+        from cognithor.channels.interactive import AdaptiveCard
 
         card = MagicMock(spec=AdaptiveCard)
         await ch.send_card(card)  # no crash
@@ -395,14 +395,14 @@ class TestDiscordSend:
     @pytest.mark.asyncio
     async def test_send_progress_not_running(self, ch: DiscordChannel) -> None:
         ch._running = False
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         tracker = MagicMock(spec=ProgressTracker)
         await ch.send_progress(tracker)  # no crash
 
     @pytest.mark.asyncio
     async def test_send_progress_success(self, ch: DiscordChannel) -> None:
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         ch._running = True
         ch._client = MagicMock()
@@ -418,7 +418,7 @@ class TestDiscordSend:
 
     @pytest.mark.asyncio
     async def test_send_progress_channel_not_found(self, ch: DiscordChannel) -> None:
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         ch._running = True
         ch._client = MagicMock()
@@ -431,7 +431,7 @@ class TestDiscordSend:
 
     @pytest.mark.asyncio
     async def test_send_progress_exception(self, ch: DiscordChannel) -> None:
-        from jarvis.channels.interactive import ProgressTracker
+        from cognithor.channels.interactive import ProgressTracker
 
         ch._running = True
         ch._client = MagicMock()
@@ -506,7 +506,7 @@ class TestDiscordApproval:
 
         action = PlannedAction(tool="test", params={})
 
-        with patch("jarvis.channels.discord.asyncio.wait_for", side_effect=asyncio.TimeoutError):
+        with patch("cognithor.channels.discord.asyncio.wait_for", side_effect=asyncio.TimeoutError):
             result = await ch.request_approval("s1", action, "reason")
         assert result is False
 
@@ -580,7 +580,7 @@ class TestDiscordStreaming:
         mock_channel.send = AsyncMock()
         ch._client.get_channel.return_value = mock_channel
 
-        with patch("jarvis.channels.discord.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.discord.asyncio.sleep", new_callable=AsyncMock):
             await ch.send_streaming_token("s1", "hello ")
 
 

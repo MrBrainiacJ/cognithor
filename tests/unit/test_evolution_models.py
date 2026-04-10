@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from jarvis.evolution.models import (
+from cognithor.evolution.models import (
     LearningPlan,
     QualityQuestion,
     ScheduleSpec,

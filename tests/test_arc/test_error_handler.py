@@ -6,14 +6,14 @@ import pytest
 
 class TestSafeFrameExtract:
     def test_none_returns_fallback(self):
-        from jarvis.arc.error_handler import safe_frame_extract
+        from cognithor.arc.error_handler import safe_frame_extract
 
         result = safe_frame_extract(None)
         assert result.shape == (64, 64)
         assert np.all(result == 0)
 
     def test_valid_frame_attribute(self):
-        from jarvis.arc.error_handler import safe_frame_extract
+        from cognithor.arc.error_handler import safe_frame_extract
 
         obs = type("O", (), {"frame": [[[0] * 64 for _ in range(64)]]})()
         result = safe_frame_extract(obs)
@@ -21,7 +21,7 @@ class TestSafeFrameExtract:
 
     def test_frame_3d_squeeze(self):
         """Real SDK format: (1, 64, 64) int8 → should squeeze to (64, 64)."""
-        from jarvis.arc.error_handler import safe_frame_extract
+        from cognithor.arc.error_handler import safe_frame_extract
 
         frame_data = np.ones((1, 64, 64), dtype=np.int8) * 5
         obs = type("O", (), {"frame": frame_data})()
@@ -30,14 +30,14 @@ class TestSafeFrameExtract:
         assert result[0, 0] == 5
 
     def test_unknown_format_returns_fallback(self):
-        from jarvis.arc.error_handler import safe_frame_extract
+        from cognithor.arc.error_handler import safe_frame_extract
 
         obs = type("O", (), {"unknown_field": 42})()
         result = safe_frame_extract(obs)
         assert result.shape == (64, 64)
 
     def test_flat_array_reshaped(self):
-        from jarvis.arc.error_handler import safe_frame_extract
+        from cognithor.arc.error_handler import safe_frame_extract
 
         flat = np.ones(64 * 64, dtype=np.int8)
         obs = type("O", (), {"frame": flat})()
@@ -45,7 +45,7 @@ class TestSafeFrameExtract:
         assert result.shape == (64, 64)
 
     def test_2d_grid_passthrough(self):
-        from jarvis.arc.error_handler import safe_frame_extract
+        from cognithor.arc.error_handler import safe_frame_extract
 
         grid = np.zeros((64, 64), dtype=np.int8)
         obs = type("O", (), {"frame": grid})()
@@ -55,7 +55,7 @@ class TestSafeFrameExtract:
 
 class TestRetryOnError:
     def test_succeeds_on_first_try(self):
-        from jarvis.arc.error_handler import retry_on_error
+        from cognithor.arc.error_handler import retry_on_error
 
         @retry_on_error(max_retries=2, delay_seconds=0)
         def ok():
@@ -64,7 +64,7 @@ class TestRetryOnError:
         assert ok() == 42
 
     def test_retries_on_failure(self):
-        from jarvis.arc.error_handler import retry_on_error
+        from cognithor.arc.error_handler import retry_on_error
 
         call_count = 0
 
@@ -80,7 +80,7 @@ class TestRetryOnError:
         assert call_count == 3
 
     def test_raises_after_max_retries(self):
-        from jarvis.arc.error_handler import retry_on_error
+        from cognithor.arc.error_handler import retry_on_error
 
         @retry_on_error(max_retries=1, delay_seconds=0, exceptions=(ValueError,))
         def always_fails():
@@ -92,7 +92,7 @@ class TestRetryOnError:
 
 class TestGameRunGuard:
     def test_suppresses_exceptions(self):
-        from jarvis.arc.error_handler import GameRunGuard
+        from cognithor.arc.error_handler import GameRunGuard
 
         class FakeArcade:
             def make(self, game_id):
@@ -114,7 +114,7 @@ class TestGameRunGuard:
         assert "boom" in guard.errors[0]["error"]
 
     def test_env_creation_failure(self):
-        from jarvis.arc.error_handler import EnvironmentConnectionError, GameRunGuard
+        from cognithor.arc.error_handler import EnvironmentConnectionError, GameRunGuard
 
         class BadArcade:
             def make(self, game_id):
@@ -128,7 +128,7 @@ class TestGameRunGuard:
                 pass
 
     def test_successful_run(self):
-        from jarvis.arc.error_handler import GameRunGuard
+        from cognithor.arc.error_handler import GameRunGuard
 
         class FakeArcade:
             def make(self, game_id):
@@ -144,7 +144,7 @@ class TestGameRunGuard:
 
 class TestExceptions:
     def test_exception_hierarchy(self):
-        from jarvis.arc.error_handler import (
+        from cognithor.arc.error_handler import (
             ArcAgentError,
             EnvironmentConnectionError,
             FrameExtractionError,

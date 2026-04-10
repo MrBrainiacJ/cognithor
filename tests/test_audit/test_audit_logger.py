@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.audit import (
+from cognithor.audit import (
     AuditCategory,
     AuditEntry,
     AuditLogger,

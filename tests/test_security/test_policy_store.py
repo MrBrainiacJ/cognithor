@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 
 import yaml
 
-from jarvis.security.policy_store import PolicyStore, PolicyVersion
+from cognithor.security.policy_store import PolicyStore, PolicyVersion
 
 if TYPE_CHECKING:
     from pathlib import Path

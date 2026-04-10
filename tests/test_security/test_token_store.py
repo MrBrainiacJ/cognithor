@@ -10,7 +10,7 @@ class TestSecureTokenStore:
 
     def test_store_and_retrieve(self) -> None:
         """Roundtrip: store → retrieve gibt Klartext zurück."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         store.store("my_token", "super-secret-123")
@@ -18,7 +18,7 @@ class TestSecureTokenStore:
 
     def test_retrieve_unknown_key(self) -> None:
         """Unbekannter Key wirft KeyError."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         with pytest.raises(KeyError):
@@ -26,7 +26,7 @@ class TestSecureTokenStore:
 
     def test_clear_removes_all(self) -> None:
         """clear() entfernt alle Tokens."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         store.store("a", "1")
@@ -39,7 +39,7 @@ class TestSecureTokenStore:
 
     def test_different_tokens_isolated(self) -> None:
         """Verschiedene Tokens sind voneinander isoliert."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         store.store("token_a", "value_a")
@@ -49,7 +49,7 @@ class TestSecureTokenStore:
 
     def test_stored_value_is_encrypted(self) -> None:
         """Gespeicherter Wert ist NICHT der Klartext."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         plaintext = "my-secret-token-12345"
@@ -60,7 +60,7 @@ class TestSecureTokenStore:
 
     def test_overwrite_existing_token(self) -> None:
         """Überschreiben eines bestehenden Tokens funktioniert."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         store.store("tok", "old_value")
@@ -69,7 +69,7 @@ class TestSecureTokenStore:
 
     def test_contains_check(self) -> None:
         """__contains__ prüft ob ein Token existiert."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         store.store("exists", "val")
@@ -78,7 +78,7 @@ class TestSecureTokenStore:
 
     def test_unicode_token(self) -> None:
         """Unicode-Tokens werden korrekt gespeichert und abgerufen."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         store.store("unicode", "tökën-wïth-ümlauts-🔑")
@@ -86,7 +86,7 @@ class TestSecureTokenStore:
 
     def test_empty_token(self) -> None:
         """Leerer String als Token ist erlaubt."""
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         store.store("empty", "")
@@ -98,7 +98,7 @@ class TestSecureTokenStoreFallback:
 
     def test_fallback_without_cryptography(self) -> None:
         """Ohne cryptography-Paket wird Base64-Fallback genutzt."""
-        import jarvis.security.token_store as mod
+        import cognithor.security.token_store as mod
 
         original_has_crypto = mod._HAS_CRYPTO
         try:
@@ -119,7 +119,7 @@ class TestGetTokenStore:
 
     def test_singleton_returns_same_instance(self) -> None:
         """get_token_store() gibt immer dieselbe Instanz zurück."""
-        from jarvis.security.token_store import get_token_store
+        from cognithor.security.token_store import get_token_store
 
         store1 = get_token_store()
         store2 = get_token_store()

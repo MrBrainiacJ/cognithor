@@ -19,13 +19,13 @@ class TestCreateAppDefaults:
 
     def test_default_host_is_localhost(self) -> None:
         """Default Host muss 127.0.0.1 sein, nicht 0.0.0.0."""
-        from jarvis.channels.webui import create_app
+        from cognithor.channels.webui import create_app
 
         # Sicherstellen dass keine Env-Var gesetzt ist
         env = {
             k: v
             for k, v in os.environ.items()
-            if k not in ("JARVIS_WEBUI_HOST", "JARVIS_WEBUI_CORS_ORIGINS", "JARVIS_API_TOKEN")
+            if k not in ("COGNITHOR_WEBUI_HOST", "COGNITHOR_WEBUI_CORS_ORIGINS", "COGNITHOR_API_TOKEN")
         }
         with patch.dict(os.environ, env, clear=True):
             app = create_app()
@@ -36,14 +36,14 @@ class TestCreateAppDefaults:
         """0.0.0.0 darf nicht der Default sein."""
         import inspect
 
-        from jarvis.channels.webui import create_app
+        from cognithor.channels.webui import create_app
 
         source = inspect.getsource(create_app)
         # Nur die Code-Zeile mit os.environ.get pruefen, nicht den Docstring
         for line in source.splitlines():
-            if "os.environ.get" in line and "JARVIS_WEBUI_HOST" in line:
+            if "os.environ.get" in line and "COGNITHOR_WEBUI_HOST" in line:
                 assert '"0.0.0.0"' not in line, (
-                    f"Default fuer JARVIS_WEBUI_HOST darf nicht 0.0.0.0 sein: {line.strip()}"
+                    f"Default fuer COGNITHOR_WEBUI_HOST darf nicht 0.0.0.0 sein: {line.strip()}"
                 )
                 break
 
@@ -51,19 +51,19 @@ class TestCreateAppDefaults:
         """Default CORS-Origin darf nicht '*' sein."""
         import inspect
 
-        from jarvis.channels.webui import create_app
+        from cognithor.channels.webui import create_app
 
         source = inspect.getsource(create_app)
-        cors_line = source.split("JARVIS_WEBUI_CORS_ORIGINS")[1].split("\n")[0]
-        assert '"*"' not in cors_line, "Default fuer JARVIS_WEBUI_CORS_ORIGINS darf nicht '*' sein"
+        cors_line = source.split("COGNITHOR_WEBUI_CORS_ORIGINS")[1].split("\n")[0]
+        assert '"*"' not in cors_line, "Default fuer COGNITHOR_WEBUI_CORS_ORIGINS darf nicht '*' sein"
 
     def test_explicit_0000_via_env_still_works(self) -> None:
         """Explizites Opt-in fuer 0.0.0.0 via Env-Var muss weiterhin funktionieren."""
         env = os.environ.copy()
-        env["JARVIS_WEBUI_HOST"] = "0.0.0.0"
-        env["JARVIS_WEBUI_CORS_ORIGINS"] = "*"
+        env["COGNITHOR_WEBUI_HOST"] = "0.0.0.0"
+        env["COGNITHOR_WEBUI_CORS_ORIGINS"] = "*"
         with patch.dict(os.environ, env, clear=True):
-            from jarvis.channels.webui import create_app
+            from cognithor.channels.webui import create_app
 
             app = create_app()
         assert app is not None
@@ -71,9 +71,9 @@ class TestCreateAppDefaults:
     def test_explicit_cors_override_works(self) -> None:
         """Explizite CORS-Origins via Env-Var werden korrekt uebernommen."""
         env = os.environ.copy()
-        env["JARVIS_WEBUI_CORS_ORIGINS"] = "https://myapp.example.com,https://other.example.com"
+        env["COGNITHOR_WEBUI_CORS_ORIGINS"] = "https://myapp.example.com,https://other.example.com"
         with patch.dict(os.environ, env, clear=True):
-            from jarvis.channels.webui import create_app
+            from cognithor.channels.webui import create_app
 
             app = create_app()
         assert app is not None
@@ -84,14 +84,14 @@ class TestWebUIChannelDefaults:
 
     def test_init_default_host_is_localhost(self) -> None:
         """WebUIChannel Default-Host muss 127.0.0.1 sein."""
-        from jarvis.channels.webui import WebUIChannel
+        from cognithor.channels.webui import WebUIChannel
 
         ch = WebUIChannel()
         assert ch._host == "127.0.0.1"
 
     def test_init_default_cors_is_empty(self) -> None:
         """WebUIChannel Default-CORS muss leer sein (nicht '*')."""
-        from jarvis.channels.webui import WebUIChannel
+        from cognithor.channels.webui import WebUIChannel
 
         ch = WebUIChannel()
         assert ch._cors_origins == []
@@ -99,14 +99,14 @@ class TestWebUIChannelDefaults:
 
     def test_init_explicit_host_accepted(self) -> None:
         """Explizit uebergebener Host wird akzeptiert."""
-        from jarvis.channels.webui import WebUIChannel
+        from cognithor.channels.webui import WebUIChannel
 
         ch = WebUIChannel(host="0.0.0.0")
         assert ch._host == "0.0.0.0"
 
     def test_init_explicit_cors_accepted(self) -> None:
         """Explizit uebergebene CORS-Origins werden akzeptiert."""
-        from jarvis.channels.webui import WebUIChannel
+        from cognithor.channels.webui import WebUIChannel
 
         ch = WebUIChannel(cors_origins=["https://example.com"])
         assert ch._cors_origins == ["https://example.com"]

@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 import uuid
 
-from jarvis.learning.execution_trace import ExecutionTrace, TraceStep, TraceStore
+from cognithor.learning.execution_trace import ExecutionTrace, TraceStep, TraceStore
 
 # ---------------------------------------------------------------------------
 # Helpers

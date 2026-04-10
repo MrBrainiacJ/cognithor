@@ -122,4 +122,4 @@ jobs:
         # devices (microphone/speaker) which are not available in CI runners.
         run: python -m pytest tests/ -x -q --tb=short --ignore=tests/test_channels/test_voice_ws_bridge.py
         env:
-          JARVIS_TEST_MODE: "1"
+          COGNITHOR_TEST_MODE: "1"

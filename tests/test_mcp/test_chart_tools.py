@@ -18,8 +18,8 @@ from unittest.mock import patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.mcp.chart_tools import (
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.mcp.chart_tools import (
     ChartError,
     ChartTools,
     _ascii_bar_chart,
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 @pytest.fixture()
 def config(tmp_path: Path) -> JarvisConfig:
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),
     )
     ensure_directory_structure(cfg)
@@ -197,7 +197,7 @@ class TestASCIIFallback:
         sample_data: list[dict],
     ) -> None:
         """If matplotlib is not available, should return ASCII chart."""
-        with patch("jarvis.mcp.chart_tools._matplotlib_available", return_value=False):
+        with patch("cognithor.mcp.chart_tools._matplotlib_available", return_value=False):
             result = await chart_tools.create_chart(
                 data=sample_data,
                 chart_type="bar",
@@ -304,7 +304,7 @@ class TestMaxDataPoints:
         """10,000 points should be fine."""
         data = [{"x": i, "y": i} for i in range(100)]
         # This should NOT raise
-        with patch("jarvis.mcp.chart_tools._matplotlib_available", return_value=False):
+        with patch("cognithor.mcp.chart_tools._matplotlib_available", return_value=False):
             result = await chart_tools.create_chart(
                 data=data, chart_type="bar", x_key="x", y_key="y", title="Big"
             )
@@ -319,7 +319,7 @@ class TestMaxDataPoints:
 class TestChartFromCSV:
     @pytest.mark.asyncio()
     async def test_csv_chart(self, chart_tools: ChartTools, sample_csv: Path) -> None:
-        with patch("jarvis.mcp.chart_tools._matplotlib_available", return_value=False):
+        with patch("cognithor.mcp.chart_tools._matplotlib_available", return_value=False):
             result = await chart_tools.chart_from_csv(
                 file_path=str(sample_csv),
                 chart_type="bar",

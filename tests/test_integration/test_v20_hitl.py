@@ -8,19 +8,19 @@ import asyncio
 
 import pytest
 
-from jarvis.graph.builder import GraphBuilder
-from jarvis.graph.engine import GraphEngine
-from jarvis.graph.types import END, GraphState
-from jarvis.hitl.manager import ApprovalManager
-from jarvis.hitl.nodes import (
+from cognithor.graph.builder import GraphBuilder
+from cognithor.graph.engine import GraphEngine
+from cognithor.graph.types import END, GraphState
+from cognithor.hitl.manager import ApprovalManager
+from cognithor.hitl.nodes import (
     create_approval_node,
     create_gate_node,
     create_input_node,
     create_review_node,
     create_selection_node,
 )
-from jarvis.hitl.notifier import HITLNotifier, NotificationRecord
-from jarvis.hitl.types import (
+from cognithor.hitl.notifier import HITLNotifier, NotificationRecord
+from cognithor.hitl.types import (
     ApprovalRequest,
     ApprovalResponse,
     ApprovalStatus,

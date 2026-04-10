@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.model_router import ModelRouter, OllamaClient, OllamaError
-from jarvis.models import Message, MessageRole
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.core.model_router import ModelRouter, OllamaClient, OllamaError
+from cognithor.models import Message, MessageRole
 
 
 @pytest.fixture()
@@ -57,7 +57,7 @@ class TestModelRouterCoverage:
     @pytest.fixture(autouse=True)
     def _reset_coding_override(self):
         """Reset ContextVar before/after each test to prevent cross-test contamination."""
-        from jarvis.core.model_router import _coding_override_var
+        from cognithor.core.model_router import _coding_override_var
 
         _coding_override_var.set(None)
         yield
@@ -314,7 +314,7 @@ class TestOllamaClientCoverage:
 
 class TestMessagesToOllama:
     def test_convert_messages(self) -> None:
-        from jarvis.core.model_router import messages_to_ollama
+        from cognithor.core.model_router import messages_to_ollama
 
         msgs = [
             Message(role=MessageRole.SYSTEM, content="You are helpful."),

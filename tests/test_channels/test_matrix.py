@@ -32,13 +32,13 @@ _mock_nio.UnknownEvent = MagicMock()
 _mock_nio.InviteMemberEvent = MagicMock()
 sys.modules.setdefault("nio", _mock_nio)
 
-from jarvis.channels.matrix import (
+from cognithor.channels.matrix import (
     MAX_MESSAGE_LENGTH,
     MatrixChannel,
     _split_message,
     _text_to_html,
 )
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -515,7 +515,7 @@ class TestMatrixApproval:
         matrix_ch._sessions["!room1:matrix.test"] = "sess-t"
         with patch.object(matrix_ch, "_send_to_room", new_callable=AsyncMock, return_value="$ev-t"):
             matrix_ch._client = AsyncMock()
-            with patch("jarvis.channels.matrix.APPROVAL_TIMEOUT", 0.05):
+            with patch("cognithor.channels.matrix.APPROVAL_TIMEOUT", 0.05):
                 action = PlannedAction(tool="rm", params={})
                 result = await matrix_ch.request_approval("sess-t", action, "Danger")
         assert result is False

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import JarvisConfig, ensure_directory_structure
 
 
 @pytest.fixture()
@@ -23,7 +23,7 @@ def config(tmp_path) -> JarvisConfig:
 
 class TestPrintBanner:
     def test_banner_ollama(self, config: JarvisConfig, capsys) -> None:
-        from jarvis.__main__ import _print_banner
+        from cognithor.__main__ import _print_banner
 
         _print_banner(config, api_host="127.0.0.1", api_port=8741)
         captured = capsys.readouterr()
@@ -32,7 +32,7 @@ class TestPrintBanner:
         assert "8741" in captured.out
 
     def test_banner_lmstudio(self, config: JarvisConfig, capsys) -> None:
-        from jarvis.__main__ import _print_banner
+        from cognithor.__main__ import _print_banner
 
         config.llm_backend_type = "lmstudio"
         config.lmstudio_base_url = "http://localhost:1234"
@@ -41,7 +41,7 @@ class TestPrintBanner:
         assert "LM Studio" in captured.out
 
     def test_banner_other_backend(self, config: JarvisConfig, capsys) -> None:
-        from jarvis.__main__ import _print_banner
+        from cognithor.__main__ import _print_banner
 
         config.llm_backend_type = "openai"
         _print_banner(config, api_host="127.0.0.1", api_port=8741)
@@ -49,7 +49,7 @@ class TestPrintBanner:
         assert "openai" in captured.out.lower() or "LLM" in captured.out
 
     def test_banner_with_ssl(self, config: JarvisConfig, capsys) -> None:
-        from jarvis.__main__ import _print_banner
+        from cognithor.__main__ import _print_banner
 
         config.security.ssl_certfile = "/path/to/cert.pem"
         config.security.ssl_keyfile = "/path/to/key.pem"
@@ -65,7 +65,7 @@ class TestPrintBanner:
 
 class TestParseArgs:
     def test_parse_no_args(self) -> None:
-        from jarvis.__main__ import parse_args
+        from cognithor.__main__ import parse_args
 
         with patch("sys.argv", ["cognithor"]):
             args = parse_args()
@@ -75,42 +75,42 @@ class TestParseArgs:
             assert args.api_port == 8741
 
     def test_parse_init_only(self) -> None:
-        from jarvis.__main__ import parse_args
+        from cognithor.__main__ import parse_args
 
         with patch("sys.argv", ["cognithor", "--init-only"]):
             args = parse_args()
             assert args.init_only is True
 
     def test_parse_no_cli(self) -> None:
-        from jarvis.__main__ import parse_args
+        from cognithor.__main__ import parse_args
 
         with patch("sys.argv", ["cognithor", "--no-cli"]):
             args = parse_args()
             assert args.no_cli is True
 
     def test_parse_api_port(self) -> None:
-        from jarvis.__main__ import parse_args
+        from cognithor.__main__ import parse_args
 
         with patch("sys.argv", ["cognithor", "--api-port", "9999"]):
             args = parse_args()
             assert args.api_port == 9999
 
     def test_parse_api_host(self) -> None:
-        from jarvis.__main__ import parse_args
+        from cognithor.__main__ import parse_args
 
         with patch("sys.argv", ["cognithor", "--api-host", "0.0.0.0"]):
             args = parse_args()
             assert args.api_host == "0.0.0.0"
 
     def test_parse_log_level(self) -> None:
-        from jarvis.__main__ import parse_args
+        from cognithor.__main__ import parse_args
 
         with patch("sys.argv", ["cognithor", "--log-level", "DEBUG"]):
             args = parse_args()
             assert args.log_level == "DEBUG"
 
     def test_parse_config_path(self, tmp_path) -> None:
-        from jarvis.__main__ import parse_args
+        from cognithor.__main__ import parse_args
 
         cfg_file = tmp_path / "custom.yaml"
         with patch("sys.argv", ["cognithor", "--config", str(cfg_file)]):
@@ -125,10 +125,10 @@ class TestParseArgs:
 
 class TestMainInitOnly:
     def test_main_init_only(self, tmp_path) -> None:
-        from jarvis.__main__ import main
+        from cognithor.__main__ import main
 
         with patch("sys.argv", ["cognithor", "--init-only"]):
-            with patch("jarvis.__main__.parse_args") as mock_parse:
+            with patch("cognithor.__main__.parse_args") as mock_parse:
                 mock_args = MagicMock()
                 mock_args.config = None
                 mock_args.log_level = "WARNING"
@@ -138,11 +138,11 @@ class TestMainInitOnly:
                 mock_args.api_host = None
                 mock_parse.return_value = mock_args
 
-                with patch("jarvis.config.load_config") as mock_load:
+                with patch("cognithor.config.load_config") as mock_load:
                     cfg = JarvisConfig(jarvis_home=tmp_path)
                     ensure_directory_structure(cfg)
                     mock_load.return_value = cfg
 
-                    with patch("jarvis.utils.logging.setup_logging"):
+                    with patch("cognithor.utils.logging.setup_logging"):
                         # Should return after init-only without starting
                         main()

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.learning.knowledge_ingest import (
+from cognithor.learning.knowledge_ingest import (
     IngestResult,
     KnowledgeIngestService,
     Priority,
@@ -108,7 +108,7 @@ class TestIngestResult:
 
 class TestIngestQueue:
     def test_enqueue_dequeue_priority_order(self):
-        from jarvis.learning.knowledge_ingest import IngestQueue, _QueueItem
+        from cognithor.learning.knowledge_ingest import IngestQueue, _QueueItem
 
         q = IngestQueue()
         q.enqueue(
@@ -141,7 +141,7 @@ class TestIngestQueue:
         assert q.empty
 
     def test_queue_size(self):
-        from jarvis.learning.knowledge_ingest import IngestQueue, _QueueItem
+        from cognithor.learning.knowledge_ingest import IngestQueue, _QueueItem
 
         q = IngestQueue()
         assert len(q) == 0
@@ -153,7 +153,7 @@ class TestIngestQueue:
         assert len(q) == 1
 
     def test_pending_returns_sorted_list(self):
-        from jarvis.learning.knowledge_ingest import IngestQueue, _QueueItem
+        from cognithor.learning.knowledge_ingest import IngestQueue, _QueueItem
 
         q = IngestQueue()
         q.enqueue(
@@ -321,7 +321,7 @@ class TestOcrPdf:
         """If PDF text extraction yields < 100 chars, OCR fallback is tried."""
         svc = KnowledgeIngestService()
         # Mock TextExtractor to return sparse text
-        with patch("jarvis.memory.ingest.TextExtractor") as MockExtractor:
+        with patch("cognithor.memory.ingest.TextExtractor") as MockExtractor:
             mock_inst = MagicMock()
             mock_inst.extract = AsyncMock(return_value="ab")  # < 100 chars
             MockExtractor.return_value = mock_inst

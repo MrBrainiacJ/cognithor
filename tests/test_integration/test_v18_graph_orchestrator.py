@@ -11,14 +11,14 @@ import tempfile
 
 import pytest
 
-from jarvis.graph.builder import (
+from cognithor.graph.builder import (
     GraphBuilder,
     branch_graph,
     linear_graph,
     loop_graph,
 )
-from jarvis.graph.engine import GraphEngine
-from jarvis.graph.nodes import (
+from cognithor.graph.engine import GraphEngine
+from cognithor.graph.nodes import (
     accumulate_node,
     condition_node,
     counter_node,
@@ -33,8 +33,8 @@ from jarvis.graph.nodes import (
     tool_node,
     transform_node,
 )
-from jarvis.graph.state import StateManager
-from jarvis.graph.types import (
+from cognithor.graph.state import StateManager
+from cognithor.graph.types import (
     END,
     Checkpoint,
     Edge,

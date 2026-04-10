@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from jarvis.mcp.browser import BROWSER_TOOL_SCHEMAS, register_browser_tools
-from jarvis.mcp.media import MEDIA_TOOL_SCHEMAS, register_media_tools
-from jarvis.mcp.web import register_web_tools
+from cognithor.mcp.browser import BROWSER_TOOL_SCHEMAS, register_browser_tools
+from cognithor.mcp.media import MEDIA_TOOL_SCHEMAS, register_media_tools
+from cognithor.mcp.web import register_web_tools
 
 
 class MockMCPClient:

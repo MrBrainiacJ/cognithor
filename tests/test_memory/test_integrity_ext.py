@@ -12,7 +12,7 @@ Targets:
 
 from __future__ import annotations
 
-from jarvis.memory.integrity import (
+from cognithor.memory.integrity import (
     ContradictionDetector,
     DecisionExplainer,
     DecisionExplanation,
@@ -247,7 +247,7 @@ class TestContradictionDetectorExtended:
         assert len(contradictions) == 0
 
     def test_contradiction_to_dict(self) -> None:
-        from jarvis.memory.integrity import Contradiction
+        from cognithor.memory.integrity import Contradiction
 
         c = Contradiction(
             contradiction_id="CONTR-0001",
@@ -410,7 +410,7 @@ class TestPlausibilityCheckerExtended:
         assert result.score <= 40
 
     def test_plausibility_check_to_dict(self) -> None:
-        from jarvis.memory.integrity import PlausibilityCheck
+        from cognithor.memory.integrity import PlausibilityCheck
 
         pc = PlausibilityCheck(
             entry_id="e1",

@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from jarvis.skills.registry import Skill, SkillRegistry
+from cognithor.skills.registry import Skill, SkillRegistry
 
 
 def _create_skill_file(path: Path, frontmatter: str, body: str) -> None:

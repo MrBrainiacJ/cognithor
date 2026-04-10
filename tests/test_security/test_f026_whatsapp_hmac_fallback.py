@@ -22,7 +22,7 @@ from unittest.mock import MagicMock
 # faster_whisper kann fehlen
 sys.modules.setdefault("faster_whisper", MagicMock())
 
-from jarvis.channels.whatsapp import WhatsAppChannel
+from cognithor.channels.whatsapp import WhatsAppChannel
 
 
 def _make_channel(app_secret: str = "") -> WhatsAppChannel:

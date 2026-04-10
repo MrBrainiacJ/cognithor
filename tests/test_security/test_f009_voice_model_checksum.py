@@ -24,7 +24,7 @@ class TestDownloadHasHashVerification:
 
     def test_download_function_uses_hashlib(self) -> None:
         """_download_piper_voice muss hashlib importieren."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         dl_section = source[source.index("_download_piper_voice") :]
@@ -34,7 +34,7 @@ class TestDownloadHasHashVerification:
 
     def test_download_function_computes_sha256(self) -> None:
         """_download_piper_voice muss SHA-256 berechnen."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         dl_section = source[source.index("_download_piper_voice") :]
@@ -44,7 +44,7 @@ class TestDownloadHasHashVerification:
 
     def test_download_calls_verify(self) -> None:
         """_download_piper_voice muss _verify_voice_hash aufrufen."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         dl_section = source[source.index("_download_piper_voice") :]
@@ -56,7 +56,7 @@ class TestDownloadHasHashVerification:
 
     def test_download_logs_hash(self) -> None:
         """Der SHA-256 Hash muss im Log erscheinen."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         dl_section = source[source.index("_download_piper_voice") :]
@@ -72,14 +72,14 @@ class TestKnownVoiceHashes:
 
     def test_known_hashes_dict_exists(self) -> None:
         """_KNOWN_VOICE_HASHES Dictionary muss im Source existieren."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         assert "_KNOWN_VOICE_HASHES" in source
 
     def test_verify_function_exists(self) -> None:
         """_verify_voice_hash Funktion muss im Source existieren."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         assert "def _verify_voice_hash" in source
@@ -132,7 +132,7 @@ class TestVerifyVoiceHashLogic:
 
     def test_source_raises_on_mismatch(self) -> None:
         """_verify_voice_hash im Source muss bei Mismatch raisen."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         verify_section = source[source.index("def _verify_voice_hash") :]

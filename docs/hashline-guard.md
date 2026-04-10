@@ -48,7 +48,7 @@ All edits are performed atomically:
 
 ### Audit Trail
 
-Every read and edit operation is logged to `~/.jarvis/hashline_audit.jsonl` as an append-only JSONL file. Each entry includes a SHA-256 hash for chain integrity.
+Every read and edit operation is logged to `~/.cognithor/hashline_audit.jsonl` as an append-only JSONL file. Each entry includes a SHA-256 hash for chain integrity.
 
 ## Configuration
 

@@ -6,15 +6,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.evolution.atl_config import ATLConfig
+from cognithor.evolution.atl_config import ATLConfig
 
 
 @pytest.fixture
 def make_loop(tmp_path):
     """Create an EvolutionLoop with ATL components wired."""
-    from jarvis.evolution.atl_journal import ATLJournal
-    from jarvis.evolution.goal_manager import Goal, GoalManager
-    from jarvis.evolution.loop import EvolutionLoop
+    from cognithor.evolution.atl_journal import ATLJournal
+    from cognithor.evolution.goal_manager import Goal, GoalManager
+    from cognithor.evolution.loop import EvolutionLoop
 
     def _factory(idle=True, llm_response=None, quiet_hours=False):
         idle_det = MagicMock()

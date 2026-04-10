@@ -26,12 +26,12 @@ services:
     volumes:
       - jarvis-data:/home/jarvis/.jarvis
     environment:
-      - JARVIS_OLLAMA_BASE_URL=http://ollama:11434
-      - JARVIS_API_HOST=0.0.0.0
-      - JARVIS_API_TOKEN=${JARVIS_API_TOKEN:?Set JARVIS_API_TOKEN in .env}
-      - JARVIS_LOGGING_LEVEL=${JARVIS_LOGGING_LEVEL:-INFO}
-      - JARVIS_TELEGRAM_TOKEN=${JARVIS_TELEGRAM_TOKEN:-}
-      - JARVIS_TELEGRAM_ALLOWED_USERS=${JARVIS_TELEGRAM_ALLOWED_USERS:-}
+      - COGNITHOR_OLLAMA_BASE_URL=http://ollama:11434
+      - COGNITHOR_API_HOST=0.0.0.0
+      - COGNITHOR_API_TOKEN=${COGNITHOR_API_TOKEN:?Set COGNITHOR_API_TOKEN in .env}
+      - COGNITHOR_LOGGING_LEVEL=${COGNITHOR_LOGGING_LEVEL:-INFO}
+      - COGNITHOR_TELEGRAM_TOKEN=${COGNITHOR_TELEGRAM_TOKEN:-}
+      - COGNITHOR_TELEGRAM_ALLOWED_USERS=${COGNITHOR_TELEGRAM_ALLOWED_USERS:-}
     networks:
       - jarvis-internal
     depends_on:
@@ -62,9 +62,9 @@ services:
     volumes:
       - jarvis-data:/home/jarvis/.jarvis
     environment:
-      - JARVIS_WEBUI_HOST=0.0.0.0
-      - JARVIS_API_TOKEN=${JARVIS_API_TOKEN:?Set JARVIS_API_TOKEN in .env}
-      - JARVIS_WEBUI_CORS_ORIGINS=${JARVIS_WEBUI_CORS_ORIGINS:-*}
+      - COGNITHOR_WEBUI_HOST=0.0.0.0
+      - COGNITHOR_API_TOKEN=${COGNITHOR_API_TOKEN:?Set COGNITHOR_API_TOKEN in .env}
+      - COGNITHOR_WEBUI_CORS_ORIGINS=${COGNITHOR_WEBUI_CORS_ORIGINS:-*}
     networks:
       - jarvis-internal
     depends_on:
@@ -107,9 +107,9 @@ services:
     container_name: cognithor-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${JARVIS_POSTGRES_DB:-cognithor}
-      POSTGRES_USER: ${JARVIS_POSTGRES_USER:-cognithor}
-      POSTGRES_PASSWORD: ${JARVIS_POSTGRES_PASSWORD:?Set JARVIS_POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${COGNITHOR_POSTGRES_DB:-cognithor}
+      POSTGRES_USER: ${COGNITHOR_POSTGRES_USER:-cognithor}
+      POSTGRES_PASSWORD: ${COGNITHOR_POSTGRES_PASSWORD:?Set COGNITHOR_POSTGRES_PASSWORD in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -117,7 +117,7 @@ services:
     profiles:
       - postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${JARVIS_POSTGRES_USER:-cognithor}"]
+      test: ["CMD-SHELL", "pg_isready -U ${COGNITHOR_POSTGRES_USER:-cognithor}"]
       interval: 15s
       timeout: 5s
       retries: 5

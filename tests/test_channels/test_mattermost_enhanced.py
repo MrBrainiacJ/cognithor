@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.mattermost import MattermostChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.mattermost import MattermostChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -232,7 +232,7 @@ class TestMattermostStreaming:
         mock_resp.json.return_value = {"id": "p1"}
         ch._http_client.post = AsyncMock(return_value=mock_resp)
 
-        with patch("jarvis.channels.mattermost.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.mattermost.asyncio.sleep", new_callable=AsyncMock):
             await ch.send_streaming_token("s1", "hello")
 
 
@@ -338,7 +338,7 @@ class TestMattermostWebsocketLoop:
         mock_ws_module.connect = MagicMock(return_value=_FakeConnect())
 
         with patch.dict("sys.modules", {"websockets": mock_ws_module}):
-            with patch("jarvis.channels.mattermost.asyncio.sleep", new_callable=AsyncMock):
+            with patch("cognithor.channels.mattermost.asyncio.sleep", new_callable=AsyncMock):
                 await ch._websocket_loop()
 
         assert ch._running is False
@@ -377,6 +377,6 @@ class TestMattermostApprovalFlow:
         ch._http_client.post = AsyncMock(return_value=mock_resp)
 
         action = PlannedAction(tool="test", params={})
-        with patch("jarvis.channels.mattermost.asyncio.wait_for", side_effect=asyncio.TimeoutError):
+        with patch("cognithor.channels.mattermost.asyncio.wait_for", side_effect=asyncio.TimeoutError):
             result = await ch.request_approval("s1", action, "reason")
         assert result is False

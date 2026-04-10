@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 import pytest
 
-from jarvis.config import PersonalityConfig
-from jarvis.core.personality import PersonalityEngine
+from cognithor.config import PersonalityConfig
+from cognithor.core.personality import PersonalityEngine
 
 
 @pytest.fixture()
@@ -50,25 +50,25 @@ class TestGetGreetingFragment:
     """Tests für Tageszeit-abhängige Grüße."""
 
     def test_morning_greeting(self, default_engine: PersonalityEngine) -> None:
-        with patch("jarvis.core.personality.datetime") as mock_dt:
+        with patch("cognithor.core.personality.datetime") as mock_dt:
             mock_dt.now.return_value.hour = 8
             greeting = default_engine.get_greeting_fragment()
             assert "Morgen" in greeting
 
     def test_afternoon_greeting(self, default_engine: PersonalityEngine) -> None:
-        with patch("jarvis.core.personality.datetime") as mock_dt:
+        with patch("cognithor.core.personality.datetime") as mock_dt:
             mock_dt.now.return_value.hour = 14
             greeting = default_engine.get_greeting_fragment()
             assert greeting == ""  # no greeting in afternoon
 
     def test_evening_greeting(self, default_engine: PersonalityEngine) -> None:
-        with patch("jarvis.core.personality.datetime") as mock_dt:
+        with patch("cognithor.core.personality.datetime") as mock_dt:
             mock_dt.now.return_value.hour = 19
             greeting = default_engine.get_greeting_fragment()
             assert "Abend" in greeting
 
     def test_night_greeting(self, default_engine: PersonalityEngine) -> None:
-        with patch("jarvis.core.personality.datetime") as mock_dt:
+        with patch("cognithor.core.personality.datetime") as mock_dt:
             mock_dt.now.return_value.hour = 2
             greeting = default_engine.get_greeting_fragment()
             assert "wach" in greeting

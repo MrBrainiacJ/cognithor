@@ -12,8 +12,8 @@ import contextvars
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.model_router import (
+from cognithor.config import JarvisConfig
+from cognithor.core.model_router import (
     ModelRouter,
     OllamaClient,
     _coding_override_var,

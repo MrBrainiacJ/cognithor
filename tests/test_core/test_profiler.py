@@ -1,7 +1,7 @@
 """Tests fuer TaskProfiler."""
 
-from jarvis.core.profiler import TaskProfiler
-from jarvis.models import CapabilityProfile
+from cognithor.core.profiler import TaskProfiler
+from cognithor.models import CapabilityProfile
 
 
 class TestTaskProfiler:

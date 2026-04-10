@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.audit import AuditCategory, AuditLogger
-from jarvis.models import (
+from cognithor.audit import AuditCategory, AuditLogger
+from cognithor.models import (
     GateStatus,
     PlannedAction,
     SessionContext,
@@ -49,12 +49,12 @@ class TestGatekeeperAuditIntegration:
 
     def test_gatekeeper_block_logged(self, audit_logger: AuditLogger, tmp_path: Path) -> None:
         """Blockierte Aktionen werden im zentralen AuditLogger protokolliert."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         gk = Gatekeeper(config, audit_logger=audit_logger)
         gk.initialize()
@@ -73,12 +73,12 @@ class TestGatekeeperAuditIntegration:
 
     def test_gatekeeper_allow_logged(self, audit_logger: AuditLogger, tmp_path: Path) -> None:
         """Erlaubte/genehmigte Aktionen werden ebenfalls auditiert."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         gk = Gatekeeper(config, audit_logger=audit_logger)
         gk.initialize()
@@ -101,12 +101,12 @@ class TestGatekeeperAuditIntegration:
         tmp_path: Path,
     ) -> None:
         """Credential-Maskierung wird auditiert."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         gk = Gatekeeper(config, audit_logger=audit_logger)
         gk.initialize()
@@ -139,7 +139,7 @@ class TestPlannerAuditIntegration:
     @pytest.mark.asyncio
     async def test_planner_logs_llm_call_success(self, audit_logger: AuditLogger) -> None:
         """Erfolgreicher LLM-Plan-Call wird auditiert."""
-        from jarvis.core.planner import Planner
+        from cognithor.core.planner import Planner
 
         mock_config = MagicMock()
         mock_ollama = AsyncMock()
@@ -173,8 +173,8 @@ class TestPlannerAuditIntegration:
     @pytest.mark.asyncio
     async def test_planner_logs_llm_error(self, audit_logger: AuditLogger) -> None:
         """LLM-Fehler werden als failed audit-entries geloggt."""
-        from jarvis.core.model_router import OllamaError
-        from jarvis.core.planner import Planner
+        from cognithor.core.model_router import OllamaError
+        from cognithor.core.planner import Planner
 
         mock_config = MagicMock()
         mock_ollama = AsyncMock()
@@ -211,9 +211,9 @@ class TestReflectorAuditIntegration:
     @pytest.mark.asyncio
     async def test_reflector_logs_llm_error(self, audit_logger: AuditLogger) -> None:
         """Reflector-LLM-Fehler wird auditiert."""
-        from jarvis.core.model_router import OllamaError
-        from jarvis.core.reflector import Reflector
-        from jarvis.models import AgentResult
+        from cognithor.core.model_router import OllamaError
+        from cognithor.core.reflector import Reflector
+        from cognithor.models import AgentResult
 
         mock_config = MagicMock()
         mock_ollama = AsyncMock()
@@ -229,8 +229,8 @@ class TestReflectorAuditIntegration:
         mock_wm = MagicMock()
         mock_wm.chat_history = []
 
-        from jarvis.models import ActionPlan
-        from jarvis.models import PlannedAction as _PA
+        from cognithor.models import ActionPlan
+        from cognithor.models import PlannedAction as _PA
 
         agent_result = AgentResult(
             response="test",
@@ -268,7 +268,7 @@ class TestMemoryManagerAuditIntegration:
 
     def test_memory_manager_accepts_audit_logger(self, audit_logger: AuditLogger) -> None:
         """MemoryManager kann mit AuditLogger initialisiert werden."""
-        from jarvis.memory.manager import MemoryManager
+        from cognithor.memory.manager import MemoryManager
 
         mm = MemoryManager(audit_logger=audit_logger)
         assert mm._audit_logger is audit_logger
@@ -284,8 +284,8 @@ class TestSkillGeneratorPackageBuilderIntegration:
 
     def test_register_creates_package(self, audit_logger: AuditLogger, tmp_path: Path) -> None:
         """Nach Registrierung wird ein signiertes Paket erstellt."""
-        from jarvis.skills.generator import GeneratedSkill, GenerationStatus, SkillGenerator
-        from jarvis.skills.package import PackageBuilder
+        from cognithor.skills.generator import GeneratedSkill, GenerationStatus, SkillGenerator
+        from cognithor.skills.package import PackageBuilder
 
         builder = PackageBuilder()  # Ohne Signer → unsigniertes Paket
         generator = SkillGenerator(
@@ -320,7 +320,7 @@ class TestSkillGeneratorPackageBuilderIntegration:
 
     def test_register_without_builder_still_works(self, tmp_path: Path) -> None:
         """Ohne PackageBuilder funktioniert register() wie bisher."""
-        from jarvis.skills.generator import GeneratedSkill, GenerationStatus, SkillGenerator
+        from cognithor.skills.generator import GeneratedSkill, GenerationStatus, SkillGenerator
 
         generator = SkillGenerator(skills_dir=tmp_path / "skills")
 
@@ -349,7 +349,7 @@ class TestSkillRegistryP2PIntegration:
 
     def test_loads_p2p_installed_skills(self, tmp_path: Path) -> None:
         """Skills in Unterverzeichnissen (P2P-Format) werden geladen."""
-        from jarvis.skills.registry import SkillRegistry
+        from cognithor.skills.registry import SkillRegistry
 
         # P2P-installiertes Skill simulieren (Unterverzeichnis mit skill.md)
         skill_dir = tmp_path / "skills" / "weather_api"
@@ -381,7 +381,7 @@ class TestSkillRegistryP2PIntegration:
 
     def test_ignores_non_skill_subdirs(self, tmp_path: Path) -> None:
         """Unterverzeichnisse ohne skill.md werden ignoriert."""
-        from jarvis.skills.registry import SkillRegistry
+        from cognithor.skills.registry import SkillRegistry
 
         (tmp_path / "not_a_skill").mkdir()
         (tmp_path / "not_a_skill" / "random.txt").write_text("nope")
@@ -393,7 +393,7 @@ class TestSkillRegistryP2PIntegration:
 
     def test_mixed_flat_and_p2p(self, tmp_path: Path) -> None:
         """Flache Skills und P2P-Skills können koexistieren."""
-        from jarvis.skills.registry import SkillRegistry
+        from cognithor.skills.registry import SkillRegistry
 
         # Flach
         (tmp_path / "flat_skill.md").write_text(
@@ -473,8 +473,8 @@ class TestFullAuditTrail:
         tmp_path: Path,
     ) -> None:
         """Simuliert: User-Input → Gatekeeper → Executor → Audit-Summary."""
-        from jarvis.core.executor import Executor
-        from jarvis.security.monitor import RuntimeMonitor
+        from cognithor.core.executor import Executor
+        from cognithor.security.monitor import RuntimeMonitor
 
         monitor = RuntimeMonitor(enable_defaults=True)
 

@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 // ──────────────────────────────────────────────────────────────────────
 // Robot Office – Animated CustomPainter (centerpiece visualization)

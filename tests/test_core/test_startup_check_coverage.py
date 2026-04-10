@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.startup_check import (
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.core.startup_check import (
     StartupChecker,
     StartupReport,
     _can_import,
@@ -113,7 +113,7 @@ class TestCheckAndFixAll:
 class TestCheckPythonPackages:
     def test_all_installed(self, config: JarvisConfig) -> None:
         checker = StartupChecker(config)
-        with patch("jarvis.core.startup_check._can_import", return_value=True):
+        with patch("cognithor.core.startup_check._can_import", return_value=True):
             report = checker.check_python_packages()
         assert isinstance(report, StartupReport)
         assert len(report.checks_passed) > 0
@@ -122,15 +122,15 @@ class TestCheckPythonPackages:
     def test_missing_packages_installed(self, config: JarvisConfig) -> None:
         checker = StartupChecker(config, auto_install=True)
         # First call: can't import; after install: can import
-        with patch("jarvis.core.startup_check._can_import", return_value=False):
-            with patch("jarvis.core.startup_check._pip_install", return_value=(True, "")):
+        with patch("cognithor.core.startup_check._can_import", return_value=False):
+            with patch("cognithor.core.startup_check._pip_install", return_value=(True, "")):
                 report = checker.check_python_packages()
         assert len(report.fixes_applied) > 0
 
     def test_missing_packages_install_fails(self, config: JarvisConfig) -> None:
         checker = StartupChecker(config, auto_install=True)
-        with patch("jarvis.core.startup_check._can_import", return_value=False):
-            with patch("jarvis.core.startup_check._pip_install", return_value=(False, "error")):
+        with patch("cognithor.core.startup_check._can_import", return_value=False):
+            with patch("cognithor.core.startup_check._pip_install", return_value=(False, "error")):
                 report = checker.check_python_packages()
         assert len(report.warnings) > 0
 

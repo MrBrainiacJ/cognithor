@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.autonomous_orchestrator import AutonomousOrchestrator, AutonomousTask
+from cognithor.core.autonomous_orchestrator import AutonomousOrchestrator, AutonomousTask
 
 
 def test_detect_recurring_daily():

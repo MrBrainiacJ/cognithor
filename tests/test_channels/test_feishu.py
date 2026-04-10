@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.channels.feishu import FeishuChannel
-from jarvis.models import OutgoingMessage
+from cognithor.channels.feishu import FeishuChannel
+from cognithor.models import OutgoingMessage
 
 
 class TestFeishuChannel:

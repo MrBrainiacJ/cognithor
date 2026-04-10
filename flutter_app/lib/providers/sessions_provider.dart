@@ -5,7 +5,7 @@
 library;
 
 import 'package:flutter/foundation.dart' show ChangeNotifier, debugPrint, kDebugMode;
-import 'package:jarvis_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/api_client.dart';
 
 void _log(String msg) {
   if (kDebugMode) debugPrint(msg);

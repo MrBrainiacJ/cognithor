@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from jarvis.mcp.ui_automation import UIAutomationProvider
+from cognithor.mcp.ui_automation import UIAutomationProvider
 
 
 class TestUIAutomationProvider:

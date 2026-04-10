@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.mcp.client import (
+from cognithor.mcp.client import (
     JarvisMCPClient,
     ServerConnection,
     ToolCallResult,
@@ -95,7 +95,7 @@ class TestCallTool:
 
     @pytest.mark.asyncio
     async def test_call_mcp_server_not_connected(self, client: JarvisMCPClient) -> None:
-        from jarvis.models import MCPToolInfo
+        from cognithor.models import MCPToolInfo
 
         client._tool_registry["remote_tool"] = MCPToolInfo(
             name="remote_tool",
@@ -109,7 +109,7 @@ class TestCallTool:
 
     @pytest.mark.asyncio
     async def test_call_mcp_server_success(self, client: JarvisMCPClient) -> None:
-        from jarvis.models import MCPToolInfo
+        from cognithor.models import MCPToolInfo
 
         client._tool_registry["remote_tool"] = MCPToolInfo(
             name="remote_tool",
@@ -136,7 +136,7 @@ class TestCallTool:
 
     @pytest.mark.asyncio
     async def test_call_mcp_server_exception(self, client: JarvisMCPClient) -> None:
-        from jarvis.models import MCPToolInfo
+        from cognithor.models import MCPToolInfo
 
         client._tool_registry["err_tool"] = MCPToolInfo(
             name="err_tool",

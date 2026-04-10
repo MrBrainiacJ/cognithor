@@ -6,8 +6,8 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:jarvis_ui/services/api_client.dart';
-import 'package:jarvis_ui/services/voice_service.dart';
+import 'package:cognithor_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/voice_service.dart';
 
 class VoiceProvider extends ChangeNotifier {
   VoiceProvider({this.apiClient, this.sendToChat}) {

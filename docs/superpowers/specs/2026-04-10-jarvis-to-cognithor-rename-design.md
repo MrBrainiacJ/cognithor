@@ -15,7 +15,7 @@ Executes all changes in sequence:
 3. **Python imports (src/):** `from jarvis.` → `from cognithor.`, `import jarvis` → `import cognithor`
 4. **Python imports (tests/):** Same transformations
 5. **Env vars:** `JARVIS_` → `COGNITHOR_` with dual-read fallback wrapper
-6. **Home path:** `".jarvis"` → `".cognithor"` with migration detection
+6. **Home path:** `".cognithor"` → `".cognithor"` with migration detection
 7. **Flutter:** `jarvis_ui` → `cognithor_ui` in pubspec.yaml + all Dart imports
 8. **Config:** pyproject.toml packages, entry points
 9. **Shell/Docker/CI:** All remaining JARVIS_ references
@@ -35,11 +35,11 @@ Applied in `config.py` where env vars are read. Both `COGNITHOR_*` and `JARVIS_*
 
 ```python
 _NEW = Path.home() / ".cognithor"
-_OLD = Path.home() / ".jarvis"
+_OLD = Path.home() / ".cognithor"
 COGNITHOR_HOME = _NEW if _NEW.exists() else _OLD if _OLD.exists() else _NEW
 ```
 
-On first start after upgrade: if `~/.jarvis` exists and `~/.cognithor` does not, create symlink `~/.cognithor` → `~/.jarvis`. No data copy, no risk.
+On first start after upgrade: if `~/.cognithor` exists and `~/.cognithor` does not, create symlink `~/.cognithor` → `~/.cognithor`. No data copy, no risk.
 
 ### 4. What stays as "jarvis"/"Jarvis"
 

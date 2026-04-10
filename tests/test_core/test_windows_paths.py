@@ -27,7 +27,7 @@ class TestNoHardcodedTmpPaths:
 
     def test_security_config_uses_platform_temp(self):
         """SecurityConfig.allowed_paths muss plattform-temp verwenden."""
-        from jarvis.config import SecurityConfig
+        from cognithor.config import SecurityConfig
 
         config = SecurityConfig()
         tmp = tempfile.gettempdir()
@@ -39,7 +39,7 @@ class TestNoHardcodedTmpPaths:
 
     def test_sandbox_config_uses_platform_temp(self):
         """models.SandboxConfig.allowed_paths muss plattform-temp verwenden."""
-        from jarvis.models import SandboxConfig
+        from cognithor.models import SandboxConfig
 
         config = SandboxConfig()
         tmp = tempfile.gettempdir()
@@ -50,8 +50,8 @@ class TestNoHardcodedTmpPaths:
 
     def test_no_literal_tmp_jarvis_in_defaults(self):
         """Defaults duerfen nicht den Unix-Literal '/tmp/jarvis/' enthalten."""
-        from jarvis.config import SecurityConfig
-        from jarvis.models import SandboxConfig
+        from cognithor.config import SecurityConfig
+        from cognithor.models import SandboxConfig
 
         sec = SecurityConfig()
         sb = SandboxConfig()
@@ -96,20 +96,20 @@ class TestPathSeparators:
 
     def test_working_memory_source_extraction(self):
         """WorkingMemory build_context_parts extrahiert source korrekt."""
-        from jarvis.memory.working import WorkingMemoryManager
-        from jarvis.models import Chunk, MemorySearchResult
+        from cognithor.memory.working import WorkingMemoryManager
+        from cognithor.models import Chunk, MemorySearchResult
 
         # Unix-style Pfad
         chunk_unix = Chunk(
             text="Testtext",
-            source_path="/home/user/.jarvis/memory/note.md",
+            source_path="/home/user/.cognithor/memory/note.md",
         )
         mr_unix = MemorySearchResult(chunk=chunk_unix, score=0.95)
 
         # Windows-style Pfad (forward slashes funktionieren auf allen OS)
         chunk_win = Chunk(
             text="Testtext Windows",
-            source_path="C:/Users/test/.jarvis/memory/notiz.md",
+            source_path="C:/Users/test/.cognithor/memory/notiz.md",
         )
         mr_win = MemorySearchResult(chunk=chunk_win, score=0.90)
 
@@ -181,7 +181,7 @@ class TestSlugify:
 
     def test_skill_tools_slugify_basic(self):
         """skill_tools._slugify erzeugt gueltigen Dateinamen."""
-        from jarvis.mcp.skill_tools import _slugify
+        from cognithor.mcp.skill_tools import _slugify
 
         assert _slugify("My Cool Skill") == "my_cool_skill"
         assert _slugify("  spaces  ") == "spaces"
@@ -189,21 +189,21 @@ class TestSlugify:
 
     def test_skill_tools_slugify_special_chars(self):
         """skill_tools._slugify entfernt Sonderzeichen."""
-        from jarvis.mcp.skill_tools import _slugify
+        from cognithor.mcp.skill_tools import _slugify
 
         result = _slugify("test@#$%skill")
         assert all(c.isalnum() or c == "_" for c in result)
 
     def test_skill_tools_slugify_empty(self):
         """skill_tools._slugify liefert Fallback fuer leeren String."""
-        from jarvis.mcp.skill_tools import _slugify
+        from cognithor.mcp.skill_tools import _slugify
 
         assert _slugify("") == "unnamed_skill"
         assert _slugify("###") == "unnamed_skill"
 
     def test_vault_slugify_german_umlauts(self):
         """vault._slugify wandelt deutsche Umlaute korrekt um."""
-        from jarvis.mcp.vault import _slugify
+        from cognithor.mcp.vault import _slugify
 
         assert "ae" in _slugify("Aehnlich")
         assert "oe" in _slugify("Oeffnen")
@@ -212,7 +212,7 @@ class TestSlugify:
 
     def test_vault_slugify_produces_valid_filename(self):
         """vault._slugify erzeugt Dateinamen ohne ungueltige Zeichen."""
-        from jarvis.mcp.vault import _slugify
+        from cognithor.mcp.vault import _slugify
 
         slug = _slugify("Test: Meine Notiz (2024)!")
         # Keine Sonderzeichen die in Dateinamen problematisch sind
@@ -221,7 +221,7 @@ class TestSlugify:
 
     def test_manager_slugify_basic(self):
         """skills.manager._slugify erzeugt gueltige Dateinamen."""
-        from jarvis.skills.manager import _slugify
+        from cognithor.skills.manager import _slugify
 
         result = _slugify("My Skill Name")
         assert result == "my-skill-name"
@@ -231,9 +231,9 @@ class TestSlugify:
 
     def test_slugify_no_path_separators(self):
         """Kein Slugify darf Pfad-Separatoren erzeugen."""
-        from jarvis.mcp.skill_tools import _slugify as st_slugify
-        from jarvis.mcp.vault import _slugify as vault_slugify
-        from jarvis.skills.manager import _slugify as mgr_slugify
+        from cognithor.mcp.skill_tools import _slugify as st_slugify
+        from cognithor.mcp.vault import _slugify as vault_slugify
+        from cognithor.skills.manager import _slugify as mgr_slugify
 
         test_inputs = [
             "normal name",
@@ -301,17 +301,17 @@ class TestPathValidation:
 
     def test_filesystem_validate_path_uses_pathlib(self):
         """FileSystemTools._validate_path nutzt Path.resolve()."""
-        from jarvis.mcp.filesystem import FileSystemTools
+        from cognithor.mcp.filesystem import FileSystemTools
 
         # Erstellt eine Instanz mit einem Mock-Config
         config = MagicMock()
-        config.security.allowed_paths = [str(Path.home() / ".jarvis")]
+        config.security.allowed_paths = [str(Path.home() / ".cognithor")]
         config.filesystem = MagicMock()
         config.filesystem.max_tree_entries = 1000
         tools = FileSystemTools(config)
 
         # Pfad innerhalb des erlaubten Verzeichnisses
-        home_jarvis = Path.home() / ".jarvis"
+        home_jarvis = Path.home() / ".cognithor"
         if home_jarvis.exists():
             test_path = str(home_jarvis / "test.txt")
             validated = tools._validate_path(test_path)
@@ -320,8 +320,8 @@ class TestPathValidation:
 
     def test_gatekeeper_validate_paths_resolves_correctly(self, tmp_path):
         """Gatekeeper._validate_paths nutzt Path fuer Validierung."""
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction
 
         # policies_dir muss ein existierendes Verzeichnis sein
         # (oder Dateien fehlen -> leere Policies)
@@ -330,7 +330,7 @@ class TestPathValidation:
 
         config = MagicMock()
         config.security.allowed_paths = [
-            str(Path.home() / ".jarvis"),
+            str(Path.home() / ".cognithor"),
             str(Path(tempfile.gettempdir()) / "jarvis"),
         ]
         config.security.blocked_commands = []
@@ -384,7 +384,7 @@ class TestNoHardcodedUnixPaths:
     @staticmethod
     def _get_source_files() -> list[Path]:
         """Sammelt alle .py Dateien im src/jarvis Verzeichnis."""
-        src_dir = Path(__file__).resolve().parent.parent.parent / "src" / "jarvis"
+        src_dir = Path(__file__).resolve().parent.parent.parent / "src" / "cognithor"
         if not src_dir.exists():
             pytest.skip(f"Source-Verzeichnis nicht gefunden: {src_dir}")
         return list(src_dir.rglob("*.py"))
@@ -454,8 +454,8 @@ class TestSandboxPlatformConfig:
 
     def test_core_sandbox_build_env_platform_aware(self):
         """security/sandbox.py _build_env setzt plattform-korrekte Werte."""
-        from jarvis.models import SandboxConfig as ModelSandboxConfig
-        from jarvis.security.sandbox import Sandbox
+        from cognithor.models import SandboxConfig as ModelSandboxConfig
+        from cognithor.security.sandbox import Sandbox
 
         sb = Sandbox(ModelSandboxConfig())
         env = sb._build_env()
@@ -469,7 +469,7 @@ class TestSandboxPlatformConfig:
 
     def test_core_sandbox_executor_detects_platform(self):
         """SandboxExecutor erkennt plattform-spezifische Faehigkeiten."""
-        from jarvis.core.sandbox import SandboxExecutor, SandboxLevel
+        from cognithor.core.sandbox import SandboxExecutor, SandboxLevel
 
         executor = SandboxExecutor()
         level = executor.level

@@ -14,12 +14,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.mcp.vault import (
+from cognithor.mcp.vault import (
     VaultTools,
     register_vault_tools,
 )
-from jarvis.mcp.vault_backend import now_iso as _now_iso
-from jarvis.mcp.vault_backend import parse_tags as _parse_tags
+from cognithor.mcp.vault_backend import now_iso as _now_iso
+from cognithor.mcp.vault_backend import parse_tags as _parse_tags
 
 # ============================================================================
 # Fixtures
@@ -527,5 +527,5 @@ class TestEnsureStructure:
 class TestVaultNoConfig:
     def test_defaults(self) -> None:
         vault = VaultTools(config=None)
-        assert vault._vault_root == Path.home() / ".jarvis" / "vault"
+        assert vault._vault_root == Path.home() / ".cognithor" / "vault"
         assert "research" in vault._default_folders

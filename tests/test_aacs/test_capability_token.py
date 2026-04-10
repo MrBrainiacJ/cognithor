@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from jarvis.aacs.tokens.capability_token import (
+from cognithor.aacs.tokens.capability_token import (
     Action,
     ActionVerb,
     CapabilityToken,

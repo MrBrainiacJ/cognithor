@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
-from jarvis.utils.logging import (
+from cognithor.utils.logging import (
     _StructlogCompatLogger,
     bind_context,
     clear_context,
@@ -115,7 +115,7 @@ class TestGetLogger:
         assert log is not None
 
     def test_fallback_without_structlog(self) -> None:
-        with patch("jarvis.utils.logging.structlog", None):
+        with patch("cognithor.utils.logging.structlog", None):
             log = get_logger("fallback_test")
             assert isinstance(log, _StructlogCompatLogger)
 
@@ -123,7 +123,7 @@ class TestGetLogger:
         # When structlog is available, it should use structlog.get_logger
         mock_structlog = MagicMock()
         mock_structlog.get_logger.return_value = MagicMock()
-        with patch("jarvis.utils.logging.structlog", mock_structlog):
+        with patch("cognithor.utils.logging.structlog", mock_structlog):
             get_logger("structlog_test")
             mock_structlog.get_logger.assert_called_once_with("structlog_test")
 
@@ -142,7 +142,7 @@ class TestSetupLogging:
     def test_setup_creates_log_file(self, tmp_path: Path) -> None:
         log_dir = tmp_path / "logs"
         setup_logging(log_dir=log_dir)
-        assert (log_dir / "jarvis.jsonl").exists() or True  # File created on first write
+        assert (log_dir / "cognithor.jsonl").exists() or True  # File created on first write
 
     def test_setup_with_json_logs(self, tmp_path: Path) -> None:
         """json_logs=True should not crash."""
@@ -165,7 +165,7 @@ class TestSetupLogging:
         # Should not crash
 
     def test_setup_without_structlog(self) -> None:
-        with patch("jarvis.utils.logging.structlog", None):
+        with patch("cognithor.utils.logging.structlog", None):
             setup_logging(level="DEBUG")  # Should return early without error
 
     def test_setup_with_log_dir_nested(self, tmp_path: Path) -> None:
@@ -181,16 +181,16 @@ class TestSetupLogging:
 
 class TestContextManagement:
     def test_bind_context_without_structlog(self) -> None:
-        with patch("jarvis.utils.logging.structlog", None):
+        with patch("cognithor.utils.logging.structlog", None):
             bind_context(user="test")  # Should be a no-op
 
     def test_clear_context_without_structlog(self) -> None:
-        with patch("jarvis.utils.logging.structlog", None):
+        with patch("cognithor.utils.logging.structlog", None):
             clear_context()  # Should be a no-op
 
     def test_bind_context_with_structlog(self) -> None:
         mock_structlog = MagicMock()
-        with patch("jarvis.utils.logging.structlog", mock_structlog):
+        with patch("cognithor.utils.logging.structlog", mock_structlog):
             bind_context(user="test", session="abc")
             mock_structlog.contextvars.bind_contextvars.assert_called_once_with(
                 user="test", session="abc"
@@ -198,6 +198,6 @@ class TestContextManagement:
 
     def test_clear_context_with_structlog(self) -> None:
         mock_structlog = MagicMock()
-        with patch("jarvis.utils.logging.structlog", mock_structlog):
+        with patch("cognithor.utils.logging.structlog", mock_structlog):
             clear_context()
             mock_structlog.contextvars.clear_contextvars.assert_called_once()

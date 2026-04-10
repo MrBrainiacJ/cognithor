@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.signal import MAX_MESSAGE_LENGTH, SignalChannel, _split_message
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.channels.signal import MAX_MESSAGE_LENGTH, SignalChannel, _split_message
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -488,7 +488,7 @@ class TestSignalApproval:
     async def test_approval_timeout(self, signal_ch: SignalChannel) -> None:
         signal_ch._sessions["+491234567"] = "sess-t"
         with patch.object(signal_ch, "_send_text", new_callable=AsyncMock):
-            with patch("jarvis.channels.signal.APPROVAL_TIMEOUT", 0.05):
+            with patch("cognithor.channels.signal.APPROVAL_TIMEOUT", 0.05):
                 action = PlannedAction(tool="rm", params={})
                 result = await signal_ch.request_approval("sess-t", action, "Danger")
         assert result is False

@@ -25,7 +25,7 @@ import pytest
 _mock_torch = MagicMock()
 sys.modules.setdefault("torch", _mock_torch)
 
-from jarvis.channels.voice import VADDetector
+from cognithor.channels.voice import VADDetector
 
 
 class TestPinnedRepo:

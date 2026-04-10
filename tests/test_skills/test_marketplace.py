@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.skills.marketplace import (
+from cognithor.skills.marketplace import (
     CATEGORY_INFOS,
     SkillCategory,
     SkillListing,

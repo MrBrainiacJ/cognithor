@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 @pytest.fixture()
 def tmp_jarvis_home(tmp_path: Path) -> Path:
     """Create a temporary Jarvis home directory with required structure."""
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     home.mkdir()
     (home / "memory").mkdir()
     (home / "prompts").mkdir()
@@ -51,7 +51,7 @@ def tmp_jarvis_home(tmp_path: Path) -> Path:
 @pytest.fixture()
 def config(tmp_jarvis_home: Path):
     """Load a JarvisConfig for the temp home."""
-    from jarvis.config import JarvisConfig
+    from cognithor.config import JarvisConfig
 
     return JarvisConfig(jarvis_home=tmp_jarvis_home)
 
@@ -62,8 +62,8 @@ def app_and_mgr(config):
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
 
-    from jarvis.channels.config_routes import create_config_routes
-    from jarvis.config_manager import ConfigManager
+    from cognithor.channels.config_routes import create_config_routes
+    from cognithor.config_manager import ConfigManager
 
     app = FastAPI()
     app.add_middleware(

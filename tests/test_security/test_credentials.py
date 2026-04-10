@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.security.credentials import CredentialStore
+from cognithor.security.credentials import CredentialStore
 
 if TYPE_CHECKING:
     from pathlib import Path

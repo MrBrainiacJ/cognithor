@@ -112,9 +112,9 @@ def main() -> None:
                     shutil.rmtree(dest)
                 # Copy new source
                 shutil.copytree(src_jarvis, dest)
-                # Copy data/procedures to ~/.jarvis/data/procedures
+                # Copy data/procedures to ~/.cognithor/data/procedures
                 src_data = candidate / "data" / "procedures"
-                jarvis_home = Path.home() / ".jarvis"
+                jarvis_home = Path.home() / ".cognithor"
                 dest_data = jarvis_home / "data" / "procedures"
                 if src_data.is_dir():
                     dest_data.mkdir(parents=True, exist_ok=True)

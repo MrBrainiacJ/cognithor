@@ -1088,10 +1088,10 @@ git commit -m "test(arc): update budget allocation tests for sequence_click defa
 
 - [ ] **Step 1: Delete stale cached profiles**
 
-The cached profiles in `~/.jarvis/arc/game_profiles/` were created before `has_toggles` existed. Delete them so they get regenerated with the new field:
+The cached profiles in `~/.cognithor/arc/game_profiles/` were created before `has_toggles` existed. Delete them so they get regenerated with the new field:
 
 ```bash
-rm -f C:/Users/ArtiCall/.jarvis/arc/game_profiles/*.json
+rm -f C:/Users/ArtiCall/.cognithor/arc/game_profiles/*.json
 echo "Stale profiles deleted"
 ```
 

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.core.llm_backend import (
+from cognithor.core.llm_backend import (
     ChatResponse,
     ClaudeCodeBackend,
     LLMBackendError,

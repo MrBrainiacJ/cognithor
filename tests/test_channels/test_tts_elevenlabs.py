@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.tts_elevenlabs import ElevenLabsConfig, ElevenLabsTTS
+from cognithor.channels.tts_elevenlabs import ElevenLabsConfig, ElevenLabsTTS
 
 # ============================================================================
 # Fixtures
@@ -100,7 +100,7 @@ class TestElevenLabsTTSSynthesize:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("jarvis.channels.tts_elevenlabs.httpx", create=True) as mock_httpx:
+        with patch("cognithor.channels.tts_elevenlabs.httpx", create=True) as mock_httpx:
             mock_httpx.AsyncClient = MagicMock(return_value=mock_client)
             mock_httpx.HTTPStatusError = Exception
             mock_httpx.RequestError = Exception
@@ -230,8 +230,8 @@ class TestElevenLabsConfig:
 
     def test_voice_config_default_voice_id(self) -> None:
         """Verify that VoiceConfig (config.py + voice.py) has correct default voice_id."""
-        from jarvis.channels.voice import VoiceConfig as ChannelVoiceConfig
-        from jarvis.config import VoiceConfig as ConfigVoiceConfig
+        from cognithor.channels.voice import VoiceConfig as ChannelVoiceConfig
+        from cognithor.config import VoiceConfig as ConfigVoiceConfig
 
         cfg_voice = ConfigVoiceConfig()
         assert cfg_voice.elevenlabs_voice_id == "hJAaR77ekN23CNyp0byH"

@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from unittest.mock import AsyncMock
 
-from jarvis.evolution.models import QualityQuestion, SubGoal
+from cognithor.evolution.models import QualityQuestion, SubGoal
 
 
 @dataclass
@@ -55,7 +55,7 @@ def _make_llm_fn(responses: list[str]) -> AsyncMock:
 
 class TestCoverageCheck:
     def test_coverage_check_passes(self):
-        from jarvis.evolution.quality_assessor import QualityAssessor
+        from cognithor.evolution.quality_assessor import QualityAssessor
 
         sg = SubGoal(
             title="VVG Grundlagen",
@@ -70,7 +70,7 @@ class TestCoverageCheck:
         assert score >= 0.9
 
     def test_coverage_check_fails(self):
-        from jarvis.evolution.quality_assessor import QualityAssessor
+        from cognithor.evolution.quality_assessor import QualityAssessor
 
         sg = SubGoal(
             title="VVG Grundlagen",
@@ -87,7 +87,7 @@ class TestCoverageCheck:
 
 class TestGenerateQuestions:
     async def test_generate_questions(self):
-        from jarvis.evolution.quality_assessor import QualityAssessor
+        from cognithor.evolution.quality_assessor import QualityAssessor
 
         llm_fn = _make_llm_fn([_QUESTIONS_JSON])
         assessor = QualityAssessor(mcp_client=AsyncMock(), llm_fn=llm_fn)
@@ -102,7 +102,7 @@ class TestGenerateQuestions:
 
 class TestAnswerQuestion:
     async def test_answer_question_uses_memory(self):
-        from jarvis.evolution.quality_assessor import QualityAssessor
+        from cognithor.evolution.quality_assessor import QualityAssessor
 
         mcp = _make_mcp()
         assessor = QualityAssessor(mcp_client=mcp, llm_fn=AsyncMock())
@@ -123,7 +123,7 @@ class TestAnswerQuestion:
 
 class TestGradeQuestion:
     async def test_grade_question(self):
-        from jarvis.evolution.quality_assessor import QualityAssessor
+        from cognithor.evolution.quality_assessor import QualityAssessor
 
         llm_fn = _make_llm_fn([_GRADE_PASS_JSON])
         assessor = QualityAssessor(mcp_client=AsyncMock(), llm_fn=llm_fn)
@@ -141,7 +141,7 @@ class TestGradeQuestion:
 
 class TestFullQualityTest:
     async def test_full_quality_test(self):
-        from jarvis.evolution.quality_assessor import QualityAssessor
+        from cognithor.evolution.quality_assessor import QualityAssessor
 
         mcp = _make_mcp()
         # LLM calls: 1x generate_questions, then 2x grade_question
@@ -171,7 +171,7 @@ class TestFullQualityTest:
         assert len(result["questions"]) == 2
 
     async def test_quality_test_skips_when_coverage_fails(self):
-        from jarvis.evolution.quality_assessor import QualityAssessor
+        from cognithor.evolution.quality_assessor import QualityAssessor
 
         llm_fn = AsyncMock()
         assessor = QualityAssessor(

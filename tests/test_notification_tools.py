@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.security.encrypted_db import encrypted_connect
+from cognithor.security.encrypted_db import encrypted_connect
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -25,7 +25,7 @@ def db_path(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def notification_tools(db_path: Path):
-    from jarvis.mcp.notification_tools import NotificationTools
+    from cognithor.mcp.notification_tools import NotificationTools
 
     tools = NotificationTools(db_path)
     yield tools
@@ -42,7 +42,7 @@ def mock_mcp_client() -> MagicMock:
 @pytest.fixture
 def mock_config(tmp_path: Path) -> MagicMock:
     cfg = MagicMock()
-    cfg.jarvis_home = tmp_path / ".jarvis"
+    cfg.jarvis_home = tmp_path / ".cognithor"
     return cfg
 
 
@@ -127,7 +127,7 @@ class TestSetReminder:
 
     @pytest.mark.asyncio
     async def test_max_limit_enforcement(self, notification_tools):
-        from jarvis.mcp.notification_tools import _MAX_ACTIVE_REMINDERS
+        from cognithor.mcp.notification_tools import _MAX_ACTIVE_REMINDERS
 
         # Insert max reminders directly into DB
         now = datetime.now(UTC)
@@ -203,7 +203,7 @@ class TestRepeatLogic:
     @pytest.mark.asyncio
     async def test_fire_creates_next_daily(self, notification_tools):
         with patch(
-            "jarvis.mcp.notification_tools._send_desktop_notification",
+            "cognithor.mcp.notification_tools._send_desktop_notification",
             new_callable=AsyncMock,
             return_value="ok",
         ):
@@ -223,7 +223,7 @@ class TestRepeatLogic:
     @pytest.mark.asyncio
     async def test_fire_creates_next_weekly(self, notification_tools):
         with patch(
-            "jarvis.mcp.notification_tools._send_desktop_notification",
+            "cognithor.mcp.notification_tools._send_desktop_notification",
             new_callable=AsyncMock,
             return_value="ok",
         ):
@@ -260,7 +260,7 @@ class TestRestorePending:
         notification_tools._conn.commit()
 
         with patch(
-            "jarvis.mcp.notification_tools._send_desktop_notification",
+            "cognithor.mcp.notification_tools._send_desktop_notification",
             new_callable=AsyncMock,
             return_value="ok",
         ):
@@ -297,7 +297,7 @@ class TestRestorePending:
 
 class TestRegistration:
     def test_register_notification_tools(self, mock_mcp_client, mock_config):
-        from jarvis.mcp.notification_tools import register_notification_tools
+        from cognithor.mcp.notification_tools import register_notification_tools
 
         tools = register_notification_tools(mock_mcp_client, mock_config)
         assert tools is not None
@@ -314,7 +314,7 @@ class TestRegistration:
 
     @pytest.mark.asyncio
     async def test_restore_pending_reminders_function(self, mock_mcp_client, mock_config):
-        from jarvis.mcp.notification_tools import (
+        from cognithor.mcp.notification_tools import (
             register_notification_tools,
             restore_pending_reminders,
         )
@@ -333,7 +333,7 @@ class TestSendNotification:
     @pytest.mark.asyncio
     async def test_send_notification_plyer_fallback(self, notification_tools):
         with patch(
-            "jarvis.mcp.notification_tools._try_plyer_notification",
+            "cognithor.mcp.notification_tools._try_plyer_notification",
             return_value=True,
         ):
             result = await notification_tools.send_notification(title="Test", message="Hello")
@@ -342,9 +342,9 @@ class TestSendNotification:
     @pytest.mark.asyncio
     async def test_send_notification_all_fallbacks_fail(self, notification_tools):
         with (
-            patch("jarvis.mcp.notification_tools._try_plyer_notification", return_value=False),
-            patch("jarvis.mcp.notification_tools._try_powershell_notification", return_value=False),
-            patch("jarvis.mcp.notification_tools._try_winsound_fallback", return_value=False),
+            patch("cognithor.mcp.notification_tools._try_plyer_notification", return_value=False),
+            patch("cognithor.mcp.notification_tools._try_powershell_notification", return_value=False),
+            patch("cognithor.mcp.notification_tools._try_winsound_fallback", return_value=False),
         ):
             result = await notification_tools.send_notification(title="Test", message="Hello")
             assert "logged" in result.lower() or "Notification" in result

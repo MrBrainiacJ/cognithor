@@ -8,15 +8,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from jarvis.sdk.decorators import _infer_schema, get_registry
-from jarvis.sdk.definitions import (
+from cognithor.sdk.decorators import _infer_schema, get_registry
+from cognithor.sdk.definitions import (
     AgentDefinition,
     HookDefinition,
     HookEvent,
     ToolDefinition,
 )
-from jarvis.sdk.registry import SDKRegistry
-from jarvis.sdk.scaffold import scaffold_agent, scaffold_tool
+from cognithor.sdk.registry import SDKRegistry
+from cognithor.sdk.scaffold import scaffold_agent, scaffold_tool
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -242,7 +242,7 @@ class TestToolDecorator:
         get_registry().clear()
 
     def test_basic_tool(self) -> None:
-        from jarvis.sdk import tool
+        from cognithor.sdk import tool
 
         @tool(name="greet", description="Greet user")
         async def greet(name: str) -> str:
@@ -253,7 +253,7 @@ class TestToolDecorator:
         assert get_registry().get_tool("greet") is not None
 
     def test_tool_without_args(self) -> None:
-        from jarvis.sdk import tool
+        from cognithor.sdk import tool
 
         @tool
         async def simple() -> str:
@@ -263,7 +263,7 @@ class TestToolDecorator:
         assert simple._sdk_tool.name == "simple"
 
     def test_tool_schema_inferred(self) -> None:
-        from jarvis.sdk import tool
+        from cognithor.sdk import tool
 
         @tool(name="calc")
         async def calc(a: int, b: int) -> int:
@@ -284,7 +284,7 @@ class TestAgentDecorator:
         get_registry().clear()
 
     def test_basic_agent(self) -> None:
-        from jarvis.sdk import agent
+        from cognithor.sdk import agent
 
         @agent(name="bot", description="Test bot", tools=["search"])
         class TestBot:
@@ -296,7 +296,7 @@ class TestAgentDecorator:
         assert get_registry().get_agent("bot") is not None
 
     def test_agent_default_name(self) -> None:
-        from jarvis.sdk import agent
+        from cognithor.sdk import agent
 
         @agent(description="Auto-named")
         class MySpecialAgent:
@@ -315,7 +315,7 @@ class TestHookDecorator:
         get_registry().clear()
 
     def test_basic_hook(self) -> None:
-        from jarvis.sdk import hook
+        from cognithor.sdk import hook
 
         @hook("on_error", priority=10)
         async def on_err(error: Exception) -> None:

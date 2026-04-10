@@ -1,7 +1,7 @@
 """
 Jarvis · Shared Test-Fixtures.
 
-Alle Tests nutzen ein temporäres Verzeichnis statt ~/.jarvis/.
+Alle Tests nutzen ein temporäres Verzeichnis statt ~/.cognithor/.
 So sind Tests isoliert und reproduzierbar.
 """
 
@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.i18n import set_locale
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.i18n import set_locale
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -42,7 +42,7 @@ def _disable_file_encryption(monkeypatch):
     _initialized=True to prevent _ensure_init() from re-enabling it.
     """
     try:
-        from jarvis.security.encrypted_file import efile
+        from cognithor.security.encrypted_file import efile
 
         monkeypatch.setattr(efile, "_fernet", None)
         monkeypatch.setattr(efile, "_initialized", True)
@@ -54,7 +54,7 @@ def _disable_file_encryption(monkeypatch):
 @pytest.fixture
 def tmp_jarvis_home(tmp_path: Path) -> Path:
     """Temporäres Jarvis-Home-Verzeichnis."""
-    return tmp_path / ".jarvis"
+    return tmp_path / ".cognithor"
 
 
 @pytest.fixture

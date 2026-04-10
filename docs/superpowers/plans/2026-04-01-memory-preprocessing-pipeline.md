@@ -1257,7 +1257,7 @@ def main() -> None:
         "--memories-file",
         type=str,
         default=None,
-        help="Path to memories.json. Default: ~/.jarvis/identity/jarvis/memories.json",
+        help="Path to memories.json. Default: ~/.cognithor/identity/jarvis/memories.json",
     )
     args = parser.parse_args()
 
@@ -1265,7 +1265,7 @@ def main() -> None:
     if args.memories_file:
         mem_path = Path(args.memories_file)
     else:
-        mem_path = Path.home() / ".jarvis" / "identity" / "jarvis" / "memories.json"
+        mem_path = Path.home() / ".cognithor" / "identity" / "jarvis" / "memories.json"
 
     if not mem_path.exists():
         print(f"[ERROR] File not found: {mem_path}")
@@ -1328,7 +1328,7 @@ if __name__ == "__main__":
 Run: `python scripts/reset_identity_memories.py`
 Expected output similar to:
 ```
-File: C:\Users\ArtiCall\.jarvis\identity\jarvis\memories.json
+File: C:\Users\ArtiCall\.cognithor\identity\jarvis\memories.json
 Total memories: 3172
 Genesis (keep): 7
 Cognithor (remove): 3165
@@ -1348,11 +1348,11 @@ git commit -m "feat(memory): add identity memory reset script (genesis-only)"
 Run: `python scripts/reset_identity_memories.py --execute`
 Expected output:
 ```
-File: C:\Users\ArtiCall\.jarvis\identity\jarvis\memories.json
+File: C:\Users\ArtiCall\.cognithor\identity\jarvis\memories.json
 Total memories: 3172
 Genesis (keep): 7
 Cognithor (remove): 3165
-Backup created: C:\Users\ArtiCall\.jarvis\identity\jarvis\memories.json.bak
+Backup created: C:\Users\ArtiCall\.cognithor\identity\jarvis\memories.json.bak
 [OK] Reset complete. 7 genesis memories retained, 3165 removed.
 ```
 

@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.browser.agent import BrowserAgent
-from jarvis.browser.types import (
+from cognithor.browser.agent import BrowserAgent
+from cognithor.browser.types import (
     ActionResult,
     ActionType,
     BrowserAction,
@@ -97,14 +97,14 @@ class TestBrowserAgentLifecycle:
     async def test_start_no_playwright(self):
         """start() returns False if Playwright not installed."""
         agent = BrowserAgent()
-        with patch("jarvis.browser.agent._HAS_PLAYWRIGHT", False):
+        with patch("cognithor.browser.agent._HAS_PLAYWRIGHT", False):
             result = await agent.start()
         assert result is False
 
     @pytest.mark.asyncio
     async def test_start_already_running(self):
         agent = _make_running_agent()
-        with patch("jarvis.browser.agent._HAS_PLAYWRIGHT", True):
+        with patch("cognithor.browser.agent._HAS_PLAYWRIGHT", True):
             result = await agent.start()
         assert result is True
 

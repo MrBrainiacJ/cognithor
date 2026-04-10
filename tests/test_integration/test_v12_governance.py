@@ -10,7 +10,7 @@ import pytest
 # ============================================================================
 # 1. Agent Vault & Session Isolation
 # ============================================================================
-from jarvis.security.agent_vault import (
+from cognithor.security.agent_vault import (
     AgentVault,
     AgentVaultManager,
     IsolatedSessionStore,
@@ -212,7 +212,7 @@ class TestAgentVaultManager:
 # 2. Red Team Framework
 # ============================================================================
 
-from jarvis.security.red_team import (
+from cognithor.security.red_team import (
     AttackCategory,
     AttackPlaybook,
     CICDGenerator,
@@ -342,7 +342,7 @@ class TestRedTeamFramework:
 # 3. Curation Board & Governance Hub
 # ============================================================================
 
-from jarvis.core.curation import (
+from cognithor.core.curation import (
     CrossAgentBudget,
     CurationBoard,
     DecisionAlternative,
@@ -549,7 +549,7 @@ class TestGovernanceHub:
 # 4. Memory Poisoning Prevention
 # ============================================================================
 
-from jarvis.memory.hygiene import (
+from cognithor.memory.hygiene import (
     PoisoningPreventor,
     SourceIntegrityChecker,
 )
@@ -636,7 +636,7 @@ class TestSourceIntegrityChecker:
 # 5. Skill-Level Risk Classification
 # ============================================================================
 
-from jarvis.audit.eu_ai_act import RiskClassifier, RiskLevel
+from cognithor.audit.eu_ai_act import RiskClassifier, RiskLevel
 
 
 class TestSkillClassification:

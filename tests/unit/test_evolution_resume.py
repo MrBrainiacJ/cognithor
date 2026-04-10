@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.checkpointing import CheckpointStore, PersistentCheckpoint
-from jarvis.evolution.resume import EVOLUTION_STEPS, EvolutionResumer
+from cognithor.core.checkpointing import CheckpointStore, PersistentCheckpoint
+from cognithor.evolution.resume import EVOLUTION_STEPS, EvolutionResumer
 
 
 @pytest.fixture()

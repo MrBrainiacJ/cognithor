@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.core.message_queue import (
+from cognithor.core.message_queue import (
     DurableMessageQueue,
     MessagePriority,
     QueuedMessage,
@@ -485,7 +485,7 @@ class TestSerialization:
 
     async def test_pydantic_model_message(self, queue: DurableMessageQueue) -> None:
         """Pydantic-Modelle (IncomingMessage) werden korrekt serialisiert."""
-        from jarvis.models import IncomingMessage
+        from cognithor.models import IncomingMessage
 
         incoming = IncomingMessage(
             channel="telegram",

@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.browser.captcha.detector import DETECT_JS, detect_captcha
-from jarvis.browser.captcha.models import CaptchaType
+from cognithor.browser.captcha.detector import DETECT_JS, detect_captcha
+from cognithor.browser.captcha.models import CaptchaType
 
 
 def _mock_page(js_result: list[dict]) -> MagicMock:

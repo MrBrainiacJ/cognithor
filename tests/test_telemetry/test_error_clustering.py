@@ -1,6 +1,6 @@
 """Tests fuer ErrorClusterer."""
 
-from jarvis.telemetry.error_clustering import ErrorClusterer, _levenshtein_ratio
+from cognithor.telemetry.error_clustering import ErrorClusterer, _levenshtein_ratio
 
 
 class TestLevenshteinRatio:

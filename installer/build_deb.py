@@ -308,7 +308,7 @@ def step_debian_control(pkg_root: Path, version: str) -> None:
         # Create default config directory for installing user
         if [ -n "$SUDO_USER" ]; then
             REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-            JARVIS_HOME="$REAL_HOME/.jarvis"
+            JARVIS_HOME="$REAL_HOME/.cognithor"
             if [ ! -d "$JARVIS_HOME" ]; then
                 su - "$SUDO_USER" -c "/usr/bin/cognithor --init-only" || true
             fi
@@ -322,7 +322,7 @@ def step_debian_control(pkg_root: Path, version: str) -> None:
         echo "    cognithor --init-only  # Create config only"
         echo "    cognithor --lite       # Low-VRAM mode (8B models)"
         echo ""
-        echo "  Config: ~/.jarvis/config.yaml"
+        echo "  Config: ~/.cognithor/config.yaml"
         echo "  Docs:   https://github.com/Alex8791-cyber/cognithor"
         echo ""
     """)

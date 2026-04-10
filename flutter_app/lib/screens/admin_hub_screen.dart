@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/staggered_list.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/staggered_list.dart';
 
-import 'package:jarvis_ui/screens/agents_screen.dart';
-import 'package:jarvis_ui/screens/config_screen.dart';
-import 'package:jarvis_ui/screens/memory_screen.dart';
-import 'package:jarvis_ui/screens/models_screen.dart';
-import 'package:jarvis_ui/screens/security_screen.dart';
-import 'package:jarvis_ui/screens/system_screen.dart';
-import 'package:jarvis_ui/screens/credentials_screen.dart';
-import 'package:jarvis_ui/screens/knowledge_graph_screen.dart';
-import 'package:jarvis_ui/screens/vault_screen.dart';
-import 'package:jarvis_ui/screens/learning_screen.dart';
-import 'package:jarvis_ui/screens/connected_devices_screen.dart';
-import 'package:jarvis_ui/screens/device_settings_screen.dart';
-import 'package:jarvis_ui/screens/network_settings_screen.dart';
-import 'package:jarvis_ui/screens/teach_screen.dart';
-import 'package:jarvis_ui/screens/workflows_screen.dart';
-import 'package:jarvis_ui/screens/evolution_goals_page.dart';
+import 'package:cognithor_ui/screens/agents_screen.dart';
+import 'package:cognithor_ui/screens/config_screen.dart';
+import 'package:cognithor_ui/screens/memory_screen.dart';
+import 'package:cognithor_ui/screens/models_screen.dart';
+import 'package:cognithor_ui/screens/security_screen.dart';
+import 'package:cognithor_ui/screens/system_screen.dart';
+import 'package:cognithor_ui/screens/credentials_screen.dart';
+import 'package:cognithor_ui/screens/knowledge_graph_screen.dart';
+import 'package:cognithor_ui/screens/vault_screen.dart';
+import 'package:cognithor_ui/screens/learning_screen.dart';
+import 'package:cognithor_ui/screens/connected_devices_screen.dart';
+import 'package:cognithor_ui/screens/device_settings_screen.dart';
+import 'package:cognithor_ui/screens/network_settings_screen.dart';
+import 'package:cognithor_ui/screens/teach_screen.dart';
+import 'package:cognithor_ui/screens/workflows_screen.dart';
+import 'package:cognithor_ui/screens/evolution_goals_page.dart';
 
 class AdminHubScreen extends StatefulWidget {
   const AdminHubScreen({super.key});

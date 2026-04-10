@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.kanban.engine import KanbanEngine
-from jarvis.kanban.models import TaskStatus
-from jarvis.kanban.store import KanbanStore
+from cognithor.kanban.engine import KanbanEngine
+from cognithor.kanban.models import TaskStatus
+from cognithor.kanban.store import KanbanStore
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def engine(tmp_path):
 class TestKanbanMCPTools:
     @pytest.mark.asyncio
     async def test_create_tool(self, engine):
-        from jarvis.mcp.kanban_tools import _handle_create
+        from cognithor.mcp.kanban_tools import _handle_create
 
         result = await _handle_create(
             engine,
@@ -35,7 +35,7 @@ class TestKanbanMCPTools:
     async def test_update_tool(self, engine):
         task = engine.create_task("Test", created_by="agent")
         engine.transition(task.id, TaskStatus.IN_PROGRESS, changed_by="agent")
-        from jarvis.mcp.kanban_tools import _handle_update
+        from cognithor.mcp.kanban_tools import _handle_update
 
         result = await _handle_update(
             engine,
@@ -51,7 +51,7 @@ class TestKanbanMCPTools:
     async def test_list_tool(self, engine):
         engine.create_task("A", assigned_agent="coder", created_by="user")
         engine.create_task("B", assigned_agent="researcher", created_by="user")
-        from jarvis.mcp.kanban_tools import _handle_list
+        from cognithor.mcp.kanban_tools import _handle_list
 
         result = await _handle_list(engine, {"assigned_to_me": True}, agent_name="coder")
         assert "A" in result

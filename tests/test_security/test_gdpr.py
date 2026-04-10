@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
-from jarvis.security.gdpr import (
+from cognithor.security.gdpr import (
     DEFAULT_RETENTION_POLICIES,
     AuditExporter,
     DataCategory,

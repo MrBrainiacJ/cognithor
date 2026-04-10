@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// Lightweight alternative to GlassPanel for use in list items and screens.
 /// Uses solid semi-transparent backgrounds instead of BackdropFilter,

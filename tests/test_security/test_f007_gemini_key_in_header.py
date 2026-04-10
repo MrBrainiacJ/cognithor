@@ -19,7 +19,7 @@ class TestGeminiBackendKeyInHeader:
 
     def test_no_key_in_url_source(self) -> None:
         """Source-Code darf kein '?key=' in URL-Konstruktionen enthalten."""
-        from jarvis.core.llm_backend import GeminiBackend
+        from cognithor.core.llm_backend import GeminiBackend
 
         source = inspect.getsource(GeminiBackend)
         # Alle Zeilen mit URL-Konstruktion pruefen
@@ -29,7 +29,7 @@ class TestGeminiBackendKeyInHeader:
 
     def test_header_set_in_client(self) -> None:
         """_ensure_client() muss x-goog-api-key Header setzen."""
-        from jarvis.core.llm_backend import GeminiBackend
+        from cognithor.core.llm_backend import GeminiBackend
 
         source = inspect.getsource(GeminiBackend._ensure_client)
         assert "x-goog-api-key" in source, "_ensure_client() muss x-goog-api-key Header setzen"
@@ -37,7 +37,7 @@ class TestGeminiBackendKeyInHeader:
     @pytest.mark.asyncio
     async def test_client_has_header(self) -> None:
         """Der erstellte httpx-Client muss den x-goog-api-key Header haben."""
-        from jarvis.core.llm_backend import GeminiBackend
+        from cognithor.core.llm_backend import GeminiBackend
 
         backend = GeminiBackend(api_key="test-gemini-key-12345", timeout=10)
         client = await backend._ensure_client()
@@ -49,7 +49,7 @@ class TestGeminiBackendKeyInHeader:
 
     def test_generate_url_has_no_key(self) -> None:
         """generateContent URL darf keinen ?key= Parameter haben."""
-        from jarvis.core.llm_backend import GeminiBackend
+        from cognithor.core.llm_backend import GeminiBackend
 
         source = inspect.getsource(GeminiBackend)
         for line in source.splitlines():
@@ -58,7 +58,7 @@ class TestGeminiBackendKeyInHeader:
 
     def test_stream_url_has_no_key(self) -> None:
         """streamGenerateContent URL darf keinen key= Parameter haben."""
-        from jarvis.core.llm_backend import GeminiBackend
+        from cognithor.core.llm_backend import GeminiBackend
 
         source = inspect.getsource(GeminiBackend)
         for line in source.splitlines():
@@ -67,7 +67,7 @@ class TestGeminiBackendKeyInHeader:
 
     def test_embed_url_has_no_key(self) -> None:
         """embedContent URL darf keinen ?key= Parameter haben."""
-        from jarvis.core.llm_backend import GeminiBackend
+        from cognithor.core.llm_backend import GeminiBackend
 
         source = inspect.getsource(GeminiBackend)
         for line in source.splitlines():
@@ -76,7 +76,7 @@ class TestGeminiBackendKeyInHeader:
 
     def test_models_url_has_no_key(self) -> None:
         """models-Listing URL darf keinen ?key= Parameter haben."""
-        from jarvis.core.llm_backend import GeminiBackend
+        from cognithor.core.llm_backend import GeminiBackend
 
         source = inspect.getsource(GeminiBackend)
         for line in source.splitlines():
@@ -89,7 +89,7 @@ class TestGeminiEmbeddingProviderKeyInHeader:
 
     def test_no_key_in_url_source(self) -> None:
         """Source-Code darf kein '?key=' enthalten."""
-        from jarvis.memory.embeddings import GeminiEmbeddingProvider
+        from cognithor.memory.embeddings import GeminiEmbeddingProvider
 
         source = inspect.getsource(GeminiEmbeddingProvider)
         for i, line in enumerate(source.splitlines(), 1):
@@ -98,7 +98,7 @@ class TestGeminiEmbeddingProviderKeyInHeader:
 
     def test_header_set_in_client(self) -> None:
         """_get_client() muss x-goog-api-key Header setzen."""
-        from jarvis.memory.embeddings import GeminiEmbeddingProvider
+        from cognithor.memory.embeddings import GeminiEmbeddingProvider
 
         source = inspect.getsource(GeminiEmbeddingProvider._get_client)
         assert "x-goog-api-key" in source, "_get_client() muss x-goog-api-key Header setzen"
@@ -106,7 +106,7 @@ class TestGeminiEmbeddingProviderKeyInHeader:
     @pytest.mark.asyncio
     async def test_client_has_header(self) -> None:
         """Der erstellte httpx-Client muss den x-goog-api-key Header haben."""
-        from jarvis.memory.embeddings import GeminiEmbeddingProvider
+        from cognithor.memory.embeddings import GeminiEmbeddingProvider
 
         provider = GeminiEmbeddingProvider(api_key="test-embed-key-67890")
         client = await provider._get_client()
@@ -118,14 +118,14 @@ class TestGeminiEmbeddingProviderKeyInHeader:
 
     def test_embed_single_url_has_no_key(self) -> None:
         """embed_single URL darf keinen ?key= Parameter haben."""
-        from jarvis.memory.embeddings import GeminiEmbeddingProvider
+        from cognithor.memory.embeddings import GeminiEmbeddingProvider
 
         source = inspect.getsource(GeminiEmbeddingProvider.embed_single)
         assert "?key=" not in source
 
     def test_embed_batch_url_has_no_key(self) -> None:
         """embed_batch_raw URL darf keinen ?key= Parameter haben."""
-        from jarvis.memory.embeddings import GeminiEmbeddingProvider
+        from cognithor.memory.embeddings import GeminiEmbeddingProvider
 
         source = inspect.getsource(GeminiEmbeddingProvider.embed_batch_raw)
         assert "?key=" not in source

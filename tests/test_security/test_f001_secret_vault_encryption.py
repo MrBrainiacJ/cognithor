@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import hashlib
 
-from jarvis.security.sandbox_isolation import PerAgentSecretVault
+from cognithor.security.sandbox_isolation import PerAgentSecretVault
 
 
 class TestSecretVaultRoundtrip:

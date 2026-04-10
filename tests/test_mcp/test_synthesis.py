@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.mcp.synthesis import (
+from cognithor.mcp.synthesis import (
     KnowledgeSynthesizer,
     _extract_keywords,
     _filter_relevant_text,
@@ -651,7 +651,7 @@ class TestToolsWiring:
         """tools.py speichert register_web_tools Rückgabewert."""
         import inspect
 
-        from jarvis.gateway.phases.tools import init_tools
+        from cognithor.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)
         assert "web_tools = register_web_tools" in source
@@ -660,7 +660,7 @@ class TestToolsWiring:
         """tools.py speichert register_memory_tools Rückgabewert."""
         import inspect
 
-        from jarvis.gateway.phases.tools import init_tools
+        from cognithor.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)
         assert "memory_tools = register_memory_tools" in source
@@ -669,7 +669,7 @@ class TestToolsWiring:
         """tools.py importiert und registriert synthesis tools."""
         import inspect
 
-        from jarvis.gateway.phases.tools import init_tools
+        from cognithor.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)
         assert "register_synthesis_tools" in source
@@ -679,7 +679,7 @@ class TestToolsWiring:
         """tools.py injiziert alle 4 Abhängigkeiten in den Synthesizer."""
         import inspect
 
-        from jarvis.gateway.phases.tools import init_tools
+        from cognithor.gateway.phases.tools import init_tools
 
         source = inspect.getsource(init_tools)
         assert "_set_llm_fn" in source

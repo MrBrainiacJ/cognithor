@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.security.sanitizer import (
+from cognithor.security.sanitizer import (
     validate_model_path_containment,
     validate_voice_name,
 )
@@ -243,7 +243,7 @@ class TestMediaTTSPathTraversal:
 
     @pytest.fixture
     def pipeline(self, tmp_path: Path):
-        from jarvis.mcp.media import MediaPipeline
+        from cognithor.mcp.media import MediaPipeline
 
         return MediaPipeline(workspace_dir=tmp_path)
 
@@ -289,7 +289,7 @@ class TestVoiceWSBridgePathTraversal:
 
     @pytest.fixture
     def handler(self, tmp_path: Path):
-        from jarvis.channels.voice_ws_bridge import VoiceMessageHandler
+        from cognithor.channels.voice_ws_bridge import VoiceMessageHandler
 
         return VoiceMessageHandler(workspace_dir=tmp_path)
 

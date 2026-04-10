@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from jarvis.gateway.gateway import MAX_STALLED_MODEL_TURNS, advance_stalled_count
-from jarvis.models import SessionContext
+from cognithor.gateway.gateway import MAX_STALLED_MODEL_TURNS, advance_stalled_count
+from cognithor.models import SessionContext
 
 # ── Unit tests for advance_stalled_count ────────────────────────
 

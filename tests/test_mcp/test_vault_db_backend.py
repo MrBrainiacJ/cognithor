@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.mcp.vault_db_backend import VaultDBBackend
+from cognithor.mcp.vault_db_backend import VaultDBBackend
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@
 # Test Reflexion Memory
 class TestReflexionIntegration:
     def test_record_lookup_prevention_cycle(self, tmp_path):
-        from jarvis.learning.reflexion import ReflexionMemory
+        from cognithor.learning.reflexion import ReflexionMemory
 
         mem = ReflexionMemory(data_dir=tmp_path)
         # Record -> lookup -> prevention rule -> adopt
@@ -31,8 +31,8 @@ class TestReflexionIntegration:
 # Test Confidence Checker
 class TestConfidenceIntegration:
     def test_confidence_with_reflexion(self, tmp_path):
-        from jarvis.core.confidence import ConfidenceChecker
-        from jarvis.learning.reflexion import ReflexionMemory
+        from cognithor.core.confidence import ConfidenceChecker
+        from cognithor.learning.reflexion import ReflexionMemory
 
         mem = ReflexionMemory(data_dir=tmp_path)
         # Record recurring error
@@ -47,7 +47,7 @@ class TestConfidenceIntegration:
 # Test Token Budget
 class TestTokenBudgetIntegration:
     def test_complexity_detection(self):
-        from jarvis.core.token_budget import TokenBudgetManager
+        from cognithor.core.token_budget import TokenBudgetManager
 
         assert TokenBudgetManager.detect_complexity("fix typo") == "simple"
         assert (
@@ -59,7 +59,7 @@ class TestTokenBudgetIntegration:
         )
 
     def test_channel_multiplier(self):
-        from jarvis.core.token_budget import TokenBudgetManager
+        from cognithor.core.token_budget import TokenBudgetManager
 
         tg = TokenBudgetManager(complexity="medium", channel="telegram")
         web = TokenBudgetManager(complexity="medium", channel="webui")
@@ -69,7 +69,7 @@ class TestTokenBudgetIntegration:
 # Test Channel Flags
 class TestChannelFlagsIntegration:
     def test_telegram_compact(self):
-        from jarvis.core.channel_flags import get_channel_flags
+        from cognithor.core.channel_flags import get_channel_flags
 
         flags = get_channel_flags("telegram")
         assert flags.token_efficient is True
@@ -77,7 +77,7 @@ class TestChannelFlagsIntegration:
         assert flags.max_response_length == 4000
 
     def test_voice_short(self):
-        from jarvis.core.channel_flags import get_channel_flags
+        from cognithor.core.channel_flags import get_channel_flags
 
         flags = get_channel_flags("voice")
         assert flags.max_response_length == 500
@@ -87,8 +87,8 @@ class TestChannelFlagsIntegration:
 # Test Session Store Extensions
 class TestSessionStoreIntegration:
     def test_session_lifecycle(self, tmp_path):
-        from jarvis.gateway.session_store import SessionStore
-        from jarvis.models import SessionContext
+        from cognithor.gateway.session_store import SessionStore
+        from cognithor.models import SessionContext
 
         store = SessionStore(str(tmp_path / "sessions.db"))
         # Create session
@@ -115,7 +115,7 @@ class TestSessionStoreIntegration:
 # Test Response Validator
 class TestResponseValidatorIntegration:
     def test_assumption_detection(self):
-        from jarvis.core.response_validator import ResponseValidator
+        from cognithor.core.response_validator import ResponseValidator
 
         v = ResponseValidator()
         result = v.validate("This probably works and should be fine", "fix the bug")
@@ -123,7 +123,7 @@ class TestResponseValidatorIntegration:
         assert result.assumption_score < 0.8
 
     def test_good_response(self):
-        from jarvis.core.response_validator import ResponseValidator
+        from cognithor.core.response_validator import ResponseValidator
 
         v = ResponseValidator()
         result = v.validate(

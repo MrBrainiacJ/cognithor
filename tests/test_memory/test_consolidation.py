@@ -6,7 +6,7 @@ consolidation results, and edge cases.
 
 from __future__ import annotations
 
-from jarvis.memory.consolidation import (
+from cognithor.memory.consolidation import (
     ConsolidationPipeline,
     ConsolidationResult,
     ContentDeduplicator,

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from jarvis.osint.evidence_aggregator import EvidenceAggregator
-from jarvis.osint.models import ClaimType, Evidence, VerificationStatus
+from cognithor.osint.evidence_aggregator import EvidenceAggregator
+from cognithor.osint.models import ClaimType, Evidence, VerificationStatus
 
 
 def _ev(source_type: str, content: str, confidence: float = 0.7) -> Evidence:

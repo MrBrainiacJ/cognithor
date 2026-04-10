@@ -14,11 +14,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.webui import (
+from cognithor.channels.webui import (
     WebUIChannel,
     WSMessageType,
 )
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 # ============================================================================
 # Fixtures

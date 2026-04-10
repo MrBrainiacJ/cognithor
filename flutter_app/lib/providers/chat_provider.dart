@@ -6,7 +6,7 @@ library;
 
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show ChangeNotifier, debugPrint, kDebugMode;
-import 'package:jarvis_ui/services/websocket_service.dart';
+import 'package:cognithor_ui/services/websocket_service.dart';
 
 // ---------------------------------------------------------------------------
 // Models

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from jarvis.config import MemoryConfig
-from jarvis.memory.chunker import _estimate_tokens
-from jarvis.memory.working import STATIC_BUDGET, WorkingMemoryManager
-from jarvis.models import Message, ToolResult
+from cognithor.config import MemoryConfig
+from cognithor.memory.chunker import _estimate_tokens
+from cognithor.memory.working import STATIC_BUDGET, WorkingMemoryManager
+from cognithor.models import Message, ToolResult
 
 
 def _msg(role: str = "user", content: str = "x" * 400) -> Message:
@@ -138,7 +138,7 @@ class TestWorkingMemoryManager:
         assert "Compaction nötig" in report
 
     def test_set_plan(self):
-        from jarvis.models import ActionPlan, PlannedAction
+        from cognithor.models import ActionPlan, PlannedAction
 
         wm = WorkingMemoryManager()
         plan = ActionPlan(

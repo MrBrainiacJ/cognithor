@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/config_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/form/form_widgets.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/config_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/form/form_widgets.dart';
 
 class CronPage extends StatelessWidget {
   const CronPage({super.key});

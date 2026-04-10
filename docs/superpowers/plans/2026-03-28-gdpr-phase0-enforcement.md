@@ -208,7 +208,7 @@ class ConsentManager:
 
     def __init__(self, db_path: str | None = None) -> None:
         if db_path is None:
-            db_path = str(Path.home() / ".jarvis" / "index" / "consent.db")
+            db_path = str(Path.home() / ".cognithor" / "index" / "consent.db")
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.execute("PRAGMA journal_mode=WAL")

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:jarvis_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/api_client.dart';
 
 /// Task model matching backend Task.to_dict() output.
 class KanbanTask {

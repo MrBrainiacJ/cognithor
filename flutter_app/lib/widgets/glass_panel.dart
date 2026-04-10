@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// Glassmorphism panel — frosted glass effect with neon-tinted border.
 ///

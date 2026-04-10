@@ -45,7 +45,7 @@ class TestLiveWebResearch:
     @pytest.mark.asyncio
     async def test_planner_prompts_support_research(self):
         """Planner prompts must include research quality instructions."""
-        from jarvis.core.planner import REPLAN_PROMPT, SYSTEM_PROMPT
+        from cognithor.core.planner import REPLAN_PROMPT, SYSTEM_PROMPT
 
         # System prompt must instruct thoroughness
         assert "deep_research" in SYSTEM_PROMPT
@@ -62,9 +62,9 @@ class TestLiveCodeGeneration:
 
     def test_code_tools_are_green(self):
         """run_python should be GREEN for autonomous operation."""
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction
 
         gk = Gatekeeper(JarvisConfig())
         action = PlannedAction(tool="run_python", params={}, rationale="test")
@@ -76,7 +76,7 @@ class TestLiveAutonomousDetection:
     """Test that the autonomous orchestrator correctly classifies tasks."""
 
     def test_complex_task_triggers_orchestration(self):
-        from jarvis.core.autonomous_orchestrator import AutonomousOrchestrator
+        from cognithor.core.autonomous_orchestrator import AutonomousOrchestrator
 
         orch = AutonomousOrchestrator()
 
@@ -95,7 +95,7 @@ class TestLiveAutonomousDetection:
         assert not orch.should_orchestrate("Wie wird das Wetter?")
 
     def test_recurring_detection(self):
-        from jarvis.core.autonomous_orchestrator import AutonomousOrchestrator
+        from cognithor.core.autonomous_orchestrator import AutonomousOrchestrator
 
         orch = AutonomousOrchestrator()
         assert orch.detect_recurring("Send me a daily stock report") == "daily"
@@ -108,9 +108,9 @@ class TestLiveGatekeeperSafety:
     """Verify that safety classifications are correct for all tool types."""
 
     def test_all_search_tools_green(self):
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction
 
         gk = Gatekeeper(JarvisConfig())
         green_tools = [
@@ -130,9 +130,9 @@ class TestLiveGatekeeperSafety:
             assert risk.value == "green", f"{tool} should be green, got {risk}"
 
     def test_dangerous_tools_orange(self):
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction
 
         gk = Gatekeeper(JarvisConfig())
         orange_tools = ["remote_exec", "email_send", "db_execute"]

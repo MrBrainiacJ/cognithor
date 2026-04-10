@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.cli import BANNER, CliChannel
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.channels.cli import BANNER, CliChannel
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 # =============================================================================
 # Fixtures

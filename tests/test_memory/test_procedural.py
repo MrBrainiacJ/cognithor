@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.procedural import ProceduralMemory
-from jarvis.models import ProcedureMetadata
+from cognithor.memory.procedural import ProceduralMemory
+from cognithor.models import ProcedureMetadata
 
 if TYPE_CHECKING:
     from pathlib import Path

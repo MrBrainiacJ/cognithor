@@ -7,9 +7,9 @@ from dataclasses import replace
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from jarvis.aacs.tokens.capability_token import Action, ActionVerb
-from jarvis.aacs.tokens.token_issuer import TokenIssuer
-from jarvis.aacs.tokens.token_validator import (
+from cognithor.aacs.tokens.capability_token import Action, ActionVerb
+from cognithor.aacs.tokens.token_issuer import TokenIssuer
+from cognithor.aacs.tokens.token_validator import (
     DIDResolver,
     NonceCache,
     TokenValidator,

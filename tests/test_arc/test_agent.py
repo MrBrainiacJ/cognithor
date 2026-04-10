@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.arc.agent import CognithorArcAgent
+from cognithor.arc.agent import CognithorArcAgent
 
 
 class TestAgentCreation:

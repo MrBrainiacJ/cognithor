@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import time
 
-from jarvis.core.worker import (
+from cognithor.core.worker import (
     FailoverManager,
     HealthMonitor,
     Job,

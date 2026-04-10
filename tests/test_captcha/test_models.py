@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.browser.captcha.models import CaptchaChallenge, CaptchaType, SolveResult
+from cognithor.browser.captcha.models import CaptchaChallenge, CaptchaType, SolveResult
 
 
 def test_captcha_type_values():

@@ -11,14 +11,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.telegram import (
+from cognithor.channels.telegram import (
     MAX_DOCUMENT_SIZE,
     MAX_MESSAGE_LENGTH,
     TelegramChannel,
     _split_message,
 )
-from jarvis.gateway.session_store import SessionStore
-from jarvis.models import IncomingMessage, OutgoingMessage
+from cognithor.gateway.session_store import SessionStore
+from cognithor.models import IncomingMessage, OutgoingMessage
 
 # ============================================================================
 # _split_message

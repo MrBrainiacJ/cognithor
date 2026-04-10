@@ -6,7 +6,7 @@ import pytest
 class TestFeedbackStore:
     @pytest.fixture
     def store(self, tmp_path):
-        from jarvis.core.feedback import FeedbackStore
+        from cognithor.core.feedback import FeedbackStore
 
         return FeedbackStore(db_path=tmp_path / "feedback.db")
 

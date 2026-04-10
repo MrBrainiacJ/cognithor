@@ -14,7 +14,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from jarvis.proactive import (
+from cognithor.proactive import (
     ApprovalMode,
     EventConfig,
     EventSource,

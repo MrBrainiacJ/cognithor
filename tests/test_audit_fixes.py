@@ -20,9 +20,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig
+from cognithor.config import JarvisConfig
 
-_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "jarvis"
+_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "cognithor"
 
 
 # ============================================================================
@@ -152,13 +152,13 @@ class TestC08_TokenStoreFallbackWarning:
     """SecureTokenStore muss pro store()-Aufruf warnen wenn kein Fernet."""
 
     def test_store_warns_on_base64_fallback(self) -> None:
-        from jarvis.security.token_store import SecureTokenStore
+        from cognithor.security.token_store import SecureTokenStore
 
         store = SecureTokenStore()
         # Force no-Fernet mode
         store._fernet = None
 
-        with patch("jarvis.security.token_store.logger") as mock_log:
+        with patch("cognithor.security.token_store.logger") as mock_log:
             store.store("test_token", "my-secret-value")
             mock_log.error.assert_called()
             call_args = str(mock_log.error.call_args)
@@ -174,13 +174,13 @@ class TestC09_AuditRaisesOnWriteFailure:
     """AuditTrail.record() muss bei Schreibfehler OSError werfen."""
 
     def test_record_raises_on_write_error(self, tmp_path: Path) -> None:
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path / "audit")
         # Set log path to a non-existent deeply nested directory
         trail._log_path = tmp_path / "nonexistent" / "deep" / "audit.jsonl"
 
-        from jarvis.models import AuditEntry, GateStatus, RiskLevel
+        from cognithor.models import AuditEntry, GateStatus, RiskLevel
 
         entry = AuditEntry(
             session_id="test",
@@ -194,7 +194,7 @@ class TestC09_AuditRaisesOnWriteFailure:
             trail.record(entry)
 
     def test_record_event_raises_on_write_error(self, tmp_path: Path) -> None:
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path / "audit")
         trail._log_path = tmp_path / "nonexistent" / "deep" / "audit.jsonl"
@@ -216,11 +216,11 @@ class TestC11_CredentialChmodWarning:
     """chmod-Fehler duerfen nicht verschluckt werden, sondern geloggt."""
 
     def test_set_file_permissions_logs_on_failure(self, tmp_path: Path) -> None:
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         fake_path = tmp_path / "nonexistent_file.enc"
 
-        with patch("jarvis.security.credentials.log") as mock_log:
+        with patch("cognithor.security.credentials.log") as mock_log:
             CredentialStore._set_file_permissions(fake_path)
             mock_log.warning.assert_called_once()
             call_args = str(mock_log.warning.call_args)
@@ -237,14 +237,14 @@ class TestC12_VaultNarrowedException:
 
     def test_decrypt_invalid_fernet_raises_valueerror(self) -> None:
         """Invalid Fernet token -> InvalidToken -> ValueError (legacy fallback)."""
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("test-agent")
         with pytest.raises(ValueError, match="Decryption failed"):
             vault._decrypt("not-valid-fernet-token")
 
     def test_decrypt_propagates_other_errors(self) -> None:
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("test-agent")
         with pytest.raises((TypeError, AttributeError)):
@@ -260,7 +260,7 @@ class TestH19_RevokedSecretsRemoved:
     """revoke() muss Secrets tatsaechlich aus dem dict entfernen."""
 
     def test_revoke_removes_secret(self) -> None:
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("test-agent")
         secret = vault.store("my_api_key", "secret-value-12345")
@@ -272,7 +272,7 @@ class TestH19_RevokedSecretsRemoved:
         assert vault.retrieve(secret.secret_id) is None
 
     def test_revoke_nonexistent_returns_false(self) -> None:
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("test-agent")
         assert vault.revoke("SEC-NOTEXIST-0001") is False
@@ -288,14 +288,14 @@ class TestC01C02_CompliancePhaseInit:
 
     @pytest.mark.asyncio()
     async def test_init_compliance_with_no_components(self) -> None:
-        from jarvis.gateway.phases.compliance import init_compliance
+        from cognithor.gateway.phases.compliance import init_compliance
 
         result = await init_compliance(config=None)
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio()
     async def test_init_compliance_with_components(self) -> None:
-        from jarvis.gateway.phases.compliance import init_compliance
+        from cognithor.gateway.phases.compliance import init_compliance
 
         result = await init_compliance(
             config=None,
@@ -314,7 +314,7 @@ class TestC04_GovernanceExports:
     """governance/__init__.py exportiert GovernanceAgent und PolicyPatcher."""
 
     def test_governance_exports(self) -> None:
-        import jarvis.governance as gov
+        import cognithor.governance as gov
 
         assert hasattr(gov, "GovernanceAgent")
         assert hasattr(gov, "PolicyPatcher")
@@ -322,7 +322,7 @@ class TestC04_GovernanceExports:
         assert "PolicyPatcher" in gov.__all__
 
     def test_governance_classes_importable(self) -> None:
-        from jarvis.governance import GovernanceAgent, PolicyPatcher
+        from cognithor.governance import GovernanceAgent, PolicyPatcher
 
         assert GovernanceAgent is not None
         assert PolicyPatcher is not None
@@ -352,12 +352,12 @@ class TestC17_A2ATaskDoneCallback:
     """_make_task_done_callback erstellt einen Closure fuer Task-Fehler."""
 
     def test_callback_factory_exists(self) -> None:
-        from jarvis.a2a.server import A2AServer
+        from cognithor.a2a.server import A2AServer
 
         assert hasattr(A2AServer, "_make_task_done_callback")
 
     def test_callback_handles_exception(self) -> None:
-        from jarvis.a2a.server import A2AServer
+        from cognithor.a2a.server import A2AServer
 
         server = A2AServer.__new__(A2AServer)
         server._tasks_failed = 0
@@ -379,7 +379,7 @@ class TestC17_A2ATaskDoneCallback:
         assert server._tasks_failed == 1
 
     def test_callback_ignores_cancelled(self) -> None:
-        from jarvis.a2a.server import A2AServer
+        from cognithor.a2a.server import A2AServer
 
         server = A2AServer.__new__(A2AServer)
         server._tasks_failed = 0
@@ -422,7 +422,7 @@ class TestH07_MagicStringsExtracted:
     """Presearch Magic Strings sind als Konstanten definiert."""
 
     def test_constants_defined(self) -> None:
-        from jarvis.gateway import gateway
+        from cognithor.gateway import gateway
 
         assert hasattr(gateway, "_PRESEARCH_NO_RESULTS")
         assert hasattr(gateway, "_PRESEARCH_NO_ENGINE")
@@ -485,7 +485,7 @@ class TestH17_WebhookNotifierRealHTTP:
         assert "hmac" in source
 
     def test_webhook_notifier_sends_with_signature(self) -> None:
-        from jarvis.security.hardening import WebhookConfig, WebhookNotifier
+        from cognithor.security.hardening import WebhookConfig, WebhookNotifier
 
         notifier = WebhookNotifier()
         webhook = WebhookConfig(
@@ -526,13 +526,13 @@ class TestH22_SkillUpdaterWarning:
     """install_update() loggt eine Warnung ueber Version-Tracking."""
 
     def test_install_logs_version_tracking_warning(self) -> None:
-        from jarvis.skills.updater import SkillUpdater
+        from cognithor.skills.updater import SkillUpdater
 
         updater = SkillUpdater()
         updater.register_installed("test-skill", "1.0.0")
         updater.check_update("test-skill", "1.1.0")
 
-        with patch("jarvis.skills.updater.log") as mock_log:
+        with patch("cognithor.skills.updater.log") as mock_log:
             result = updater.install_update("test-skill")
 
             assert result.success is True
@@ -550,7 +550,7 @@ class TestH28_MCPHttpTransport:
     """JarvisMCPClient hat _connect_http_server() Methode."""
 
     def test_http_transport_method_exists(self) -> None:
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         assert hasattr(JarvisMCPClient, "_connect_http_server")
 
@@ -569,7 +569,7 @@ class TestH01_IRCApproval:
     """IRC-Channel hat funktionale textbasierte Approval."""
 
     def test_irc_has_approval_futures(self) -> None:
-        from jarvis.channels.irc import IRCChannel
+        from cognithor.channels.irc import IRCChannel
 
         ch = IRCChannel(server="irc.example.com", nick="TestBot")
         assert hasattr(ch, "_approval_futures")
@@ -578,7 +578,7 @@ class TestH01_IRCApproval:
 
     @pytest.mark.asyncio()
     async def test_irc_approval_timeout(self) -> None:
-        from jarvis.channels.irc import IRCChannel
+        from cognithor.channels.irc import IRCChannel
 
         ch = IRCChannel(server="irc.example.com", nick="TestBot", channels=["#test"])
         ch._writer = MagicMock()
@@ -609,7 +609,7 @@ class TestH02_TwitchApproval:
     """Twitch-Channel hat funktionale textbasierte Approval."""
 
     def test_twitch_has_approval_futures(self) -> None:
-        from jarvis.channels.twitch import TwitchChannel
+        from cognithor.channels.twitch import TwitchChannel
 
         ch = TwitchChannel(token="oauth:test123456", channel="testchannel")
         assert hasattr(ch, "_approval_futures")
@@ -618,7 +618,7 @@ class TestH02_TwitchApproval:
 
     @pytest.mark.asyncio()
     async def test_twitch_approval_timeout(self) -> None:
-        from jarvis.channels.twitch import TwitchChannel
+        from cognithor.channels.twitch import TwitchChannel
 
         ch = TwitchChannel(token="oauth:test123456", channel="testchannel")
         ch._writer = MagicMock()

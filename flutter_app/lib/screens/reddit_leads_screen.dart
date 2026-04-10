@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
-import 'package:jarvis_ui/providers/reddit_leads_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/jarvis_empty_state.dart';
-import 'package:jarvis_ui/widgets/jarvis_stat.dart';
-import 'package:jarvis_ui/widgets/leads/lead_card.dart';
-import 'package:jarvis_ui/widgets/leads/lead_detail_sheet.dart';
-import 'package:jarvis_ui/widgets/leads/lead_wizard.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/jarvis_stat.dart';
+import 'package:cognithor_ui/widgets/leads/lead_card.dart';
+import 'package:cognithor_ui/widgets/leads/lead_detail_sheet.dart';
+import 'package:cognithor_ui/widgets/leads/lead_wizard.dart';
 
 class RedditLeadsScreen extends StatefulWidget {
   const RedditLeadsScreen({super.key});

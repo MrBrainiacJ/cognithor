@@ -15,7 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from jarvis.config import (
+from cognithor.config import (
     JarvisConfig,
     ensure_directory_structure,
     load_config,
@@ -30,7 +30,7 @@ class TestJarvisConfigDefaults:
 
     def test_default_home(self) -> None:
         config = JarvisConfig()
-        assert config.jarvis_home == Path.home() / ".jarvis"
+        assert config.jarvis_home == Path.home() / ".cognithor"
 
     def test_custom_home(self, tmp_jarvis_home: Path) -> None:
         config = JarvisConfig(jarvis_home=tmp_jarvis_home)
@@ -123,7 +123,7 @@ logging:
         assert config.ollama.base_url == "http://localhost:11434"
 
     def test_env_override(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("JARVIS_OLLAMA_BASE_URL", "http://remote:11434")
+        monkeypatch.setenv("COGNITHOR_OLLAMA_BASE_URL", "http://remote:11434")
         config = load_config(tmp_path / "nonexistent.yaml")
         # Env-Var sollte überschreiben
         # Hinweis: Der aktuelle Parser unterstützt einfache section_key Paare
@@ -319,7 +319,7 @@ class TestModelAutoAdaptation:
 
     def test_explicit_model_names_preserved(self, tmp_path: Path) -> None:
         """Explizit gesetzte Modellnamen werden NICHT überschrieben."""
-        from jarvis.models import ModelConfig
+        from cognithor.models import ModelConfig
 
         config = JarvisConfig(
             jarvis_home=tmp_path,
@@ -591,7 +591,7 @@ class TestMultiProviderAutoAdaptation:
     def test_lmstudio_does_not_set_online_mode(self, tmp_path: Path) -> None:
         """LM Studio ist lokal → operation_mode bleibt OFFLINE."""
         config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="lmstudio")
-        from jarvis.models import OperationMode
+        from cognithor.models import OperationMode
 
         assert config.resolved_operation_mode == OperationMode.OFFLINE
 
@@ -661,12 +661,12 @@ class TestEditableSections:
     """Tests für ConfigManager._EDITABLE_SECTIONS."""
 
     def test_executor_is_editable(self) -> None:
-        from jarvis.config_manager import _EDITABLE_SECTIONS
+        from cognithor.config_manager import _EDITABLE_SECTIONS
 
         assert "executor" in _EDITABLE_SECTIONS
 
     def test_web_is_editable(self) -> None:
-        from jarvis.config_manager import _EDITABLE_SECTIONS
+        from cognithor.config_manager import _EDITABLE_SECTIONS
 
         assert "web" in _EDITABLE_SECTIONS
 
@@ -683,7 +683,7 @@ class TestLiveReload:
         """Executor.reload_config() aktualisiert runtime-Werte."""
         from unittest.mock import AsyncMock
 
-        from jarvis.core.executor import Executor
+        from cognithor.core.executor import Executor
 
         config = JarvisConfig(jarvis_home=tmp_path)
         executor = Executor(config, AsyncMock())

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.core.bindings import (
+from cognithor.core.bindings import (
     BindingEngine,
     BindingMatchResult,
     MessageBinding,
@@ -895,7 +895,7 @@ class TestAgentRouterIntegration:
     """Bindings werden VOR Keyword-Routing ausgewertet."""
 
     def test_binding_overrides_keywords(self) -> None:
-        from jarvis.core.agent_router import AgentProfile, AgentRouter
+        from cognithor.core.agent_router import AgentProfile, AgentRouter
 
         router = AgentRouter()
         router.initialize(
@@ -928,7 +928,7 @@ class TestAgentRouterIntegration:
         assert "binding:force_binding" in decision.matched_patterns
 
     def test_no_binding_falls_to_keywords(self) -> None:
-        from jarvis.core.agent_router import AgentProfile, AgentRouter
+        from cognithor.core.agent_router import AgentProfile, AgentRouter
 
         router = AgentRouter()
         router.initialize(
@@ -944,7 +944,7 @@ class TestAgentRouterIntegration:
         assert decision.agent.name == "keyword_agent"
 
     def test_binding_with_message_context(self) -> None:
-        from jarvis.core.agent_router import AgentProfile, AgentRouter
+        from cognithor.core.agent_router import AgentProfile, AgentRouter
 
         router = AgentRouter()
         router.initialize(
@@ -965,7 +965,7 @@ class TestAgentRouterIntegration:
         assert decision.agent.name == "telegram_bot"
 
     def test_binding_target_not_found_falls_through(self) -> None:
-        from jarvis.core.agent_router import AgentRouter
+        from cognithor.core.agent_router import AgentRouter
 
         router = AgentRouter()
         router.initialize()
@@ -983,7 +983,7 @@ class TestAgentRouterIntegration:
         assert decision.agent.name == "jarvis"
 
     def test_router_stats_include_bindings(self) -> None:
-        from jarvis.core.agent_router import AgentRouter
+        from cognithor.core.agent_router import AgentRouter
 
         router = AgentRouter()
         router.initialize()
@@ -1001,7 +1001,7 @@ class TestAgentRouterIntegration:
     def test_from_yaml_loads_bindings(self, tmp_path: Path) -> None:
         import yaml
 
-        from jarvis.core.agent_router import AgentRouter
+        from cognithor.core.agent_router import AgentRouter
 
         # agents.yaml
         agents_path = tmp_path / "agents.yaml"

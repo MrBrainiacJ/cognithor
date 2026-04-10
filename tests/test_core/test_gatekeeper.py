@@ -20,9 +20,9 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 
-from jarvis.config import JarvisConfig, SecurityConfig, ToolsConfig, ensure_directory_structure
-from jarvis.core.gatekeeper import Gatekeeper
-from jarvis.models import (
+from cognithor.config import JarvisConfig, SecurityConfig, ToolsConfig, ensure_directory_structure
+from cognithor.core.gatekeeper import Gatekeeper
+from cognithor.models import (
     GateStatus,
     PlannedAction,
     RiskLevel,
@@ -85,7 +85,7 @@ class TestRiskClassification:
         self, gatekeeper: Gatekeeper, session: SessionContext
     ) -> None:
         """write_file matched die Default-Policy INFORM → YELLOW."""
-        action = PlannedAction(tool="write_file", params={"path": "~/.jarvis/workspace/test.txt"})
+        action = PlannedAction(tool="write_file", params={"path": "~/.cognithor/workspace/test.txt"})
         decision = gatekeeper.evaluate(action, session)
         # Default-Policy setzt write_file auf INFORM
         assert decision.status in (GateStatus.INFORM, GateStatus.ALLOW)
@@ -297,7 +297,7 @@ class TestPathValidation:
     def test_allowed_path_passes(
         self, gatekeeper: Gatekeeper, session: SessionContext, gk_config: JarvisConfig
     ) -> None:
-        # ~/.jarvis/workspace ist erlaubt
+        # ~/.cognithor/workspace ist erlaubt
         safe_path = str(gk_config.workspace_dir / "test.txt")
         action = PlannedAction(tool="read_file", params={"path": safe_path})
         decision = gatekeeper.evaluate(action, session)
@@ -314,7 +314,7 @@ class TestPathValidation:
     ) -> None:
         action = PlannedAction(
             tool="read_file",
-            params={"path": "~/.jarvis/workspace/../../../etc/passwd"},
+            params={"path": "~/.cognithor/workspace/../../../etc/passwd"},
         )
         decision = gatekeeper.evaluate(action, session)
         assert decision.status == GateStatus.BLOCK

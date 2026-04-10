@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/providers/config_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/providers/config_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 class EvolutionConfigPage extends StatelessWidget {
   const EvolutionConfigPage({super.key});

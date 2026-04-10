@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.core_memory import CoreMemory
+from cognithor.memory.core_memory import CoreMemory
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -40,12 +40,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.executor import Executor
-from jarvis.core.gatekeeper import Gatekeeper
-from jarvis.core.planner import Planner
-from jarvis.gateway.gateway import Gateway
-from jarvis.models import IncomingMessage
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.core.executor import Executor
+from cognithor.core.gatekeeper import Gatekeeper
+from cognithor.core.planner import Planner
+from cognithor.gateway.gateway import Gateway
+from cognithor.models import IncomingMessage
 
 # =============================================================================
 # Helpers
@@ -93,16 +93,16 @@ def gateway_with_mocks(tmp_path):
     Returns (gateway, mock_ollama, mock_mcp, tmp_path) so tests can configure
     LLM responses and tool results per-scenario.
     """
-    from jarvis.config import SecurityConfig
+    from cognithor.config import SecurityConfig
 
     sandbox = tmp_path / "sandbox"
     sandbox.mkdir()
 
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[
-                str(tmp_path / ".jarvis"),
+                str(tmp_path / ".cognithor"),
                 str(sandbox),
                 str(tmp_path),
             ],
@@ -166,16 +166,16 @@ def gateway_extended_tools(tmp_path):
     Same pattern as gateway_with_mocks but exposes more tools so plans that
     reference document_export, exec_command, list_directory, etc. pass Gatekeeper.
     """
-    from jarvis.config import SecurityConfig
+    from cognithor.config import SecurityConfig
 
     sandbox = tmp_path / "sandbox"
     sandbox.mkdir()
 
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[
-                str(tmp_path / ".jarvis"),
+                str(tmp_path / ".cognithor"),
                 str(sandbox),
                 str(tmp_path),
             ],

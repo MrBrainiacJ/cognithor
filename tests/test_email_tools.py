@@ -24,7 +24,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig
+from cognithor.config import JarvisConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 def email_config(tmp_path: Path) -> JarvisConfig:
     """JarvisConfig with email enabled and temporary paths."""
     return JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         email={
             "enabled": True,
             "imap_host": "imap.example.com",
@@ -54,7 +54,7 @@ def email_config(tmp_path: Path) -> JarvisConfig:
 def email_config_disabled(tmp_path: Path) -> JarvisConfig:
     """JarvisConfig with email disabled."""
     return JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
     )
 
 
@@ -68,7 +68,7 @@ def mock_env_password():
 @pytest.fixture
 def email_tools(email_config: JarvisConfig, mock_env_password: Any):
     """EmailTools instance with mocked environment."""
-    from jarvis.mcp.email_tools import EmailTools
+    from cognithor.mcp.email_tools import EmailTools
 
     return EmailTools(email_config)
 
@@ -135,7 +135,7 @@ class TestRateLimiting:
 
     def test_at_limit(self, email_tools: Any) -> None:
         """Error when at rate limit."""
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         email_tools._send_timestamps = [time.monotonic() for _ in range(10)]
         with pytest.raises(EmailError, match="Rate-Limit"):
@@ -149,7 +149,7 @@ class TestRateLimiting:
 
     def test_mixed_timestamps(self, email_tools: Any) -> None:
         """Mix of old and recent timestamps."""
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         old = time.monotonic() - 4000
         recent = time.monotonic()
@@ -173,21 +173,21 @@ class TestAttachmentValidation:
 
     def test_attachment_outside_workspace(self, email_tools: Any) -> None:
         """Attachment outside workspace is rejected."""
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="nicht erlaubt"):
             email_tools._validate_attachment_path("/etc/passwd")
 
     def test_attachment_not_found(self, email_tools: Any, tmp_path: Path) -> None:
         """Nonexistent attachment is rejected."""
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="nicht gefunden"):
             email_tools._validate_attachment_path(str(tmp_path / "nonexistent.pdf"))
 
     def test_attachment_is_directory(self, email_tools: Any, tmp_path: Path) -> None:
         """Directory path as attachment is rejected."""
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         subdir = tmp_path / "subdir"
         subdir.mkdir()
@@ -206,7 +206,7 @@ class TestPasswordRetrieval:
 
     def test_password_missing(self, email_config: JarvisConfig) -> None:
         """Missing password env var raises error."""
-        from jarvis.mcp.email_tools import EmailError, EmailTools
+        from cognithor.mcp.email_tools import EmailError, EmailTools
 
         with patch.dict(os.environ, {}, clear=True):
             # Remove TEST_EMAIL_PASSWORD if present
@@ -223,23 +223,23 @@ class TestHtmlStripping:
     """Tests for HTML tag removal."""
 
     def test_strip_basic_html(self) -> None:
-        from jarvis.mcp.email_tools import _strip_html
+        from cognithor.mcp.email_tools import _strip_html
 
         assert _strip_html("<p>Hello</p>") == "Hello"
 
     def test_strip_nested_html(self) -> None:
-        from jarvis.mcp.email_tools import _strip_html
+        from cognithor.mcp.email_tools import _strip_html
 
         result = _strip_html("<div><p>Hello <b>World</b></p></div>")
         assert result == "Hello World"
 
     def test_strip_empty(self) -> None:
-        from jarvis.mcp.email_tools import _strip_html
+        from cognithor.mcp.email_tools import _strip_html
 
         assert _strip_html("") == ""
 
     def test_strip_preserves_text(self) -> None:
-        from jarvis.mcp.email_tools import _strip_html
+        from cognithor.mcp.email_tools import _strip_html
 
         assert _strip_html("No HTML here") == "No HTML here"
 
@@ -251,17 +251,17 @@ class TestHeaderDecoding:
     """Tests for MIME header decoding."""
 
     def test_plain_header(self) -> None:
-        from jarvis.mcp.email_tools import _decode_header
+        from cognithor.mcp.email_tools import _decode_header
 
         assert _decode_header("Simple Subject") == "Simple Subject"
 
     def test_none_header(self) -> None:
-        from jarvis.mcp.email_tools import _decode_header
+        from cognithor.mcp.email_tools import _decode_header
 
         assert _decode_header(None) == ""
 
     def test_empty_header(self) -> None:
-        from jarvis.mcp.email_tools import _decode_header
+        from cognithor.mcp.email_tools import _decode_header
 
         assert _decode_header("") == ""
 
@@ -273,7 +273,7 @@ class TestBodyPreview:
     """Tests for email body preview extraction."""
 
     def test_plain_text_preview(self) -> None:
-        from jarvis.mcp.email_tools import _extract_body_preview
+        from cognithor.mcp.email_tools import _extract_body_preview
 
         raw = _make_raw_email(body="Hello World")
         msg = email.message_from_bytes(raw)
@@ -282,7 +282,7 @@ class TestBodyPreview:
         assert has_att is False
 
     def test_html_body_stripped(self) -> None:
-        from jarvis.mcp.email_tools import _extract_body_preview
+        from cognithor.mcp.email_tools import _extract_body_preview
 
         raw = _make_raw_email(body="<p>Hello <b>World</b></p>", html=True)
         msg = email.message_from_bytes(raw)
@@ -291,7 +291,7 @@ class TestBodyPreview:
         assert "<p>" not in preview
 
     def test_long_preview_truncated(self) -> None:
-        from jarvis.mcp.email_tools import _extract_body_preview
+        from cognithor.mcp.email_tools import _extract_body_preview
 
         long_body = "A" * 1000
         raw = _make_raw_email(body=long_body)
@@ -383,7 +383,7 @@ class TestEmailSearch:
         assert 'SUBJECT "Meeting"' in call_args[1]
 
     async def test_search_invalid_date(self, email_tools: Any) -> None:
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         mock_conn = MagicMock()
         with (
@@ -423,7 +423,7 @@ class TestEmailSend:
         mock_smtp.__enter__ = MagicMock(return_value=mock_smtp)
         mock_smtp.__exit__ = MagicMock(return_value=False)
 
-        with patch("jarvis.mcp.email_tools.smtplib.SMTP_SSL", return_value=mock_smtp):
+        with patch("cognithor.mcp.email_tools.smtplib.SMTP_SSL", return_value=mock_smtp):
             result = await email_tools.email_send(
                 to="recipient@example.com",
                 subject="Test",
@@ -432,25 +432,25 @@ class TestEmailSend:
         assert "erfolgreich" in result
 
     async def test_send_missing_to(self, email_tools: Any) -> None:
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="mpf.nger|Empfaenger|missing_recipient"):
             await email_tools.email_send(to="", subject="Test", body="Hello")
 
     async def test_send_missing_subject(self, email_tools: Any) -> None:
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="etreff|Betreff|missing_subject"):
             await email_tools.email_send(to="recipient@example.com", subject="", body="Hello")
 
     async def test_send_missing_body(self, email_tools: Any) -> None:
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="achrichtentext|Nachrichtentext|missing_body"):
             await email_tools.email_send(to="recipient@example.com", subject="Test", body="")
 
     async def test_send_invalid_address(self, email_tools: Any) -> None:
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         with pytest.raises(EmailError, match="Ungültige E-Mail"):
             await email_tools.email_send(
@@ -460,7 +460,7 @@ class TestEmailSend:
             )
 
     async def test_send_rate_limited(self, email_tools: Any) -> None:
-        from jarvis.mcp.email_tools import EmailError
+        from cognithor.mcp.email_tools import EmailError
 
         email_tools._send_timestamps = [time.monotonic() for _ in range(10)]
         with pytest.raises(EmailError, match="Rate-Limit"):
@@ -479,7 +479,7 @@ class TestEmailSend:
         mock_smtp.__enter__ = MagicMock(return_value=mock_smtp)
         mock_smtp.__exit__ = MagicMock(return_value=False)
 
-        with patch("jarvis.mcp.email_tools.smtplib.SMTP_SSL", return_value=mock_smtp):
+        with patch("cognithor.mcp.email_tools.smtplib.SMTP_SSL", return_value=mock_smtp):
             result = await email_tools.email_send(
                 to="recipient@example.com",
                 subject="Report",
@@ -490,7 +490,7 @@ class TestEmailSend:
 
     async def test_send_starttls(self, email_config: JarvisConfig, mock_env_password: Any) -> None:
         """STARTTLS port (587) uses SMTP instead of SMTP_SSL."""
-        from jarvis.mcp.email_tools import EmailTools
+        from cognithor.mcp.email_tools import EmailTools
 
         email_config.email.smtp_port = 587
         tools = EmailTools(email_config)
@@ -499,7 +499,7 @@ class TestEmailSend:
         mock_smtp.__enter__ = MagicMock(return_value=mock_smtp)
         mock_smtp.__exit__ = MagicMock(return_value=False)
 
-        with patch("jarvis.mcp.email_tools.smtplib.SMTP", return_value=mock_smtp):
+        with patch("cognithor.mcp.email_tools.smtplib.SMTP", return_value=mock_smtp):
             result = await tools.email_send(
                 to="recipient@example.com",
                 subject="Test",
@@ -513,7 +513,7 @@ class TestEmailSend:
         mock_smtp.__enter__ = MagicMock(return_value=mock_smtp)
         mock_smtp.__exit__ = MagicMock(return_value=False)
 
-        with patch("jarvis.mcp.email_tools.smtplib.SMTP_SSL", return_value=mock_smtp):
+        with patch("cognithor.mcp.email_tools.smtplib.SMTP_SSL", return_value=mock_smtp):
             result = await email_tools.email_send(
                 to="a@example.com, b@example.com",
                 subject="Test",
@@ -569,7 +569,7 @@ class TestRegistration:
     def test_register_when_enabled(
         self, email_config: JarvisConfig, mock_env_password: Any
     ) -> None:
-        from jarvis.mcp.email_tools import register_email_tools
+        from cognithor.mcp.email_tools import register_email_tools
 
         mcp = MagicMock()
         result = register_email_tools(mcp, email_config)
@@ -577,7 +577,7 @@ class TestRegistration:
         assert mcp.register_builtin_handler.call_count == 4
 
     def test_register_when_disabled(self, email_config_disabled: JarvisConfig) -> None:
-        from jarvis.mcp.email_tools import register_email_tools
+        from cognithor.mcp.email_tools import register_email_tools
 
         mcp = MagicMock()
         result = register_email_tools(mcp, email_config_disabled)
@@ -585,7 +585,7 @@ class TestRegistration:
         assert mcp.register_builtin_handler.call_count == 0
 
     def test_register_without_password(self, email_config: JarvisConfig) -> None:
-        from jarvis.mcp.email_tools import register_email_tools
+        from cognithor.mcp.email_tools import register_email_tools
 
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("TEST_EMAIL_PASSWORD", None)
@@ -594,10 +594,10 @@ class TestRegistration:
             assert result is None
 
     def test_register_without_host(self, tmp_path: Path, mock_env_password: Any) -> None:
-        from jarvis.mcp.email_tools import register_email_tools
+        from cognithor.mcp.email_tools import register_email_tools
 
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             email={
                 "enabled": True,
                 "imap_host": "",
@@ -613,7 +613,7 @@ class TestRegistration:
     def test_registered_tool_names(
         self, email_config: JarvisConfig, mock_env_password: Any
     ) -> None:
-        from jarvis.mcp.email_tools import register_email_tools
+        from cognithor.mcp.email_tools import register_email_tools
 
         mcp = MagicMock()
         register_email_tools(mcp, email_config)

@@ -16,8 +16,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.mcp.filesystem import FileSystemError, FileSystemTools
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.mcp.filesystem import FileSystemError, FileSystemTools
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -39,9 +39,9 @@ def sandbox(tmp_path: Path) -> Path:
 def config(tmp_path: Path, sandbox: Path) -> JarvisConfig:
     """Config deren allowed_paths auf die Sandbox zeigt."""
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(
-            allowed_paths=[str(sandbox), str(tmp_path / ".jarvis")],
+            allowed_paths=[str(sandbox), str(tmp_path / ".cognithor")],
         ),
     )
     ensure_directory_structure(cfg)
@@ -317,8 +317,8 @@ class TestListDirectory:
 class TestRegisterFsTools:
     def test_registers_all_tools(self, config: JarvisConfig) -> None:
         """Alle 4 Tools werden beim MCP-Client registriert."""
-        from jarvis.mcp.client import JarvisMCPClient
-        from jarvis.mcp.filesystem import register_fs_tools
+        from cognithor.mcp.client import JarvisMCPClient
+        from cognithor.mcp.filesystem import register_fs_tools
 
         client = JarvisMCPClient(config)
         fs = register_fs_tools(client, config)
@@ -333,8 +333,8 @@ class TestRegisterFsTools:
 
     def test_schemas_contain_descriptions(self, config: JarvisConfig) -> None:
         """Tool-Schemas enthalten Beschreibungen."""
-        from jarvis.mcp.client import JarvisMCPClient
-        from jarvis.mcp.filesystem import register_fs_tools
+        from cognithor.mcp.client import JarvisMCPClient
+        from cognithor.mcp.filesystem import register_fs_tools
 
         client = JarvisMCPClient(config)
         register_fs_tools(client, config)

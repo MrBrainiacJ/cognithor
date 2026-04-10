@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from jarvis.memory.watcher import MemoryFileHandler, MemoryWatcher
+from cognithor.memory.watcher import MemoryFileHandler, MemoryWatcher
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -21,7 +21,7 @@ src/jarvis/arc/
 
 Persistenz:
 ```
-~/.jarvis/arc/
+~/.cognithor/arc/
 └── game_profiles/
     └── {game_id}.json
 ```
@@ -65,7 +65,7 @@ class GameProfile:
 
 ### Methoden
 
-- `save()` — JSON-Serialisierung nach `~/.jarvis/arc/game_profiles/{game_id}.json`
+- `save()` — JSON-Serialisierung nach `~/.cognithor/arc/game_profiles/{game_id}.json`
 - `load(game_id) -> GameProfile | None` — Laden aus Cache
 - `exists(game_id) -> bool` — Pruefen ob Profil vorhanden
 - `update_metrics(strategy_name, result)` — Metriken nach Solve-Versuch aktualisieren

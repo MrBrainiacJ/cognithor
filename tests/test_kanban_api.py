@@ -6,9 +6,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from jarvis.kanban.api import create_kanban_router
-from jarvis.kanban.engine import KanbanEngine
-from jarvis.kanban.store import KanbanStore
+from cognithor.kanban.api import create_kanban_router
+from cognithor.kanban.engine import KanbanEngine
+from cognithor.kanban.store import KanbanStore
 
 
 @pytest.fixture

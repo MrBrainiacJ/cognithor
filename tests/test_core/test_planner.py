@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.model_router import ModelRouter, OllamaClient
-from jarvis.core.planner import Planner
-from jarvis.models import (
+from cognithor.config import JarvisConfig
+from cognithor.core.model_router import ModelRouter, OllamaClient
+from cognithor.core.planner import Planner
+from cognithor.models import (
     ToolResult,
     WorkingMemory,
 )
@@ -83,7 +83,7 @@ class TestDirectResponse:
         self, planner: Planner, mock_ollama: AsyncMock, working_memory: WorkingMemory
     ) -> None:
         """LLM-Fehler → Plan mit Fehlermeldung."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         mock_ollama.chat.side_effect = OllamaError("Connection refused")
         plan = await planner.plan("Test", working_memory, {})
@@ -252,7 +252,7 @@ class TestEscalation:
     async def test_escalation_fallback_on_error(
         self, planner: Planner, mock_ollama: AsyncMock, working_memory: WorkingMemory
     ) -> None:
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         mock_ollama.chat.side_effect = OllamaError("timeout")
         msg = await planner.generate_escalation("delete_file", "Blockiert", working_memory)

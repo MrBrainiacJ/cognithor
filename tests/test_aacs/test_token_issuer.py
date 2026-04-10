@@ -7,12 +7,12 @@ import unittest.mock as mock
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from jarvis.aacs.exceptions import (
+from cognithor.aacs.exceptions import (
     DelegationDepthExceededError,
     PrivilegeEscalationError,
 )
-from jarvis.aacs.tokens.capability_token import Action, ActionVerb
-from jarvis.aacs.tokens.token_issuer import TokenIssuer
+from cognithor.aacs.tokens.capability_token import Action, ActionVerb
+from cognithor.aacs.tokens.token_issuer import TokenIssuer
 
 
 @pytest.fixture()

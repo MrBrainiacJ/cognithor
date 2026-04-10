@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.context_guard import (
+from cognithor.core.context_guard import (
     COMPACTED_PLACEHOLDER,
     ContextGuardConfig,
     apply_context_guard,

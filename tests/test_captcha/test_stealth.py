@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.browser.captcha.stealth import (
+from cognithor.browser.captcha.stealth import (
     DEFAULT_VIEWPORT,
     REALISTIC_USER_AGENT,
     STEALTH_ARGS,

@@ -8,9 +8,9 @@ import threading
 import time
 from typing import TYPE_CHECKING
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
-from jarvis.hashline.models import HashlinedFile, HashlinedLine
+from cognithor.hashline.cache import HashlineCache
+from cognithor.hashline.config import HashlineConfig
+from cognithor.hashline.models import HashlinedFile, HashlinedLine
 
 if TYPE_CHECKING:
     from pathlib import Path

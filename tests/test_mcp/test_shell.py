@@ -17,8 +17,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.mcp.shell import ShellTools, register_shell_tools
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.mcp.shell import ShellTools, register_shell_tools
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -36,7 +36,7 @@ def _path_in_result(expected_path: Path, result: str) -> bool:
             return True
         # MSYS maps /tmp to C:\Users\...\AppData\Local\Temp
         # Compare by matching the unique test-specific path suffix
-        # e.g. both paths end with "pytest-NNN/test_pwd0/.jarvis/workspace"
+        # e.g. both paths end with "pytest-NNN/test_pwd0/.cognithor/workspace"
         stripped = result.strip().replace("\\", "/")
         expected_posix = posix
         # Find longest common suffix by path components
@@ -62,7 +62,7 @@ def _path_in_result(expected_path: Path, result: str) -> bool:
 @pytest.fixture()
 def config(tmp_path: Path) -> JarvisConfig:
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(tmp_path)],
         ),
@@ -157,7 +157,7 @@ class TestWorkingDirectory:
 
     @pytest.mark.asyncio
     async def test_default_working_dir(self, shell: ShellTools, config: JarvisConfig) -> None:
-        """Default Working Directory ist ~/.jarvis/workspace."""
+        """Default Working Directory ist ~/.cognithor/workspace."""
         result = await shell.exec_command("pwd")
         assert _path_in_result(config.workspace_dir, result)
 
@@ -230,7 +230,7 @@ class TestOutputDecoding:
     """Decoding ist jetzt in SandboxExecutor._decode_and_truncate."""
 
     def test_decode_utf8(self) -> None:
-        from jarvis.core.sandbox import SandboxExecutor
+        from cognithor.core.sandbox import SandboxExecutor
 
         stdout, stderr, truncated = SandboxExecutor._decode_and_truncate(
             "Ärzte und Über".encode(), b""
@@ -238,14 +238,14 @@ class TestOutputDecoding:
         assert "Ärzte" in stdout
 
     def test_decode_empty(self) -> None:
-        from jarvis.core.sandbox import SandboxExecutor
+        from cognithor.core.sandbox import SandboxExecutor
 
         stdout, stderr, truncated = SandboxExecutor._decode_and_truncate(b"", b"")
         assert stdout == ""
         assert stderr == ""
 
     def test_decode_latin1_fallback(self) -> None:
-        from jarvis.core.sandbox import SandboxExecutor
+        from cognithor.core.sandbox import SandboxExecutor
 
         # 0x80 ist kein gültiges UTF-8
         data = b"Hello \x80 World"
@@ -261,7 +261,7 @@ class TestOutputDecoding:
 
 class TestRegisterShellTools:
     def test_registers_exec_command(self, config: JarvisConfig) -> None:
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         client = JarvisMCPClient(config)
         shell = register_shell_tools(client, config)
@@ -272,7 +272,7 @@ class TestRegisterShellTools:
         assert len(tools) == 1
 
     def test_schema_contains_command_param(self, config: JarvisConfig) -> None:
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         client = JarvisMCPClient(config)
         register_shell_tools(client, config)

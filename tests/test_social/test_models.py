@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.social.models import Lead, LeadStats, LeadStatus, ScanResult
+from cognithor.social.models import Lead, LeadStats, LeadStatus, ScanResult
 
 
 class TestLead:

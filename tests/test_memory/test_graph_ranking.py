@@ -17,12 +17,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.graph_ranking import (
+from cognithor.memory.graph_ranking import (
     EntityRank,
     GraphRanking,
 )
-from jarvis.memory.indexer import MemoryIndex
-from jarvis.models import Chunk, Entity, MemorySearchResult, Relation
+from cognithor.memory.indexer import MemoryIndex
+from cognithor.models import Chunk, Entity, MemorySearchResult, Relation
 
 if TYPE_CHECKING:
     from pathlib import Path

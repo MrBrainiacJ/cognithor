@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.telegram import TelegramChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.telegram import TelegramChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -130,7 +130,7 @@ class TestTranscribeAudioPaths:
 class TestSendCircuitBreaker:
     @pytest.mark.asyncio
     async def test_send_circuit_breaker_open(self, ch: TelegramChannel) -> None:
-        from jarvis.utils.circuit_breaker import CircuitBreakerOpen
+        from cognithor.utils.circuit_breaker import CircuitBreakerOpen
 
         ch._app = MagicMock()
         ch._circuit_breaker = MagicMock()
@@ -165,7 +165,7 @@ class TestApprovalWorkflow:
             await coro
             return True
 
-        with patch("jarvis.channels.telegram.asyncio.wait_for", side_effect=_fake_wait_for):
+        with patch("cognithor.channels.telegram.asyncio.wait_for", side_effect=_fake_wait_for):
             result = await ch.request_approval("s1", action, "test")
         assert result is True
 

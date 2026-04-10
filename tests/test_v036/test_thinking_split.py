@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.roles import (
+from cognithor.core.roles import (
     should_log_output,
     uses_extended_thinking,
 )
@@ -32,7 +32,7 @@ class TestThinkingSplit:
         This test verifies the role behaviour dict has the correct flags.
         Actual cost tracking integration tested in telemetry tests.
         """
-        from jarvis.core.roles import ROLE_BEHAVIOURS
+        from cognithor.core.roles import ROLE_BEHAVIOURS
 
         orch = ROLE_BEHAVIOURS["orchestrator"]
         # Extended thinking is ON (tokens generated, just not logged)
@@ -43,7 +43,7 @@ class TestThinkingSplit:
     @pytest.mark.parametrize("role", ["orchestrator", "worker", "monitor"])
     def test_thinking_flag_consistent_with_log_flag(self, role):
         """Only orchestrator should have thinking=True AND log=False."""
-        from jarvis.core.roles import ROLE_BEHAVIOURS
+        from cognithor.core.roles import ROLE_BEHAVIOURS
 
         b = ROLE_BEHAVIOURS[role]
         if role == "orchestrator":

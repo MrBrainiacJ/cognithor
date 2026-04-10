@@ -19,9 +19,9 @@ from unittest.mock import MagicMock
 import pytest
 
 if TYPE_CHECKING:
-    from jarvis.mcp.prompts import JarvisPromptProvider
-    from jarvis.mcp.resources import JarvisResourceProvider
-    from jarvis.mcp.server import JarvisMCPServer
+    from cognithor.mcp.prompts import JarvisPromptProvider
+    from cognithor.mcp.resources import JarvisResourceProvider
+    from cognithor.mcp.server import JarvisMCPServer
 
 # ============================================================================
 # MCP Server Tests
@@ -32,7 +32,7 @@ class TestMCPToolDef:
     """Tests für MCPToolDef und Annotations."""
 
     def test_tool_def_basic(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         tool = MCPToolDef(
             name="test_tool",
@@ -44,7 +44,7 @@ class TestMCPToolDef:
         assert tool.description == "Ein Test-Tool"
 
     def test_tool_def_to_schema(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         tool = MCPToolDef(
             name="read_file",
@@ -59,7 +59,7 @@ class TestMCPToolDef:
         assert schema["annotations"]["idempotentHint"] is True
 
     def test_tool_def_no_annotations(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         tool = MCPToolDef(
             name="test",
@@ -73,7 +73,7 @@ class TestMCPToolDef:
 
 class TestMCPResource:
     def test_resource_basic(self) -> None:
-        from jarvis.mcp.server import MCPResource
+        from cognithor.mcp.server import MCPResource
 
         r = MCPResource(
             uri="jarvis://memory/core",
@@ -86,7 +86,7 @@ class TestMCPResource:
         assert schema["mimeType"] == "text/markdown"
 
     def test_resource_template(self) -> None:
-        from jarvis.mcp.server import MCPResourceTemplate
+        from cognithor.mcp.server import MCPResourceTemplate
 
         t = MCPResourceTemplate(
             uri_template="jarvis://memory/entity/{entity_id}",
@@ -99,7 +99,7 @@ class TestMCPResource:
 
 class TestMCPPromptDef:
     def test_prompt_basic(self) -> None:
-        from jarvis.mcp.server import MCPPrompt, MCPPromptArgument
+        from cognithor.mcp.server import MCPPrompt, MCPPromptArgument
 
         p = MCPPrompt(
             name="summarize",
@@ -117,8 +117,8 @@ class TestMCPPromptDef:
 
 class TestMCPServerConfig:
     def test_default_disabled(self) -> None:
-        from jarvis.mcp.server import MCPServerConfig as Cfg
-        from jarvis.mcp.server import MCPServerMode
+        from cognithor.mcp.server import MCPServerConfig as Cfg
+        from cognithor.mcp.server import MCPServerMode
 
         cfg = Cfg()
         assert cfg.mode == MCPServerMode.DISABLED
@@ -126,8 +126,8 @@ class TestMCPServerConfig:
         assert cfg.require_auth is False
 
     def test_http_mode(self) -> None:
-        from jarvis.mcp.server import MCPServerConfig as Cfg
-        from jarvis.mcp.server import MCPServerMode
+        from cognithor.mcp.server import MCPServerConfig as Cfg
+        from cognithor.mcp.server import MCPServerMode
 
         cfg = Cfg(mode=MCPServerMode.HTTP, http_port=8080)
         assert cfg.mode == MCPServerMode.HTTP
@@ -138,13 +138,13 @@ class TestJarvisMCPServer:
     """Tests für den MCP-Server-Kern."""
 
     def _make_server(self) -> JarvisMCPServer:
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
+        from cognithor.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         cfg = MCPServerConfig(mode=MCPServerMode.HTTP)
         return JarvisMCPServer(cfg)
 
     def test_register_tool(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         server = self._make_server()
         server.register_tool(
@@ -158,7 +158,7 @@ class TestJarvisMCPServer:
         assert "test" in server._tools
 
     def test_register_resource(self) -> None:
-        from jarvis.mcp.server import MCPResource
+        from cognithor.mcp.server import MCPResource
 
         server = self._make_server()
         server.register_resource(
@@ -170,7 +170,7 @@ class TestJarvisMCPServer:
         assert "jarvis://test" in server._resources
 
     def test_register_prompt(self) -> None:
-        from jarvis.mcp.server import MCPPrompt
+        from cognithor.mcp.server import MCPPrompt
 
         server = self._make_server()
         server.register_prompt(MCPPrompt(name="test", description="Test"))
@@ -178,7 +178,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_initialize(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         server = self._make_server()
         server.register_tool(
@@ -196,7 +196,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_tools_list(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         server = self._make_server()
         server.register_tool(
@@ -213,7 +213,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_tools_call_success(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         server = self._make_server()
         server.register_tool(
@@ -230,7 +230,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_tools_call_async_handler(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         async def async_handler(**kw: str) -> str:
             return "async result"
@@ -255,7 +255,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_tools_call_error(self) -> None:
-        from jarvis.mcp.server import MCPToolDef
+        from cognithor.mcp.server import MCPToolDef
 
         def failing_handler(**kw: str) -> str:
             raise ValueError("Boom!")
@@ -275,7 +275,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_resources_list(self) -> None:
-        from jarvis.mcp.server import MCPResource
+        from cognithor.mcp.server import MCPResource
 
         server = self._make_server()
         server.register_resource(
@@ -290,7 +290,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_resources_read(self) -> None:
-        from jarvis.mcp.server import MCPResource
+        from cognithor.mcp.server import MCPResource
 
         server = self._make_server()
         server.register_resource(
@@ -314,7 +314,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_resources_template_match(self) -> None:
-        from jarvis.mcp.server import MCPResourceTemplate
+        from cognithor.mcp.server import MCPResourceTemplate
 
         server = self._make_server()
         server.register_resource_template(
@@ -329,7 +329,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_prompts_list(self) -> None:
-        from jarvis.mcp.server import MCPPrompt
+        from cognithor.mcp.server import MCPPrompt
 
         server = self._make_server()
         server.register_prompt(MCPPrompt(name="summarize", description="Zusammenfassung"))
@@ -339,7 +339,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_prompts_get(self) -> None:
-        from jarvis.mcp.server import MCPPrompt
+        from cognithor.mcp.server import MCPPrompt
 
         def handler(**kw: str) -> list:
             return [
@@ -432,7 +432,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_http_auth_failure(self) -> None:
-        from jarvis.mcp.server import MCPServerConfig, MCPServerMode
+        from cognithor.mcp.server import MCPServerConfig, MCPServerMode
 
         cfg = MCPServerConfig(mode=MCPServerMode.HTTP, require_auth=True, auth_token="secret123")
         server = self._make_server()
@@ -446,7 +446,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_handle_http_auth_success(self) -> None:
-        from jarvis.mcp.server import MCPServerConfig, MCPServerMode
+        from cognithor.mcp.server import MCPServerConfig, MCPServerMode
 
         cfg = MCPServerConfig(mode=MCPServerMode.HTTP, require_auth=True, auth_token="secret123")
         server = self._make_server()
@@ -458,7 +458,7 @@ class TestJarvisMCPServer:
         assert "error" not in result
 
     def test_stats(self) -> None:
-        from jarvis.mcp.server import MCPPrompt, MCPResource, MCPToolDef
+        from cognithor.mcp.server import MCPPrompt, MCPResource, MCPToolDef
 
         server = self._make_server()
         server.register_tool(
@@ -475,7 +475,7 @@ class TestJarvisMCPServer:
 
     @pytest.mark.asyncio
     async def test_server_start_disabled(self) -> None:
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig
+        from cognithor.mcp.server import JarvisMCPServer, MCPServerConfig
 
         server = JarvisMCPServer(MCPServerConfig())  # Default: DISABLED
         await server.start()
@@ -509,13 +509,13 @@ class TestJarvisMCPServer:
 
 class TestJarvisResourceProvider:
     def _make_provider(self) -> JarvisResourceProvider:
-        from jarvis.mcp.resources import JarvisResourceProvider
+        from cognithor.mcp.resources import JarvisResourceProvider
 
         return JarvisResourceProvider(config=None, memory=None)
 
     def test_register_all(self) -> None:
-        from jarvis.mcp.resources import JarvisResourceProvider
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
+        from cognithor.mcp.resources import JarvisResourceProvider
+        from cognithor.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         provider = JarvisResourceProvider()
@@ -568,13 +568,13 @@ class TestJarvisResourceProvider:
 
 class TestJarvisPromptProvider:
     def _make_provider(self) -> JarvisPromptProvider:
-        from jarvis.mcp.prompts import JarvisPromptProvider
+        from cognithor.mcp.prompts import JarvisPromptProvider
 
         return JarvisPromptProvider()
 
     def test_register_all(self) -> None:
-        from jarvis.mcp.prompts import JarvisPromptProvider
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
+        from cognithor.mcp.prompts import JarvisPromptProvider
+        from cognithor.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         provider = JarvisPromptProvider()
@@ -639,7 +639,7 @@ class TestJarvisPromptProvider:
 
 class TestAgentCard:
     def test_basic_card(self) -> None:
-        from jarvis.mcp.discovery import AgentCard
+        from cognithor.mcp.discovery import AgentCard
 
         card = AgentCard(name="Jarvis", version="15.0.0")
         d = card.to_dict()
@@ -648,7 +648,7 @@ class TestAgentCard:
         assert "de" in d["languages"]
 
     def test_card_with_skills(self) -> None:
-        from jarvis.mcp.discovery import AgentCard, AgentSkill
+        from cognithor.mcp.discovery import AgentCard, AgentSkill
 
         card = AgentCard(
             skills=[
@@ -660,7 +660,7 @@ class TestAgentCard:
         assert d["skills"][0]["id"] == "web"
 
     def test_card_capabilities(self) -> None:
-        from jarvis.mcp.discovery import AgentCard
+        from cognithor.mcp.discovery import AgentCard
 
         card = AgentCard(capabilities=["tools", "resources"])
         d = card.to_dict()
@@ -670,7 +670,7 @@ class TestAgentCard:
 
 class TestDiscoveryManager:
     def test_build_card(self) -> None:
-        from jarvis.mcp.discovery import DiscoveryManager
+        from cognithor.mcp.discovery import DiscoveryManager
 
         dm = DiscoveryManager(host="localhost", port=3001)
         card = dm.build_card(
@@ -685,14 +685,14 @@ class TestDiscoveryManager:
         assert len(card.skills) > 0
 
     def test_build_card_no_tools(self) -> None:
-        from jarvis.mcp.discovery import DiscoveryManager
+        from cognithor.mcp.discovery import DiscoveryManager
 
         dm = DiscoveryManager()
         card = dm.build_card(tool_names=[], resource_count=0, prompt_count=0)
         assert len(card.capabilities) == 0
 
     def test_get_card_dict(self) -> None:
-        from jarvis.mcp.discovery import DiscoveryManager
+        from cognithor.mcp.discovery import DiscoveryManager
 
         dm = DiscoveryManager()
         dm.build_card(tool_names=["read_file"])
@@ -701,7 +701,7 @@ class TestDiscoveryManager:
         assert d["name"] == "Jarvis"
 
     def test_health(self) -> None:
-        from jarvis.mcp.discovery import DiscoveryManager
+        from cognithor.mcp.discovery import DiscoveryManager
 
         dm = DiscoveryManager()
         h = dm.health()
@@ -710,7 +710,7 @@ class TestDiscoveryManager:
         assert h["mcp_protocol"] == "2025-11-25"
 
     def test_skill_derivation(self) -> None:
-        from jarvis.mcp.discovery import DiscoveryManager
+        from cognithor.mcp.discovery import DiscoveryManager
 
         dm = DiscoveryManager()
         skills = dm._derive_skills(
@@ -730,7 +730,7 @@ class TestDiscoveryManager:
         assert "code_execution" in skill_ids
 
     def test_stats(self) -> None:
-        from jarvis.mcp.discovery import DiscoveryManager
+        from cognithor.mcp.discovery import DiscoveryManager
 
         dm = DiscoveryManager()
         dm.build_card(tool_names=["read_file"])
@@ -746,34 +746,34 @@ class TestDiscoveryManager:
 
 class TestAnnotations:
     def test_read_only_annotation(self) -> None:
-        from jarvis.mcp.bridge import _build_annotations
+        from cognithor.mcp.bridge import _build_annotations
 
         ann = _build_annotations("read_file")
         assert ann["readOnlyHint"] is True
         assert "destructiveHint" not in ann
 
     def test_destructive_annotation(self) -> None:
-        from jarvis.mcp.bridge import _build_annotations
+        from cognithor.mcp.bridge import _build_annotations
 
         ann = _build_annotations("write_file")
         assert ann["destructiveHint"] is True
         assert "readOnlyHint" not in ann
 
     def test_idempotent_annotation(self) -> None:
-        from jarvis.mcp.bridge import _build_annotations
+        from cognithor.mcp.bridge import _build_annotations
 
         ann = _build_annotations("web_search")
         assert ann["readOnlyHint"] is True
         assert ann["idempotentHint"] is True
 
     def test_unknown_tool_no_annotations(self) -> None:
-        from jarvis.mcp.bridge import _build_annotations
+        from cognithor.mcp.bridge import _build_annotations
 
         ann = _build_annotations("custom_tool")
         assert len(ann) == 0
 
     def test_browse_tools_annotations(self) -> None:
-        from jarvis.mcp.bridge import _build_annotations
+        from cognithor.mcp.bridge import _build_annotations
 
         # browse_url ist read-only
         assert _build_annotations("browse_url").get("readOnlyHint") is True
@@ -821,7 +821,7 @@ class TestMCPBridge:
         return client
 
     def test_bridge_disabled_by_default(self) -> None:
-        from jarvis.mcp.bridge import MCPBridge
+        from cognithor.mcp.bridge import MCPBridge
 
         config = self._make_mock_config()
         bridge = MCPBridge(config)
@@ -830,7 +830,7 @@ class TestMCPBridge:
         assert bridge.enabled is False
 
     def test_bridge_stats_disabled(self) -> None:
-        from jarvis.mcp.bridge import MCPBridge
+        from cognithor.mcp.bridge import MCPBridge
 
         config = self._make_mock_config()
         bridge = MCPBridge(config)
@@ -838,7 +838,7 @@ class TestMCPBridge:
         assert stats["enabled"] is False
 
     def test_get_agent_card_uninitialized(self) -> None:
-        from jarvis.mcp.bridge import MCPBridge
+        from cognithor.mcp.bridge import MCPBridge
 
         config = self._make_mock_config()
         bridge = MCPBridge(config)
@@ -846,7 +846,7 @@ class TestMCPBridge:
         assert "error" in card
 
     def test_get_health_disabled(self) -> None:
-        from jarvis.mcp.bridge import MCPBridge
+        from cognithor.mcp.bridge import MCPBridge
 
         config = self._make_mock_config()
         bridge = MCPBridge(config)
@@ -855,7 +855,7 @@ class TestMCPBridge:
 
     @pytest.mark.asyncio
     async def test_handle_mcp_request_no_server(self) -> None:
-        from jarvis.mcp.bridge import MCPBridge
+        from cognithor.mcp.bridge import MCPBridge
 
         config = self._make_mock_config()
         bridge = MCPBridge(config)
@@ -864,7 +864,7 @@ class TestMCPBridge:
 
     @pytest.mark.asyncio
     async def test_start_stop_disabled(self) -> None:
-        from jarvis.mcp.bridge import MCPBridge
+        from cognithor.mcp.bridge import MCPBridge
 
         config = self._make_mock_config()
         bridge = MCPBridge(config)
@@ -883,7 +883,7 @@ class TestMCPIntegration:
     @pytest.mark.asyncio
     async def test_full_initialize_flow(self) -> None:
         """Simuliert den kompletten Client → Server initialize-Flow."""
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode, MCPToolDef
+        from cognithor.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode, MCPToolDef
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         server.register_tool(
@@ -930,7 +930,7 @@ class TestMCPIntegration:
     @pytest.mark.asyncio
     async def test_full_resource_flow(self) -> None:
         """Simuliert Resource-Discovery und -Read."""
-        from jarvis.mcp.server import JarvisMCPServer, MCPResource, MCPServerConfig, MCPServerMode
+        from cognithor.mcp.server import JarvisMCPServer, MCPResource, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         server.register_resource(
@@ -953,8 +953,8 @@ class TestMCPIntegration:
     @pytest.mark.asyncio
     async def test_full_prompt_flow(self) -> None:
         """Simuliert Prompt-Discovery und -Get."""
-        from jarvis.mcp.prompts import JarvisPromptProvider
-        from jarvis.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
+        from cognithor.mcp.prompts import JarvisPromptProvider
+        from cognithor.mcp.server import JarvisMCPServer, MCPServerConfig, MCPServerMode
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         provider = JarvisPromptProvider()

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.learning.trace_optimizer import (
+from cognithor.learning.trace_optimizer import (
     OptimizationProposal,
     ProposalStore,
     TraceOptimizer,
@@ -240,7 +240,7 @@ class TestAdoptionRejection:
         mock_trace_store: MagicMock,
         mock_reflexion_memory: MagicMock,
     ) -> None:
-        from jarvis.learning.evolution_orchestrator import EvolutionOrchestrator
+        from cognithor.learning.evolution_orchestrator import EvolutionOrchestrator
 
         proposal = self._make_proposal(proposal_store)
 
@@ -272,7 +272,7 @@ class TestAdoptionRejection:
         mock_trace_store: MagicMock,
         mock_reflexion_memory: MagicMock,
     ) -> None:
-        from jarvis.learning.evolution_orchestrator import EvolutionOrchestrator
+        from cognithor.learning.evolution_orchestrator import EvolutionOrchestrator
 
         proposal = self._make_proposal(proposal_store)
         # First apply

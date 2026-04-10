@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.mcp.vault import VaultTools
+from cognithor.mcp.vault import VaultTools
 
 # ── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -152,7 +152,7 @@ class TestSaveProceduralTraversal:
 
     def test_traversal_blocked(self, tmp_path: Path) -> None:
         """../../malicious.md wird geblockt."""
-        from jarvis.mcp.memory_server import MemoryTools
+        from cognithor.mcp.memory_server import MemoryTools
 
         # Minimales Memory-Mock
         memory = MagicMock()
@@ -171,7 +171,7 @@ class TestSaveProceduralTraversal:
 
     def test_legitimate_save_works(self, tmp_path: Path) -> None:
         """Normaler Pfad funktioniert."""
-        from jarvis.mcp.memory_server import MemoryTools
+        from cognithor.mcp.memory_server import MemoryTools
 
         memory = MagicMock()
         proc_dir = tmp_path / "procedural"
@@ -188,7 +188,7 @@ class TestSaveProceduralTraversal:
 
     def test_subdir_traversal_escape_blocked(self, tmp_path: Path) -> None:
         """skills/../../escape.md wird geblockt."""
-        from jarvis.mcp.memory_server import MemoryTools
+        from cognithor.mcp.memory_server import MemoryTools
 
         memory = MagicMock()
         proc_dir = tmp_path / "procedural"
@@ -210,7 +210,7 @@ class TestAnalyzeCodeTraversal:
 
     async def test_traversal_outside_workspace_blocked(self, tmp_path: Path) -> None:
         """Datei außerhalb des Workspace wird geblockt."""
-        from jarvis.mcp.code_tools import CodeTools
+        from cognithor.mcp.code_tools import CodeTools
 
         workspace = tmp_path / "workspace"
         workspace.mkdir()
@@ -235,7 +235,7 @@ class TestAnalyzeCodeTraversal:
 
     async def test_legitimate_file_works(self, tmp_path: Path) -> None:
         """Datei innerhalb des Workspace funktioniert."""
-        from jarvis.mcp.code_tools import CodeTools
+        from cognithor.mcp.code_tools import CodeTools
 
         workspace = tmp_path / "workspace"
         workspace.mkdir()
@@ -258,7 +258,7 @@ class TestAnalyzeCodeTraversal:
 
     async def test_relative_traversal_blocked(self, tmp_path: Path) -> None:
         """../../etc/passwd-artiger Pfad wird geblockt."""
-        from jarvis.mcp.code_tools import CodeTools
+        from cognithor.mcp.code_tools import CodeTools
 
         workspace = tmp_path / "workspace"
         workspace.mkdir()

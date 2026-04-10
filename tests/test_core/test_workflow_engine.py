@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.core.workflow_engine import WorkflowEngine
-from jarvis.core.workflow_schema import (
+from cognithor.core.workflow_engine import WorkflowEngine
+from cognithor.core.workflow_schema import (
     NodeResult,
     NodeStatus,
     NodeType,

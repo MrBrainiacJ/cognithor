@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.encrypted_file import _MAGIC_HEADER, EncryptedFileIO
+from cognithor.security.encrypted_file import _MAGIC_HEADER, EncryptedFileIO
 
 
 @pytest.fixture
 def eio(tmp_path, monkeypatch):
     """EncryptedFileIO with a test key."""
-    monkeypatch.setenv("JARVIS_DB_KEY", "test_key_for_encryption_1234567890abcdef")
+    monkeypatch.setenv("COGNITHOR_DB_KEY", "test_key_for_encryption_1234567890abcdef")
     io = EncryptedFileIO()
     io._initialized = False  # Force re-init with new env
     io._fernet = None
@@ -20,7 +20,7 @@ def eio(tmp_path, monkeypatch):
 @pytest.fixture
 def eio_no_key(tmp_path, monkeypatch):
     """EncryptedFileIO without a key."""
-    monkeypatch.delenv("JARVIS_DB_KEY", raising=False)
+    monkeypatch.delenv("COGNITHOR_DB_KEY", raising=False)
     io = EncryptedFileIO()
     io._initialized = False
     io._fernet = None
@@ -121,7 +121,7 @@ def test_file_not_found_raises(eio, tmp_path):
 
 
 def test_write_without_key_writes_plaintext(tmp_path, monkeypatch):
-    monkeypatch.delenv("JARVIS_DB_KEY", raising=False)
+    monkeypatch.delenv("COGNITHOR_DB_KEY", raising=False)
     io = EncryptedFileIO()
     io._initialized = True
     io._fernet = None  # No key

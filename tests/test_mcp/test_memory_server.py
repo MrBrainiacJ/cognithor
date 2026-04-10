@@ -14,10 +14,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.mcp.memory_server import MemoryTools, register_memory_tools
-from jarvis.memory.manager import MemoryManager
-from jarvis.models import Entity, MemoryTier, Relation
+from cognithor.config import JarvisConfig
+from cognithor.mcp.memory_server import MemoryTools, register_memory_tools
+from cognithor.memory.manager import MemoryManager
+from cognithor.models import Entity, MemoryTier, Relation
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def config(tmp_path: Path) -> JarvisConfig:
     """Config mit temporärem Home-Verzeichnis."""
-    return JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+    return JarvisConfig(jarvis_home=tmp_path / ".cognithor")
 
 
 @pytest.fixture
@@ -359,7 +359,7 @@ class TestProcedures:
 
     def test_search_procedures_with_data(self, tools: MemoryTools, manager: MemoryManager):
         # Prozedur erstellen
-        from jarvis.memory.procedural import ProcedureMetadata
+        from cognithor.memory.procedural import ProcedureMetadata
 
         meta = ProcedureMetadata(
             name="bu-angebot",
@@ -383,7 +383,7 @@ class TestProcedures:
         assert "Fehler" in result or "error" in result.lower() or "nicht gefunden" in result
 
     def test_record_usage_success(self, tools: MemoryTools, manager: MemoryManager):
-        from jarvis.memory.procedural import ProcedureMetadata
+        from cognithor.memory.procedural import ProcedureMetadata
 
         meta = ProcedureMetadata(
             name="test-proc",
@@ -396,7 +396,7 @@ class TestProcedures:
         assert "1x" in result
 
     def test_record_usage_failure(self, tools: MemoryTools, manager: MemoryManager):
-        from jarvis.memory.procedural import ProcedureMetadata
+        from cognithor.memory.procedural import ProcedureMetadata
 
         meta = ProcedureMetadata(name="fail-proc", trigger_keywords=["fail"])
         manager.procedural.save_procedure(name=meta.name, body="# Fail\n", metadata=meta)

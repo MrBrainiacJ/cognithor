@@ -791,7 +791,7 @@ def register_background_tools(
     Returns:
         BackgroundProcessManager instance (for gateway to start monitor).
     """
-    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".jarvis")
+    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".cognithor")
     manager = BackgroundProcessManager(
         db_path=jarvis_home / "background_jobs.db",
         log_dir=jarvis_home / "workspace" / "background_logs",

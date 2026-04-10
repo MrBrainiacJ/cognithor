@@ -6,7 +6,7 @@ import datetime
 
 import pytest
 
-from jarvis.evolution.atl_journal import ATLJournal
+from cognithor.evolution.atl_journal import ATLJournal
 
 
 @pytest.fixture

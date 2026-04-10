@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.governance.governor import GovernanceAgent
-from jarvis.models import PolicyChange
+from cognithor.governance.governor import GovernanceAgent
+from cognithor.models import PolicyChange
 
 
 def _mock_telemetry(tool_stats=None, unused_tools=None):

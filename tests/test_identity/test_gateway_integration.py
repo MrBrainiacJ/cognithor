@@ -9,14 +9,14 @@ class TestIdentityConfig:
     def test_identity_config_exists(self) -> None:
         import tempfile
 
-        from jarvis.config import IdentityConfig, JarvisConfig
+        from cognithor.config import IdentityConfig, JarvisConfig
 
         cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
         assert hasattr(cfg, "identity")
         assert isinstance(cfg.identity, IdentityConfig)
 
     def test_identity_enabled_default(self) -> None:
-        from jarvis.config import IdentityConfig
+        from cognithor.config import IdentityConfig
 
         ic = IdentityConfig()
         assert ic.enabled is True
@@ -25,7 +25,7 @@ class TestIdentityConfig:
         assert ic.blockchain_enabled is False
 
     def test_identity_disabled(self) -> None:
-        from jarvis.config import IdentityConfig
+        from cognithor.config import IdentityConfig
 
         ic = IdentityConfig(enabled=False)
         assert ic.enabled is False
@@ -35,12 +35,12 @@ class TestGatekeeperGenesisAnchors:
     """Tests for Genesis Anchor policy in Gatekeeper."""
 
     def test_genesis_anchors_count(self) -> None:
-        from jarvis.identity.cognitio.engine import GENESIS_ANCHOR_CONTENTS
+        from cognithor.identity.cognitio.engine import GENESIS_ANCHOR_CONTENTS
 
         assert len(GENESIS_ANCHOR_CONTENTS) == 7
 
     def test_genesis_anchors_immutable_content(self) -> None:
-        from jarvis.identity.cognitio.engine import GENESIS_ANCHOR_CONTENTS
+        from cognithor.identity.cognitio.engine import GENESIS_ANCHOR_CONTENTS
 
         # Anchor 0: No harm
         assert "harm" in GENESIS_ANCHOR_CONTENTS[0].lower()
@@ -59,9 +59,9 @@ class TestGatekeeperGenesisAnchors:
         """Identity tools should be classified as GREEN."""
         import tempfile
 
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction, RiskLevel
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction, RiskLevel
 
         cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
         gk = Gatekeeper(cfg)
@@ -78,8 +78,8 @@ class TestIdentityPhaseInit:
         """declare_pge_attrs should include identity_layer."""
         import tempfile
 
-        from jarvis.config import JarvisConfig
-        from jarvis.gateway.phases.pge import declare_pge_attrs
+        from cognithor.config import JarvisConfig
+        from cognithor.gateway.phases.pge import declare_pge_attrs
 
         cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
         attrs = declare_pge_attrs(cfg)
@@ -90,7 +90,7 @@ class TestIdentityLayerLifecycle:
     """Tests for IdentityLayer lifecycle methods."""
 
     def test_freeze_unfreeze(self) -> None:
-        from jarvis.identity import IdentityLayer
+        from cognithor.identity import IdentityLayer
 
         il = IdentityLayer.__new__(IdentityLayer)
         il._engine = None
@@ -105,7 +105,7 @@ class TestIdentityLayerLifecycle:
         assert il._frozen is False
 
     def test_empty_enrichment_when_unavailable(self) -> None:
-        from jarvis.identity import IdentityLayer
+        from cognithor.identity import IdentityLayer
 
         il = IdentityLayer.__new__(IdentityLayer)
         il._engine = None
@@ -117,7 +117,7 @@ class TestIdentityLayerLifecycle:
         assert result["temperature_modifier"] == 0.0
 
     def test_process_interaction_when_unavailable(self) -> None:
-        from jarvis.identity import IdentityLayer
+        from cognithor.identity import IdentityLayer
 
         il = IdentityLayer.__new__(IdentityLayer)
         il._engine = None
@@ -128,7 +128,7 @@ class TestIdentityLayerLifecycle:
         assert result == {}
 
     def test_recall_when_unavailable(self) -> None:
-        from jarvis.identity import IdentityLayer
+        from cognithor.identity import IdentityLayer
 
         il = IdentityLayer.__new__(IdentityLayer)
         il._engine = None
@@ -139,7 +139,7 @@ class TestIdentityLayerLifecycle:
         assert result == []
 
     def test_state_summary_when_unavailable(self) -> None:
-        from jarvis.identity import IdentityLayer
+        from cognithor.identity import IdentityLayer
 
         il = IdentityLayer.__new__(IdentityLayer)
         il._engine = None

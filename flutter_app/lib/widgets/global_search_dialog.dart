@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// Indexed terms for all config pages.
 /// Each entry: (display label, page key, search terms).

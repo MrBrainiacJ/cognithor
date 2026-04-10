@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.social.scanner import RedditScanner, ScanConfig
+from cognithor.social.scanner import RedditScanner, ScanConfig
 
 
 class TestRedditScanner:

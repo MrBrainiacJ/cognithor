@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from jarvis.hashline.exceptions import (
+from cognithor.hashline.exceptions import (
     BinaryFileError,
     CacheFullError,
     FileTooLargeError,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.arc.classic.dsl import (
+from cognithor.arc.classic.dsl import (
     count_by_color,
     crop_to_content,
     fill,

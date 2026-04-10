@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.mcp.git_tools import GitTools, GitToolsError, register_git_tools
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.mcp.git_tools import GitTools, GitToolsError, register_git_tools
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def git_config(tmp_path: Path) -> JarvisConfig:
     """JarvisConfig mit temporaerem Workspace."""
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     config = JarvisConfig(jarvis_home=home)
     ensure_directory_structure(config)
     return config

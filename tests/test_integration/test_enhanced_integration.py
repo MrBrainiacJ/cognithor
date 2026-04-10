@@ -13,12 +13,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.executor import Executor
-from jarvis.memory.enhanced_retrieval import EnhancedSearchPipeline, FrequencyTracker
-from jarvis.memory.graph_ranking import GraphRanking
-from jarvis.memory.multimodal import MultimodalMemory
-from jarvis.skills.generator import GapDetector, SkillGapType
+from cognithor.config import JarvisConfig
+from cognithor.core.executor import Executor
+from cognithor.memory.enhanced_retrieval import EnhancedSearchPipeline, FrequencyTracker
+from cognithor.memory.graph_ranking import GraphRanking
+from cognithor.memory.multimodal import MultimodalMemory
+from cognithor.skills.generator import GapDetector, SkillGapType
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -35,14 +35,14 @@ class TestMemoryManagerEnhancedProperties:
     def manager(self, tmp_path: Path):
         """Erstellt einen MemoryManager mit tmp_path."""
         with (
-            patch("jarvis.memory.manager.EmbeddingClient"),
-            patch("jarvis.memory.manager.CoreMemory"),
+            patch("cognithor.memory.manager.EmbeddingClient"),
+            patch("cognithor.memory.manager.CoreMemory"),
         ):
-            from jarvis.memory.manager import MemoryManager
+            from cognithor.memory.manager import MemoryManager
 
             config = JarvisConfig(
-                jarvis_dir=tmp_path / ".jarvis",
-                memory_dir=tmp_path / ".jarvis" / "memory",
+                jarvis_dir=tmp_path / ".cognithor",
+                memory_dir=tmp_path / ".cognithor" / "memory",
             )
             mm = MemoryManager(config)
             return mm
@@ -60,7 +60,7 @@ class TestMemoryManagerEnhancedProperties:
         assert isinstance(manager.frequency_tracker, FrequencyTracker)
 
     def test_has_compressor(self, manager) -> None:
-        from jarvis.memory.enhanced_retrieval import EpisodicCompressor
+        from cognithor.memory.enhanced_retrieval import EpisodicCompressor
 
         assert isinstance(manager.compressor, EpisodicCompressor)
 
@@ -180,14 +180,14 @@ class TestEnhancedSearchWithGraphBoost:
     @pytest.fixture
     def manager_with_data(self, tmp_path: Path):
         with (
-            patch("jarvis.memory.manager.EmbeddingClient"),
-            patch("jarvis.memory.manager.CoreMemory"),
+            patch("cognithor.memory.manager.EmbeddingClient"),
+            patch("cognithor.memory.manager.CoreMemory"),
         ):
-            from jarvis.memory.manager import MemoryManager
+            from cognithor.memory.manager import MemoryManager
 
             config = JarvisConfig(
-                jarvis_dir=tmp_path / ".jarvis",
-                memory_dir=tmp_path / ".jarvis" / "memory",
+                jarvis_dir=tmp_path / ".cognithor",
+                memory_dir=tmp_path / ".cognithor" / "memory",
             )
             mm = MemoryManager(config)
 
@@ -250,14 +250,14 @@ class TestSearchMemorySignature:
     @pytest.fixture
     def manager(self, tmp_path: Path):
         with (
-            patch("jarvis.memory.manager.EmbeddingClient"),
-            patch("jarvis.memory.manager.CoreMemory"),
+            patch("cognithor.memory.manager.EmbeddingClient"),
+            patch("cognithor.memory.manager.CoreMemory"),
         ):
-            from jarvis.memory.manager import MemoryManager
+            from cognithor.memory.manager import MemoryManager
 
             config = JarvisConfig(
-                jarvis_dir=tmp_path / ".jarvis",
-                memory_dir=tmp_path / ".jarvis" / "memory",
+                jarvis_dir=tmp_path / ".cognithor",
+                memory_dir=tmp_path / ".cognithor" / "memory",
             )
             return MemoryManager(config)
 
@@ -273,7 +273,7 @@ class TestSearchMemorySignature:
 
     @pytest.mark.asyncio
     async def test_with_tier_filter(self, manager) -> None:
-        from jarvis.models import MemoryTier
+        from cognithor.models import MemoryTier
 
         results = await manager.search_memory("test", tier=MemoryTier.CORE)
         assert isinstance(results, list)

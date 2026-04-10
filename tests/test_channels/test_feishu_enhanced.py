@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.feishu import FeishuChannel, _parse_json_safe
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.feishu import FeishuChannel, _parse_json_safe
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ class TestFeishuVerifyEvent:
         # So we use a mock to control the hash output.
         mock_hash = MagicMock()
         mock_hash.hexdigest.return_value = "test_sig"
-        with patch("jarvis.channels.feishu.hashlib.sha256", return_value=mock_hash):
+        with patch("cognithor.channels.feishu.hashlib.sha256", return_value=mock_hash):
             assert ch.verify_event(body, encrypt_key=key) is True
 
     def test_bad_signature(self, ch: FeishuChannel) -> None:

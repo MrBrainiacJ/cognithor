@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/navigation_provider.dart';
-import 'package:jarvis_ui/providers/pip_provider.dart';
-import 'package:jarvis_ui/providers/theme_provider.dart';
-import 'package:jarvis_ui/screens/admin_hub_screen.dart';
-import 'package:jarvis_ui/screens/chat_screen.dart';
-import 'package:jarvis_ui/screens/config_screen.dart';
-import 'package:jarvis_ui/screens/dashboard_screen.dart';
-import 'package:jarvis_ui/screens/identity_screen.dart';
-import 'package:jarvis_ui/screens/kanban_screen.dart';
-import 'package:jarvis_ui/screens/reddit_leads_screen.dart';
-import 'package:jarvis_ui/screens/skills_screen.dart';
-import 'package:jarvis_ui/widgets/global_search_dialog.dart';
-import 'package:jarvis_ui/widgets/responsive_scaffold.dart';
-import 'package:jarvis_ui/widgets/robot_office/pip_overlay.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/navigation_provider.dart';
+import 'package:cognithor_ui/providers/pip_provider.dart';
+import 'package:cognithor_ui/providers/theme_provider.dart';
+import 'package:cognithor_ui/screens/admin_hub_screen.dart';
+import 'package:cognithor_ui/screens/chat_screen.dart';
+import 'package:cognithor_ui/screens/config_screen.dart';
+import 'package:cognithor_ui/screens/dashboard_screen.dart';
+import 'package:cognithor_ui/screens/identity_screen.dart';
+import 'package:cognithor_ui/screens/kanban_screen.dart';
+import 'package:cognithor_ui/screens/reddit_leads_screen.dart';
+import 'package:cognithor_ui/screens/skills_screen.dart';
+import 'package:cognithor_ui/widgets/global_search_dialog.dart';
+import 'package:cognithor_ui/widgets/responsive_scaffold.dart';
+import 'package:cognithor_ui/widgets/robot_office/pip_overlay.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});

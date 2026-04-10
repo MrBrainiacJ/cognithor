@@ -12,7 +12,7 @@
 ## 1. Consent Manager
 
 **File:** `src/jarvis/security/consent.py`
-**DB:** `~/.jarvis/index/consent.db` (SQLCipher encrypted)
+**DB:** `~/.cognithor/index/consent.db` (SQLCipher encrypted)
 
 ### Schema
 ```sql
@@ -173,20 +173,20 @@ def encrypted_connect(db_path: str, key: str | None = None) -> sqlite3.Connectio
 - Fallback: if `pysqlcipher3` not installed, warn and use unencrypted (graceful degradation)
 
 ### Affected Databases
-- `~/.jarvis/index/memory_traces.db`
-- `~/.jarvis/index/memory_proposals.db`
-- `~/.jarvis/index/memory_governance.db`
-- `~/.jarvis/index/memory_runs.db`
-- `~/.jarvis/index/knowledge_claims.db`
-- `~/.jarvis/index/consent.db` (new)
-- `~/.jarvis/memory/sessions/sessions.db`
-- `~/.jarvis/memory/knowledge_qa.db`
-- `~/.jarvis/memory/knowledge_lineage.db`
+- `~/.cognithor/index/memory_traces.db`
+- `~/.cognithor/index/memory_proposals.db`
+- `~/.cognithor/index/memory_governance.db`
+- `~/.cognithor/index/memory_runs.db`
+- `~/.cognithor/index/knowledge_claims.db`
+- `~/.cognithor/index/consent.db` (new)
+- `~/.cognithor/memory/sessions/sessions.db`
+- `~/.cognithor/memory/knowledge_qa.db`
+- `~/.cognithor/memory/knowledge_lineage.db`
 - Evolution goal-scoped indexes
 
 ### Key Management
 - Primary: `JARVIS_DB_KEY` environment variable
-- Fallback: Auto-generated 32-byte key stored in credential store (`~/.jarvis/credentials/db_key.enc`)
+- Fallback: Auto-generated 32-byte key stored in credential store (`~/.cognithor/credentials/db_key.enc`)
 - The credential store itself uses `JARVIS_CREDENTIAL_KEY` (already exists)
 
 ---
@@ -348,7 +348,7 @@ class DataPurpose(str, Enum):
 Append-only log for all compliance events. Cannot be deleted or modified.
 
 **File:** `src/jarvis/security/compliance_audit.py`
-**Storage:** `~/.jarvis/data/audit/compliance.jsonl` (append-only, no delete/truncate)
+**Storage:** `~/.cognithor/data/audit/compliance.jsonl` (append-only, no delete/truncate)
 
 ### Events logged:
 - Consent granted/withdrawn (user_id, channel, timestamp)
@@ -367,7 +367,7 @@ Append-only log for all compliance events. Cannot be deleted or modified.
 - Append-only (open with mode="a")
 - Never deleted by RetentionEnforcer
 - Signed with SHA-256 chain (each line includes hash of previous line)
-- Backed up to `~/.jarvis/data/audit/compliance.jsonl.bak` weekly
+- Backed up to `~/.cognithor/data/audit/compliance.jsonl.bak` weekly
 
 ---
 

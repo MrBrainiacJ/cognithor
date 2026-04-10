@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.mcp.shell import ShellTools, register_shell_tools
+from cognithor.mcp.shell import ShellTools, register_shell_tools
 
 
 @pytest.fixture

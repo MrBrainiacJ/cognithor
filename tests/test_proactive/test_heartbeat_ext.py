@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 import pytest
 
-from jarvis.proactive import (
+from cognithor.proactive import (
     ApprovalMode,
     EventConfig,
     EventType,
@@ -40,7 +40,7 @@ class TestEventConfigQuietHours:
             quiet_hours_end=6,
         )
         # Mock hour=23 -> should be in quiet hours
-        with patch("jarvis.proactive.datetime") as mock_dt:
+        with patch("cognithor.proactive.datetime") as mock_dt:
             mock_now = datetime(2026, 1, 1, 23, 0, tzinfo=UTC)
             mock_dt.now.return_value = mock_now
             mock_dt.fromisoformat = datetime.fromisoformat
@@ -52,7 +52,7 @@ class TestEventConfigQuietHours:
             quiet_hours_start=22,
             quiet_hours_end=6,
         )
-        with patch("jarvis.proactive.datetime") as mock_dt:
+        with patch("cognithor.proactive.datetime") as mock_dt:
             mock_now = datetime(2026, 1, 1, 3, 0, tzinfo=UTC)
             mock_dt.now.return_value = mock_now
             mock_dt.fromisoformat = datetime.fromisoformat
@@ -64,7 +64,7 @@ class TestEventConfigQuietHours:
             quiet_hours_start=22,
             quiet_hours_end=6,
         )
-        with patch("jarvis.proactive.datetime") as mock_dt:
+        with patch("cognithor.proactive.datetime") as mock_dt:
             mock_now = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
             mock_dt.now.return_value = mock_now
             mock_dt.fromisoformat = datetime.fromisoformat

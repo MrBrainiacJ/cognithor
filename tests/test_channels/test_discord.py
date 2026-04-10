@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.discord import DiscordChannel
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.channels.discord import DiscordChannel
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 # ============================================================================
 # Fixtures

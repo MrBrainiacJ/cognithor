@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 class JarvisNumberField extends StatefulWidget {
   const JarvisNumberField({

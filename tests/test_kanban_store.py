@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.kanban.models import Task, TaskPriority, TaskStatus
-from jarvis.kanban.store import KanbanStore
+from cognithor.kanban.models import Task, TaskPriority, TaskStatus
+from cognithor.kanban.store import KanbanStore
 
 
 @pytest.fixture

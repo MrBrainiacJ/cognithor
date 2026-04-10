@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.gateway.gateway import Gateway
-from jarvis.models import IncomingMessage
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.gateway.gateway import Gateway
+from cognithor.models import IncomingMessage
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -85,9 +85,9 @@ class TestFullPGECycle:
             mock_mcp.disconnect_all = AsyncMock()
 
             # Initialize with mocks already set
-            from jarvis.core.executor import Executor
-            from jarvis.core.gatekeeper import Gatekeeper
-            from jarvis.core.planner import Planner
+            from cognithor.core.executor import Executor
+            from cognithor.core.gatekeeper import Gatekeeper
+            from cognithor.core.planner import Planner
 
             gateway._planner = Planner(config, mock_ollama, mock_router)
             gateway._gatekeeper = Gatekeeper(config)
@@ -148,9 +148,9 @@ class TestFullPGECycle:
         mock_mcp.call_tool = AsyncMock(return_value=MockToolResult(content="Hello World"))
         mock_mcp.disconnect_all = AsyncMock()
 
-        from jarvis.core.executor import Executor
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.core.planner import Planner
+        from cognithor.core.executor import Executor
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.core.planner import Planner
 
         gateway._planner = Planner(config, mock_ollama, mock_router)
         gateway._gatekeeper = Gatekeeper(config)
@@ -228,7 +228,7 @@ class TestWorkingMemory:
 
 class TestSessionContextFeatures:
     def test_iteration_tracking(self) -> None:
-        from jarvis.models import SessionContext
+        from cognithor.models import SessionContext
 
         session = SessionContext(max_iterations=5)
         assert not session.iterations_exhausted
@@ -241,7 +241,7 @@ class TestSessionContextFeatures:
         assert session.iterations_exhausted
 
     def test_reset_iteration(self) -> None:
-        from jarvis.models import SessionContext
+        from cognithor.models import SessionContext
 
         session = SessionContext()
         session.iteration_count = 7
@@ -250,7 +250,7 @@ class TestSessionContextFeatures:
         assert session.iteration_count == 0
 
     def test_record_block(self) -> None:
-        from jarvis.models import SessionContext
+        from cognithor.models import SessionContext
 
         session = SessionContext()
         assert session.record_block("exec_command") == 1
@@ -267,7 +267,7 @@ class TestSessionContextFeatures:
 class TestApprovalHandling:
     @pytest.mark.asyncio
     async def test_no_channel_returns_original_decisions(self, config: JarvisConfig) -> None:
-        from jarvis.models import GateDecision, GateStatus, PlannedAction, RiskLevel, SessionContext
+        from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel, SessionContext
 
         gateway = Gateway(config)
         session = SessionContext()

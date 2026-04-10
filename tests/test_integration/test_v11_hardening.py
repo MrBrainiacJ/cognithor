@@ -8,7 +8,7 @@ from __future__ import annotations
 # ============================================================================
 # 1. Security Hardening
 # ============================================================================
-from jarvis.security.hardening import (
+from cognithor.security.hardening import (
     ContainerIsolation,
     CredentialScanner,
     GateDecision,
@@ -197,7 +197,7 @@ class TestScanScheduler:
         assert s.count == 3  # 3 Default-Schedules
 
     def test_add_remove(self) -> None:
-        from jarvis.security.hardening import ScheduledScan
+        from cognithor.security.hardening import ScheduledScan
 
         s = ScanScheduler(load_defaults=False)
         s.add(ScheduledScan("custom", "Custom", "0 * * * *", ["prompt_injection"]))
@@ -224,7 +224,7 @@ class TestPreCommitHook:
 # 2. EU AI Act Compliance
 # ============================================================================
 
-from jarvis.audit.eu_ai_act import (
+from cognithor.audit.eu_ai_act import (
     ComplianceDocManager,
     DocumentType,
     EUAIActGovernor,
@@ -371,7 +371,7 @@ class TestEUAIActGovernor:
 # 3. Multi-Tenant, Trust, Emergency
 # ============================================================================
 
-from jarvis.core.multitenant import (
+from cognithor.core.multitenant import (
     EmergencyAction,
     EmergencyController,
     MultiTenantGovernor,
@@ -580,7 +580,7 @@ class TestMultiTenantGovernor:
 # 4. Memory Erweiterungen
 # ============================================================================
 
-from jarvis.memory.hygiene import (
+from cognithor.memory.hygiene import (
     DuplicateDetector,
     MemoryVersionControl,
 )

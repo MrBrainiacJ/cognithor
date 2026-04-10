@@ -1,5 +1,5 @@
-from jarvis.arc.episode_memory import EpisodeMemory, StateTransition
-from jarvis.arc.goal_inference import GoalInferenceModule, GoalType, InferredGoal
+from cognithor.arc.episode_memory import EpisodeMemory, StateTransition
+from cognithor.arc.goal_inference import GoalInferenceModule, GoalType, InferredGoal
 
 
 class TestAnalyzeWinCondition:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.evolution.cycle_controller import (
+from cognithor.evolution.cycle_controller import (
     CycleController,
     CycleState,
     ExamResult,

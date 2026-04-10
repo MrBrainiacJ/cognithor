@@ -10,8 +10,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.mcp.search_tools import SearchTools, SearchToolsError, register_search_tools
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.mcp.search_tools import SearchTools, SearchToolsError, register_search_tools
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -21,7 +21,7 @@ from jarvis.mcp.search_tools import SearchTools, SearchToolsError, register_sear
 @pytest.fixture
 def search_config(tmp_path: Path) -> JarvisConfig:
     """JarvisConfig mit temporaerem Workspace."""
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     config = JarvisConfig(jarvis_home=home)
     ensure_directory_structure(config)
     return config

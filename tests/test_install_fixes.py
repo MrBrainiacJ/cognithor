@@ -648,14 +648,14 @@ class TestMacOSPortability:
         fake_rc.write_text(
             "export PATH=/usr/bin\n"
             "# Jarvis Agent OS\n"
-            "alias jarvis='/home/user/.jarvis/venv/bin/jarvis'\n"
+            "alias jarvis='/home/user/.cognithor/venv/bin/jarvis'\n"
             "export EDITOR=vim\n"
         )
         script = textwrap.dedent(f"""\
             set +e
             rc="{fake_rc.as_posix()}"
             if grep -q "Jarvis Agent OS\\|jarvis.*venv.*bin.*jarvis" "$rc" 2>/dev/null; then
-                grep -v "Jarvis Agent OS" "$rc" | grep -v "jarvis.*venv.*bin.*jarvis" > "${{rc}}.jarvis_tmp" \\
+                grep -v "Jarvis Agent OS" "$rc" | grep -v "cognithor.*venv.*bin.*jarvis" > "${{rc}}.jarvis_tmp" \\
                     && mv "${{rc}}.jarvis_tmp" "$rc" \\
                     || rm -f "${{rc}}.jarvis_tmp"
             fi
@@ -740,7 +740,7 @@ class TestViteVenvPython:
 
     def test_checks_jarvis_home_venv(self):
         text = _read(VITE_CONFIG)
-        assert ".jarvis" in text and "venv" in text, "Must check for ~/.jarvis/venv"
+        assert ".cognithor" in text and "venv" in text, "Must check for ~/.cognithor/venv"
 
     def test_uses_existsSync(self):
         text = _read(VITE_CONFIG)

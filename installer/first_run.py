@@ -1,6 +1,6 @@
 """Cognithor First-Run Setup.
 
-Called automatically on first launch when ~/.jarvis/.cognithor_initialized is missing.
+Called automatically on first launch when ~/.cognithor/.cognithor_initialized is missing.
 Downloads community skills from GitHub registry, installs default agent configs,
 and runs an interactive setup wizard (hardware detection, model recommendation).
 """
@@ -17,12 +17,12 @@ from pathlib import Path
 REGISTRY_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/registry.json"
 SKILL_BASE_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/skills"
 
-JARVIS_HOME = Path(os.environ.get("JARVIS_HOME", Path.home() / ".jarvis"))
+JARVIS_HOME = Path(os.environ.get("JARVIS_HOME", Path.home() / ".cognithor"))
 INSTALL_DIR = Path(sys.executable).resolve().parent.parent  # e.g. D:\Cognithor
 
 
 def setup_agents() -> int:
-    """Copy default agents.yaml to ~/.jarvis/config/ if missing."""
+    """Copy default agents.yaml to ~/.cognithor/config/ if missing."""
     config_dir = JARVIS_HOME / "config"
     config_dir.mkdir(parents=True, exist_ok=True)
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// A premium shimmer/skeleton loading effect.
 ///

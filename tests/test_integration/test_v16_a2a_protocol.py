@@ -9,9 +9,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.a2a.client import A2AClient, RemoteAgent
-from jarvis.a2a.server import A2AServer, A2AServerConfig
-from jarvis.a2a.types import (
+from cognithor.a2a.client import A2AClient, RemoteAgent
+from cognithor.a2a.server import A2AServer, A2AServerConfig
+from cognithor.a2a.types import (
     A2A_CONTENT_TYPE,
     A2A_PROTOCOL_VERSION,
     A2A_VERSION_HEADER,
@@ -993,7 +993,7 @@ class TestA2AHTTPHandler:
     """Tests für den A2A HTTP-Handler (ohne FastAPI)."""
 
     def _make_adapter(self):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = MagicMock()
         config.mcp_config_file = MagicMock()
@@ -1002,14 +1002,14 @@ class TestA2AHTTPHandler:
         return A2AAdapter(config)
 
     def test_handler_init(self) -> None:
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         adapter = self._make_adapter()
         handler = A2AHTTPHandler(adapter)
         assert handler.adapter is adapter
 
     def test_extract_auth_token(self) -> None:
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         handler = A2AHTTPHandler(self._make_adapter())
         assert handler._extract_token("Bearer tok123") == "tok123"
@@ -1018,7 +1018,7 @@ class TestA2AHTTPHandler:
         assert handler._extract_token("BearerNOSPACE") is None
 
     def test_response_headers(self) -> None:
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         handler = A2AHTTPHandler(self._make_adapter())
         headers = handler._response_headers()
@@ -1028,7 +1028,7 @@ class TestA2AHTTPHandler:
 
     @pytest.mark.asyncio
     async def test_handle_agent_card(self) -> None:
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         handler = A2AHTTPHandler(self._make_adapter())
         card = await handler.handle_agent_card()
@@ -1036,7 +1036,7 @@ class TestA2AHTTPHandler:
 
     @pytest.mark.asyncio
     async def test_handle_health_disabled(self) -> None:
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         handler = A2AHTTPHandler(self._make_adapter())
         result = await handler.handle_health()
@@ -1054,7 +1054,7 @@ class TestA2AAdapterDetails:
     """Erweiterte Adapter-Tests."""
 
     def _make_adapter(self):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = MagicMock()
         config.mcp_config_file = MagicMock()

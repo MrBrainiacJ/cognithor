@@ -2,9 +2,9 @@
 
 import pytest
 
-from jarvis.core.kernel import AgentKernel, InvalidTransitionError
-from jarvis.core.plan_graph import PlanGraph
-from jarvis.models import KernelState, PlanNode, ToolResult
+from cognithor.core.kernel import AgentKernel, InvalidTransitionError
+from cognithor.core.plan_graph import PlanGraph
+from cognithor.models import KernelState, PlanNode, ToolResult
 
 
 class TestAgentKernel:

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.skills.remote_registry import (
+from cognithor.skills.remote_registry import (
     DependencyResolver,
     InstalledPlugin,
     InstallResult,

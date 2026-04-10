@@ -25,7 +25,7 @@ class TestConcurrentSessionIsolation:
     """Mehrere Agents dürfen nicht auf fremde Scopes zugreifen."""
 
     def test_multi_user_isolation_scopes(self) -> None:
-        from jarvis.core.isolation import MultiUserIsolation
+        from cognithor.core.isolation import MultiUserIsolation
 
         iso = MultiUserIsolation()
         scope_a = iso.get_or_create_scope("alex", "coder")
@@ -38,7 +38,7 @@ class TestConcurrentSessionIsolation:
         assert scope_a.scope_key != scope_c.scope_key
 
     def test_10_agents_isolated(self) -> None:
-        from jarvis.core.isolation import MultiUserIsolation
+        from cognithor.core.isolation import MultiUserIsolation
 
         iso = MultiUserIsolation()
         agents = [f"agent_{i}" for i in range(10)]
@@ -48,7 +48,7 @@ class TestConcurrentSessionIsolation:
         assert len(set(keys)) == 10
 
     def test_same_user_different_agents_no_data_leak(self) -> None:
-        from jarvis.core.isolation import MultiUserIsolation
+        from cognithor.core.isolation import MultiUserIsolation
 
         iso = MultiUserIsolation()
         scope_coder = iso.get_or_create_scope("alex", "coder")
@@ -68,7 +68,7 @@ class TestConcurrentSessionIsolation:
 
 class TestConcurrentWorkspaceGuard:
     def test_registered_agent_allowed_in_own_workspace(self, tmp_path: Path) -> None:
-        from jarvis.core.isolation import WorkspaceGuard
+        from cognithor.core.isolation import WorkspaceGuard
 
         guard = WorkspaceGuard(tmp_path)
         guard.register_agent("coder")
@@ -76,7 +76,7 @@ class TestConcurrentWorkspaceGuard:
         assert guard.check_access("coder", tmp_path / "coder" / "file.py")
 
     def test_agent_blocked_from_other_workspace(self, tmp_path: Path) -> None:
-        from jarvis.core.isolation import WorkspaceGuard
+        from cognithor.core.isolation import WorkspaceGuard
 
         guard = WorkspaceGuard(tmp_path)
         guard.register_agent("coder")
@@ -86,7 +86,7 @@ class TestConcurrentWorkspaceGuard:
         assert not blocked
 
     def test_violations_logged(self, tmp_path: Path) -> None:
-        from jarvis.core.isolation import WorkspaceGuard
+        from cognithor.core.isolation import WorkspaceGuard
 
         guard = WorkspaceGuard(tmp_path)
         guard.register_agent("coder")
@@ -98,7 +98,7 @@ class TestConcurrentWorkspaceGuard:
         assert violations[0]["agent_id"] == "coder"
 
     def test_multiple_agents_separate_workspaces(self, tmp_path: Path) -> None:
-        from jarvis.core.isolation import WorkspaceGuard
+        from cognithor.core.isolation import WorkspaceGuard
 
         guard = WorkspaceGuard(tmp_path)
         agents = ["agent_a", "agent_b", "agent_c", "agent_d", "agent_e"]
@@ -112,7 +112,7 @@ class TestConcurrentWorkspaceGuard:
                     assert not guard.check_access(agent, tmp_path / other / "data.db")
 
     def test_unregistered_agent_blocked(self, tmp_path: Path) -> None:
-        from jarvis.core.isolation import WorkspaceGuard
+        from cognithor.core.isolation import WorkspaceGuard
 
         guard = WorkspaceGuard(tmp_path)
         assert not guard.check_access("unknown", tmp_path / "unknown" / "file.py")
@@ -125,7 +125,7 @@ class TestConcurrentWorkspaceGuard:
 
 class TestConcurrentQuotas:
     def test_independent_rate_limits(self) -> None:
-        from jarvis.core.isolation import RateLimiter
+        from cognithor.core.isolation import RateLimiter
 
         limiter = RateLimiter()
         # Agent A: 3 Anfragen mit Limit 3/min
@@ -137,7 +137,7 @@ class TestConcurrentQuotas:
         assert limiter.check_and_consume("agent_b", max_per_minute=3)
 
     def test_quota_per_agent(self) -> None:
-        from jarvis.core.isolation import AgentResourceQuota
+        from cognithor.core.isolation import AgentResourceQuota
 
         quota_a = AgentResourceQuota(agent_id="coder", daily_token_budget=1000)
         quota_b = AgentResourceQuota(agent_id="researcher", daily_token_budget=1000)
@@ -149,7 +149,7 @@ class TestConcurrentQuotas:
         assert quota_b.check_token_budget(300)  # 200 + 300 <= 1000
 
     def test_quota_utilization(self) -> None:
-        from jarvis.core.isolation import AgentResourceQuota
+        from cognithor.core.isolation import AgentResourceQuota
 
         quota = AgentResourceQuota(agent_id="test", daily_token_budget=1000)
         quota.consume_tokens(500)
@@ -164,7 +164,7 @@ class TestConcurrentQuotas:
 
 class TestConcurrentAuthGateway:
     def test_sso_creates_per_agent_tokens(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         result = gw.login("alex", ["coder", "researcher", "assistant"])
@@ -175,7 +175,7 @@ class TestConcurrentAuthGateway:
         assert agent_ids == {"coder", "researcher", "assistant"}
 
     def test_token_from_agent_a_cannot_act_as_agent_b(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         result = gw.login("alex", ["coder", "researcher"])
@@ -186,7 +186,7 @@ class TestConcurrentAuthGateway:
         assert token.agent_id != "researcher"
 
     def test_revoke_one_agent_keeps_others(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         result = gw.login("alex", ["coder", "researcher"])
@@ -201,7 +201,7 @@ class TestConcurrentAuthGateway:
         assert gw.validate_token(raw_researcher) is not None
 
     def test_concurrent_sessions_per_user(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         gw.login("alex", ["coder", "researcher", "assistant"])
@@ -212,7 +212,7 @@ class TestConcurrentAuthGateway:
         assert agent_ids == {"coder", "researcher", "assistant"}
 
     def test_logout_ends_all_agent_sessions(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         gw.login("alex", ["coder", "researcher"])
@@ -222,7 +222,7 @@ class TestConcurrentAuthGateway:
         assert len(gw.active_sessions("alex")) == 0
 
     def test_scoped_tokens_respect_boundaries(self) -> None:
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.gateway.auth import AuthGateway
 
         gw = AuthGateway()
         _, token = gw.create_token("alex", "coder", scopes=["read", "execute"])
@@ -238,7 +238,7 @@ class TestConcurrentAuthGateway:
 
 class TestConcurrentHeartbeat:
     def test_tasks_isolated_per_agent(self) -> None:
-        from jarvis.core.agent_heartbeat import AgentHeartbeatScheduler, AgentTask
+        from cognithor.core.agent_heartbeat import AgentHeartbeatScheduler, AgentTask
 
         sched = AgentHeartbeatScheduler()
         sched.add_task(AgentTask(task_id="build", agent_id="coder", name="Build"))
@@ -252,7 +252,7 @@ class TestConcurrentHeartbeat:
         assert "search" not in coder_ids
 
     def test_task_execution_scoped(self) -> None:
-        from jarvis.core.agent_heartbeat import AgentHeartbeatScheduler, AgentTask
+        from cognithor.core.agent_heartbeat import AgentHeartbeatScheduler, AgentTask
 
         sched = AgentHeartbeatScheduler()
         sched.add_task(AgentTask(task_id="t1", agent_id="coder", name="Build"))
@@ -265,7 +265,7 @@ class TestConcurrentHeartbeat:
         assert sched.get_task("researcher", "t2").run_count == 0
 
     def test_dashboard_shows_all_agents(self) -> None:
-        from jarvis.core.agent_heartbeat import (
+        from cognithor.core.agent_heartbeat import (
             AgentHeartbeatConfig,
             AgentHeartbeatScheduler,
             AgentTask,
@@ -296,7 +296,7 @@ class TestConcurrentHeartbeat:
 
 class TestConcurrentInteractionState:
     def test_interactions_scoped_to_agent(self) -> None:
-        from jarvis.channels.commands import InteractionStore, InteractionType
+        from cognithor.channels.commands import InteractionStore, InteractionType
 
         store = InteractionStore()
         s1 = store.create(InteractionType.BUTTON_CLICK, "u1", agent_id="coder")
@@ -307,7 +307,7 @@ class TestConcurrentInteractionState:
         assert s1.interaction_id != s2.interaction_id
 
     def test_resolve_only_own_interaction(self) -> None:
-        from jarvis.channels.commands import InteractionStore, InteractionType
+        from cognithor.channels.commands import InteractionStore, InteractionType
 
         store = InteractionStore()
         s_coder = store.create(InteractionType.BUTTON_CLICK, "u1", agent_id="coder")
@@ -319,7 +319,7 @@ class TestConcurrentInteractionState:
         assert not s_researcher.resolved
 
     def test_many_agents_pending_interactions(self) -> None:
-        from jarvis.channels.commands import InteractionStore, InteractionType
+        from cognithor.channels.commands import InteractionStore, InteractionType
 
         store = InteractionStore()
         for i in range(10):
@@ -336,7 +336,7 @@ class TestConcurrentInteractionState:
 
 class TestConcurrentRBAC:
     def test_user_role_restricts_agent_access(self) -> None:
-        from jarvis.gateway.wizards import DashboardUser, UserRole
+        from cognithor.gateway.wizards import DashboardUser, UserRole
 
         admin = DashboardUser(user_id="admin", display_name="Admin", role=UserRole.ADMIN)
         user = DashboardUser(
@@ -352,7 +352,7 @@ class TestConcurrentRBAC:
         assert not user.can_access_agent("researcher")
 
     def test_multiple_users_different_permissions(self) -> None:
-        from jarvis.gateway.wizards import RBACManager, UserRole
+        from cognithor.gateway.wizards import RBACManager, UserRole
 
         rbac = RBACManager()
         rbac.add_user("admin", "Admin", UserRole.ADMIN)
@@ -374,13 +374,13 @@ class TestConcurrentRBAC:
 class TestEndToEndIsolation:
     def test_full_isolation_scenario(self, tmp_path: Path) -> None:
         """Kompletter Durchlauf: 3 Agents, vollständig isoliert."""
-        from jarvis.core.agent_heartbeat import (
+        from cognithor.core.agent_heartbeat import (
             AgentHeartbeatConfig,
             AgentHeartbeatScheduler,
             AgentTask,
         )
-        from jarvis.core.isolation import MultiUserIsolation, WorkspaceGuard
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.core.isolation import MultiUserIsolation, WorkspaceGuard
+        from cognithor.gateway.auth import AuthGateway
 
         auth = AuthGateway()
         isolation = MultiUserIsolation()
@@ -435,8 +435,8 @@ class TestEndToEndIsolation:
 
     def test_two_users_five_agents_isolation(self) -> None:
         """2 Users mit je 5 Agents -> vollständig isoliert."""
-        from jarvis.core.isolation import MultiUserIsolation
-        from jarvis.gateway.auth import AuthGateway
+        from cognithor.core.isolation import MultiUserIsolation
+        from cognithor.gateway.auth import AuthGateway
 
         auth = AuthGateway()
         isolation = MultiUserIsolation()

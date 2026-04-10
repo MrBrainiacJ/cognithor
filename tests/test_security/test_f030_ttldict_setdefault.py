@@ -16,7 +16,7 @@ import time
 
 import pytest
 
-from jarvis.utils.ttl_dict import TTLDict
+from cognithor.utils.ttl_dict import TTLDict
 
 # ============================================================================
 # dict-kompatibles Verhalten

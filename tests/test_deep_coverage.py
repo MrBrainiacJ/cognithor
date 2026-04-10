@@ -35,7 +35,7 @@ import pytest
 
 class TestA2AHTTPHandler:
     def test_init_and_response_headers(self):
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         adapter = MagicMock()
         handler = A2AHTTPHandler(adapter)
@@ -43,7 +43,7 @@ class TestA2AHTTPHandler:
         assert "Content-Type" in headers
 
     def test_extract_token_bearer(self):
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         handler = A2AHTTPHandler(MagicMock())
         assert handler._extract_token("Bearer abc123") == "abc123"
@@ -52,7 +52,7 @@ class TestA2AHTTPHandler:
         assert handler._extract_token(None) is None
 
     async def test_handle_agent_card(self):
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         adapter = MagicMock()
         adapter.get_agent_card.return_value = {"name": "Jarvis"}
@@ -61,7 +61,7 @@ class TestA2AHTTPHandler:
         assert result == {"name": "Jarvis"}
 
     async def test_handle_jsonrpc(self):
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         adapter = MagicMock()
         adapter.handle_a2a_request = AsyncMock(return_value={"jsonrpc": "2.0", "result": "ok"})
@@ -74,7 +74,7 @@ class TestA2AHTTPHandler:
         assert result["result"] == "ok"
 
     async def test_handle_health_enabled(self):
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         adapter = MagicMock()
         adapter.enabled = True
@@ -85,7 +85,7 @@ class TestA2AHTTPHandler:
         assert result["enabled"] is True
 
     async def test_handle_health_disabled(self):
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         adapter = MagicMock()
         adapter.enabled = False
@@ -96,7 +96,7 @@ class TestA2AHTTPHandler:
 
     def test_register_routes_no_starlette(self):
         """When starlette is not available, register_routes returns early."""
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         handler = A2AHTTPHandler(MagicMock())
         # Temporarily make starlette unimportable
@@ -115,7 +115,7 @@ class TestA2AHTTPHandler:
 
     def test_register_routes_with_starlette(self):
         """When starlette is available, register_routes decorates app."""
-        from jarvis.a2a.http_handler import A2AHTTPHandler
+        from cognithor.a2a.http_handler import A2AHTTPHandler
 
         handler = A2AHTTPHandler(MagicMock())
         app = MagicMock()
@@ -158,10 +158,10 @@ class TestBrowserTools:
         return mcp
 
     def test_register_browser_use_tools_returns_agent(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent_inst = MagicMock()
             MockAgent.return_value = agent_inst
             result = register_browser_use_tools(mcp)
@@ -170,20 +170,20 @@ class TestBrowserTools:
             assert len(mcp._tools) >= 10
 
     async def test_navigate_no_url(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_navigate"]({}))
             assert "error" in result
 
     async def test_navigate_start_fails(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.is_running = False
             agent.start = AsyncMock(return_value=False)
@@ -193,10 +193,10 @@ class TestBrowserTools:
             assert "error" in result
 
     async def test_navigate_success(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.is_running = True
             state = MagicMock()
@@ -208,10 +208,10 @@ class TestBrowserTools:
             assert result["url"] == "http://x.com"
 
     async def test_click_by_description(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -222,10 +222,10 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_click_by_selector(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -236,30 +236,30 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_click_no_params(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_click"]({}))
             assert "error" in result
 
     async def test_fill_no_selector(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_fill"]({}))
             assert "error" in result
 
     async def test_fill_success(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -272,20 +272,20 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_fill_form_no_data(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_fill_form"]({}))
             assert "error" in result
 
     async def test_fill_form_success(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -298,10 +298,10 @@ class TestBrowserTools:
             assert result["filled"] == 1
 
     async def test_screenshot_success(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.success = True
@@ -314,10 +314,10 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_screenshot_failure(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.success = False
@@ -329,10 +329,10 @@ class TestBrowserTools:
             assert result["success"] is False
 
     async def test_extract_text(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.extract_text = AsyncMock(return_value="Hello World")
             MockAgent.return_value = agent
@@ -341,10 +341,10 @@ class TestBrowserTools:
             assert result["text"] == "Hello World"
 
     async def test_extract_tables(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.extract_tables = AsyncMock(return_value=[["a", "b"]])
             MockAgent.return_value = agent
@@ -353,10 +353,10 @@ class TestBrowserTools:
             assert "tables" in result
 
     async def test_extract_links(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.extract_links = AsyncMock(return_value=[{"href": "http://x.com"}])
             MockAgent.return_value = agent
@@ -365,20 +365,20 @@ class TestBrowserTools:
             assert "links" in result
 
     async def test_extract_unknown_mode(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_extract"]({"mode": "xyz"}))
             assert "error" in result
 
     async def test_analyze(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             state = MagicMock()
             state.to_summary.return_value = "Summary"
@@ -390,20 +390,20 @@ class TestBrowserTools:
             assert "summary" in result
 
     async def test_execute_js_no_script(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_execute_js"]({}))
             assert "error" in result
 
     async def test_execute_js_blocked(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(
@@ -413,20 +413,20 @@ class TestBrowserTools:
             assert "Blocked" in result["error"]
 
     async def test_execute_js_too_long(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_execute_js"]({"script": "x" * 60000}))
             assert "error" in result
 
     async def test_execute_js_success(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -439,10 +439,10 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_tab_new(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -455,10 +455,10 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_tab_close(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -469,10 +469,10 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_tab_switch(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -483,10 +483,10 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_tab_list(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.page_count = 3
             agent._active_page_idx = 0
@@ -496,20 +496,20 @@ class TestBrowserTools:
             assert result["tab_count"] == 3
 
     async def test_tab_unknown_action(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp)
             result = json.loads(await mcp._tools["browser_tab"]({"action": "foo"}))
             assert "error" in result
 
     async def test_key_press(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             res = MagicMock()
             res.to_dict.return_value = {"success": True}
@@ -520,10 +520,10 @@ class TestBrowserTools:
             assert result["success"] is True
 
     async def test_vision_analyze_not_running(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.is_running = False
             agent.start = AsyncMock(return_value=False)
@@ -533,10 +533,10 @@ class TestBrowserTools:
             assert "error" in result
 
     async def test_vision_analyze_no_vision(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.is_running = True
             agent._vision = None
@@ -546,20 +546,20 @@ class TestBrowserTools:
             assert "error" in result
 
     async def test_vision_find_no_desc(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             MockAgent.return_value = MagicMock()
             register_browser_use_tools(mcp, vision_analyzer=MagicMock())
             result = json.loads(await mcp._tools["browser_vision_find"]({}))
             assert "error" in result
 
     async def test_vision_screenshot_not_running(self):
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp = self._make_mock_mcp()
-        with patch("jarvis.browser.tools.BrowserAgent") as MockAgent:
+        with patch("cognithor.browser.tools.BrowserAgent") as MockAgent:
             agent = MagicMock()
             agent.is_running = False
             agent.start = AsyncMock(return_value=False)
@@ -576,26 +576,26 @@ class TestBrowserTools:
 
 class TestSessionManager:
     def test_init_default_path(self):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager()
         assert "sessions" in str(sm._storage_dir)
 
     def test_init_custom_path(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager(storage_dir=tmp_path)
         assert sm._storage_dir == tmp_path
 
     def test_session_snapshot_post_init(self):
-        from jarvis.browser.session_manager import SessionSnapshot
+        from cognithor.browser.session_manager import SessionSnapshot
 
         snap = SessionSnapshot(session_id="s1", domain="example.com")
         assert snap.created_at != ""
         assert snap.updated_at != ""
 
     def test_save_and_get_session(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(
@@ -611,7 +611,7 @@ class TestSessionManager:
         assert loaded.domain == "example.com"
 
     def test_load_from_disk(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(session_id="s2", domain="test.com")
@@ -623,13 +623,13 @@ class TestSessionManager:
         assert loaded.domain == "test.com"
 
     def test_get_nonexistent(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager(storage_dir=tmp_path)
         assert sm.get_session("nonexistent") is None
 
     def test_delete_session(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         sm.save_session(SessionSnapshot(session_id="s1", domain="x.com"))
@@ -638,7 +638,7 @@ class TestSessionManager:
         assert sm.delete_session("s1") is False
 
     def test_list_sessions(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         sm.save_session(SessionSnapshot(session_id="s1", domain="a.com"))
@@ -647,14 +647,14 @@ class TestSessionManager:
         assert len(sessions) == 2
 
     def test_list_sessions_empty_dir(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager(storage_dir=tmp_path / "nonexistent")
         sessions = sm.list_sessions()
         assert sessions == []
 
     async def test_save_from_page(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager(storage_dir=tmp_path)
         page = MagicMock()
@@ -671,7 +671,7 @@ class TestSessionManager:
         assert snap.visit_count == 1
 
     async def test_save_from_page_errors(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager(storage_dir=tmp_path)
         page = MagicMock()
@@ -685,7 +685,7 @@ class TestSessionManager:
         assert snap is not None  # Should still succeed
 
     async def test_restore_to_context(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(
@@ -701,7 +701,7 @@ class TestSessionManager:
         context.add_cookies.assert_called_once()
 
     async def test_restore_to_context_no_cookies(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(session_id="s1", domain="x.com", cookies=[])
@@ -710,7 +710,7 @@ class TestSessionManager:
         assert result is False
 
     async def test_restore_to_context_error(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(
@@ -725,7 +725,7 @@ class TestSessionManager:
         assert result is False
 
     async def test_restore_local_storage(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(
@@ -740,7 +740,7 @@ class TestSessionManager:
         assert result is True
 
     async def test_restore_local_storage_no_data(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(session_id="s1", domain="x.com")
@@ -749,7 +749,7 @@ class TestSessionManager:
         assert result is False
 
     async def test_restore_local_storage_error(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(
@@ -764,7 +764,7 @@ class TestSessionManager:
         assert result is False
 
     def test_cleanup(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         snap = SessionSnapshot(session_id="old", domain="x.com")
@@ -782,7 +782,7 @@ class TestSessionManager:
         assert removed == 1
 
     def test_stats(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager, SessionSnapshot
+        from cognithor.browser.session_manager import SessionManager, SessionSnapshot
 
         sm = SessionManager(storage_dir=tmp_path)
         sm.save_session(SessionSnapshot(session_id="s1", domain="testdomain"))
@@ -798,7 +798,7 @@ class TestSessionManager:
 
 class TestCronEngine:
     async def test_start_stop(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -817,7 +817,7 @@ class TestCronEngine:
     async def test_start_loads_enabled_jobs(self, tmp_path):
         import yaml
 
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_data = {
             "jobs": {
@@ -839,8 +839,8 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_schedule_invalid_cron(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
-        from jarvis.models import CronJob
+        from cognithor.cron.engine import CronEngine
+        from cognithor.models import CronJob
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -852,8 +852,8 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_execute_job_no_handler(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
-        from jarvis.models import CronJob
+        from cognithor.cron.engine import CronEngine
+        from cognithor.models import CronJob
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -865,8 +865,8 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_execute_job_with_handler(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
-        from jarvis.models import CronJob
+        from cognithor.cron.engine import CronEngine
+        from cognithor.models import CronJob
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -879,8 +879,8 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_execute_job_with_agent(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
-        from jarvis.models import CronJob
+        from cognithor.cron.engine import CronEngine
+        from cognithor.models import CronJob
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -894,8 +894,8 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_execute_job_handler_error(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
-        from jarvis.models import CronJob
+        from cognithor.cron.engine import CronEngine
+        from cognithor.models import CronJob
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -908,8 +908,8 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_add_runtime_job(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
-        from jarvis.models import CronJob
+        from cognithor.cron.engine import CronEngine
+        from cognithor.models import CronJob
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -922,8 +922,8 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_remove_runtime_job(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
-        from jarvis.models import CronJob
+        from cognithor.cron.engine import CronEngine
+        from cognithor.models import CronJob
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -940,7 +940,7 @@ class TestCronEngine:
     async def test_list_jobs(self, tmp_path):
         import yaml
 
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_data = {
             "jobs": {
@@ -959,7 +959,7 @@ class TestCronEngine:
     async def test_get_next_run_times(self, tmp_path):
         import yaml
 
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_data = {
             "jobs": {
@@ -977,7 +977,7 @@ class TestCronEngine:
     async def test_trigger_now(self, tmp_path):
         import yaml
 
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         handler = AsyncMock()
         jobs_data = {
@@ -997,7 +997,7 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_add_system_job(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -1013,7 +1013,7 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_set_handler(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         engine = CronEngine()
         handler = AsyncMock()
@@ -1021,14 +1021,14 @@ class TestCronEngine:
         assert engine._handler is handler
 
     def test_job_count_no_store(self):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         engine = CronEngine()
         assert engine.job_count == 0
         assert engine.has_enabled_jobs is False
 
     async def test_heartbeat_with_config(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -1054,7 +1054,7 @@ class TestCronEngine:
         await engine.stop()
 
     async def test_heartbeat_no_checklist(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -1077,7 +1077,7 @@ class TestCronEngine:
         await engine.stop()
 
     def test_parse_cron_fields(self):
-        from jarvis.cron.engine import _parse_cron_fields
+        from cognithor.cron.engine import _parse_cron_fields
 
         fields = _parse_cron_fields("0 7 * * 1-5")
         assert fields["minute"] == "0"
@@ -1085,13 +1085,13 @@ class TestCronEngine:
         assert fields["day_of_week"] == "1-5"
 
     def test_parse_cron_fields_invalid(self):
-        from jarvis.cron.engine import _parse_cron_fields
+        from cognithor.cron.engine import _parse_cron_fields
 
         with pytest.raises(ValueError):
             _parse_cron_fields("0 7 *")
 
     async def test_remove_scheduled_nonexistent(self, tmp_path):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         jobs_yaml = tmp_path / "jobs.yaml"
         jobs_yaml.write_text("jobs: {}", encoding="utf-8")
@@ -1109,7 +1109,7 @@ class TestCronEngine:
 
 class TestCronJobs:
     def test_load_default_creation(self, tmp_path):
-        from jarvis.cron.jobs import JobStore
+        from cognithor.cron.jobs import JobStore
 
         store = JobStore(tmp_path / "cron" / "jobs.yaml")
         jobs = store.load()
@@ -1120,7 +1120,7 @@ class TestCronJobs:
     def test_load_existing_dict_format(self, tmp_path):
         import yaml
 
-        from jarvis.cron.jobs import JobStore
+        from cognithor.cron.jobs import JobStore
 
         data = {
             "jobs": {
@@ -1142,7 +1142,7 @@ class TestCronJobs:
     def test_load_existing_list_format(self, tmp_path):
         import yaml
 
-        from jarvis.cron.jobs import JobStore
+        from cognithor.cron.jobs import JobStore
 
         data = {
             "jobs": [
@@ -1162,7 +1162,7 @@ class TestCronJobs:
         assert "list_job" in jobs
 
     def test_load_invalid_yaml(self, tmp_path):
-        from jarvis.cron.jobs import JobStore
+        from cognithor.cron.jobs import JobStore
 
         path = tmp_path / "jobs.yaml"
         # Write truly invalid YAML (mapping with bad indentation / unbalanced)
@@ -1174,7 +1174,7 @@ class TestCronJobs:
     def test_get_enabled(self, tmp_path):
         import yaml
 
-        from jarvis.cron.jobs import JobStore
+        from cognithor.cron.jobs import JobStore
 
         data = {
             "jobs": {
@@ -1191,8 +1191,8 @@ class TestCronJobs:
         assert enabled[0].name == "j1"
 
     def test_add_job(self, tmp_path):
-        from jarvis.cron.jobs import JobStore
-        from jarvis.models import CronJob
+        from cognithor.cron.jobs import JobStore
+        from cognithor.models import CronJob
 
         path = tmp_path / "jobs.yaml"
         path.write_text("jobs: {}", encoding="utf-8")
@@ -1208,8 +1208,8 @@ class TestCronJobs:
         assert "new_job" in data["jobs"]
 
     def test_remove_job(self, tmp_path):
-        from jarvis.cron.jobs import JobStore
-        from jarvis.models import CronJob
+        from cognithor.cron.jobs import JobStore
+        from cognithor.models import CronJob
 
         path = tmp_path / "jobs.yaml"
         path.write_text("jobs: {}", encoding="utf-8")
@@ -1220,8 +1220,8 @@ class TestCronJobs:
         assert store.remove_job("nonexistent") is False
 
     def test_toggle_job(self, tmp_path):
-        from jarvis.cron.jobs import JobStore
-        from jarvis.models import CronJob
+        from cognithor.cron.jobs import JobStore
+        from cognithor.models import CronJob
 
         path = tmp_path / "jobs.yaml"
         path.write_text("jobs: {}", encoding="utf-8")
@@ -1233,7 +1233,7 @@ class TestCronJobs:
         assert store.toggle_job("nonexistent", True) is False
 
     def test_governance_analysis(self):
-        from jarvis.cron.jobs import governance_analysis
+        from cognithor.cron.jobs import governance_analysis
 
         # No governance agent
         gateway = MagicMock()
@@ -1246,8 +1246,8 @@ class TestCronJobs:
         asyncio.get_event_loop().run_until_complete(governance_analysis(gateway))
 
     def test_add_job_with_agent(self, tmp_path):
-        from jarvis.cron.jobs import JobStore
-        from jarvis.models import CronJob
+        from cognithor.cron.jobs import JobStore
+        from cognithor.models import CronJob
 
         path = tmp_path / "jobs.yaml"
         path.write_text("jobs: {}", encoding="utf-8")
@@ -1268,7 +1268,7 @@ class TestCronJobs:
 
 class TestDBFactory:
     def test_create_sqlite_default(self, tmp_path):
-        from jarvis.db.factory import create_backend
+        from cognithor.db.factory import create_backend
 
         config = MagicMock()
         config.database = None
@@ -1277,7 +1277,7 @@ class TestDBFactory:
         assert backend.backend_type == "sqlite"
 
     def test_create_sqlite_explicit(self, tmp_path):
-        from jarvis.db.factory import create_backend
+        from cognithor.db.factory import create_backend
 
         config = MagicMock()
         config.database = MagicMock()
@@ -1287,7 +1287,7 @@ class TestDBFactory:
         assert backend.backend_type == "sqlite"
 
     def test_create_postgresql(self):
-        from jarvis.db.factory import create_backend
+        from cognithor.db.factory import create_backend
 
         config = MagicMock()
         config.database = MagicMock()
@@ -1303,7 +1303,7 @@ class TestDBFactory:
         assert backend.backend_type == "postgresql"
 
     def test_create_unknown_backend(self):
-        from jarvis.db.factory import create_backend
+        from cognithor.db.factory import create_backend
 
         config = MagicMock()
         config.database = MagicMock()
@@ -1319,20 +1319,20 @@ class TestDBFactory:
 
 class TestSQLiteBackend:
     def test_init(self, tmp_path):
-        from jarvis.db.sqlite_backend import SQLiteBackend
+        from cognithor.db.sqlite_backend import SQLiteBackend
 
         db = SQLiteBackend(tmp_path / "test.db")
         assert db.backend_type == "sqlite"
         assert db.placeholder == "?"
 
     def test_conn_property(self, tmp_path):
-        from jarvis.db.sqlite_backend import SQLiteBackend
+        from cognithor.db.sqlite_backend import SQLiteBackend
 
         db = SQLiteBackend(tmp_path / "test.db")
         assert db.conn is not None
 
     async def test_execute_and_fetchall(self, tmp_path):
-        from jarvis.db.sqlite_backend import SQLiteBackend
+        from cognithor.db.sqlite_backend import SQLiteBackend
 
         db = SQLiteBackend(tmp_path / "test.db")
         await db.executescript("CREATE TABLE t1 (id INTEGER PRIMARY KEY, name TEXT)")
@@ -1343,7 +1343,7 @@ class TestSQLiteBackend:
         assert rows[0]["name"] == "Alice"
 
     async def test_fetchone(self, tmp_path):
-        from jarvis.db.sqlite_backend import SQLiteBackend
+        from cognithor.db.sqlite_backend import SQLiteBackend
 
         db = SQLiteBackend(tmp_path / "test.db")
         await db.executescript("CREATE TABLE t2 (id INTEGER PRIMARY KEY, val TEXT)")
@@ -1355,7 +1355,7 @@ class TestSQLiteBackend:
         assert row2 is None
 
     async def test_executemany(self, tmp_path):
-        from jarvis.db.sqlite_backend import SQLiteBackend
+        from cognithor.db.sqlite_backend import SQLiteBackend
 
         db = SQLiteBackend(tmp_path / "test.db")
         await db.executescript("CREATE TABLE t3 (id INTEGER PRIMARY KEY, n TEXT)")
@@ -1364,7 +1364,7 @@ class TestSQLiteBackend:
         assert len(rows) == 3
 
     async def test_commit_and_close(self, tmp_path):
-        from jarvis.db.sqlite_backend import SQLiteBackend
+        from cognithor.db.sqlite_backend import SQLiteBackend
 
         db = SQLiteBackend(tmp_path / "test.db")
         await db.commit()
@@ -1406,7 +1406,7 @@ class TestPostgreSQLBackend:
         with patch.dict(sys.modules, {"psycopg": None, "psycopg.conninfo": None}):
             from importlib import reload
 
-            import jarvis.db.postgresql_backend as pg_mod
+            import cognithor.db.postgresql_backend as pg_mod
 
             reload(pg_mod)
             backend = pg_mod.PostgreSQLBackend(host="localhost", password="s3cret")
@@ -1415,14 +1415,14 @@ class TestPostgreSQLBackend:
             assert "localhost" in backend._conninfo
 
     async def test_ensure_pool_no_psycopg_pool(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         with patch.dict(sys.modules, {"psycopg_pool": None}), pytest.raises(ImportError):
             await backend._ensure_pool()
 
     async def test_execute_with_mocked_pool(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         mock_cursor = MagicMock()
@@ -1434,7 +1434,7 @@ class TestPostgreSQLBackend:
         assert result is mock_cursor
 
     async def test_fetchone_with_mocked_pool(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         mock_cursor = AsyncMock()
@@ -1447,7 +1447,7 @@ class TestPostgreSQLBackend:
         assert row == {"id": 1, "name": "Alice"}
 
     async def test_fetchone_returns_none(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         mock_cursor = AsyncMock()
@@ -1459,7 +1459,7 @@ class TestPostgreSQLBackend:
         assert row is None
 
     async def test_fetchall_with_mocked_pool(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         mock_cursor = AsyncMock()
@@ -1472,7 +1472,7 @@ class TestPostgreSQLBackend:
         assert len(rows) == 2
 
     async def test_executemany_with_mocked_pool(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         mock_cursor = AsyncMock()
@@ -1482,7 +1482,7 @@ class TestPostgreSQLBackend:
         await backend.executemany("INSERT INTO t VALUES (%s)", [(1,), (2,)])
 
     async def test_executescript_with_mocked_pool(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         mock_conn = AsyncMock()
@@ -1493,13 +1493,13 @@ class TestPostgreSQLBackend:
         assert mock_conn.execute.call_count == 2
 
     async def test_commit_noop(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         await backend.commit()  # Should be a no-op
 
     async def test_close(self):
-        from jarvis.db.postgresql_backend import PostgreSQLBackend
+        from cognithor.db.postgresql_backend import PostgreSQLBackend
 
         backend = PostgreSQLBackend()
         mock_pool = AsyncMock()
@@ -1526,8 +1526,8 @@ class TestReplayEngine:
         return gk
 
     def test_replay_run_no_plans(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import RunRecord
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import RunRecord
 
         gk = self._make_gatekeeper()
         engine = ReplayEngine(gk)
@@ -1537,8 +1537,8 @@ class TestReplayEngine:
         assert len(result.divergences) == 0
 
     def test_replay_run_with_plan_no_divergence(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import (
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import (
             ActionPlan,
             GateDecision,
             GateStatus,
@@ -1563,8 +1563,8 @@ class TestReplayEngine:
         assert result.would_have_succeeded is True
 
     def test_replay_run_with_divergence_new_block(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import (
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import (
             ActionPlan,
             GateDecision,
             GateStatus,
@@ -1594,8 +1594,8 @@ class TestReplayEngine:
         assert result.would_have_succeeded is False
 
     def test_replay_run_with_divergence_new_allow(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import (
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import (
             ActionPlan,
             GateDecision,
             GateStatus,
@@ -1620,8 +1620,8 @@ class TestReplayEngine:
         assert result.would_have_succeeded is True
 
     def test_replay_run_with_new_policies(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import RunRecord
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import RunRecord
 
         gk = self._make_gatekeeper()
         engine = ReplayEngine(gk)
@@ -1633,8 +1633,8 @@ class TestReplayEngine:
         assert gk.set_policies.call_count == 2  # swap + restore
 
     def test_counterfactual_analysis(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import RunRecord
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import RunRecord
 
         gk = self._make_gatekeeper()
         engine = ReplayEngine(gk)
@@ -1649,8 +1649,8 @@ class TestReplayEngine:
         assert results[1].policy_variant_name == "lenient"
 
     def test_compare_decisions_missing(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import GateDecision, GateStatus, PlannedAction
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import GateDecision, GateStatus, PlannedAction
 
         gk = self._make_gatekeeper()
         engine = ReplayEngine(gk)
@@ -1663,8 +1663,8 @@ class TestReplayEngine:
         assert divs[0].replayed_status == "MISSING"
 
     def test_swap_policies_parse_error(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
-        from jarvis.models import RunRecord
+        from cognithor.forensics.replay_engine import ReplayEngine
+        from cognithor.models import RunRecord
 
         gk = self._make_gatekeeper()
         gk._parse_rule.side_effect = Exception("bad rule")
@@ -1682,7 +1682,7 @@ class TestReplayEngine:
 
 class TestAuditDeep:
     def test_mask_credentials_patterns(self):
-        from jarvis.security.audit import mask_credentials
+        from cognithor.security.audit import mask_credentials
 
         # Bearer token
         assert "***" in mask_credentials("Bearer eyJhbGciOiJIUzI1NiJ9.abc")
@@ -1698,7 +1698,7 @@ class TestAuditDeep:
         assert mask_credentials("") == ""
 
     def test_mask_dict_list_values(self):
-        from jarvis.security.audit import mask_dict
+        from cognithor.security.audit import mask_dict
 
         data = {"keys": ["Bearer abc123456789", "normal text"]}
         masked = mask_dict(data)
@@ -1706,7 +1706,7 @@ class TestAuditDeep:
         assert masked["keys"][1] == "normal text"
 
     def test_mask_dict_non_string_values(self):
-        from jarvis.security.audit import mask_dict
+        from cognithor.security.audit import mask_dict
 
         data = {"count": 42, "active": True, "nested": {"val": 3.14}}
         masked = mask_dict(data)
@@ -1714,7 +1714,7 @@ class TestAuditDeep:
         assert masked["active"] is True
 
     def test_audit_write_error(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         # Force write error by making log_path a directory
@@ -1723,7 +1723,7 @@ class TestAuditDeep:
             trail.record_event("s1", "test")
 
     def test_query_with_tool_and_status_filters(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         # Record a regular event
@@ -1733,7 +1733,7 @@ class TestAuditDeep:
         assert len(results) == 0
 
     def test_verify_chain_tampered(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         trail.record_event("s1", "ev1")
@@ -1756,7 +1756,7 @@ class TestAuditDeep:
 
 class TestAgentVaultDeep:
     def test_vault_rotator(self):
-        from jarvis.security.agent_vault import VaultRotator
+        from cognithor.security.agent_vault import VaultRotator
 
         rotator = VaultRotator()
         assert len(rotator._policies) > 0
@@ -1764,13 +1764,13 @@ class TestAgentVaultDeep:
         assert isinstance(s, dict)
 
     def test_vault_rotator_no_defaults(self):
-        from jarvis.security.agent_vault import VaultRotator
+        from cognithor.security.agent_vault import VaultRotator
 
         rotator = VaultRotator(load_defaults=False)
         assert len(rotator._policies) == 0
 
     def test_agent_secret_properties(self):
-        from jarvis.security.agent_vault import AgentSecret, SecretType
+        from cognithor.security.agent_vault import AgentSecret, SecretType
 
         secret = AgentSecret(
             secret_id="SEC-1",
@@ -1784,7 +1784,7 @@ class TestAgentVaultDeep:
         assert d["secret_id"] == "SEC-1"
 
     def test_agent_secret_expired(self):
-        from jarvis.security.agent_vault import AgentSecret, SecretType
+        from cognithor.security.agent_vault import AgentSecret, SecretType
 
         secret = AgentSecret(
             secret_id="SEC-1",
@@ -1796,7 +1796,7 @@ class TestAgentVaultDeep:
         assert secret.is_expired is True
 
     def test_vault_expire_check(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         s = vault.store("short_lived", "value", ttl_hours=0)
@@ -1814,7 +1814,7 @@ class TestAgentVaultDeep:
 
 class TestCICDGateDeep:
     def test_evaluate_with_stages(self):
-        from jarvis.security.cicd_gate import GatePolicy, GateVerdict, SecurityGate
+        from cognithor.security.cicd_gate import GatePolicy, GateVerdict, SecurityGate
 
         gate = SecurityGate(
             policy=GatePolicy(
@@ -1841,7 +1841,7 @@ class TestCICDGateDeep:
         assert any("Fuzzing" in r for r in result.reasons)
 
     def test_evaluate_medium_low_limits(self):
-        from jarvis.security.cicd_gate import GatePolicy, GateVerdict, SecurityGate
+        from cognithor.security.cicd_gate import GatePolicy, GateVerdict, SecurityGate
 
         gate = SecurityGate(
             policy=GatePolicy(
@@ -1867,7 +1867,7 @@ class TestCICDGateDeep:
         assert result.verdict == GateVerdict.FAIL
 
     def test_continuous_red_team_probe(self):
-        from jarvis.security.cicd_gate import RedTeamProbe
+        from cognithor.security.cicd_gate import RedTeamProbe
 
         probe = RedTeamProbe(
             probe_id="P1",
@@ -1889,7 +1889,7 @@ class TestCICDGateDeep:
 
 class TestSandboxIsolationDeep:
     def test_sandbox_to_dict(self):
-        from jarvis.security.sandbox_isolation import AgentSandbox, ResourceLimit, ResourceType
+        from cognithor.security.sandbox_isolation import AgentSandbox, ResourceLimit, ResourceType
 
         sb = AgentSandbox(
             sandbox_id="sb1",
@@ -1901,7 +1901,7 @@ class TestSandboxIsolationDeep:
         assert "cpu" in d["limits"]
 
     def test_namespace_path_traversal(self):
-        from jarvis.security.sandbox_isolation import NamespaceIsolation
+        from cognithor.security.sandbox_isolation import NamespaceIsolation
 
         ni = NamespaceIsolation()
         ni.create("agent1", "tenant1")
@@ -1912,7 +1912,7 @@ class TestSandboxIsolationDeep:
         )
 
     def test_per_agent_secret_vault(self):
-        from jarvis.security.sandbox_isolation import PerAgentSecretVault
+        from cognithor.security.sandbox_isolation import PerAgentSecretVault
 
         vault = PerAgentSecretVault()
         vault.store("agent1", "api_key", "secret123")
@@ -1937,7 +1937,7 @@ class TestSandboxIsolationDeep:
         assert isinstance(s, dict)
 
     def test_sandbox_manager_stats(self):
-        from jarvis.security.sandbox_isolation import SandboxManager
+        from cognithor.security.sandbox_isolation import SandboxManager
 
         sm = SandboxManager()
         sm.create("a1")
@@ -1947,7 +1947,7 @@ class TestSandboxIsolationDeep:
         assert s["running"] == 2
 
     def test_admin_manager_stats(self):
-        from jarvis.security.sandbox_isolation import AdminManager, AdminRole
+        from cognithor.security.sandbox_isolation import AdminManager, AdminRole
 
         am = AdminManager()
         am.create("a@x.com", "t1", AdminRole.SUPER_ADMIN)
@@ -1964,7 +1964,7 @@ class TestSandboxIsolationDeep:
 
 class TestFrameworkDeep:
     def test_security_team_remove_member(self):
-        from jarvis.security.framework import SecurityTeam, TeamMember, TeamRole
+        from cognithor.security.framework import SecurityTeam, TeamMember, TeamRole
 
         team = SecurityTeam()
         m = TeamMember("M1", "Alice", TeamRole.SECURITY_ANALYST)
@@ -1973,7 +1973,7 @@ class TestFrameworkDeep:
         assert team.remove_member("M1") is False
 
     def test_security_team_auto_assign_no_match(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             SecurityIncident,
@@ -1991,7 +1991,7 @@ class TestFrameworkDeep:
         assert result is None  # No members
 
     def test_security_metrics_with_incidents(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             IncidentTracker,
@@ -2021,7 +2021,7 @@ class TestFrameworkDeep:
         assert isinstance(heatmap, dict)
 
     def test_team_member_to_dict(self):
-        from jarvis.security.framework import TeamMember, TeamRole
+        from cognithor.security.framework import TeamMember, TeamRole
 
         m = TeamMember("M1", "Bob", TeamRole.DEVELOPER, on_call=True, specialties=["python"])
         d = m.to_dict()
@@ -2029,7 +2029,7 @@ class TestFrameworkDeep:
         assert d["on_call"] is True
 
     def test_security_team_stats(self):
-        from jarvis.security.framework import SecurityTeam, TeamMember, TeamRole
+        from cognithor.security.framework import SecurityTeam, TeamMember, TeamRole
 
         team = SecurityTeam()
         team.add_member(TeamMember("M1", "Alice", TeamRole.ML_ENGINEER, on_call=True))
@@ -2038,7 +2038,7 @@ class TestFrameworkDeep:
         assert s["on_call"] == 1
 
     def test_incident_time_properties_no_dates(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             SecurityIncident,
@@ -2054,7 +2054,7 @@ class TestFrameworkDeep:
         assert inc.time_to_resolve_seconds is None
 
     def test_incident_time_invalid_dates(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             SecurityIncident,

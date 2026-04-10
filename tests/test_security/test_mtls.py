@@ -8,7 +8,7 @@ import pytest
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-from jarvis.security.mtls import (
+from cognithor.security.mtls import (
     ensure_mtls_certs,
     generate_ca,
     generate_client_cert,

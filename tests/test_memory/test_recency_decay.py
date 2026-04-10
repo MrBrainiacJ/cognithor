@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from jarvis.memory.search import recency_decay
+from cognithor.memory.search import recency_decay
 
 # Fixed "today" so tests are deterministic regardless of when they run.
 FIXED_TODAY = date(2026, 3, 5)
@@ -21,7 +21,7 @@ FIXED_TODAY = date(2026, 3, 5)
 @pytest.fixture(autouse=True)
 def _freeze_today():
     """Patch date.today() to return a fixed date for all tests."""
-    with patch("jarvis.memory.search.date") as mock_date:
+    with patch("cognithor.memory.search.date") as mock_date:
         mock_date.today.return_value = FIXED_TODAY
         # Keep side_effect-free so date(...) constructor still works
         mock_date.side_effect = lambda *a, **kw: date(*a, **kw)

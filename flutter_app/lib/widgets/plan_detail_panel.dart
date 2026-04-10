@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/jarvis_chip.dart';
-import 'package:jarvis_ui/widgets/jarvis_progress_bar.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/jarvis_chip.dart';
+import 'package:cognithor_ui/widgets/jarvis_progress_bar.dart';
 
 /// Shows plan details when plan_detail WS message arrives.
 class PlanDetailPanel extends StatelessWidget {

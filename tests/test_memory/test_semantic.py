@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.indexer import MemoryIndex
-from jarvis.memory.semantic import SemanticMemory
+from cognithor.memory.indexer import MemoryIndex
+from cognithor.memory.semantic import SemanticMemory
 
 if TYPE_CHECKING:
     from pathlib import Path

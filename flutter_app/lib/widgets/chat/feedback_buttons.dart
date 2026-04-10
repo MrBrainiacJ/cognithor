@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// Thumbs up/down feedback buttons shown below assistant messages.
 class FeedbackButtons extends StatefulWidget {

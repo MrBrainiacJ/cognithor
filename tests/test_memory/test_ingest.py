@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.memory.ingest import (
+from cognithor.memory.ingest import (
     IngestConfig,
     IngestPipeline,
     IngestResult,

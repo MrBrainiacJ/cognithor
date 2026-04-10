@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.distributed_lock import (
+from cognithor.core.distributed_lock import (
     DistributedLock,
     FileLockBackend,
     LocalLockBackend,

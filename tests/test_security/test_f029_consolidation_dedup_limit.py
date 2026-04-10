@@ -14,7 +14,7 @@ from __future__ import annotations
 import inspect
 import time
 
-from jarvis.memory.consolidation import ContentDeduplicator
+from cognithor.memory.consolidation import ContentDeduplicator
 
 # ============================================================================
 # MAX_FUZZY_ENTRIES Konfiguration

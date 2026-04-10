@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from jarvis.evolution.deep_learner import DeepLearner
-from jarvis.evolution.models import LearningPlan, SeedSource, SubGoal
+from cognithor.evolution.deep_learner import DeepLearner
+from cognithor.evolution.models import LearningPlan, SeedSource, SubGoal
 
 
 @pytest.fixture()

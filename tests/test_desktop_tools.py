@@ -21,7 +21,7 @@ def workspace(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def desktop_tools(workspace: Path):
-    from jarvis.mcp.desktop_tools import DesktopTools
+    from cognithor.mcp.desktop_tools import DesktopTools
 
     return DesktopTools(workspace)
 
@@ -47,7 +47,7 @@ def mock_config(workspace: Path) -> MagicMock:
 
 class TestRegistration:
     def test_register_desktop_tools(self, mock_mcp_client, mock_config):
-        from jarvis.mcp.desktop_tools import register_desktop_tools
+        from cognithor.mcp.desktop_tools import register_desktop_tools
 
         tools = register_desktop_tools(mock_mcp_client, mock_config)
         assert tools is not None
@@ -89,7 +89,7 @@ class TestGetClipboard:
     @pytest.mark.asyncio
     async def test_get_clipboard_text(self, desktop_tools):
         with patch(
-            "jarvis.mcp.desktop_tools._ps_get_clipboard_text",
+            "cognithor.mcp.desktop_tools._ps_get_clipboard_text",
             return_value="Hello World",
         ):
             result = await desktop_tools.get_clipboard()
@@ -101,11 +101,11 @@ class TestGetClipboard:
     async def test_get_clipboard_empty(self, desktop_tools):
         with (
             patch(
-                "jarvis.mcp.desktop_tools._ps_get_clipboard_text",
+                "cognithor.mcp.desktop_tools._ps_get_clipboard_text",
                 return_value="",
             ),
             patch(
-                "jarvis.mcp.desktop_tools._ps_get_clipboard_image",
+                "cognithor.mcp.desktop_tools._ps_get_clipboard_image",
                 return_value=False,
             ),
         ):
@@ -121,11 +121,11 @@ class TestGetClipboard:
 
         with (
             patch(
-                "jarvis.mcp.desktop_tools._ps_get_clipboard_text",
+                "cognithor.mcp.desktop_tools._ps_get_clipboard_text",
                 side_effect=RuntimeError("no text"),
             ),
             patch(
-                "jarvis.mcp.desktop_tools._ps_get_clipboard_image",
+                "cognithor.mcp.desktop_tools._ps_get_clipboard_image",
                 side_effect=mock_get_image,
             ),
         ):
@@ -146,11 +146,11 @@ class TestGetClipboard:
 
         with (
             patch(
-                "jarvis.mcp.desktop_tools._ps_get_clipboard_text",
+                "cognithor.mcp.desktop_tools._ps_get_clipboard_text",
                 side_effect=RuntimeError("no text"),
             ),
             patch(
-                "jarvis.mcp.desktop_tools._ps_get_clipboard_image",
+                "cognithor.mcp.desktop_tools._ps_get_clipboard_image",
                 side_effect=mock_get_image,
             ),
         ):
@@ -167,7 +167,7 @@ class TestGetClipboard:
 class TestSetClipboard:
     @pytest.mark.asyncio
     async def test_set_clipboard(self, desktop_tools):
-        with patch("jarvis.mcp.desktop_tools._ps_set_clipboard") as mock_set:
+        with patch("cognithor.mcp.desktop_tools._ps_set_clipboard") as mock_set:
             result = await desktop_tools.set_clipboard("Test text")
             assert result["status"] == "ok"
             assert result["chars"] == 9
@@ -185,7 +185,7 @@ class TestScreenshotDesktop:
         fake_png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
 
         with patch(
-            "jarvis.mcp.desktop_tools._try_mss_screenshot",
+            "cognithor.mcp.desktop_tools._try_mss_screenshot",
             return_value=(fake_png, 1920, 1080),
         ):
             result = await desktop_tools.screenshot_desktop()
@@ -200,9 +200,9 @@ class TestScreenshotDesktop:
         fake_png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
 
         with (
-            patch("jarvis.mcp.desktop_tools._try_mss_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools._try_mss_screenshot", return_value=None),
             patch(
-                "jarvis.mcp.desktop_tools._try_pil_screenshot",
+                "cognithor.mcp.desktop_tools._try_pil_screenshot",
                 return_value=(fake_png, 1920, 1080),
             ),
         ):
@@ -212,11 +212,11 @@ class TestScreenshotDesktop:
     @pytest.mark.asyncio
     async def test_screenshot_fallback_powershell(self, desktop_tools):
         with (
-            patch("jarvis.mcp.desktop_tools._try_mss_screenshot", return_value=None),
-            patch("jarvis.mcp.desktop_tools._try_pil_screenshot", return_value=None),
-            patch("jarvis.mcp.desktop_tools.sys") as mock_sys,
+            patch("cognithor.mcp.desktop_tools._try_mss_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools._try_pil_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools.sys") as mock_sys,
             patch(
-                "jarvis.mcp.desktop_tools._try_ps_screenshot",
+                "cognithor.mcp.desktop_tools._try_ps_screenshot",
                 return_value=(1920, 1080),
             ),
         ):
@@ -227,9 +227,9 @@ class TestScreenshotDesktop:
     @pytest.mark.asyncio
     async def test_screenshot_no_backend(self, desktop_tools):
         with (
-            patch("jarvis.mcp.desktop_tools._try_mss_screenshot", return_value=None),
-            patch("jarvis.mcp.desktop_tools._try_pil_screenshot", return_value=None),
-            patch("jarvis.mcp.desktop_tools.sys") as mock_sys,
+            patch("cognithor.mcp.desktop_tools._try_mss_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools._try_pil_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools.sys") as mock_sys,
         ):
             mock_sys.platform = "linux"
             result = await desktop_tools.screenshot_desktop()
@@ -241,7 +241,7 @@ class TestScreenshotDesktop:
         custom = tmp_path / "custom" / "shot.png"
 
         with patch(
-            "jarvis.mcp.desktop_tools._try_mss_screenshot",
+            "cognithor.mcp.desktop_tools._try_mss_screenshot",
             return_value=(fake_png, 1920, 1080),
         ):
             result = await desktop_tools.screenshot_desktop(save_path=str(custom))
@@ -260,7 +260,7 @@ class TestScreenshotRegion:
         fake_png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
 
         with patch(
-            "jarvis.mcp.desktop_tools._try_mss_screenshot",
+            "cognithor.mcp.desktop_tools._try_mss_screenshot",
             return_value=(fake_png, 400, 300),
         ):
             result = await desktop_tools.screenshot_region(x=100, y=200, width=400, height=300)
@@ -273,9 +273,9 @@ class TestScreenshotRegion:
         fake_png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
 
         with (
-            patch("jarvis.mcp.desktop_tools._try_mss_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools._try_mss_screenshot", return_value=None),
             patch(
-                "jarvis.mcp.desktop_tools._try_pil_screenshot",
+                "cognithor.mcp.desktop_tools._try_pil_screenshot",
                 return_value=(fake_png, 400, 300),
             ),
         ):
@@ -285,8 +285,8 @@ class TestScreenshotRegion:
     @pytest.mark.asyncio
     async def test_region_no_backend(self, desktop_tools):
         with (
-            patch("jarvis.mcp.desktop_tools._try_mss_screenshot", return_value=None),
-            patch("jarvis.mcp.desktop_tools._try_pil_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools._try_mss_screenshot", return_value=None),
+            patch("cognithor.mcp.desktop_tools._try_pil_screenshot", return_value=None),
         ):
             result = await desktop_tools.screenshot_region(x=0, y=0, width=100, height=100)
             assert "error" in result
@@ -299,7 +299,7 @@ class TestScreenshotRegion:
 
 class TestDownscale:
     def test_no_downscale_needed(self):
-        from jarvis.mcp.desktop_tools import _downscale_if_needed
+        from cognithor.mcp.desktop_tools import _downscale_if_needed
 
         data = b"fake"
         out, w, h = _downscale_if_needed(data, 1920, 1080)
@@ -308,7 +308,7 @@ class TestDownscale:
         assert h == 1080
 
     def test_downscale_needed_without_pillow(self):
-        from jarvis.mcp.desktop_tools import _downscale_if_needed
+        from cognithor.mcp.desktop_tools import _downscale_if_needed
 
         data = b"fake"
         # 5K resolution -> should attempt downscale, but without valid PNG + PIL it falls back
@@ -336,7 +336,7 @@ class TestVisionIntegration:
 
         fake_png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
         with patch(
-            "jarvis.mcp.desktop_tools._try_mss_screenshot",
+            "cognithor.mcp.desktop_tools._try_mss_screenshot",
             return_value=(fake_png, 1920, 1080),
         ):
             result = await desktop_tools.screenshot_desktop()

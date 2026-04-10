@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.models import (
+from cognithor.models import (
     AuditEntry,
     GateStatus,
     RiskLevel,
 )
-from jarvis.security.audit import AuditTrail, mask_credentials, mask_dict
+from cognithor.security.audit import AuditTrail, mask_credentials, mask_dict
 
 if TYPE_CHECKING:
     from pathlib import Path

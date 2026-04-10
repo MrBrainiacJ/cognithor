@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.consent import ConsentManager
+from cognithor.security.consent import ConsentManager
 
 
 @pytest.fixture

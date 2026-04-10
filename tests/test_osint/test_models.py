@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from jarvis.osint.models import (
+from cognithor.osint.models import (
     ClaimType,
     Evidence,
     Finding,

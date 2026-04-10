@@ -1618,7 +1618,7 @@ In `src/jarvis/gateway/phases/advanced.py`, after the `knowledge_ingest` block (
 
         social_cfg = getattr(config, "social", None)
         if social_cfg and social_cfg.reddit_product_name:
-            jarvis_home = getattr(config, "jarvis_home", None) or Path.home() / ".jarvis"
+            jarvis_home = getattr(config, "jarvis_home", None) or Path.home() / ".cognithor"
             leads_db = str(Path(jarvis_home) / "leads.db")
             llm_fn = result.get("llm_fn")
             result["reddit_lead_service"] = RedditLeadService(

@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 
-from jarvis.cron.jobs import DEFAULT_JOBS, JobStore
-from jarvis.models import CronJob
+from cognithor.cron.jobs import DEFAULT_JOBS, JobStore
+from cognithor.models import CronJob
 
 if TYPE_CHECKING:
     from pathlib import Path

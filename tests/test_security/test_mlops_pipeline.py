@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from jarvis.security.mlops_pipeline import (
+from cognithor.security.mlops_pipeline import (
     AdversarialFuzzer,
     CIConfig,
     CIIntegration,

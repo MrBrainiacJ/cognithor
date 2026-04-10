@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.utils.installer import (
+from cognithor.utils.installer import (
     InstallerBackend,
     InstallerInfo,
     build_install_command,
@@ -61,12 +61,12 @@ class TestInstallerInfo:
 
 
 class TestDetectUv:
-    @patch("jarvis.utils.installer.shutil.which", return_value=None)
+    @patch("cognithor.utils.installer.shutil.which", return_value=None)
     def test_not_found(self, _mock: MagicMock) -> None:
         assert detect_uv() is None
 
-    @patch("jarvis.utils.installer.subprocess.run")
-    @patch("jarvis.utils.installer.shutil.which", return_value="/usr/bin/uv")
+    @patch("cognithor.utils.installer.subprocess.run")
+    @patch("cognithor.utils.installer.shutil.which", return_value="/usr/bin/uv")
     def test_found(self, _which: MagicMock, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=0, stdout="uv 0.6.3\n")
         result = detect_uv()
@@ -75,21 +75,21 @@ class TestDetectUv:
         assert result.version == "0.6.3"
         assert result.path == "/usr/bin/uv"
 
-    @patch("jarvis.utils.installer.subprocess.run")
-    @patch("jarvis.utils.installer.shutil.which", return_value="/usr/bin/uv")
+    @patch("cognithor.utils.installer.subprocess.run")
+    @patch("cognithor.utils.installer.shutil.which", return_value="/usr/bin/uv")
     def test_version_parse_no_prefix(self, _which: MagicMock, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=0, stdout="0.7.0")
         result = detect_uv()
         assert result is not None
         assert result.version == "0.7.0"
 
-    @patch("jarvis.utils.installer.subprocess.run", side_effect=FileNotFoundError)
-    @patch("jarvis.utils.installer.shutil.which", return_value="/usr/bin/uv")
+    @patch("cognithor.utils.installer.subprocess.run", side_effect=FileNotFoundError)
+    @patch("cognithor.utils.installer.shutil.which", return_value="/usr/bin/uv")
     def test_run_error(self, _which: MagicMock, _run: MagicMock) -> None:
         assert detect_uv() is None
 
-    @patch("jarvis.utils.installer.subprocess.run")
-    @patch("jarvis.utils.installer.shutil.which", return_value="/usr/bin/uv")
+    @patch("cognithor.utils.installer.subprocess.run")
+    @patch("cognithor.utils.installer.shutil.which", return_value="/usr/bin/uv")
     def test_non_zero_exit(self, _which: MagicMock, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=1, stdout="")
         assert detect_uv() is None
@@ -99,7 +99,7 @@ class TestDetectUv:
 
 
 class TestDetectPip:
-    @patch("jarvis.utils.installer.subprocess.run")
+    @patch("cognithor.utils.installer.subprocess.run")
     def test_found(self, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(
             returncode=0, stdout="pip 24.0 from /usr/lib/python3.12/site-packages (python 3.12)\n"
@@ -109,12 +109,12 @@ class TestDetectPip:
         assert result.is_uv is False
         assert result.version == "24.0"
 
-    @patch("jarvis.utils.installer.subprocess.run")
+    @patch("cognithor.utils.installer.subprocess.run")
     def test_not_found(self, mock_run: MagicMock) -> None:
         mock_run.return_value = MagicMock(returncode=1, stdout="")
         assert detect_pip() is None
 
-    @patch("jarvis.utils.installer.subprocess.run", side_effect=Exception("boom"))
+    @patch("cognithor.utils.installer.subprocess.run", side_effect=Exception("boom"))
     def test_exception(self, _run: MagicMock) -> None:
         assert detect_pip() is None
 
@@ -123,8 +123,8 @@ class TestDetectPip:
 
 
 class TestDetectInstaller:
-    @patch("jarvis.utils.installer.detect_pip")
-    @patch("jarvis.utils.installer.detect_uv")
+    @patch("cognithor.utils.installer.detect_pip")
+    @patch("cognithor.utils.installer.detect_uv")
     def test_prefers_uv(self, mock_uv: MagicMock, mock_pip: MagicMock) -> None:
         uv_info = InstallerInfo(InstallerBackend.UV, "/usr/bin/uv", "0.6.3")
         pip_info = InstallerInfo(InstallerBackend.PIP, "pip", "24.0")
@@ -134,8 +134,8 @@ class TestDetectInstaller:
         assert result is not None
         assert result.is_uv is True
 
-    @patch("jarvis.utils.installer.detect_pip")
-    @patch("jarvis.utils.installer.detect_uv")
+    @patch("cognithor.utils.installer.detect_pip")
+    @patch("cognithor.utils.installer.detect_uv")
     def test_fallback_to_pip(self, mock_uv: MagicMock, mock_pip: MagicMock) -> None:
         pip_info = InstallerInfo(InstallerBackend.PIP, "pip", "24.0")
         mock_uv.return_value = None
@@ -144,8 +144,8 @@ class TestDetectInstaller:
         assert result is not None
         assert result.is_uv is False
 
-    @patch("jarvis.utils.installer.detect_pip")
-    @patch("jarvis.utils.installer.detect_uv")
+    @patch("cognithor.utils.installer.detect_pip")
+    @patch("cognithor.utils.installer.detect_uv")
     def test_skip_uv(self, mock_uv: MagicMock, mock_pip: MagicMock) -> None:
         uv_info = InstallerInfo(InstallerBackend.UV, "/usr/bin/uv", "0.6.3")
         pip_info = InstallerInfo(InstallerBackend.PIP, "pip", "24.0")
@@ -156,8 +156,8 @@ class TestDetectInstaller:
         assert result.is_uv is False
         mock_uv.assert_not_called()
 
-    @patch("jarvis.utils.installer.detect_pip", return_value=None)
-    @patch("jarvis.utils.installer.detect_uv", return_value=None)
+    @patch("cognithor.utils.installer.detect_pip", return_value=None)
+    @patch("cognithor.utils.installer.detect_uv", return_value=None)
     def test_nothing_found(self, _uv: MagicMock, _pip: MagicMock) -> None:
         assert detect_installer() is None
 
@@ -241,15 +241,15 @@ class TestBuildSyncCommand:
 
 
 class TestRunInstall:
-    @patch("jarvis.utils.installer.detect_installer", return_value=None)
+    @patch("cognithor.utils.installer.detect_installer", return_value=None)
     def test_no_installer(self, _det: MagicMock) -> None:
         ok, info, msg = run_install("/project")
         assert ok is False
         assert info is None
         assert "Neither" in msg
 
-    @patch("jarvis.utils.installer.subprocess.run")
-    @patch("jarvis.utils.installer.detect_installer")
+    @patch("cognithor.utils.installer.subprocess.run")
+    @patch("cognithor.utils.installer.detect_installer")
     def test_success_uv(self, mock_det: MagicMock, mock_run: MagicMock) -> None:
         uv_info = InstallerInfo(InstallerBackend.UV, "/usr/bin/uv", "0.6.3")
         mock_det.return_value = uv_info
@@ -259,8 +259,8 @@ class TestRunInstall:
         assert info is not None
         assert info.is_uv is True
 
-    @patch("jarvis.utils.installer.subprocess.run")
-    @patch("jarvis.utils.installer.detect_installer")
+    @patch("cognithor.utils.installer.subprocess.run")
+    @patch("cognithor.utils.installer.detect_installer")
     def test_failure(self, mock_det: MagicMock, mock_run: MagicMock) -> None:
         pip_info = InstallerInfo(InstallerBackend.PIP, "pip", "24.0")
         mock_det.return_value = pip_info
@@ -270,9 +270,9 @@ class TestRunInstall:
         assert "boom" in msg
 
     @patch(
-        "jarvis.utils.installer.subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 600)
+        "cognithor.utils.installer.subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 600)
     )
-    @patch("jarvis.utils.installer.detect_installer")
+    @patch("cognithor.utils.installer.detect_installer")
     def test_timeout(self, mock_det: MagicMock, _run: MagicMock) -> None:
         pip_info = InstallerInfo(InstallerBackend.PIP, "pip", "24.0")
         mock_det.return_value = pip_info
@@ -280,8 +280,8 @@ class TestRunInstall:
         assert ok is False
         assert "timed out" in msg
 
-    @patch("jarvis.utils.installer.subprocess.run", side_effect=OSError("disk full"))
-    @patch("jarvis.utils.installer.detect_installer")
+    @patch("cognithor.utils.installer.subprocess.run", side_effect=OSError("disk full"))
+    @patch("cognithor.utils.installer.detect_installer")
     def test_os_error(self, mock_det: MagicMock, _run: MagicMock) -> None:
         pip_info = InstallerInfo(InstallerBackend.PIP, "pip", "24.0")
         mock_det.return_value = pip_info

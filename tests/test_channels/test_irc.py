@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.irc import IRCChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.irc import IRCChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 class TestIRCChannel:

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.vault import (
+from cognithor.security.vault import (
     EncryptedVault,
     IsolatedSessionStore,
     SessionIsolationGuard,

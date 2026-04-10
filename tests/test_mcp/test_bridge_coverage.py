@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.mcp.bridge import (
+from cognithor.mcp.bridge import (
     MCPBridge,
     _build_annotations,
 )
-from jarvis.mcp.server import MCPServerMode, ToolAnnotationKey
+from cognithor.mcp.server import MCPServerMode, ToolAnnotationKey
 
 if TYPE_CHECKING:
     from pathlib import Path

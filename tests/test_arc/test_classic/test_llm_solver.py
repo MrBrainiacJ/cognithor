@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.arc.classic.llm_solver import LLMSolver
-from jarvis.arc.classic.task_parser import ArcTask
+from cognithor.arc.classic.llm_solver import LLMSolver
+from cognithor.arc.classic.task_parser import ArcTask
 
 # ---------------------------------------------------------------------------
 # Helpers

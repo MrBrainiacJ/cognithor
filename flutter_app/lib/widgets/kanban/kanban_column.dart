@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jarvis_ui/providers/kanban_provider.dart';
-import 'package:jarvis_ui/widgets/kanban/kanban_card.dart';
+import 'package:cognithor_ui/providers/kanban_provider.dart';
+import 'package:cognithor_ui/widgets/kanban/kanban_card.dart';
 
 class KanbanColumn extends StatelessWidget {
   final String status;

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.gatekeeper import Gatekeeper, GateStatus
-from jarvis.models import PlannedAction, RiskLevel, SessionContext
+from cognithor.core.gatekeeper import Gatekeeper, GateStatus
+from cognithor.models import PlannedAction, RiskLevel, SessionContext
 
 
 @pytest.fixture
 def gk():
-    from jarvis.config import JarvisConfig
+    from cognithor.config import JarvisConfig
 
     return Gatekeeper(JarvisConfig())
 

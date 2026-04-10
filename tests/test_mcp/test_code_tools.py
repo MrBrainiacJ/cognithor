@@ -14,8 +14,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.mcp.code_tools import MAX_CODE_SIZE, CodeTools, register_code_tools
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.mcp.code_tools import MAX_CODE_SIZE, CodeTools, register_code_tools
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 @pytest.fixture()
 def config(tmp_path: Path) -> JarvisConfig:
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),
     )
     ensure_directory_structure(cfg)

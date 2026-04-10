@@ -97,7 +97,7 @@ In `deep_learner.py`, `run_subgoal()` calls `cycle_controller.after_expansion()`
 
 ### Persistence
 
-CycleHistory saved as JSON alongside the plan: `~/.jarvis/evolution/plans/{plan_id}/cycle_history.json`
+CycleHistory saved as JSON alongside the plan: `~/.cognithor/evolution/plans/{plan_id}/cycle_history.json`
 
 ## 2. Missing ATL Actions + Risk Ceiling Enforcement
 

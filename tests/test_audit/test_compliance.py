@@ -6,7 +6,7 @@ und RemediationTracker.
 
 from __future__ import annotations
 
-from jarvis.audit.compliance import (
+from cognithor.audit.compliance import (
     ComplianceFramework,
     ComplianceReport,
     ComplianceStatus,

@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.channels.twitch import TwitchChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.twitch import TwitchChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 class TestTwitchChannel:

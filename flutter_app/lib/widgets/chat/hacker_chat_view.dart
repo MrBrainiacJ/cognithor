@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/providers/chat_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/chat/matrix_rain_painter.dart';
+import 'package:cognithor_ui/providers/chat_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/chat/matrix_rain_painter.dart';
 
 /// Terminal-style chat view for hacker mode.
 ///

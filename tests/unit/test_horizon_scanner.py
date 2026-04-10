@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.evolution.horizon_scanner import HorizonScanner
-from jarvis.evolution.models import LearningPlan, SubGoal
+from cognithor.evolution.horizon_scanner import HorizonScanner
+from cognithor.evolution.models import LearningPlan, SubGoal
 
 # ---------------------------------------------------------------------------
 # Helpers

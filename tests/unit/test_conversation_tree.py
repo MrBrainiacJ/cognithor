@@ -6,7 +6,7 @@ import pytest
 class TestConversationTree:
     @pytest.fixture
     def tree(self, tmp_path):
-        from jarvis.core.conversation_tree import ConversationTree
+        from cognithor.core.conversation_tree import ConversationTree
 
         return ConversationTree(db_path=tmp_path / "tree.db")
 

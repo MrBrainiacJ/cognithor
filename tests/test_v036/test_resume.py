@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sys
 
-from jarvis.core.checkpointing import (
+from cognithor.core.checkpointing import (
     CheckpointStore,
     PersistentCheckpoint,
 )

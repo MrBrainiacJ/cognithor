@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.gateway.gateway import Gateway
+from cognithor.gateway.gateway import Gateway
 
 if TYPE_CHECKING:
     from pathlib import Path

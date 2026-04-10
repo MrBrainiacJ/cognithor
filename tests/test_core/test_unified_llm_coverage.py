@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.unified_llm import UnifiedLLMClient
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.core.unified_llm import UnifiedLLMClient
 
 
 @pytest.fixture()
@@ -121,7 +121,7 @@ class TestUnifiedLLMBackendMode:
     @pytest.mark.asyncio
     async def test_chat_with_backend(self) -> None:
         """Backend.chat() returns ChatResponse object (not dict)."""
-        from jarvis.core.llm_backend import ChatResponse
+        from cognithor.core.llm_backend import ChatResponse
 
         mock_backend = AsyncMock()
         mock_backend.chat = AsyncMock(
@@ -149,7 +149,7 @@ class TestUnifiedLLMBackendMode:
     @pytest.mark.asyncio
     async def test_chat_with_backend_tool_calls(self) -> None:
         """Backend.chat() returns ChatResponse with tool_calls."""
-        from jarvis.core.llm_backend import ChatResponse
+        from cognithor.core.llm_backend import ChatResponse
 
         tool_calls = [{"function": {"name": "web_search", "arguments": {"q": "test"}}}]
         mock_backend = AsyncMock()
@@ -173,7 +173,7 @@ class TestUnifiedLLMBackendMode:
     @pytest.mark.asyncio
     async def test_chat_with_backend_error_wraps_to_ollama_error(self) -> None:
         """Backend errors get wrapped as OllamaError."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         mock_backend = AsyncMock()
         mock_backend.chat = AsyncMock(side_effect=Exception("API error"))
@@ -226,7 +226,7 @@ class TestUnifiedLLMBackendMode:
 
     @pytest.mark.asyncio
     async def test_embed_with_backend(self) -> None:
-        from jarvis.core.llm_backend import EmbedResponse
+        from cognithor.core.llm_backend import EmbedResponse
 
         mock_backend = AsyncMock()
         mock_backend.embed = AsyncMock(
@@ -288,7 +288,7 @@ class TestUnifiedLLMBackendMode:
     @pytest.mark.asyncio
     async def test_chat_no_backend_no_ollama_raises(self) -> None:
         """Neither ollama nor backend => OllamaError."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         client = UnifiedLLMClient(ollama_client=None, backend=None)
         with pytest.raises(
@@ -301,7 +301,7 @@ class TestUnifiedLLMBackendMode:
 
     @pytest.mark.asyncio
     async def test_embed_no_backend_no_ollama_raises(self) -> None:
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         client = UnifiedLLMClient(ollama_client=None, backend=None)
         with pytest.raises(
@@ -317,7 +317,7 @@ class TestUnifiedLLMBackendMode:
 
 class TestUnifiedLLMFactory:
     def test_create_ollama(self, config: JarvisConfig) -> None:
-        with patch("jarvis.core.unified_llm.OllamaClient") as MockOllama:
+        with patch("cognithor.core.unified_llm.OllamaClient") as MockOllama:
             MockOllama.return_value = MagicMock()
             client = UnifiedLLMClient.create(config)
             assert isinstance(client, UnifiedLLMClient)
@@ -325,9 +325,9 @@ class TestUnifiedLLMFactory:
 
     def test_create_with_backend_type(self, config: JarvisConfig) -> None:
         config.llm_backend_type = "openai"
-        with patch("jarvis.core.unified_llm.OllamaClient") as MockOllama:
+        with patch("cognithor.core.unified_llm.OllamaClient") as MockOllama:
             MockOllama.return_value = MagicMock()
-            with patch("jarvis.core.llm_backend.create_backend") as mock_create:
+            with patch("cognithor.core.llm_backend.create_backend") as mock_create:
                 mock_backend = MagicMock()
                 mock_backend.backend_type = "openai"
                 mock_create.return_value = mock_backend
@@ -336,9 +336,9 @@ class TestUnifiedLLMFactory:
 
     def test_create_backend_failure_raises(self, config: JarvisConfig) -> None:
         """If backend creation fails, raise OllamaError (no silent fallback)."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         config.llm_backend_type = "openai"
-        with patch("jarvis.core.llm_backend.create_backend", side_effect=Exception("fail")):
+        with patch("cognithor.core.llm_backend.create_backend", side_effect=Exception("fail")):
             with pytest.raises(OllamaError, match="konnte nicht initialisiert werden"):
                 UnifiedLLMClient.create(config)

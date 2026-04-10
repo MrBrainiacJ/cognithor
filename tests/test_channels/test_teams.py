@@ -30,14 +30,14 @@ sys.modules.setdefault("botbuilder.schema", _mock_botbuilder_schema)
 sys.modules.setdefault("botbuilder.integration", MagicMock())
 sys.modules.setdefault("botbuilder.integration.aiohttp", MagicMock())
 
-from jarvis.channels.teams import (
+from cognithor.channels.teams import (
     MAX_MESSAGE_LENGTH,
     TeamsChannel,
     _build_approval_card,
     _create_typing_activity,
     _split_message,
 )
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 # ============================================================================
 # Fixtures
@@ -170,7 +170,7 @@ class TestTeamsOnTurn:
         ctx = _make_turn_context(text="Hallo Teams", activity_type="message")
 
         # Mock ActivityTypes
-        with patch("jarvis.channels.teams.ActivityTypes", create=True) as at_mock:
+        with patch("cognithor.channels.teams.ActivityTypes", create=True) as at_mock:
             at_mock.message = "message"
             at_mock.invoke = "invoke"
             at_mock.conversation_update = "conversationUpdate"
@@ -185,7 +185,7 @@ class TestTeamsOnTurn:
         teams_ch._handler = handler
         ctx = _make_turn_context(text="Frage")
 
-        with patch("jarvis.channels.teams.TurnContext", create=True) as tc_mock:
+        with patch("cognithor.channels.teams.TurnContext", create=True) as tc_mock:
             tc_mock.get_conversation_reference = MagicMock(return_value=MagicMock())
             await teams_ch._on_message(ctx)
 
@@ -201,7 +201,7 @@ class TestTeamsOnTurn:
         teams_ch._handler = handler
         ctx = _make_turn_context(text="")
 
-        with patch("jarvis.channels.teams.TurnContext", create=True) as tc_mock:
+        with patch("cognithor.channels.teams.TurnContext", create=True) as tc_mock:
             tc_mock.get_conversation_reference = MagicMock(return_value=MagicMock())
             await teams_ch._on_message(ctx)
 
@@ -226,7 +226,7 @@ class TestTeamsOnTurn:
             entities=[entity],
         )
 
-        with patch("jarvis.channels.teams.TurnContext", create=True) as tc_mock:
+        with patch("cognithor.channels.teams.TurnContext", create=True) as tc_mock:
             tc_mock.get_conversation_reference = MagicMock(return_value=MagicMock())
             await teams_ch._on_message(ctx)
 
@@ -244,7 +244,7 @@ class TestTeamsOnTurn:
 
         ctx = _make_turn_context(text="ja", conversation_id="conv-1")
 
-        with patch("jarvis.channels.teams.TurnContext", create=True) as tc_mock:
+        with patch("cognithor.channels.teams.TurnContext", create=True) as tc_mock:
             tc_mock.get_conversation_reference = MagicMock(return_value=MagicMock())
             await teams_ch._on_message(ctx)
 
@@ -260,7 +260,7 @@ class TestTeamsOnTurn:
 
         ctx = _make_turn_context(text="nein", conversation_id="conv-1")
 
-        with patch("jarvis.channels.teams.TurnContext", create=True) as tc_mock:
+        with patch("cognithor.channels.teams.TurnContext", create=True) as tc_mock:
             tc_mock.get_conversation_reference = MagicMock(return_value=MagicMock())
             await teams_ch._on_message(ctx)
 
@@ -273,7 +273,7 @@ class TestTeamsOnTurn:
         teams_ch._handler = handler
         ctx = _make_turn_context(text="crash")
 
-        with patch("jarvis.channels.teams.TurnContext", create=True) as tc_mock:
+        with patch("cognithor.channels.teams.TurnContext", create=True) as tc_mock:
             tc_mock.get_conversation_reference = MagicMock(return_value=MagicMock())
             await teams_ch._on_message(ctx)
 
@@ -291,7 +291,7 @@ class TestTeamsOnTurn:
 
         ctx = _make_turn_context(text="Test")
 
-        with patch("jarvis.channels.teams.TurnContext", create=True) as tc_mock:
+        with patch("cognithor.channels.teams.TurnContext", create=True) as tc_mock:
             tc_mock.get_conversation_reference = MagicMock(return_value=MagicMock())
             await teams_ch._on_message(ctx)
 
@@ -315,7 +315,7 @@ class TestTeamsInvoke:
             value={"action": "approve", "approval_id": "appr-1"},
         )
 
-        with patch("jarvis.channels.teams.Activity", create=True, return_value=MagicMock()):
+        with patch("cognithor.channels.teams.Activity", create=True, return_value=MagicMock()):
             await teams_ch._on_invoke(ctx)
 
         assert future.done()
@@ -332,7 +332,7 @@ class TestTeamsInvoke:
             value={"action": "reject", "approval_id": "appr-2"},
         )
 
-        with patch("jarvis.channels.teams.Activity", create=True, return_value=MagicMock()):
+        with patch("cognithor.channels.teams.Activity", create=True, return_value=MagicMock()):
             await teams_ch._on_invoke(ctx)
 
         assert future.done()
@@ -344,7 +344,7 @@ class TestTeamsInvoke:
             activity_type="invoke",
             value={"action": "unknown"},
         )
-        with patch("jarvis.channels.teams.Activity", create=True, return_value=MagicMock()):
+        with patch("cognithor.channels.teams.Activity", create=True, return_value=MagicMock()):
             await teams_ch._on_invoke(ctx)  # Kein Crash
 
 

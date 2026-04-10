@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.core.sandbox import (
+from cognithor.core.sandbox import (
     BwrapSandbox,
     FirejailSandbox,
     NetworkPolicy,
@@ -257,8 +257,8 @@ class TestSandboxExecutorBare:
 class TestSandboxDetection:
     def test_bare_when_nothing_available(self) -> None:
         with (
-            patch("jarvis.core.sandbox.BwrapSandbox.is_available", return_value=False),
-            patch("jarvis.core.sandbox.FirejailSandbox.is_available", return_value=False),
+            patch("cognithor.core.sandbox.BwrapSandbox.is_available", return_value=False),
+            patch("cognithor.core.sandbox.FirejailSandbox.is_available", return_value=False),
         ):
             cfg = SandboxConfig(preferred_level=SandboxLevel.BWRAP)
             executor = SandboxExecutor(cfg)
@@ -266,15 +266,15 @@ class TestSandboxDetection:
             assert executor.level in (SandboxLevel.BARE, SandboxLevel.JOBOBJECT)
 
     def test_bwrap_when_available(self) -> None:
-        with patch("jarvis.core.sandbox.BwrapSandbox.is_available", return_value=True):
+        with patch("cognithor.core.sandbox.BwrapSandbox.is_available", return_value=True):
             cfg = SandboxConfig(preferred_level=SandboxLevel.BWRAP)
             executor = SandboxExecutor(cfg)
             assert executor.level == SandboxLevel.BWRAP
 
     def test_firejail_when_preferred_and_available(self) -> None:
         with (
-            patch("jarvis.core.sandbox.BwrapSandbox.is_available", return_value=False),
-            patch("jarvis.core.sandbox.FirejailSandbox.is_available", return_value=True),
+            patch("cognithor.core.sandbox.BwrapSandbox.is_available", return_value=False),
+            patch("cognithor.core.sandbox.FirejailSandbox.is_available", return_value=True),
         ):
             cfg = SandboxConfig(preferred_level=SandboxLevel.FIREJAIL)
             executor = SandboxExecutor(cfg)
@@ -282,8 +282,8 @@ class TestSandboxDetection:
 
     def test_bwrap_fallback_when_firejail_preferred_but_unavailable(self) -> None:
         with (
-            patch("jarvis.core.sandbox.BwrapSandbox.is_available", return_value=True),
-            patch("jarvis.core.sandbox.FirejailSandbox.is_available", return_value=False),
+            patch("cognithor.core.sandbox.BwrapSandbox.is_available", return_value=True),
+            patch("cognithor.core.sandbox.FirejailSandbox.is_available", return_value=False),
         ):
             cfg = SandboxConfig(preferred_level=SandboxLevel.FIREJAIL)
             executor = SandboxExecutor(cfg)
@@ -315,7 +315,7 @@ class TestNetworkPolicyOverride:
 class TestShellToolsIntegration:
     @pytest.mark.asyncio
     async def test_shell_uses_sandbox(self, tmp_path: Path) -> None:
-        from jarvis.mcp.shell import ShellTools
+        from cognithor.mcp.shell import ShellTools
 
         config = MagicMock()
         config.workspace_dir = tmp_path
@@ -330,7 +330,7 @@ class TestShellToolsIntegration:
 
     @pytest.mark.asyncio
     async def test_shell_empty_command(self, tmp_path: Path) -> None:
-        from jarvis.mcp.shell import ShellTools
+        from cognithor.mcp.shell import ShellTools
 
         config = MagicMock()
         config.workspace_dir = tmp_path
@@ -343,7 +343,7 @@ class TestShellToolsIntegration:
 
     @pytest.mark.asyncio
     async def test_shell_register(self, tmp_path: Path) -> None:
-        from jarvis.mcp.shell import register_shell_tools
+        from cognithor.mcp.shell import register_shell_tools
 
         config = MagicMock()
         config.workspace_dir = tmp_path

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.mcp.remote_shell import RemoteHost, RemoteShellTools
+from cognithor.mcp.remote_shell import RemoteHost, RemoteShellTools
 
 
 def test_add_and_list_hosts():

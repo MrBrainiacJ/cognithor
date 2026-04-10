@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import pytest
 
-from jarvis.evolution.models import SourceSpec
-from jarvis.evolution.research_agent import FetchResult, ResearchAgent
+from cognithor.evolution.models import SourceSpec
+from cognithor.evolution.research_agent import FetchResult, ResearchAgent
 
 # ---------------------------------------------------------------------------
 # Mock helpers

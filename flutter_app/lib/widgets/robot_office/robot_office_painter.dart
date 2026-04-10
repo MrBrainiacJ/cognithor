@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'package:jarvis_ui/widgets/robot_office/furniture.dart';
-import 'package:jarvis_ui/widgets/robot_office/robot.dart';
-import 'package:jarvis_ui/widgets/robot_office/robot_office_widget.dart';
+import 'package:cognithor_ui/widgets/robot_office/furniture.dart';
+import 'package:cognithor_ui/widgets/robot_office/robot.dart';
+import 'package:cognithor_ui/widgets/robot_office/robot_office_widget.dart';
 
 /// CustomPainter that draws the isometric office scene with furniture,
 /// animated robots, pets, and particle effects.

@@ -10,7 +10,7 @@ import pytest
 class TestRedditMcpTools:
     @pytest.mark.asyncio
     async def test_register_tools(self):
-        from jarvis.mcp.reddit_tools import register_reddit_tools
+        from cognithor.mcp.reddit_tools import register_reddit_tools
 
         mcp = MagicMock()
         svc = MagicMock()

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.channels.wake_word import WakeWordDetector
+from cognithor.channels.wake_word import WakeWordDetector
 
 
 def _make_silence(duration_ms: int = 50) -> bytes:

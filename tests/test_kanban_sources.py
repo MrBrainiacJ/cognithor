@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.kanban.sources import (
+from cognithor.kanban.sources import (
     ChatTaskDetector,
     CronTaskAdapter,
     EvolutionTaskAdapter,

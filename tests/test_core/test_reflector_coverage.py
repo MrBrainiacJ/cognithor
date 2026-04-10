@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.core.reflector import Reflector, _safe_float, _sanitize_memory_text
-from jarvis.models import (
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.core.reflector import Reflector, _safe_float, _sanitize_memory_text
+from cognithor.models import (
     ActionPlan,
     AgentResult,
     SessionContext,
@@ -54,7 +54,7 @@ def _make_agent_result(
     has_actions: bool = True,
 ) -> AgentResult:
     """Creates a minimal AgentResult for tests."""
-    from jarvis.models import PlannedAction
+    from cognithor.models import PlannedAction
 
     if has_actions:
         plan = ActionPlan(
@@ -167,7 +167,7 @@ class TestReflect:
     @pytest.mark.asyncio
     async def test_reflect_llm_error_fallback(self, config: JarvisConfig) -> None:
         """LLM error should use fallback reflection."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         mock_llm = AsyncMock()
         mock_llm.chat = AsyncMock(side_effect=OllamaError("LLM unavailable"))
@@ -255,7 +255,7 @@ class TestApply:
     @pytest.mark.asyncio
     async def test_apply_empty_result(self, config: JarvisConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
-        from jarvis.models import ReflectionResult
+        from cognithor.models import ReflectionResult
 
         result = ReflectionResult(
             session_id="test",
@@ -310,7 +310,7 @@ class TestApplyExtended:
     @pytest.mark.asyncio
     async def test_apply_with_session_summary(self, config: JarvisConfig) -> None:
         """ReflectionResult mit session_summary -> episodic count > 0."""
-        from jarvis.models import ReflectionResult, SessionSummary
+        from cognithor.models import ReflectionResult, SessionSummary
 
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         result = ReflectionResult(
@@ -334,7 +334,7 @@ class TestApplyExtended:
     @pytest.mark.asyncio
     async def test_apply_with_extracted_facts(self, config: JarvisConfig) -> None:
         """ReflectionResult mit ExtractedFact-Entities -> semantic count > 0."""
-        from jarvis.models import ExtractedFact, ReflectionResult
+        from cognithor.models import ExtractedFact, ReflectionResult
 
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         result = ReflectionResult(
@@ -364,7 +364,7 @@ class TestApplyExtended:
     @pytest.mark.asyncio
     async def test_apply_with_procedure_candidate(self, config: JarvisConfig) -> None:
         """ReflectionResult mit ProcedureCandidate -> procedural count > 0."""
-        from jarvis.models import ProcedureCandidate, ReflectionResult
+        from cognithor.models import ProcedureCandidate, ReflectionResult
 
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         result = ReflectionResult(
@@ -392,7 +392,7 @@ class TestApplyExtended:
     @pytest.mark.asyncio
     async def test_apply_with_all_types(self, config: JarvisConfig) -> None:
         """Alle drei Typen (episodic, semantic, procedural) vorhanden -> alle counts > 0."""
-        from jarvis.models import (
+        from cognithor.models import (
             ExtractedFact,
             ProcedureCandidate,
             ReflectionResult,
@@ -448,7 +448,7 @@ class TestApplyExtended:
     @pytest.mark.asyncio
     async def test_apply_memory_manager_error(self, config: JarvisConfig) -> None:
         """memory_manager wirft Exception -> wird graceful abgefangen."""
-        from jarvis.models import ReflectionResult, SessionSummary
+        from cognithor.models import ReflectionResult, SessionSummary
 
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         result = ReflectionResult(
@@ -481,7 +481,7 @@ class TestWriteSemantic:
     @pytest.mark.asyncio
     async def test_write_semantic_entity(self, config: JarvisConfig) -> None:
         """ExtractedFact mit entity_name und attributes -> Entitaet wird angelegt."""
-        from jarvis.models import ExtractedFact
+        from cognithor.models import ExtractedFact
 
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         facts = [
@@ -509,7 +509,7 @@ class TestWriteSemantic:
     @pytest.mark.asyncio
     async def test_write_semantic_relation(self, config: JarvisConfig) -> None:
         """ExtractedFact mit relation_type und relation_target -> Relation wird erstellt."""
-        from jarvis.models import ExtractedFact
+        from cognithor.models import ExtractedFact
 
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         facts = [
@@ -536,7 +536,7 @@ class TestWriteSemantic:
     @pytest.mark.asyncio
     async def test_write_semantic_sanitizes_text(self, config: JarvisConfig) -> None:
         """ExtractedFact mit Injection-Patterns -> Felder werden sanitized."""
-        from jarvis.models import ExtractedFact
+        from cognithor.models import ExtractedFact
 
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         facts = [

@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.telegram import TelegramChannel, _split_message
+from cognithor.channels.telegram import TelegramChannel, _split_message
 
 
 class TestTelegramChannelInit:
@@ -64,7 +64,7 @@ class TestProcessIncoming:
         ch._app.bot.send_chat_action = AsyncMock()
         ch._app.bot.send_message = AsyncMock()
 
-        from jarvis.models import OutgoingMessage
+        from cognithor.models import OutgoingMessage
 
         mock_response = OutgoingMessage(
             channel="telegram",
@@ -299,7 +299,7 @@ class TestTelegramSend:
         ch = TelegramChannel(token="t")
         ch._app = None
 
-        from jarvis.models import OutgoingMessage
+        from cognithor.models import OutgoingMessage
 
         msg = OutgoingMessage(channel="telegram", text="Test", metadata={"chat_id": "123"})
         # Should not raise
@@ -310,7 +310,7 @@ class TestTelegramSend:
         ch = TelegramChannel(token="t")
         ch._app = MagicMock()
 
-        from jarvis.models import OutgoingMessage
+        from cognithor.models import OutgoingMessage
 
         msg = OutgoingMessage(channel="telegram", text="Test", metadata={})
         # Should not raise, just log warning
@@ -322,7 +322,7 @@ class TestTelegramSend:
         ch._app = MagicMock()
         ch._app.bot.send_message = AsyncMock()
 
-        from jarvis.models import OutgoingMessage
+        from cognithor.models import OutgoingMessage
 
         msg = OutgoingMessage(channel="telegram", text="Hallo!", metadata={"chat_id": "123"})
         await ch.send(msg)
@@ -336,7 +336,7 @@ class TestTelegramSend:
         # First call with Markdown fails, second without succeeds
         ch._app.bot.send_message = AsyncMock(side_effect=[Exception("Bad markdown"), None])
 
-        from jarvis.models import OutgoingMessage
+        from cognithor.models import OutgoingMessage
 
         msg = OutgoingMessage(
             channel="telegram", text="*broken markdown", metadata={"chat_id": "123"}
@@ -352,7 +352,7 @@ class TestRequestApproval:
         ch = TelegramChannel(token="t")
         ch._app = None
 
-        from jarvis.models import PlannedAction
+        from cognithor.models import PlannedAction
 
         action = PlannedAction(tool="shell", params={"cmd": "rm -rf /"})
         result = await ch.request_approval("sess-1", action, "Gefährlich")
@@ -363,7 +363,7 @@ class TestRequestApproval:
         ch = TelegramChannel(token="t")
         ch._app = MagicMock()
 
-        from jarvis.models import PlannedAction
+        from cognithor.models import PlannedAction
 
         action = PlannedAction(tool="shell", params={"cmd": "ls"})
         result = await ch.request_approval("unknown-session", action, "Test")

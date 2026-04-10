@@ -51,7 +51,7 @@ async def _mock_llm(prompt: str) -> str:
 
 
 def _make_fetch_result(**kwargs):
-    from jarvis.evolution.research_agent import FetchResult
+    from cognithor.evolution.research_agent import FetchResult
 
     defaults = {
         "url": "https://example.com/vvg",
@@ -73,7 +73,7 @@ def _make_fetch_result(**kwargs):
 class TestKnowledgeBuilder:
     @pytest.mark.asyncio
     async def test_build_from_fetch_result(self):
-        from jarvis.evolution.knowledge_builder import BuildResult, KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import BuildResult, KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, llm_fn=_mock_llm, goal_slug="vvg-recht")
@@ -96,7 +96,7 @@ class TestKnowledgeBuilder:
 
     @pytest.mark.asyncio
     async def test_chunking(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         kb = KnowledgeBuilder(mcp_client=_make_mcp(), goal_slug="test")
         long_text = " ".join(["word"] * 2000)
@@ -110,7 +110,7 @@ class TestKnowledgeBuilder:
 
     @pytest.mark.asyncio
     async def test_chunking_short_text(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         kb = KnowledgeBuilder(mcp_client=_make_mcp(), goal_slug="test")
         short_text = "This is a short text with only a few words."
@@ -122,7 +122,7 @@ class TestKnowledgeBuilder:
 
     @pytest.mark.asyncio
     async def test_entity_extraction(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         kb = KnowledgeBuilder(mcp_client=_make_mcp(), llm_fn=_mock_llm, goal_slug="test")
 
@@ -138,7 +138,7 @@ class TestKnowledgeBuilder:
 
     @pytest.mark.asyncio
     async def test_entity_extraction_llm_failure(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         async def bad_llm(prompt: str) -> str:
             return "This is not JSON at all, sorry."
@@ -152,7 +152,7 @@ class TestKnowledgeBuilder:
 
     @pytest.mark.asyncio
     async def test_vault_folder_uses_goal_slug(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, llm_fn=_mock_llm, goal_slug="versicherung")
@@ -168,7 +168,7 @@ class TestKnowledgeBuilder:
 
     @pytest.mark.asyncio
     async def test_memory_uses_semantic_tier(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, llm_fn=_mock_llm, goal_slug="test-slug")
@@ -184,7 +184,7 @@ class TestKnowledgeBuilder:
 
     @pytest.mark.asyncio
     async def test_build_result_accumulates(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, llm_fn=_mock_llm, goal_slug="multi")
@@ -207,7 +207,7 @@ class TestKnowledgeBuilder:
         assert total_chunks >= 3
 
     def test_build_result_dataclass(self):
-        from jarvis.evolution.knowledge_builder import BuildResult
+        from cognithor.evolution.knowledge_builder import BuildResult
 
         br = BuildResult()
 
@@ -222,28 +222,28 @@ class TestContentQualityGate:
     """Tests for _is_usable_content — rejects PDF artifacts and too-short text."""
 
     def test_rejects_too_short_text(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         usable, reason = _is_usable_content("Short.")
         assert usable is False
         assert reason == "too_short"
 
     def test_rejects_empty_text(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         usable, reason = _is_usable_content("")
         assert usable is False
         assert reason == "too_short"
 
     def test_rejects_whitespace_only(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         usable, reason = _is_usable_content("   \n\n\t  \n  ")
         assert usable is False
         assert reason == "too_short"
 
     def test_rejects_pdf_artifact_text(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         # Pad with enough PDF-like lines to exceed min_chars and trigger artifact ratio
         pdf_dump = "\n".join(
@@ -271,7 +271,7 @@ class TestContentQualityGate:
         assert "pdf_artifacts" in reason
 
     def test_accepts_real_article(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         article = (
             "Das Versicherungsvertragsgesetz (VVG) regelt die Rechtsbeziehungen "
@@ -286,14 +286,14 @@ class TestContentQualityGate:
         assert reason == "ok"
 
     def test_accepts_content_at_boundary(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         text = "x " * 101  # 202 chars — just above 200 threshold
         usable, reason = _is_usable_content(text)
         assert usable is True
 
     def test_borderline_garbage_ratio_below_threshold(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         lines = ["endobj", "xref", "trailer"]
         lines += ["Dies ist ein normaler Satz ueber Versicherungsrecht."] * 8
@@ -302,7 +302,7 @@ class TestContentQualityGate:
         assert usable is True
 
     def test_custom_min_chars(self):
-        from jarvis.evolution.knowledge_builder import _is_usable_content
+        from cognithor.evolution.knowledge_builder import _is_usable_content
 
         text = "a " * 60  # 120 chars
         usable_default, _ = _is_usable_content(text)
@@ -316,7 +316,7 @@ class TestBuildRejectsGarbage:
 
     @pytest.mark.asyncio
     async def test_build_skips_pdf_garbage(self):
-        from jarvis.evolution.knowledge_builder import BuildResult, KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import BuildResult, KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, llm_fn=_mock_llm, goal_slug="test")
@@ -347,7 +347,7 @@ class TestBuildRejectsGarbage:
 
     @pytest.mark.asyncio
     async def test_build_skips_too_short(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, goal_slug="test")
@@ -359,7 +359,7 @@ class TestBuildRejectsGarbage:
 
     @pytest.mark.asyncio
     async def test_build_accepts_good_content(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(mcp_client=mcp, llm_fn=_mock_llm, goal_slug="test")
@@ -381,67 +381,67 @@ class TestSourceConfidenceScoring:
     """Tests for _score_source_confidence — URL-based trust scoring."""
 
     def test_trusted_gov_domain(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://www.bafin.de/SharedDocs/some-article.html")
         assert score == 0.9
 
     def test_trusted_bund_domain(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://www.gesetze-im-internet.de/vvg/__1.html")
         assert score == 0.9
 
     def test_medium_trust_wikipedia(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://de.wikipedia.org/wiki/Versicherung")
         assert score == 0.7
 
     def test_medium_trust_heise(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://www.heise.de/news/some-article.html")
         assert score == 0.7
 
     def test_low_trust_blog(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://some-random-blog.com/post/123")
         assert score == 0.3
 
     def test_low_trust_medium(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://medium.com/@user/my-article-abc123")
         assert score == 0.3
 
     def test_low_trust_reddit(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://www.reddit.com/r/python/comments/abc")
         assert score == 0.3
 
     def test_default_unknown_domain(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://www.example.com/article")
         assert score == 0.5
 
     def test_empty_url(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("")
         assert score == 0.5
 
     def test_owasp_high_trust(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://owasp.org/Top10/")
         assert score == 0.8
 
     def test_europa_eu(self):
-        from jarvis.evolution.knowledge_builder import _score_source_confidence
+        from cognithor.evolution.knowledge_builder import _score_source_confidence
 
         score = _score_source_confidence("https://eur-lex.europa.eu/legal-content/EN/ALL/")
         assert score == 0.9
@@ -451,7 +451,7 @@ class TestParseLLMJson:
     """Tests for _parse_llm_json — 4-tier fallback parsing."""
 
     def test_tier1_valid_json(self):
-        from jarvis.evolution.knowledge_builder import _parse_llm_json
+        from cognithor.evolution.knowledge_builder import _parse_llm_json
 
         raw = json.dumps(
             {
@@ -468,7 +468,7 @@ class TestParseLLMJson:
         assert result["is_useful"] is True
 
     def test_tier2_json_in_markdown_block(self):
-        from jarvis.evolution.knowledge_builder import _parse_llm_json
+        from cognithor.evolution.knowledge_builder import _parse_llm_json
 
         raw = (
             "Hier ist meine Analyse:\n\n"
@@ -482,7 +482,7 @@ class TestParseLLMJson:
         assert result["memory_type"] == "procedural"
 
     def test_tier3_regex_extraction(self):
-        from jarvis.evolution.knowledge_builder import _parse_llm_json
+        from cognithor.evolution.knowledge_builder import _parse_llm_json
 
         raw = (
             'Hier ist das Ergebnis: "summary": "Extracted via regex.", '
@@ -493,7 +493,7 @@ class TestParseLLMJson:
         assert result["memory_type"] == "episodic"
 
     def test_tier4_complete_fallback(self):
-        from jarvis.evolution.knowledge_builder import _parse_llm_json
+        from cognithor.evolution.knowledge_builder import _parse_llm_json
 
         raw = "I cannot process this request. Here is some random text."
         result = _parse_llm_json(
@@ -505,14 +505,14 @@ class TestParseLLMJson:
         assert result["is_useful"] is True
 
     def test_fallback_truncates_long_content(self):
-        from jarvis.evolution.knowledge_builder import _parse_llm_json
+        from cognithor.evolution.knowledge_builder import _parse_llm_json
 
         long_fallback = "x" * 2000
         result = _parse_llm_json("garbage", long_fallback, "https://example.com")
         assert len(result["summary"]) == 800
 
     def test_is_useful_false_parsed(self):
-        from jarvis.evolution.knowledge_builder import _parse_llm_json
+        from cognithor.evolution.knowledge_builder import _parse_llm_json
 
         raw = json.dumps(
             {
@@ -526,7 +526,7 @@ class TestParseLLMJson:
         assert result["is_useful"] is False
 
     def test_partial_json_with_extra_text(self):
-        from jarvis.evolution.knowledge_builder import _parse_llm_json
+        from cognithor.evolution.knowledge_builder import _parse_llm_json
 
         raw = (
             "<think>Let me analyze this text.</think>\n"
@@ -563,7 +563,7 @@ class TestSummarizeForIdentity:
     async def test_build_calls_summarize_when_memory_manager_set(self):
         from unittest.mock import MagicMock
 
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -590,7 +590,7 @@ class TestSummarizeForIdentity:
 
     @pytest.mark.asyncio
     async def test_build_skips_summarize_without_memory_manager(self):
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         kb = KnowledgeBuilder(
@@ -606,7 +606,7 @@ class TestSummarizeForIdentity:
     async def test_build_skips_summarize_without_llm_fn(self):
         from unittest.mock import MagicMock
 
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -624,7 +624,7 @@ class TestSummarizeForIdentity:
     async def test_already_summarized_skips_llm_call(self):
         from unittest.mock import MagicMock
 
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -660,7 +660,7 @@ class TestSummarizeForIdentity:
     async def test_dedup_skips_duplicate_summaries(self):
         from unittest.mock import MagicMock
 
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -686,7 +686,7 @@ class TestSummarizeForIdentity:
     async def test_summarize_failure_does_not_block_pipeline(self):
         from unittest.mock import MagicMock
 
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         mcp = _make_mcp()
         mm = MagicMock()
@@ -708,7 +708,7 @@ class TestSummarizeForIdentity:
     async def test_is_useful_false_skips_store(self):
         from unittest.mock import MagicMock
 
-        from jarvis.evolution.knowledge_builder import KnowledgeBuilder
+        from cognithor.evolution.knowledge_builder import KnowledgeBuilder
 
         async def useless_llm(prompt: str) -> str:
             if "Wissenskurator" in prompt:

@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.model_router import ModelRouter, OllamaClient, OllamaError
-from jarvis.core.reflector import Reflector
-from jarvis.models import (
+from cognithor.config import JarvisConfig
+from cognithor.core.model_router import ModelRouter, OllamaClient, OllamaError
+from cognithor.core.reflector import Reflector
+from cognithor.models import (
     ActionPlan,
     AgentResult,
     AuditEntry,

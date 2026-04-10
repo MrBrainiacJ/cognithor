@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.social.discovery import SubredditDiscovery, SubredditSuggestion
+from cognithor.social.discovery import SubredditDiscovery, SubredditSuggestion
 
 
 class TestSubredditDiscovery:

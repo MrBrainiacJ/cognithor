@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from jarvis.evolution.atl_config import ATLConfig
-from jarvis.evolution.goal_manager import Goal, GoalManager
+from cognithor.evolution.atl_config import ATLConfig
+from cognithor.evolution.goal_manager import Goal, GoalManager
 
 
 def test_auto_goal_from_curiosity(tmp_path):
-    from jarvis.evolution.loop import EvolutionLoop
+    from cognithor.evolution.loop import EvolutionLoop
 
     idle = MagicMock()
     idle.is_idle = True
@@ -38,7 +38,7 @@ def test_auto_goal_from_curiosity(tmp_path):
 
 
 def test_no_duplicate_goals(tmp_path):
-    from jarvis.evolution.loop import EvolutionLoop
+    from cognithor.evolution.loop import EvolutionLoop
 
     idle = MagicMock()
     idle.is_idle = True
@@ -71,7 +71,7 @@ def test_no_duplicate_goals(tmp_path):
 
 
 def test_low_importance_skipped(tmp_path):
-    from jarvis.evolution.loop import EvolutionLoop
+    from cognithor.evolution.loop import EvolutionLoop
 
     idle = MagicMock()
     idle.is_idle = True

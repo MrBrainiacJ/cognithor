@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.a2a.delegation import (
+from cognithor.a2a.delegation import (
     DirectedMessage,
     DirectionPermissionError,
     can_send_direction,

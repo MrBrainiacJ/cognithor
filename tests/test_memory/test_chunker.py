@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.memory.chunker import (
+from cognithor.memory.chunker import (
     _content_hash,
     _detect_tier,
     _estimate_tokens,
@@ -10,7 +10,7 @@ from jarvis.memory.chunker import (
     _find_header_positions,
     chunk_text,
 )
-from jarvis.models import MemoryTier
+from cognithor.models import MemoryTier
 
 
 class TestEstimateTokens:
@@ -70,19 +70,19 @@ class TestFindHeaders:
 
 class TestDetectTier:
     def test_core(self):
-        assert _detect_tier("/home/.jarvis/memory/CORE.md") == MemoryTier.CORE
+        assert _detect_tier("/home/.cognithor/memory/CORE.md") == MemoryTier.CORE
 
     def test_episodic(self):
-        assert _detect_tier("/home/.jarvis/memory/episodes/2026-02-21.md") == MemoryTier.EPISODIC
+        assert _detect_tier("/home/.cognithor/memory/episodes/2026-02-21.md") == MemoryTier.EPISODIC
 
     def test_procedural(self):
         assert (
-            _detect_tier("/home/.jarvis/memory/procedures/bu-angebot.md") == MemoryTier.PROCEDURAL
+            _detect_tier("/home/.cognithor/memory/procedures/bu-angebot.md") == MemoryTier.PROCEDURAL
         )
 
     def test_semantic(self):
         assert (
-            _detect_tier("/home/.jarvis/memory/knowledge/kunden/mueller.md") == MemoryTier.SEMANTIC
+            _detect_tier("/home/.cognithor/memory/knowledge/kunden/mueller.md") == MemoryTier.SEMANTIC
         )
 
     def test_default(self):

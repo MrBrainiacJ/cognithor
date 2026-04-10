@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.agent_heartbeat import (
+from cognithor.core.agent_heartbeat import (
     AgentHeartbeatConfig,
     AgentHeartbeatScheduler,
     AgentTask,

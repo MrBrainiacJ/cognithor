@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.evolution.atl_config import ATLConfig
+from cognithor.evolution.atl_config import ATLConfig
 
 
 def test_atl_config_defaults():

@@ -9,7 +9,7 @@ import time
 import uuid
 from unittest.mock import MagicMock
 
-from jarvis.learning.trace_optimizer import (
+from cognithor.learning.trace_optimizer import (
     OptimizationProposal,
     ProposalStore,
     TraceOptimizer,
@@ -63,7 +63,7 @@ def _make_proposal(
 
 def _make_mock_trace_store() -> MagicMock:
     """Create a mock trace store with properly typed return values."""
-    from jarvis.learning.execution_trace import ExecutionTrace, TraceStep
+    from cognithor.learning.execution_trace import ExecutionTrace, TraceStep
 
     mock_trace = ExecutionTrace(
         trace_id="mock-t1",

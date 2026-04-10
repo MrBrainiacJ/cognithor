@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.preflight import (
+from cognithor.core.preflight import (
     ContextWindowExceeded,
     _compact_messages,
     estimate_tokens,

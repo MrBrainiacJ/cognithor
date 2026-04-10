@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.mcp.skill_tools import SkillTools, _slugify, register_skill_tools
+from cognithor.mcp.skill_tools import SkillTools, _slugify, register_skill_tools
 
 if TYPE_CHECKING:
     from pathlib import Path

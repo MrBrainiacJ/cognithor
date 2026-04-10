@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.browser.captcha.models import CaptchaType, SolveResult
-from jarvis.browser.captcha.solver import CaptchaConfig, CaptchaSolver
+from cognithor.browser.captcha.models import CaptchaType, SolveResult
+from cognithor.browser.captcha.solver import CaptchaConfig, CaptchaSolver
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ async def test_solve_with_detected_challenge(solver, mock_page):
             {"type": "text", "selector": "img.captcha", "sitekey": ""},
         ]
     )
-    with patch("jarvis.browser.captcha.solver.get_strategy") as mock_gs:
+    with patch("cognithor.browser.captcha.solver.get_strategy") as mock_gs:
 
         async def fake_strat(page, challenge, vision_fn):
             return SolveResult(
@@ -65,7 +65,7 @@ async def test_solve_retry_on_failure(solver, mock_page):
         ]
     )
     call_count = 0
-    with patch("jarvis.browser.captcha.solver.get_strategy") as mock_gs:
+    with patch("cognithor.browser.captcha.solver.get_strategy") as mock_gs:
 
         async def failing_then_ok(page, challenge, vision_fn):
             nonlocal call_count
@@ -101,7 +101,7 @@ async def test_solve_all_retries_exhausted(solver, mock_page):
             {"type": "text", "selector": "img.captcha", "sitekey": ""},
         ]
     )
-    with patch("jarvis.browser.captcha.solver.get_strategy") as mock_gs:
+    with patch("cognithor.browser.captcha.solver.get_strategy") as mock_gs:
 
         async def always_fail(page, challenge, vision_fn):
             return SolveResult(

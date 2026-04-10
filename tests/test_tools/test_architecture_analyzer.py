@@ -3,7 +3,7 @@
 import tempfile
 from pathlib import Path
 
-from jarvis.tools.architecture_analyzer import ArchitectureAnalyzer
+from cognithor.tools.architecture_analyzer import ArchitectureAnalyzer
 
 
 class TestArchitectureAnalyzer:

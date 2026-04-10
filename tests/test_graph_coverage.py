@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.graph.engine import GraphEngine
-from jarvis.graph.state import StateManager
-from jarvis.graph.types import (
+from cognithor.graph.engine import GraphEngine
+from cognithor.graph.state import StateManager
+from cognithor.graph.types import (
     END,
     Checkpoint,
     Edge,

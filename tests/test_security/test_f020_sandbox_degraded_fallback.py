@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from jarvis.models import SandboxConfig, SandboxLevel
-from jarvis.security.sandbox import Sandbox, SandboxResult
+from cognithor.models import SandboxConfig, SandboxLevel
+from cognithor.security.sandbox import Sandbox, SandboxResult
 
 # ============================================================================
 # SandboxResult Tests

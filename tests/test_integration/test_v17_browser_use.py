@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.browser.page_analyzer import PageAnalyzer
-from jarvis.browser.session_manager import SessionManager, SessionSnapshot
-from jarvis.browser.types import (
+from cognithor.browser.page_analyzer import PageAnalyzer
+from cognithor.browser.session_manager import SessionManager, SessionSnapshot
+from cognithor.browser.types import (
     ActionResult,
     ActionType,
     BrowserAction,
@@ -551,7 +551,7 @@ class TestBrowserAgentNoPlaywright:
         assert config.locale == "de-DE"
 
     def test_stats_not_running(self):
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         agent = BrowserAgent()
         stats = agent.stats()
@@ -616,7 +616,7 @@ class TestBrowserAgentMocked:
     def agent_with_mocks(self, mock_playwright):
         """BrowserAgent mit gemocktem Playwright (bereits gestartet)."""
         pw, browser, context, page = mock_playwright
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         agent = BrowserAgent()
         agent._playwright = pw
@@ -833,7 +833,7 @@ class TestBrowserAgentMocked:
         assert not result.success
 
     def test_not_started_error(self):
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         agent = BrowserAgent()
         with pytest.raises(RuntimeError, match="not started"):
@@ -868,7 +868,7 @@ class TestBrowserAgentMocked:
 class TestBrowserUseTools:
     def test_registration(self):
         """Prüft dass alle MCP-Tools registriert werden."""
-        from jarvis.browser.tools import register_browser_use_tools
+        from cognithor.browser.tools import register_browser_use_tools
 
         mcp_mock = MagicMock()
         registered_tools: dict[str, Any] = {}
@@ -907,14 +907,14 @@ class TestBrowserAgentVision:
 
     def test_init_without_vision(self) -> None:
         """Bestehender Code funktioniert ohne vision_analyzer."""
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         agent = BrowserAgent()
         assert agent._vision is None
 
     def test_init_with_vision(self) -> None:
         """vision_analyzer wird korrekt gespeichert."""
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         mock_vision = MagicMock()
         agent = BrowserAgent(vision_analyzer=mock_vision)
@@ -922,7 +922,7 @@ class TestBrowserAgentVision:
 
     def test_stats_without_vision(self) -> None:
         """Stats ohne Vision enthalten kein 'vision' Feld."""
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         agent = BrowserAgent()
         s = agent.stats()
@@ -930,7 +930,7 @@ class TestBrowserAgentVision:
 
     def test_stats_with_vision(self) -> None:
         """Stats mit Vision enthalten Vision-Stats."""
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         mock_vision = MagicMock()
         mock_vision.stats.return_value = {"enabled": True, "calls": 5}
@@ -943,7 +943,7 @@ class TestBrowserAgentVision:
     @pytest.mark.asyncio
     async def test_analyze_page_without_vision(self) -> None:
         """analyze_page_with_vision funktioniert auch ohne Vision."""
-        from jarvis.browser.agent import BrowserAgent
+        from cognithor.browser.agent import BrowserAgent
 
         agent = BrowserAgent()
         agent._running = True
@@ -967,8 +967,8 @@ class TestBrowserAgentVision:
     @pytest.mark.asyncio
     async def test_analyze_page_with_vision(self) -> None:
         """analyze_page_with_vision kombiniert DOM + Vision + page_content."""
-        from jarvis.browser.agent import BrowserAgent
-        from jarvis.browser.vision import VisionAnalysisResult
+        from cognithor.browser.agent import BrowserAgent
+        from cognithor.browser.vision import VisionAnalysisResult
 
         mock_vision = AsyncMock()
         mock_vision.is_enabled = True
@@ -1005,8 +1005,8 @@ class TestBrowserAgentVision:
     @pytest.mark.asyncio
     async def test_find_and_click_text_match_first(self) -> None:
         """Text-Match gewinnt — Vision wird nicht aufgerufen."""
-        from jarvis.browser.agent import BrowserAgent
-        from jarvis.browser.types import ActionResult
+        from cognithor.browser.agent import BrowserAgent
+        from cognithor.browser.types import ActionResult
 
         mock_vision = AsyncMock()
         mock_vision.is_enabled = True
@@ -1030,9 +1030,9 @@ class TestBrowserAgentVision:
     @pytest.mark.asyncio
     async def test_find_and_click_vision_fallback(self) -> None:
         """Vision-Fallback wenn Text-Match fehlschlägt, mit page_content."""
-        from jarvis.browser.agent import BrowserAgent
-        from jarvis.browser.types import ActionResult
-        from jarvis.browser.vision import VisionAnalysisResult
+        from cognithor.browser.agent import BrowserAgent
+        from cognithor.browser.types import ActionResult
+        from cognithor.browser.vision import VisionAnalysisResult
 
         mock_vision = AsyncMock()
         mock_vision.is_enabled = True

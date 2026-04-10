@@ -6,7 +6,7 @@ import time
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
-from jarvis.memory.watcher import MemoryFileHandler, MemoryWatcher
+from cognithor.memory.watcher import MemoryFileHandler, MemoryWatcher
 
 if TYPE_CHECKING:
     from pathlib import Path

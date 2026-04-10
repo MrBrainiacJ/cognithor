@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
-from jarvis.arc.game_profile import GameProfile, StrategyMetrics
-from jarvis.arc.per_game_solver import (
+from cognithor.arc.game_profile import GameProfile, StrategyMetrics
+from cognithor.arc.per_game_solver import (
     PerGameSolver,
     SolveResult,
     StrategyOutcome,

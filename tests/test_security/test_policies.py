@@ -7,8 +7,8 @@ import tempfile
 
 import pytest
 
-from jarvis.models import AgentType, PlannedAction, SandboxLevel
-from jarvis.security.policies import (
+from cognithor.models import AgentType, PlannedAction, SandboxLevel
+from cognithor.security.policies import (
     AgentPermissions,
     PolicyEngine,
     PolicyViolation,

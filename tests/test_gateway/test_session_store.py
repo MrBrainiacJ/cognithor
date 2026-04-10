@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.gateway.session_store import SessionStore
+from cognithor.gateway.session_store import SessionStore
 
 if TYPE_CHECKING:
     from pathlib import Path

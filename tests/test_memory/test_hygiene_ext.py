@@ -13,7 +13,7 @@ Targets:
 
 from __future__ import annotations
 
-from jarvis.memory.hygiene import (
+from cognithor.memory.hygiene import (
     DuplicateDetector,
     HygieneReport,
     MemoryHygieneEngine,

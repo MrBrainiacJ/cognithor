@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.core.distributed_lock import (
+from cognithor.core.distributed_lock import (
     DistributedLock,
     FileLockBackend,
     LocalLockBackend,
@@ -443,34 +443,34 @@ class TestCreateLock:
 
 class TestConfigIntegration:
     def test_config_has_lock_backend(self) -> None:
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         cfg = JarvisConfig()
         assert cfg.lock_backend == "local"
 
     def test_config_has_redis_url(self) -> None:
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         cfg = JarvisConfig()
         assert cfg.redis_url == "redis://localhost:6379/0"
 
     def test_config_lock_backend_values(self) -> None:
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         for value in ("local", "file", "redis"):
             cfg = JarvisConfig(lock_backend=value)
             assert cfg.lock_backend == value
 
     def test_create_lock_from_real_config(self) -> None:
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         cfg = JarvisConfig()
         lock = create_lock(cfg)
         assert isinstance(lock, LocalLockBackend)
 
     def test_create_lock_file_from_config(self, tmp_path: Path) -> None:
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
-        cfg = JarvisConfig(lock_backend="file", jarvis_home=tmp_path / ".jarvis")
+        cfg = JarvisConfig(lock_backend="file", jarvis_home=tmp_path / ".cognithor")
         lock = create_lock(cfg)
         assert isinstance(lock, FileLockBackend)

@@ -18,8 +18,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from jarvis.skills.community.client import CommunityRegistryClient, RegistryEntry
-from jarvis.skills.community.validator import ValidationResult
+from cognithor.skills.community.client import CommunityRegistryClient, RegistryEntry
+from cognithor.skills.community.validator import ValidationResult
 
 if TYPE_CHECKING:
     from pathlib import Path

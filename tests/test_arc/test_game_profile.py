@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from jarvis.arc.game_profile import GameProfile, StrategyMetrics
+from cognithor.arc.game_profile import GameProfile, StrategyMetrics
 
 
 class TestStrategyMetrics:

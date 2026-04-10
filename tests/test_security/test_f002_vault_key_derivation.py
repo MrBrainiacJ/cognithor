@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.security.agent_vault import (
+from cognithor.security.agent_vault import (
     AgentVault,
     AgentVaultManager,
     SecretType,
@@ -232,7 +232,7 @@ class TestAgentVaultManagerIntegration:
                 vault_b._decrypt(encrypted)
 
     def test_manager_without_path_uses_default(self) -> None:
-        """Manager ohne expliziten path nutzt ~/.jarvis/vault_master.key."""
+        """Manager ohne expliziten path nutzt ~/.cognithor/vault_master.key."""
         mgr = AgentVaultManager()
         assert len(mgr._master_secret) == 32
         vault = mgr.create_vault("agent-default")

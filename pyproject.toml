@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cognithor"
-version = "0.86.4"
+version = "0.87.0"
 description = "Cognithor · Agent OS — Local-first autonomous agent operating system"
 readme = "README.md"
 license = "Apache-2.0"
@@ -179,11 +179,11 @@ Repository = "https://github.com/Alex8791-cyber/cognithor"
 "Bug Tracker" = "https://github.com/Alex8791-cyber/cognithor/issues"
 
 [project.scripts]
-cognithor = "jarvis.__main__:main"
-jarvis = "jarvis.__main__:main"
+cognithor = "cognithor.__main__:main"
+jarvis = "cognithor.__main__:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/jarvis"]
+packages = ["src/cognithor"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

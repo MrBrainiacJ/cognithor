@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 
 /// Dialog for creating or editing a Kanban task.
 class TaskDialog extends StatefulWidget {

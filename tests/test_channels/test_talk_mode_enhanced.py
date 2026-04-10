@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.talk_mode import TalkMode
+from cognithor.channels.talk_mode import TalkMode
 
 
 @pytest.fixture
@@ -109,7 +109,7 @@ class TestTalkModeLoop:
 
     @pytest.mark.asyncio
     async def test_loop_with_speech(self, tm: TalkMode) -> None:
-        from jarvis.models import OutgoingMessage
+        from cognithor.models import OutgoingMessage
 
         tm._active = True
         tm._voice.listen_once = AsyncMock(return_value="Hello Jarvis")

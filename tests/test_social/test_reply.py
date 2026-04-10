@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from jarvis.social.models import Lead
-from jarvis.social.reply import ReplyMode, ReplyPoster
+from cognithor.social.models import Lead
+from cognithor.social.reply import ReplyMode, ReplyPoster
 
 
 class TestReplyPoster:
@@ -19,7 +19,7 @@ class TestReplyPoster:
             reply_draft="Try Cognithor",
         )
         poster = ReplyPoster()
-        with patch("jarvis.social.reply._copy_to_clipboard") as mock_clip:
+        with patch("cognithor.social.reply._copy_to_clipboard") as mock_clip:
             with patch("webbrowser.open") as mock_browser:
                 result = poster.post(lead, mode=ReplyMode.CLIPBOARD)
         assert result.success
@@ -37,7 +37,7 @@ class TestReplyPoster:
             reply_draft="Draft text",
         )
         poster = ReplyPoster()
-        with patch("jarvis.social.reply._copy_to_clipboard") as mock_clip:
+        with patch("cognithor.social.reply._copy_to_clipboard") as mock_clip:
             with patch("webbrowser.open") as mock_browser:
                 result = poster.post(lead, mode=ReplyMode.BROWSER)
         assert result.success
@@ -55,7 +55,7 @@ class TestReplyPoster:
             reply_final="Final edited version",
         )
         poster = ReplyPoster()
-        with patch("jarvis.social.reply._copy_to_clipboard") as mock_clip:
+        with patch("cognithor.social.reply._copy_to_clipboard") as mock_clip:
             with patch("webbrowser.open"):
                 poster.post(lead, mode=ReplyMode.CLIPBOARD)
         mock_clip.assert_called_once_with("Final edited version")

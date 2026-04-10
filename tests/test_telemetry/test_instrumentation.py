@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.telemetry.instrumentation import TelemetryHub, measure, trace
+from cognithor.telemetry.instrumentation import TelemetryHub, measure, trace
 
 # ============================================================================
 # trace decorator

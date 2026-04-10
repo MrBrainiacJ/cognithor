@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.mcp.computer_use import ComputerUseTools
+from cognithor.mcp.computer_use import ComputerUseTools
 
 
 class MockVisionResult:
@@ -51,10 +51,10 @@ class TestClickElement:
     @pytest.mark.asyncio
     async def test_click_by_name(self, tools):
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64",
+            "cognithor.mcp.computer_use._take_screenshot_b64",
             return_value=("base64data", 1920, 1080, 1.0),
         ):
-            with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
+            with patch("cognithor.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("Login Button")
                 assert result["success"] is True
@@ -64,10 +64,10 @@ class TestClickElement:
     @pytest.mark.asyncio
     async def test_click_by_partial_description(self, tools):
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64",
+            "cognithor.mcp.computer_use._take_screenshot_b64",
             return_value=("base64data", 1920, 1080, 1.0),
         ):
-            with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
+            with patch("cognithor.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("login")
                 assert result["success"] is True
@@ -76,10 +76,10 @@ class TestClickElement:
     @pytest.mark.asyncio
     async def test_click_by_text(self, tools):
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64",
+            "cognithor.mcp.computer_use._take_screenshot_b64",
             return_value=("base64data", 1920, 1080, 1.0),
         ):
-            with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
+            with patch("cognithor.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("Login")
                 assert result["success"] is True
@@ -87,7 +87,7 @@ class TestClickElement:
     @pytest.mark.asyncio
     async def test_no_match(self, tools):
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64",
+            "cognithor.mcp.computer_use._take_screenshot_b64",
             return_value=("base64data", 1920, 1080, 1.0),
         ):
             result = await tools.computer_click_element("nonexistent element xyz")
@@ -99,7 +99,7 @@ class TestClickElement:
     async def test_no_elements_detected(self, tools):
         tools._vision.analyze_desktop = AsyncMock(return_value=MockVisionResult(elements=[]))
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64",
+            "cognithor.mcp.computer_use._take_screenshot_b64",
             return_value=("base64data", 1920, 1080, 1.0),
         ):
             result = await tools.computer_click_element("anything")
@@ -131,10 +131,10 @@ class TestClickElement:
             )
         )
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64",
+            "cognithor.mcp.computer_use._take_screenshot_b64",
             return_value=("base64data", 1920, 1080, 1.0),
         ):
-            with patch("jarvis.mcp.computer_use._get_pyautogui") as mock_gui:
+            with patch("cognithor.mcp.computer_use._get_pyautogui") as mock_gui:
                 mock_gui.return_value.click = MagicMock()
                 result = await tools.computer_click_element("Save")
                 assert result["success"] is True
@@ -147,7 +147,7 @@ class TestWaitForChange:
     async def test_detects_change(self, tools):
         tools._last_screenshot_hash = "old_hash"
         with patch(
-            "jarvis.mcp.computer_use._take_screenshot_b64",
+            "cognithor.mcp.computer_use._take_screenshot_b64",
             return_value=("new_data", 1920, 1080, 1.0),
         ):
             result = await tools.computer_wait_for_change(timeout_ms=1000)
@@ -157,7 +157,7 @@ class TestWaitForChange:
     async def test_no_change_timeout(self, tools):
         tools._last_screenshot_hash = "some_hash"
         # Return same data every time → same hash
-        with patch("jarvis.mcp.computer_use._take_screenshot_b64") as mock_ss:
+        with patch("cognithor.mcp.computer_use._take_screenshot_b64") as mock_ss:
             # MD5 of "same_data" will be consistent
             mock_ss.return_value = ("same_data", 1920, 1080, 1.0)
             tools._last_screenshot_hash = __import__("hashlib").md5(b"same_data").hexdigest()

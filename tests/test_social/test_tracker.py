@@ -6,17 +6,17 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.social.tracker import PerformanceTracker, engagement_score
+from cognithor.social.tracker import PerformanceTracker, engagement_score
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from jarvis.social.store import LeadStore
+    from cognithor.social.store import LeadStore
 
 
 @pytest.fixture()
 def store(tmp_path: Path) -> LeadStore:
-    from jarvis.social.store import LeadStore
+    from cognithor.social.store import LeadStore
 
     return LeadStore(str(tmp_path / "leads.db"))
 
@@ -61,7 +61,7 @@ class TestPerformanceTracker:
                 }
             },
         ]
-        from jarvis.social.tracker import _find_our_reply
+        from cognithor.social.tracker import _find_our_reply
 
         match = _find_our_reply(comments, "Check out Cognithor")
         assert match is not None
@@ -78,7 +78,7 @@ class TestPerformanceTracker:
                 }
             },
         ]
-        from jarvis.social.tracker import _find_our_reply
+        from cognithor.social.tracker import _find_our_reply
 
         match = _find_our_reply(comments, "Check out Cognithor \u2014 it does exactly this")
         assert match is not None  # fuzzy match should find it

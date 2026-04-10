@@ -1,6 +1,6 @@
 """Tests fuer TaskTelemetryCollector."""
 
-from jarvis.telemetry.task_telemetry import TaskTelemetryCollector
+from cognithor.telemetry.task_telemetry import TaskTelemetryCollector
 
 
 class TestTaskTelemetryCollector:

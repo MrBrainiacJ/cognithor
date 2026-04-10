@@ -11,14 +11,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.channels.api import (
+from cognithor.channels.api import (
     APIChannel,
     HealthResponse,
     MessageRequest,
     MessageResponse,
     SessionInfo,
 )
-from jarvis.models import OutgoingMessage
+from cognithor.models import OutgoingMessage
 
 # ============================================================================
 # Fixtures
@@ -257,7 +257,7 @@ class TestAuthentication:
 class TestApprovalFlow:
     @pytest.mark.asyncio
     async def test_approval_timeout_returns_false(self, channel: APIChannel) -> None:
-        from jarvis.models import PlannedAction
+        from cognithor.models import PlannedAction
 
         PlannedAction(
             tool="email_send",

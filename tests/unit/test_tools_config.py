@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.config import JarvisConfig, ToolsConfig
+from cognithor.config import JarvisConfig, ToolsConfig
 
 
 class TestToolsConfig:
@@ -64,7 +64,7 @@ class TestGatekeeperBlocksDisabledTools:
     }
 
     def test_computer_use_blocked_when_disabled(self):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=False))
         gk = Gatekeeper(config)
@@ -72,7 +72,7 @@ class TestGatekeeperBlocksDisabledTools:
             assert gk.is_tool_disabled(tool), f"{tool} should be disabled"
 
     def test_computer_use_allowed_when_enabled(self):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=True))
         gk = Gatekeeper(config)
@@ -80,7 +80,7 @@ class TestGatekeeperBlocksDisabledTools:
             assert not gk.is_tool_disabled(tool), f"{tool} should be enabled"
 
     def test_desktop_tools_blocked_when_disabled(self):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = JarvisConfig(tools=ToolsConfig(desktop_tools_enabled=False))
         gk = Gatekeeper(config)
@@ -88,7 +88,7 @@ class TestGatekeeperBlocksDisabledTools:
             assert gk.is_tool_disabled(tool), f"{tool} should be disabled"
 
     def test_desktop_tools_allowed_when_enabled(self):
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = JarvisConfig(tools=ToolsConfig(desktop_tools_enabled=True))
         gk = Gatekeeper(config)

@@ -30,11 +30,11 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # --- Configuration ---
-JARVIS_HOME="${JARVIS_HOME:-$HOME/.jarvis}"
-VENV_DIR="${JARVIS_HOME}/venv"
+COGNITHOR_HOME="${COGNITHOR_HOME:-$HOME/.jarvis}"
+VENV_DIR="${COGNITHOR_HOME}/venv"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIN_PYTHON="3.12"
-OLLAMA_URL="${JARVIS_OLLAMA_BASE_URL:-http://localhost:11434}"
+OLLAMA_URL="${COGNITHOR_OLLAMA_BASE_URL:-http://localhost:11434}"
 USE_UV=false
 PKG_INSTALLER=""  # "uv" or "pip", set in detect_installer
 
@@ -744,17 +744,17 @@ setup_directories() {
 
     # Core directories that Cognithor needs
     local dirs=(
-        "$JARVIS_HOME"
-        "$JARVIS_HOME/memory"
-        "$JARVIS_HOME/memory/episodes"
-        "$JARVIS_HOME/memory/procedures"
-        "$JARVIS_HOME/memory/knowledge"
-        "$JARVIS_HOME/memory/sessions"
-        "$JARVIS_HOME/index"
-        "$JARVIS_HOME/logs"
-        "$JARVIS_HOME/cache"
-        "$JARVIS_HOME/workspace"
-        "$JARVIS_HOME/workspace/tmp"
+        "$COGNITHOR_HOME"
+        "$COGNITHOR_HOME/memory"
+        "$COGNITHOR_HOME/memory/episodes"
+        "$COGNITHOR_HOME/memory/procedures"
+        "$COGNITHOR_HOME/memory/knowledge"
+        "$COGNITHOR_HOME/memory/sessions"
+        "$COGNITHOR_HOME/index"
+        "$COGNITHOR_HOME/logs"
+        "$COGNITHOR_HOME/cache"
+        "$COGNITHOR_HOME/workspace"
+        "$COGNITHOR_HOME/workspace/tmp"
     )
 
     for dir in "${dirs[@]}"; do
@@ -773,10 +773,10 @@ setup_directories() {
             warn "jarvis --init-only failed (exit code: $_exit_code) -- skipped"
         fi
     fi
-    success "Directory structure in $JARVIS_HOME complete"
+    success "Directory structure in $COGNITHOR_HOME complete"
 
     # Config file
-    local config_file="$JARVIS_HOME/config.yaml"
+    local config_file="$COGNITHOR_HOME/config.yaml"
     if [[ -f "$config_file" ]]; then
         info "config.yaml already exists -- not overwriting"
     else
@@ -806,7 +806,7 @@ setup_directories() {
     fi
 
     # .env (optional)
-    local env_file="$JARVIS_HOME/.env"
+    local env_file="$COGNITHOR_HOME/.env"
     if [[ ! -f "$env_file" ]]; then
         if [[ -f "$REPO_DIR/.env.example" ]]; then
             cp "$REPO_DIR/.env.example" "$env_file"
@@ -838,8 +838,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 ExecStart=${VENV_DIR}/bin/jarvis
-WorkingDirectory=${JARVIS_HOME}
-EnvironmentFile=-${JARVIS_HOME}/.env
+WorkingDirectory=${COGNITHOR_HOME}
+EnvironmentFile=-${COGNITHOR_HOME}/.env
 Restart=on-failure
 RestartSec=10
 WatchdogSec=300
@@ -847,7 +847,7 @@ WatchdogSec=300
 # Security
 NoNewPrivileges=true
 ProtectHome=read-only
-ReadWritePaths=${JARVIS_HOME} /tmp/jarvis
+ReadWritePaths=${COGNITHOR_HOME} /tmp/jarvis
 
 # Logging
 StandardOutput=journal
@@ -871,15 +871,15 @@ BindsTo=jarvis.service
 [Service]
 Type=simple
 ExecStart=${VENV_DIR}/bin/python -m uvicorn jarvis.channels.webui:create_app --host 127.0.0.1 --port 8080 --factory
-WorkingDirectory=${JARVIS_HOME}
-EnvironmentFile=-${JARVIS_HOME}/.env
+WorkingDirectory=${COGNITHOR_HOME}
+EnvironmentFile=-${COGNITHOR_HOME}/.env
 Restart=on-failure
 RestartSec=5
 
 # Security
 NoNewPrivileges=true
 ProtectHome=read-only
-ReadWritePaths=${JARVIS_HOME} /tmp/jarvis
+ReadWritePaths=${COGNITHOR_HOME} /tmp/jarvis
 
 # Logging
 StandardOutput=journal
@@ -910,11 +910,11 @@ UNIT
 setup_logrotate() {
     header "Log Rotation"
 
-    local logrotate_dir="$JARVIS_HOME/logrotate.d"
+    local logrotate_dir="$COGNITHOR_HOME/logrotate.d"
     mkdir -p "$logrotate_dir"
 
     cat > "$logrotate_dir/jarvis" << CONF
-${JARVIS_HOME}/logs/*.log {
+${COGNITHOR_HOME}/logs/*.log {
     daily
     missingok
     rotate 14
@@ -926,7 +926,7 @@ ${JARVIS_HOME}/logs/*.log {
     create 0640
 }
 
-${JARVIS_HOME}/logs/*.jsonl {
+${COGNITHOR_HOME}/logs/*.jsonl {
     daily
     missingok
     rotate 30
@@ -951,7 +951,7 @@ run_smoke_test() {
 
     if [[ -f "$REPO_DIR/scripts/smoke_test.py" ]]; then
         "$VENV_DIR/bin/python" "$REPO_DIR/scripts/smoke_test.py" \
-            --jarvis-home "$JARVIS_HOME" \
+            --jarvis-home "$COGNITHOR_HOME" \
             --ollama-url "$OLLAMA_URL" \
             --venv "$VENV_DIR"
     else
@@ -1075,7 +1075,7 @@ DESKTOP
 uninstall() {
     header "Uninstall Cognithor"
 
-    warn "This removes the Cognithor installation (NOT your data in ~/.jarvis)"
+    warn "This removes the Cognithor installation (NOT your data in ~/.cognithor)"
 
     read -rp "Continue? [y/N] " confirm
     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
@@ -1108,8 +1108,8 @@ uninstall() {
     done
 
     success "Cognithor uninstalled"
-    info "Your data in $JARVIS_HOME was NOT deleted"
-    info "To fully remove: rm -rf $JARVIS_HOME"
+    info "Your data in $COGNITHOR_HOME was NOT deleted"
+    info "To fully remove: rm -rf $COGNITHOR_HOME"
 }
 
 # ============================================================================
@@ -1134,10 +1134,10 @@ DONE
     echo "    systemctl --user enable jarvis      # Autostart"
     echo ""
     echo "  Directories:"
-    echo "    $JARVIS_HOME/                       # Home"
-    echo "    $JARVIS_HOME/config.yaml            # Configuration"
-    echo "    $JARVIS_HOME/memory/                # All memories"
-    echo "    $JARVIS_HOME/logs/                  # Logs + Audit"
+    echo "    $COGNITHOR_HOME/                       # Home"
+    echo "    $COGNITHOR_HOME/config.yaml            # Configuration"
+    echo "    $COGNITHOR_HOME/memory/                # All memories"
+    echo "    $COGNITHOR_HOME/logs/                  # Logs + Audit"
     echo ""
     echo "  Next steps:"
     echo "    1. Review and customize config.yaml"

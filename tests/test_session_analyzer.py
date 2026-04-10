@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.learning.session_analyzer import (
+from cognithor.learning.session_analyzer import (
     CLUSTER_THRESHOLD,
     FailureCluster,
     ImprovementAction,
@@ -925,7 +925,7 @@ class TestRecencyWeight:
 
     def test_half_life(self, analyzer: SessionAnalyzer) -> None:
         """Nach RECENCY_HALF_LIFE_DAYS sollte das Gewicht ~0.5 sein."""
-        from jarvis.learning.session_analyzer import RECENCY_HALF_LIFE_DAYS
+        from cognithor.learning.session_analyzer import RECENCY_HALF_LIFE_DAYS
 
         half_life_ago = datetime.now(UTC) - timedelta(days=RECENCY_HALF_LIFE_DAYS)
         weight = analyzer._calculate_recency_weight(half_life_ago)

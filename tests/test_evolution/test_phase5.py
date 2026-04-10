@@ -14,7 +14,7 @@ import pytest
 # ---------------------------------------------------------------------------
 # Autonomous Learner
 # ---------------------------------------------------------------------------
-from jarvis.evolution.autonomous_learner import (
+from cognithor.evolution.autonomous_learner import (
     AutonomousLearner,
     GapSource,
     ImprovementProposal,
@@ -25,18 +25,18 @@ from jarvis.evolution.autonomous_learner import (
     ProposalType,
     TaskPriority,
 )
-from jarvis.evolution.cron_scheduler import (
+from cognithor.evolution.cron_scheduler import (
     EvolutionScheduler,
     ScheduledTask,
     _cron_field_matches,
     _cron_matches,
 )
-from jarvis.evolution.meta_learner import (
+from cognithor.evolution.meta_learner import (
     MetaAnalysis,
     MetaLearner,
     StrategyAdjustment,
 )
-from jarvis.evolution.rag_pipeline import (
+from cognithor.evolution.rag_pipeline import (
     EvolutionRAG,
     RAGChunk,
     RAGDocument,

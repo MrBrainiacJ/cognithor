@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/providers/chat_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/providers/chat_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 class PipelineIndicator extends StatelessWidget {
   const PipelineIndicator({super.key, required this.phases});

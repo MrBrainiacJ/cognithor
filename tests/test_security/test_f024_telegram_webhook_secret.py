@@ -28,7 +28,7 @@ sys.modules.setdefault("telegram.ext", _mock_telegram.ext)
 sys.modules.setdefault("telegram.constants", MagicMock())
 sys.modules.setdefault("telegram.error", MagicMock())
 
-from jarvis.channels.telegram import TelegramChannel
+from cognithor.channels.telegram import TelegramChannel
 
 
 def _make_channel() -> TelegramChannel:

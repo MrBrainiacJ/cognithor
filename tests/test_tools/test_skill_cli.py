@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.tools.skill_cli import (
+from cognithor.tools.skill_cli import (
     BUILT_IN_TEMPLATES,
     ContributorReward,
     LintIssue,

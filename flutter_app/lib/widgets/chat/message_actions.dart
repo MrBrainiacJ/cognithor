@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// Inline action icons (copy, edit) shown beneath a chat message bubble.
 ///

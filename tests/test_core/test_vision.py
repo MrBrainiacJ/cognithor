@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.vision import (
+from cognithor.core.vision import (
     ImageContent,
     ImageMediaType,
     MultimodalMessage,

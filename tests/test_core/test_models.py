@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from jarvis.models import (
+from cognithor.models import (
     ActionPlan,
     AgentResult,
     AuditEntry,
@@ -526,7 +526,7 @@ class TestModelConfig:
 
 class TestMCPServerConfig:
     def test_stdio(self) -> None:
-        c = MCPServerConfig(command="python", args=["-m", "jarvis.mcp.filesystem"])
+        c = MCPServerConfig(command="python", args=["-m", "cognithor.mcp.filesystem"])
         assert c.transport == "stdio"
         assert c.enabled is True
 
@@ -548,7 +548,7 @@ class TestMCPToolInfo:
 
 class TestPolicyRule:
     def test_create(self) -> None:
-        from jarvis.models import PolicyMatch, PolicyParamMatch
+        from cognithor.models import PolicyMatch, PolicyParamMatch
 
         rule = PolicyRule(
             name="no_destructive_shell",
@@ -565,7 +565,7 @@ class TestPolicyRule:
         assert rule.match.tool == "exec_command"
 
     def test_wildcard_match(self) -> None:
-        from jarvis.models import PolicyMatch, PolicyParamMatch
+        from cognithor.models import PolicyMatch, PolicyParamMatch
 
         rule = PolicyRule(
             name="credential_mask",

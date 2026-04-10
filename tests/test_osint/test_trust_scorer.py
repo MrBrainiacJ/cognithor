@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from jarvis.osint.models import (
+from cognithor.osint.models import (
     ClaimResult,
     ClaimType,
     Evidence,
     VerificationStatus,
 )
-from jarvis.osint.trust_scorer import TrustScorer
+from cognithor.osint.trust_scorer import TrustScorer
 
 
 def _cr(

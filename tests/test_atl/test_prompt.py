@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.evolution.atl_prompt import AutonomousThought, build_atl_prompt, parse_atl_response
+from cognithor.evolution.atl_prompt import AutonomousThought, build_atl_prompt, parse_atl_response
 
 
 def test_build_prompt_contains_key_sections():

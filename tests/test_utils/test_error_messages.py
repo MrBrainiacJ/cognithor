@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from jarvis.i18n import set_locale
-from jarvis.utils.error_messages import (
+from cognithor.i18n import set_locale
+from cognithor.utils.error_messages import (
     _friendly_tool_name,
     all_actions_blocked_message,
     classify_error_for_user,

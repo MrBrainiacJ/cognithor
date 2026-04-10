@@ -18,8 +18,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.config_manager import ConfigManager
+from cognithor.config import JarvisConfig
+from cognithor.config_manager import ConfigManager
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -63,7 +63,7 @@ class FakeApp:
 
 @pytest.fixture
 def tmp_home(tmp_path: Path) -> Path:
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     home.mkdir(parents=True, exist_ok=True)
     return home
 
@@ -92,7 +92,7 @@ def _setup_dag_app(
     gw._template_library = None
     gw._dag_workflow_engine = dag_engine
 
-    from jarvis.channels.config_routes import create_config_routes
+    from cognithor.channels.config_routes import create_config_routes
 
     create_config_routes(app, config_manager, gateway=gw)
 
@@ -261,7 +261,7 @@ class TestSourceLevelChecks:
     """Prueft den Source-Code auf den Fix."""
 
     def _get_source(self) -> str:
-        from jarvis.channels import config_routes
+        from cognithor.channels import config_routes
 
         return inspect.getsource(config_routes._register_workflow_graph_routes)
 

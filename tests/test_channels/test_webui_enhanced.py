@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.webui import WebUIChannel, WSMessageType
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.channels.webui import WebUIChannel, WSMessageType
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -185,7 +185,7 @@ class TestWebUIApprovalTimeout:
 
         action = PlannedAction(tool="rm", params={})
         # Patch timeout to be very short
-        with patch("jarvis.channels.webui.asyncio.wait_for", side_effect=TimeoutError):
+        with patch("cognithor.channels.webui.asyncio.wait_for", side_effect=TimeoutError):
             result = await channel.request_approval("s1", action, "Test")
         assert result is False
 

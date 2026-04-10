@@ -70,7 +70,7 @@ src/jarvis/evolution/
 ├── atl_prompt.py          # ATL System Prompt + Response Parsing
 └── atl_config.py          # ATLConfig dataclass
 
-~/.jarvis/
+~/.cognithor/
 ├── evolution/
 │   ├── goals.yaml         # Persistente Ziele (NEU)
 │   └── journal/           # Tagesbasierte Journal-Eintraege (NEU)
@@ -152,7 +152,7 @@ class GoalManager:
         """One-time migration: convert config.yaml learning_goals to Goal objects."""
 ```
 
-**Persistenz:** `~/.jarvis/evolution/goals.yaml`
+**Persistenz:** `~/.cognithor/evolution/goals.yaml`
 
 **Migration:** Beim ersten Start mit ATL enabled werden die bestehenden
 `config.evolution.learning_goals` Strings automatisch zu Goal-Objekten konvertiert
@@ -186,7 +186,7 @@ class ATLJournal:
 
     async def log_cycle(self, cycle: int, summary: str,
                         goal_updates: list, actions: list) -> None:
-        """Append to ~/.jarvis/evolution/journal/YYYY-MM-DD.md"""
+        """Append to ~/.cognithor/evolution/journal/YYYY-MM-DD.md"""
 
     def today(self) -> str | None:
         """Read today's journal."""

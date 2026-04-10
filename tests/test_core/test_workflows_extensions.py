@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.extensions import (
+from cognithor.core.extensions import (
     I18nManager,
     ModelCapability,
     ModelDefinition,
@@ -18,7 +18,7 @@ from jarvis.core.extensions import (
     ModelProvider,
     TranslationBundle,
 )
-from jarvis.core.workflows import (
+from cognithor.core.workflows import (
     EcosystemPolicy,
     SecurityTier,
     TemplateLibrary,

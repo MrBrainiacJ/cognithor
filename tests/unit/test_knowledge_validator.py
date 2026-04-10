@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.evolution.knowledge_validator import KnowledgeClaim, KnowledgeValidator
+from cognithor.evolution.knowledge_validator import KnowledgeClaim, KnowledgeValidator
 
 
 @dataclass

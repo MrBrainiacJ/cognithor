@@ -9,15 +9,15 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
-from jarvis.hashline.editor import HashlineEditor
-from jarvis.hashline.exceptions import MaxRetriesExceededError
-from jarvis.hashline.hasher import LineHasher
-from jarvis.hashline.models import EditIntent
-from jarvis.hashline.recovery import HashlineRecovery
-from jarvis.hashline.tagger import HashlineTagger
-from jarvis.hashline.validator import HashlineValidator
+from cognithor.hashline.cache import HashlineCache
+from cognithor.hashline.config import HashlineConfig
+from cognithor.hashline.editor import HashlineEditor
+from cognithor.hashline.exceptions import MaxRetriesExceededError
+from cognithor.hashline.hasher import LineHasher
+from cognithor.hashline.models import EditIntent
+from cognithor.hashline.recovery import HashlineRecovery
+from cognithor.hashline.tagger import HashlineTagger
+from cognithor.hashline.validator import HashlineValidator
 
 if TYPE_CHECKING:
     from pathlib import Path

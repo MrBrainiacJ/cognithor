@@ -7,15 +7,15 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.core.orchestrator import Orchestrator
-from jarvis.models import (
+from cognithor.core.orchestrator import Orchestrator
+from cognithor.models import (
     AgentHandle,
     AgentResult,
     AgentType,
     SubAgentConfig,
 )
-from jarvis.security.audit import AuditTrail
-from jarvis.security.policies import PolicyEngine, PolicyViolation, ResourceQuota
+from cognithor.security.audit import AuditTrail
+from cognithor.security.policies import PolicyEngine, PolicyViolation, ResourceQuota
 
 if TYPE_CHECKING:
     from pathlib import Path

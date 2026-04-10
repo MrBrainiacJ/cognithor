@@ -5,8 +5,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:jarvis_ui/services/api_client.dart';
-import 'package:jarvis_ui/services/websocket_service.dart';
+import 'package:cognithor_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/websocket_service.dart';
 
 enum JarvisConnectionState { disconnected, connecting, connected, error }
 

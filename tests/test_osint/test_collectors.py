@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.osint.collectors.crunchbase import CrunchbaseCollector
-from jarvis.osint.collectors.linkedin import LinkedInCollector
-from jarvis.osint.collectors.scholar import ScholarCollector
-from jarvis.osint.collectors.social import SocialCollector
+from cognithor.osint.collectors.crunchbase import CrunchbaseCollector
+from cognithor.osint.collectors.linkedin import LinkedInCollector
+from cognithor.osint.collectors.scholar import ScholarCollector
+from cognithor.osint.collectors.social import SocialCollector
 
 
 def test_stub_scholar_not_available():

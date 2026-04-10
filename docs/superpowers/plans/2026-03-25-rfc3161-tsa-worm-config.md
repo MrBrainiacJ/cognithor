@@ -161,7 +161,7 @@ audit chain up to that point) existed at a specific time.
 
 Usage:
     client = TSAClient(tsa_url="https://freetsa.org/tsr",
-                       storage_dir=Path("~/.jarvis/tsa/"))
+                       storage_dir=Path("~/.cognithor/tsa/"))
     tsr_path = client.request_timestamp(sha256_hex, "2026-03-25")
 
 Verification (manual, with OpenSSL):
@@ -213,7 +213,7 @@ class TSAClient:
         storage_dir: Path | str = "",
     ) -> None:
         self._tsa_url = tsa_url
-        self._storage_dir = Path(storage_dir) if storage_dir else Path.home() / ".jarvis" / "tsa"
+        self._storage_dir = Path(storage_dir) if storage_dir else Path.home() / ".cognithor" / "tsa"
         self._storage_dir.mkdir(parents=True, exist_ok=True)
         self._openssl = shutil.which("openssl")
 

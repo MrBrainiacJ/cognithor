@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.core.executor import Executor
-from jarvis.gateway.session_store import SessionStore
-from jarvis.models import (
+from cognithor.core.executor import Executor
+from cognithor.gateway.session_store import SessionStore
+from cognithor.models import (
     GateDecision,
     GateStatus,
     Message,
@@ -316,7 +316,7 @@ class TestCronEngineProperties:
 
     def test_job_count_no_store(self) -> None:
         """Ohne JobStore ist job_count 0."""
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         engine = CronEngine(jobs_path=None)
         assert engine.job_count == 0
@@ -324,7 +324,7 @@ class TestCronEngineProperties:
 
     def test_job_count_with_disabled_jobs(self) -> None:
         """Alle Jobs deaktiviert → 0."""
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write("jobs:\n  test_job:\n    schedule: '0 7 * * *'\n")

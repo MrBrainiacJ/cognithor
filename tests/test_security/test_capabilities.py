@@ -3,8 +3,8 @@
 import os
 import tempfile
 
-from jarvis.models import ToolCapability, ToolCapabilitySpec
-from jarvis.security.capabilities import (
+from cognithor.models import ToolCapability, ToolCapabilitySpec
+from cognithor.security.capabilities import (
     PERMISSIVE,
     RESTRICTIVE,
     STANDARD,

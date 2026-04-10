@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/widgets/dag_graph_painter.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/widgets/dag_graph_painter.dart';
 
 class LiveDagPanel extends StatelessWidget {
   const LiveDagPanel({super.key, required this.entries});

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.mcp.browser import (
+from cognithor.mcp.browser import (
     BROWSER_TOOL_SCHEMAS,
     MAX_TEXT_LENGTH,
     BrowserResult,

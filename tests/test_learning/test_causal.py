@@ -1,6 +1,6 @@
 """Tests fuer CausalAnalyzer."""
 
-from jarvis.learning.causal import CausalAnalyzer
+from cognithor.learning.causal import CausalAnalyzer
 
 
 class TestCausalAnalyzer:

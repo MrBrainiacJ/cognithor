@@ -6,7 +6,7 @@ FormField, ProgressTracker, AdaptiveCard.
 
 from __future__ import annotations
 
-from jarvis.channels.interactive import (
+from cognithor.channels.interactive import (
     AdaptiveCard,
     ButtonStyle,
     DiscordColor,

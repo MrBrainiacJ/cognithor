@@ -104,7 +104,7 @@ def _make_relation(src: str, tgt: str, rtype: str = "related_to", confidence: fl
 
 @pytest.fixture
 def app_and_gateway():
-    from jarvis.channels.config_routes import create_config_routes
+    from cognithor.channels.config_routes import create_config_routes
 
     app = FakeApp()
     gateway = MagicMock()

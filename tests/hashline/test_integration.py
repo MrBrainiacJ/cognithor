@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.hashline import EditIntent, HashlineGuard
-from jarvis.hashline.config import HashlineConfig
+from cognithor.hashline import EditIntent, HashlineGuard
+from cognithor.hashline.config import HashlineConfig
 
 
 @pytest.fixture

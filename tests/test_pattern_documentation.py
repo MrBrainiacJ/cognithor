@@ -12,8 +12,8 @@ from __future__ import annotations
 import time
 from unittest.mock import MagicMock
 
-from jarvis.gateway.gateway import Gateway
-from jarvis.models import AgentResult, Message, MessageRole, ToolResult, WorkingMemory
+from cognithor.gateway.gateway import Gateway
+from cognithor.models import AgentResult, Message, MessageRole, ToolResult, WorkingMemory
 
 # ── Helpers ──────────────────────────────────────────────────────
 

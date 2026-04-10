@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from jarvis.arc.game_analyzer import (
+from cognithor.arc.game_analyzer import (
     GameAnalyzer,
     SacrificeReport,
     _grid_to_png_b64,
@@ -194,7 +194,7 @@ class TestVisionCalls:
             }
         }
 
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             mock_ollama.chat.return_value = mock_resp
             result = analyzer._vision_call_initial(grid, [5, 6])
 
@@ -205,7 +205,7 @@ class TestVisionCalls:
         analyzer = GameAnalyzer.__new__(GameAnalyzer)
         grid = np.zeros((64, 64), dtype=np.int8)
 
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             mock_ollama.chat.side_effect = ConnectionError("Ollama offline")
             result = analyzer._vision_call_initial(grid, [1, 2, 3, 4])
 
@@ -229,7 +229,7 @@ class TestVisionCalls:
             }
         }
 
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             mock_ollama.chat.return_value = mock_resp
             result = analyzer._vision_call_final(grid_before, grid_after)
 
@@ -239,7 +239,7 @@ class TestVisionCalls:
 
 class TestAnalyze:
     def test_analyze_uses_cache(self, tmp_path):
-        from jarvis.arc.game_profile import GameProfile
+        from cognithor.arc.game_profile import GameProfile
 
         # Pre-save a profile
         p = GameProfile(
@@ -264,7 +264,7 @@ class TestAnalyze:
         assert result.vision_description == "cached"
 
     def test_analyze_force_ignores_cache(self, tmp_path):
-        from jarvis.arc.game_profile import GameProfile
+        from cognithor.arc.game_profile import GameProfile
 
         p = GameProfile(
             game_id="force_test",
@@ -323,7 +323,7 @@ class TestAnalyze:
         }
 
         analyzer = GameAnalyzer(arcade=mock_arcade)
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             mock_ollama.chat.return_value = vision_resp
             result = analyzer.analyze("force_test", force=True, base_dir=tmp_path)
 
@@ -332,7 +332,7 @@ class TestAnalyze:
 
 class TestCLIIntegration:
     def test_build_parser_accepts_analyzer_mode(self):
-        from jarvis.arc.__main__ import _build_parser
+        from cognithor.arc.__main__ import _build_parser
 
         parser = _build_parser()
         args = parser.parse_args(["--mode", "analyzer", "--game", "ft09"])
@@ -340,7 +340,7 @@ class TestCLIIntegration:
         assert args.game == "ft09"
 
     def test_build_parser_accepts_reanalyze_flag(self):
-        from jarvis.arc.__main__ import _build_parser
+        from cognithor.arc.__main__ import _build_parser
 
         parser = _build_parser()
         args = parser.parse_args(["--mode", "analyzer", "--reanalyze"])
@@ -348,7 +348,7 @@ class TestCLIIntegration:
 
     def test_analyzer_mode_requires_game_or_all(self):
         """analyzer mode should work without --game (runs all games)."""
-        from jarvis.arc.__main__ import _build_parser
+        from cognithor.arc.__main__ import _build_parser
 
         parser = _build_parser()
         args = parser.parse_args(["--mode", "analyzer"])
@@ -409,7 +409,7 @@ class TestHasTogglesDetection:
         }
 
         analyzer = GameAnalyzer(arcade=mock_arcade)
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             mock_ollama.chat.return_value = vision_resp
             profile = analyzer.analyze("toggle_test", force=True, base_dir=tmp_path)
 
@@ -464,7 +464,7 @@ class TestHasTogglesDetection:
         }
 
         analyzer = GameAnalyzer(arcade=mock_arcade)
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             mock_ollama.chat.return_value = vision_resp
             profile = analyzer.analyze("no_toggle_test", force=True, base_dir=tmp_path)
 

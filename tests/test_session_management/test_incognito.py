@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from jarvis.gateway.session_store import SessionStore
-from jarvis.models import SessionContext
+from cognithor.gateway.session_store import SessionStore
+from cognithor.models import SessionContext
 
 
 def test_create_incognito_session(tmp_path):

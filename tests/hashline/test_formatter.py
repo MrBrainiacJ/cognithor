@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.hashline.models import HashlinedFile, HashlinedLine
+from cognithor.hashline.models import HashlinedFile, HashlinedLine
 
 if TYPE_CHECKING:
-    from jarvis.hashline.formatter import HashlineFormatter
+    from cognithor.hashline.formatter import HashlineFormatter
 
 
 class TestFormatLine:

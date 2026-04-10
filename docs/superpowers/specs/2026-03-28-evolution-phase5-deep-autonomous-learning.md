@@ -166,7 +166,7 @@ class QualityQuestion:
 ### Persistence Layout
 
 ```
-~/.jarvis/evolution/plans/
+~/.cognithor/evolution/plans/
   └── versicherungsrecht-vvg/
        ├── plan.json                 # LearningPlan
        ├── subgoals/

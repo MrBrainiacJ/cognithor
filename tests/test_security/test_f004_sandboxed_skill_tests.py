@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.tools.skill_cli import SkillTester
+from cognithor.tools.skill_cli import SkillTester
 
 
 class TestBuildSafeEnv:
@@ -36,7 +36,7 @@ class TestBuildSafeEnv:
             "SLACK_TOKEN",
             "TELEGRAM_BOT_TOKEN",
             "DATABASE_URL",
-            "JARVIS_SECRET",
+            "COGNITHOR_SECRET",
             "MASTER_SECRET",
         ]
         # Setze temporaer sensitive Vars

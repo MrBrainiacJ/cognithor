@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.memory.embeddings import (
+from cognithor.memory.embeddings import (
     EmbeddingClient,
     EmbeddingResult,
     EmbeddingStats,
@@ -275,7 +275,7 @@ class TestCreateEmbeddingProvider:
         config.openai_api_key = "test-key"
         config.openai_base_url = "https://api.openai.com/v1"
         with patch(
-            "jarvis.memory.embeddings._get_api_key_and_url",
+            "cognithor.memory.embeddings._get_api_key_and_url",
             return_value=("key", "https://api.openai.com/v1"),
         ):
             provider = create_embedding_provider(config)

@@ -11,7 +11,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import 'package:jarvis_ui/services/api_client.dart';
+import 'package:cognithor_ui/services/api_client.dart';
 
 void _log(String msg) {
   if (kDebugMode) debugPrint(msg);

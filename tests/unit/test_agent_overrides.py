@@ -10,9 +10,9 @@ class TestPlannerAgentOverrides:
 
     @pytest.fixture
     def mock_planner(self):
-        from jarvis.config import JarvisConfig
-        from jarvis.core.model_router import ModelRouter
-        from jarvis.core.planner import Planner
+        from cognithor.config import JarvisConfig
+        from cognithor.core.model_router import ModelRouter
+        from cognithor.core.planner import Planner
 
         config = JarvisConfig()
         mock_ollama = MagicMock()
@@ -38,7 +38,7 @@ class TestPlannerAgentOverrides:
 
     @pytest.fixture
     def empty_wm(self):
-        from jarvis.models import WorkingMemory
+        from cognithor.models import WorkingMemory
 
         return WorkingMemory()
 

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from jarvis.browser.captcha.classifier import classify_challenge, select_vision_model
-from jarvis.browser.captcha.models import CaptchaChallenge, CaptchaType
+from cognithor.browser.captcha.classifier import classify_challenge, select_vision_model
+from cognithor.browser.captcha.models import CaptchaChallenge, CaptchaType
 
 
 def test_classify_text():

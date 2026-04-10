@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.browser.context_bridge import (
+from cognithor.browser.context_bridge import (
     ContextSnapshot,
     TabContextBridge,
     TabHandle,

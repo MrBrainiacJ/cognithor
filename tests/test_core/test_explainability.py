@@ -6,7 +6,7 @@ und ExplainabilityEngine.
 
 from __future__ import annotations
 
-from jarvis.core.explainability import (
+from cognithor.core.explainability import (
     DecisionTrail,
     ExplainabilityEngine,
     SourceAttribution,

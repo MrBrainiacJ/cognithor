@@ -15,7 +15,7 @@ import time
 
 import pytest
 
-from jarvis.memory.integrity import DuplicateDetector, MemoryEntry
+from cognithor.memory.integrity import DuplicateDetector, MemoryEntry
 
 
 class TestMaxEntriesLimit:

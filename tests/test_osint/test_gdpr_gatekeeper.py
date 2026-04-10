@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.osint.gdpr_gatekeeper import GDPRGatekeeper
-from jarvis.osint.models import GDPRViolationError, HIMRequest
+from cognithor.osint.gdpr_gatekeeper import GDPRGatekeeper
+from cognithor.osint.models import GDPRViolationError, HIMRequest
 
 
 def _req(**kw) -> HIMRequest:

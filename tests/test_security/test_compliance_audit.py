@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from jarvis.security.compliance_audit import ComplianceAuditLog
+from cognithor.security.compliance_audit import ComplianceAuditLog
 
 
 @pytest.fixture

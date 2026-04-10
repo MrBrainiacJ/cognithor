@@ -15,7 +15,7 @@ from __future__ import annotations
 import inspect
 from datetime import UTC, datetime, timedelta
 
-from jarvis.security.gdpr import (
+from cognithor.security.gdpr import (
     DataCategory,
     DataProcessingLog,
     DataProcessingRecord,

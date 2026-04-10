@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.core.model_router import OllamaClient, OllamaError
-from jarvis.core.unified_llm import UnifiedLLMClient
+from cognithor.core.model_router import OllamaClient, OllamaError
+from cognithor.core.unified_llm import UnifiedLLMClient
 
 # ============================================================================
 # Fixtures
@@ -315,7 +315,7 @@ class TestFactory:
     @pytest.mark.asyncio
     async def test_create_raises_on_backend_error(self) -> None:
         """Wenn Backend-Erstellung fehlschlägt, wird ein Fehler geworfen (kein stilles Fallback)."""
-        from jarvis.core.model_router import OllamaError
+        from cognithor.core.model_router import OllamaError
 
         config = MagicMock()
         config.llm_backend_type = "openai"
@@ -324,7 +324,7 @@ class TestFactory:
         config.ollama.timeout_seconds = 30
         config.ollama.keep_alive = "5m"
 
-        with patch("jarvis.core.llm_backend.create_backend", side_effect=ValueError("Bad key")):
+        with patch("cognithor.core.llm_backend.create_backend", side_effect=ValueError("Bad key")):
             with pytest.raises(OllamaError, match="konnte nicht initialisiert werden"):
                 UnifiedLLMClient.create(config)
 

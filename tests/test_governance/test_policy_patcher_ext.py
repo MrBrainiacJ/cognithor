@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import yaml
 
-from jarvis.governance.policy_patcher import PolicyPatcher
-from jarvis.models import PolicyChange
+from cognithor.governance.policy_patcher import PolicyPatcher
+from cognithor.models import PolicyChange
 
 if TYPE_CHECKING:
     from pathlib import Path

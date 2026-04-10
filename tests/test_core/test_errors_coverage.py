@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.errors import (
+from cognithor.core.errors import (
     AuthenticationError,
     ChannelError,
     ConfigError,
@@ -24,7 +24,7 @@ class TestJarvisError:
     def test_base_error(self) -> None:
         err = JarvisError("base error")
         assert str(err) == "base error"
-        assert err.error_code == "JARVIS_ERROR"
+        assert err.error_code == "COGNITHOR_ERROR"
         assert err.details == {}
 
     def test_base_error_with_code_and_details(self) -> None:

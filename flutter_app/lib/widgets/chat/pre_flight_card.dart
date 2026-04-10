@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// Non-blocking plan preview card with auto-execute countdown.
 class PreFlightCard extends StatefulWidget {

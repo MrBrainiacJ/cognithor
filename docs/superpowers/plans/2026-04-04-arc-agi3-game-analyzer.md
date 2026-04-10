@@ -148,7 +148,7 @@ __all__ = ["GameProfile", "StrategyMetrics"]
 
 log = get_logger(__name__)
 
-_DEFAULT_BASE_DIR = Path.home() / ".jarvis" / "arc"
+_DEFAULT_BASE_DIR = Path.home() / ".cognithor" / "arc"
 
 
 @dataclass

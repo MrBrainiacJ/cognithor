@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 class TestContextPipelineSkillLookup:
     def test_get_skill_context_returns_matches(self):
-        from jarvis.core.context_pipeline import ContextPipeline
+        from cognithor.core.context_pipeline import ContextPipeline
 
         cp = ContextPipeline.__new__(ContextPipeline)
         cp._skill_registry = MagicMock()
@@ -30,7 +30,7 @@ class TestContextPipelineSkillLookup:
         cp._skill_registry.match.assert_called_once()
 
     def test_get_skill_context_no_registry_returns_empty(self):
-        from jarvis.core.context_pipeline import ContextPipeline
+        from cognithor.core.context_pipeline import ContextPipeline
 
         cp = ContextPipeline.__new__(ContextPipeline)
         cp._skill_registry = None
@@ -39,7 +39,7 @@ class TestContextPipelineSkillLookup:
         assert result == ""
 
     def test_get_skill_context_no_matches_returns_empty(self):
-        from jarvis.core.context_pipeline import ContextPipeline
+        from cognithor.core.context_pipeline import ContextPipeline
 
         cp = ContextPipeline.__new__(ContextPipeline)
         cp._skill_registry = MagicMock()
@@ -49,7 +49,7 @@ class TestContextPipelineSkillLookup:
         assert result == ""
 
     def test_get_skill_context_exception_returns_empty(self):
-        from jarvis.core.context_pipeline import ContextPipeline
+        from cognithor.core.context_pipeline import ContextPipeline
 
         cp = ContextPipeline.__new__(ContextPipeline)
         cp._skill_registry = MagicMock()
@@ -61,7 +61,7 @@ class TestContextPipelineSkillLookup:
 
 class TestRegistryInjection:
     def test_set_skill_registry_stores_reference(self):
-        from jarvis.core.context_pipeline import ContextPipeline
+        from cognithor.core.context_pipeline import ContextPipeline
 
         cp = ContextPipeline.__new__(ContextPipeline)
         cp._skill_registry = None
@@ -74,7 +74,7 @@ class TestRegistryInjection:
 
 class TestToolAvailabilityLogging:
     def test_skill_skipped_when_tools_missing(self):
-        from jarvis.skills.registry import Skill, SkillRegistry
+        from cognithor.skills.registry import Skill, SkillRegistry
 
         registry = SkillRegistry()
 
@@ -98,7 +98,7 @@ class TestToolAvailabilityLogging:
         assert len(matches) == 0
 
     def test_skill_matches_when_tools_available(self):
-        from jarvis.skills.registry import Skill, SkillRegistry
+        from cognithor.skills.registry import Skill, SkillRegistry
 
         registry = SkillRegistry()
 
@@ -127,8 +127,8 @@ class TestLifecycleCronIntegration:
     def test_lifecycle_manager_can_be_created(self):
         from pathlib import Path
 
-        from jarvis.skills.lifecycle import SkillLifecycleManager
-        from jarvis.skills.registry import SkillRegistry
+        from cognithor.skills.lifecycle import SkillLifecycleManager
+        from cognithor.skills.registry import SkillRegistry
 
         registry = SkillRegistry()
         lifecycle = SkillLifecycleManager(
@@ -141,8 +141,8 @@ class TestLifecycleCronIntegration:
         import tempfile
         from pathlib import Path
 
-        from jarvis.skills.lifecycle import SkillLifecycleManager
-        from jarvis.skills.registry import SkillRegistry
+        from cognithor.skills.lifecycle import SkillLifecycleManager
+        from cognithor.skills.registry import SkillRegistry
 
         registry = SkillRegistry()
         with tempfile.TemporaryDirectory() as tmp:

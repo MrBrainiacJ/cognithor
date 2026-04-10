@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.learning.prompt_evolution import (
+from cognithor.learning.prompt_evolution import (
     PromptEvolutionEngine,
     _version_id,
 )
@@ -234,8 +234,8 @@ class TestPromptEvolutionEngine:
 
     async def test_evolution_respects_gate(self, tmp_path):
         """When ImprovementGate blocks prompt_tuning, evolution should not proceed."""
-        from jarvis.config import ImprovementGovernanceConfig
-        from jarvis.governance.improvement_gate import (
+        from cognithor.config import ImprovementGovernanceConfig
+        from cognithor.governance.improvement_gate import (
             GateVerdict,
             ImprovementDomain,
             ImprovementGate,
@@ -360,14 +360,14 @@ class TestIntervalEnforcement:
 
 class TestCronCallback:
     async def test_cron_skips_when_no_engine(self):
-        from jarvis.cron.jobs import prompt_evolution_check
+        from cognithor.cron.jobs import prompt_evolution_check
 
         gw = MagicMock(spec=[])  # no _prompt_evolution attr
         await prompt_evolution_check(gw)  # should not raise
 
     async def test_cron_blocked_by_gate(self):
-        from jarvis.cron.jobs import prompt_evolution_check
-        from jarvis.governance.improvement_gate import GateVerdict
+        from cognithor.cron.jobs import prompt_evolution_check
+        from cognithor.governance.improvement_gate import GateVerdict
 
         engine = AsyncMock()
         gate = MagicMock()
@@ -381,7 +381,7 @@ class TestCronCallback:
         engine.maybe_evolve.assert_not_called()
 
     async def test_cron_calls_maybe_evolve(self):
-        from jarvis.cron.jobs import prompt_evolution_check
+        from cognithor.cron.jobs import prompt_evolution_check
 
         engine = AsyncMock()
         engine.maybe_evolve.return_value = "abc123"
@@ -394,7 +394,7 @@ class TestCronCallback:
         engine.maybe_evolve.assert_awaited_once_with("system_prompt")
 
     async def test_cron_no_gate_attribute(self):
-        from jarvis.cron.jobs import prompt_evolution_check
+        from cognithor.cron.jobs import prompt_evolution_check
 
         engine = AsyncMock()
         engine.maybe_evolve.return_value = None

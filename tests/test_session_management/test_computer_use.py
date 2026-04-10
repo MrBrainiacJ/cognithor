@@ -7,7 +7,7 @@ import pytest
 
 def test_computer_use_tools_importable():
     """ComputerUseTools class should be importable."""
-    from jarvis.mcp.computer_use import ComputerUseTools
+    from cognithor.mcp.computer_use import ComputerUseTools
 
     tools = ComputerUseTools()
     assert tools is not None
@@ -20,9 +20,9 @@ def test_computer_use_gatekeeper_classification():
     (user-opted-in but still require approval gate).  All tools become RED
     when computer_use_enabled=False.
     """
-    from jarvis.config import JarvisConfig, ToolsConfig
-    from jarvis.core.gatekeeper import Gatekeeper
-    from jarvis.models import PlannedAction
+    from cognithor.config import JarvisConfig, ToolsConfig
+    from cognithor.core.gatekeeper import Gatekeeper
+    from cognithor.models import PlannedAction
 
     gk_enabled = Gatekeeper(JarvisConfig(tools=ToolsConfig(computer_use_enabled=True)))
     gk_disabled = Gatekeeper(JarvisConfig(tools=ToolsConfig(computer_use_enabled=False)))
@@ -54,7 +54,7 @@ def test_computer_use_gatekeeper_classification():
 @pytest.mark.asyncio
 async def test_computer_screenshot():
     """computer_screenshot should return width/height."""
-    from jarvis.mcp.computer_use import ComputerUseTools
+    from cognithor.mcp.computer_use import ComputerUseTools
 
     tools = ComputerUseTools()
     try:

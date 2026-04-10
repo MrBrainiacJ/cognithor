@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from jarvis.skills.persistence import MarketplaceStore
-from jarvis.skills.seed_data import seed_marketplace
+from cognithor.skills.persistence import MarketplaceStore
+from cognithor.skills.seed_data import seed_marketplace
 
 # ======================================================================
 # Fixtures
@@ -680,7 +680,7 @@ class TestAPI:
         except ImportError:
             pytest.skip("FastAPI nicht installiert")
 
-        from jarvis.skills import api as skills_api
+        from cognithor.skills import api as skills_api
 
         # Store injizieren
         skills_api.set_store(populated_store)

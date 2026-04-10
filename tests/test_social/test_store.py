@@ -9,8 +9,8 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
-from jarvis.social.models import Lead, LeadStatus, ScanResult
-from jarvis.social.store import LeadStore
+from cognithor.social.models import Lead, LeadStatus, ScanResult
+from cognithor.social.store import LeadStore
 
 
 @pytest.fixture()

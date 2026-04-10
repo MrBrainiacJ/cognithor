@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.indexer import MemoryIndex, _deserialize_vector, _serialize_vector
-from jarvis.models import Chunk, Entity, MemoryTier, Relation
+from cognithor.memory.indexer import MemoryIndex, _deserialize_vector, _serialize_vector
+from cognithor.models import Chunk, Entity, MemoryTier, Relation
 
 if TYPE_CHECKING:
     from pathlib import Path

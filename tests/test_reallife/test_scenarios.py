@@ -46,7 +46,7 @@ class TestWebResearch:
     @pytest.mark.asyncio
     async def test_weather_query_generates_search_plan(self):
         """A weather question should produce a search_and_read plan, not ask for permission."""
-        from jarvis.core.planner import SYSTEM_PROMPT
+        from cognithor.core.planner import SYSTEM_PROMPT
 
         # Verify the system prompt instructs against asking for permission
         lower = SYSTEM_PROMPT.lower()
@@ -55,7 +55,7 @@ class TestWebResearch:
     @pytest.mark.asyncio
     async def test_replan_prompt_has_quality_check(self):
         """Replan prompt must include source quality assessment."""
-        from jarvis.core.planner import REPLAN_PROMPT
+        from cognithor.core.planner import REPLAN_PROMPT
 
         lower = REPLAN_PROMPT.lower()
         assert "quellen" in lower, "REPLAN_PROMPT must mention Quellen (sources)"
@@ -75,9 +75,9 @@ class TestFileOperations:
     @pytest.mark.asyncio
     async def test_file_tools_are_green(self):
         """File read tools must be GREEN (no approval needed)."""
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction, RiskLevel
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction, RiskLevel
 
         config = JarvisConfig()
         gk = Gatekeeper(config)
@@ -91,9 +91,9 @@ class TestFileOperations:
     @pytest.mark.asyncio
     async def test_write_file_is_green(self):
         """write_file should be GREEN for autonomous ops (inform, not block)."""
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction, RiskLevel
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction, RiskLevel
 
         config = JarvisConfig()
         gk = Gatekeeper(config)
@@ -118,9 +118,9 @@ class TestRemoteExecution:
     @pytest.mark.asyncio
     async def test_remote_exec_is_orange(self):
         """remote_exec must be ORANGE (requires user approval)."""
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction, RiskLevel
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction, RiskLevel
 
         config = JarvisConfig()
         gk = Gatekeeper(config)
@@ -143,7 +143,7 @@ class TestMemoryContext:
     @pytest.mark.asyncio
     async def test_incognito_session_has_flag(self):
         """Incognito sessions must have incognito=True."""
-        from jarvis.models import SessionContext
+        from cognithor.models import SessionContext
 
         session = SessionContext(session_id="incog_test", incognito=True)
         assert session.incognito is True
@@ -151,7 +151,7 @@ class TestMemoryContext:
     @pytest.mark.asyncio
     async def test_session_config_exists(self):
         """SessionConfig must exist with proper defaults."""
-        from jarvis.config import JarvisConfig
+        from cognithor.config import JarvisConfig
 
         config = JarvisConfig()
         assert config.session.inactivity_timeout_minutes == 30
@@ -169,9 +169,9 @@ class TestToolCoverage:
     @pytest.mark.asyncio
     async def test_search_tools_are_green(self):
         """Web search tools must be GREEN."""
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction, RiskLevel
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction, RiskLevel
 
         config = JarvisConfig()
         gk = Gatekeeper(config)
@@ -184,9 +184,9 @@ class TestToolCoverage:
     @pytest.mark.asyncio
     async def test_exec_command_is_green(self):
         """exec_command should be GREEN for autonomous ops (not GREEN, not ORANGE)."""
-        from jarvis.config import JarvisConfig
-        from jarvis.core.gatekeeper import Gatekeeper
-        from jarvis.models import PlannedAction, RiskLevel
+        from cognithor.config import JarvisConfig
+        from cognithor.core.gatekeeper import Gatekeeper
+        from cognithor.models import PlannedAction, RiskLevel
 
         config = JarvisConfig()
         gk = Gatekeeper(config)
@@ -208,13 +208,13 @@ class TestGEPASelfImprovement:
 
     def test_min_traces_threshold(self):
         """Evolution cycle needs enough data points."""
-        from jarvis.learning.evolution_orchestrator import EvolutionOrchestrator
+        from cognithor.learning.evolution_orchestrator import EvolutionOrchestrator
 
         assert EvolutionOrchestrator.MIN_TRACES >= 20
 
     def test_high_impact_needs_review(self):
         """High-impact proposals must not be auto-applied."""
-        from jarvis.learning.evolution_orchestrator import EvolutionOrchestrator
+        from cognithor.learning.evolution_orchestrator import EvolutionOrchestrator
 
         assert hasattr(EvolutionOrchestrator, "HIGH_IMPACT_TYPES")
         assert "prompt_patch" in EvolutionOrchestrator.HIGH_IMPACT_TYPES
@@ -230,8 +230,8 @@ class TestSessionManagement:
 
     def test_auto_session_staleness(self, tmp_path):
         """Stale sessions should trigger new session creation."""
-        from jarvis.gateway.session_store import SessionStore
-        from jarvis.models import SessionContext
+        from cognithor.gateway.session_store import SessionStore
+        from cognithor.models import SessionContext
 
         store = SessionStore(tmp_path / "sessions.db")
         old = SessionContext(
@@ -254,11 +254,11 @@ class TestSessionManagement:
 
     def test_chat_history_filters_system(self, tmp_path):
         """Only user/assistant messages should be persisted."""
-        from jarvis.gateway.session_store import SessionStore
-        from jarvis.models import Message, MessageRole
+        from cognithor.gateway.session_store import SessionStore
+        from cognithor.models import Message, MessageRole
 
         store = SessionStore(tmp_path / "sessions.db")
-        from jarvis.models import SessionContext
+        from cognithor.models import SessionContext
 
         s = SessionContext(
             session_id="filter000000001", user_id="u", channel="webui", agent_name="jarvis"
@@ -282,8 +282,8 @@ class TestSessionManagement:
 
     def test_search_across_sessions(self, tmp_path):
         """Full-text search should find messages across sessions."""
-        from jarvis.gateway.session_store import SessionStore
-        from jarvis.models import Message, MessageRole, SessionContext
+        from cognithor.gateway.session_store import SessionStore
+        from cognithor.models import Message, MessageRole, SessionContext
 
         store = SessionStore(tmp_path / "sessions.db")
         s = SessionContext(
@@ -307,8 +307,8 @@ class TestSessionManagement:
 
     def test_export_session(self, tmp_path):
         """Session export should include all messages and metadata."""
-        from jarvis.gateway.session_store import SessionStore
-        from jarvis.models import Message, MessageRole, SessionContext
+        from cognithor.gateway.session_store import SessionStore
+        from cognithor.models import Message, MessageRole, SessionContext
 
         store = SessionStore(tmp_path / "sessions.db")
         s = SessionContext(

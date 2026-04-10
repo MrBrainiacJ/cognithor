@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import yaml
 
-from jarvis.config import JarvisConfig
-from jarvis.config_manager import ConfigManager
+from cognithor.config import JarvisConfig
+from cognithor.config_manager import ConfigManager
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -60,7 +60,7 @@ class FakeApp:
 
 @pytest.fixture
 def tmp_home(tmp_path: Path) -> Path:
-    home = tmp_path / ".jarvis"
+    home = tmp_path / ".cognithor"
     home.mkdir(parents=True, exist_ok=True)
     return home
 
@@ -135,7 +135,7 @@ def gateway() -> MagicMock:
 @pytest.fixture
 def registered_app(app: FakeApp, config_manager: ConfigManager, gateway: MagicMock) -> FakeApp:
     """App mit allen Routes registriert."""
-    from jarvis.channels.config_routes import create_config_routes
+    from cognithor.channels.config_routes import create_config_routes
 
     create_config_routes(app, config_manager, gateway=gateway)
     return app
@@ -200,7 +200,7 @@ class TestSystemRoutes:
     @pytest.mark.asyncio
     async def test_system_status(self, registered_app: FakeApp) -> None:
         handler = registered_app.routes["GET /api/v1/status"]
-        with patch("jarvis.channels.config_routes.RuntimeMonitor", create=True):
+        with patch("cognithor.channels.config_routes.RuntimeMonitor", create=True):
             result = await handler()
         assert "timestamp" in result
         assert "config_version" in result
@@ -250,14 +250,14 @@ class TestSystemRoutes:
         handler = registered_app.routes["POST /api/v1/credentials"]
         fake_request = AsyncMock()
         fake_request.json = AsyncMock(return_value={"service": "test", "key": "k", "value": "v"})
-        with patch("jarvis.channels.config_routes.CredentialStore", create=True):
+        with patch("cognithor.channels.config_routes.CredentialStore", create=True):
             result = await handler(fake_request)
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_delete_credential(self, registered_app: FakeApp) -> None:
         handler = registered_app.routes["DELETE /api/v1/credentials/{service}/{key}"]
-        with patch("jarvis.channels.config_routes.CredentialStore", create=True):
+        with patch("cognithor.channels.config_routes.CredentialStore", create=True):
             result = await handler(service="test", key="k")
         assert isinstance(result, dict)
 

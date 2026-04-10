@@ -4,7 +4,7 @@
 
 **Goal:** Complete EU AI Act + GDPR audit compliance with HMAC signatures, blockchain anchoring, user data export, and automated breach notification.
 
-**Architecture:** Extend existing `security/audit.py` AuditTrail with HMAC-SHA256 signing (secret from `~/.jarvis/audit_key`). Add periodic blockchain hash anchoring via existing IdentityConfig flags. New API endpoints for user data export and breach notification. Breach detector runs as gateway background task monitoring SECURITY/CRITICAL audit events.
+**Architecture:** Extend existing `security/audit.py` AuditTrail with HMAC-SHA256 signing (secret from `~/.cognithor/audit_key`). Add periodic blockchain hash anchoring via existing IdentityConfig flags. New API endpoints for user data export and breach notification. Breach detector runs as gateway background task monitoring SECURITY/CRITICAL audit events.
 
 **Tech Stack:** Python 3.12+ (hmac, hashlib, sqlite3, asyncio), pytest
 
@@ -161,7 +161,7 @@ class AuditConfig(BaseModel):
     )
     hmac_key_file: str = Field(
         default="",
-        description="Pfad zur HMAC-Key-Datei (leer = ~/.jarvis/audit_key)",
+        description="Pfad zur HMAC-Key-Datei (leer = ~/.cognithor/audit_key)",
     )
     breach_notification_enabled: bool = Field(
         default=True,

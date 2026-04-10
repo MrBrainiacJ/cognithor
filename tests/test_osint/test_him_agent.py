@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.osint.him_agent import HIMAgent
-from jarvis.osint.models import GDPRViolationError, HIMRequest
+from cognithor.osint.him_agent import HIMAgent
+from cognithor.osint.models import GDPRViolationError, HIMRequest
 
 
 @pytest.mark.asyncio
@@ -22,7 +22,7 @@ async def test_full_investigation_flow(terry_case):
     request = HIMRequest(**terry_case["request"])
 
     with patch(
-        "jarvis.osint.collectors.github.GitHubCollector._fetch_with_retry",
+        "cognithor.osint.collectors.github.GitHubCollector._fetch_with_retry",
         new_callable=AsyncMock,
     ) as mock_gh:
         mock_gh.side_effect = [
@@ -67,12 +67,12 @@ async def test_all_collectors_fail_graceful():
     )
     with (
         patch(
-            "jarvis.osint.collectors.github.GitHubCollector._fetch_with_retry",
+            "cognithor.osint.collectors.github.GitHubCollector._fetch_with_retry",
             new_callable=AsyncMock,
             side_effect=Exception("network down"),
         ),
         patch(
-            "jarvis.osint.collectors.arxiv.ArxivCollector.collect",
+            "cognithor.osint.collectors.arxiv.ArxivCollector.collect",
             new_callable=AsyncMock,
             return_value=[],
         ),

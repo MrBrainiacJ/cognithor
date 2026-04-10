@@ -53,7 +53,7 @@ def _setup_app(agents_data: dict | None = None, bindings_data: dict | None = Non
     config_manager.config.heartbeat = hb
     gateway = MagicMock()
 
-    from jarvis.channels.config_routes import create_config_routes
+    from cognithor.channels.config_routes import create_config_routes
 
     create_config_routes(app, config_manager, gateway=gateway)
     return app, agents_path, bindings_path
@@ -247,7 +247,7 @@ class TestAlreadySecureEndpoints:
         config_manager.config.heartbeat = hb
         gateway = MagicMock()
 
-        from jarvis.channels.config_routes import create_config_routes
+        from cognithor.channels.config_routes import create_config_routes
 
         create_config_routes(app, config_manager, gateway=gateway)
 

@@ -11,9 +11,9 @@ from unittest.mock import AsyncMock
 import pytest
 import yaml
 
-from jarvis.cron.engine import CronEngine, _parse_cron_fields
-from jarvis.cron.jobs import DEFAULT_JOBS, JobStore
-from jarvis.models import CronJob, IncomingMessage
+from cognithor.cron.engine import CronEngine, _parse_cron_fields
+from cognithor.cron.jobs import DEFAULT_JOBS, JobStore
+from cognithor.models import CronJob, IncomingMessage
 
 if TYPE_CHECKING:
     from pathlib import Path

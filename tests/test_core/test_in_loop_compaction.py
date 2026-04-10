@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.in_loop_compaction import (
+from cognithor.core.in_loop_compaction import (
     PROTECT_HEAD_MESSAGES,
     PROTECT_TAIL_MESSAGES,
     SUMMARY_LABEL,

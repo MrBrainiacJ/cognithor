@@ -10,7 +10,7 @@ import math
 
 import pytest
 
-from jarvis.memory.scoring import (
+from cognithor.memory.scoring import (
     DecayStrategy,
     FrequencyTracker,
     ImportanceScorer,

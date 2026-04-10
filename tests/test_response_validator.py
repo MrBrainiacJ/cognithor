@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.response_validator import (
+from cognithor.core.response_validator import (
     PASS_THRESHOLD,
     ResponseValidator,
     ValidationResult,

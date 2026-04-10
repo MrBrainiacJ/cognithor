@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.twitch import TwitchChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.twitch import TwitchChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -281,7 +281,7 @@ class TestTwitchReceiveLoop:
         mock_reader.read = fake_read
         ch._reader = mock_reader
 
-        with patch("jarvis.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
             await ch._receive_loop()
 
 
@@ -293,7 +293,7 @@ class TestTwitchSendChat:
         ch._writer.drain = AsyncMock()
         ch._last_msg_time = 0
 
-        with patch("jarvis.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
             await ch._send_chat("Hello viewers!")
 
         # Should have sent PRIVMSG
@@ -307,7 +307,7 @@ class TestTwitchSendChat:
         ch._writer.drain = AsyncMock()
         ch._last_msg_time = 0
 
-        with patch("jarvis.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
             await ch._send_chat("Line 1\nLine 2")
 
         # Should send multiple PRIVMSGs
@@ -323,7 +323,7 @@ class TestTwitchSendChat:
         ch._last_msg_time = 0
 
         msg = OutgoingMessage(channel="twitch", text="test msg")
-        with patch("jarvis.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
             await ch.send(msg)
 
         calls = ch._writer.write.call_args_list
@@ -338,5 +338,5 @@ class TestTwitchStreaming:
         ch._writer.drain = AsyncMock()
         ch._last_msg_time = 0
 
-        with patch("jarvis.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.twitch.asyncio.sleep", new_callable=AsyncMock):
             await ch.send_streaming_token("s1", "hello")

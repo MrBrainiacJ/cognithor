@@ -6,8 +6,8 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:jarvis_ui/models/chat_node.dart';
-import 'package:jarvis_ui/services/api_client.dart';
+import 'package:cognithor_ui/models/chat_node.dart';
+import 'package:cognithor_ui/services/api_client.dart';
 
 /// Callback type for sending WebSocket messages.
 typedef WsSendCallback = void Function(Map<String, dynamic> message);

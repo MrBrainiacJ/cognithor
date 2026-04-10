@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.signal import SignalChannel
+from cognithor.channels.signal import SignalChannel
 
 
 class TestWebhookSecretParameter:
@@ -155,7 +155,7 @@ class TestExposedWebhookWarning:
             webhook_host="0.0.0.0",
             webhook_secret="",
         )
-        with patch("jarvis.channels.signal.logger") as mock_logger:
+        with patch("cognithor.channels.signal.logger") as mock_logger:
             try:
                 from aiohttp import web  # noqa: F401
             except ImportError:
@@ -182,7 +182,7 @@ class TestExposedWebhookWarning:
             webhook_host="127.0.0.1",
             webhook_secret="",
         )
-        with patch("jarvis.channels.signal.logger") as mock_logger:
+        with patch("cognithor.channels.signal.logger") as mock_logger:
             try:
                 from aiohttp import web  # noqa: F401
             except ImportError:
@@ -206,7 +206,7 @@ class TestExposedWebhookWarning:
             webhook_host="0.0.0.0",
             webhook_secret="my-secret",
         )
-        with patch("jarvis.channels.signal.logger") as mock_logger:
+        with patch("cognithor.channels.signal.logger") as mock_logger:
             try:
                 from aiohttp import web  # noqa: F401
             except ImportError:

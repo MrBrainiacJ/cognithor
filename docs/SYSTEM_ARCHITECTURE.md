@@ -235,7 +235,7 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                           DATA PERSISTENCE                                   │
 │                                                                              │
-│  ~/.jarvis/                                                                  │
+│  ~/.cognithor/                                                                  │
 │  ├── config.yaml              Config (3-layer cascade)                       │
 │  ├── .env                     API keys + secrets                             │
 │  ├── .cognithor_initialized   Version marker (JSON)                          │

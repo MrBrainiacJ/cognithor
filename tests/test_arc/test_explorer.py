@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from jarvis.arc.episode_memory import EpisodeMemory
-from jarvis.arc.explorer import ExplorationPhase, HypothesisDrivenExplorer
-from jarvis.arc.goal_inference import GoalInferenceModule, GoalType, InferredGoal
+from cognithor.arc.episode_memory import EpisodeMemory
+from cognithor.arc.explorer import ExplorationPhase, HypothesisDrivenExplorer
+from cognithor.arc.goal_inference import GoalInferenceModule, GoalType, InferredGoal
 
 
 def _make_mock_action(name, value, simple=True):

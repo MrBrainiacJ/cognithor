@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.skills.updater import (
+from cognithor.skills.updater import (
     SkillUpdater,
     UpdateCheck,
     UpdatePolicy,

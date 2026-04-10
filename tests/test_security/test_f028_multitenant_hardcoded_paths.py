@@ -4,7 +4,7 @@ Prueft dass:
   - data_path plattformunabhaengig ist (kein /data/tenants/)
   - secrets_path plattformunabhaengig ist (kein /run/secrets/)
   - Pfade den tenant_id enthalten
-  - Pfade unter ~/.jarvis/tenants/ liegen
+  - Pfade unter ~/.cognithor/tenants/ liegen
   - Path-Objekte korrekt aufgeloest werden
   - Source-Code keine hardcoded Unix-Pfade mehr hat
 """
@@ -14,7 +14,7 @@ from __future__ import annotations
 import inspect
 from pathlib import Path
 
-from jarvis.core.multitenant import Tenant, TenantManager, TenantPlan
+from cognithor.core.multitenant import Tenant, TenantManager, TenantPlan
 
 # ============================================================================
 # Plattformunabhaengige Pfade
@@ -94,7 +94,7 @@ class TestPathStructure:
     def test_data_path_under_jarvis_tenants(self) -> None:
         t = Tenant(tenant_id="t1", name="T")
         p = Path(t.data_path)
-        # Erwartete Struktur: ~/.jarvis/tenants/t1/data
+        # Erwartete Struktur: ~/.cognithor/tenants/t1/data
         parts = p.parts
         assert "tenants" in parts
         assert "t1" in parts
@@ -148,7 +148,7 @@ class TestSourceLevelChecks:
 
     def test_path_imported(self) -> None:
         """Path wird importiert."""
-        import jarvis.core.multitenant as mod
+        import cognithor.core.multitenant as mod
 
         source = inspect.getsource(mod)
         assert "from pathlib import Path" in source

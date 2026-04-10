@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:jarvis_ui/l10n/generated/app_localizations.dart';
-import 'package:jarvis_ui/providers/connection_provider.dart';
-import 'package:jarvis_ui/providers/admin_provider.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/neon_card.dart';
-import 'package:jarvis_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
+import 'package:cognithor_ui/providers/admin_provider.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/neon_card.dart';
+import 'package:cognithor_ui/widgets/jarvis_toast.dart';
 
 /// Full-screen agent editor for creating and editing agent profiles.
 class AgentEditorScreen extends StatefulWidget {

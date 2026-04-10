@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.core.config_versioning import (
+from cognithor.core.config_versioning import (
     _MAX_REVISIONS,
     _cleanup_old_revisions,
     list_revisions,

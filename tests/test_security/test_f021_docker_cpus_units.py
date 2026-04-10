@@ -14,8 +14,8 @@ import inspect
 
 import pytest
 
-from jarvis.models import SandboxConfig
-from jarvis.security.sandbox import Sandbox
+from cognithor.models import SandboxConfig
+from cognithor.security.sandbox import Sandbox
 
 # ============================================================================
 # SandboxConfig Tests

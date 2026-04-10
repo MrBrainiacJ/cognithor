@@ -7,9 +7,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from jarvis.gateway.session_store import SessionStore
-from jarvis.models import Message, MessageRole, SessionContext
-from jarvis.security.credentials import CredentialStore
+from cognithor.gateway.session_store import SessionStore
+from cognithor.models import Message, MessageRole, SessionContext
+from cognithor.security.credentials import CredentialStore
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -248,7 +248,7 @@ class TestAgentProfileCredentialConfig:
     """AgentProfile unterstützt credential_scope und credential_mappings."""
 
     def test_agent_profile_has_credential_fields(self) -> None:
-        from jarvis.core.agent_router import AgentProfile
+        from cognithor.core.agent_router import AgentProfile
 
         agent = AgentProfile(
             name="coder",
@@ -260,7 +260,7 @@ class TestAgentProfileCredentialConfig:
         assert agent.credential_mappings == {"api_key": "github:token"}
 
     def test_default_agent_has_no_scope(self) -> None:
-        from jarvis.core.agent_router import AgentProfile
+        from cognithor.core.agent_router import AgentProfile
 
         agent = AgentProfile(name="jarvis")
         assert agent.credential_scope == ""

@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.models import ArchitectureFinding, CodeSmell, RefactoringReport
-from jarvis.tools.refactoring_agent import RefactoringAgent
+from cognithor.models import ArchitectureFinding, CodeSmell, RefactoringReport
+from cognithor.tools.refactoring_agent import RefactoringAgent
 
 if TYPE_CHECKING:
     from pathlib import Path

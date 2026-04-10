@@ -9,7 +9,7 @@ Targets:
 
 from __future__ import annotations
 
-from jarvis.learning.causal import CausalAnalyzer
+from cognithor.learning.causal import CausalAnalyzer
 
 
 class TestModelPerformance:

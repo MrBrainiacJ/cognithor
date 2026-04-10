@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.a2a.client import A2AClient, RemoteAgent
-from jarvis.a2a.http_handler import A2AHTTPHandler
-from jarvis.a2a.types import (
+from cognithor.a2a.client import A2AClient, RemoteAgent
+from cognithor.a2a.http_handler import A2AHTTPHandler
+from cognithor.a2a.types import (
     A2A_CONTENT_TYPE,
     A2A_VERSION_HEADER,
     A2AAgentCapabilities,

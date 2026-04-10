@@ -7,7 +7,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from jarvis.security.device_pairing import DevicePairingManager
+from cognithor.security.device_pairing import DevicePairingManager
 
 
 def _make_manager(ttl_days: int = 180) -> DevicePairingManager:

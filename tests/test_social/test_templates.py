@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.social.templates import TemplateManager
+from cognithor.social.templates import TemplateManager
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 @pytest.fixture()
 def manager(tmp_path: Path) -> TemplateManager:
-    from jarvis.social.store import LeadStore
+    from cognithor.social.store import LeadStore
 
     store = LeadStore(str(tmp_path / "leads.db"))
     return TemplateManager(store=store)

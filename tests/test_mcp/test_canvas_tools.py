@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.channels.canvas import CanvasManager
-from jarvis.mcp.canvas_tools import CanvasTools
+from cognithor.channels.canvas import CanvasManager
+from cognithor.mcp.canvas_tools import CanvasTools
 
 
 @pytest.fixture

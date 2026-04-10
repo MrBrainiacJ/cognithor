@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from jarvis.models import MCPToolInfo
+from cognithor.models import MCPToolInfo
 
 
 class TestMCPToolInfoRiskLevel:
@@ -28,7 +28,7 @@ class TestGatekeeperToolRegistryIntegration:
 
     def _make_gatekeeper(self):
         """Create a minimal Gatekeeper with mocked config."""
-        from jarvis.core.gatekeeper import Gatekeeper
+        from cognithor.core.gatekeeper import Gatekeeper
 
         config = MagicMock()
         config.jarvis_home = MagicMock()
@@ -55,7 +55,7 @@ class TestGatekeeperToolRegistryIntegration:
         }
         gk.set_tool_registry(registry)
 
-        from jarvis.core.gatekeeper import RiskLevel
+        from cognithor.core.gatekeeper import RiskLevel
 
         result = gk._classify_risk(self._make_action("read_file"))
         assert result == RiskLevel.GREEN
@@ -67,7 +67,7 @@ class TestGatekeeperToolRegistryIntegration:
         }
         gk.set_tool_registry(registry)
 
-        from jarvis.core.gatekeeper import RiskLevel
+        from cognithor.core.gatekeeper import RiskLevel
 
         result = gk._classify_risk(self._make_action("danger_tool"))
         assert result == RiskLevel.RED
@@ -80,7 +80,7 @@ class TestGatekeeperToolRegistryIntegration:
         }
         gk.set_tool_registry(registry)
 
-        from jarvis.core.gatekeeper import RiskLevel
+        from cognithor.core.gatekeeper import RiskLevel
 
         # read_file is in the hardcoded GREEN list
         result = gk._classify_risk(self._make_action("read_file"))
@@ -91,7 +91,7 @@ class TestGatekeeperToolRegistryIntegration:
         gk = self._make_gatekeeper()
         # No set_tool_registry call
 
-        from jarvis.core.gatekeeper import RiskLevel
+        from cognithor.core.gatekeeper import RiskLevel
 
         result = gk._classify_risk(self._make_action("read_file"))
         assert result == RiskLevel.GREEN
@@ -106,7 +106,7 @@ class TestGatekeeperToolRegistryIntegration:
         }
         gk.set_tool_registry(registry)
 
-        from jarvis.core.gatekeeper import RiskLevel
+        from cognithor.core.gatekeeper import RiskLevel
 
         result = gk._classify_risk(self._make_action("totally_new_tool"))
         assert result == RiskLevel.ORANGE
@@ -120,7 +120,7 @@ class TestGatekeeperToolRegistryIntegration:
         }
         gk.set_tool_registry(registry)
 
-        from jarvis.core.gatekeeper import RiskLevel
+        from cognithor.core.gatekeeper import RiskLevel
 
         result = gk._classify_risk(self._make_action("exec_command"))
         assert result == RiskLevel.ORANGE

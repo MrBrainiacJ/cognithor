@@ -11,14 +11,14 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from jarvis.config import JarvisConfig
-from jarvis.models import IncomingMessage
+from cognithor.config import JarvisConfig
+from cognithor.models import IncomingMessage
 
 
 class TestDAGWorkflowEngineAttr:
     def test_dag_workflow_engine_attr_declared(self, tmp_path) -> None:
         """'dag_workflow_engine' ist in declare_advanced_attrs() enthalten."""
-        from jarvis.gateway.phases.advanced import declare_advanced_attrs
+        from cognithor.gateway.phases.advanced import declare_advanced_attrs
 
         config = JarvisConfig(jarvis_home=tmp_path)
         result = declare_advanced_attrs(config)
@@ -28,7 +28,7 @@ class TestDAGWorkflowEngineAttr:
 class TestDAGEngineInitialized:
     def test_dag_engine_initialized(self, tmp_path) -> None:
         """DAG-Engine wird erstellt wenn WorkflowEngine importierbar ist."""
-        from jarvis.gateway.phases.advanced import declare_advanced_attrs
+        from cognithor.gateway.phases.advanced import declare_advanced_attrs
 
         config = JarvisConfig(jarvis_home=tmp_path)
         result = declare_advanced_attrs(config)
@@ -38,7 +38,7 @@ class TestDAGEngineInitialized:
         assert "dag_workflow_engine" in result
         # If the import succeeded, it should be an instance
         if result["dag_workflow_engine"] is not None:
-            from jarvis.core.workflow_engine import WorkflowEngine
+            from cognithor.core.workflow_engine import WorkflowEngine
 
             assert isinstance(result["dag_workflow_engine"], WorkflowEngine)
 

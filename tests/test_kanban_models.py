@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from jarvis.kanban.models import (
+from cognithor.kanban.models import (
     Task,
     TaskHistory,
     TaskPriority,

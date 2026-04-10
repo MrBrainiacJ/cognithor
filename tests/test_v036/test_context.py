@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 
-from jarvis.core.context_window import ContextEntry, ContextWindow
+from cognithor.core.context_window import ContextEntry, ContextWindow
 
 
 class TestIsolation:

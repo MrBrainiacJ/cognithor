@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 class PerformanceBadge extends StatelessWidget {
   const PerformanceBadge({super.key, required this.score, this.compact = false});

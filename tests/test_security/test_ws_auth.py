@@ -2,7 +2,7 @@
 
 Validates:
 - Token-based auth on the /ws/{session_id} endpoint
-- Backwards compatibility when JARVIS_API_TOKEN is unset
+- Backwards compatibility when COGNITHOR_API_TOKEN is unset
 - Session-ID collision closes the prior connection
 """
 
@@ -32,7 +32,7 @@ def _make_app() -> tuple[FastAPI, dict[str, WebSocket]]:
     @app.websocket("/ws/{session_id}")
     async def ws_endpoint(websocket: WebSocket, session_id: str) -> None:
         # ── Token-based authentication (mirrors __main__.py) ──────
-        required_token = os.environ.get("JARVIS_API_TOKEN")
+        required_token = os.environ.get("COGNITHOR_API_TOKEN")
         if required_token:
             client_token = websocket.query_params.get("token")
             if not client_token or client_token != required_token:
@@ -75,9 +75,9 @@ class TestWSAuth:
     """WebSocket authentication tests."""
 
     def test_ws_no_token_required_when_env_unset(self) -> None:
-        """When JARVIS_API_TOKEN is NOT set, any client can connect."""
+        """When COGNITHOR_API_TOKEN is NOT set, any client can connect."""
         env = os.environ.copy()
-        env.pop("JARVIS_API_TOKEN", None)
+        env.pop("COGNITHOR_API_TOKEN", None)
 
         with patch.dict(os.environ, env, clear=True):
             app, _ = _make_app()
@@ -88,8 +88,8 @@ class TestWSAuth:
                 assert resp == {"type": "pong"}
 
     def test_ws_rejects_missing_token_when_env_set(self) -> None:
-        """When JARVIS_API_TOKEN is set but client sends no token, reject."""
-        with patch.dict(os.environ, {"JARVIS_API_TOKEN": "secret-123"}, clear=False):
+        """When COGNITHOR_API_TOKEN is set but client sends no token, reject."""
+        with patch.dict(os.environ, {"COGNITHOR_API_TOKEN": "secret-123"}, clear=False):
             app, _ = _make_app()
             client = TestClient(app)
             # No ?token= query param -- must be rejected
@@ -101,8 +101,8 @@ class TestWSAuth:
             # did NOT succeed.
 
     def test_ws_rejects_wrong_token(self) -> None:
-        """When JARVIS_API_TOKEN is set and client sends a wrong token, reject."""
-        with patch.dict(os.environ, {"JARVIS_API_TOKEN": "secret-123"}, clear=False):
+        """When COGNITHOR_API_TOKEN is set and client sends a wrong token, reject."""
+        with patch.dict(os.environ, {"COGNITHOR_API_TOKEN": "secret-123"}, clear=False):
             app, _ = _make_app()
             client = TestClient(app)
             with pytest.raises(Exception):  # noqa: B017 — Starlette exception may have empty message
@@ -110,8 +110,8 @@ class TestWSAuth:
                     ws.send_text(json.dumps({"type": "ping"}))
 
     def test_ws_accepts_correct_token(self) -> None:
-        """When JARVIS_API_TOKEN is set and client sends the correct token, allow."""
-        with patch.dict(os.environ, {"JARVIS_API_TOKEN": "secret-123"}, clear=False):
+        """When COGNITHOR_API_TOKEN is set and client sends the correct token, allow."""
+        with patch.dict(os.environ, {"COGNITHOR_API_TOKEN": "secret-123"}, clear=False):
             app, _ = _make_app()
             client = TestClient(app)
             with client.websocket_connect("/ws/test-session?token=secret-123") as ws:
@@ -123,7 +123,7 @@ class TestWSAuth:
         """When a new client connects with the same session_id, the old
         connection is closed with code 4002 before the new one is stored."""
         env = os.environ.copy()
-        env.pop("JARVIS_API_TOKEN", None)
+        env.pop("COGNITHOR_API_TOKEN", None)
 
         with patch.dict(os.environ, env, clear=True):
             app, ws_connections = _make_app()
@@ -158,7 +158,7 @@ class TestWSAuthEdgeCases:
 
     def test_ws_empty_token_rejected(self) -> None:
         """An empty string token should be rejected when env token is set."""
-        with patch.dict(os.environ, {"JARVIS_API_TOKEN": "secret-123"}, clear=False):
+        with patch.dict(os.environ, {"COGNITHOR_API_TOKEN": "secret-123"}, clear=False):
             app, _ = _make_app()
             client = TestClient(app)
             with pytest.raises(Exception):  # noqa: B017 — Starlette exception may have empty message
@@ -166,8 +166,8 @@ class TestWSAuthEdgeCases:
                     ws.send_text(json.dumps({"type": "ping"}))
 
     def test_ws_token_not_required_when_env_empty_string(self) -> None:
-        """When JARVIS_API_TOKEN is set to empty string, treat as unset."""
-        with patch.dict(os.environ, {"JARVIS_API_TOKEN": ""}, clear=False):
+        """When COGNITHOR_API_TOKEN is set to empty string, treat as unset."""
+        with patch.dict(os.environ, {"COGNITHOR_API_TOKEN": ""}, clear=False):
             app, _ = _make_app()
             client = TestClient(app)
             with client.websocket_connect("/ws/test-session") as ws:
@@ -178,7 +178,7 @@ class TestWSAuthEdgeCases:
     def test_ws_different_session_ids_independent(self) -> None:
         """Two different session_ids should not interfere with each other."""
         env = os.environ.copy()
-        env.pop("JARVIS_API_TOKEN", None)
+        env.pop("COGNITHOR_API_TOKEN", None)
 
         with patch.dict(os.environ, env, clear=True):
             app, ws_connections = _make_app()

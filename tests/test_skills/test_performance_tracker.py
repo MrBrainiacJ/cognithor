@@ -11,7 +11,7 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
-from jarvis.skills.performance_tracker import (
+from cognithor.skills.performance_tracker import (
     DegradationConfig,
     SkillPerformanceTracker,
 )
@@ -152,7 +152,7 @@ class TestCooldown:
         assert await tracker.is_degraded("s1")
 
         # Simulate time passing
-        with patch("jarvis.skills.performance_tracker.time") as mock_time:
+        with patch("cognithor.skills.performance_tracker.time") as mock_time:
             mock_time.time.return_value = time.time() + 61
             assert not await tracker.is_degraded("s1")
 

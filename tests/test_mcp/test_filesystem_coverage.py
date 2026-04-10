@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.mcp.filesystem import (
+from cognithor.mcp.filesystem import (
     FileSystemError,
     FileSystemTools,
     register_fs_tools,

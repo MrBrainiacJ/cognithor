@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import re
 
-from jarvis.telemetry.metrics import MetricsProvider
-from jarvis.telemetry.prometheus import (
+from cognithor.telemetry.metrics import MetricsProvider
+from cognithor.telemetry.prometheus import (
     PrometheusExporter,
     _escape_label_value,
     _format_labels,
@@ -440,7 +440,7 @@ class TestMetricCollectorExport:
     """Tests for exporting from gateway MetricCollector."""
 
     def test_collector_counters(self):
-        from jarvis.gateway.monitoring import MetricCollector
+        from cognithor.gateway.monitoring import MetricCollector
 
         collector = MetricCollector()
         collector.increment("events.message_received", 10)
@@ -451,7 +451,7 @@ class TestMetricCollectorExport:
         assert "10" in output
 
     def test_collector_gauges(self):
-        from jarvis.gateway.monitoring import MetricCollector
+        from cognithor.gateway.monitoring import MetricCollector
 
         collector = MetricCollector()
         collector.gauge("cpu_percent", 45.2)
@@ -463,7 +463,7 @@ class TestMetricCollectorExport:
 
     def test_both_providers(self):
         """Both MetricsProvider and MetricCollector can be used together."""
-        from jarvis.gateway.monitoring import MetricCollector
+        from cognithor.gateway.monitoring import MetricCollector
 
         provider = MetricsProvider()
         provider.counter("requests_total", 5)

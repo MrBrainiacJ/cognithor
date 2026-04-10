@@ -15,7 +15,7 @@ from __future__ import annotations
 import inspect
 from unittest.mock import MagicMock, patch
 
-from jarvis.core.startup_check import StartupChecker, StartupReport
+from cognithor.core.startup_check import StartupChecker, StartupReport
 
 # ============================================================================
 # Default-Verhalten: kein Auto-Install
@@ -38,8 +38,8 @@ class TestDefaultNoAutoInstall:
         checker = StartupChecker(auto_install=True)
         assert checker._auto_install is True
 
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
-    @patch("jarvis.core.startup_check._pip_install")
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install")
     def test_missing_packages_without_flag_warns_only(
         self, mock_pip: MagicMock, mock_import: MagicMock
     ) -> None:
@@ -51,8 +51,8 @@ class TestDefaultNoAutoInstall:
         assert len(report.warnings) > 0
         assert len(report.fixes_applied) == 0
 
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
-    @patch("jarvis.core.startup_check._pip_install")
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install")
     def test_warning_contains_hint(self, mock_pip: MagicMock, mock_import: MagicMock) -> None:
         """Warning-Text enthaelt Hinweis auf --auto-install."""
         checker = StartupChecker()
@@ -61,8 +61,8 @@ class TestDefaultNoAutoInstall:
         has_hint = any("--auto-install" in w for w in report.warnings)
         assert has_hint, f"No --auto-install hint in warnings: {report.warnings}"
 
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
-    @patch("jarvis.core.startup_check._pip_install")
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install")
     def test_warning_contains_pip_command(
         self, mock_pip: MagicMock, mock_import: MagicMock
     ) -> None:
@@ -82,8 +82,8 @@ class TestDefaultNoAutoInstall:
 class TestAutoInstallEnabled:
     """Prueft dass mit auto_install=True installiert wird."""
 
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
-    @patch("jarvis.core.startup_check._pip_install", return_value=(True, ""))
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install", return_value=(True, ""))
     def test_auto_install_calls_pip(self, mock_pip: MagicMock, mock_import: MagicMock) -> None:
         """Mit auto_install=True wird _pip_install aufgerufen."""
         checker = StartupChecker(auto_install=True)
@@ -92,8 +92,8 @@ class TestAutoInstallEnabled:
         assert mock_pip.call_count >= 1
         assert len(report.fixes_applied) > 0
 
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
-    @patch("jarvis.core.startup_check._pip_install", return_value=(True, ""))
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install", return_value=(True, ""))
     def test_auto_install_no_warnings_on_success(
         self, mock_pip: MagicMock, mock_import: MagicMock
     ) -> None:
@@ -103,8 +103,8 @@ class TestAutoInstallEnabled:
 
         assert len(report.warnings) == 0
 
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
-    @patch("jarvis.core.startup_check._pip_install", return_value=(False, "error"))
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install", return_value=(False, "error"))
     def test_auto_install_failure_creates_warning(
         self, mock_pip: MagicMock, mock_import: MagicMock
     ) -> None:
@@ -115,8 +115,8 @@ class TestAutoInstallEnabled:
         assert len(report.warnings) > 0
         assert any("Failed" in w for w in report.warnings)
 
-    @patch("jarvis.core.startup_check._can_import", return_value=True)
-    @patch("jarvis.core.startup_check._pip_install")
+    @patch("cognithor.core.startup_check._can_import", return_value=True)
+    @patch("cognithor.core.startup_check._pip_install")
     def test_no_install_when_all_present(self, mock_pip: MagicMock, mock_import: MagicMock) -> None:
         """Wenn alle Pakete vorhanden, kein pip install -- auch mit Flag."""
         checker = StartupChecker(auto_install=True)
@@ -137,14 +137,14 @@ class TestCLIArgument:
 
     def test_argparse_has_auto_install(self) -> None:
         """__main__.py definiert --auto-install Argument."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         assert "--auto-install" in source
 
     def test_auto_install_is_store_true(self) -> None:
         """--auto-install ist ein store_true Flag (kein Wert noetig)."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         # Find the auto-install argument definition
@@ -214,7 +214,7 @@ class TestSourceLevelChecks:
 
     def test_main_passes_auto_install_to_checker(self) -> None:
         """__main__.py gibt auto_install an StartupChecker weiter."""
-        import jarvis.__main__ as main_mod
+        import cognithor.__main__ as main_mod
 
         source = inspect.getsource(main_mod)
         assert "auto_install" in source
@@ -228,12 +228,12 @@ class TestSourceLevelChecks:
 class TestCheckAndFixAllIntegration:
     """Prueft dass check_and_fix_all den auto_install-State respektiert."""
 
-    @patch("jarvis.core.startup_check.StartupChecker._find_repo_root", return_value=None)
-    @patch("jarvis.core.startup_check.StartupChecker.check_directories")
-    @patch("jarvis.core.startup_check.StartupChecker.check_models")
-    @patch("jarvis.core.startup_check.StartupChecker.check_ollama")
-    @patch("jarvis.core.startup_check._can_import", return_value=False)
-    @patch("jarvis.core.startup_check._pip_install")
+    @patch("cognithor.core.startup_check.StartupChecker._find_repo_root", return_value=None)
+    @patch("cognithor.core.startup_check.StartupChecker.check_directories")
+    @patch("cognithor.core.startup_check.StartupChecker.check_models")
+    @patch("cognithor.core.startup_check.StartupChecker.check_ollama")
+    @patch("cognithor.core.startup_check._can_import", return_value=False)
+    @patch("cognithor.core.startup_check._pip_install")
     def test_full_check_without_auto_install(
         self,
         mock_pip: MagicMock,

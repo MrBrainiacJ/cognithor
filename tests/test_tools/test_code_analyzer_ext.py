@@ -13,7 +13,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from jarvis.tools.code_analyzer import (
+from cognithor.tools.code_analyzer import (
     CodeSmellDetector,
 )
 

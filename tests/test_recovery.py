@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.recovery import (
+from cognithor.core.recovery import (
     DEFAULT_RECIPES,
     EscalationPolicy,
     FailureClass,

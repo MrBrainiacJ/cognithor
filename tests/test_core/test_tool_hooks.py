@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.tool_hooks import (
+from cognithor.core.tool_hooks import (
     HookEvent,
     ToolHookRunner,
     audit_logging_hook,

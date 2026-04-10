@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from jarvis.gateway.monitoring import (
+from cognithor.gateway.monitoring import (
     AuditEntry,
     AuditTrailViewer,
     EventBus,

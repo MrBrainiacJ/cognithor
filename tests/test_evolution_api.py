@@ -6,7 +6,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from jarvis.evolution.api import create_evolution_router
+from cognithor.evolution.api import create_evolution_router
 
 
 class MockGoalManager:

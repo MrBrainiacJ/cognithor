@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.safe_call import (
+from cognithor.core.safe_call import (
     _FAILURE_REGISTRY,
     _safe_call,
     _safe_call_async,

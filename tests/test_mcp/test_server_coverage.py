@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.mcp.server import (
+from cognithor.mcp.server import (
     PROTOCOL_VERSION,
     JarvisMCPServer,
     MCPLogEntry,

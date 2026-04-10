@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.skills.cli import main
+from cognithor.skills.cli import main
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -27,7 +27,7 @@ def mock_config(tmp_path: Path):
     config.jarvis_home = tmp_path
     config.plugins.skills_dir = "skills"
 
-    with patch("jarvis.skills.cli.load_config", return_value=config):
+    with patch("cognithor.skills.cli.load_config", return_value=config):
         yield config, skills_dir
 
 
@@ -96,14 +96,14 @@ class TestSearchCommand:
         assert "Keine Ergebnisse" in captured.out or "Gefundene" in captured.out
 
     def test_search_with_results(self, mock_config, capsys) -> None:
-        with patch("jarvis.skills.manager.search_remote_skills", return_value=["found-skill"]):
+        with patch("cognithor.skills.manager.search_remote_skills", return_value=["found-skill"]):
             main(["search", "test"])
         captured = capsys.readouterr()
         assert "Gefundene Skills" in captured.out
         assert "found-skill" in captured.out
 
     def test_search_with_limit(self, mock_config, capsys) -> None:
-        with patch("jarvis.skills.manager.search_remote_skills", return_value=[]) as mock_search:
+        with patch("cognithor.skills.manager.search_remote_skills", return_value=[]) as mock_search:
             main(["search", "test", "--limit", "5"])
             mock_search.assert_called_once_with("test", limit=5)
 

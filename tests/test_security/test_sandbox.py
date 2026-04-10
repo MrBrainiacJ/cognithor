@@ -6,8 +6,8 @@ import sys
 
 import pytest
 
-from jarvis.models import SandboxConfig, SandboxLevel
-from jarvis.security.sandbox import Sandbox, SandboxResult
+from cognithor.models import SandboxConfig, SandboxLevel
+from cognithor.security.sandbox import Sandbox, SandboxResult
 
 # ============================================================================
 # Fixtures

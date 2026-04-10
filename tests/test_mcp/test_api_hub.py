@@ -19,8 +19,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, SecurityConfig, ensure_directory_structure
-from jarvis.mcp.api_hub import (
+from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.mcp.api_hub import (
     API_TEMPLATES,
     APIHub,
     _build_auth_headers,
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 @pytest.fixture()
 def config(tmp_path: Path) -> JarvisConfig:
     cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".jarvis",
+        jarvis_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(tmp_path)],
         ),

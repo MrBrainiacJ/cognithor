@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.core.loop_detector import (
+from cognithor.core.loop_detector import (
     GUARDED_TOOL_NAMES,
     NO_PROGRESS_REPEAT_THRESHOLD,
     PING_PONG_THRESHOLD,

@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
-from jarvis.hashline.formatter import HashlineFormatter
-from jarvis.hashline.hasher import LineHasher
-from jarvis.hashline.models import HashlinedFile, HashlinedLine
+from cognithor.hashline.cache import HashlineCache
+from cognithor.hashline.config import HashlineConfig
+from cognithor.hashline.formatter import HashlineFormatter
+from cognithor.hashline.hasher import LineHasher
+from cognithor.hashline.models import HashlinedFile, HashlinedLine
 
 if TYPE_CHECKING:
     from pathlib import Path

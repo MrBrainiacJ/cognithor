@@ -2,8 +2,8 @@
 
 import pytest
 
-from jarvis.core.plan_graph import CycleError, PlanGraph
-from jarvis.models import ActionPlan, PlannedAction, PlanNode
+from cognithor.core.plan_graph import CycleError, PlanGraph
+from cognithor.models import ActionPlan, PlannedAction, PlanNode
 
 
 class TestPlanGraph:

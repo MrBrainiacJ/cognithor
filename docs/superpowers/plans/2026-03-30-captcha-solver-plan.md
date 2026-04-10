@@ -1063,7 +1063,7 @@ git commit -m "feat(captcha): MCP tool, gatekeeper ORANGE, config, stealth in ag
 ### Task 8: Skill + Documentation
 
 **Files:**
-- Create: `~/.jarvis/skills/generated/captcha_solver.md`
+- Create: `~/.cognithor/skills/generated/captcha_solver.md`
 - Modify: `src/jarvis/browser/captcha/__init__.py` — ensure clean exports
 - Test: final dry-run
 
@@ -1117,7 +1117,7 @@ Expected: 0 errors
 - [ ] **Step 4: Commit**
 
 ```bash
-git add ~/.jarvis/skills/generated/captcha_solver.md src/jarvis/browser/captcha/
+git add ~/.cognithor/skills/generated/captcha_solver.md src/jarvis/browser/captcha/
 git commit -m "feat(captcha): skill file + documentation complete"
 ```
 

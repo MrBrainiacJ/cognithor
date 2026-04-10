@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.irc import IRCChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.irc import IRCChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -278,7 +278,7 @@ class TestIRCReceiveLoop:
         mock_reader.read = fake_read
         ch._reader = mock_reader
 
-        with patch("jarvis.channels.irc.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.irc.asyncio.sleep", new_callable=AsyncMock):
             await ch._receive_loop()
 
 
@@ -290,7 +290,7 @@ class TestIRCSendMessage:
         ch._writer.drain = AsyncMock()
         ch._last_msg_time = 0
 
-        with patch("jarvis.channels.irc.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.irc.asyncio.sleep", new_callable=AsyncMock):
             await ch._send_message("#general", "Hello IRC!")
 
         calls = ch._writer.write.call_args_list
@@ -303,7 +303,7 @@ class TestIRCSendMessage:
         ch._writer.drain = AsyncMock()
         ch._last_msg_time = 0
 
-        with patch("jarvis.channels.irc.asyncio.sleep", new_callable=AsyncMock):
+        with patch("cognithor.channels.irc.asyncio.sleep", new_callable=AsyncMock):
             await ch._send_message("#general", "Line 1\nLine 2")
 
         calls = ch._writer.write.call_args_list

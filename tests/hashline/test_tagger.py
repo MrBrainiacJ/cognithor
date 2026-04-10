@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.hashline.cache import HashlineCache
-from jarvis.hashline.config import HashlineConfig
-from jarvis.hashline.exceptions import BinaryFileError, FileTooLargeError
-from jarvis.hashline.hasher import LineHasher
-from jarvis.hashline.tagger import HashlineTagger
+from cognithor.hashline.cache import HashlineCache
+from cognithor.hashline.config import HashlineConfig
+from cognithor.hashline.exceptions import BinaryFileError, FileTooLargeError
+from cognithor.hashline.hasher import LineHasher
+from cognithor.hashline.tagger import HashlineTagger
 
 if TYPE_CHECKING:
     from pathlib import Path

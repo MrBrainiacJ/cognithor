@@ -6,7 +6,7 @@ import pytest
 class TestCorrectionMemory:
     @pytest.fixture
     def mem(self, tmp_path):
-        from jarvis.core.correction_memory import CorrectionMemory
+        from cognithor.core.correction_memory import CorrectionMemory
 
         return CorrectionMemory(db_path=tmp_path / "corrections.db")
 

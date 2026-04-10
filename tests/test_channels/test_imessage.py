@@ -14,13 +14,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.imessage import (
+from cognithor.channels.imessage import (
     MAX_MESSAGE_LENGTH,
     IMessageChannel,
     _escape_applescript,
     _split_message,
 )
-from jarvis.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
 
 # ============================================================================
 # Fixtures
@@ -120,7 +120,7 @@ class TestIMessageLifecycle:
         mock_resp.json.return_value = {"data": {"server_version": "1.0"}}
         mock_client.get = AsyncMock(return_value=mock_resp)
 
-        with patch("jarvis.channels.imessage.httpx", create=True) as mock_httpx:
+        with patch("cognithor.channels.imessage.httpx", create=True) as mock_httpx:
             mock_httpx.AsyncClient.return_value = mock_client
             # Patch httpx import inside start()
 
@@ -537,7 +537,7 @@ class TestIMessageApproval:
         bb_ch._sessions["+491234567"] = "sess-timeout"
         bb_ch._mode = "bluebubbles"
         with patch.object(bb_ch, "_send_bb", new_callable=AsyncMock):
-            with patch("jarvis.channels.imessage.APPROVAL_TIMEOUT", 0.05):
+            with patch("cognithor.channels.imessage.APPROVAL_TIMEOUT", 0.05):
                 action = PlannedAction(tool="rm", params={})
                 result = await bb_ch.request_approval("sess-timeout", action, "Danger")
         assert result is False

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/providers/kanban_provider.dart';
+import 'package:cognithor_ui/providers/kanban_provider.dart';
 
 class KanbanCard extends StatelessWidget {
   final KanbanTask task;

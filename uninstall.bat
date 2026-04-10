@@ -14,8 +14,8 @@ echo.
 echo                    -- Uninstaller --
 echo.
 
-set "JARVIS_HOME=%USERPROFILE%\.jarvis"
-set "VENV_DIR=%JARVIS_HOME%\venv"
+set "COGNITHOR_HOME=%USERPROFILE%\.jarvis"
+set "VENV_DIR=%COGNITHOR_HOME%\venv"
 set "INSTALL_DIR=%LOCALAPPDATA%\Cognithor"
 
 :: ============================================================
@@ -32,7 +32,7 @@ set HAS_SHORTCUT=0
 set HAS_OLLAMA=0
 
 if exist "%VENV_DIR%" set HAS_VENV=1
-if exist "%JARVIS_HOME%\config.yaml" set HAS_DATA=1
+if exist "%COGNITHOR_HOME%\config.yaml" set HAS_DATA=1
 if exist "%INSTALL_DIR%\cognithor.bat" set HAS_INSTALL=1
 
 set "DESKTOP_PATH="
@@ -61,7 +61,7 @@ if not errorlevel 1 set HAS_OLLAMA=1
 
 echo   Found:
 if %HAS_VENV%==1    echo     [x] Virtual environment: %VENV_DIR%
-if %HAS_DATA%==1    echo     [x] User data: %JARVIS_HOME%
+if %HAS_DATA%==1    echo     [x] User data: %COGNITHOR_HOME%
 if %HAS_INSTALL%==1 echo     [x] Packaged install: %INSTALL_DIR%
 if %HAS_SHORTCUT%==1 echo     [x] Desktop/Start Menu shortcuts
 if %HAS_OLLAMA%==1  echo     [x] Ollama process running
@@ -175,8 +175,8 @@ if defined CURRENT_PATH (
 )
 
 :: Remove marker file
-if exist "%JARVIS_HOME%\.cognithor_initialized" (
-    del "%JARVIS_HOME%\.cognithor_initialized" >nul 2>&1
+if exist "%COGNITHOR_HOME%\.cognithor_initialized" (
+    del "%COGNITHOR_HOME%\.cognithor_initialized" >nul 2>&1
     echo   [OK] Initialization marker removed
 )
 
@@ -184,9 +184,9 @@ if exist "%JARVIS_HOME%\.cognithor_initialized" (
 if "%CHOICE%"=="2" (
     echo.
     echo   [..] Removing user data...
-    if exist "%JARVIS_HOME%" (
-        rmdir /s /q "%JARVIS_HOME%" >nul 2>&1
-        echo   [OK] User data removed: %JARVIS_HOME%
+    if exist "%COGNITHOR_HOME%" (
+        rmdir /s /q "%COGNITHOR_HOME%" >nul 2>&1
+        echo   [OK] User data removed: %COGNITHOR_HOME%
     )
 )
 
@@ -197,8 +197,8 @@ echo   ============================================
 echo.
 
 if "%CHOICE%"=="1" (
-    echo   Your data in %JARVIS_HOME% was preserved.
-    echo   To remove it later: rmdir /s /q "%JARVIS_HOME%"
+    echo   Your data in %COGNITHOR_HOME% was preserved.
+    echo   To remove it later: rmdir /s /q "%COGNITHOR_HOME%"
     echo.
 )
 

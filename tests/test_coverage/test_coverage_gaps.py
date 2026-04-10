@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, MemoryConfig
+from cognithor.config import JarvisConfig, MemoryConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -30,9 +30,9 @@ class TestHybridSearch:
     @pytest.fixture()
     def search_engine(self, tmp_path: Path):
         """Erstellt eine HybridSearch mit echtem Index und Mock-Embeddings."""
-        from jarvis.memory.embeddings import EmbeddingClient
-        from jarvis.memory.indexer import MemoryIndex
-        from jarvis.memory.search import HybridSearch
+        from cognithor.memory.embeddings import EmbeddingClient
+        from cognithor.memory.indexer import MemoryIndex
+        from cognithor.memory.search import HybridSearch
 
         config = MemoryConfig()
         index = MemoryIndex(db_path=tmp_path / "test.db")
@@ -44,7 +44,7 @@ class TestHybridSearch:
     @pytest.fixture()
     def populated_search(self, search_engine):
         """Search-Engine mit vorindexierten Chunks."""
-        from jarvis.models import Chunk, MemoryTier
+        from cognithor.models import Chunk, MemoryTier
 
         idx = search_engine.index
         texts = [
@@ -102,7 +102,7 @@ class TestHybridSearch:
     @pytest.mark.asyncio()
     async def test_vector_search_with_mock_embeddings(self, populated_search):
         """Vektor-Suche mit Mock-Embeddings."""
-        from jarvis.memory.embeddings import EmbeddingResult
+        from cognithor.memory.embeddings import EmbeddingResult
 
         mock_vector = [0.1] * 768
         populated_search._embeddings.embed_text.return_value = EmbeddingResult(
@@ -142,7 +142,7 @@ class TestHybridSearch:
     @pytest.mark.asyncio()
     async def test_hybrid_merge_scoring(self, populated_search):
         """Hybrid-Merge kombiniert Scores aus allen Kanälen."""
-        from jarvis.memory.embeddings import EmbeddingResult
+        from cognithor.memory.embeddings import EmbeddingResult
 
         mock_vector = [0.5] * 768
         populated_search._embeddings.embed_text.return_value = EmbeddingResult(
@@ -177,7 +177,7 @@ class TestHybridSearch:
     @pytest.mark.asyncio()
     async def test_tier_filter(self, populated_search):
         """Tier-Filter schränkt auf einen Memory-Tier ein."""
-        from jarvis.models import MemoryTier
+        from cognithor.models import MemoryTier
 
         results = await populated_search.search(
             "Projektmanagement",
@@ -196,7 +196,7 @@ class TestHybridSearch:
 
     def test_graph_search_with_entities(self, populated_search):
         """Graph-Suche findet Chunks über Entity-Matching."""
-        from jarvis.models import Chunk, Entity, MemoryTier
+        from cognithor.models import Chunk, Entity, MemoryTier
 
         idx = populated_search.index
         entity = Entity(
@@ -239,7 +239,7 @@ class TestHybridSearch:
     @pytest.mark.asyncio()
     async def test_core_memory_no_decay(self, search_engine):
         """Core Memory Chunks bekommen keinen Recency-Decay."""
-        from jarvis.models import Chunk, MemoryTier
+        from cognithor.models import Chunk, MemoryTier
 
         idx = search_engine.index
         chunk = Chunk(
@@ -272,7 +272,7 @@ class TestEmbeddingClient:
 
     @pytest.fixture()
     def client(self):
-        from jarvis.memory.embeddings import EmbeddingClient
+        from cognithor.memory.embeddings import EmbeddingClient
 
         return EmbeddingClient(
             model="nomic-embed-text",
@@ -468,13 +468,13 @@ class TestGatewayIntegration:
 
     @pytest.fixture()
     def gateway_config(self, tmp_path: Path):
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         config.ensure_directories()
         return config
 
     @pytest.fixture()
     def gateway(self, gateway_config):
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway(gateway_config)
         gw._running = True  # Für den Agent-Loop
@@ -496,7 +496,7 @@ class TestGatewayIntegration:
 
     def test_init(self, gateway_config):
         """Gateway initialisiert mit leeren Channels."""
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway(gateway_config)
         assert gw._channels == {}
@@ -506,7 +506,7 @@ class TestGatewayIntegration:
     @pytest.mark.asyncio()
     async def test_initialize_without_ollama(self, gateway_config):
         """Gateway startet auch ohne erreichbaren Ollama-Server."""
-        from jarvis.gateway.gateway import Gateway
+        from cognithor.gateway.gateway import Gateway
 
         gw = Gateway(gateway_config)
 
@@ -517,7 +517,7 @@ class TestGatewayIntegration:
         mock_llm._backend = None
         mock_llm.backend_type = "ollama"
 
-        with patch("jarvis.core.unified_llm.UnifiedLLMClient") as mock_llm_cls:
+        with patch("cognithor.core.unified_llm.UnifiedLLMClient") as mock_llm_cls:
             mock_llm_cls.create.return_value = mock_llm
 
             await gw.initialize()
@@ -541,7 +541,7 @@ class TestGatewayIntegration:
     @pytest.mark.asyncio()
     async def test_handle_message_direct_response(self, gateway):
         """Direct-response Pfad: Planner gibt direkte Antwort."""
-        from jarvis.models import ActionPlan, IncomingMessage
+        from cognithor.models import ActionPlan, IncomingMessage
 
         gateway._planner.plan.return_value = ActionPlan(
             goal="test",
@@ -559,7 +559,7 @@ class TestGatewayIntegration:
     @pytest.mark.asyncio()
     async def test_handle_message_no_plan(self, gateway):
         """Kein Plan und keine direkte Antwort → Fallback-Text."""
-        from jarvis.models import ActionPlan, IncomingMessage
+        from cognithor.models import ActionPlan, IncomingMessage
 
         gateway._planner.plan.return_value = ActionPlan(
             goal="test",
@@ -574,7 +574,7 @@ class TestGatewayIntegration:
     @pytest.mark.asyncio()
     async def test_handle_message_with_tool_execution(self, gateway):
         """Tool-Execution Pfad: Planner → Gatekeeper → Executor."""
-        from jarvis.models import (
+        from cognithor.models import (
             ActionPlan,
             GateDecision,
             GateStatus,
@@ -619,7 +619,7 @@ class TestGatewayIntegration:
     @pytest.mark.asyncio()
     async def test_handle_message_all_blocked(self, gateway):
         """Alle Aktionen blockiert → Blockiert-Meldung."""
-        from jarvis.models import (
+        from cognithor.models import (
             ActionPlan,
             GateDecision,
             GateStatus,
@@ -651,7 +651,7 @@ class TestGatewayIntegration:
     @pytest.mark.asyncio()
     async def test_handle_message_with_errors_replan(self, gateway):
         """Bei Fehlern → Re-Plan bis Iterationslimit."""
-        from jarvis.models import (
+        from cognithor.models import (
             ActionPlan,
             GateDecision,
             GateStatus,
@@ -749,7 +749,7 @@ class TestGatewayIntegration:
         """Reflexion wird nach erfolgreicher Antwort ausgeführt (background task)."""
         import asyncio
 
-        from jarvis.models import ActionPlan, IncomingMessage, ReflectionResult
+        from cognithor.models import ActionPlan, IncomingMessage, ReflectionResult
 
         gateway._planner.plan.return_value = ActionPlan(
             goal="test",
@@ -789,7 +789,7 @@ class TestModelRouter:
     @pytest.fixture(autouse=True)
     def _reset_coding_override(self):
         """Reset ContextVar before/after each test to prevent cross-test contamination."""
-        from jarvis.core.model_router import _coding_override_var
+        from cognithor.core.model_router import _coding_override_var
 
         _coding_override_var.set(None)
         yield
@@ -801,7 +801,7 @@ class TestModelRouter:
 
     @pytest.fixture()
     def router(self, config):
-        from jarvis.core.model_router import ModelRouter
+        from cognithor.core.model_router import ModelRouter
 
         mock_ollama = MagicMock()
         return ModelRouter(config, mock_ollama)
@@ -862,7 +862,7 @@ class TestModelRouter:
     @pytest.mark.asyncio()
     async def test_router_initialize(self, config):
         """Router lädt verfügbare Modelle."""
-        from jarvis.core.model_router import ModelRouter
+        from cognithor.core.model_router import ModelRouter
 
         mock_ollama = AsyncMock()
         mock_ollama.list_models.return_value = ["qwen3:8b", "qwen3:32b"]
@@ -876,7 +876,7 @@ class TestModelRouter:
     @pytest.mark.asyncio()
     async def test_ollama_client_available(self):
         """OllamaClient prüft Verfügbarkeit via /api/tags."""
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         config = JarvisConfig()
         client = OllamaClient(config)
@@ -898,7 +898,7 @@ class TestModelRouter:
         """OllamaClient meldet nicht verfügbar bei Fehler."""
         import httpx
 
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         config = JarvisConfig()
         client = OllamaClient(config)
@@ -915,7 +915,7 @@ class TestModelRouter:
     @pytest.mark.asyncio()
     async def test_ollama_client_list_models(self):
         """OllamaClient listet Modelle."""
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         config = JarvisConfig()
         client = OllamaClient(config)
@@ -940,7 +940,7 @@ class TestModelRouter:
     @pytest.mark.asyncio()
     async def test_ollama_client_list_models_error(self):
         """list_models gibt leere Liste bei Fehler."""
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         config = JarvisConfig()
         client = OllamaClient(config)
@@ -965,7 +965,7 @@ class TestMCPClient:
 
     @pytest.fixture()
     def mcp(self, tmp_path: Path):
-        from jarvis.mcp.client import JarvisMCPClient
+        from cognithor.mcp.client import JarvisMCPClient
 
         config = JarvisConfig(jarvis_home=tmp_path)
         return JarvisMCPClient(config)
@@ -1076,8 +1076,8 @@ class TestSandbox:
 
     @pytest.fixture()
     def sandbox(self):
-        from jarvis.models import SandboxConfig
-        from jarvis.security.sandbox import Sandbox
+        from cognithor.models import SandboxConfig
+        from cognithor.security.sandbox import Sandbox
 
         config = SandboxConfig()
         return Sandbox(config)
@@ -1089,7 +1089,7 @@ class TestSandbox:
 
     def test_available_levels(self, sandbox):
         """Process-Level ist immer verfügbar."""
-        from jarvis.models import SandboxLevel
+        from cognithor.models import SandboxLevel
 
         levels = sandbox.available_levels
         assert SandboxLevel.PROCESS in levels
@@ -1152,7 +1152,7 @@ class TestMemoryWatcher:
 
     @pytest.fixture()
     def watcher_setup(self, tmp_path: Path):
-        from jarvis.memory.watcher import MemoryWatcher
+        from cognithor.memory.watcher import MemoryWatcher
 
         watch_dir = tmp_path / "knowledge"
         watch_dir.mkdir()
@@ -1245,7 +1245,7 @@ class TestMemoryFileHandler:
 
     @pytest.fixture()
     def handler(self):
-        from jarvis.memory.watcher import MemoryFileHandler
+        from cognithor.memory.watcher import MemoryFileHandler
 
         callback = MagicMock()
         return MemoryFileHandler(callback=callback, debounce_seconds=0.1), callback

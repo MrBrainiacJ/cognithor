@@ -8,16 +8,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.hashline.models import EditIntent
-from jarvis.hashline.tagger import HashlineTagger
-from jarvis.hashline.validator import HashlineValidator
+from cognithor.hashline.models import EditIntent
+from cognithor.hashline.tagger import HashlineTagger
+from cognithor.hashline.validator import HashlineValidator
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from jarvis.hashline.cache import HashlineCache
-    from jarvis.hashline.config import HashlineConfig
-    from jarvis.hashline.hasher import LineHasher
+    from cognithor.hashline.cache import HashlineCache
+    from cognithor.hashline.config import HashlineConfig
+    from cognithor.hashline.hasher import LineHasher
 
 
 @pytest.fixture

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from jarvis.browser.captcha.models import CaptchaType
-from jarvis.browser.captcha.strategies import (
+from cognithor.browser.captcha.models import CaptchaType
+from cognithor.browser.captcha.strategies import (
     build_image_grid_prompt,
     build_text_captcha_prompt,
     get_strategy,

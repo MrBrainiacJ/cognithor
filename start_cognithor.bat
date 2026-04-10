@@ -44,7 +44,7 @@ echo.
 echo     COGNITHOR - Agent OS
 echo     ============================
 echo.
-echo   v0.86.4
+echo   v0.87.0
 echo.
 
 set "REPO_ROOT=%~dp0"
@@ -378,7 +378,7 @@ goto :eof
 
 :start_llama_server
 :: Check if llama_cpp is configured as backend
-findstr /C:"llm_backend_type: llama_cpp" "%USERPROFILE%\.jarvis\config.yaml" >nul 2>&1
+findstr /C:"llm_backend_type: llama_cpp" "%USERPROFILE%\.cognithor\config.yaml" >nul 2>&1
 if errorlevel 1 (
     echo   [SKIP] llama.cpp not configured as backend.
     goto :eof

@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.api import APIChannel
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.channels.api import APIChannel
+from cognithor.models import OutgoingMessage, PlannedAction
 
 
 @pytest.fixture
@@ -141,7 +141,7 @@ class TestAPIApproval:
         async def short_wait_for(coro, *, timeout):
             return await original_wait_for(coro, timeout=0.01)
 
-        with patch("jarvis.channels.api.asyncio.wait_for", side_effect=short_wait_for):
+        with patch("cognithor.channels.api.asyncio.wait_for", side_effect=short_wait_for):
             result = await ch.request_approval("s1", action, "reason")
 
         assert result is False

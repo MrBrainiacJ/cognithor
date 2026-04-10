@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.a2a.server import A2AServer, A2AServerConfig
-from jarvis.a2a.types import (
+from cognithor.a2a.server import A2AServer, A2AServerConfig
+from cognithor.a2a.types import (
     A2A_PROTOCOL_VERSION,
     A2AAgentCard,
     A2AErrorCode,
@@ -769,7 +769,7 @@ class TestA2AAdapter:
         return config
 
     def test_setup_disabled(self):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = self._make_config()
         adapter = A2AAdapter(config)
@@ -780,7 +780,7 @@ class TestA2AAdapter:
     def test_setup_enabled_from_yaml(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True, "port": 3099}}))
@@ -796,7 +796,7 @@ class TestA2AAdapter:
     def test_setup_with_interop(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -818,7 +818,7 @@ class TestA2AAdapter:
     async def test_start_stop(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -836,7 +836,7 @@ class TestA2AAdapter:
     async def test_handle_incoming_task_no_text(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -853,7 +853,7 @@ class TestA2AAdapter:
     async def test_handle_incoming_task_echo(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -874,7 +874,7 @@ class TestA2AAdapter:
     async def test_handle_incoming_task_with_handler(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -897,7 +897,7 @@ class TestA2AAdapter:
     async def test_handle_incoming_task_handler_exception(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -918,7 +918,7 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_delegate_task_no_client(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = MagicMock()
         config.mcp_config_file = MagicMock()
@@ -929,7 +929,7 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_discover_remote_no_client(self, tmp_path):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = MagicMock()
         config.mcp_config_file = MagicMock()
@@ -940,7 +940,7 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_handle_a2a_request_no_server(self):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = MagicMock()
         config.mcp_config_file = MagicMock()
@@ -951,7 +951,7 @@ class TestA2AAdapter:
 
     @pytest.mark.asyncio
     async def test_handle_stream_request_no_server(self):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = MagicMock()
         config.mcp_config_file = MagicMock()
@@ -964,7 +964,7 @@ class TestA2AAdapter:
         assert "error" in events[0]
 
     def test_get_agent_card_no_server(self):
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         config = MagicMock()
         config.mcp_config_file = MagicMock()
@@ -976,7 +976,7 @@ class TestA2AAdapter:
     def test_stats(self, tmp_path):
         import yaml
 
-        from jarvis.a2a.adapter import A2AAdapter
+        from cognithor.a2a.adapter import A2AAdapter
 
         mcp_yaml = tmp_path / "mcp.yaml"
         mcp_yaml.write_text(yaml.dump({"a2a": {"enabled": True}}))
@@ -997,7 +997,7 @@ class TestA2AAdapter:
 
 class TestCapabilitiesToSkills:
     def test_known_capability(self):
-        from jarvis.a2a.adapter import capabilities_to_skills
+        from cognithor.a2a.adapter import capabilities_to_skills
 
         cap = MagicMock()
         cap.capability_type.value = "web_search"
@@ -1009,7 +1009,7 @@ class TestCapabilitiesToSkills:
         assert "de" in skills[0].tags
 
     def test_unknown_capability(self):
-        from jarvis.a2a.adapter import capabilities_to_skills
+        from cognithor.a2a.adapter import capabilities_to_skills
 
         cap = MagicMock()
         cap.capability_type.value = "custom_thing"

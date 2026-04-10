@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from jarvis.benchmark.suite import (
+from cognithor.benchmark.suite import (
     BUILTIN_TASKS,
     BenchmarkReport,
     BenchmarkResult,

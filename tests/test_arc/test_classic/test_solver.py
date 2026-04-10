@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.arc.classic.solver import ArcSolver
-from jarvis.arc.classic.task_parser import ArcTask
+from cognithor.arc.classic.solver import ArcSolver
+from cognithor.arc.classic.task_parser import ArcTask
 
 
 class TestArcSolver:

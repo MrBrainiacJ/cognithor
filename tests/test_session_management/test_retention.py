@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from jarvis.gateway.session_store import SessionStore
-from jarvis.models import SessionContext
+from cognithor.gateway.session_store import SessionStore
+from cognithor.models import SessionContext
 
 
 def test_cleanup_old_sessions(tmp_path):

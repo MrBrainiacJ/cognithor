@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.social.refiner import RefinedReply, ReplyRefiner
+from cognithor.social.refiner import RefinedReply, ReplyRefiner
 
 
 @pytest.fixture()

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.core.user_preferences import UserPreference, UserPreferenceStore
+from cognithor.core.user_preferences import UserPreference, UserPreferenceStore
 
 
 @pytest.fixture()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.security.python_ast_guard import Violation, analyse_python, is_safe_python
+from cognithor.security.python_ast_guard import Violation, analyse_python, is_safe_python
 
 
 class TestSafeCode:

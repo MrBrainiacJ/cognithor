@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from jarvis.hitl.manager import ApprovalManager
-from jarvis.hitl.notifier import HITLNotifier, NotificationRecord
-from jarvis.hitl.types import (
+from cognithor.hitl.manager import ApprovalManager
+from cognithor.hitl.notifier import HITLNotifier, NotificationRecord
+from cognithor.hitl.types import (
     ApprovalRequest,
     ApprovalResponse,
     ApprovalStatus,

@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.memory.manager import MemoryManager
-from jarvis.models import MemoryTier
+from cognithor.config import JarvisConfig
+from cognithor.memory.manager import MemoryManager
+from cognithor.models import MemoryTier
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def config(tmp_path: Path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+    return JarvisConfig(jarvis_home=tmp_path / ".cognithor")
 
 
 @pytest.fixture
@@ -171,7 +171,7 @@ class TestSyncDocumentToIdentity:
     def test_passes_through_to_identity_layer(self):
         from unittest.mock import MagicMock
 
-        from jarvis.memory.manager import MemoryManager
+        from cognithor.memory.manager import MemoryManager
 
         mm = MagicMock(spec=MemoryManager)
         mm._identity_layer = MagicMock()
@@ -196,7 +196,7 @@ class TestSyncDocumentToIdentity:
     def test_no_identity_layer_is_noop(self):
         from unittest.mock import MagicMock
 
-        from jarvis.memory.manager import MemoryManager
+        from cognithor.memory.manager import MemoryManager
 
         mm = MagicMock(spec=MemoryManager)
         mm._identity_layer = None
@@ -210,7 +210,7 @@ class TestSyncDocumentToIdentity:
     def test_exception_is_silenced(self):
         from unittest.mock import MagicMock
 
-        from jarvis.memory.manager import MemoryManager
+        from cognithor.memory.manager import MemoryManager
 
         mm = MagicMock(spec=MemoryManager)
         mm._identity_layer = MagicMock()

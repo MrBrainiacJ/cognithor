@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jarvis.security.shell_validator import (
+from cognithor.security.shell_validator import (
     CommandIntent,
     ValidationVerdict,
     classify_command,

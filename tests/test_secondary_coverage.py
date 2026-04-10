@@ -31,7 +31,7 @@ import pytest
 
 class TestRateLimiter:
     def test_token_bucket_consume(self):
-        from jarvis.security.rate_limiter import TokenBucket
+        from cognithor.security.rate_limiter import TokenBucket
 
         b = TokenBucket(rate=10.0, capacity=5.0)
         assert b.consume(1.0) is True
@@ -40,7 +40,7 @@ class TestRateLimiter:
         assert b.consume(1.0) is False
 
     def test_token_bucket_refill(self):
-        from jarvis.security.rate_limiter import TokenBucket
+        from cognithor.security.rate_limiter import TokenBucket
 
         b = TokenBucket(rate=1000.0, capacity=10.0)
         b.consume(10.0)  # drain
@@ -50,7 +50,7 @@ class TestRateLimiter:
 
     @pytest.mark.asyncio
     async def test_rate_limiter_check(self):
-        from jarvis.security.rate_limiter import RateLimiter
+        from cognithor.security.rate_limiter import RateLimiter
 
         # Very low refill rate so tokens don't refill between check() calls
         rl = RateLimiter(rate=0.001, capacity=5.0)
@@ -60,7 +60,7 @@ class TestRateLimiter:
 
     @pytest.mark.asyncio
     async def test_rate_limiter_different_clients(self):
-        from jarvis.security.rate_limiter import RateLimiter
+        from cognithor.security.rate_limiter import RateLimiter
 
         rl = RateLimiter(rate=100.0, capacity=2.0)
         assert await rl.check("a") is True
@@ -68,7 +68,7 @@ class TestRateLimiter:
 
     @pytest.mark.asyncio
     async def test_rate_limiter_cleanup(self):
-        from jarvis.security.rate_limiter import RateLimiter
+        from cognithor.security.rate_limiter import RateLimiter
 
         rl = RateLimiter(rate=10.0, capacity=10.0, cleanup_interval=0.0)
         await rl.check("old_client")
@@ -86,7 +86,7 @@ class TestRateLimiter:
 
 class TestCredentialStore:
     def test_store_retrieve_delete(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -102,7 +102,7 @@ class TestCredentialStore:
         assert not store.has("github", "token")
 
     def test_agent_scoped_credentials(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -118,7 +118,7 @@ class TestCredentialStore:
         assert store.retrieve("api", "key") == "global_key"
 
     def test_list_entries(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -133,7 +133,7 @@ class TestCredentialStore:
         assert len(agent_entries) == 2  # agent1's + globals
 
     def test_inject_credentials(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -147,7 +147,7 @@ class TestCredentialStore:
         assert result["query"] == "test"
 
     def test_inject_invalid_mapping(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -157,7 +157,7 @@ class TestCredentialStore:
         assert "x" not in result
 
     def test_count_and_encrypted(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -169,7 +169,7 @@ class TestCredentialStore:
         assert store.is_encrypted is True
 
     def test_persistence(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store1 = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -185,7 +185,7 @@ class TestCredentialStore:
         assert store2.retrieve("s", "k") == "v"
 
     def test_delete_agent_credential(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -196,7 +196,7 @@ class TestCredentialStore:
         assert store.delete("s", "k", agent_id="a1") is False
 
     def test_retrieve_nonexistent(self, tmp_path):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
@@ -205,9 +205,9 @@ class TestCredentialStore:
         assert store.retrieve("nope", "nope") is None
 
     def test_no_passphrase_raises(self, tmp_path, monkeypatch):
-        from jarvis.security.credentials import CredentialStore
+        from cognithor.security.credentials import CredentialStore
 
-        monkeypatch.delenv("JARVIS_CREDENTIAL_KEY", raising=False)
+        monkeypatch.delenv("COGNITHOR_CREDENTIAL_KEY", raising=False)
         store = CredentialStore(
             store_path=tmp_path / "creds.enc",
             passphrase="",
@@ -233,7 +233,7 @@ class TestSandboxMocked:
     @pytest.mark.asyncio
     async def test_execute_docker_fallback_to_namespace(self):
         """Docker not available -> falls back to namespace -> then process."""
-        from jarvis.security.sandbox import Sandbox
+        from cognithor.security.sandbox import Sandbox
 
         sandbox = Sandbox()
         sandbox._capabilities = {
@@ -256,7 +256,7 @@ class TestSandboxMocked:
             )
         )
 
-        from jarvis.models import SandboxLevel
+        from cognithor.models import SandboxLevel
 
         await sandbox.execute("echo hello", level=SandboxLevel.CONTAINER)
         # Should have been downgraded
@@ -264,7 +264,7 @@ class TestSandboxMocked:
 
     @pytest.mark.asyncio
     async def test_build_env(self):
-        from jarvis.security.sandbox import Sandbox
+        from cognithor.security.sandbox import Sandbox
 
         sandbox = Sandbox()
         env = sandbox._build_env({"CUSTOM": "val"})
@@ -272,7 +272,7 @@ class TestSandboxMocked:
         assert "PATH" in env
 
     def test_capabilities(self):
-        from jarvis.security.sandbox import Sandbox
+        from cognithor.security.sandbox import Sandbox
 
         sandbox = Sandbox()
         caps = sandbox.capabilities
@@ -280,14 +280,14 @@ class TestSandboxMocked:
         assert caps["process"] is True
 
     def test_available_levels(self):
-        from jarvis.security.sandbox import Sandbox
+        from cognithor.security.sandbox import Sandbox
 
         sandbox = Sandbox()
         levels = sandbox.available_levels
         assert len(levels) >= 1  # at minimum PROCESS
 
     def test_max_level(self):
-        from jarvis.security.sandbox import Sandbox
+        from cognithor.security.sandbox import Sandbox
 
         sandbox = Sandbox()
         ml = sandbox.max_level
@@ -301,7 +301,7 @@ class TestSandboxMocked:
 
 class TestDBFactory:
     def test_factory_sqlite(self, tmp_path):
-        from jarvis.db.factory import create_backend
+        from cognithor.db.factory import create_backend
 
         config = MagicMock()
         config.database = None
@@ -323,10 +323,10 @@ class TestDBFactory:
         config.database = db_config
         # This will import PostgreSQLBackend (which may fail without psycopg)
         # so we mock the import
-        with patch("jarvis.db.factory.PostgreSQLBackend", create=True) as mock_pg:
+        with patch("cognithor.db.factory.PostgreSQLBackend", create=True) as mock_pg:
             mock_pg.return_value = MagicMock()
             # Need to patch the import inside the function
-            import jarvis.db.factory as factory_mod
+            import cognithor.db.factory as factory_mod
 
             original_func = factory_mod.create_backend
 
@@ -341,7 +341,7 @@ class TestDBFactory:
             assert result is not None
 
     def test_factory_unknown(self):
-        from jarvis.db.factory import create_backend
+        from cognithor.db.factory import create_backend
 
         db_config = MagicMock()
         db_config.backend = "unknown_db"
@@ -359,7 +359,7 @@ class TestDBFactory:
 class TestPageAnalyzer:
     @pytest.mark.asyncio
     async def test_analyze(self):
-        from jarvis.browser.page_analyzer import PageAnalyzer
+        from cognithor.browser.page_analyzer import PageAnalyzer
 
         analyzer = PageAnalyzer()
         page = AsyncMock()
@@ -384,7 +384,7 @@ class TestPageAnalyzer:
 
     @pytest.mark.asyncio
     async def test_analyze_error(self):
-        from jarvis.browser.page_analyzer import PageAnalyzer
+        from cognithor.browser.page_analyzer import PageAnalyzer
 
         analyzer = PageAnalyzer()
         page = AsyncMock()
@@ -395,7 +395,7 @@ class TestPageAnalyzer:
 
     @pytest.mark.asyncio
     async def test_detect_cookie_banner(self):
-        from jarvis.browser.page_analyzer import PageAnalyzer
+        from cognithor.browser.page_analyzer import PageAnalyzer
 
         analyzer = PageAnalyzer()
         page = AsyncMock()
@@ -404,7 +404,7 @@ class TestPageAnalyzer:
         assert result["found"] is False
 
     def test_stats(self):
-        from jarvis.browser.page_analyzer import PageAnalyzer
+        from cognithor.browser.page_analyzer import PageAnalyzer
 
         analyzer = PageAnalyzer()
         s = analyzer.stats()
@@ -419,7 +419,7 @@ class TestPageAnalyzer:
 class TestSessionManager:
     @pytest.mark.asyncio
     async def test_save_and_restore(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager(storage_dir=str(tmp_path))
         page = AsyncMock()
@@ -445,7 +445,7 @@ class TestSessionManager:
         await sm.restore_to_context(context2, "session1")
 
     def test_stats(self, tmp_path):
-        from jarvis.browser.session_manager import SessionManager
+        from cognithor.browser.session_manager import SessionManager
 
         sm = SessionManager(storage_dir=str(tmp_path))
         s = sm.stats()
@@ -460,7 +460,7 @@ class TestSessionManager:
 class TestCronEngine:
     @pytest.mark.asyncio
     async def test_start_stop(self):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         engine = CronEngine()
         await engine.start()
@@ -469,7 +469,7 @@ class TestCronEngine:
         assert engine.running is False
 
     def test_properties(self):
-        from jarvis.cron.engine import CronEngine
+        from cognithor.cron.engine import CronEngine
 
         engine = CronEngine()
         assert engine.running is False
@@ -484,7 +484,7 @@ class TestCronEngine:
 
 class TestCronJobs:
     def test_load_jobs_no_file(self, tmp_path):
-        from jarvis.cron.jobs import JobStore
+        from cognithor.cron.jobs import JobStore
 
         js = JobStore(path=str(tmp_path / "nonexistent.yaml"))
         jobs = js.load()
@@ -504,7 +504,7 @@ class TestCronJobs:
                 }
             )
         )
-        from jarvis.cron.jobs import JobStore
+        from cognithor.cron.jobs import JobStore
 
         js = JobStore(path=str(jobs_yaml))
         jobs = js.load()
@@ -518,7 +518,7 @@ class TestCronJobs:
 
 class TestReplayEngine:
     def test_replay_run_no_plans(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
+        from cognithor.forensics.replay_engine import ReplayEngine
 
         gatekeeper = MagicMock()
         gatekeeper.evaluate_plan = MagicMock(return_value=[])
@@ -535,7 +535,7 @@ class TestReplayEngine:
         assert result is not None
 
     def test_counterfactual_analysis(self):
-        from jarvis.forensics.replay_engine import ReplayEngine
+        from cognithor.forensics.replay_engine import ReplayEngine
 
         gatekeeper = MagicMock()
         gatekeeper.evaluate_plan = MagicMock(return_value=[])
@@ -567,7 +567,7 @@ class TestReplayEngine:
 
 class TestAudit:
     def test_audit_trail_basic(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         h = trail.record_event("sess1", "test_action", {"key": "value"})
@@ -575,7 +575,7 @@ class TestAudit:
         assert trail.entry_count > 0
 
     def test_record_event_and_verify_chain(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         trail.record_event("s1", "login", {"user": "alice"})
@@ -586,7 +586,7 @@ class TestAudit:
         assert broken == -1
 
     def test_credential_masking(self, tmp_path):
-        from jarvis.security.audit import AuditTrail, mask_credentials
+        from cognithor.security.audit import AuditTrail, mask_credentials
 
         trail = AuditTrail(log_dir=tmp_path)
         # Log an event with credential-like data
@@ -597,14 +597,14 @@ class TestAudit:
         assert "***" in masked
 
     def test_mask_dict(self):
-        from jarvis.security.audit import mask_dict
+        from cognithor.security.audit import mask_dict
 
         data = {"password": "secret", "nested": {"token": "Bearer abc123456789"}}
         masked = mask_dict(data)
         assert "***" in masked["nested"]["token"]
 
     def test_mask_dict_depth_limit(self):
-        from jarvis.security.audit import mask_dict
+        from cognithor.security.audit import mask_dict
 
         # depth > 10 returns data as-is
         data = {"key": "value"}
@@ -612,14 +612,14 @@ class TestAudit:
         assert result == data
 
     def test_query_empty(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         results = trail.query(session_id="nonexistent")
         assert results == []
 
     def test_query_with_events(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         trail.record_event("sess1", "action_a", {"x": 1})
@@ -629,7 +629,7 @@ class TestAudit:
         assert results[0]["session_id"] == "sess1"
 
     def test_verify_chain_empty(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         valid, total, broken = trail.verify_chain()
@@ -637,7 +637,7 @@ class TestAudit:
         assert total == 0
 
     def test_last_hash_and_log_path(self, tmp_path):
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail = AuditTrail(log_dir=tmp_path)
         assert trail.last_hash == "genesis"
@@ -647,7 +647,7 @@ class TestAudit:
 
     def test_restore_chain_on_reinit(self, tmp_path):
         """Verify that a new AuditTrail restores the chain from disk."""
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         trail1 = AuditTrail(log_dir=tmp_path)
         trail1.record_event("s1", "ev1")
@@ -666,7 +666,7 @@ class TestAudit:
 
 class TestSecurityFramework:
     def test_incident_tracker_create_and_get(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             IncidentTracker,
@@ -684,7 +684,7 @@ class TestSecurityFramework:
         assert tracker.count == 1
 
     def test_incident_lifecycle(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             IncidentStatus,
@@ -703,7 +703,7 @@ class TestSecurityFramework:
         assert inc.closed_at != ""
 
     def test_incident_assign(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             IncidentTracker,
@@ -716,7 +716,7 @@ class TestSecurityFramework:
         assert tracker.assign("nonexistent", "Bob") is False
 
     def test_open_incidents_and_by_severity(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             IncidentStatus,
@@ -733,7 +733,7 @@ class TestSecurityFramework:
         assert len(tracker.by_category(IncidentCategory.CREDENTIAL_LEAK)) == 2
 
     def test_tracker_stats(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             IncidentTracker,
@@ -746,7 +746,7 @@ class TestSecurityFramework:
         assert isinstance(s["by_severity"], dict)
 
     def test_security_metrics(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentTracker,
             SecurityMetrics,
         )
@@ -762,7 +762,7 @@ class TestSecurityFramework:
         assert "mttd_seconds" in d
 
     def test_posture_scorer_default(self):
-        from jarvis.security.framework import PostureScorer
+        from cognithor.security.framework import PostureScorer
 
         scorer = PostureScorer()
         result = scorer.calculate()
@@ -772,7 +772,7 @@ class TestSecurityFramework:
         assert result["level"] == "good"
 
     def test_posture_scorer_poor(self):
-        from jarvis.security.framework import PostureScorer
+        from cognithor.security.framework import PostureScorer
 
         scorer = PostureScorer(mttr_threshold_seconds=100.0)
         result = scorer.calculate(
@@ -786,7 +786,7 @@ class TestSecurityFramework:
         assert result["level"] in ("poor", "critical")
 
     def test_security_team_auto_assign(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             IncidentTracker,
@@ -807,7 +807,7 @@ class TestSecurityFramework:
         assert inc.assigned_to == "Alice"
 
     def test_security_incident_time_properties(self):
-        from jarvis.security.framework import (
+        from cognithor.security.framework import (
             IncidentCategory,
             IncidentSeverity,
             SecurityIncident,
@@ -835,14 +835,14 @@ class TestSecurityFramework:
 
 class TestCICDGate:
     def test_security_gate_pass(self):
-        from jarvis.security.cicd_gate import GateVerdict, SecurityGate
+        from cognithor.security.cicd_gate import GateVerdict, SecurityGate
 
         gate = SecurityGate()
         result = gate.evaluate({})
         assert result.verdict == GateVerdict.PASS
 
     def test_security_gate_fail_critical(self):
-        from jarvis.security.cicd_gate import GateVerdict, SecurityGate
+        from cognithor.security.cicd_gate import GateVerdict, SecurityGate
 
         gate = SecurityGate()
         pipeline = {
@@ -861,7 +861,7 @@ class TestCICDGate:
         assert len(result.reasons) > 0
 
     def test_security_gate_override(self):
-        from jarvis.security.cicd_gate import GateVerdict, SecurityGate
+        from cognithor.security.cicd_gate import GateVerdict, SecurityGate
 
         gate = SecurityGate()
         result = gate.evaluate(
@@ -878,7 +878,7 @@ class TestCICDGate:
         assert gate.override("nonexistent", "admin", "this gate id does not exist") is None
 
     def test_history_and_pass_rate(self):
-        from jarvis.security.cicd_gate import SecurityGate
+        from cognithor.security.cicd_gate import SecurityGate
 
         gate = SecurityGate()
         gate.evaluate({})
@@ -889,7 +889,7 @@ class TestCICDGate:
         assert gate.last_result() is not None
 
     def test_stats(self):
-        from jarvis.security.cicd_gate import SecurityGate
+        from cognithor.security.cicd_gate import SecurityGate
 
         gate = SecurityGate()
         gate.evaluate({})
@@ -899,7 +899,7 @@ class TestCICDGate:
         assert "policy" in s
 
     def test_gate_policy_to_dict(self):
-        from jarvis.security.cicd_gate import GatePolicy
+        from cognithor.security.cicd_gate import GatePolicy
 
         policy = GatePolicy(policy_id="custom", block_on_critical=False)
         d = policy.to_dict()
@@ -907,7 +907,7 @@ class TestCICDGate:
         assert d["block_on_critical"] is False
 
     def test_gate_result_to_dict(self):
-        from jarvis.security.cicd_gate import SecurityGate
+        from cognithor.security.cicd_gate import SecurityGate
 
         gate = SecurityGate()
         result = gate.evaluate({})
@@ -923,7 +923,7 @@ class TestCICDGate:
 
 class TestAgentVault:
     def test_agent_vault_manager_create_and_get(self):
-        from jarvis.security.agent_vault import AgentVaultManager
+        from cognithor.security.agent_vault import AgentVaultManager
 
         mgr = AgentVaultManager()
         vault = mgr.create_vault("agent1")
@@ -932,7 +932,7 @@ class TestAgentVault:
         assert mgr.vault_count == 1
 
     def test_vault_store_and_retrieve(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         secret = vault.store("my_api_key", "super_secret_value")
@@ -941,13 +941,13 @@ class TestAgentVault:
         assert retrieved == "super_secret_value"
 
     def test_vault_retrieve_nonexistent(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         assert vault.retrieve("nonexistent") is None
 
     def test_vault_rotate(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         secret = vault.store("key1", "old_value")
@@ -957,7 +957,7 @@ class TestAgentVault:
         assert vault.retrieve(secret.secret_id) == "new_value"
 
     def test_vault_revoke(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         secret = vault.store("key1", "val")
@@ -966,7 +966,7 @@ class TestAgentVault:
         assert vault.revoke("nonexistent") is False
 
     def test_vault_active_and_all_secrets(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         s1 = vault.store("k1", "v1")
@@ -978,7 +978,7 @@ class TestAgentVault:
         assert vault.secret_count == 1
 
     def test_vault_access_log(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         s = vault.store("k", "v")
@@ -987,7 +987,7 @@ class TestAgentVault:
         assert len(log) >= 2  # store + retrieve
 
     def test_vault_stats(self):
-        from jarvis.security.agent_vault import AgentVault
+        from cognithor.security.agent_vault import AgentVault
 
         vault = AgentVault("agent1")
         vault.store("k", "v")
@@ -996,7 +996,7 @@ class TestAgentVault:
         assert s["active"] == 1
 
     def test_manager_destroy_vault(self):
-        from jarvis.security.agent_vault import AgentVaultManager
+        from cognithor.security.agent_vault import AgentVaultManager
 
         mgr = AgentVaultManager()
         vault = mgr.create_vault("agent1")
@@ -1006,7 +1006,7 @@ class TestAgentVault:
         assert mgr.destroy_vault("agent1") is False
 
     def test_manager_stats(self):
-        from jarvis.security.agent_vault import AgentVaultManager
+        from cognithor.security.agent_vault import AgentVaultManager
 
         mgr = AgentVaultManager()
         mgr.create_vault("a1")
@@ -1021,7 +1021,7 @@ class TestAgentVault:
 
 class TestSandboxIsolation:
     def test_tenant_manager_create_get(self):
-        from jarvis.security.sandbox_isolation import TenantManager
+        from cognithor.security.sandbox_isolation import TenantManager
 
         tm = TenantManager()
         tenant = tm.create("t1", "Test Tenant")
@@ -1030,7 +1030,7 @@ class TestSandboxIsolation:
         assert tm.tenant_count == 1
 
     def test_tenant_manager_delete(self):
-        from jarvis.security.sandbox_isolation import TenantManager
+        from cognithor.security.sandbox_isolation import TenantManager
 
         tm = TenantManager()
         tm.create("t1", "Test Tenant")
@@ -1039,7 +1039,7 @@ class TestSandboxIsolation:
         assert tm.delete("t1") is False
 
     def test_tenant_agent_limits(self):
-        from jarvis.security.sandbox_isolation import TenantManager
+        from cognithor.security.sandbox_isolation import TenantManager
 
         tm = TenantManager()
         tm.create("t1", "Tenant", max_agents=2)
@@ -1052,7 +1052,7 @@ class TestSandboxIsolation:
         assert tm.can_add_agent("nonexistent") is False
 
     def test_tenant_stats(self):
-        from jarvis.security.sandbox_isolation import TenantManager
+        from cognithor.security.sandbox_isolation import TenantManager
 
         tm = TenantManager()
         tm.create("t1", "Tenant")
@@ -1061,7 +1061,7 @@ class TestSandboxIsolation:
         assert s["total_tenants"] == 1
 
     def test_sandbox_manager_create_get(self):
-        from jarvis.security.sandbox_isolation import SandboxManager, SandboxState
+        from cognithor.security.sandbox_isolation import SandboxManager, SandboxState
 
         sm = SandboxManager()
         sb = sm.create("agent1")
@@ -1071,7 +1071,7 @@ class TestSandboxIsolation:
         assert sm.sandbox_count == 1
 
     def test_sandbox_manager_terminate_suspend(self):
-        from jarvis.security.sandbox_isolation import SandboxManager, SandboxState
+        from cognithor.security.sandbox_isolation import SandboxManager, SandboxState
 
         sm = SandboxManager()
         sb = sm.create("agent1")
@@ -1084,7 +1084,7 @@ class TestSandboxIsolation:
         assert len(sm.running()) == 0
 
     def test_sandbox_tool_access(self):
-        from jarvis.security.sandbox_isolation import AgentSandbox
+        from cognithor.security.sandbox_isolation import AgentSandbox
 
         sb = AgentSandbox(
             sandbox_id="sb1",
@@ -1097,7 +1097,7 @@ class TestSandboxIsolation:
         assert sb.check_tool_access("tool_d") is False  # not in allowed
 
     def test_sandbox_endpoint_access(self):
-        from jarvis.security.sandbox_isolation import AgentSandbox
+        from cognithor.security.sandbox_isolation import AgentSandbox
 
         sb = AgentSandbox(
             sandbox_id="sb1",
@@ -1108,7 +1108,7 @@ class TestSandboxIsolation:
         assert sb.check_endpoint_access("https://evil.com") is False
 
     def test_sandbox_resource_consumption(self):
-        from jarvis.security.sandbox_isolation import AgentSandbox, ResourceLimit, ResourceType
+        from cognithor.security.sandbox_isolation import AgentSandbox, ResourceLimit, ResourceType
 
         sb = AgentSandbox(
             sandbox_id="sb1",
@@ -1120,7 +1120,7 @@ class TestSandboxIsolation:
         assert sb.consume_resource(ResourceType.MEMORY, 10.0) is True  # no limit
 
     def test_resource_limit_properties(self):
-        from jarvis.security.sandbox_isolation import ResourceLimit, ResourceType
+        from cognithor.security.sandbox_isolation import ResourceLimit, ResourceType
 
         rl = ResourceLimit(ResourceType.CPU, 100.0, current_value=75.0)
         assert rl.utilization == 75.0
@@ -1131,7 +1131,7 @@ class TestSandboxIsolation:
         assert d["resource"] == "cpu"
 
     def test_namespace_isolation(self):
-        from jarvis.security.sandbox_isolation import NamespaceIsolation
+        from cognithor.security.sandbox_isolation import NamespaceIsolation
 
         ni = NamespaceIsolation()
         ns = ni.create("agent1", "tenant1")
@@ -1144,7 +1144,7 @@ class TestSandboxIsolation:
         assert len(all_ns) == 1
 
     def test_isolation_enforcer_provision(self):
-        from jarvis.security.sandbox_isolation import IsolationEnforcer
+        from cognithor.security.sandbox_isolation import IsolationEnforcer
 
         enforcer = IsolationEnforcer()
         enforcer.tenants.create("default", "Default Tenant")
@@ -1153,7 +1153,7 @@ class TestSandboxIsolation:
         assert "namespace" in result
 
     def test_isolation_enforcer_decommission(self):
-        from jarvis.security.sandbox_isolation import IsolationEnforcer
+        from cognithor.security.sandbox_isolation import IsolationEnforcer
 
         enforcer = IsolationEnforcer()
         enforcer.tenants.create("default", "Default")
@@ -1162,7 +1162,7 @@ class TestSandboxIsolation:
         assert result["sandbox_terminated"] is True
 
     def test_isolation_enforcer_stats(self):
-        from jarvis.security.sandbox_isolation import IsolationEnforcer
+        from cognithor.security.sandbox_isolation import IsolationEnforcer
 
         enforcer = IsolationEnforcer()
         s = enforcer.stats()
@@ -1170,7 +1170,7 @@ class TestSandboxIsolation:
         assert "tenants" in s
 
     def test_admin_manager(self):
-        from jarvis.security.sandbox_isolation import AdminManager, AdminRole
+        from cognithor.security.sandbox_isolation import AdminManager, AdminRole
 
         am = AdminManager()
         admin = am.create("admin@test.com", "t1", AdminRole.TENANT_ADMIN)
@@ -1182,7 +1182,7 @@ class TestSandboxIsolation:
         assert am.admin_count == 0
 
     def test_delegated_admin_super(self):
-        from jarvis.security.sandbox_isolation import AdminRole, DelegatedAdmin
+        from cognithor.security.sandbox_isolation import AdminRole, DelegatedAdmin
 
         admin = DelegatedAdmin("a1", "admin@x.com", "t1", AdminRole.SUPER_ADMIN)
         assert admin.can("anything") is True

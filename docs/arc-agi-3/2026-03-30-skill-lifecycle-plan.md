@@ -8,7 +8,7 @@
 
 ## Problem
 
-1. `create_skill` MCP Tool schreibt `.md` + `.py` nach `~/.jarvis/skills/generated/`
+1. `create_skill` MCP Tool schreibt `.md` + `.py` nach `~/.cognithor/skills/generated/`
 2. `SkillRegistry.__init__` scannt dieses Verzeichnis NICHT
 3. Erstellte Skills tauchen nie in der Tool-Liste auf
 4. Cognithor weiß nicht dass er Skills hat die er selbst erstellt hat
@@ -42,8 +42,8 @@ User: "Erstelle einen Skill für Wettervorhersagen"
 Cognithor startet
 → SkillRegistry.__init__()
 → Lädt built-in Skills (src/jarvis/skills/builtin/)
-→ Lädt User Skills (~/.jarvis/skills/*.md)
-→ NEU: Lädt generierte Skills (~/.jarvis/skills/generated/*.md)
+→ Lädt User Skills (~/.cognithor/skills/*.md)
+→ NEU: Lädt generierte Skills (~/.cognithor/skills/generated/*.md)
 → Log: "skill_registry_loaded categories=7 total=22 (16 builtin + 6 generated)"
 ```
 
@@ -81,7 +81,7 @@ Alle 24h (oder im Idle):
 ### Teil 4: ARC-AGI-3 als Skill
 
 **Dateien:**
-- `~/.jarvis/skills/generated/arc_agi3_play.md` — Skill-Definition
+- `~/.cognithor/skills/generated/arc_agi3_play.md` — Skill-Definition
 - Nutzt existierendes `src/jarvis/arc/` Modul
 
 **Skill-Definition:**
@@ -134,7 +134,7 @@ User: "Spiel ARC-AGI-3 Game ls20"
 - `src/jarvis/gateway/gateway.py` oder Cron — Lifecycle-Job
 
 **Erstellen (Skill-Datei):**
-- `~/.jarvis/skills/generated/arc_agi3_play.md`
+- `~/.cognithor/skills/generated/arc_agi3_play.md`
 
 ## Risiko
 

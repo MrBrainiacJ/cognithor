@@ -13,8 +13,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from jarvis.config import JarvisConfig
-from jarvis.config_manager import (
+from cognithor.config import JarvisConfig
+from cognithor.config_manager import (
     ConfigManager,
     _is_secret_field,
 )
@@ -178,14 +178,14 @@ class TestStripMaskedSecrets:
 
 class TestUpdateTopLevelSecretField:
     def test_update_api_key_set_value(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
         mgr.update_top_level("openai_api_key", "sk-new-key")
         assert mgr.config.openai_api_key == "sk-new-key"
 
     def test_update_api_key_clear_warns(self, tmp_path: Path) -> None:
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             openai_api_key="sk-existing",
         )
         mgr = ConfigManager(config=config)
@@ -194,7 +194,7 @@ class TestUpdateTopLevelSecretField:
 
     def test_update_api_key_masked_value_treated_as_no_value(self, tmp_path: Path) -> None:
         config = JarvisConfig(
-            jarvis_home=tmp_path / ".jarvis",
+            jarvis_home=tmp_path / ".cognithor",
             openai_api_key="sk-real-key",
         )
         mgr = ConfigManager(config=config)
@@ -209,7 +209,7 @@ class TestUpdateTopLevelSecretField:
 
 class TestSaveAtomicFailure:
     def test_save_creates_parent_dirs(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
         target = tmp_path / "sub" / "dir" / "config.yaml"
         result = mgr.save(target)
@@ -217,7 +217,7 @@ class TestSaveAtomicFailure:
         assert target.exists()
 
     def test_save_without_callback(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".jarvis")
+        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config, on_reload=None)
         target = tmp_path / "no_callback.yaml"
         mgr.save(target)
@@ -231,7 +231,7 @@ class TestSaveAtomicFailure:
 
 class TestReloadCallback:
     def test_reload_triggers_callback(self, tmp_path: Path) -> None:
-        config_path = tmp_path / ".jarvis" / "config.yaml"
+        config_path = tmp_path / ".cognithor" / "config.yaml"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text("owner_name: TestReload\n")
 
@@ -243,7 +243,7 @@ class TestReloadCallback:
         assert reloaded[0].owner_name == "TestReload"
 
     def test_reload_without_callback(self, tmp_path: Path) -> None:
-        config_path = tmp_path / ".jarvis" / "config.yaml"
+        config_path = tmp_path / ".cognithor" / "config.yaml"
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text("owner_name: NoCallback\n")
 

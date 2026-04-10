@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.core.agent_router import (
+from cognithor.core.agent_router import (
     AgentProfile,
     AgentRouter,
 )
@@ -474,7 +474,7 @@ class TestPerAgentSessions:
     """Verschiedene Agenten bekommen getrennte Sessions."""
 
     def test_session_includes_agent_name(self) -> None:
-        from jarvis.models import SessionContext
+        from cognithor.models import SessionContext
 
         session = SessionContext(
             user_id="alex",
@@ -484,13 +484,13 @@ class TestPerAgentSessions:
         assert session.agent_name == "researcher"
 
     def test_default_agent_is_jarvis(self) -> None:
-        from jarvis.models import SessionContext
+        from cognithor.models import SessionContext
 
         session = SessionContext(user_id="alex", channel="telegram")
         assert session.agent_name == "jarvis"
 
     def test_cronjob_has_agent_field(self) -> None:
-        from jarvis.models import CronJob
+        from cognithor.models import CronJob
 
         job = CronJob(
             name="morning_briefing",
@@ -501,7 +501,7 @@ class TestPerAgentSessions:
         assert job.agent == "organizer"
 
     def test_cronjob_default_no_agent(self) -> None:
-        from jarvis.models import CronJob
+        from cognithor.models import CronJob
 
         job = CronJob(name="test", schedule="* * * * *", prompt="Test")
         assert job.agent == ""

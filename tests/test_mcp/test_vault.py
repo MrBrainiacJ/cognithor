@@ -18,7 +18,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.mcp.vault import VaultTools, _slugify
+from cognithor.mcp.vault import VaultTools, _slugify
 
 if TYPE_CHECKING:
     from pathlib import Path

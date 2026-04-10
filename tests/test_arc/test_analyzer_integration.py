@@ -8,9 +8,9 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from jarvis.arc.game_analyzer import GameAnalyzer
-from jarvis.arc.game_profile import GameProfile, StrategyMetrics
-from jarvis.arc.per_game_solver import PerGameSolver, SolveResult
+from cognithor.arc.game_analyzer import GameAnalyzer
+from cognithor.arc.game_profile import GameProfile, StrategyMetrics
+from cognithor.arc.per_game_solver import PerGameSolver, SolveResult
 
 
 def _make_mock_game_state(name):
@@ -79,7 +79,7 @@ class TestFullPipeline:
         }
 
         # Step 1: Analyze
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             mock_ollama.chat.return_value = vision_resp
             analyzer = GameAnalyzer(arcade=mock_arcade)
             profile = analyzer.analyze("test_integration", base_dir=tmp_path)
@@ -120,7 +120,7 @@ class TestFullPipeline:
         analyzer = GameAnalyzer(arcade=MagicMock())
 
         # Should NOT call ollama
-        with patch("jarvis.arc.game_analyzer.ollama") as mock_ollama:
+        with patch("cognithor.arc.game_analyzer.ollama") as mock_ollama:
             loaded = analyzer.analyze("cached_run", base_dir=tmp_path)
             mock_ollama.chat.assert_not_called()
 
@@ -168,7 +168,7 @@ class TestFullPipeline:
 class TestSequenceClickPipeline:
     def test_no_toggle_game_uses_sequence_click(self, tmp_path):
         """Games without toggles should prefer sequence_click strategy."""
-        from jarvis.arc.game_profile import GameProfile
+        from cognithor.arc.game_profile import GameProfile
 
         profile = GameProfile(
             game_id="no_toggle_game",
@@ -191,7 +191,7 @@ class TestSequenceClickPipeline:
 
     def test_toggle_game_uses_cluster_click(self, tmp_path):
         """Games with toggles should prefer cluster_click strategy."""
-        from jarvis.arc.game_profile import GameProfile
+        from cognithor.arc.game_profile import GameProfile
 
         profile = GameProfile(
             game_id="toggle_game",
@@ -214,7 +214,7 @@ class TestSequenceClickPipeline:
 
     def test_profile_has_toggles_persists(self, tmp_path):
         """has_toggles should survive save/load cycle."""
-        from jarvis.arc.game_profile import GameProfile
+        from cognithor.arc.game_profile import GameProfile
 
         for val in [True, False]:
             p = GameProfile(

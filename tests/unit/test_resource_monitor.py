@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jarvis.system.resource_monitor import ResourceMonitor, ResourceSnapshot
+from cognithor.system.resource_monitor import ResourceMonitor, ResourceSnapshot
 
 
 class TestResourceSnapshot:

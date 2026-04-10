@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
-import 'package:jarvis_ui/widgets/neon_card.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/widgets/neon_card.dart';
 
 class JarvisMetricCard extends StatelessWidget {
   const JarvisMetricCard({

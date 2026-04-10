@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from jarvis.core.isolation import (
+from cognithor.core.isolation import (
     AgentResourceQuota,
     MultiUserIsolation,
     RateLimiter,

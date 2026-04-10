@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.memory.episodic import EpisodicMemory
+from cognithor.memory.episodic import EpisodicMemory
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
-from jarvis.skills.seed_data import (
+from cognithor.skills.seed_data import (
     _CATEGORY_MAP,
     _parse_procedure_to_listing,
     seed_marketplace,

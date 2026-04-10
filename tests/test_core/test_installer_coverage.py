@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from jarvis.core.installer import (
+from cognithor.core.installer import (
     PRESETS,
     ChannelConfig,
     ChannelConfigurator,

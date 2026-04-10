@@ -1179,7 +1179,7 @@ class DeepLearner:
         operation_mode: str = "offline",
     ) -> None:
         self._llm_fn = llm_fn
-        self._plans_dir = Path(plans_dir) if plans_dir else Path.home() / ".jarvis" / "evolution" / "plans"
+        self._plans_dir = Path(plans_dir) if plans_dir else Path.home() / ".cognithor" / "evolution" / "plans"
         self._plans_dir.mkdir(parents=True, exist_ok=True)
         self._mcp_client = mcp_client
         self._memory = memory_manager

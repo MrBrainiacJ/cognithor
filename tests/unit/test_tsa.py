@@ -11,7 +11,7 @@ class TestTSAClient:
 
     @pytest.fixture
     def client(self, tmp_path):
-        from jarvis.security.tsa import TSAClient
+        from cognithor.security.tsa import TSAClient
 
         return TSAClient(
             tsa_url="https://freetsa.org/tsr",
@@ -30,7 +30,7 @@ class TestTSAClient:
     def test_build_request_without_openssl_uses_fallback(self, client, tmp_path):
         digest = hashlib.sha256(b"test data").hexdigest()
         with patch("shutil.which", return_value=None):
-            from jarvis.security.tsa import TSAClient
+            from cognithor.security.tsa import TSAClient
 
             fallback_client = TSAClient(
                 tsa_url="https://freetsa.org/tsr",
@@ -66,7 +66,7 @@ class TestTSAClientRequestViaCurl:
 
     @pytest.fixture
     def client(self, tmp_path):
-        from jarvis.security.tsa import TSAClient
+        from cognithor.security.tsa import TSAClient
 
         return TSAClient(
             tsa_url="https://freetsa.org/tsr",

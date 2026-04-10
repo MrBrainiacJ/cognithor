@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.voice import (
+from cognithor.channels.voice import (
     AudioBuffer,
     STTBackend,
     STTEngine,
@@ -25,7 +25,7 @@ from jarvis.channels.voice import (
     VoiceChannel,
     VoiceConfig,
 )
-from jarvis.models import OutgoingMessage, PlannedAction
+from cognithor.models import OutgoingMessage, PlannedAction
 
 # ============================================================================
 # Fixtures

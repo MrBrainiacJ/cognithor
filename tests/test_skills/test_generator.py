@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.skills.generator import (
+from cognithor.skills.generator import (
     GapDetector,
     GeneratedSkill,
     GenerationStatus,

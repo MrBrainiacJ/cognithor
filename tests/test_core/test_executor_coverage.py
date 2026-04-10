@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from jarvis.config import JarvisConfig
-from jarvis.core.executor import ExecutionError, Executor
-from jarvis.models import GateDecision, GateStatus, PlannedAction, RiskLevel
+from cognithor.config import JarvisConfig
+from cognithor.core.executor import ExecutionError, Executor
+from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel
 
 
 @dataclass

@@ -17,7 +17,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING
 
-from jarvis.memory.episodic_store import EpisodicStore
+from cognithor.memory.episodic_store import EpisodicStore
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -218,7 +218,7 @@ class TestSourceLevelChecks:
     """Prueft den Source-Code auf den Fix."""
 
     def test_threading_imported(self) -> None:
-        import jarvis.memory.episodic_store as mod
+        import cognithor.memory.episodic_store as mod
 
         source = inspect.getsource(mod)
         assert "import threading" in source

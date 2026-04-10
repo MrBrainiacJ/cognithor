@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from jarvis.mcp.tool_registry_db import (
+from cognithor.mcp.tool_registry_db import (
     DEFAULT_EXAMPLES,
     TOOL_CATEGORIES,
     TOOL_ROLE_DEFAULTS,

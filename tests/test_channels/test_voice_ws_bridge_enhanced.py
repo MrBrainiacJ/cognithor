@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.channels.voice_ws_bridge import VoiceMessageHandler, VoiceWebSocketBridge
+from cognithor.channels.voice_ws_bridge import VoiceMessageHandler, VoiceWebSocketBridge
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -72,7 +72,7 @@ class TestTranscribeVoiceMessageExtMap:
     @pytest.mark.asyncio
     async def test_ogg_mime_type(self, handler: VoiceMessageHandler) -> None:
         """audio/ogg uses .ogg extension."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
         mock_media = MagicMock()
@@ -89,7 +89,7 @@ class TestTranscribeVoiceMessageExtMap:
     @pytest.mark.asyncio
     async def test_mp3_mime_type(self, handler: VoiceMessageHandler) -> None:
         """audio/mp3 uses .mp3 extension."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
         mock_media = MagicMock()
@@ -106,7 +106,7 @@ class TestTranscribeVoiceMessageExtMap:
     @pytest.mark.asyncio
     async def test_mpeg_mime_type(self, handler: VoiceMessageHandler) -> None:
         """audio/mpeg uses .mp3 extension."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
         mock_media = MagicMock()
@@ -123,7 +123,7 @@ class TestTranscribeVoiceMessageExtMap:
     @pytest.mark.asyncio
     async def test_mp4_mime_type(self, handler: VoiceMessageHandler) -> None:
         """audio/mp4 uses .m4a extension."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
         mock_media = MagicMock()
@@ -140,7 +140,7 @@ class TestTranscribeVoiceMessageExtMap:
     @pytest.mark.asyncio
     async def test_wav_no_conversion_needed(self, handler: VoiceMessageHandler) -> None:
         """audio/wav does not need conversion."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"RIFF" + b"\x00" * 50).decode()
         mock_media = MagicMock()
@@ -157,7 +157,7 @@ class TestTranscribeVoiceMessageExtMap:
     @pytest.mark.asyncio
     async def test_unknown_mime_type_defaults_webm(self, handler: VoiceMessageHandler) -> None:
         """Unknown MIME type defaults to .webm extension."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
         mock_media = MagicMock()
@@ -176,7 +176,7 @@ class TestHandleWSVoiceMessageEdgeCases:
     @pytest.mark.asyncio
     async def test_custom_language(self, handler: VoiceMessageHandler) -> None:
         """Custom language parameter is passed through."""
-        from jarvis.mcp.media import MediaResult
+        from cognithor.mcp.media import MediaResult
 
         audio_b64 = base64.b64encode(b"\x00" * 50).decode()
         mock_media = MagicMock()

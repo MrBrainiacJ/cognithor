@@ -275,7 +275,7 @@ class ArcConfig(BaseModel):
     api_key_env: str = "ARC_API_KEY"
     operation_mode: Literal["normal", "competition"] = "normal"
     save_recordings: bool = True
-    recording_dir: str = "~/.jarvis/recordings/arc"
+    recording_dir: str = "~/.cognithor/recordings/arc"
 
     # Explorer
     discovery_max_steps: int = 50

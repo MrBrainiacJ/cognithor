@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jarvis.skills.p2p import (
+from cognithor.skills.p2p import (
     IndexEntry,
     PeerNode,
     PeerRegistry,
@@ -26,7 +26,7 @@ from jarvis.skills.p2p import (
     SkillIndex,
     SubscriptionFeed,
 )
-from jarvis.skills.package import (
+from cognithor.skills.package import (
     SkillManifest,
     TrustLevel,
 )

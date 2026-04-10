@@ -29,9 +29,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.config import JarvisConfig, ensure_directory_structure
-from jarvis.gateway.gateway import Gateway
-from jarvis.models import (
+from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.gateway.gateway import Gateway
+from cognithor.models import (
     ActionPlan,
     GateDecision,
     GateStatus,
@@ -117,13 +117,13 @@ class TestGatewayInitialize:
     async def test_initialize_calls_phases(self, config: JarvisConfig) -> None:
         gw = Gateway(config)
         with (
-            patch("jarvis.gateway.gateway.init_core", new_callable=AsyncMock) as mock_core,
-            patch("jarvis.gateway.gateway.init_security", new_callable=AsyncMock) as mock_sec,
-            patch("jarvis.gateway.gateway.init_memory", new_callable=AsyncMock) as mock_mem,
-            patch("jarvis.gateway.gateway.init_tools", new_callable=AsyncMock) as mock_tools,
-            patch("jarvis.gateway.gateway.init_pge", new_callable=AsyncMock) as mock_pge,
-            patch("jarvis.gateway.gateway.init_agents", new_callable=AsyncMock) as mock_agents,
-            patch("jarvis.gateway.gateway.init_advanced", new_callable=AsyncMock) as mock_adv,
+            patch("cognithor.gateway.gateway.init_core", new_callable=AsyncMock) as mock_core,
+            patch("cognithor.gateway.gateway.init_security", new_callable=AsyncMock) as mock_sec,
+            patch("cognithor.gateway.gateway.init_memory", new_callable=AsyncMock) as mock_mem,
+            patch("cognithor.gateway.gateway.init_tools", new_callable=AsyncMock) as mock_tools,
+            patch("cognithor.gateway.gateway.init_pge", new_callable=AsyncMock) as mock_pge,
+            patch("cognithor.gateway.gateway.init_agents", new_callable=AsyncMock) as mock_agents,
+            patch("cognithor.gateway.gateway.init_advanced", new_callable=AsyncMock) as mock_adv,
         ):
             mock_core.return_value = {
                 "llm": MagicMock(),

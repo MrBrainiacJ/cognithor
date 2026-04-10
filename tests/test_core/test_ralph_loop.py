@@ -6,7 +6,7 @@ import asyncio
 
 import pytest
 
-from jarvis.core.ralph_loop import (
+from cognithor.core.ralph_loop import (
     RALPH_PROMPT_FRAGMENT,
     RalphConfig,
     RalphLoop,

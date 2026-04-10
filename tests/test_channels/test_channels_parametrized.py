@@ -22,18 +22,18 @@ import pytest
 # ---------------------------------------------------------------------------
 # Channel imports -- wrapped in try/except for optional dependencies
 # ---------------------------------------------------------------------------
-from jarvis.channels.cli import CliChannel
-from jarvis.channels.discord import DiscordChannel
-from jarvis.channels.irc import IRCChannel
-from jarvis.channels.matrix import MatrixChannel
-from jarvis.channels.mattermost import MattermostChannel
-from jarvis.channels.signal import SignalChannel
-from jarvis.channels.slack import SlackChannel
-from jarvis.channels.teams import TeamsChannel
-from jarvis.channels.telegram import TelegramChannel
-from jarvis.channels.webui import WebUIChannel
-from jarvis.channels.whatsapp import WhatsAppChannel
-from jarvis.models import OutgoingMessage
+from cognithor.channels.cli import CliChannel
+from cognithor.channels.discord import DiscordChannel
+from cognithor.channels.irc import IRCChannel
+from cognithor.channels.matrix import MatrixChannel
+from cognithor.channels.mattermost import MattermostChannel
+from cognithor.channels.signal import SignalChannel
+from cognithor.channels.slack import SlackChannel
+from cognithor.channels.teams import TeamsChannel
+from cognithor.channels.telegram import TelegramChannel
+from cognithor.channels.webui import WebUIChannel
+from cognithor.channels.whatsapp import WhatsAppChannel
+from cognithor.models import OutgoingMessage
 
 # ---------------------------------------------------------------------------
 # Factory helpers -- each returns an instantiated channel with mocked deps
@@ -47,7 +47,7 @@ def _make_cli() -> CliChannel:
 
 
 def _make_telegram() -> TelegramChannel:
-    with patch("jarvis.channels.telegram.get_token_store") as mock_ts:
+    with patch("cognithor.channels.telegram.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "fake-telegram-token"
         mock_ts.return_value = store
@@ -55,7 +55,7 @@ def _make_telegram() -> TelegramChannel:
 
 
 def _make_discord() -> DiscordChannel:
-    with patch("jarvis.channels.discord.get_token_store") as mock_ts:
+    with patch("cognithor.channels.discord.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "fake-discord-token"
         mock_ts.return_value = store
@@ -63,7 +63,7 @@ def _make_discord() -> DiscordChannel:
 
 
 def _make_slack() -> SlackChannel:
-    with patch("jarvis.channels.slack.get_token_store") as mock_ts:
+    with patch("cognithor.channels.slack.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "xoxb-fake"
         mock_ts.return_value = store
@@ -71,7 +71,7 @@ def _make_slack() -> SlackChannel:
 
 
 def _make_whatsapp() -> WhatsAppChannel:
-    with patch("jarvis.channels.whatsapp.get_token_store") as mock_ts:
+    with patch("cognithor.channels.whatsapp.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "fake-wa-token"
         mock_ts.return_value = store
@@ -91,7 +91,7 @@ def _make_signal() -> SignalChannel:
 
 
 def _make_matrix() -> MatrixChannel:
-    with patch("jarvis.channels.matrix.get_token_store") as mock_ts:
+    with patch("cognithor.channels.matrix.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "fake-matrix-token"
         mock_ts.return_value = store
@@ -112,7 +112,7 @@ def _make_irc() -> IRCChannel:
 
 
 def _make_mattermost() -> MattermostChannel:
-    with patch("jarvis.channels.mattermost.get_token_store") as mock_ts:
+    with patch("cognithor.channels.mattermost.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "fake-mm-token"
         mock_ts.return_value = store
@@ -124,7 +124,7 @@ def _make_mattermost() -> MattermostChannel:
 
 
 def _make_teams() -> TeamsChannel:
-    with patch("jarvis.channels.teams.get_token_store") as mock_ts:
+    with patch("cognithor.channels.teams.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "fake-teams-pw"
         mock_ts.return_value = store
@@ -135,7 +135,7 @@ def _make_teams() -> TeamsChannel:
 
 
 def _make_webui() -> WebUIChannel:
-    with patch("jarvis.channels.webui.get_token_store") as mock_ts:
+    with patch("cognithor.channels.webui.get_token_store") as mock_ts:
         store = MagicMock()
         store.retrieve.return_value = "fake-webui-token"
         mock_ts.return_value = store
@@ -296,7 +296,7 @@ class TestApprovalWithoutStart:
     async def test_approval_before_start_returns_false(
         self, factory: Any, expected_name: str
     ) -> None:
-        from jarvis.models import PlannedAction
+        from cognithor.models import PlannedAction
 
         channel = factory()
         action = PlannedAction(tool="test_tool", params={"key": "value"})
@@ -341,7 +341,7 @@ class TestInheritance:
 
     @pytest.mark.parametrize("factory,expected_name", CHANNEL_PARAMS)
     def test_is_channel_subclass(self, factory: Any, expected_name: str) -> None:
-        from jarvis.channels.base import Channel
+        from cognithor.channels.base import Channel
 
         channel = factory()
         assert isinstance(channel, Channel)

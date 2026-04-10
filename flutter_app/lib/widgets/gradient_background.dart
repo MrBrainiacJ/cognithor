@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:jarvis_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
 /// A subtle animated gradient background placed behind [child].
 ///
