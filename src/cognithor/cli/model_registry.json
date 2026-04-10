@@ -1,0 +1,61 @@
+{
+  "updated": "2026-04-10",
+  "providers": {
+    "ollama": {
+      "discovery_url": "http://localhost:11434/api/tags",
+      "models": [
+        "qwen3:32b",
+        "qwen3:8b",
+        "qwen3:1.7b",
+        "llama3.3:70b",
+        "llama3.2:8b",
+        "mistral:7b",
+        "gemma2:9b",
+        "phi-4:14b",
+        "nomic-embed-text",
+        "deepseek-r1:32b"
+      ]
+    },
+    "openai": {
+      "discovery_url": "https://api.openai.com/v1/models",
+      "api_key_env": "COGNITHOR_OPENAI_API_KEY",
+      "models": [
+        "gpt-4.1",
+        "gpt-4.1-mini",
+        "gpt-4.1-nano",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "o3",
+        "o3-mini",
+        "o4-mini"
+      ]
+    },
+    "anthropic": {
+      "discovery_url": null,
+      "models": [
+        "claude-sonnet-4-20250514",
+        "claude-haiku-4-20250414",
+        "claude-opus-4-20250514"
+      ]
+    },
+    "gemini": {
+      "discovery_url": "https://generativelanguage.googleapis.com/v1/models",
+      "api_key_env": "COGNITHOR_GEMINI_API_KEY",
+      "models": [
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash"
+      ]
+    },
+    "lmstudio": {
+      "discovery_url": "http://localhost:1234/v1/models",
+      "models": []
+    },
+    "claude-code": {
+      "discovery_url": null,
+      "models": [
+        "claude-sonnet-4"
+      ]
+    }
+  }
+}
