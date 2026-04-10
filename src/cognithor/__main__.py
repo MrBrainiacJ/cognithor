@@ -2119,7 +2119,7 @@ def main() -> None:
     try:
         asyncio.run(run())
     except KeyboardInterrupt:
-        pass  # Clean exit, no traceback
+        log.info("jarvis_shutdown_by_user")
     except SystemExit:
         pass
 
