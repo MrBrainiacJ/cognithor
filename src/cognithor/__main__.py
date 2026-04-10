@@ -2106,15 +2106,22 @@ def main() -> None:
         except KeyboardInterrupt:
             log.info("jarvis_interrupted")
         finally:
+            # Graceful shutdown: stop uvicorn before closing the event loop
             if api_server:
                 api_server.should_exit = True
+                try:
+                    await asyncio.sleep(0.5)  # Give uvicorn time to finish requests
+                except asyncio.CancelledError:
+                    pass
             await gateway.shutdown()
             log.info("jarvis_stopped")
 
     try:
         asyncio.run(run())
     except KeyboardInterrupt:
-        log.info("jarvis_shutdown_by_user")
+        pass  # Clean exit, no traceback
+    except SystemExit:
+        pass
 
 
 def _print_banner(
