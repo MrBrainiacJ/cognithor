@@ -246,14 +246,14 @@ class TestMainStartup:
 
 class TestVersion:
     def test_version_exists(self) -> None:
-        from jarvis import __version__
+        from cognithor import __version__
 
         assert __version__
         assert isinstance(__version__, str)
 
     def test_version_format(self) -> None:
         """Version hat semver-Format."""
-        from jarvis import __version__
+        from cognithor import __version__
 
         parts = __version__.split(".")
         assert len(parts) == 3
@@ -262,7 +262,7 @@ class TestVersion:
 
     def test_version_matches_config(self) -> None:
         """Config.version stimmt mit __version__ überein."""
-        from jarvis import __version__
+        from cognithor import __version__
         from cognithor.config import JarvisConfig
 
         cfg = JarvisConfig()

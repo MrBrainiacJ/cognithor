@@ -234,7 +234,7 @@ class TestJarvisConfigExtended:
     """Tests für erweiterte JarvisConfig Properties und Methoden."""
 
     def test_version(self, config: JarvisConfig) -> None:
-        from jarvis import __version__
+        from cognithor import __version__
 
         assert config.version == __version__
 

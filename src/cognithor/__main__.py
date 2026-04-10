@@ -56,7 +56,7 @@ def _silence_library_loggers() -> None:
         pass
 
 
-from jarvis import BANNER_ASCII, __version__
+from cognithor import BANNER_ASCII, __version__
 
 if TYPE_CHECKING:
     from starlette.types import ASGIApp, Receive, Scope, Send

@@ -356,7 +356,7 @@ class TestProjectIntegrity:
 
     def test_version_importable(self):
         """Jarvis-Version ist importierbar."""
-        from jarvis import __version__
+        from cognithor import __version__
 
         assert __version__
         # Semantic Versioning

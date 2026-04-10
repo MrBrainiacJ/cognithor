@@ -198,7 +198,7 @@ class ConfigManager:
         data = self._config.model_dump(mode="json")
 
         # Version always from the package -- never from config.yaml
-        from jarvis import __version__
+        from cognithor import __version__
 
         data["version"] = __version__
 
