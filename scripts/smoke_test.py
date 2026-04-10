@@ -95,7 +95,7 @@ class SmokeTest:
                 self._fail(f"{module} fehlt")
 
         try:
-            import jarvis
+            import cognithor
 
             self._pass(f"jarvis v{jarvis.__version__}")
         except ImportError:
@@ -138,7 +138,7 @@ class SmokeTest:
     def test_config(self) -> None:
         header("3. Konfiguration")
         try:
-            from jarvis.config import load_config
+            from cognithor.config import load_config
 
             config = load_config(self.jarvis_home / "config.yaml")
             self._pass(f"Config geladen (v{config.version})")
@@ -179,8 +179,8 @@ class SmokeTest:
     def test_memory(self) -> None:
         header("5. Memory-System")
         try:
-            from jarvis.config import JarvisConfig, ensure_directory_structure
-            from jarvis.memory.manager import MemoryManager
+            from cognithor.config import JarvisConfig, ensure_directory_structure
+            from cognithor.memory.manager import MemoryManager
 
             config = JarvisConfig(jarvis_home=self.jarvis_home)
             ensure_directory_structure(config)
@@ -197,9 +197,9 @@ class SmokeTest:
     def test_gatekeeper(self) -> None:
         header("6. Gatekeeper")
         try:
-            from jarvis.config import JarvisConfig
-            from jarvis.core.gatekeeper import Gatekeeper
-            from jarvis.models import GateStatus, PlannedAction, SessionContext
+            from cognithor.config import JarvisConfig
+            from cognithor.core.gatekeeper import Gatekeeper
+            from cognithor.models import GateStatus, PlannedAction, SessionContext
 
             config = JarvisConfig(jarvis_home=self.jarvis_home)
             gk = Gatekeeper(config)
@@ -221,11 +221,11 @@ class SmokeTest:
     def test_mcp_tools(self) -> None:
         header("7. MCP-Tools")
         try:
-            from jarvis.config import JarvisConfig
-            from jarvis.mcp.client import JarvisMCPClient
-            from jarvis.mcp.filesystem import register_fs_tools
-            from jarvis.mcp.shell import register_shell_tools
-            from jarvis.mcp.web import register_web_tools
+            from cognithor.config import JarvisConfig
+            from cognithor.mcp.client import JarvisMCPClient
+            from cognithor.mcp.filesystem import register_fs_tools
+            from cognithor.mcp.shell import register_shell_tools
+            from cognithor.mcp.web import register_web_tools
 
             config = JarvisConfig(jarvis_home=self.jarvis_home)
             mcp = JarvisMCPClient(config)
@@ -240,7 +240,7 @@ class SmokeTest:
     def test_credentials(self) -> None:
         header("8. Credential-Store")
         try:
-            from jarvis.security.credentials import CredentialStore
+            from cognithor.security.credentials import CredentialStore
 
             with tempfile.NamedTemporaryFile(suffix=".enc", delete=False) as tmp:
                 store = CredentialStore(store_path=Path(tmp.name), passphrase="smoke-test-2026")
@@ -264,8 +264,8 @@ class SmokeTest:
     def test_audit(self) -> None:
         header("9. Audit-Trail")
         try:
-            from jarvis.models import AuditEntry, GateStatus, RiskLevel
-            from jarvis.security.audit import AuditTrail
+            from cognithor.models import AuditEntry, GateStatus, RiskLevel
+            from cognithor.security.audit import AuditTrail
 
             with tempfile.TemporaryDirectory() as tmpdir:
                 audit = AuditTrail(log_dir=Path(tmpdir))
@@ -291,8 +291,8 @@ class SmokeTest:
     def test_gateway(self) -> None:
         header("10. Gateway")
         try:
-            from jarvis.config import JarvisConfig
-            from jarvis.gateway.gateway import Gateway
+            from cognithor.config import JarvisConfig
+            from cognithor.gateway.gateway import Gateway
 
             config = JarvisConfig(jarvis_home=self.jarvis_home)
             Gateway(config)

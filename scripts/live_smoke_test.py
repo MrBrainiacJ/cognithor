@@ -72,7 +72,7 @@ async def test_ollama_connection(base_url: str) -> bool:
     print_step("🔌", "Test 1: Ollama-Verbindung")
 
     try:
-        from jarvis.core.model_router import OllamaClient
+        from cognithor.core.model_router import OllamaClient
 
         config_module = __import__("jarvis.config", fromlist=["JarvisConfig"])
         config = config_module.JarvisConfig()
@@ -100,7 +100,7 @@ async def test_directory_structure(jarvis_home: Path) -> bool:
     """Test 2: Verzeichnisstruktur und Default-Dateien."""
     print_step("📁", "Test 2: Verzeichnisstruktur")
 
-    from jarvis.config import JarvisConfig
+    from cognithor.config import JarvisConfig
 
     config = JarvisConfig(jarvis_home=jarvis_home)
     created = config.ensure_directories()
@@ -142,7 +142,7 @@ async def test_core_memory(jarvis_home: Path) -> bool:
     """Test 3: CORE.md laden und prüfen."""
     print_step("🧠", "Test 3: Core Memory")
 
-    from jarvis.config import JarvisConfig
+    from cognithor.config import JarvisConfig
 
     config = JarvisConfig(jarvis_home=jarvis_home)
     core_path = config.core_memory_file
@@ -175,9 +175,9 @@ async def test_gatekeeper(jarvis_home: Path) -> bool:
     """Test 4: Gatekeeper mit Default-Policies."""
     print_step("🛡️", "Test 4: Gatekeeper + Policies")
 
-    from jarvis.config import JarvisConfig
-    from jarvis.core.gatekeeper import Gatekeeper
-    from jarvis.models import GateStatus, PlannedAction, SessionContext
+    from cognithor.config import JarvisConfig
+    from cognithor.core.gatekeeper import Gatekeeper
+    from cognithor.models import GateStatus, PlannedAction, SessionContext
 
     config = JarvisConfig(jarvis_home=jarvis_home)
     # Smoke-Test-Verzeichnis als erlaubten Pfad hinzufügen
@@ -234,9 +234,9 @@ async def test_memory_index(jarvis_home: Path) -> bool:
     """Test 5: Memory-Indexer (SQLite + FTS5)."""
     print_step("💾", "Test 5: Memory-Index")
 
-    from jarvis.config import JarvisConfig
-    from jarvis.memory.indexer import MemoryIndex
-    from jarvis.models import Chunk, Entity, MemoryTier
+    from cognithor.config import JarvisConfig
+    from cognithor.memory.indexer import MemoryIndex
+    from cognithor.models import Chunk, Entity, MemoryTier
 
     config = JarvisConfig(jarvis_home=jarvis_home)
     db_path = config.index_dir / "jarvis.db"
@@ -279,8 +279,8 @@ async def test_llm_direct_response(jarvis_home: Path, model: str, verbose: bool)
     """Test 6: LLM direkte Antwort (keine Tools)."""
     print_step("🤖", f"Test 6: LLM Direkte Antwort ({model})")
 
-    from jarvis.config import JarvisConfig
-    from jarvis.core.model_router import OllamaClient
+    from cognithor.config import JarvisConfig
+    from cognithor.core.model_router import OllamaClient
 
     config = JarvisConfig(jarvis_home=jarvis_home)
     client = OllamaClient(config)
@@ -350,9 +350,9 @@ async def test_llm_tool_plan(jarvis_home: Path, model: str, verbose: bool) -> bo
     """Test 7: LLM erstellt einen Tool-Plan."""
     print_step("📋", f"Test 7: LLM Tool-Plan ({model})")
 
-    from jarvis.config import JarvisConfig
-    from jarvis.core.model_router import OllamaClient
-    from jarvis.core.planner import SYSTEM_PROMPT
+    from cognithor.config import JarvisConfig
+    from cognithor.core.model_router import OllamaClient
+    from cognithor.core.planner import SYSTEM_PROMPT
 
     config = JarvisConfig(jarvis_home=jarvis_home)
     client = OllamaClient(config)
@@ -411,9 +411,9 @@ async def test_full_gateway(jarvis_home: Path, model: str, verbose: bool) -> boo
     """Test 8: Kompletter Gateway Agent-Loop."""
     print_step("🚀", "Test 8: Gateway Agent-Loop (End-to-End)")
 
-    from jarvis.config import JarvisConfig
-    from jarvis.gateway.gateway import Gateway
-    from jarvis.models import IncomingMessage
+    from cognithor.config import JarvisConfig
+    from cognithor.gateway.gateway import Gateway
+    from cognithor.models import IncomingMessage
 
     config = JarvisConfig(jarvis_home=jarvis_home)
     gw = Gateway(config)

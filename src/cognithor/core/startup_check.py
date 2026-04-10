@@ -553,12 +553,12 @@ class StartupChecker:
     # ------------------------------------------------------------------
 
     def _find_repo_root(self) -> str | None:
-        """Try to locate the repository root from the jarvis package location."""
+        """Try to locate the repository root from the cognithor package location."""
         try:
-            import jarvis
+            import cognithor
 
-            pkg_dir = Path(jarvis.__file__).resolve().parent  # src/jarvis
-            # src/jarvis -> src -> repo_root
+            pkg_dir = Path(cognithor.__file__).resolve().parent  # src/cognithor
+            # src/cognithor -> src -> repo_root
             candidate = pkg_dir.parent.parent
             if (candidate / "pyproject.toml").is_file():
                 return str(candidate)

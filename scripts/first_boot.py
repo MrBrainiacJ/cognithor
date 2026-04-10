@@ -109,7 +109,7 @@ def check_system(result: BootResult) -> None:
 
     # Jarvis installiert?
     try:
-        import jarvis  # noqa: F401
+        import cognithor  # noqa: F401
 
         result.add_pass("jarvis Package importierbar")
     except ImportError:
@@ -161,8 +161,8 @@ async def check_ollama(result: BootResult, fix: bool = False) -> dict[str, bool]
     """Prüft Ollama-Erreichbarkeit und Modell-Verfügbarkeit."""
     header("2. Ollama & Modelle")
 
-    from jarvis.config import load_config
-    from jarvis.core.model_router import OllamaClient
+    from cognithor.config import load_config
+    from cognithor.core.model_router import OllamaClient
 
     config = load_config()
     client = OllamaClient(config)
@@ -241,8 +241,8 @@ async def check_llm(result: BootResult, models: dict[str, bool]) -> None:
         result.add_warn("Planner-Modell nicht verfügbar — LLM-Test übersprungen")
         return
 
-    from jarvis.config import load_config
-    from jarvis.core.model_router import OllamaClient
+    from cognithor.config import load_config
+    from cognithor.core.model_router import OllamaClient
 
     config = load_config()
     client = OllamaClient(config)
@@ -308,8 +308,8 @@ async def check_embeddings(result: BootResult, models: dict[str, bool]) -> None:
         result.add_warn("Embedding-Modell nicht verfügbar — Test übersprungen")
         return
 
-    from jarvis.config import load_config
-    from jarvis.core.model_router import OllamaClient
+    from cognithor.config import load_config
+    from cognithor.core.model_router import OllamaClient
 
     config = load_config()
     client = OllamaClient(config)
@@ -357,7 +357,7 @@ def check_memory_init(result: BootResult) -> None:
     """Prüft ob Verzeichnisse, CORE.md und Prozeduren korrekt erstellt werden."""
     header("5. Memory-Initialisierung")
 
-    from jarvis.config import JarvisConfig, ensure_directory_structure
+    from cognithor.config import JarvisConfig, ensure_directory_structure
 
     # Temporäres Home für Test (oder echtes wenn gewünscht)
     jarvis_home = Path.home() / ".jarvis"
@@ -421,8 +421,8 @@ async def check_agent_loop(result: BootResult, models: dict[str, bool]) -> None:
         result.add_warn("Planner nicht verfügbar — Agent-Loop übersprungen")
         return
 
-    from jarvis.gateway.gateway import Gateway
-    from jarvis.models import IncomingMessage
+    from cognithor.gateway.gateway import Gateway
+    from cognithor.models import IncomingMessage
 
     gateway = Gateway()
     try:
@@ -498,8 +498,8 @@ async def check_memory_roundtrip(result: BootResult, models: dict[str, bool]) ->
         result.add_warn("Planner nicht verfügbar — Memory-Test übersprungen")
         return
 
-    from jarvis.gateway.gateway import Gateway
-    from jarvis.models import IncomingMessage
+    from cognithor.gateway.gateway import Gateway
+    from cognithor.models import IncomingMessage
 
     gateway = Gateway()
     try:
@@ -578,8 +578,8 @@ async def check_procedure_match(result: BootResult, models: dict[str, bool]) -> 
         result.add_warn("Planner nicht verfügbar — Prozedur-Test übersprungen")
         return
 
-    from jarvis.gateway.gateway import Gateway
-    from jarvis.models import IncomingMessage
+    from cognithor.gateway.gateway import Gateway
+    from cognithor.models import IncomingMessage
 
     gateway = Gateway()
     try:

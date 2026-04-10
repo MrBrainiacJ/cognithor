@@ -22,19 +22,19 @@ def check(name, ok):
 # 1. Backend imports
 print("=== 1. Backend Module Imports ===")
 try:
-    from jarvis.social.models import Lead, LeadStatus, ScanResult, LeadStats
-    from jarvis.social.store import LeadStore
-    from jarvis.social.scanner import RedditScanner, ScanConfig
-    from jarvis.social.reply import ReplyPoster, ReplyMode, ReplyResult
-    from jarvis.social.service import RedditLeadService
-    from jarvis.mcp.reddit_tools import register_reddit_tools
+    from cognithor.social.models import Lead, LeadStatus, ScanResult, LeadStats
+    from cognithor.social.store import LeadStore
+    from cognithor.social.scanner import RedditScanner, ScanConfig
+    from cognithor.social.reply import ReplyPoster, ReplyMode, ReplyResult
+    from cognithor.social.service import RedditLeadService
+    from cognithor.mcp.reddit_tools import register_reddit_tools
     check("All social modules importable", True)
 except Exception as e:
     check(f"Import failed: {e}", False)
 
 # 2. Config
 print("\n=== 2. Config ===")
-from jarvis.config import JarvisConfig
+from cognithor.config import JarvisConfig
 cfg = JarvisConfig()
 for f in ["reddit_scan_enabled", "reddit_subreddits", "reddit_min_score",
           "reddit_product_name", "reddit_product_description", "reddit_reply_tone", "reddit_auto_post"]:

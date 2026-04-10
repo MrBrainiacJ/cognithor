@@ -96,8 +96,8 @@ def check_disk(jarvis_home: str = "~/.jarvis") -> dict:
 def check_memory(jarvis_home: str = "~/.jarvis") -> dict:
     """Prüft Memory-System Integrität."""
     try:
-        from jarvis.config import JarvisConfig, ensure_directory_structure
-        from jarvis.memory.manager import MemoryManager
+        from cognithor.config import JarvisConfig, ensure_directory_structure
+        from cognithor.memory.manager import MemoryManager
 
         home = Path(jarvis_home).expanduser()
         config = JarvisConfig(jarvis_home=home)
@@ -120,7 +120,7 @@ def check_memory(jarvis_home: str = "~/.jarvis") -> dict:
 def check_audit(jarvis_home: str = "~/.jarvis") -> dict:
     """Prüft Audit-Trail Integrität."""
     try:
-        from jarvis.security.audit import AuditTrail
+        from cognithor.security.audit import AuditTrail
 
         home = Path(jarvis_home).expanduser()
         logs_dir = home / "logs"
