@@ -34,6 +34,8 @@ console = Console()
 
 def _load_config(config_path: Path = _DEFAULT_CONFIG) -> dict[str, Any]:
     """Load YAML config from *config_path* and return as dict."""
+    if not config_path.exists():
+        return {}
     with open(config_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
     return data if isinstance(data, dict) else {}

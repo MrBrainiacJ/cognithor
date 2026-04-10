@@ -153,6 +153,16 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip startup dependency/model check (faster boot when already configured)",
     )
+    sub = parser.add_subparsers(dest="command")
+    config_parser = sub.add_parser("config", help="Configure Cognithor interactively")
+    config_sub = config_parser.add_subparsers(dest="config_action")
+    config_sub.add_parser("list", help="Show current settings")
+    set_p = config_sub.add_parser("set", help="Set a config value")
+    set_p.add_argument("key", help="Dot-path config key")
+    set_p.add_argument("value", help="New value")
+    get_p = config_sub.add_parser("get", help="Get a config value")
+    get_p.add_argument("key", help="Dot-path config key")
+
     return parser.parse_args()
 
 
@@ -262,6 +272,21 @@ def main() -> None:
         _expand_working_set(min_mb=128, max_mb=512)
 
     args = parse_args()
+
+    if getattr(args, "command", None) == "config":
+        from cognithor.cli import config_cmd, config_tui
+
+        config_path = args.config or (Path.home() / ".cognithor" / "config.yaml")
+        action = getattr(args, "config_action", None)
+        if action == "set":
+            sys.exit(config_cmd.cmd_set(args.key, args.value, config_path=config_path))
+        elif action == "get":
+            sys.exit(config_cmd.cmd_get(args.key, config_path=config_path))
+        elif action == "list":
+            sys.exit(config_cmd.cmd_list(config_path=config_path))
+        else:
+            config_tui.launch(config_path=config_path)
+            sys.exit(0)
 
     # 0. Load .env file (secrets from ~/.cognithor/.env or project root)
     try:
