@@ -353,7 +353,7 @@ class SecretStore:
 
             keyring.set_password(_SERVICE, _INDEX_KEY, ",".join(sorted(keys)))
         except Exception:
-            pass
+            log.debug("secret_store_index_update_failed", exc_info=True)
 
     def _remove_from_index(self, key_name: str) -> None:
         """Remove a key name from the index."""
@@ -365,7 +365,7 @@ class SecretStore:
 
             keyring.set_password(_SERVICE, _INDEX_KEY, ",".join(sorted(keys)))
         except Exception:
-            pass
+            log.debug("secret_store_index_remove_failed", exc_info=True)
 
     # ------------------------------------------------------------------ #
     # Convenience: dump stored secrets (for debugging, never in prod logs)

@@ -581,7 +581,7 @@ class TelegramChannel(Channel):
             if hasattr(self, "_handler") and hasattr(self._handler, "__self__"):
                 consent_mgr = getattr(self._handler.__self__, "consent_manager", None)
         except Exception:
-            pass
+            logger.debug("telegram_voice_consent_check_failed", exc_info=True)
         if consent_mgr and consent_mgr.requires_consent(str(user_id), "telegram"):
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -646,7 +646,7 @@ class TelegramChannel(Channel):
             if hasattr(self, "_handler") and hasattr(self._handler, "__self__"):
                 consent_mgr = getattr(self._handler.__self__, "consent_manager", None)
         except Exception:
-            pass
+            logger.debug("telegram_photo_consent_check_failed", exc_info=True)
         if consent_mgr and consent_mgr.requires_consent(str(user_id), "telegram"):
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -749,7 +749,7 @@ class TelegramChannel(Channel):
             if hasattr(self, "_handler") and hasattr(self._handler, "__self__"):
                 consent_mgr = getattr(self._handler.__self__, "consent_manager", None)
         except Exception:
-            pass
+            logger.debug("telegram_document_consent_check_failed", exc_info=True)
         if consent_mgr and consent_mgr.requires_consent(str(user_id), "telegram"):
             await context.bot.send_message(
                 chat_id=chat_id,

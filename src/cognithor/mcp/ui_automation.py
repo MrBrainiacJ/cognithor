@@ -87,7 +87,7 @@ class UIAutomationProvider:
                     if len(text) > 100:
                         text = text[:97] + "..."
             except Exception:
-                pass
+                log.debug("ui_automation_element_value_read_failed", exc_info=True)
 
             return {
                 "name": name,
@@ -127,7 +127,7 @@ class UIAutomationProvider:
                 except Exception:
                     continue
         except Exception:
-            pass
+            log.debug("ui_automation_foreground_window_detect_failed", exc_info=True)
         return windows[0] if windows else None
 
     def _walk_children(self, element: Any, depth: int, results: list[dict]) -> None:

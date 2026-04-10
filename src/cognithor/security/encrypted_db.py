@@ -131,7 +131,7 @@ def _check_encryption_enabled() -> bool:
                 _encryption_enabled_cache = bool(db_section.get("encryption_enabled", False))
                 return _encryption_enabled_cache
     except Exception:
-        pass
+        log.debug("encrypted_db_config_read_failed", exc_info=True)
 
     # Default: encryption disabled (safe fallback — avoids VirtualLock on first run)
     _encryption_enabled_cache = False
@@ -320,7 +320,7 @@ def encrypted_connect(
                             )
                             return conn
                         except Exception:
-                            pass
+                            log.debug("encrypted_db_legacy_open_failed", exc_info=True)
                 # Re-raise if nothing worked
                 raise
 
@@ -364,7 +364,7 @@ def encrypted_connect(
                     log.debug("encrypted_db_created", path=db_path[-30:])
                     return conn
                 except Exception:
-                    pass
+                    log.debug("encrypted_db_new_file_create_failed", exc_info=True)
 
     if _sqlcipher_available and not key:
         if not getattr(encrypted_connect, "_warned_no_key", False):

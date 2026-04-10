@@ -70,7 +70,7 @@ class HIMAgent:
                 )
                 github_followers = profile.get("followers", 0)
         except Exception:
-            pass
+            log.debug("him_agent_github_profile_fetch_failed", exc_info=True)
 
         scope = self._gdpr.check(request, github_followers=github_followers)
 

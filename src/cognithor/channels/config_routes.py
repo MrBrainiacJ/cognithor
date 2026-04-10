@@ -752,7 +752,7 @@ def _register_config_routes(
 
                 set_locale(updates["language"])
             except Exception:
-                pass
+                log.debug("config_locale_sync_failed", exc_info=True)
         return {"results": results}
 
     @app.post("/api/v1/config/reload", dependencies=deps)
@@ -2644,7 +2644,7 @@ def _register_security_routes(
                                     }
                                 )
                             except Exception:
-                                pass
+                                log.debug("gdpr_export_episode_read_failed", exc_info=True)
                 export["episodic_memories"] = episodes
             except Exception:
                 export["episodic_memories"] = []
@@ -2872,7 +2872,7 @@ def _register_security_routes(
                 results=[r["status"] for r in results],
             )
         except Exception:
-            pass
+            log.debug("gdpr_correction_audit_log_failed", exc_info=True)
 
         return {
             "corrections_applied": len(results),
@@ -2921,7 +2921,7 @@ def _register_security_routes(
                             )
                             imported += 1
                     except Exception:
-                        pass
+                        log.debug("gdpr_import_vault_note_failed", exc_info=True)
             counts["vault_notes"] = imported
 
         # Import entities
@@ -2957,7 +2957,7 @@ def _register_security_routes(
                                 indexer._conn.commit()
                                 imported += 1
                     except Exception:
-                        pass
+                        log.debug("gdpr_import_entity_failed", exc_info=True)
             counts["entities"] = imported
 
         # Import relations
@@ -2982,7 +2982,7 @@ def _register_security_routes(
                             )
                             imported += 1
                         except Exception:
-                            pass
+                            log.debug("gdpr_import_relation_failed", exc_info=True)
                     indexer._conn.commit()
             counts["relations"] = imported
 
@@ -3004,7 +3004,7 @@ def _register_security_routes(
                             pref_store._conn.commit()
                             imported += 1
                     except Exception:
-                        pass
+                        log.debug("gdpr_import_preference_failed", exc_info=True)
             counts["user_preferences"] = imported
 
         # Log import in compliance audit
@@ -3014,7 +3014,7 @@ def _register_security_routes(
             audit = ComplianceAuditLog()
             audit.record("data_imported", counts=counts)
         except Exception:
-            pass
+            log.debug("gdpr_import_audit_log_failed", exc_info=True)
 
         return {
             "status": "imported",
@@ -4492,7 +4492,7 @@ def _register_ui_routes(
                 try:
                     next_runs = cron_engine.get_next_run_times()
                 except Exception:
-                    pass
+                    log.debug("cron_next_run_times_fetch_failed", exc_info=True)
 
             result = []
             for j in jobs.values():
@@ -4940,7 +4940,7 @@ def _register_learning_routes(
                 if ent:
                     current = ent.confidence
             except Exception:
-                pass
+                log.debug("entity_confidence_read_failed", exc_info=True)
 
         new_conf = confidence.apply_feedback(entity_id, current, feedback_type)
 
@@ -6017,7 +6017,7 @@ def _register_backend_routes(
                         "haiku",
                     ]
             except Exception:
-                pass
+                log.debug("claude_code_provider_check_failed", exc_info=True)
 
         # Ollama
         try:

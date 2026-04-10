@@ -619,7 +619,7 @@ class EvolutionLoop:
                             text = getattr(r, "text", str(r))[:150]
                             goal_knowledge_parts.append(f"- Wissen zu '{g.title[:30]}': {text}")
                 except Exception:
-                    pass
+                    log.debug("evolution_goal_knowledge_search_failed", exc_info=True)
         goal_knowledge = "\n".join(goal_knowledge_parts)[:2000]
 
         from cognithor.evolution.atl_prompt import build_atl_prompt, parse_atl_response
@@ -811,7 +811,7 @@ class EvolutionLoop:
                         verified.append(f"{desc} {tag}")
                         continue
                     except Exception:
-                        pass
+                        log.debug("evolution_action_verification_failed", exc_info=True)
                 verified.append(desc)
             executed_actions = verified
 
@@ -995,7 +995,7 @@ class EvolutionLoop:
                     entities = stats.get("entities", 0)
                     gi.close()
                 except Exception:
-                    pass
+                    log.debug("evolution_goal_index_stats_failed", exc_info=True)
 
             sources = best_plan.total_vault_entries or 0
 
@@ -1234,7 +1234,7 @@ class EvolutionLoop:
                                     **{k: v for k, v in _task_data.items() if k != "status"}
                                 )
                         except Exception:
-                            pass
+                            log.debug("evolution_kanban_skill_failure_task_failed", exc_info=True)
                     elif uses == 0 and getattr(skill, "source", "") != "builtin":
                         tasks.append(
                             _LearningGoal(
@@ -1334,7 +1334,7 @@ class EvolutionLoop:
                 if results:
                     parts.extend(getattr(r, "text", str(r))[:200] for r in results[:3])
             except Exception:
-                pass
+                log.debug("evolution_gap_memory_search_failed", exc_info=True)
 
         # hybrid + online: web search + fetch for broader context
         if self._operation_mode in ("hybrid", "online") and self._mcp_client:

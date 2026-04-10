@@ -601,7 +601,7 @@ class MediaPipeline:
                         img_path.write_bytes(base_image["image"])
                         image_paths.append(str(img_path))
                     except Exception:
-                        pass
+                        log.debug("media_pdf_image_extract_failed", exc_info=True)
 
             if extract_tables:
                 try:
@@ -620,7 +620,7 @@ class MediaPipeline:
                                 f"Tabelle (Seite {i + 1}, #{t_idx + 1}):\n" + "\n".join(md_rows)
                             )
                 except Exception:
-                    pass
+                    log.debug("media_pdf_table_extract_failed", exc_info=True)
 
         # Metadaten
         meta = doc.metadata or {}
@@ -728,7 +728,7 @@ class MediaPipeline:
                         img_path.write_bytes(image.blob)
                         image_paths.append(str(img_path))
                     except Exception:
-                        pass
+                        log.debug("media_ppt_image_extract_failed", exc_info=True)
 
             notes = ""
             if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
@@ -855,7 +855,7 @@ class MediaPipeline:
                         img_path.write_bytes(blob)
                         image_paths.append(str(img_path))
                     except Exception:
-                        pass
+                        log.debug("media_docx_image_extract_failed", exc_info=True)
 
         # Metadaten
         props = doc.core_properties

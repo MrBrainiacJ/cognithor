@@ -554,7 +554,7 @@ class KnowledgeIngestService:
                     if desc:
                         vision_text += f"\n[Image description: {desc}]\n"
                 except Exception:
-                    pass
+                    log.debug("ingest_vision_image_extraction_failed", exc_info=True)
                 finally:
                     img_path.unlink(missing_ok=True)
 

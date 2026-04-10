@@ -53,7 +53,7 @@ class ComplianceAuditLog:
                     data = json.loads(last_line)
                     return data.get("hash", "genesis")
         except Exception:
-            pass
+            log.debug("compliance_audit_chain_hash_read_failed", exc_info=True)
         return "genesis"
 
     def _compute_hash(self, entry: dict) -> str:

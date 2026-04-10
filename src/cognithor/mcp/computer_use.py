@@ -329,7 +329,7 @@ class ComputerUseTools:
                             if result.success:
                                 detail = result.description
                         except Exception:
-                            pass
+                            log.debug("computer_use_vision_change_detect_failed", exc_info=True)
 
                     return {
                         "changed": True,
@@ -337,7 +337,7 @@ class ComputerUseTools:
                         "detail": detail,
                     }
             except Exception:
-                pass
+                log.debug("computer_use_screenshot_compare_failed", exc_info=True)
 
             await asyncio.sleep(0.3)
 

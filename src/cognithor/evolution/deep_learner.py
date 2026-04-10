@@ -593,7 +593,9 @@ class DeepLearner:
                                                 total_p += exam_data.get("passed", 0)
                                                 all_gaps.extend(exam_data.get("gaps", []))
                                         except Exception:
-                                            pass
+                                            log.debug(
+                                                "deep_learner_quality_test_failed", exc_info=True
+                                            )
                                     avg_score = sum(scores) / len(scores) if scores else 0.0
                                     exam = ExamResult(
                                         score=avg_score,

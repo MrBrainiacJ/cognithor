@@ -53,7 +53,7 @@ def _silence_library_loggers() -> None:
 
         tf_logging.set_verbosity_error()
     except Exception:
-        pass
+        _logging.getLogger(__name__).debug("suppress_transformers_logging_failed", exc_info=True)
 
 
 from cognithor import BANNER_ASCII, __version__
@@ -1101,7 +1101,9 @@ def main() -> None:
 
                                                 _os.unlink(tmp_path)
                                             except Exception:
-                                                pass
+                                                log.debug(
+                                                    "webui_tmp_file_cleanup_failed", exc_info=True
+                                                )
 
                                 from cognithor.models import IncomingMessage
 
@@ -1489,7 +1491,7 @@ def main() -> None:
                                     )
                                     cmd.extend(["--speaker", str(_speaker_map[_spk])])
                             except Exception:
-                                pass
+                                log.debug("tts_speaker_config_load_failed", exc_info=True)
                         # Read the UTF-8 text file as bytes for stdin
                         with open(txt_input_path, "rb") as _tts_in:
                             _tts_input_bytes = _tts_in.read()

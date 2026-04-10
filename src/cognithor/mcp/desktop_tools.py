@@ -170,7 +170,7 @@ def _try_ps_screenshot(save_path: str) -> tuple[int, int] | None:
             if len(parts) == 2:
                 return int(parts[0]), int(parts[1])
     except Exception:
-        pass
+        log.debug("desktop_screen_resolution_detection_failed", exc_info=True)
     return None
 
 
@@ -229,7 +229,7 @@ class DesktopTools:
             if text:
                 return {"type": "text", "content": text, "length": len(text)}
         except Exception:
-            pass
+            log.debug("desktop_clipboard_text_read_failed", exc_info=True)
 
         # Try image
         ts = self._timestamp()
@@ -248,10 +248,10 @@ class DesktopTools:
                         desc = await self._vision_analyzer.analyze(str(img_path))
                         result["description"] = desc
                     except Exception:
-                        pass
+                        log.debug("desktop_clipboard_image_vision_failed", exc_info=True)
                 return result
         except Exception:
-            pass
+            log.debug("desktop_clipboard_image_read_failed", exc_info=True)
 
         return {"type": "empty", "content": "Clipboard is empty or unreadable."}
 
@@ -351,7 +351,7 @@ class DesktopTools:
                 desc = await self._vision_analyzer.analyze(str(path))
                 result["description"] = desc
             except Exception:
-                pass
+                log.debug("desktop_screenshot_vision_failed", exc_info=True)
         return result
 
 

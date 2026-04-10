@@ -162,9 +162,9 @@ class HashlineValidator:
                         if i == line_number:
                             return line.rstrip("\n").rstrip("\r")
             except Exception:
-                pass
+                log.debug("hashline_latin1_fallback_read_failed", exc_info=True)
         except Exception:
-            pass
+            log.debug("hashline_line_read_failed", exc_info=True)
         return None
 
     def _load_and_cache(self, path: Path) -> HashlinedFile | None:

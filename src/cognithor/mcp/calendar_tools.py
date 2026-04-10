@@ -90,7 +90,7 @@ def _get_configured_timezone(tz_str: str) -> timezone:
         now = datetime.now(zi)
         return timezone(now.utcoffset() or timedelta(0))
     except Exception:
-        pass
+        log.debug("calendar_zoneinfo_parse_failed", exc_info=True)
 
     # Try UTC+N format
     match = re.match(r"UTC([+-])(\d{1,2})(?::(\d{2}))?", tz_str)

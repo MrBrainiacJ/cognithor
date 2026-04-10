@@ -988,7 +988,7 @@ Regeln:
                         feedback_type=feedback_type,
                     )
                 except Exception:
-                    pass
+                    log.debug("reflector_confidence_feedback_failed", exc_info=True)
 
         log.debug("reflection_wrote_semantic", count=written)
         return written

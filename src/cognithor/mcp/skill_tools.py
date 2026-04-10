@@ -531,7 +531,7 @@ def register_skill_tools(
                         token = line.split("=", 1)[1]
                         break
             except Exception:
-                pass
+                log.debug("skill_tools_git_credential_fetch_failed", exc_info=True)
         if not token:
             return (
                 "Error: No GitHub token available. Either:\n"

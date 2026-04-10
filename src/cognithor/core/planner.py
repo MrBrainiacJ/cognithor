@@ -370,7 +370,7 @@ class Planner:
                     if content and isinstance(content, str):
                         return content
         except Exception:
-            pass
+            log.debug("planner_prompt_file_load_failed", exc_info=True)
         # i18n Preset Fallback (curated translations)
         if preset_key:
             try:
@@ -380,7 +380,7 @@ class Planner:
                 if preset and preset_key in preset:
                     return preset[preset_key]
             except Exception:
-                pass
+                log.debug("planner_preset_fallback_failed", exc_info=True)
         return fallback
 
     def reload_prompts(self) -> None:
@@ -1056,7 +1056,7 @@ class Planner:
                             db_section = registry_db.get_tool_prompt_section("planner", language)
                             registry_db.close()
                     except Exception:
-                        pass
+                        log.debug("planner_tool_registry_db_load_failed", exc_info=True)
 
                     if db_section:
                         self._cached_tools_section = db_section
@@ -1145,7 +1145,7 @@ class Planner:
                 if hints:
                     context_parts.append("### Bewaehrte Strategien\n" + "\n".join(hints[:3]))
             except Exception:
-                pass
+                log.debug("planner_strategy_hints_failed", exc_info=True)
 
         # Causal-Learning-Vorschlaege (wenn verfuegbar)
         if self._causal_analyzer is not None:
@@ -1158,7 +1158,7 @@ class Planner:
                         f"Erfolgreiche Tool-Muster: {'; '.join(hints)}"
                     )
             except Exception:
-                pass
+                log.debug("planner_causal_sequence_scores_failed", exc_info=True)
 
         # Capability-basierte Selbsteinschaetzung (wenn TaskProfiler verfuegbar)
         if self._task_profiler is not None:
@@ -1172,7 +1172,7 @@ class Planner:
                         parts.append(f"Schwaechen: {', '.join(cap.weaknesses[:3])}")
                     context_parts.append("### Selbsteinschaetzung\n" + " | ".join(parts))
             except Exception:
-                pass
+                log.debug("planner_capability_profile_failed", exc_info=True)
 
         context_section = "\n\n".join(context_parts) if context_parts else "Kein Kontext geladen."
 
@@ -1197,7 +1197,7 @@ class Planner:
                 )
                 identity_section = _id_ctx.get("cognitive_context", "")
             except Exception:
-                pass
+                log.debug("planner_identity_context_failed", exc_info=True)
 
         if identity_section:
             context_section += f"\n\n### Kognitive Identitaet\n{identity_section}"

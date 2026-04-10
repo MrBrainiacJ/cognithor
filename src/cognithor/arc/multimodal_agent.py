@@ -352,7 +352,7 @@ class MultimodalArcAgent:
             sc = arcade.get_scorecard()
             score = float(getattr(sc, "score", 0.0))
         except Exception:
-            pass
+            log.debug("arc_multimodal_scorecard_failed", exc_info=True)
 
         return {
             "game_id": game_id,

@@ -798,7 +798,7 @@ class ErasureManager:
             audit = ComplianceAuditLog()
             audit.record("erasure_executed", user_id=user_id, counts=counts, partial=bool(errors))
         except Exception:
-            pass
+            _log.debug("gdpr_erasure_audit_log_failed", exc_info=True)
 
         return counts
 

@@ -563,7 +563,7 @@ class StartupChecker:
             if (candidate / "pyproject.toml").is_file():
                 return str(candidate)
         except Exception:
-            pass
+            log.debug("startup_check_repo_root_detection_failed", exc_info=True)
         return None
 
     @staticmethod

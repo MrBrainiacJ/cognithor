@@ -25,7 +25,7 @@ def _get_audit_log() -> Any:
 
             _audit_log = ComplianceAuditLog()
         except Exception:
-            pass
+            log.debug("consent_audit_log_init_failed", exc_info=True)
     return _audit_log
 
 

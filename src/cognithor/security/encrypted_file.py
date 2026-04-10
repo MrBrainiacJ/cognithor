@@ -97,7 +97,7 @@ class EncryptedFileIO:
                     db_section = data.get("database", {})
                     return bool(db_section.get("encryption_enabled", False))
         except Exception:
-            pass
+            log.debug("encrypted_file_config_read_failed", exc_info=True)
         return False
 
     def _get_key(self) -> str:
@@ -115,7 +115,7 @@ class EncryptedFileIO:
             if existing:
                 return existing
         except Exception:
-            pass
+            log.debug("encrypted_file_keyring_read_failed", exc_info=True)
 
         # 3. CredentialStore
         try:
@@ -126,7 +126,7 @@ class EncryptedFileIO:
             if existing:
                 return existing
         except Exception:
-            pass
+            log.debug("encrypted_file_credential_store_read_failed", exc_info=True)
 
         return ""
 

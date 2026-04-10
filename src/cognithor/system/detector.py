@@ -201,7 +201,7 @@ class SystemDetector:
                     ctypes.windll.kernel32.GetPhysicallyInstalledSystemMemory(ctypes.byref(mem_kb))
                     total_gb = round(mem_kb.value / (1024 * 1024), 1)
                 except Exception:
-                    pass
+                    log.debug("detector_win32_memory_query_failed", exc_info=True)
         status = "ok" if total_gb >= 16 else "warn" if total_gb >= 8 else "fail"
         data = {"total_gb": total_gb, "available_gb": available_gb, "percent_used": percent}
         return DetectionResult(key="ram", value=f"{total_gb} GB", status=status, raw_data=data)
@@ -327,7 +327,7 @@ class SystemDetector:
                     },
                 )
         except Exception:
-            pass
+            log.debug("detector_ollama_api_check_failed", exc_info=True)
         # Check if installed
         if shutil.which("ollama"):
             return DetectionResult(
@@ -358,7 +358,7 @@ class SystemDetector:
                     raw_data={"installed": True, "running": True, "models": models},
                 )
         except Exception:
-            pass
+            log.debug("detector_lmstudio_api_check_failed", exc_info=True)
         return DetectionResult(
             key="lmstudio",
             value="Not available",

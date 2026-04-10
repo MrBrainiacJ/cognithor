@@ -575,7 +575,7 @@ class KnowledgeBuilder:
                                     entity["name"], entity["type"], attrs, ""
                                 )
                     except Exception:
-                        pass
+                        log.debug("knowledge_builder_entity_store_failed", exc_info=True)
                 for rel in relations:
                     try:
                         await self._mcp.call_tool(
@@ -593,7 +593,7 @@ class KnowledgeBuilder:
                                     rel["source"], rel["relation"], rel["target"]
                                 )
                     except Exception:
-                        pass
+                        log.debug("knowledge_builder_relation_store_failed", exc_info=True)
                 processed += 1
                 log.info(
                     "entity_queue_drained",

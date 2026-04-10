@@ -246,7 +246,7 @@ class VerifiedWebLookup:
             if "#" in url and "/app" in url:
                 return True
         except Exception:
-            pass
+            log.debug("verified_lookup_url_parse_failed", exc_info=True)
         return False
 
     def _best_browser(self) -> Any | None:

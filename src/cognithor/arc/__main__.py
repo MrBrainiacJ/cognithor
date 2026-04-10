@@ -15,8 +15,11 @@ Modes:
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from typing import Any
+
+log = logging.getLogger(__name__)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -290,7 +293,7 @@ def _run_analyzer(game_id: str, reanalyze: bool, verbose: bool, config: Any) -> 
         scorecard = arcade.get_scorecard()
         print(f"[SCORECARD] {scorecard.score}")
     except Exception:
-        pass
+        log.debug("arc_scorecard_fetch_failed", exc_info=True)
 
     return 0
 

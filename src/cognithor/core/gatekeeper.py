@@ -139,7 +139,7 @@ class Gatekeeper:
 
             self._capability_matrix = CapabilityMatrix()
         except Exception:
-            pass
+            log.debug("gatekeeper_capability_matrix_init_failed", exc_info=True)
 
         # Pre-execution confidence checker
         self._confidence_checker: Any = None
@@ -148,7 +148,7 @@ class Gatekeeper:
 
             self._confidence_checker = ConfidenceChecker()
         except Exception:
-            pass
+            log.debug("gatekeeper_confidence_checker_init_failed", exc_info=True)
 
         # Community-Skill ToolEnforcer
         self._tool_enforcer: Any = None
@@ -157,7 +157,7 @@ class Gatekeeper:
 
             self._tool_enforcer = ToolEnforcer()
         except Exception:
-            pass
+            log.debug("gatekeeper_tool_enforcer_init_failed", exc_info=True)
 
         # Trust-Resolver fuer Workspace-Vertrauen (Phase 2)
         self._trust_resolver: Any = None
@@ -166,7 +166,7 @@ class Gatekeeper:
 
             self._trust_resolver = TrustResolver.from_jarvis_config(config)
         except Exception:
-            pass
+            log.debug("gatekeeper_trust_resolver_init_failed", exc_info=True)
 
         # Aktiver Community-Skill (wird pro evaluate()-Aufruf gesetzt)
         self._active_skill: Skill | None = None
@@ -783,7 +783,7 @@ class Gatekeeper:
                 if violated:
                     return RiskLevel.RED
             except Exception:
-                pass
+                log.debug("gatekeeper_ethical_check_failed", exc_info=True)
 
         # Unbekannte Tools → ORANGE (Fail-Safe: lieber nachfragen)
         return RiskLevel.ORANGE

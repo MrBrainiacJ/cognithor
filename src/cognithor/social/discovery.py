@@ -113,7 +113,7 @@ class SubredditDiscovery:
                         children = posts_resp.json().get("data", {}).get("children", [])
                         sample_posts = [c["data"]["title"] for c in children[:3]]
                 except Exception:
-                    pass
+                    log.debug("discovery_subreddit_sample_posts_failed", exc_info=True)
 
                 # Rank score: relevance × posts × log(subscribers)
                 posts_per_day_val = posts_per_day  # noqa: F841 (used in sort key)

@@ -166,7 +166,7 @@ class Executor:
 
             self._loop_detector = ToolLoopDetector()
         except Exception:
-            pass
+            log.debug("executor_loop_detector_init_failed", exc_info=True)
         # Tool-Hook-System (Pre/Post Tool-Use)
         self._tool_hook_runner: Any = None
         try:
@@ -564,7 +564,7 @@ class Executor:
                         error_type="ToolLoop",
                     )
             except Exception:
-                pass
+                log.debug("executor_loop_detection_check_failed", exc_info=True)
 
         for attempt in range(1, self._max_retries + 1):
             start = time.monotonic()
@@ -757,7 +757,7 @@ class Executor:
                 )
                 _kanban.create_task(**{k: v for k, v in _task_data.items() if k != "status"})
         except Exception:
-            pass
+            log.debug("executor_kanban_recovery_task_failed", exc_info=True)
         # Report gap for auto skill generator
         if self._gap_detector:
             self._gap_detector.report_repeated_failure(
