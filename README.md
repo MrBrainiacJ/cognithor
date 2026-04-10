@@ -348,7 +348,10 @@ pip install cognithor[all]          # Everything (large install)
 ollama pull qwen3:8b                # Pull a model
 cognithor                           # Start
 
-# Upgrade an existing installation:
+# Upgrade to a specific version:
+pip install cognithor[all]==0.87.0
+
+# Upgrade to latest:
 pip install --upgrade cognithor[all]
 ```
 
