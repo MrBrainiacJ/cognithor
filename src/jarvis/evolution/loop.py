@@ -1524,10 +1524,12 @@ class EvolutionLoop:
                         await asyncio.sleep(60)  # Wait for resources to free up
                     elif result.reason == "budget_exhausted":
                         await asyncio.sleep(cooldown * 2)  # Long pause on budget
+                    elif result.skipped:
+                        await asyncio.sleep(cooldown)  # Full cooldown only for skipped
                     else:
-                        await asyncio.sleep(cooldown)
+                        await asyncio.sleep(5)  # Successful cycle → next immediately
                 else:
-                    await asyncio.sleep(30)
+                    await asyncio.sleep(10)  # Check idle every 10s
             except asyncio.CancelledError:
                 break
             except Exception:
