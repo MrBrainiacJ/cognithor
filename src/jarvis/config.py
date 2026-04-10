@@ -1878,10 +1878,10 @@ class EvolutionConfig(BaseModel):
         default_factory=dict,
         description="Per-agent daily budget in USD, e.g. {'scout': 0.50, 'skill_builder': 0.30}",
     )
-    learning_goals: list[str] = Field(
+    learning_goals: list[Any] = Field(
         default_factory=list,
         description=(
-            "User-defined learning topics, e.g. ['Python async patterns', 'Kubernetes deployment']"
+            "User-defined learning topics. Strings or dicts with id/title/status/priority/progress."
         ),
     )
     # Deep Learning (Phase 5)
