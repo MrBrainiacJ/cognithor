@@ -188,7 +188,7 @@ def step_launcher(pkg_root: Path, version: str) -> None:
 
         export COGNITHOR_HOME="${{COGNITHOR_HOME:-$HOME/.jarvis}}"
 
-        exec "{INSTALL_PREFIX}/venv/bin/python" -m jarvis "$@"
+        exec "{INSTALL_PREFIX}/venv/bin/python" -m cognithor "$@"
     """)
     )
     launcher.chmod(0o755)

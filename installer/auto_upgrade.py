@@ -2,11 +2,12 @@ r"""Auto-upgrade Cognithor if a source tree with a newer version is found.
 
 Checked locations (in order):
   1. COGNITHOR_DEV environment variable
-  2. %USERPROFILE%\Jarvis\jarvis complete v20
-  3. D:\Jarvis\jarvis complete v20
-  4. %USERPROFILE%\cognithor
+  2. %USERPROFILE%\Cognithor
+  3. D:\Cognithor
+  4. %USERPROFILE%\Jarvis\jarvis complete v20 (legacy)
+  5. D:\Jarvis\jarvis complete v20 (legacy)
 
-If src/jarvis/ with a higher version is found, copies the package
+If src/cognithor/ with a higher version is found, copies the package
 directly into site-packages (no pip/build tools needed).
 """
 
@@ -32,13 +33,21 @@ def _read_version_from_toml(toml_path: Path) -> str | None:
 
 
 def _installed_version() -> str | None:
-    """Get the currently installed jarvis version."""
+    """Get the currently installed cognithor version."""
+    try:
+        from cognithor import __version__
+
+        return __version__
+    except Exception:
+        pass
+    # Fallback: try legacy package name
     try:
         from jarvis import __version__
 
         return __version__
     except Exception:
-        return None
+        pass
+    return None
 
 
 def _compare_versions(a: str, b: str) -> int:
@@ -71,13 +80,15 @@ def main() -> None:
     if dev:
         candidates.append(Path(dev))
 
-    # 2-4. Common locations
+    # 2-5. Common locations (new + legacy)
     home = Path.home()
     candidates.extend(
         [
-            home / "Jarvis" / "jarvis complete v20",
-            Path("D:/Jarvis/jarvis complete v20"),
+            home / "Cognithor",
+            Path("D:/Cognithor"),
             home / "cognithor",
+            home / "Jarvis" / "jarvis complete v20",  # legacy
+            Path("D:/Jarvis/jarvis complete v20"),  # legacy
         ]
     )
 
@@ -87,8 +98,11 @@ def main() -> None:
 
     for candidate in candidates:
         toml = candidate / "pyproject.toml"
-        src_jarvis = candidate / "src" / "jarvis"
-        if not toml.exists() or not src_jarvis.is_dir():
+        # Try both new and legacy source directory names
+        src_pkg = candidate / "src" / "cognithor"
+        if not src_pkg.is_dir():
+            src_pkg = candidate / "src" / "jarvis"  # legacy layout
+        if not toml.exists() or not src_pkg.is_dir():
             continue
 
         dev_ver = _read_version_from_toml(toml)
@@ -105,17 +119,23 @@ def main() -> None:
                 print(f"         Continuing with v{cur}")
                 return
 
-            dest = site_packages / "jarvis"
+            # Determine target package name from source
+            pkg_name = src_pkg.name  # "cognithor" or "jarvis"
+            dest = site_packages / pkg_name
             try:
-                # Remove old package
-                if dest.exists():
-                    shutil.rmtree(dest)
+                # Remove old packages (both names)
+                for old_name in ("cognithor", "jarvis"):
+                    old_dest = site_packages / old_name
+                    if old_dest.exists():
+                        shutil.rmtree(old_dest)
                 # Copy new source
-                shutil.copytree(src_jarvis, dest)
+                shutil.copytree(src_pkg, dest)
                 # Copy data/procedures to ~/.cognithor/data/procedures
                 src_data = candidate / "data" / "procedures"
-                jarvis_home = Path.home() / ".cognithor"
-                dest_data = jarvis_home / "data" / "procedures"
+                cognithor_home = Path.home() / ".cognithor"
+                if not cognithor_home.exists():
+                    cognithor_home = Path.home() / ".jarvis"  # fallback
+                dest_data = cognithor_home / "data" / "procedures"
                 if src_data.is_dir():
                     dest_data.mkdir(parents=True, exist_ok=True)
                     for f in src_data.glob("*.md"):
@@ -129,14 +149,14 @@ def main() -> None:
                         shutil.rmtree(dest_web)
                     dest_web.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(src_web, dest_web)
-                    print(f"  [OK] Flutter UI synced")
+                    print("  [OK] Flutter UI synced")
                 print(f"  [OK] Upgraded to v{dev_ver}")
             except Exception as exc:
                 print(f"  [WARN] Upgrade failed: {exc}")
                 print(f"         Continuing with v{cur}")
             return  # Only upgrade once
 
-    # No upgrade needed — silent return
+    # No upgrade needed -- silent return
 
 
 if __name__ == "__main__":

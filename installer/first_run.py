@@ -128,14 +128,14 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     """Run interactive setup wizard: detect hardware, recommend model, write config."""
     try:
         # Import from installed cognithor package
-        from jarvis.core.installer import (
+        from cognithor.core.installer import (
             PRESETS,
             HardwareDetector,
             ModelRecommender,
             PresetLevel,
         )
     except ImportError:
-        print("  [WARN] Could not import setup wizard (jarvis not installed?)")
+        print("  [WARN] Could not import setup wizard (cognithor not installed?)")
         return None
 
     print()
@@ -202,7 +202,7 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
             selected_model = "gemma2:2b"
 
         print(f"  [OK] Selected: {selected_model}")
-        config["jarvis"]["model"] = selected_model
+        config["cognithor"]["model"] = selected_model
 
     # Step 4: External API config
     if use_api:
@@ -221,14 +221,14 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
         api_env_keys = {"1": "OPENAI_API_KEY", "2": "ANTHROPIC_API_KEY", "3": "GOOGLE_API_KEY"}
 
         provider = api_providers[api_choice]
-        config["jarvis"]["api_provider"] = provider
+        config["cognithor"]["api_provider"] = provider
 
         if api_choice in ("1", "2", "3"):
             env_key = api_env_keys[api_choice]
             existing = os.environ.get(env_key, "")
             if existing:
                 print(f"  [OK] {env_key} already set in environment")
-                config["jarvis"]["api_key_env"] = env_key
+                config["cognithor"]["api_key_env"] = env_key
             else:
                 print("  Enter your API key (or press Enter to configure later):")
                 api_key = input("  > ").strip()
@@ -238,12 +238,12 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
                     with open(env_file, "a", encoding="utf-8") as f:
                         f.write(f"{env_key}={api_key}\n")
                     print(f"  [OK] API key saved to {env_file}")
-                    config["jarvis"]["api_key_env"] = env_key
+                    config["cognithor"]["api_key_env"] = env_key
                 else:
                     print(f"  [SKIP] Set {env_key} environment variable later")
 
         if not use_ollama:
-            config["jarvis"]["model"] = (
+            config["cognithor"]["model"] = (
                 "gpt-4o"
                 if api_choice == "1"
                 else "claude-sonnet-4-20250514"
@@ -263,9 +263,9 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     preset_level = tier_map.get(hw.tier, PresetLevel.STANDARD)
     preset = PRESETS[preset_level]
 
-    config["jarvis"]["max_agents"] = preset.max_agents
-    config["jarvis"]["max_concurrent"] = preset.max_concurrent
-    config["jarvis"]["memory_limit_mb"] = preset.memory_limit_mb
+    config["cognithor"]["max_agents"] = preset.max_agents
+    config["cognithor"]["max_concurrent"] = preset.max_concurrent
+    config["cognithor"]["memory_limit_mb"] = preset.memory_limit_mb
     config["features"]["rag"] = preset.enable_rag
     config["features"]["federation"] = preset.enable_federation
     config["features"]["cron"] = preset.enable_cron
@@ -281,7 +281,7 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     print()
     lang_choice = _ask_choice("  Language [1/2/3]", ["1", "2", "3"], default="1")
     lang_map = {"1": "en", "2": "de", "3": "zh"}
-    config["jarvis"]["language"] = lang_map[lang_choice]
+    config["cognithor"]["language"] = lang_map[lang_choice]
 
     # Write config.yaml
     config_path = JARVIS_HOME / "config" / "config.yaml"

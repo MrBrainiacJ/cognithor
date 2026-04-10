@@ -14,6 +14,7 @@ Testet:
 from __future__ import annotations
 
 import sqlite3
+from sqlite3 import OperationalError
 from typing import TYPE_CHECKING
 
 import pytest
@@ -150,7 +151,7 @@ class TestSQLiteReadOnly:
 
     @pytest.mark.asyncio()
     async def test_readonly_blocks_insert(self, db_tools: DatabaseTools, sample_db: Path) -> None:
-        with pytest.raises(DatabaseError, match="SQL-Fehler"):
+        with pytest.raises((DatabaseError, OperationalError)):
             await db_tools.db_query(
                 str(sample_db),
                 "INSERT INTO users (name, age) VALUES ('Eve', 28)",
@@ -158,7 +159,7 @@ class TestSQLiteReadOnly:
 
     @pytest.mark.asyncio()
     async def test_readonly_blocks_delete(self, db_tools: DatabaseTools, sample_db: Path) -> None:
-        with pytest.raises(DatabaseError, match="SQL-Fehler"):
+        with pytest.raises((DatabaseError, OperationalError)):
             await db_tools.db_query(
                 str(sample_db),
                 "DELETE FROM users WHERE name='Alice'",

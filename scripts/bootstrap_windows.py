@@ -26,7 +26,7 @@ from pathlib import Path
 
 # ── Version (dynamisch aus pyproject.toml lesen) ──────────────────────────
 def _read_version() -> str:
-    """Liest die Version aus pyproject.toml oder src/jarvis/__init__.py."""
+    """Liest die Version aus pyproject.toml oder src/cognithor/__init__.py."""
     # 1. Versuche pyproject.toml im Repo-Root
     for candidate in [
         Path(__file__).resolve().parent.parent / "pyproject.toml",
@@ -44,7 +44,7 @@ def _read_version() -> str:
             except Exception:
                 pass
     # 2. Fallback: jarvis.__init__.__version__
-    init_path = Path(__file__).resolve().parent.parent / "src" / "jarvis" / "__init__.py"
+    init_path = Path(__file__).resolve().parent.parent / "src" / "cognithor" / "__init__.py"
     if init_path.exists():
         try:
             for line in init_path.read_text(encoding="utf-8").splitlines():
@@ -81,7 +81,8 @@ def _download_flutter_web(repo_root: str) -> bool:
             bar = "#" * filled + "-" * (bar_len - filled)
             print(
                 f"\r           [{bar}] {pct}% ({dl_mb:.1f}/{total_mb:.1f} MB)",
-                end="", flush=True,
+                end="",
+                flush=True,
             )
         else:
             dl_mb = downloaded / (1024 * 1024)
@@ -761,11 +762,11 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     # ── 5. Python-Abhaengigkeiten ──────────────────────────────────────
     header("5/14  Python Dependencies")
 
-    # Pruefe ob jarvis bereits importierbar ist
-    jarvis_ok = False
+    # Pruefe ob cognithor bereits importierbar ist
+    cognithor_ok = False
     try:
         check = subprocess.run(
-            [sys.executable, "-c", "import jarvis; print(jarvis.__version__)"],
+            [sys.executable, "-c", "import cognithor; print(cognithor.__version__)"],
             capture_output=True,
             text=True,
             timeout=15,
@@ -773,7 +774,7 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         )
         if check.returncode == 0 and check.stdout.strip():
             ok(f"jarvis already installed (v{check.stdout.strip()})")
-            jarvis_ok = True
+            cognithor_ok = True
             # Ensure [all] extras are installed (identity, etc.)
             _identity_check = subprocess.run(
                 [sys.executable, "-c", "import chromadb"],
@@ -797,7 +798,7 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         pass
 
     # Check ARC-AGI-3 availability (informational only — not auto-installed)
-    if jarvis_ok:
+    if cognithor_ok:
         try:
             _arc_check = subprocess.run(
                 [sys.executable, "-c", "import arc_agi"],
@@ -811,7 +812,7 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         except Exception:
             pass
 
-    if not jarvis_ok:
+    if not cognithor_ok:
         # uv bevorzugen wenn vorhanden (10x schneller)
         installer_backend, installer_cmd = _detect_python_installer(repo_root)
         info(f"Installing Python dependencies with {installer_backend}...")
@@ -844,7 +845,7 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     if _home_venv_python.exists() and str(_home_venv_python) != sys.executable:
         try:
             _venv_check = subprocess.run(
-                [str(_home_venv_python), "-c", "import jarvis"],
+                [str(_home_venv_python), "-c", "import cognithor"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -1043,7 +1044,11 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     header("10/14  Smoke Test")
     try:
         qt = subprocess.run(
-            [sys.executable, "-c", "import jarvis; print(f'jarvis v{jarvis.__version__}')"],
+            [
+                sys.executable,
+                "-c",
+                "import cognithor; print(f'cognithor v{cognithor.__version__}')",
+            ],
             capture_output=True,
             text=True,
             timeout=15,
@@ -1223,7 +1228,7 @@ def quick_start(repo_root: str, *, skip_models: bool = False) -> bool:
     for _py in _pythons_to_check:
         try:
             check = subprocess.run(
-                [_py, "-c", "import jarvis"],
+                [_py, "-c", "import cognithor"],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -1319,7 +1324,7 @@ def print_summary(result: BootResult, elapsed: float, first: bool = True) -> Non
 
     if result.success:
         ok("System ready -- starting UI!")
-        info("Tip: Use 'python -m jarvis --lite' for minimal VRAM usage (6 GB).")
+        info("Tip: Use 'python -m cognithor --lite' for minimal VRAM usage (6 GB).")
     else:
         fail("System not ready. Please fix the errors above.")
 
