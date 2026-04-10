@@ -930,7 +930,12 @@ class TestMCPIntegration:
     @pytest.mark.asyncio
     async def test_full_resource_flow(self) -> None:
         """Simuliert Resource-Discovery und -Read."""
-        from cognithor.mcp.server import JarvisMCPServer, MCPResource, MCPServerConfig, MCPServerMode
+        from cognithor.mcp.server import (
+            JarvisMCPServer,
+            MCPResource,
+            MCPServerConfig,
+            MCPServerMode,
+        )
 
         server = JarvisMCPServer(MCPServerConfig(mode=MCPServerMode.HTTP))
         server.register_resource(

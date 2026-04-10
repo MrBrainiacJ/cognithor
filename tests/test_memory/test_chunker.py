@@ -77,12 +77,14 @@ class TestDetectTier:
 
     def test_procedural(self):
         assert (
-            _detect_tier("/home/.cognithor/memory/procedures/bu-angebot.md") == MemoryTier.PROCEDURAL
+            _detect_tier("/home/.cognithor/memory/procedures/bu-angebot.md")
+            == MemoryTier.PROCEDURAL
         )
 
     def test_semantic(self):
         assert (
-            _detect_tier("/home/.cognithor/memory/knowledge/kunden/mueller.md") == MemoryTier.SEMANTIC
+            _detect_tier("/home/.cognithor/memory/knowledge/kunden/mueller.md")
+            == MemoryTier.SEMANTIC
         )
 
     def test_default(self):

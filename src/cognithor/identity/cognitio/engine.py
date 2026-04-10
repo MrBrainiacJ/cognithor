@@ -71,7 +71,11 @@ import contextlib
 
 from cognithor.identity.cognitio.attention import MultiHeadAttention
 from cognithor.identity.cognitio.biases import BiasEngine
-from cognithor.identity.cognitio.character import CharacterManager, CognitiveState, PersonalityVector
+from cognithor.identity.cognitio.character import (
+    CharacterManager,
+    CognitiveState,
+    PersonalityVector,
+)
 from cognithor.identity.cognitio.dream import DreamCycle
 from cognithor.identity.cognitio.embeddings import EmbeddingEngine
 from cognithor.identity.cognitio.emotion_shield import EmotionShield

@@ -36,7 +36,8 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
         with patch(
-            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64", 1920, 1080, 1.0),
         ):
             result = await tools.computer_screenshot()
 
@@ -51,7 +52,8 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=None)
 
         with patch(
-            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64", 1920, 1080, 1.0),
         ):
             result = await tools.computer_screenshot()
 
@@ -72,7 +74,8 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
         with patch(
-            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64", 1920, 1080, 1.0),
         ):
             result = await tools.computer_screenshot()
 
@@ -94,7 +97,8 @@ class TestComputerScreenshotWithVision:
         tools = ComputerUseTools(vision_analyzer=mock_vision)
 
         with patch(
-            "cognithor.mcp.computer_use._take_screenshot_b64", return_value=("base64", 1920, 1080, 1.0)
+            "cognithor.mcp.computer_use._take_screenshot_b64",
+            return_value=("base64", 1920, 1080, 1.0),
         ):
             await tools.computer_screenshot(task_context="Reddit oeffnen")
 
@@ -321,7 +325,9 @@ class TestWaitForStableScreen:
             counter["n"] += 1
             return (f"different_image_{counter['n']}", 1920, 1080, 1.0)
 
-        with patch("cognithor.mcp.computer_use._take_screenshot_b64", side_effect=changing_screenshot):
+        with patch(
+            "cognithor.mcp.computer_use._take_screenshot_b64", side_effect=changing_screenshot
+        ):
             import time as _time
 
             start = _time.monotonic()

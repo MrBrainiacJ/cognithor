@@ -270,7 +270,8 @@ class TestRunInstall:
         assert "boom" in msg
 
     @patch(
-        "cognithor.utils.installer.subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 600)
+        "cognithor.utils.installer.subprocess.run",
+        side_effect=subprocess.TimeoutExpired("cmd", 600),
     )
     @patch("cognithor.utils.installer.detect_installer")
     def test_timeout(self, mock_det: MagicMock, _run: MagicMock) -> None:

@@ -314,7 +314,9 @@ def register_skill_tools(
             from cognithor.skills.community.client import CommunityRegistryClient
 
             community_dir = (
-                skills_dirs[-1] / "community" if skills_dirs else Path("~/.cognithor/skills/community")
+                skills_dirs[-1] / "community"
+                if skills_dirs
+                else Path("~/.cognithor/skills/community")
             )
             client = CommunityRegistryClient(community_dir=community_dir)
             result = await client.install(name)
@@ -355,7 +357,9 @@ def register_skill_tools(
             from cognithor.skills.community.client import CommunityRegistryClient
 
             community_dir = (
-                skills_dirs[-1] / "community" if skills_dirs else Path("~/.cognithor/skills/community")
+                skills_dirs[-1] / "community"
+                if skills_dirs
+                else Path("~/.cognithor/skills/community")
             )
             client = CommunityRegistryClient(community_dir=community_dir)
             results = await client.search(query=query, category=category)

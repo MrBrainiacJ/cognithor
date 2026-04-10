@@ -377,6 +377,8 @@ class TestMattermostApprovalFlow:
         ch._http_client.post = AsyncMock(return_value=mock_resp)
 
         action = PlannedAction(tool="test", params={})
-        with patch("cognithor.channels.mattermost.asyncio.wait_for", side_effect=asyncio.TimeoutError):
+        with patch(
+            "cognithor.channels.mattermost.asyncio.wait_for", side_effect=asyncio.TimeoutError
+        ):
             result = await ch.request_approval("s1", action, "reason")
         assert result is False

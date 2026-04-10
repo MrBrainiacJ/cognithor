@@ -267,7 +267,13 @@ class TestSessionContextFeatures:
 class TestApprovalHandling:
     @pytest.mark.asyncio
     async def test_no_channel_returns_original_decisions(self, config: JarvisConfig) -> None:
-        from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel, SessionContext
+        from cognithor.models import (
+            GateDecision,
+            GateStatus,
+            PlannedAction,
+            RiskLevel,
+            SessionContext,
+        )
 
         gateway = Gateway(config)
         session = SessionContext()

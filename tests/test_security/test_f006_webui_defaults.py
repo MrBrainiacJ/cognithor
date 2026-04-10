@@ -25,7 +25,8 @@ class TestCreateAppDefaults:
         env = {
             k: v
             for k, v in os.environ.items()
-            if k not in ("COGNITHOR_WEBUI_HOST", "COGNITHOR_WEBUI_CORS_ORIGINS", "COGNITHOR_API_TOKEN")
+            if k
+            not in ("COGNITHOR_WEBUI_HOST", "COGNITHOR_WEBUI_CORS_ORIGINS", "COGNITHOR_API_TOKEN")
         }
         with patch.dict(os.environ, env, clear=True):
             app = create_app()
@@ -55,7 +56,9 @@ class TestCreateAppDefaults:
 
         source = inspect.getsource(create_app)
         cors_line = source.split("COGNITHOR_WEBUI_CORS_ORIGINS")[1].split("\n")[0]
-        assert '"*"' not in cors_line, "Default fuer COGNITHOR_WEBUI_CORS_ORIGINS darf nicht '*' sein"
+        assert '"*"' not in cors_line, (
+            "Default fuer COGNITHOR_WEBUI_CORS_ORIGINS darf nicht '*' sein"
+        )
 
     def test_explicit_0000_via_env_still_works(self) -> None:
         """Explizites Opt-in fuer 0.0.0.0 via Env-Var muss weiterhin funktionieren."""

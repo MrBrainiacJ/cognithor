@@ -343,7 +343,9 @@ class TestSendNotification:
     async def test_send_notification_all_fallbacks_fail(self, notification_tools):
         with (
             patch("cognithor.mcp.notification_tools._try_plyer_notification", return_value=False),
-            patch("cognithor.mcp.notification_tools._try_powershell_notification", return_value=False),
+            patch(
+                "cognithor.mcp.notification_tools._try_powershell_notification", return_value=False
+            ),
             patch("cognithor.mcp.notification_tools._try_winsound_fallback", return_value=False),
         ):
             result = await notification_tools.send_notification(title="Test", message="Hello")

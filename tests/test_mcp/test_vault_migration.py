@@ -6,7 +6,11 @@ import pytest
 
 from cognithor.mcp.vault_db_backend import VaultDBBackend
 from cognithor.mcp.vault_file_backend import VaultFileBackend
-from cognithor.mcp.vault_migration import detect_mode_change, migrate_db_to_files, migrate_files_to_db
+from cognithor.mcp.vault_migration import (
+    detect_mode_change,
+    migrate_db_to_files,
+    migrate_files_to_db,
+)
 
 
 @pytest.fixture

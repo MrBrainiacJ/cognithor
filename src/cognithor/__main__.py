@@ -282,7 +282,9 @@ def main() -> None:
     from cognithor.i18n import set_locale
 
     _lang = (
-        os.environ.get("COGNITHOR_LANGUAGE") or os.environ.get("COGNITHOR_LANGUAGE") or config.language
+        os.environ.get("COGNITHOR_LANGUAGE")
+        or os.environ.get("COGNITHOR_LANGUAGE")
+        or config.language
     )
     set_locale(_lang)
 
@@ -1969,9 +1971,12 @@ def main() -> None:
                 from cognithor.channels.matrix import MatrixChannel
 
                 homeserver = (
-                    os.environ.get("COGNITHOR_MATRIX_HOMESERVER") or config.channels.matrix_homeserver
+                    os.environ.get("COGNITHOR_MATRIX_HOMESERVER")
+                    or config.channels.matrix_homeserver
                 )
-                user_id = os.environ.get("COGNITHOR_MATRIX_USER_ID") or config.channels.matrix_user_id
+                user_id = (
+                    os.environ.get("COGNITHOR_MATRIX_USER_ID") or config.channels.matrix_user_id
+                )
                 if homeserver and user_id:
                     gateway.register_channel(
                         MatrixChannel(

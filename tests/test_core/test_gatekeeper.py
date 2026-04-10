@@ -85,7 +85,9 @@ class TestRiskClassification:
         self, gatekeeper: Gatekeeper, session: SessionContext
     ) -> None:
         """write_file matched die Default-Policy INFORM → YELLOW."""
-        action = PlannedAction(tool="write_file", params={"path": "~/.cognithor/workspace/test.txt"})
+        action = PlannedAction(
+            tool="write_file", params={"path": "~/.cognithor/workspace/test.txt"}
+        )
         decision = gatekeeper.evaluate(action, session)
         # Default-Policy setzt write_file auf INFORM
         assert decision.status in (GateStatus.INFORM, GateStatus.ALLOW)

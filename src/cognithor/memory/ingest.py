@@ -69,7 +69,9 @@ class IngestConfig:
     processed_dir: Path = field(
         default_factory=lambda: Path.home() / ".cognithor" / "ingest" / "processed"
     )
-    failed_dir: Path = field(default_factory=lambda: Path.home() / ".cognithor" / "ingest" / "failed")
+    failed_dir: Path = field(
+        default_factory=lambda: Path.home() / ".cognithor" / "ingest" / "failed"
+    )
 
     # Verarbeitung
     max_file_size_bytes: int = MAX_FILE_SIZE_BYTES

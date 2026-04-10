@@ -131,7 +131,9 @@ class TestMainInitOnly:
 
             with (
                 patch("cognithor.config.load_config", return_value=mock_config),
-                patch("cognithor.config.ensure_directory_structure", return_value=["path1", "path2"]),
+                patch(
+                    "cognithor.config.ensure_directory_structure", return_value=["path1", "path2"]
+                ),
                 patch("cognithor.utils.logging.setup_logging"),
                 patch("cognithor.utils.logging.get_logger", return_value=mock_logger),
             ):

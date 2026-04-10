@@ -212,14 +212,18 @@ class TestDockerPs:
             assert "nginx" in result
 
     async def test_ps_all(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")
+        ) as mock:
             await docker.docker_ps(all=True)
             # Verify -a flag was passed
             call_args = mock.call_args[0]
             assert "-a" in call_args
 
     async def test_ps_with_filter(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")
+        ) as mock:
             await docker.docker_ps(filter="name=web")
             call_args = mock.call_args[0]
             assert "--filter" in call_args
@@ -231,7 +235,9 @@ class TestDockerPs:
             assert "No containers" in result
 
     async def test_ps_error(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(1, "", "Cannot connect")):
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(1, "", "Cannot connect")
+        ):
             result = await docker.docker_ps()
             assert "Error" in result
 
@@ -247,14 +253,18 @@ class TestDockerLogs:
             assert "log line 1" in result
 
     async def test_logs_with_tail(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")
+        ) as mock:
             await docker.docker_logs(container="web", tail=50)
             call_args = mock.call_args[0]
             assert "--tail" in call_args
             assert "50" in call_args
 
     async def test_logs_with_since(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")
+        ) as mock:
             await docker.docker_logs(container="web", since="1h")
             call_args = mock.call_args[0]
             assert "--since" in call_args
@@ -267,14 +277,18 @@ class TestDockerLogs:
 
     async def test_logs_follow_ignored(self, docker: DockerTools) -> None:
         """follow=True should be silently ignored."""
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")
+        ) as mock:
             await docker.docker_logs(container="web", follow=True)
             call_args = mock.call_args[0]
             assert "--follow" not in call_args
             assert "-f" not in call_args
 
     async def test_logs_tail_clamped(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "output", "")
+        ) as mock:
             await docker.docker_logs(container="web", tail=999999)
             call_args = mock.call_args[0]
             assert "10000" in call_args  # Clamped to max
@@ -290,7 +304,9 @@ class TestDockerInspect:
             assert "abc123" in result
 
     async def test_inspect_with_format(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "running", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "running", "")
+        ) as mock:
             await docker.docker_inspect(target="web", format="{{.State.Status}}")
             call_args = mock.call_args[0]
             assert "--format" in call_args
@@ -310,7 +326,9 @@ class TestDockerRun:
     """Tests fuer docker_run -- inkl. Security-Checks."""
 
     async def test_run_basic(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123def456\n", "")):
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123def456\n", "")
+        ):
             result = await docker.docker_run(image="nginx:latest")
             assert "started successfully" in result.lower() or "abc123" in result
 
@@ -320,7 +338,9 @@ class TestDockerRun:
             assert "web-server" in result
 
     async def test_run_with_ports(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")
+        ) as mock:
             await docker.docker_run(image="nginx", ports=["8080:80"])
             call_args = mock.call_args[0]
             assert "-p" in call_args
@@ -332,7 +352,9 @@ class TestDockerRun:
         assert "Invalid port" in result
 
     async def test_run_with_env(self, docker: DockerTools) -> None:
-        with patch("cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")) as mock:
+        with patch(
+            "cognithor.mcp.docker_tools._run_docker", return_value=(0, "abc123\n", "")
+        ) as mock:
             await docker.docker_run(image="nginx", env={"NODE_ENV": "production"})
             call_args = mock.call_args[0]
             assert "-e" in call_args

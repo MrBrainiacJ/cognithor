@@ -64,7 +64,9 @@ class TemplateManager:
     """
 
     def __init__(self, templates_dir: Path | None = None) -> None:
-        self._templates_dir = templates_dir or Path.home() / ".cognithor" / "templates" / "documents"
+        self._templates_dir = (
+            templates_dir or Path.home() / ".cognithor" / "templates" / "documents"
+        )
         self._templates: dict[str, DocumentTemplate] = {}
         self._load_templates()
 
