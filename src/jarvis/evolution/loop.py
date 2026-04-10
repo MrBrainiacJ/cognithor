@@ -1127,9 +1127,21 @@ class EvolutionLoop:
                         log.debug("evolution_retest_failed", exc_info=True)
 
         # --- Tier 2: User learning goals ---
-        goals: list[str] = []
+        raw_goals = []
         if self._config and hasattr(self._config, "learning_goals"):
-            goals = self._config.learning_goals or []
+            raw_goals = self._config.learning_goals or []
+
+        # Normalize: support both strings and dicts
+        goals: list[str] = []
+        for g in raw_goals:
+            if isinstance(g, str):
+                goals.append(g)
+            elif isinstance(g, dict):
+                title = g.get("title", "")
+                desc = g.get("description", "")
+                status = g.get("status", "active")
+                if title and status == "active":
+                    goals.append(f"{title}: {desc}" if desc else title)
 
         if goals:
             # Auto-promote complex goals to deep learning plans
