@@ -59,9 +59,16 @@ def _silence_library_loggers() -> None:
 from jarvis import BANNER_ASCII, __version__
 
 if TYPE_CHECKING:
+    from starlette.types import ASGIApp, Receive, Scope, Send
+
+# Must be importable at runtime for FastAPI endpoint signature resolution
+# (PEP 563 stores annotations as strings; FastAPI resolves them via __globals__)
+try:
     from starlette.requests import Request as _BootstrapRequest
     from starlette.requests import Request as _STRequest
-    from starlette.types import ASGIApp, Receive, Scope, Send
+except ImportError:
+    _BootstrapRequest = None  # type: ignore[assignment,misc]
+    _STRequest = None  # type: ignore[assignment,misc]
 
 # WebSocket/FastAPI types must be at module level so that
 # `from __future__ import annotations` (PEP 563) can resolve
