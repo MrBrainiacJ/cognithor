@@ -395,6 +395,16 @@ class Gateway:
             if browser_agent:
                 self._reddit_lead_service._poster._browser_agent = browser_agent
 
+        # Identity Tools: register MCP tools for cognitive identity interface
+        if getattr(self, "_identity_layer", None) and self._mcp_client:
+            try:
+                from jarvis.mcp.identity_tools import register_identity_tools
+
+                register_identity_tools(self._mcp_client, self._identity_layer, config=self._config)
+                log.info("identity_mcp_tools_registered")
+            except Exception:
+                log.debug("identity_mcp_tools_registration_failed", exc_info=True)
+
         if getattr(self, "_session_analyzer", None) and self._memory_manager:
             self._session_analyzer._memory_manager = self._memory_manager
 
