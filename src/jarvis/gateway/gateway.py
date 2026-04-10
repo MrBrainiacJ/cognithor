@@ -57,6 +57,8 @@ from jarvis.models import (
     Message,
     MessageRole,
     OutgoingMessage,
+    PlannedAction,
+    RiskLevel,
     SessionContext,
     ToolResult,
     WorkingMemory,
@@ -3120,8 +3122,23 @@ class Gateway:
                 except Exception:
                     log.debug("identity_enrich_failed", exc_info=True)
 
+            # Hard-routing: skills with force_tool bypass the Planner's tool selection
+            _force_plan = None
+            if (
+                active_skill is not None
+                and session.iteration_count == 1
+                and hasattr(active_skill, "skill")
+                and active_skill.skill is not None
+                and active_skill.skill.slug == "reddit_lead_hunter"
+            ):
+                _force_plan = self._build_reddit_forced_plan(msg.text)
+                if _force_plan is not None:
+                    log.info("reddit_hard_route_applied", goal=_force_plan.goal)
+
             # Planner
-            if session.iteration_count == 1:
+            if _force_plan is not None:
+                plan = _force_plan
+            elif session.iteration_count == 1:
                 plan = await self._planner.plan(
                     user_message=msg.text,
                     working_memory=wm,
@@ -4905,6 +4922,60 @@ class Gateway:
             text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
 
         return text
+
+    def _build_reddit_forced_plan(self, user_text: str) -> ActionPlan | None:
+        """Build a forced ActionPlan that calls reddit_scan directly.
+
+        Extracts product and subreddit names from the user message.
+        Returns None if insufficient info to build a plan.
+        """
+        import re as _re
+
+        text_lower = user_text.lower()
+
+        # Extract subreddits from message (r/Name or just Name after "in")
+        subs = _re.findall(r"r/(\w+)", user_text)
+        if not subs:
+            # Try "in XYZ" pattern
+            m = _re.search(r"\bin\s+(\w+)", text_lower)
+            if m and m.group(1) not in ("einem", "einem", "der", "die", "das", "den"):
+                subs = [m.group(1)]
+
+        # Extract product name — use config default or try to find in text
+        svc = getattr(self, "_reddit_lead_service", None)
+        product = ""
+        if svc:
+            product = svc._scan_config.product_name
+
+        # Try to find product in text (after "für/for")
+        m = _re.search(r"(?:fuer|für|for)\s+(\w+)", user_text, _re.IGNORECASE)
+        if m:
+            candidate = m.group(1)
+            # Don't use common stop words as product
+            if candidate.lower() not in ("mich", "uns", "dich", "das", "die", "den"):
+                product = candidate
+
+        if not product:
+            return None
+
+        params: dict[str, Any] = {"product": product}
+        if subs:
+            params["subreddits"] = ",".join(subs)
+
+        return ActionPlan(
+            goal=f"Reddit-Leads fuer {product} scannen"
+            + (f" in r/{',r/'.join(subs)}" if subs else ""),
+            reasoning=f"Skill reddit_lead_hunter matched — direkter reddit_scan Aufruf (hard-routed)",
+            steps=[
+                PlannedAction(
+                    tool="reddit_scan",
+                    params=params,
+                    rationale=f"Reddit nach {product}-relevanten Posts scannen",
+                    risk_estimate=RiskLevel.GREEN,
+                )
+            ],
+            confidence=0.95,
+        )
 
     async def _maybe_presearch(self, msg: IncomingMessage, wm: WorkingMemory) -> str | None:
         """Fuehrt automatisch eine Web-Suche durch wenn die Nachricht eine Faktenfrage ist.

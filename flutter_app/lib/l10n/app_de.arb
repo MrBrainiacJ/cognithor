@@ -973,6 +973,9 @@
   "discoverSubreddits": "Subreddits entdecken",
   "discovering": "Entdecke...",
 
+  "pendingReview": "Freigabe",
+  "approveTask": "Freigeben",
+  "rejectTask": "Ablehnen",
   "scheduled": "Geplant",
   "noScheduledTasks": "Keine geplanten Aufgaben",
   "scheduledTasksHint": "Konfiguriere Cron-Jobs unter Administration, um wiederkehrende Aufgaben zu planen.",

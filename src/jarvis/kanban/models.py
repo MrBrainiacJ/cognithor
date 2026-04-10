@@ -13,6 +13,7 @@ from typing import Any
 class TaskStatus(str, Enum):
     TODO = "todo"
     IN_PROGRESS = "in_progress"
+    PENDING_REVIEW = "pending_review"
     VERIFYING = "verifying"
     DONE = "done"
     BLOCKED = "blocked"
@@ -38,10 +39,17 @@ class TaskSource(str, Enum):
 VALID_TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
     TaskStatus.TODO: {TaskStatus.IN_PROGRESS, TaskStatus.CANCELLED},
     TaskStatus.IN_PROGRESS: {
+        TaskStatus.PENDING_REVIEW,
         TaskStatus.VERIFYING,
         TaskStatus.BLOCKED,
         TaskStatus.CANCELLED,
         TaskStatus.TODO,
+    },
+    TaskStatus.PENDING_REVIEW: {
+        TaskStatus.DONE,  # approved → execute & done
+        TaskStatus.IN_PROGRESS,  # rejected → back to work
+        TaskStatus.TODO,  # rejected → rethink
+        TaskStatus.CANCELLED,
     },
     TaskStatus.VERIFYING: {TaskStatus.DONE, TaskStatus.IN_PROGRESS},
     TaskStatus.BLOCKED: {TaskStatus.IN_PROGRESS, TaskStatus.TODO, TaskStatus.CANCELLED},

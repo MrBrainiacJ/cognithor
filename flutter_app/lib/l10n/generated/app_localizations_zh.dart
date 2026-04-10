@@ -2760,6 +2760,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discovering => '发现中...';
 
   @override
+  String get pendingReview => '待审核';
+
+  @override
+  String get approveTask => '批准';
+
+  @override
+  String get rejectTask => '拒绝';
+
+  @override
   String get scheduled => '计划任务';
 
   @override

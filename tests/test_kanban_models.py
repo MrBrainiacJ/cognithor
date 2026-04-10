@@ -15,8 +15,9 @@ from jarvis.kanban.models import (
 
 class TestTaskStatus:
     def test_all_values(self):
-        assert len(TaskStatus) == 6
+        assert len(TaskStatus) == 7
         assert TaskStatus.TODO == "todo"
+        assert TaskStatus.PENDING_REVIEW == "pending_review"
         assert TaskStatus.CANCELLED == "cancelled"
 
 

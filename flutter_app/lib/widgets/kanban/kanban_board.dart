@@ -7,11 +7,12 @@ import 'package:jarvis_ui/widgets/kanban/kanban_column.dart';
 class KanbanBoard extends StatelessWidget {
   const KanbanBoard({super.key});
 
-  static const _columnOrder = ['todo', 'in_progress', 'verifying', 'done', 'blocked'];
+  static const _columnOrder = ['todo', 'in_progress', 'pending_review', 'verifying', 'done', 'blocked'];
 
   static const _columnColors = {
     'todo': Colors.grey,
     'in_progress': Colors.blueAccent,
+    'pending_review': Colors.amber,
     'verifying': Colors.orange,
     'done': Colors.green,
     'blocked': Colors.red,
@@ -20,6 +21,7 @@ class KanbanBoard extends StatelessWidget {
   Map<String, String> _columnLabels(AppLocalizations l) => {
     'todo': l.toDo,
     'in_progress': l.kanbanInProgress,
+    'pending_review': l.pendingReview,
     'verifying': l.verifying,
     'done': l.kanbanDone,
     'blocked': l.kanbanBlocked,

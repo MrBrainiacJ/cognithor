@@ -2785,6 +2785,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discovering => 'Discovering...';
 
   @override
+  String get pendingReview => 'Pending Review';
+
+  @override
+  String get approveTask => 'Approve';
+
+  @override
+  String get rejectTask => 'Reject';
+
+  @override
   String get scheduled => 'Scheduled';
 
   @override

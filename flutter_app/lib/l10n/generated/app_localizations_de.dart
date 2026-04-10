@@ -2793,6 +2793,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get discovering => 'Entdecke...';
 
   @override
+  String get pendingReview => 'Freigabe';
+
+  @override
+  String get approveTask => 'Freigeben';
+
+  @override
+  String get rejectTask => 'Ablehnen';
+
+  @override
   String get scheduled => 'Geplant';
 
   @override

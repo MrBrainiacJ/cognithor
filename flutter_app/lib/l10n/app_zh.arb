@@ -964,6 +964,9 @@
   "discoverSubreddits": "发现子版块",
   "discovering": "发现中...",
 
+  "pendingReview": "待审核",
+  "approveTask": "批准",
+  "rejectTask": "拒绝",
   "scheduled": "计划任务",
   "noScheduledTasks": "没有计划任务",
   "scheduledTasksHint": "在管理中配置定时任务以安排周期性任务。",

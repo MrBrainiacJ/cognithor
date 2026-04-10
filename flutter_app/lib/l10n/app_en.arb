@@ -1634,6 +1634,12 @@
   "discovering": "Discovering...",
   "@discovering": {},
 
+  "pendingReview": "Pending Review",
+  "@pendingReview": {},
+  "approveTask": "Approve",
+  "@approveTask": {},
+  "rejectTask": "Reject",
+  "@rejectTask": {},
   "scheduled": "Scheduled",
   "@scheduled": {},
   "noScheduledTasks": "No scheduled tasks",

@@ -2777,6 +2777,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get discovering => 'جارٍ الاكتشاف...';
 
   @override
+  String get pendingReview => 'بانتظار المراجعة';
+
+  @override
+  String get approveTask => 'موافقة';
+
+  @override
+  String get rejectTask => 'رفض';
+
+  @override
   String get scheduled => 'المهام المجدولة';
 
   @override

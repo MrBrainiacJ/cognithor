@@ -5478,6 +5478,24 @@ abstract class AppLocalizations {
   /// **'Discovering...'**
   String get discovering;
 
+  /// No description provided for @pendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Review'**
+  String get pendingReview;
+
+  /// No description provided for @approveTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approveTask;
+
+  /// No description provided for @rejectTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get rejectTask;
+
   /// No description provided for @scheduled.
   ///
   /// In en, this message translates to:

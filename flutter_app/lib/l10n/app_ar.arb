@@ -964,6 +964,9 @@
   "discoverSubreddits": "اكتشاف المنتديات",
   "discovering": "جارٍ الاكتشاف...",
 
+  "pendingReview": "بانتظار المراجعة",
+  "approveTask": "موافقة",
+  "rejectTask": "رفض",
   "scheduled": "المهام المجدولة",
   "noScheduledTasks": "لا توجد مهام مجدولة",
   "scheduledTasksHint": "قم بتكوين المهام المتكررة في الإدارة لجدولة المهام الدورية.",
