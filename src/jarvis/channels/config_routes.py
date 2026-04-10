@@ -3899,27 +3899,144 @@ def _register_ui_routes(
 
     @app.get("/api/v1/evolution/goals", dependencies=deps)
     async def get_evolution_goals() -> dict[str, Any]:
-        """Get user-defined learning goals."""
+        """Get user-defined learning goals as structured objects."""
         evo = getattr(config_manager.config, "evolution", None)
-        goals = getattr(evo, "learning_goals", []) if evo else []
+        raw = getattr(evo, "learning_goals", []) if evo else []
+        # Normalize: support both string list and dict list
+        goals = []
+        for i, g in enumerate(raw):
+            if isinstance(g, str):
+                goals.append(
+                    {
+                        "id": f"goal_{i}",
+                        "title": g,
+                        "description": "",
+                        "status": "active",
+                        "priority": 3,
+                        "progress": 0.0,
+                    }
+                )
+            elif isinstance(g, dict):
+                g.setdefault("id", f"goal_{i}")
+                g.setdefault("status", "active")
+                g.setdefault("priority", 3)
+                g.setdefault("progress", 0.0)
+                g.setdefault("description", "")
+                goals.append(g)
         return {"goals": goals}
+
+    def _save_goals(goals: list[dict[str, Any]]) -> None:
+        config_manager.update_section("evolution", {"learning_goals": goals})
+        config_manager.save()
+        loop = getattr(gateway, "_evolution_loop", None)
+        if loop and loop._config:
+            loop._config.learning_goals = [g.get("title", "") for g in goals if isinstance(g, dict)]
 
     @app.put("/api/v1/evolution/goals", dependencies=deps)
     async def set_evolution_goals(request: Request) -> dict[str, Any]:
-        """Set user-defined learning goals."""
+        """Replace all learning goals."""
         try:
             body = await request.json()
             goals = body.get("goals", [])
             if not isinstance(goals, list):
-                return {"error": "goals must be a list of strings"}
-            goals = [str(g).strip() for g in goals if str(g).strip()]
-            config_manager.update_section("evolution", {"learning_goals": goals})
-            config_manager.save()
-            # Live-update the running evolution loop
-            loop = getattr(gateway, "_evolution_loop", None)
-            if loop and loop._config:
-                loop._config.learning_goals = goals
-            return {"goals": goals, "count": len(goals)}
+                return {"error": "goals must be a list"}
+            # Normalize strings to dicts
+            normalized = []
+            for i, g in enumerate(goals):
+                if isinstance(g, str):
+                    normalized.append(
+                        {
+                            "id": f"goal_{i}",
+                            "title": g,
+                            "description": "",
+                            "status": "active",
+                            "priority": 3,
+                            "progress": 0.0,
+                        }
+                    )
+                elif isinstance(g, dict):
+                    normalized.append(g)
+            _save_goals(normalized)
+            return {"goals": normalized, "count": len(normalized)}
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @app.post("/api/v1/evolution/goals", dependencies=deps)
+    async def add_evolution_goal(request: Request) -> dict[str, Any]:
+        """Add a single learning goal."""
+        try:
+            body = await request.json()
+            title = body.get("title", "").strip()
+            if not title:
+                return {"error": "title is required"}
+            # Load existing
+            evo = getattr(config_manager.config, "evolution", None)
+            raw = getattr(evo, "learning_goals", []) if evo else []
+            existing = []
+            for i, g in enumerate(raw):
+                if isinstance(g, str):
+                    existing.append(
+                        {
+                            "id": f"goal_{i}",
+                            "title": g,
+                            "description": "",
+                            "status": "active",
+                            "priority": 3,
+                            "progress": 0.0,
+                        }
+                    )
+                elif isinstance(g, dict):
+                    existing.append(g)
+            # Add new
+            import uuid
+
+            new_goal = {
+                "id": uuid.uuid4().hex[:12],
+                "title": title,
+                "description": body.get("description", ""),
+                "status": "active",
+                "priority": body.get("priority", 3),
+                "progress": 0.0,
+            }
+            existing.append(new_goal)
+            _save_goals(existing)
+            return new_goal
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @app.patch("/api/v1/evolution/goals/{goal_id}", dependencies=deps)
+    async def update_evolution_goal(goal_id: str, request: Request) -> dict[str, Any]:
+        """Update a single learning goal."""
+        try:
+            body = await request.json()
+            evo = getattr(config_manager.config, "evolution", None)
+            raw = getattr(evo, "learning_goals", []) if evo else []
+            goals = []
+            for i, g in enumerate(raw):
+                if isinstance(g, str):
+                    goals.append(
+                        {
+                            "id": f"goal_{i}",
+                            "title": g,
+                            "description": "",
+                            "status": "active",
+                            "priority": 3,
+                            "progress": 0.0,
+                        }
+                    )
+                elif isinstance(g, dict):
+                    goals.append(g)
+            updated = None
+            for g in goals:
+                if g.get("id") == goal_id:
+                    for k, v in body.items():
+                        g[k] = v
+                    updated = g
+                    break
+            if updated is None:
+                return {"error": "Goal not found"}
+            _save_goals(goals)
+            return updated
         except Exception as exc:
             return {"error": str(exc)}
 
