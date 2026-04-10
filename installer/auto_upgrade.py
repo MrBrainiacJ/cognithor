@@ -120,6 +120,16 @@ def main() -> None:
                     dest_data.mkdir(parents=True, exist_ok=True)
                     for f in src_data.glob("*.md"):
                         shutil.copy2(f, dest_data / f.name)
+                # Sync Flutter web UI if a build exists
+                src_web = candidate / "flutter_app" / "build" / "web"
+                install_dir = Path(sys.executable).parent.parent
+                dest_web = install_dir / "flutter_app" / "web"
+                if src_web.is_dir() and (src_web / "index.html").exists():
+                    if dest_web.exists():
+                        shutil.rmtree(dest_web)
+                    dest_web.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(src_web, dest_web)
+                    print(f"  [OK] Flutter UI synced")
                 print(f"  [OK] Upgraded to v{dev_ver}")
             except Exception as exc:
                 print(f"  [WARN] Upgrade failed: {exc}")
