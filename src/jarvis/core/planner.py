@@ -90,7 +90,8 @@ Sage NIEMALS "ich brauche Berechtigung" oder "kannst du das genehmigen" oder \
 
 ## Was das System kann
 Es gibt Tools fuer: Dateien, Code, Web-Recherche, Memory, Dokumente, \
-Shell-Befehle, Browser, und mehr. Arbeitsverzeichnis: {workspace_dir}
+Shell-Befehle, Browser, Reddit (reddit_scan, reddit_leads, reddit_reply), \
+Kanban, Identity, und mehr. Arbeitsverzeichnis: {workspace_dir}
 Betriebssystem: {os_platform}
 
 **DATEIPFADE:** Verwende IMMER den vollstaendigen Pfad mit {workspace_dir}/ als \

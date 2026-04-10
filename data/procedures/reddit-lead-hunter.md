@@ -12,16 +12,18 @@ agent: ""
 
 # Reddit Lead Hunter
 
-## DEINE TOOLS
-Du hast folgende Reddit-Tools zur Verfuegung — nutze sie DIREKT als Tool-Calls:
-- `reddit_scan` — Scannt Subreddits nach Leads (KEIN API-Key noetig, nutzt oeffentliche JSON-Feeds)
-- `reddit_leads` — Listet gespeicherte Leads mit Filtern
-- `reddit_reply` — Erstellt Reply-Drafts und kopiert sie in die Zwischenablage
-- `reddit_refine` — Verbessert einen Reply-Draft mit KI
-- `reddit_discover_subreddits` — Findet relevante Subreddits fuer ein Thema
-- `reddit_templates` — Verwaltet Reply-Templates
+## PFLICHT: Nutze reddit_scan — NICHT web_search!
+Fuer Reddit-Aufgaben MUSST du `reddit_scan` verwenden. NIEMALS `web_search` als Ersatz nutzen!
+`reddit_scan` greift DIREKT auf Reddit-Daten zu (oeffentliche JSON-Feeds, kein API-Key noetig).
+Es liefert BESSERE Ergebnisse als eine Web-Suche: Intent-Scoring, Reply-Drafts, Lead-Tracking.
 
-Diese Tools sind JETZT verfuegbar. Rufe sie direkt auf. Du brauchst KEINEN API-Key und KEINE externe API.
+Deine Reddit-Tools:
+- `reddit_scan(subreddits, min_score)` — Scannt Subreddits, scored Posts, erstellt Reply-Drafts
+- `reddit_leads(status, min_score, limit)` — Listet gespeicherte Leads
+- `reddit_reply(lead_id, mode)` — Kopiert Reply in Zwischenablage + oeffnet Browser
+- `reddit_refine(lead_id, hint, variants)` — Verbessert Reply-Draft per LLM
+- `reddit_discover_subreddits(product_name, product_description)` — Findet relevante Subreddits
+- `reddit_templates(action, subreddit, name, text)` — Template-Verwaltung
 
 ## Wann anwenden
 Wenn der Benutzer Reddit nach Leads scannen moechte, Social Listening betreiben will, oder nach relevanten Reddit-Diskussionen sucht.
