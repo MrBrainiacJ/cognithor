@@ -58,6 +58,7 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
         "agent_heartbeat": None,
         "command_registry": None,
         "interaction_store": None,
+        "reddit_lead_service": None,
     }
 
     # ── Enterprise Placeholders (deferred) ──────────────────────────────

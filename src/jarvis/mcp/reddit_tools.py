@@ -124,7 +124,7 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         description=(
             "Scan Reddit subreddits for high-intent leads. Returns scored posts with reply drafts."
         ),
-        parameters={
+        input_schema={
             "subreddits": {
                 "type": "string",
                 "description": "Comma-separated subreddit names (default: config)",
@@ -139,7 +139,7 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         "reddit_leads",
         _reddit_leads,
         description="List current Reddit leads with filters.",
-        parameters={
+        input_schema={
             "status": {
                 "type": "string",
                 "description": "Filter: new, reviewed, replied, archived",
@@ -152,7 +152,7 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         "reddit_reply",
         _reddit_reply,
         description="Post a reply to a Reddit lead. Copies to clipboard and opens browser.",
-        parameters={
+        input_schema={
             "lead_id": {"type": "string", "description": "Lead ID to reply to"},
             "mode": {
                 "type": "string",
@@ -233,7 +233,7 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         "reddit_refine",
         _reddit_refine,
         description="Refine a reply draft via LLM. Set variants>0 to generate multiple options.",
-        parameters={
+        input_schema={
             "lead_id": {"type": "string", "description": "Lead ID"},
             "hint": {"type": "string", "description": "Optional: direction for refinement"},
             "variants": {
@@ -246,7 +246,7 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         "reddit_discover_subreddits",
         _reddit_discover_subreddits,
         description="Discover relevant subreddits for a product via LLM + Reddit validation.",
-        parameters={
+        input_schema={
             "product_name": {
                 "type": "string",
                 "description": "Product name (default: config)",
@@ -261,7 +261,7 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         "reddit_templates",
         _reddit_templates,
         description="Manage reply templates. Actions: list, create, delete.",
-        parameters={
+        input_schema={
             "action": {"type": "string", "description": "list, create, or delete"},
             "subreddit": {
                 "type": "string",
