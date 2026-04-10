@@ -12,14 +12,13 @@ class EvolutionConfigPage extends StatelessWidget {
       builder: (context, cfg, _) {
         final evo = cfg.cfg['evolution'] as Map<String, dynamic>? ?? {};
         final enabled = evo['enabled'] == true;
-        final idleThreshold = ((evo['idle_threshold_seconds'] as num?) ?? 300).toInt();
+        final idleMinutes = ((evo['idle_minutes'] as num?) ?? 5).toInt();
         final maxCycles = ((evo['max_cycles_per_day'] as num?) ?? 10).toInt();
-        final llmEnabled = evo['llm_enabled'] == true;
+        final deepLearning = evo['deep_learning_enabled'] == true;
 
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Evolution Engine Toggle
             SwitchListTile(
               title: const Text('Evolution Engine'),
               subtitle: const Text('Enable autonomous learning during idle time'),
@@ -28,34 +27,30 @@ class EvolutionConfigPage extends StatelessWidget {
               onChanged: (v) => cfg.set('evolution.enabled', v),
             ),
             const Divider(height: 24),
-
-            // Idle Threshold
             ListTile(
               title: const Text('Idle Threshold'),
-              subtitle: Text('Start learning after $idleThreshold seconds of inactivity'),
+              subtitle: Text('Start learning after $idleMinutes minutes of inactivity'),
               trailing: SizedBox(
                 width: 120,
                 child: DropdownButtonFormField<int>(
-                  value: [60, 120, 300, 600, 900, 1800].contains(idleThreshold) ? idleThreshold : 300,
+                  value: [1, 2, 5, 10, 15, 30].contains(idleMinutes) ? idleMinutes : 5,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 60, child: Text('1 min')),
-                    DropdownMenuItem(value: 120, child: Text('2 min')),
-                    DropdownMenuItem(value: 300, child: Text('5 min')),
-                    DropdownMenuItem(value: 600, child: Text('10 min')),
-                    DropdownMenuItem(value: 900, child: Text('15 min')),
-                    DropdownMenuItem(value: 1800, child: Text('30 min')),
+                    DropdownMenuItem(value: 1, child: Text('1 min')),
+                    DropdownMenuItem(value: 2, child: Text('2 min')),
+                    DropdownMenuItem(value: 5, child: Text('5 min')),
+                    DropdownMenuItem(value: 10, child: Text('10 min')),
+                    DropdownMenuItem(value: 15, child: Text('15 min')),
+                    DropdownMenuItem(value: 30, child: Text('30 min')),
                   ],
-                  onChanged: (v) => cfg.set('evolution.idle_threshold_seconds', v),
+                  onChanged: (v) => cfg.set('evolution.idle_minutes', v),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-
-            // Max Cycles per Day
             ListTile(
               title: const Text('Max Cycles / Day'),
               subtitle: Text('$maxCycles cycles allowed per day'),
@@ -80,14 +75,12 @@ class EvolutionConfigPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
-            // LLM Enabled
             SwitchListTile(
-              title: const Text('LLM-powered Learning'),
-              subtitle: const Text('Use LLM for research (costs tokens). Disable for memory-only mode.'),
-              value: llmEnabled,
+              title: const Text('Deep Learning Plans'),
+              subtitle: const Text('Auto-promote complex goals to structured learning plans'),
+              value: deepLearning,
               activeColor: JarvisTheme.accent,
-              onChanged: (v) => cfg.set('evolution.llm_enabled', v),
+              onChanged: (v) => cfg.set('evolution.deep_learning_enabled', v),
             ),
           ],
         );
