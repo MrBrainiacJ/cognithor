@@ -2462,6 +2462,7 @@ class Gateway:
                         agent_workspace,
                         run_id,
                         stream_callback=stream_callback,
+                        active_skill=active_skill,
                     )
                 else:
                     await _pipeline_cb(
@@ -2485,6 +2486,7 @@ class Gateway:
                     agent_workspace,
                     run_id,
                     stream_callback=stream_callback,
+                    active_skill=active_skill,
                 )
         finally:
             _cleanup_skill_state()
@@ -2954,6 +2956,7 @@ class Gateway:
         agent_workspace: Any,
         run_id: str | None,
         stream_callback: Any | None = None,
+        active_skill: Any | None = None,
     ) -> tuple[str, list[ToolResult], list[ActionPlan], list[AuditEntry]]:
         """Phase 3: Plan → Gate → Execute Loop.
 
