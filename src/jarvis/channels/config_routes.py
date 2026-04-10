@@ -4040,6 +4040,61 @@ def _register_ui_routes(
         except Exception as exc:
             return {"error": str(exc)}
 
+    @app.get("/api/v1/evolution/journal", dependencies=deps)
+    async def get_evolution_journal(days: int = 7) -> dict[str, Any]:
+        """Get evolution journal from recent cycle results and vault entries."""
+        try:
+            from pathlib import Path as _P
+            from datetime import datetime, timedelta, UTC
+
+            lines: list[str] = []
+            cutoff = datetime.now(UTC) - timedelta(days=days)
+
+            # Source 1: Evolution vault entries
+            vault_dir = _P(config_manager.config.jarvis_home) / "vault" / "wissen"
+            if vault_dir.exists():
+                for f in sorted(
+                    vault_dir.glob("*.md"), key=lambda x: x.stat().st_mtime, reverse=True
+                )[:30]:
+                    mtime = datetime.fromtimestamp(f.stat().st_mtime, tz=UTC)
+                    if mtime < cutoff:
+                        continue
+                    title = f.stem.replace("-", " ")[:80]
+                    size_kb = f.stat().st_size / 1024
+                    lines.append(
+                        f"[{mtime.strftime('%Y-%m-%d %H:%M')}] Researched: {title} ({size_kb:.1f} KB)"
+                    )
+
+            # Source 2: Evolution loop stats
+            evo_loop = getattr(gateway, "_evolution_loop", None)
+            if evo_loop:
+                stats = evo_loop.stats()
+                lines.insert(0, f"## Evolution Engine Status")
+                lines.insert(1, f"- Cycles today: {stats.get('cycles_today', 0)}")
+                lines.insert(2, f"- Total cycles: {stats.get('total_cycles', 0)}")
+                lines.insert(3, f"- Status: {'Running' if stats.get('running') else 'Stopped'}")
+                lines.insert(4, "")
+
+            # Source 3: Deep learner plan progress
+            dl = getattr(gateway, "_deep_learner", None)
+            if dl:
+                plans = dl.list_plans()
+                if plans:
+                    lines.append("")
+                    lines.append("## Learning Plans Progress")
+                    for p in plans:
+                        passed = sum(
+                            1 for sg in p.sub_goals if sg.status in ("verified", "completed")
+                        )
+                        total = len(p.sub_goals)
+                        lines.append(f"- {p.goal[:60]}: {passed}/{total} sub-goals")
+
+            content = "\n".join(lines) if lines else ""
+            return {"content": content}
+        except Exception as exc:
+            log.error("evolution_journal_failed", error=str(exc))
+            return {"content": "", "error": str(exc)}
+
     @app.get("/api/v1/evolution/plans", dependencies=deps)
     async def list_evolution_plans() -> dict[str, Any]:
         """List all learning plans."""
