@@ -88,96 +88,82 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
     # To activate any of them, move the import block back here and
     # wire the key methods into handle_message() or a background task.
 
-    # Phase 16b: DAG WorkflowEngine (this one IS used — wired in gateway.py)
-    try:
+    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".jarvis")
+
+    # --- All subsystems via _safe_call (failures logged + tracked) ---
+
+    def _init_dag():
         from jarvis.core.workflow_engine import WorkflowEngine as DAGWorkflowEngine
 
-        result["dag_workflow_engine"] = DAGWorkflowEngine()
-    except Exception:
-        log.debug("dag_workflow_engine_init_skipped", exc_info=True)
+        return DAGWorkflowEngine()
 
-    # GEPA — Execution Trace Store
-    try:
+    _init_subsystem("dag_workflow_engine", result, _init_dag)
+
+    def _init_trace_store():
         from jarvis.learning.execution_trace import TraceStore
 
-        trace_db = str(config.db_path.with_name("memory_traces.db"))
-        result["trace_store"] = TraceStore(Path(trace_db))
-        log.info("trace_store_initialized", db=trace_db)
-    except Exception:
-        log.debug("trace_store_init_skipped", exc_info=True)
+        return TraceStore(Path(str(config.db_path.with_name("memory_traces.db"))))
 
-    # GEPA — Proposal Store
-    try:
+    _init_subsystem("trace_store", result, _init_trace_store)
+
+    def _init_proposal_store():
         from jarvis.learning.trace_optimizer import ProposalStore
 
-        proposal_db = str(config.db_path.with_name("memory_proposals.db"))
-        result["proposal_store"] = ProposalStore(Path(proposal_db))
-        log.info("proposal_store_initialized", db=proposal_db)
-    except Exception:
-        log.debug("proposal_store_init_skipped", exc_info=True)
+        return ProposalStore(Path(str(config.db_path.with_name("memory_proposals.db"))))
 
-    # GEPA — Evolution Orchestrator (uses TraceStore + ProposalStore from above)
-    try:
+    _init_subsystem("proposal_store", result, _init_proposal_store)
+
+    def _init_gepa():
         from jarvis.learning.causal_attributor import CausalAttributor
         from jarvis.learning.evolution_orchestrator import EvolutionOrchestrator
         from jarvis.learning.trace_optimizer import TraceOptimizer
 
-        if getattr(config, "gepa", None) and config.gepa.enabled:
-            ts = result.get("trace_store")
-            ps = result.get("proposal_store")
-            if ts and ps:
-                result["evolution_orchestrator"] = EvolutionOrchestrator(
-                    trace_store=ts,
-                    attributor=CausalAttributor(),
-                    optimizer=TraceOptimizer(proposal_store=ps),
-                    proposal_store=ps,
-                    min_traces=config.gepa.min_traces_for_proposal,
-                    max_active=config.gepa.max_active_optimizations,
-                    rollback_threshold=config.gepa.auto_rollback_threshold,
-                    auto_apply=config.gepa.auto_apply,
-                )
-                log.info("gepa_orchestrator_initialized")
-    except Exception:
-        log.debug("gepa_orchestrator_init_skipped", exc_info=True)
+        if not (getattr(config, "gepa", None) and config.gepa.enabled):
+            return None
+        ts = result.get("trace_store")
+        ps = result.get("proposal_store")
+        if not (ts and ps):
+            return None
+        return EvolutionOrchestrator(
+            trace_store=ts,
+            attributor=CausalAttributor(),
+            optimizer=TraceOptimizer(proposal_store=ps),
+            proposal_store=ps,
+            min_traces=config.gepa.min_traces_for_proposal,
+            max_active=config.gepa.max_active_optimizations,
+            rollback_threshold=config.gepa.auto_rollback_threshold,
+            auto_apply=config.gepa.auto_apply,
+        )
 
-    # StrategyMemory (Meta-Reasoning)
-    try:
+    _init_subsystem("evolution_orchestrator", result, _init_gepa)
+
+    def _init_strategy_memory():
         from jarvis.learning.strategy_memory import StrategyMemory
 
-        jarvis_home = getattr(config, "jarvis_home", Path.home() / ".jarvis")
-        strat_db = Path(jarvis_home) / "index" / "strategy_memory.db"
-        result["strategy_memory"] = StrategyMemory(db_path=strat_db)
-        log.info("strategy_memory_initialized", db=str(strat_db))
-    except Exception:
-        log.debug("strategy_memory_init_skipped", exc_info=True)
+        return StrategyMemory(db_path=Path(jarvis_home) / "index" / "strategy_memory.db")
 
-    # Reflexion Memory
-    try:
+    _init_subsystem("strategy_memory", result, _init_strategy_memory)
+
+    def _init_reflexion():
         from jarvis.learning.reflexion import ReflexionMemory
 
-        reflexion_dir = Path(getattr(config, "jarvis_home", Path.home() / ".jarvis")) / "memory"
-        result["reflexion_memory"] = ReflexionMemory(data_dir=reflexion_dir)
-        log.info("reflexion_memory_initialized", data_dir=str(reflexion_dir))
-    except Exception:
-        log.debug("reflexion_memory_init_skipped", exc_info=True)
+        return ReflexionMemory(data_dir=Path(jarvis_home) / "memory")
 
-    # HermesCompatLayer (agentskills.io SKILL.md import/export)
-    try:
+    _init_subsystem("reflexion_memory", result, _init_reflexion)
+
+    def _init_hermes():
         from jarvis.skills.hermes_compat import HermesCompatLayer
 
-        result["hermes_compat"] = HermesCompatLayer()
-    except Exception:
-        log.debug("hermes_compat_init_skipped", exc_info=True)
+        return HermesCompatLayer()
 
-    # RunRecorder (Forensic Run Recording)
-    try:
+    _init_subsystem("hermes_compat", result, _init_hermes)
+
+    def _init_run_recorder():
         from jarvis.forensics.run_recorder import RunRecorder
 
-        runs_db = str(config.db_path.with_name("memory_runs.db"))
-        result["run_recorder"] = RunRecorder(runs_db)
-        log.info("run_recorder_initialized", db=runs_db)
-    except Exception:
-        log.debug("run_recorder_init_skipped", exc_info=True)
+        return RunRecorder(str(config.db_path.with_name("memory_runs.db")))
+
+    _init_subsystem("run_recorder", result, _init_run_recorder)
 
     return result
 
@@ -202,162 +188,120 @@ async def init_advanced(
         run_recorder: RunRecorder (from declare_advanced_attrs).
     """
     result: PhaseResult = {}
+    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".jarvis")
 
-    # GovernanceAgent (needs PGE subsystems + CostTracker + RunRecorder)
-    try:
+    # --- All subsystems via _safe_call (failures logged + tracked) ---
+
+    def _init_governance():
         from jarvis.governance.governor import GovernanceAgent
 
-        gov_db = str(config.db_path.with_name("memory_governance.db"))
-        result["governance_agent"] = GovernanceAgent(
+        return GovernanceAgent(
             task_telemetry=task_telemetry,
             error_clusterer=error_clusterer,
             task_profiler=task_profiler,
             cost_tracker=cost_tracker,
             run_recorder=run_recorder,
-            db_path=gov_db,
+            db_path=str(config.db_path.with_name("memory_governance.db")),
         )
-        log.info("governance_agent_initialized", db=gov_db)
-    except Exception:
-        log.debug("governance_agent_init_skipped", exc_info=True)
 
-    # ImprovementGate
-    try:
+    _init_subsystem("governance_agent", result, _init_governance)
+
+    def _init_improvement_gate():
         from jarvis.governance.improvement_gate import ImprovementGate
 
         gate = ImprovementGate(config.improvement)
         if result.get("governance_agent"):
             result["governance_agent"].improvement_gate = gate
-        result["improvement_gate"] = gate
-        log.info("improvement_gate_initialized")
-    except Exception:
-        log.debug("improvement_gate_init_skipped", exc_info=True)
+        return gate
 
-    # PromptEvolutionEngine
-    try:
+    _init_subsystem("improvement_gate", result, _init_improvement_gate)
+
+    def _init_prompt_evolution():
         from jarvis.learning.prompt_evolution import PromptEvolutionEngine
 
-        if config.prompt_evolution.enabled:
-            pe_db = str(config.db_path.with_name("memory_prompt_evolution.db"))
-            result["prompt_evolution"] = PromptEvolutionEngine(
-                db_path=pe_db,
-                min_sessions_per_arm=config.prompt_evolution.min_sessions_per_arm,
-                significance_threshold=config.prompt_evolution.significance_threshold,
-                max_concurrent_tests=config.prompt_evolution.max_concurrent_tests,
-            )
-            log.info("prompt_evolution_initialized", db=pe_db)
-    except Exception:
-        log.debug("prompt_evolution_init_skipped", exc_info=True)
+        if not config.prompt_evolution.enabled:
+            return None
+        return PromptEvolutionEngine(
+            db_path=str(config.db_path.with_name("memory_prompt_evolution.db")),
+            min_sessions_per_arm=config.prompt_evolution.min_sessions_per_arm,
+            significance_threshold=config.prompt_evolution.significance_threshold,
+            max_concurrent_tests=config.prompt_evolution.max_concurrent_tests,
+        )
 
-    # SessionAnalyzer (Feedback-Loop, Failure-Clustering)
-    try:
+    _init_subsystem("prompt_evolution", result, _init_prompt_evolution)
+
+    def _init_session_analyzer():
         from jarvis.learning.session_analyzer import SessionAnalyzer
 
-        sa_dir = Path(getattr(config, "jarvis_home", Path.home() / ".jarvis")) / "memory"
-        result["session_analyzer"] = SessionAnalyzer(data_dir=sa_dir)
-        log.info("session_analyzer_initialized", data_dir=str(sa_dir))
-    except Exception:
-        log.debug("session_analyzer_init_skipped", exc_info=True)
+        return SessionAnalyzer(data_dir=Path(jarvis_home) / "memory")
 
-    # CuriosityEngine (Knowledge Gap Detection)
-    try:
+    _init_subsystem("session_analyzer", result, _init_session_analyzer)
+
+    def _init_curiosity():
         from jarvis.learning.curiosity import CuriosityEngine
 
-        result["curiosity_engine"] = CuriosityEngine()
-        log.info("curiosity_engine_initialized")
-    except Exception:
-        log.debug("curiosity_engine_init_skipped", exc_info=True)
+        return CuriosityEngine()
 
-    # KnowledgeConfidenceManager (Confidence Decay & Feedback)
-    try:
+    _init_subsystem("curiosity_engine", result, _init_curiosity)
+
+    def _init_confidence():
         from jarvis.learning.confidence import KnowledgeConfidenceManager
 
-        result["confidence_manager"] = KnowledgeConfidenceManager()
-        log.info("confidence_manager_initialized")
-    except Exception:
-        log.debug("confidence_manager_init_skipped", exc_info=True)
+        return KnowledgeConfidenceManager()
 
-    # ActiveLearner (Background file watching & learning)
-    try:
+    _init_subsystem("confidence_manager", result, _init_confidence)
+
+    def _init_active_learner():
         from jarvis.learning.active_learner import ActiveLearner
 
-        result["active_learner"] = ActiveLearner()
-        log.info("active_learner_initialized")
-    except Exception:
-        log.debug("active_learner_init_skipped", exc_info=True)
+        return ActiveLearner()
 
-    # ExplorationExecutor (needs CuriosityEngine)
-    try:
+    _init_subsystem("active_learner", result, _init_active_learner)
+
+    def _init_exploration():
         from jarvis.learning.explorer import ExplorationExecutor
 
-        curiosity = result.get("curiosity_engine")
-        mm = getattr(config, "_memory_manager", None)
-        result["exploration_executor"] = ExplorationExecutor(
-            curiosity=curiosity,
-            memory=mm,
+        return ExplorationExecutor(
+            curiosity=result.get("curiosity_engine"),
+            memory=getattr(config, "_memory_manager", None),
         )
-        log.info("exploration_executor_initialized")
-    except Exception:
-        log.debug("exploration_executor_init_skipped", exc_info=True)
 
-    # KnowledgeQAStore
-    try:
+    _init_subsystem("exploration_executor", result, _init_exploration)
+
+    def _init_knowledge_qa():
         from jarvis.learning.knowledge_qa import KnowledgeQAStore
 
-        jarvis_home = getattr(
-            config,
-            "jarvis_home",
-            Path.home() / ".jarvis",
-        )
-        qa_db = Path(jarvis_home) / "memory" / "knowledge_qa.db"
-        result["knowledge_qa"] = KnowledgeQAStore(db_path=qa_db)
-        log.info("knowledge_qa_initialized", db=str(qa_db))
-    except Exception:
-        log.debug("knowledge_qa_init_skipped", exc_info=True)
+        return KnowledgeQAStore(db_path=Path(jarvis_home) / "memory" / "knowledge_qa.db")
 
-    # KnowledgeLineageTracker
-    try:
+    _init_subsystem("knowledge_qa", result, _init_knowledge_qa)
+
+    def _init_knowledge_lineage():
         from jarvis.learning.lineage import KnowledgeLineageTracker
 
-        jarvis_home = getattr(
-            config,
-            "jarvis_home",
-            Path.home() / ".jarvis",
+        return KnowledgeLineageTracker(
+            db_path=Path(jarvis_home) / "memory" / "knowledge_lineage.db"
         )
-        lin_db = Path(jarvis_home) / "memory" / "knowledge_lineage.db"
-        result["knowledge_lineage"] = KnowledgeLineageTracker(
-            db_path=lin_db,
-        )
-        log.info("knowledge_lineage_initialized", db=str(lin_db))
-    except Exception:
-        log.debug("knowledge_lineage_init_skipped", exc_info=True)
 
-    # KnowledgeIngestService (unified file/URL/YouTube ingestion)
-    try:
+    _init_subsystem("knowledge_lineage", result, _init_knowledge_lineage)
+
+    def _init_knowledge_ingest():
         from jarvis.learning.knowledge_ingest import KnowledgeIngestService
 
-        mm = getattr(config, "_memory_manager", None)
-        kb = result.get("knowledge_builder")
-        llm_fn = result.get("llm_fn")
-        result["knowledge_ingest"] = KnowledgeIngestService(
-            memory=mm,
-            knowledge_builder=kb,
-            llm_fn=llm_fn,
+        return KnowledgeIngestService(
+            memory=getattr(config, "_memory_manager", None),
+            knowledge_builder=result.get("knowledge_builder"),
+            llm_fn=result.get("llm_fn"),
         )
-        log.info("knowledge_ingest_initialized")
-    except Exception:
-        log.debug("knowledge_ingest_init_skipped", exc_info=True)
 
-    # RedditLeadService (social listening) — always init so MCP tools are available
-    try:
+    _init_subsystem("knowledge_ingest", result, _init_knowledge_ingest)
+
+    def _init_reddit():
         from jarvis.social.service import RedditLeadService
 
         social_cfg = getattr(config, "social", None)
-        jarvis_home = getattr(config, "jarvis_home", None) or Path.home() / ".jarvis"
-        leads_db = str(Path(jarvis_home) / "leads.db")
-        llm_fn = result.get("llm_fn")
-        result["reddit_lead_service"] = RedditLeadService(
-            db_path=leads_db,
-            llm_fn=llm_fn,
+        return RedditLeadService(
+            db_path=str(Path(jarvis_home) / "leads.db"),
+            llm_fn=result.get("llm_fn"),
             product_name=getattr(social_cfg, "reddit_product_name", "") if social_cfg else "",
             product_description=getattr(social_cfg, "reddit_product_description", "")
             if social_cfg
@@ -366,21 +310,19 @@ async def init_advanced(
             default_subreddits=getattr(social_cfg, "reddit_subreddits", []) if social_cfg else [],
             min_score=getattr(social_cfg, "reddit_min_score", 60) if social_cfg else 60,
         )
-        log.info("reddit_lead_service_initialized")
-    except Exception:
-        log.debug("reddit_lead_service_init_skipped", exc_info=True)
 
-    # ReplayEngine (needs Gatekeeper for policy re-evaluation)
+    _init_subsystem("reddit_lead_service", result, _init_reddit)
+
     if gatekeeper is not None:
-        try:
+
+        def _init_replay():
             from jarvis.forensics.replay_engine import ReplayEngine
 
-            result["replay_engine"] = ReplayEngine(gatekeeper)
-            log.info("replay_engine_initialized")
-        except Exception:
-            log.debug("replay_engine_init_skipped", exc_info=True)
+            return ReplayEngine(gatekeeper)
 
-    # Wire GEPA dependencies from init phase
+        _init_subsystem("replay_engine", result, _init_replay)
+
+    # Wire GEPA dependencies
     orch = result.get("evolution_orchestrator")
     if orch:
         if result.get("prompt_evolution"):
@@ -388,8 +330,7 @@ async def init_advanced(
         if result.get("session_analyzer"):
             orch._session_analyzer = result["session_analyzer"]
 
-    # Hashline Guard — line-level integrity for file edits
-    try:
+    def _init_hashline():
         from jarvis.hashline import HashlineGuard
         from jarvis.hashline.config import HashlineConfig as HLConfig
 
@@ -400,13 +341,10 @@ async def init_advanced(
             else {}
         )
         hl_cfg = HLConfig.from_dict(hl_dict)
-        if hl_cfg.enabled:
-            jarvis_home = getattr(config, "jarvis_home", Path.home() / ".jarvis")
-            result["hashline_guard"] = HashlineGuard.create(
-                config=hl_cfg, data_dir=Path(jarvis_home)
-            )
-            log.info("hashline_guard_initialized")
-    except Exception:
-        log.debug("hashline_guard_init_skipped", exc_info=True)
+        if not hl_cfg.enabled:
+            return None
+        return HashlineGuard.create(config=hl_cfg, data_dir=Path(jarvis_home))
+
+    _init_subsystem("hashline_guard", result, _init_hashline)
 
     return result
