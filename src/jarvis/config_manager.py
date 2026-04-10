@@ -111,6 +111,9 @@ _EDITABLE_SECTIONS = frozenset(
         "personality",
         "evolution",
         "atl",
+        "social",
+        "kanban",
+        "vault",
     }
 )
 

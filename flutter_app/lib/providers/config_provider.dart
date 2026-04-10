@@ -464,7 +464,7 @@ class ConfigProvider extends ChangeNotifier {
         'model_overrides', 'web', 'database', 'executor', 'tools', 'audit',
         'improvement', 'prompt_evolution',
         'browser', 'calendar', 'email', 'identity', 'personality', 'recovery',
-        'evolution', 'vault',
+        'evolution', 'vault', 'social', 'kanban',
       ]) {
         if (_cfg.containsKey(section)) {
           futures.add(_api!.patch('config/$section', _cfg[section] as Map<String, dynamic>)
