@@ -15,11 +15,16 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
 
     async def _reddit_scan(
         subreddits: str = "",
+        product: str = "",
         min_score: int = 0,
     ) -> str:
         """Scan Reddit for leads. Subreddits as comma-separated string."""
         if lead_service is None:
             return json.dumps({"error": "Reddit Lead Service not initialized"})
+
+        # Allow overriding product from tool call
+        if product:
+            lead_service._scan_config.product_name = product
 
         if not lead_service._scan_config.product_name:
             return json.dumps(
@@ -29,7 +34,6 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
             )
 
         subs = [s.strip() for s in subreddits.split(",") if s.strip()] if subreddits else None
-        # subs=None → service falls back to default_subreddits from config
         effective_min = min_score if min_score > 0 else lead_service._scan_config.min_score
 
         result = await lead_service.scan(
@@ -132,12 +136,17 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
                     "type": "string",
                     "description": "Kommagetrennte Subreddit-Namen, z.B. 'LocalLLaMA,SaaS'",
                 },
+                "product": {
+                    "type": "string",
+                    "description": "Produktname nach dem gesucht wird, z.B. 'Cognithor'",
+                },
                 "min_score": {
                     "type": "integer",
-                    "description": "Minimum Intent-Score 0-100 (Default: Config)",
+                    "description": "Minimum Intent-Score 0-100 (Default: 60)",
                     "default": 0,
                 },
             },
+            "required": ["subreddits", "product"],
         },
     )
     mcp_client.register_builtin_handler(
