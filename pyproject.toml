@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["ai", "agent", "ollama", "local-first", "automation"]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: End Users/Desktop",
     "Operating System :: POSIX :: Linux",
