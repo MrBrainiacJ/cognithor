@@ -347,6 +347,9 @@ pip install cognithor[web]          # + Web UI (Flutter Command Center)
 pip install cognithor[all]          # Everything (large install)
 ollama pull qwen3:8b                # Pull a model
 cognithor                           # Start
+
+# Upgrade an existing installation:
+pip install --upgrade cognithor[all]
 ```
 
 ### Prerequisites (Option B/C only)
