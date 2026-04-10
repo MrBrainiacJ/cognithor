@@ -57,7 +57,7 @@ class EvolutionConfigPage extends StatelessWidget {
               trailing: SizedBox(
                 width: 120,
                 child: DropdownButtonFormField<int>(
-                  value: [1, 3, 5, 10, 20, 50].contains(maxCycles) ? maxCycles : 10,
+                  value: [1, 3, 5, 10, 20, 50, 100].contains(maxCycles) ? maxCycles : 10,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -69,6 +69,7 @@ class EvolutionConfigPage extends StatelessWidget {
                     DropdownMenuItem(value: 10, child: Text('10')),
                     DropdownMenuItem(value: 20, child: Text('20')),
                     DropdownMenuItem(value: 50, child: Text('50')),
+                    DropdownMenuItem(value: 100, child: Text('100')),
                   ],
                   onChanged: (v) => cfg.set('evolution.max_cycles_per_day', v),
                 ),
