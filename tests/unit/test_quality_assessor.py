@@ -60,10 +60,10 @@ class TestCoverageCheck:
         sg = SubGoal(
             title="VVG Grundlagen",
             description="Grundlagen des VVG",
-            chunks_created=30,
-            entities_created=10,
-            vault_entries=10,
-            sources_fetched=10,
+            chunks_created=60,
+            entities_created=20,
+            vault_entries=20,
+            sources_fetched=15,
         )
         assessor = QualityAssessor(mcp_client=AsyncMock(), llm_fn=AsyncMock())
         score = assessor.check_coverage(sg)
@@ -155,10 +155,10 @@ class TestFullQualityTest:
         sg = SubGoal(
             title="VVG Grundlagen",
             description="Grundlagen des VVG",
-            chunks_created=30,
-            entities_created=10,
-            vault_entries=10,
-            sources_fetched=10,
+            chunks_created=60,
+            entities_created=20,
+            vault_entries=20,
+            sources_fetched=15,
         )
         result = await assessor.run_quality_test(sg, "vvg-grundlagen")
 

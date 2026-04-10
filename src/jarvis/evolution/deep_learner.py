@@ -289,21 +289,62 @@ class DeepLearner:
                 plan.save(str(self._plans_dir))
                 return False
 
-            # Dynamic search queries — context-aware, not domain-specific
+            # Dynamic search queries — LLM-generated if possible, fallback to templates
             _base = subgoal.title
             _plan_ctx = plan.goal[:60]
-            query_variants = [
-                f"{_base} {subgoal.description}",
-                f"{_plan_ctx} {_base} overview guide",
-                f"{_base} tutorial examples how to",
-                f"{_base} comparison alternatives pros cons",
-                f"{_base} best practices recommendations",
-                f"{_plan_ctx} {_base} community discussion",
-                f"{_base} latest news updates 2025 2026",
-                f"{_base} open source GitHub projects",
-                f"{_base} architecture design patterns",
-                f"{_plan_ctx} FAQ common questions",
-            ]
+            if research_round == 0 and self._llm_fn:
+                # First round: ask LLM for targeted search queries
+                try:
+                    _qgen_resp = await self._llm_fn(
+                        f"Generate 5 specific web search queries to research this topic:\n"
+                        f"Goal: {_plan_ctx}\nSub-topic: {_base}\n"
+                        f"Description: {subgoal.description}\n\n"
+                        f"Reply ONLY with a JSON list of 5 search queries:\n"
+                        f'["query1", "query2", "query3", "query4", "query5"]',
+                    )
+                    import re as _qre
+
+                    _qraw = (
+                        _qgen_resp
+                        if isinstance(_qgen_resp, str)
+                        else _qgen_resp.get("message", {}).get("content", "")
+                    )
+                    _qmatch = _qre.search(r"\[.*\]", _qraw, _qre.DOTALL)
+                    if _qmatch:
+                        _llm_queries = json.loads(_qmatch.group())
+                        if isinstance(_llm_queries, list) and len(_llm_queries) >= 3:
+                            query_variants = [str(q)[:200] for q in _llm_queries[:10]]
+                            log.info("deep_learner_llm_queries", count=len(query_variants))
+                        else:
+                            raise ValueError("not enough queries")
+                    else:
+                        raise ValueError("no JSON list found")
+                except Exception:
+                    log.debug("deep_learner_llm_query_gen_failed", exc_info=True)
+                    query_variants = [
+                        f"{_base} {subgoal.description}",
+                        f"{_plan_ctx} {_base} overview",
+                        f"{_base} tutorial examples",
+                        f"{_base} comparison alternatives",
+                        f"{_base} best practices",
+                    ]
+            elif not hasattr(self, "_cached_query_variants"):
+                query_variants = [
+                    f"{_base} {subgoal.description}",
+                    f"{_plan_ctx} {_base} overview",
+                    f"{_base} tutorial examples",
+                    f"{_base} comparison alternatives",
+                    f"{_base} best practices",
+                    f"{_plan_ctx} {_base} community",
+                    f"{_base} latest 2025 2026",
+                    f"{_base} GitHub open source",
+                    f"{_base} architecture patterns",
+                    f"{_plan_ctx} FAQ",
+                ]
+            if research_round == 0:
+                self._cached_query_variants = query_variants
+            else:
+                query_variants = getattr(self, "_cached_query_variants", [f"{_base}"])
             query = query_variants[research_round % len(query_variants)][:200]
 
             sources = await self._discover_sources(query)
@@ -750,8 +791,8 @@ class DeepLearner:
             return []
         try:
             result = await self._mcp_client.call_tool(
-                "web_search",
-                {"query": topic[:150], "num_results": 5, "language": "de"},
+                "search_and_read",
+                {"query": topic[:150], "num_results": 5},
             )
             if result.is_error:
                 return []

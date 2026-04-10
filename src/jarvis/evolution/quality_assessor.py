@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 # before the LLM self-exam triggers. These represent meaningful depth
 # for a single sub-topic (e.g. "VVG Grundlagen", not the entire plan).
 _COVERAGE_THRESHOLDS = {
-    "vault_entries": 8,
-    "chunks_created": 25,
-    "entities_created": 8,
-    "sources_fetched": 8,
+    "vault_entries": 15,
+    "chunks_created": 50,
+    "entities_created": 15,
+    "sources_fetched": 12,
 }
 
 
@@ -101,30 +101,25 @@ class QualityAssessor:
         """
         parts: list[str] = []
 
-        # Extract key terms from the question for better search precision
-        # Strip common question words to get the actual topic
-        search_query = q.question
-        for noise in (
-            "Welche",
-            "Welcher",
-            "Welches",
-            "Was ist",
-            "Was sind",
-            "Wie wird",
-            "Wie werden",
-            "Wodurch",
-            "Worin",
-            "im deutschen",
-            "im Versicherungsrecht",
-            "grundlegend",
-            "wesentlich",
-        ):
-            search_query = search_query.replace(noise, "")
-        search_query = search_query.strip().strip("?").strip()
-        # Use both: specific terms AND expected answer keywords
+        # Extract key content words from the question — keep nouns and entities,
+        # remove only function words that hurt search precision
+        import re as _re
+
+        search_query = q.question.strip().rstrip("?")
+        # Remove only short function words, preserve all content words
+        search_query = _re.sub(
+            r"\b(und|oder|ist|sind|wird|werden|kann|hat|die|der|das|den|dem|"
+            r"des|ein|eine|einem|einen|einer|es|im|in|zu|zum|zur|von|"
+            r"auf|fuer|für|mit|bei|nach|aus|was|wie|welche|welcher|welches|"
+            r"worin|wodurch|warum|wann|wo)\b",
+            "",
+            search_query,
+            flags=_re.IGNORECASE,
+        )
+        search_query = _re.sub(r"\s+", " ", search_query).strip()
+        # Boost with expected answer keywords
         if q.expected_answer:
-            # Add first few words of expected answer as search boost
-            answer_hint = " ".join(q.expected_answer.split()[:6])
+            answer_hint = " ".join(q.expected_answer.split()[:8])
             search_query = f"{search_query} {answer_hint}"
 
         vault_result = await self._mcp.call_tool(
