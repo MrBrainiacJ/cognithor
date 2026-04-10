@@ -46,14 +46,14 @@ class QualityAssessor:
     # ------------------------------------------------------------------
 
     def check_coverage(self, subgoal: SubGoal) -> float:
-        """Return ratio of coverage checks that pass (0.0 .. 1.0)."""
-        checks = [
-            subgoal.vault_entries >= _COVERAGE_THRESHOLDS["vault_entries"],
-            subgoal.chunks_created >= _COVERAGE_THRESHOLDS["chunks_created"],
-            subgoal.entities_created >= _COVERAGE_THRESHOLDS["entities_created"],
-            subgoal.sources_fetched >= _COVERAGE_THRESHOLDS["sources_fetched"],
+        """Return proportional coverage score (0.0 .. 1.0) with 1% granularity."""
+        metrics = [
+            min(1.0, subgoal.vault_entries / max(1, _COVERAGE_THRESHOLDS["vault_entries"])),
+            min(1.0, subgoal.chunks_created / max(1, _COVERAGE_THRESHOLDS["chunks_created"])),
+            min(1.0, subgoal.entities_created / max(1, _COVERAGE_THRESHOLDS["entities_created"])),
+            min(1.0, subgoal.sources_fetched / max(1, _COVERAGE_THRESHOLDS["sources_fetched"])),
         ]
-        return sum(checks) / len(checks)
+        return round(sum(metrics) / len(metrics), 2)
 
     # ------------------------------------------------------------------
     # Question generation
