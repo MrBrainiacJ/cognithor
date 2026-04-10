@@ -1001,7 +1001,7 @@ class Gatekeeper:
         code: str,
         action: PlannedAction,
     ) -> GateDecision | None:
-        """Check Python code for dangerous patterns (os.system, subprocess, etc.).
+        """Check Python code for dangerous patterns using AST analysis + regex fallback.
 
         Returns:
             GateDecision(BLOCK) if dangerous code detected, otherwise None.
@@ -1009,6 +1009,26 @@ class Gatekeeper:
         if not code.strip():
             return None
 
+        # Layer 1: AST-based analysis (catches getattr, chr, __import__ bypasses)
+        try:
+            from jarvis.security.python_ast_guard import analyse_python
+
+            violations = analyse_python(code)
+            if violations:
+                details = "; ".join(v.detail for v in violations[:3])
+                return GateDecision(
+                    status=GateStatus.BLOCK,
+                    reason=t("gatekeeper.dangerous_code", description=details),
+                    risk_level=RiskLevel.RED,
+                    original_action=action,
+                    policy_name="blocked_python_ast",
+                )
+        except SyntaxError:
+            pass  # Unparseable code falls through to regex check
+        except Exception:
+            log.debug("python_ast_guard_failed", exc_info=True)
+
+        # Layer 2: Regex fallback (catches patterns AST might miss in edge cases)
         for pattern, description in self._DANGEROUS_PYTHON_PATTERNS:
             if pattern.search(code):
                 return GateDecision(
@@ -1026,7 +1046,7 @@ class Gatekeeper:
         command: str,
         action: PlannedAction,
     ) -> GateDecision | None:
-        """Check a shell command against destructive patterns.
+        """Check a shell command using AST analysis + regex fallback.
 
         Returns:
             GateDecision(BLOCK) wenn destruktiv, sonst None.
@@ -1034,6 +1054,24 @@ class Gatekeeper:
         if not command.strip():
             return None
 
+        # Layer 1: AST-based analysis (catches substitution, chaining, path bypasses)
+        try:
+            from jarvis.security.shell_ast_guard import analyse_shell
+
+            violations = analyse_shell(command)
+            if violations:
+                details = "; ".join(v.detail for v in violations[:3])
+                return GateDecision(
+                    status=GateStatus.BLOCK,
+                    reason=t("gatekeeper.destructive_command", pattern=details),
+                    risk_level=RiskLevel.RED,
+                    original_action=action,
+                    policy_name="blocked_command_ast",
+                )
+        except Exception:
+            log.debug("shell_ast_guard_failed", exc_info=True)
+
+        # Layer 2: Regex fallback
         for pattern in self._blocked_command_patterns:
             if pattern.search(command):
                 return GateDecision(
