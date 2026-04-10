@@ -401,7 +401,7 @@ class Gateway:
             # Wire LLM function (was None during Phase F init)
             if hasattr(self, "_ollama") and self._ollama is not None:
                 _fast_model = (
-                    self._config.models.default.name
+                    self._config.models.planner.name
                     if hasattr(self._config, "models")
                     else "qwen3:32b"
                 )
