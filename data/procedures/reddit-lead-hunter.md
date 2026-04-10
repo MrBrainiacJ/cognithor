@@ -12,6 +12,17 @@ agent: ""
 
 # Reddit Lead Hunter
 
+## DEINE TOOLS
+Du hast folgende Reddit-Tools zur Verfuegung — nutze sie DIREKT als Tool-Calls:
+- `reddit_scan` — Scannt Subreddits nach Leads (KEIN API-Key noetig, nutzt oeffentliche JSON-Feeds)
+- `reddit_leads` — Listet gespeicherte Leads mit Filtern
+- `reddit_reply` — Erstellt Reply-Drafts und kopiert sie in die Zwischenablage
+- `reddit_refine` — Verbessert einen Reply-Draft mit KI
+- `reddit_discover_subreddits` — Findet relevante Subreddits fuer ein Thema
+- `reddit_templates` — Verwaltet Reply-Templates
+
+Diese Tools sind JETZT verfuegbar. Rufe sie direkt auf. Du brauchst KEINEN API-Key und KEINE externe API.
+
 ## Wann anwenden
 Wenn der Benutzer Reddit nach Leads scannen moechte, Social Listening betreiben will, oder nach relevanten Reddit-Diskussionen sucht.
 
