@@ -32,6 +32,7 @@ import 'package:jarvis_ui/screens/config/audit_page.dart';
 import 'package:jarvis_ui/screens/config/vault_page.dart';
 import 'package:jarvis_ui/screens/config/atl_page.dart';
 import 'package:jarvis_ui/screens/config/social_page.dart';
+import 'package:jarvis_ui/screens/config/evolution_config_page.dart';
 
 // ── Category definition ──────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ final _categories = [
     'security', 'tools', 'audit', 'database',
   ]),
   _Category((l) => l.catSystem, Icons.settings, [
-    'general', 'language', 'logging', 'cron', 'mcp', 'system_profile', 'budget', 'social', 'system',
+    'general', 'language', 'logging', 'cron', 'mcp', 'system_profile', 'budget', 'social', 'evolution', 'system',
   ]),
 ];
 
@@ -114,6 +115,8 @@ final _pageRegistry = <String, _SubPageDef>{
       Icons.lock_outlined, (l) => 'Vault', () => const VaultPage()),
   'social': _SubPageDef(Icons.track_changes, (l) => l.socialListening,
       () => const SocialPage()),
+  'evolution': _SubPageDef(Icons.auto_awesome, (l) => 'Evolution',
+      () => const EvolutionConfigPage()),
   'system': _SubPageDef(
       Icons.build, (l) => l.configPageSystem, () => const SystemConfigPage()),
 };
