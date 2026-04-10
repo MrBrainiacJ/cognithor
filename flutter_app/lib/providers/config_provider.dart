@@ -467,7 +467,12 @@ class ConfigProvider extends ChangeNotifier {
         'evolution', 'vault', 'social', 'kanban',
       ]) {
         if (_cfg.containsKey(section)) {
-          futures.add(_api!.patch('config/$section', _cfg[section] as Map<String, dynamic>)
+          var sectionData = Map<String, dynamic>.from(_cfg[section] as Map<String, dynamic>);
+          // Don't overwrite learning_goals — managed by Evolution Goals API
+          if (section == 'evolution') {
+            sectionData.remove('learning_goals');
+          }
+          futures.add(_api!.patch('config/$section', sectionData)
               .then((r) {
             if (r.containsKey('error')) _sectionErrors[section] = r['error'].toString();
           }));
