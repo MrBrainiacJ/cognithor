@@ -690,10 +690,15 @@ def main() -> None:
 
                 @api_app.get("/api/v1/health")
                 async def _cc_health() -> dict[str, Any]:
+                    from jarvis.core.safe_call import get_failure_report, has_failures
+
+                    _failures = get_failure_report()
                     return {
-                        "status": "ok",
+                        "status": "degraded" if _failures else "ok",
                         "version": __version__,
                         "uptime_seconds": _time.monotonic() - _api_start,
+                        "subsystem_failures": len(_failures),
+                        "failed_subsystems": list(_failures.keys()) if _failures else [],
                     }
 
                 # ── Bootstrap: DEPRECATED ─────────────────────────────

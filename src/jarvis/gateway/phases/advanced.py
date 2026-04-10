@@ -20,7 +20,17 @@ from jarvis.utils.logging import get_logger
 if TYPE_CHECKING:
     from jarvis.gateway.phases import PhaseResult
 
+from jarvis.core.safe_call import _safe_call
+
 log = get_logger(__name__)
+
+
+def _init_subsystem(name: str, result: PhaseResult, fn: Any, *args: Any, **kwargs: Any) -> None:
+    """Init a subsystem via _safe_call and store in result dict."""
+    value = _safe_call(name, fn, *args, **kwargs)
+    if value is not None:
+        result[name] = value
+        log.info(f"{name}_initialized")
 
 
 def declare_advanced_attrs(config: Any) -> PhaseResult:
