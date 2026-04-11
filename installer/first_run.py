@@ -9,10 +9,14 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import shutil
 import sys
 import urllib.request
 from pathlib import Path
+from typing import Any
+
+
 
 REGISTRY_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/registry.json"
 SKILL_BASE_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/skills"
@@ -22,11 +26,8 @@ INSTALL_DIR = Path(sys.executable).resolve().parent.parent  # e.g. D:\Cognithor
 
 
 def setup_agents() -> int:
-    """Copy default agents.yaml to ~/.cognithor/config/ if missing."""
-    config_dir = JARVIS_HOME / "config"
-    config_dir.mkdir(parents=True, exist_ok=True)
-
-    agents_dest = config_dir / "agents.yaml"
+    """Copy default agents.yaml to ~/.cognithor/ if missing."""
+    agents_dest = JARVIS_HOME / "agents.yaml"
     if agents_dest.exists():
         print("  [SKIP] agents.yaml already exists")
         return 0
@@ -169,11 +170,7 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     use_ollama = provider_choice in ("1", "3")
     use_api = provider_choice in ("2", "3")
 
-    config = {
-        "jarvis": {},
-        "features": {},
-        "channels": {},
-    }
+    config: dict[str, Any] = {}
 
     # Step 3: Model selection (Ollama)
     if use_ollama:
@@ -199,10 +196,13 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
             )
             selected_model = recs[int(model_choice) - 1].model_name
         else:
-            selected_model = "gemma2:2b"
+            selected_model = "qwen3.5:3b"
 
         print(f"  [OK] Selected: {selected_model}")
-        config["cognithor"]["model"] = selected_model
+        config["models"] = {
+            "planner": {"name": selected_model},
+            "executor": {"name": selected_model},
+        }
 
     # Step 4: External API config
     if use_api:
@@ -219,31 +219,31 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
 
         api_providers = {"1": "openai", "2": "anthropic", "3": "google", "4": "custom"}
         api_env_keys = {"1": "OPENAI_API_KEY", "2": "ANTHROPIC_API_KEY", "3": "GOOGLE_API_KEY"}
+        backend_map = {"1": "openai", "2": "anthropic", "3": "gemini"}
 
         provider = api_providers[api_choice]
-        config["cognithor"]["api_provider"] = provider
+        if api_choice in backend_map:
+            config["llm_backend_type"] = backend_map[api_choice]
 
         if api_choice in ("1", "2", "3"):
             env_key = api_env_keys[api_choice]
             existing = os.environ.get(env_key, "")
             if existing:
                 print(f"  [OK] {env_key} already set in environment")
-                config["cognithor"]["api_key_env"] = env_key
             else:
                 print("  Enter your API key (or press Enter to configure later):")
                 api_key = input("  > ").strip()
                 if api_key:
-                    # Save to .env file in jarvis home
+                    # Save to .env file in cognithor home
                     env_file = JARVIS_HOME / ".env"
                     with open(env_file, "a", encoding="utf-8") as f:
                         f.write(f"{env_key}={api_key}\n")
                     print(f"  [OK] API key saved to {env_file}")
-                    config["cognithor"]["api_key_env"] = env_key
                 else:
                     print(f"  [SKIP] Set {env_key} environment variable later")
 
         if not use_ollama:
-            config["cognithor"]["model"] = (
+            api_model = (
                 "gpt-4o"
                 if api_choice == "1"
                 else "claude-sonnet-4-20250514"
@@ -252,6 +252,11 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
                 if api_choice == "3"
                 else ""
             )
+            if api_model:
+                config["models"] = {
+                    "planner": {"name": api_model},
+                    "executor": {"name": api_model},
+                }
 
     # Step 5: Apply preset based on hardware tier
     tier_map = {
@@ -263,12 +268,11 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     preset_level = tier_map.get(hw.tier, PresetLevel.STANDARD)
     preset = PRESETS[preset_level]
 
-    config["cognithor"]["max_agents"] = preset.max_agents
-    config["cognithor"]["max_concurrent"] = preset.max_concurrent
-    config["cognithor"]["memory_limit_mb"] = preset.memory_limit_mb
-    config["features"]["rag"] = preset.enable_rag
-    config["features"]["federation"] = preset.enable_federation
-    config["features"]["cron"] = preset.enable_cron
+    config["max_agents"] = preset.max_agents
+    config["max_concurrent"] = preset.max_concurrent
+    config["memory_limit_mb"] = preset.memory_limit_mb
+    if hasattr(preset, "enable_rag"):
+        config["rag"] = {"enabled": preset.enable_rag}
     config["database"] = {"encryption_enabled": encryption_ok}
 
     # Step 6: Language
@@ -281,10 +285,10 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     print()
     lang_choice = _ask_choice("  Language [1/2/3]", ["1", "2", "3"], default="1")
     lang_map = {"1": "en", "2": "de", "3": "zh"}
-    config["cognithor"]["language"] = lang_map[lang_choice]
+    config["language"] = lang_map[lang_choice]
 
-    # Write config.yaml
-    config_path = JARVIS_HOME / "config" / "config.yaml"
+    # Write config.yaml (load_config reads from ~/.cognithor/config.yaml)
+    config_path = JARVIS_HOME / "config.yaml"
     if not config_path.exists():
         _write_yaml(config, config_path)
         print(f"\n  [OK] Configuration saved to {config_path}")
@@ -314,17 +318,24 @@ def _write_yaml(data: dict, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = ["# Cognithor Configuration (auto-generated by first-run setup)\n"]
 
-    for section, values in data.items():
-        lines.append(f"{section}:")
-        if isinstance(values, dict):
-            for key, val in values.items():
-                if isinstance(val, bool):
-                    lines.append(f"  {key}: {'true' if val else 'false'}")
-                elif isinstance(val, str):
-                    lines.append(f'  {key}: "{val}"')
-                else:
-                    lines.append(f"  {key}: {val}")
-        lines.append("")
+    def _format_value(val: object) -> str:
+        if isinstance(val, bool):
+            return "true" if val else "false"
+        if isinstance(val, str):
+            return f'"{val}"'
+        return str(val)
+
+    def _write_dict(d: dict, indent: int = 0) -> None:
+        prefix = "  " * indent
+        for key, val in d.items():
+            if isinstance(val, dict):
+                lines.append(f"{prefix}{key}:")
+                _write_dict(val, indent + 1)
+            else:
+                lines.append(f"{prefix}{key}: {_format_value(val)}")
+
+    _write_dict(data)
+    lines.append("")
 
     path.write_text("\n".join(lines), encoding="utf-8")
 
