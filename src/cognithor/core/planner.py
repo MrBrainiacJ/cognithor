@@ -1000,8 +1000,9 @@ class Planner:
             {"role": "system", "content": system_content},
         ]
 
-        if getattr(working_memory, "cag_prefix", None):
-            messages.append({"role": "system", "content": working_memory.cag_prefix})
+        _cag_msg = getattr(working_memory, "cag_prefix", None)
+        if isinstance(_cag_msg, str) and _cag_msg:
+            messages.append({"role": "system", "content": _cag_msg})
         elif working_memory.core_memory_text:
             messages.append(
                 {
@@ -1090,8 +1091,9 @@ class Planner:
         proc_budget = 1500 if compact else 3000
         proc_skill_budget = 300 if compact else 600
 
-        if getattr(working_memory, "cag_prefix", None):
-            context_parts.append(working_memory.cag_prefix)
+        _cag = getattr(working_memory, "cag_prefix", None)
+        if isinstance(_cag, str) and _cag:
+            context_parts.append(_cag)
         elif working_memory.core_memory_text:
             core_text = working_memory.core_memory_text
             if core_budget and len(core_text) > core_budget:
