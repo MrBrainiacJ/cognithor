@@ -676,6 +676,8 @@ class Gatekeeper:
             "kanban_create_task",
             "kanban_update_task",
             "kanban_list_tasks",
+            "social_scan",
+            "social_leads",
         }
         if tool in green_tools:
             return RiskLevel.GREEN
