@@ -117,11 +117,20 @@ get_nproc() {
 run_with_timeout() {
     local seconds="$1"
     shift
-    if command -v timeout &>/dev/null; then
-        timeout "$seconds" "$@"
-    else
-        "$@"
+    # Pure shell timeout — no GNU timeout needed (macOS compatible)
+    "$@" &
+    local pid=$!
+    local waited=0
+    while kill -0 "$pid" 2>/dev/null && [ "$waited" -lt "$seconds" ]; do
+        sleep 1
+        waited=$((waited + 1))
+    done
+    if kill -0 "$pid" 2>/dev/null; then
+        kill "$pid" 2>/dev/null
+        wait "$pid" 2>/dev/null
+        return 124  # Same exit code as GNU timeout
     fi
+    wait "$pid"
 }
 
 # Disk space check (in GB)
