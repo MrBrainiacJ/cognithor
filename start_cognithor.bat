@@ -44,7 +44,7 @@ echo.
 echo     COGNITHOR - Agent OS
 echo     ============================
 echo.
-echo   v0.87.2
+echo   v0.88.0
 echo.
 
 set "REPO_ROOT=%~dp0"
