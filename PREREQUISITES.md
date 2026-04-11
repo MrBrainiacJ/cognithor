@@ -122,7 +122,7 @@ JARVIS_API_CORS_ORIGINS=...   # Comma-separated allowed origins
 
 - Cognithor runs natively on Windows 10/11 (no WSL required).
 - Use the bootstrap script for automated setup: `python scripts/bootstrap_windows.py`
-- **PATH:** After `pip install -e ".[all]"`, the `cognithor` command may not be found if Python's `Scripts` directory is not in your PATH. Use `python -m jarvis` as a reliable alternative that always works.
+- **PATH:** After `pip install -e ".[all]"`, the `cognithor` command may not be found if Python's `Scripts` directory is not in your PATH. Use `python -m cognithor` as a reliable alternative that always works.
 - To fix PATH permanently: add `%APPDATA%\Python\PythonXY\Scripts` (or the `Scripts` folder inside your venv) to your system PATH.
 - Long path support: Enable via Group Policy or registry if paths exceed 260 chars.
 
