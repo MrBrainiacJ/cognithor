@@ -331,32 +331,32 @@ class TestFix4LlmUnreachableWarning:
 
 
 class TestFix5DocsWindowsPath:
-    """Proves docs mention python -m jarvis and PATH hints for Windows."""
+    """Proves docs mention python -m cognithor and PATH hints for Windows."""
 
     def _read_file(self, name: str) -> str:
         path = Path(__file__).resolve().parent.parent / name
         return path.read_text(encoding="utf-8")
 
     def test_readme_mentions_python_m_jarvis_prominently(self) -> None:
-        """README Quick Start must show 'python -m jarvis' as equal alternative."""
+        """README Quick Start must show 'python -m cognithor' as equal alternative."""
         content = self._read_file("README.md")
-        # Must appear as a non-comment line (not just "# or: python -m jarvis")
+        # Must appear as a non-comment line (not just "# or: python -m cognithor")
         lines = content.splitlines()
         prominent_lines = [
-            l for l in lines if "python -m jarvis" in l and not l.strip().startswith("#")
+            l for l in lines if "python -m cognithor" in l and not l.strip().startswith("#")
         ]
-        assert len(prominent_lines) >= 1, "python -m jarvis must be prominent, not just a comment"
+        assert len(prominent_lines) >= 1, "python -m cognithor must be prominent, not just a comment"
 
     def test_readme_has_windows_path_hint(self) -> None:
         """README must mention PATH and Scripts for Windows users."""
         content = self._read_file("README.md")
         assert "Scripts" in content, "README must mention Scripts directory for PATH"
-        assert "python -m jarvis" in content
+        assert "python -m cognithor" in content
 
     def test_prerequisites_has_windows_path_hint(self) -> None:
         """PREREQUISITES Windows section must mention PATH workaround."""
         content = self._read_file("PREREQUISITES.md")
-        assert "python -m jarvis" in content, "PREREQUISITES must mention python -m jarvis"
+        assert "python -m cognithor" in content, "PREREQUISITES must mention python -m cognithor"
         assert "PATH" in content, "PREREQUISITES must mention PATH"
 
     def test_prerequisites_no_webrtcvad(self) -> None:

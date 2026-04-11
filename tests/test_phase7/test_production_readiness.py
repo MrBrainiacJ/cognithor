@@ -364,9 +364,9 @@ class TestProjectIntegrity:
         assert len(parts) >= 2
 
     def test_main_entry_point(self):
-        """python -m jarvis --version funktioniert."""
+        """python -m cognithor --version funktioniert."""
         result = subprocess.run(
-            [sys.executable, "-m", "jarvis", "--version"],
+            [sys.executable, "-m", "cognithor", "--version"],
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT / "src"),
