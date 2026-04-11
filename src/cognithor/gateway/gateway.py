@@ -3500,6 +3500,36 @@ class Gateway:
 
             all_blocked = all(d.status == GateStatus.BLOCK for d in approved_decisions)
             if all_blocked:
+                # Create pending_review Kanban task for blocked actions
+                _kanban = getattr(self, "_kanban_engine", None)
+                if _kanban:
+                    for step, decision in zip(plan.steps, approved_decisions, strict=False):
+                        if decision.status == GateStatus.BLOCK:
+                            try:
+                                _kanban.create_task(
+                                    title=f"Review: {step.tool} blocked by Gatekeeper",
+                                    description=(
+                                        f"**Tool:** {step.tool}\n"
+                                        f"**Reason:** {decision.reason}\n"
+                                        f"**Risk:** {decision.risk_level.value}\n"
+                                        f"**Params:** {str(step.params)[:200]}\n\n"
+                                        "Approve this task to allow execution, "
+                                        "or reject to cancel."
+                                    ),
+                                    priority="high",
+                                    status="pending_review",
+                                    source="system",
+                                    source_ref=f"gatekeeper:{step.tool}",
+                                    created_by="gatekeeper",
+                                )
+                                log.info(
+                                    "kanban_pending_review_created",
+                                    tool=step.tool,
+                                    risk=decision.risk_level.value,
+                                )
+                            except Exception:
+                                log.debug("kanban_pending_review_failed", exc_info=True)
+
                 for step, decision in zip(plan.steps, approved_decisions, strict=False):
                     block_count = session.record_block(step.tool)
                     if block_count >= 3:

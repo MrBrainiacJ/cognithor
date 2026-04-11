@@ -56,6 +56,7 @@ class KanbanEngine:
         *,
         description: str = "",
         priority: TaskPriority | str = TaskPriority.MEDIUM,
+        status: TaskStatus | str = TaskStatus.TODO,
         assigned_agent: str = "",
         source: TaskSource | str = TaskSource.MANUAL,
         source_ref: str = "",
@@ -65,6 +66,7 @@ class KanbanEngine:
     ) -> Task:
         src = TaskSource(source) if isinstance(source, str) else source
         pri = TaskPriority(priority) if isinstance(priority, str) else priority
+        sts = TaskStatus(status) if isinstance(status, str) else status
 
         if src != TaskSource.MANUAL:
             if self._auto_task_count >= self._max_auto_tasks:
@@ -84,7 +86,7 @@ class KanbanEngine:
         task = Task(
             title=title,
             description=description,
-            status=TaskStatus.TODO,
+            status=sts,
             priority=pri,
             assigned_agent=assigned_agent,
             source=src,
