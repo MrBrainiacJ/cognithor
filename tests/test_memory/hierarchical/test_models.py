@@ -194,27 +194,22 @@ class TestGetParser:
         with pytest.raises(ParserError, match="Unsupported file type: .xyz"):
             get_parser(Path("file.xyz"))
 
-    def test_md_parser_class_name(self) -> None:
-        """get_parser should attempt to load MarkdownParser for .md files.
+    def test_md_returns_markdown_parser(self) -> None:
+        parser = get_parser(Path("readme.md"))
+        assert type(parser).__name__ == "MarkdownParser"
 
-        Since the parser module doesn't exist yet, we expect a ParserError
-        mentioning the class name.
-        """
-        with pytest.raises(ParserError, match="MarkdownParser"):
-            get_parser(Path("readme.md"))
+    def test_txt_returns_plaintext_parser(self) -> None:
+        parser = get_parser(Path("notes.txt"))
+        assert type(parser).__name__ == "PlainTextParser"
 
-    def test_txt_parser_class_name(self) -> None:
-        with pytest.raises(ParserError, match="PlainTextParser"):
-            get_parser(Path("notes.txt"))
+    def test_pdf_returns_pdf_parser(self) -> None:
+        parser = get_parser(Path("doc.pdf"))
+        assert type(parser).__name__ == "PDFParser"
 
-    def test_pdf_parser_class_name(self) -> None:
-        with pytest.raises(ParserError, match="PDFParser"):
-            get_parser(Path("doc.pdf"))
+    def test_docx_returns_docx_parser(self) -> None:
+        parser = get_parser(Path("doc.docx"))
+        assert type(parser).__name__ == "DocxParser"
 
-    def test_docx_parser_class_name(self) -> None:
-        with pytest.raises(ParserError, match="DocxParser"):
-            get_parser(Path("doc.docx"))
-
-    def test_html_parser_class_name(self) -> None:
-        with pytest.raises(ParserError, match="HtmlParser"):
-            get_parser(Path("page.html"))
+    def test_html_returns_html_parser(self) -> None:
+        parser = get_parser(Path("page.html"))
+        assert type(parser).__name__ == "HtmlParser"
