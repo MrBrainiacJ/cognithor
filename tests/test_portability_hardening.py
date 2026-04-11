@@ -345,7 +345,9 @@ class TestFix5DocsWindowsPath:
         prominent_lines = [
             l for l in lines if "python -m cognithor" in l and not l.strip().startswith("#")
         ]
-        assert len(prominent_lines) >= 1, "python -m cognithor must be prominent, not just a comment"
+        assert len(prominent_lines) >= 1, (
+            "python -m cognithor must be prominent, not just a comment"
+        )
 
     def test_readme_has_windows_path_hint(self) -> None:
         """README must mention PATH and Scripts for Windows users."""
