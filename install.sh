@@ -10,6 +10,7 @@
 #   ./install.sh --full       Everything including Voice
 #   ./install.sh --use-uv     Use uv instead of pip (10x faster)
 #   ./install.sh --systemd    Install systemd services only
+#   ./install.sh --silent     Non-interactive mode (accept all defaults)
 #   ./install.sh --uninstall  Uninstall
 #
 # Prerequisites:
@@ -18,7 +19,7 @@
 #   - Ollama (installed and running)
 #
 # ============================================================================
-set -euo pipefail
+set -eo pipefail
 
 # --- Colors ---
 RED='\033[0;31m'
@@ -30,16 +31,28 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # --- Configuration ---
-COGNITHOR_HOME="${COGNITHOR_HOME:-$HOME/.jarvis}"
+if [ -d "$HOME/.cognithor" ]; then
+    COGNITHOR_HOME="${COGNITHOR_HOME:-$HOME/.cognithor}"
+elif [ -d "$HOME/.jarvis" ]; then
+    COGNITHOR_HOME="${COGNITHOR_HOME:-$HOME/.jarvis}"
+else
+    COGNITHOR_HOME="${COGNITHOR_HOME:-$HOME/.cognithor}"
+fi
 VENV_DIR="${COGNITHOR_HOME}/venv"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIN_PYTHON="3.12"
-OLLAMA_URL="${COGNITHOR_OLLAMA_BASE_URL:-http://localhost:11434}"
+OLLAMA_URL="${COGNITHOR_OLLAMA_URL:-http://localhost:11434}"
 USE_UV=false
 PKG_INSTALLER=""  # "uv" or "pip", set in detect_installer
+SILENT=0
 
 # --- Error Tracker ---
 INSTALL_FAILED=false
+
+# --- Install Log ---
+mkdir -p "$COGNITHOR_HOME"
+LOG_FILE="$COGNITHOR_HOME/install.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
 
 # ============================================================================
 # Helper functions
@@ -62,8 +75,91 @@ check_command() {
 }
 
 version_ge() {
-    # Check if version $1 >= $2
-    printf '%s\n%s\n' "$2" "$1" | sort -V | head -n1 | grep -qF "$2"
+    # Check if version $1 >= $2 (POSIX-compatible version sort)
+    printf '%s\n%s\n' "$2" "$1" | sort -t. -k1,1n -k2,2n -k3,3n | head -n1 | grep -qF "$2"
+}
+
+# Network retry wrapper for unreliable commands
+retry() {
+    local max_attempts=3 delay=5 attempt=1
+    local cmd="$*"
+    while [ $attempt -le $max_attempts ]; do
+        if eval "$cmd"; then return 0; fi
+        echo "  [WARN] Attempt $attempt/$max_attempts failed. Retrying in ${delay}s..."
+        sleep $delay
+        attempt=$((attempt + 1))
+    done
+    echo "  [FAIL] Command failed after $max_attempts attempts: $cmd"
+    return 1
+}
+
+# Cross-platform system dependency installer
+install_system_deps() {
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get update -qq && sudo apt-get install -y "$@"
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y "$@"
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -S --noconfirm "$@"
+    elif command -v brew &>/dev/null; then
+        brew install "$@"
+    else
+        echo "  [WARN] No supported package manager found. Please install manually: $*"
+    fi
+}
+
+# Portable nproc
+get_nproc() {
+    nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4
+}
+
+# Portable timeout wrapper
+run_with_timeout() {
+    local seconds="$1"
+    shift
+    if command -v timeout &>/dev/null; then
+        timeout "$seconds" "$@"
+    else
+        "$@"
+    fi
+}
+
+# Disk space check (in GB)
+check_disk_space() {
+    local required_gb="${1:-10}"
+    local free_kb
+    free_kb=$(df -k "$HOME" | awk 'NR==2{print $4}')
+    local free_gb=$((free_kb / 1024 / 1024))
+    if [ "$free_gb" -lt "$required_gb" ]; then
+        warn "Only ${free_gb}GB free disk space. Models need ~${required_gb}GB."
+    fi
+}
+
+# Wait for Ollama to become reachable
+wait_for_ollama() {
+    local max_wait=${1:-30} waited=0
+    while [ $waited -lt $max_wait ]; do
+        if curl -sf "$OLLAMA_URL/api/tags" >/dev/null 2>&1; then return 0; fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+    return 1
+}
+
+# Interactive prompt helper (respects --silent)
+prompt_yn() {
+    local message="$1" default="${2:-N}"
+    if [ "$SILENT" -eq 1 ]; then
+        if [ "$default" = "Y" ] || [ "$default" = "y" ]; then
+            echo "y"
+        else
+            echo "n"
+        fi
+        return
+    fi
+    local answer
+    read -rp "  $message " answer || answer="$default"
+    echo "$answer"
 }
 
 # ============================================================================
@@ -78,6 +174,7 @@ show_error_submission() {
     echo "  https://github.com/Alex8791-cyber/cognithor/issues/new"
     echo ""
     echo "  Include the output above as a log."
+    echo "  Install log saved to: $LOG_FILE"
     echo ""
 }
 
@@ -122,7 +219,7 @@ detect_installer() {
             warn "uv not found, installing automatically..."
             local _uv_install_script
             _uv_install_script=$(mktemp)
-            if curl -LsSf --max-time 30 https://astral.sh/uv/install.sh -o "$_uv_install_script"; then
+            if retry "curl -LsSf --max-time 30 https://astral.sh/uv/install.sh -o '$_uv_install_script'"; then
                 warn "Downloaded uv installer to $_uv_install_script -- executing..."
                 sh "$_uv_install_script" 2>/dev/null
                 rm -f "$_uv_install_script"
@@ -161,9 +258,11 @@ detect_installer() {
     echo ""
     error "pip not found!"
     echo ""
-    echo "  Install pip with:"
+    echo "  Install pip with your package manager, e.g.:"
     echo ""
-    echo "    sudo apt install python3-pip"
+    echo "    sudo apt install python3-pip      # Debian/Ubuntu"
+    echo "    sudo dnf install python3-pip      # Fedora"
+    echo "    brew install python                # macOS"
     echo ""
     echo "  Then run again:"
     echo ""
@@ -209,7 +308,11 @@ _python_install_hint() {
             echo "    sudo zypper install python312 python312-devel"
             ;;
         *)
-            echo "    https://www.python.org/downloads/"
+            if command -v brew &>/dev/null; then
+                echo "    brew install python@3.12"
+            else
+                echo "    https://www.python.org/downloads/"
+            fi
             ;;
     esac
     echo ""
@@ -247,8 +350,10 @@ check_prerequisites() {
         else
             error "pip not found"
             echo ""
-            echo "  Fix with:"
-            echo "    sudo apt install python3-pip"
+            echo "  Fix with your package manager, e.g.:"
+            echo "    sudo apt install python3-pip      # Debian/Ubuntu"
+            echo "    sudo dnf install python3-pip      # Fedora"
+            echo "    brew install python                # macOS"
             echo ""
             fatal "pip is a required dependency. Please install and try again."
         fi
@@ -260,8 +365,9 @@ check_prerequisites() {
     else
         error "venv not found"
         echo ""
-        echo "  Fix with:"
-        echo "    sudo apt install python3.12-venv"
+        echo "  Fix with your package manager, e.g.:"
+        echo "    sudo apt install python3.12-venv     # Debian/Ubuntu"
+        echo "    sudo dnf install python3.12-devel    # Fedora"
         echo ""
         fatal "python3-venv is a required dependency. Please install and try again."
     fi
@@ -280,37 +386,32 @@ check_prerequisites() {
         success "Ollama installed ($ollama_version)"
     else
         warn "Ollama not found -- LLM features will be limited without Ollama"
-        read -rp "  Install Ollama now? [y/N] " _ollama_answer
+        local _ollama_answer
+        _ollama_answer=$(prompt_yn "Install Ollama now? [y/N]" "N")
         if [[ "$_ollama_answer" =~ ^[yY]$ ]]; then
             info "Installing Ollama..."
             local _ollama_install_script
             _ollama_install_script=$(mktemp)
-            curl -fsSL --max-time 60 https://ollama.com/install.sh -o "$_ollama_install_script"
-            if [ $? -eq 0 ] && sh "$_ollama_install_script"; then
-                rm -f "$_ollama_install_script"
-                success "Ollama installed"
-                # Start Ollama server
-                nohup ollama serve &>/dev/null &
-                info "Waiting for Ollama server..."
-                local _ollama_delay=1
-                local _ollama_total=0
-                while [[ $_ollama_total -lt 15 ]]; do
-                    if curl -sf --max-time 2 "${OLLAMA_URL}/api/version" &>/dev/null; then
+            if retry "curl -fsSL --max-time 60 https://ollama.com/install.sh -o '$_ollama_install_script'"; then
+                if sh "$_ollama_install_script"; then
+                    rm -f "$_ollama_install_script"
+                    success "Ollama installed"
+                    # Start Ollama server
+                    nohup ollama serve &>/dev/null &
+                    info "Waiting for Ollama server..."
+                    if wait_for_ollama 30; then
                         success "Ollama server started"
-                        break
+                    else
+                        warn "Ollama server not reachable after 30s -- start manually: ollama serve"
                     fi
-                    sleep "$_ollama_delay"
-                    _ollama_total=$((_ollama_total + _ollama_delay))
-                    # Exponential backoff: 1, 2, 4 (capped)
-                    _ollama_delay=$((_ollama_delay * 2))
-                    [[ $_ollama_delay -gt 4 ]] && _ollama_delay=4
-                done
-                if [[ $_ollama_total -ge 15 ]]; then
-                    warn "Ollama server not reachable after 15s -- start manually: ollama serve"
+                else
+                    rm -f "$_ollama_install_script"
+                    error "Ollama installation failed"
+                    info "Install manually: curl -fsSL https://ollama.com/install.sh | sh"
                 fi
             else
                 rm -f "$_ollama_install_script"
-                error "Ollama installation failed"
+                error "Failed to download Ollama installer"
                 info "Install manually: curl -fsSL https://ollama.com/install.sh | sh"
             fi
         else
@@ -334,7 +435,8 @@ check_prerequisites() {
     else
         warn "Flutter SDK not found (optional -- needed for Flutter UI)"
         info "Install: https://docs.flutter.dev/get-started/install"
-        read -rp "  Install Flutter SDK now? [y/N] " _flutter_answer
+        local _flutter_answer
+        _flutter_answer=$(prompt_yn "Install Flutter SDK now? [y/N]" "N")
         if [[ "$_flutter_answer" =~ ^[yY]$ ]]; then
             info "Installing Flutter SDK..."
             if check_command git; then
@@ -342,7 +444,7 @@ check_prerequisites() {
                 if [[ -d "$flutter_dir" ]]; then
                     info "Existing Flutter dir found at $flutter_dir"
                 else
-                    git clone https://github.com/flutter/flutter.git -b stable --depth 1 "$flutter_dir"
+                    retry "git clone https://github.com/flutter/flutter.git -b stable --depth 1 '$flutter_dir'"
                 fi
                 export PATH="$flutter_dir/bin:$PATH"
                 if check_command flutter; then
@@ -382,7 +484,7 @@ detect_hardware_tier() {
     if check_command nvidia-smi; then
         local _nvsmi_output
         _nvsmi_output=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null) || true
-        if [[ -n "$_nvsmi_output" ]]; then
+        if [[ -n "${_nvsmi_output:-}" ]]; then
             # Sum VRAM across all GPUs (one value per line)
             local _total_vram=0
             while IFS= read -r _line; do
@@ -406,12 +508,12 @@ detect_hardware_tier() {
     elif check_command rocm-smi; then
         local _rocm_output
         _rocm_output=$(rocm-smi --showmeminfo vram --json 2>/dev/null) || true
-        if [[ -n "$_rocm_output" ]]; then
+        if [[ -n "${_rocm_output:-}" ]]; then
             local _total_vram=0
             # Parse JSON output: extract "Total Memory (B)" values
             while IFS= read -r _vram_bytes; do
-                _vram_bytes=$(echo "$_vram_bytes" | tr -d ' ",' | grep -oP '[0-9]+')
-                if [[ -n "$_vram_bytes" && "$_vram_bytes" =~ ^[0-9]+$ ]]; then
+                _vram_bytes=$(echo "$_vram_bytes" | sed 's/[^0-9]//g')
+                if [[ -n "${_vram_bytes:-}" && "$_vram_bytes" =~ ^[0-9]+$ ]]; then
                     _total_vram=$(( _total_vram + _vram_bytes / 1048576 ))
                     gpu_count=$(( gpu_count + 1 ))
                 fi
@@ -437,16 +539,20 @@ except: pass
         fi
     fi
 
-    # RAM via /proc/meminfo
+    # RAM via /proc/meminfo or sysctl (macOS)
     if [[ -f /proc/meminfo ]]; then
         local ram_kb
         ram_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
         ram_mb=$(( ram_kb / 1024 ))
+    elif command -v sysctl &>/dev/null; then
+        local ram_bytes
+        ram_bytes=$(sysctl -n hw.memsize 2>/dev/null || echo 0)
+        ram_mb=$(( ram_bytes / 1048576 ))
     fi
 
     local ram_gb=$(( ram_mb / 1024 ))
     local cpu_cores
-    cpu_cores=$(nproc 2>/dev/null || echo "4")
+    cpu_cores=$(get_nproc)
 
     # Determine tier
     local tier="minimal"
@@ -484,6 +590,7 @@ ensure_ollama_models() {
     header "Checking Ollama models"
 
     detect_hardware_tier
+    check_disk_space 10
 
     if ! curl -sf "${OLLAMA_URL}/api/version" &>/dev/null; then
         warn "Ollama not reachable -- download models manually:"
@@ -531,11 +638,12 @@ for m in data.get('models', []):
         echo ""
         warn "Missing ${#missing_required[@]} required model(s): ${missing_required[*]}"
         echo ""
-        read -rp "  Download missing models now? [y/N] " _pull_answer
+        local _pull_answer
+        _pull_answer=$(prompt_yn "Download missing models now? [y/N]" "N")
         if [[ "$_pull_answer" =~ ^[yY]$ ]]; then
             for model in "${missing_required[@]}"; do
                 info "Downloading $model..."
-                if ollama pull "$model"; then
+                if retry "ollama pull '$model'"; then
                     success "$model installed"
                 else
                     warn "Failed to download $model"
@@ -593,12 +701,12 @@ setup_venv() {
     # shellcheck disable=SC1091
     source "$VENV_DIR/bin/activate"
     if [[ "$PKG_INSTALLER" == "pip" ]]; then
-        pip install --upgrade pip setuptools wheel --quiet
+        retry "pip install --upgrade pip setuptools wheel --quiet"
     fi
     success "venv created and activated"
 }
 
-install_jarvis() {
+install_cognithor() {
     header "Installing Cognithor"
 
     local install_extras="$1"
@@ -609,19 +717,19 @@ install_jarvis() {
 
     if [[ "$PKG_INSTALLER" == "uv" ]]; then
         info "Installing cognithor[$install_extras] with uv from $REPO_DIR ..."
-        uv pip install -e "$spec" --quiet 2>&1 | tail -5
+        retry "uv pip install -e '$spec' --quiet 2>&1 | tail -5"
     else
         echo ""
         info "Installing cognithor[$install_extras] with pip from $REPO_DIR ..."
         info "Installing packages... (may take 2-5 minutes)"
         echo ""
-        pip install -e "$spec" --progress-bar on 2>&1 | tail -20
+        retry "pip install -e '$spec' --progress-bar on 2>&1 | tail -20"
     fi
 
     # Install identity extras if missing
     if ! python3 -c "import jarvis.identity" 2>/dev/null; then
         echo "  [INFO] Installing identity module..."
-        pip install -e ".[identity]" --quiet 2>/dev/null || echo "  [WARNING] Identity install failed"
+        retry "pip install -e '.[identity]' --quiet 2>/dev/null" || echo "  [WARNING] Identity install failed"
     fi
 
     # Install pysqlcipher3 for GDPR encryption at rest
@@ -630,12 +738,8 @@ install_jarvis() {
     else
         echo "  [INFO] Installing pysqlcipher3 for GDPR encryption at rest..."
         # System library required first
-        if command -v apt-get &>/dev/null; then
-            sudo apt-get install -y libsqlcipher-dev 2>/dev/null || true
-        elif command -v brew &>/dev/null; then
-            brew install sqlcipher 2>/dev/null || true
-        fi
-        pip install pysqlcipher3 --quiet 2>/dev/null && \
+        install_system_deps libsqlcipher-dev 2>/dev/null || true
+        retry "pip install pysqlcipher3 --quiet 2>/dev/null" && \
             success "pysqlcipher3 installed" || \
             warn "pysqlcipher3 install failed -- database encryption unavailable. Install libsqlcipher-dev (Ubuntu) or sqlcipher (macOS) and retry."
     fi
@@ -648,12 +752,16 @@ install_jarvis() {
     fi
 
     # Check CLI
-    if "$VENV_DIR/bin/jarvis" --version &>/dev/null; then
+    if "$VENV_DIR/bin/cognithor" --version &>/dev/null; then
+        local ver
+        ver=$("$VENV_DIR/bin/cognithor" --version 2>&1)
+        success "CLI available: $ver"
+    elif "$VENV_DIR/bin/jarvis" --version &>/dev/null; then
         local ver
         ver=$("$VENV_DIR/bin/jarvis" --version 2>&1)
         success "CLI available: $ver"
     else
-        warn "CLI 'jarvis' not in PATH -- use: $VENV_DIR/bin/jarvis"
+        warn "CLI not in PATH -- use: $VENV_DIR/bin/cognithor"
     fi
 
     # Flutter UI Build (preferred)
@@ -677,7 +785,7 @@ install_jarvis() {
         if check_command node && check_command npm; then
             if [[ ! -d "$ui_dir/node_modules" ]]; then
                 info "Installing legacy UI dependencies (npm install)..."
-                (cd "$ui_dir" && npm install --silent 2>&1 | tail -5) || true
+                (cd "$ui_dir" && retry "npm install --silent 2>&1 | tail -5") || true
             fi
             if [[ ! -f "$ui_dist" ]]; then
                 info "Building legacy UI (npm run build)..."
@@ -720,7 +828,7 @@ create_directory_safe() {
         return 0
     fi
     local err_file
-    err_file=$(mktemp "${TMPDIR:-/tmp}/jarvis_mkdir_XXXXXX" 2>/dev/null || echo "/tmp/jarvis_mkdir_err")
+    err_file=$(mktemp "${TMPDIR:-/tmp}/cognithor_mkdir_XXXXXX" 2>/dev/null || echo "/tmp/cognithor_mkdir_err")
     if mkdir -p "$dir" 2>"$err_file"; then
         success "  [created] $dir"
         rm -f "$err_file" 2>/dev/null
@@ -761,16 +869,18 @@ setup_directories() {
         create_directory_safe "$dir"
     done
 
-    # Run jarvis --init-only for any extra setup (with timeout)
-    info "Running jarvis --init-only..."
-    if timeout 30 "$VENV_DIR/bin/jarvis" --init-only 2>/dev/null; then
+    # Run cognithor --init-only for any extra setup (with timeout)
+    info "Running cognithor --init-only..."
+    if run_with_timeout 30 "$VENV_DIR/bin/cognithor" --init-only 2>/dev/null; then
+        success "cognithor --init-only completed"
+    elif run_with_timeout 30 "$VENV_DIR/bin/jarvis" --init-only 2>/dev/null; then
         success "jarvis --init-only completed"
     else
         local _exit_code=$?
         if [[ $_exit_code -eq 124 ]]; then
-            warn "jarvis --init-only timed out after 30s -- skipped"
+            warn "init-only timed out after 30s -- skipped"
         else
-            warn "jarvis --init-only failed (exit code: $_exit_code) -- skipped"
+            warn "init-only failed (exit code: $_exit_code) -- skipped"
         fi
     fi
     success "Directory structure in $COGNITHOR_HOME complete"
@@ -798,7 +908,7 @@ setup_directories() {
         fi
         # Write language to the top of config.yaml
         local _tmp_cfg
-        _tmp_cfg=$(mktemp "${TMPDIR:-/tmp}/jarvis_cfg_XXXXXX")
+        _tmp_cfg=$(mktemp "${TMPDIR:-/tmp}/cognithor_cfg_XXXXXX")
         echo "language: \"${_detected_lang}\"" > "$_tmp_cfg"
         cat "$config_file" >> "$_tmp_cfg"
         mv "$_tmp_cfg" "$config_file"
@@ -823,11 +933,17 @@ setup_directories() {
 install_systemd() {
     header "Systemd Services"
 
+    if ! command -v systemctl &>/dev/null; then
+        warn "systemctl not found -- skipping systemd service installation"
+        info "Systemd services are only available on Linux with systemd"
+        return 0
+    fi
+
     local service_dir="$HOME/.config/systemd/user"
     mkdir -p "$service_dir"
 
     # Cognithor Core Service
-    local service_file="$service_dir/jarvis.service"
+    local service_file="$service_dir/cognithor.service"
     cat > "$service_file" << UNIT
 [Unit]
 Description=Cognithor Agent OS
@@ -837,7 +953,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=${VENV_DIR}/bin/jarvis
+ExecStart=${VENV_DIR}/bin/python -m cognithor
 WorkingDirectory=${COGNITHOR_HOME}
 EnvironmentFile=-${COGNITHOR_HOME}/.env
 Restart=on-failure
@@ -847,26 +963,26 @@ WatchdogSec=300
 # Security
 NoNewPrivileges=true
 ProtectHome=read-only
-ReadWritePaths=${COGNITHOR_HOME} /tmp/jarvis
+ReadWritePaths=${COGNITHOR_HOME} /tmp/cognithor
 
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=jarvis
+SyslogIdentifier=cognithor
 
 [Install]
 WantedBy=default.target
 UNIT
-    success "jarvis.service created"
+    success "cognithor.service created"
 
     # WebUI Service (optional)
-    local webui_file="$service_dir/jarvis-webui.service"
+    local webui_file="$service_dir/cognithor-webui.service"
     cat > "$webui_file" << UNIT
 [Unit]
 Description=Cognithor Web-UI (FastAPI)
 Documentation=https://github.com/Alex8791-cyber/cognithor
-After=jarvis.service
-BindsTo=jarvis.service
+After=cognithor.service
+BindsTo=cognithor.service
 
 [Service]
 Type=simple
@@ -879,28 +995,28 @@ RestartSec=5
 # Security
 NoNewPrivileges=true
 ProtectHome=read-only
-ReadWritePaths=${COGNITHOR_HOME} /tmp/jarvis
+ReadWritePaths=${COGNITHOR_HOME} /tmp/cognithor
 
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=jarvis-webui
+SyslogIdentifier=cognithor-webui
 
 [Install]
 WantedBy=default.target
 UNIT
-    success "jarvis-webui.service created"
+    success "cognithor-webui.service created"
 
     # Daemon Reload
     systemctl --user daemon-reload 2>/dev/null || true
     success "systemd daemon-reload"
 
     info "Manage services:"
-    info "  systemctl --user start jarvis        # Start"
-    info "  systemctl --user stop jarvis         # Stop"
-    info "  systemctl --user enable jarvis       # Autostart"
-    info "  journalctl --user -u jarvis -f       # Logs"
-    info "  systemctl --user start jarvis-webui  # Start Web-UI"
+    info "  systemctl --user start cognithor        # Start"
+    info "  systemctl --user stop cognithor         # Stop"
+    info "  systemctl --user enable cognithor       # Autostart"
+    info "  journalctl --user -u cognithor -f       # Logs"
+    info "  systemctl --user start cognithor-webui  # Start Web-UI"
 }
 
 # ============================================================================
@@ -913,7 +1029,7 @@ setup_logrotate() {
     local logrotate_dir="$COGNITHOR_HOME/logrotate.d"
     mkdir -p "$logrotate_dir"
 
-    cat > "$logrotate_dir/jarvis" << CONF
+    cat > "$logrotate_dir/cognithor" << CONF
 ${COGNITHOR_HOME}/logs/*.log {
     daily
     missingok
@@ -939,7 +1055,7 @@ ${COGNITHOR_HOME}/logs/*.jsonl {
 }
 CONF
     success "logrotate configuration created"
-    info "For system logrotate: sudo ln -s $logrotate_dir/jarvis /etc/logrotate.d/jarvis"
+    info "For system logrotate: sudo ln -s $logrotate_dir/cognithor /etc/logrotate.d/cognithor"
 }
 
 # ============================================================================
@@ -965,7 +1081,7 @@ run_smoke_test() {
         _llm_response=$(curl -sf --max-time 30 "${OLLAMA_URL}/api/chat" \
             -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"Say hello briefly."}],"stream":false}' \
             2>/dev/null)
-        if [[ -n "$_llm_response" ]]; then
+        if [[ -n "${_llm_response:-}" ]]; then
             local _llm_answer
             _llm_answer=$(echo "$_llm_response" | python3 -c "
 import sys, json
@@ -974,7 +1090,7 @@ try:
     print(data.get('message', {}).get('content', '').strip()[:80])
 except: pass
 " 2>/dev/null)
-            if [[ -n "$_llm_answer" ]]; then
+            if [[ -n "${_llm_answer:-}" ]]; then
                 success "LLM responds: $_llm_answer"
             else
                 warn "LLM responded empty -- model may not be ready yet"
@@ -1001,7 +1117,8 @@ setup_shell_integration() {
         shell_rc="$HOME/.zshrc"
     fi
 
-    local alias_line="alias jarvis='${VENV_DIR}/bin/jarvis'"
+    local alias_line="alias cognithor='${VENV_DIR}/bin/cognithor'"
+    local alias_line_compat="alias jarvis='${VENV_DIR}/bin/cognithor'"
     local activate_line="# Cognithor Agent OS"
 
     if [[ -n "$shell_rc" ]]; then
@@ -1012,8 +1129,9 @@ setup_shell_integration() {
                 echo ""
                 echo "$activate_line"
                 echo "$alias_line"
+                echo "$alias_line_compat"
             } >> "$shell_rc"
-            success "Alias 'jarvis' added to $shell_rc"
+            success "Aliases 'cognithor' and 'jarvis' added to $shell_rc"
         fi
     else
         info "No .bashrc/.zshrc found -- add manually:"
@@ -1038,7 +1156,7 @@ Version=1.0
 Type=Application
 Name=Cognithor (CLI)
 Comment=Cognithor Agent OS - Terminal
-Exec=${VENV_DIR}/bin/jarvis
+Exec=${VENV_DIR}/bin/python -m cognithor
 Icon=utilities-terminal
 Terminal=true
 Categories=Utility;Development;
@@ -1053,7 +1171,7 @@ Version=1.0
 Type=Application
 Name=Cognithor Web-UI
 Comment=Cognithor Agent OS - Web Interface
-Exec=bash -c '${VENV_DIR}/bin/python -m jarvis --no-cli & sleep 3 && xdg-open http://localhost:8741; wait'
+Exec=bash -c '${VENV_DIR}/bin/python -m cognithor --no-cli & sleep 3 && xdg-open http://localhost:8741; wait'
 Icon=applications-internet
 Terminal=false
 Categories=Utility;Development;
@@ -1075,22 +1193,28 @@ DESKTOP
 uninstall() {
     header "Uninstall Cognithor"
 
-    warn "This removes the Cognithor installation (NOT your data in ~/.cognithor)"
+    warn "This removes the Cognithor installation (NOT your data in $COGNITHOR_HOME)"
 
-    read -rp "Continue? [y/N] " confirm
+    local confirm
+    confirm=$(prompt_yn "Continue? [y/N]" "N")
     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
         info "Cancelled."
         exit 0
     fi
 
     # Stop services
-    systemctl --user stop jarvis jarvis-webui 2>/dev/null || true
-    systemctl --user disable jarvis jarvis-webui 2>/dev/null || true
+    if command -v systemctl &>/dev/null; then
+        systemctl --user stop cognithor cognithor-webui 2>/dev/null || true
+        systemctl --user disable cognithor cognithor-webui 2>/dev/null || true
 
-    # Remove service files
-    rm -f "$HOME/.config/systemd/user/jarvis.service"
-    rm -f "$HOME/.config/systemd/user/jarvis-webui.service"
-    systemctl --user daemon-reload 2>/dev/null || true
+        # Remove service files
+        rm -f "$HOME/.config/systemd/user/cognithor.service"
+        rm -f "$HOME/.config/systemd/user/cognithor-webui.service"
+        # Also clean up old jarvis-named services
+        rm -f "$HOME/.config/systemd/user/jarvis.service"
+        rm -f "$HOME/.config/systemd/user/jarvis-webui.service"
+        systemctl --user daemon-reload 2>/dev/null || true
+    fi
 
     # Remove venv
     if [[ -d "$VENV_DIR" ]]; then
@@ -1100,10 +1224,10 @@ uninstall() {
 
     # Remove shell alias (portable: works on GNU sed and BSD/macOS sed)
     for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
-        if [[ -f "$rc" ]] && grep -q "Cognithor Agent OS\|Jarvis Agent OS\|jarvis.*venv.*bin.*jarvis" "$rc" 2>/dev/null; then
-            grep -v "Cognithor Agent OS" "$rc" | grep -v "Jarvis Agent OS" | grep -v "jarvis.*venv.*bin.*jarvis" > "${rc}.jarvis_tmp" \
-                && mv "${rc}.jarvis_tmp" "$rc" \
-                || rm -f "${rc}.jarvis_tmp"
+        if [[ -f "$rc" ]] && grep -q "Cognithor Agent OS\|Jarvis Agent OS\|jarvis.*venv.*bin.*jarvis\|cognithor.*venv.*bin.*cognithor" "$rc" 2>/dev/null; then
+            grep -v "Cognithor Agent OS" "$rc" | grep -v "Jarvis Agent OS" | grep -v "jarvis.*venv.*bin.*jarvis" | grep -v "cognithor.*venv.*bin.*cognithor" > "${rc}.cognithor_tmp" \
+                && mv "${rc}.cognithor_tmp" "$rc" \
+                || rm -f "${rc}.cognithor_tmp"
         fi
     done
 
@@ -1126,12 +1250,12 @@ DONE
     echo -e "${NC}"
 
     echo "  Getting started:"
-    echo "    jarvis                              # CLI chat"
-    echo "    jarvis --config ~/my-config.yaml    # Custom config"
+    echo "    cognithor                              # CLI chat"
+    echo "    cognithor --config ~/my-config.yaml    # Custom config"
     echo ""
     echo "  Systemd:"
-    echo "    systemctl --user start jarvis       # Run as service"
-    echo "    systemctl --user enable jarvis      # Autostart"
+    echo "    systemctl --user start cognithor       # Run as service"
+    echo "    systemctl --user enable cognithor      # Autostart"
     echo ""
     echo "  Directories:"
     echo "    $COGNITHOR_HOME/                       # Home"
@@ -1141,7 +1265,7 @@ DONE
     echo ""
     echo "  Next steps:"
     echo "    1. Review and customize config.yaml"
-    echo "    2. Start jarvis and test"
+    echo "    2. Start cognithor and test"
     echo "    3. Optional: Enable Telegram/WebUI/Flutter"
     echo ""
     if check_command flutter && [[ -f "$REPO_DIR/flutter_app/pubspec.yaml" ]]; then
@@ -1150,6 +1274,8 @@ DONE
         echo "    cd flutter_app && flutter build web        # Production build"
         echo ""
     fi
+
+    info "Install log saved to: $LOG_FILE"
 }
 
 # ============================================================================
@@ -1164,6 +1290,7 @@ main() {
     for arg in "$@"; do
         case "$arg" in
             --use-uv) USE_UV=true ;;
+            --silent) SILENT=1 ;;
             --minimal|--full|--systemd|--uninstall|--help|-h) mode="$arg" ;;
         esac
     done
@@ -1181,7 +1308,7 @@ main() {
             check_prerequisites
             detect_installer
             setup_venv
-            install_jarvis ""
+            install_cognithor ""
             setup_directories
             run_smoke_test
             show_summary
@@ -1191,7 +1318,7 @@ main() {
             detect_installer
             ensure_ollama_models
             setup_venv
-            install_jarvis "full"
+            install_cognithor "full"
             setup_directories
             install_systemd
             setup_logrotate
@@ -1201,12 +1328,13 @@ main() {
             show_summary
             ;;
         --help|-h)
-            echo "Usage: $0 [--minimal|--full|--use-uv|--systemd|--uninstall|--help]"
+            echo "Usage: $0 [--minimal|--full|--use-uv|--silent|--systemd|--uninstall|--help]"
             echo ""
             echo "  (no arguments)    Interactive installation"
             echo "  --minimal         Core packages only"
             echo "  --full            Everything including Voice + Systemd"
             echo "  --use-uv          Use uv instead of pip (10x faster)"
+            echo "  --silent          Non-interactive mode (accept all defaults)"
             echo "  --systemd         Install systemd services only"
             echo "  --uninstall       Uninstall"
             exit 0
@@ -1217,7 +1345,7 @@ main() {
             detect_installer
             ensure_ollama_models
             setup_venv
-            install_jarvis "all,dev"
+            install_cognithor "all,dev"
             setup_directories
             install_systemd
             setup_logrotate
