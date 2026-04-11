@@ -44,7 +44,7 @@ Cognithor uses a two-branch model:
 
 ```bash
 # From the beta GitHub release:
-pip install https://github.com/Alex8791-cyber/cognithor/releases/download/v0.84.0-beta/cognithor-0.84.0-py3-none-any.whl
+pip install https://github.com/Alex8791-cyber/cognithor/releases/download/v0.90.0-beta/cognithor-0.90.0-py3-none-any.whl
 
 # Or from source:
 git clone -b beta https://github.com/Alex8791-cyber/cognithor.git
@@ -106,7 +106,7 @@ python -m pytest tests/ -x -q
    python -m pytest tests/ -x -q      # All tests pass
    ruff check src/ tests/              # No lint errors
    ruff format --check src/ tests/     # Formatting correct
-   mypy src/jarvis/ --strict           # Type checking passes
+   mypy src/cognithor/ --strict         # Type checking passes
    ```
 5. **Commit** with a clear, conventional message:
    ```
@@ -130,10 +130,10 @@ python -m pytest tests/ -x -q
 
 #### Test Conventions
 
-- **Test file naming:** `tests/test_{module}/test_{file}.py`
+- **Test file naming:** `tests/{module}/test_{file}.py` or `tests/test_{module}/test_{file}.py`
 - **Test class naming:** `TestClassName` grouping related tests
 - **Test method naming:** `test_specific_behavior_under_condition`
-- **Use fixtures** from `conftest.py` (`tmp_jarvis_home`, `config`, etc.)
+- **Use fixtures** from `conftest.py` (`tmp_cognithor_home`, `config`, etc.)
 - **Mock external services** — tests must run without network access
 - **Target:** maintain 89%+ coverage, 0 test failures
 

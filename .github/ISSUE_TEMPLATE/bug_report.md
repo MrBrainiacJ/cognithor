@@ -13,7 +13,7 @@ assignees: ''
 | Field | Value |
 |-------|-------|
 | **OS** | <!-- e.g., Windows 11 23H2, Ubuntu 24.04 LTS, macOS 15.2 --> |
-| **Cognithor version** | <!-- run: cognithor --version  OR  python -c "import jarvis; print(jarvis.__version__)" --> |
+| **Cognithor version** | <!-- run: cognithor --version  OR  python -c "import cognithor; print(cognithor.__version__)" --> |
 | **Python version** | <!-- run: python3 --version --> |
 | **Install method** | <!-- start_cognithor.bat / install.sh / bootstrap_windows.py / manual pip / Docker --> |
 | **LLM backend** | <!-- Ollama / LM Studio / OpenAI / Anthropic / Gemini / Groq / DeepSeek / other --> |
@@ -46,8 +46,8 @@ What actually happened. Include the exact error message if there is one.
 Paste relevant log output here.
 
 Logs are located at:
-  - Linux/macOS: ~/.jarvis/logs/jarvis.log
-  - Windows: %USERPROFILE%\.jarvis\logs\jarvis.log
+  - Linux/macOS: ~/.cognithor/logs/cognithor.log
+  - Windows: %USERPROFILE%\.cognithor\logs\cognithor.log
 
 For install issues, paste the full terminal output.
 ```

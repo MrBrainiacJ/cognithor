@@ -4,7 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.78.2+ | Yes       |
+| 0.85.0+ | Yes (current: 0.90.0) |
+| 0.78.2–0.84.x | Security patches on request |
 | 0.71–0.78.1 | Upgrade recommended (GHSA-cognithor-001) |
 | < 0.71  | No        |
 
@@ -30,6 +31,7 @@ Cognithor implements defense-in-depth with multiple security layers (supporting 
 - **Sandbox** — Multi-level execution isolation: Process-level → Linux Namespaces (nsjail) → Docker containers → Windows Job Objects.
 - **Audit Trail** — Append-only JSONL log with SHA-256 hash chain. Tamper-evident. Credentials are masked before logging.
 - **Credential Vault** — Fernet-encrypted (AES-256) per-agent secret storage. Keys never appear in logs or API responses.
+- **AST-Based Code Analysis** — Python `ast.NodeVisitor` guard detects dangerous imports, subprocess calls, eval, exec at the syntax tree level. Shell commands analyzed via `bashlex` parser with regex fallback. Replaces regex-based guards (v0.90.0+).
 - **Input Sanitization** — Protection against shell injection, path traversal, and prompt injection attacks.
 - **Path Sandbox** — File operations restricted to explicitly allowed directories.
 - **Red-Teaming** — Automated offensive security test suite (1,425 LOC).
@@ -66,7 +68,7 @@ All upload and processing paths enforce size limits to prevent resource exhausti
 ## Credential Handling
 
 - API keys in configuration are masked (`***`) in all API responses by default.
-- The `.env` file (`~/.jarvis/.env`) is excluded from version control via `.gitignore`.
+- The `.env` file (`~/.cognithor/.env` or legacy `~/.jarvis/.env`) is excluded from version control via `.gitignore`.
 - The Control Center API never writes masked placeholder values (`***`) back to configuration files.
 
 ## Past Advisories

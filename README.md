@@ -7,7 +7,7 @@
     <em>Cognition + Thor — Intelligence with Power</em>
   </p>
   <p align="center">
-    <a href="#llm-providers">18 LLM Providers</a> &middot; <a href="#channels">18 Channels</a> &middot; <a href="#6-tier-cognitive-memory">6-Tier Memory</a> &middot; <a href="#knowledge-vault">Knowledge Vault</a> &middot; <a 
+    <a href="#llm-providers">18 LLM Providers</a> &middot; <a href="#channels">18 Channels</a> &middot; <a href="#6-tier-cognitive-memory">6-Tier Memory</a> &middot; <a href="#4-channel-hybrid-search">4-Channel Search</a> &middot; <a href="#knowledge-vault">Knowledge Vault</a> &middot; <a 
     href="#security">Security</a> &middot; <a href="LICENSE">Apache 2.0</a>
   </p>
   <p align="center">
@@ -21,7 +21,7 @@
   </p>
 </p>
 
-> **Note:** Cognithor is in **active development (Beta)**. While the test suite is extensive (13,000+ tests, 89% coverage), the project has not been battle-tested in production environments. Expect rough edges, breaking changes between versions, and some German-language strings in system prompts and error messages. Contributions, bug reports, and feedback are very welcome. See [Status & Maturity](#status--maturity) for details. For non technical users, wait until version 1.0.0 for stable long term support. 
+> **Note:** Cognithor is in **active development (Beta)**. While the test suite is extensive (13,000+ tests, 89% coverage), the project has not been battle-tested in production environments. Expect rough edges, breaking changes between versions, and some German-language strings in system prompts and error messages. Contributions, bug reports, and feedback are very welcome. See [Status & Maturity](#status--maturity) for details. For non-technical users, wait until version 1.0.0 for stable long-term support.
 
   [![clawdboard](https://clawdboard.ai/api/badge/Alex8791-cyber)](https://clawdboard.ai/user/Alex8791-cyber)
 
@@ -37,7 +37,7 @@
 
 Most AI assistants send your data to the cloud. Cognithor runs entirely on your machine — with Ollama or LM Studio, no API keys required. Cloud providers are optional, not mandatory.
 
-It replaces a patchwork of tools with one integrated system: 18 channels, 125+ MCP tools, 6-tier memory, knowledge vault, voice, browser automation, Computer Use, and more — all wired together from day one. 13,000+ tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
+It replaces a patchwork of tools with one integrated system: 18 channels, 130+ MCP tools, 6-tier memory with 4-channel hybrid search, knowledge vault, voice, browser automation, Computer Use, cross-platform social listening, and more — all wired together from day one. 13,000+ tests at 89% coverage keep it honest. See [Status & Maturity](#status--maturity) for what that does and does not guarantee.
 
 **In plain terms:** Cognithor is an AI assistant that lives entirely on your computer. You talk to it through your terminal, a web UI, Telegram, Discord, or any of 18 supported channels — and it talks back, remembers what you said last week, and acts on your behalf. It can search the web, write and edit files, run shell commands, control your browser, automate your desktop (clicking, typing, reading windows), manage your calendar, and learn new skills over time. Think of it as a local, private, self-improving Jarvis.
 
@@ -56,7 +56,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 | **Core agent loop (PGE)** | Stable — well-tested and functional |
 | **Memory system** | Stable — 6-tier architecture works reliably |
 | **CLI channel** | Stable — primary development interface |
-| **Flutter Command Center** | Beta — Sci-Fi aesthetic, cross-platform, GEPA pipeline visualization, Robot Office pathfinding, 20 config pages, chat, voice, learning dashboard |
+| **Flutter Command Center** | Beta — Sci-Fi aesthetic, cross-platform, GEPA pipeline visualization, Robot Office pathfinding, 20+ config pages, chat, voice, learning dashboard |
 | **Messaging channels** (Telegram, Discord, etc.) | Beta — basic flows work, edge cases may break |
 | **Voice mode / TTS** | Alpha — experimental, hardware-dependent |
 | **Browser automation** | Stable — Playwright-based, CAPTCHA solving, stealth mode |
@@ -73,6 +73,11 @@ What makes it different from other local AI tools is that Cognithor is not just 
 | **Audit & Compliance** | Beta — HMAC + Ed25519 signatures, RFC 3161 TSA, GDPR Art. 15/33, WORM-ready |
 | **Enterprise features** (GDPR, A2A, Governance) | Stable — GDPR 100% user rights, consent management, SQLCipher encryption, audit trail |
 | **Encryption at Rest** | Stable — SQLCipher (AES-256) for all databases, Fernet for files, OS Keyring key management |
+| **Cross-Platform Social Listening** | Beta — Reddit + Hacker News + Discord scanning, LLM-scored leads, unified MCP tools |
+| **Hierarchical Document Reasoning** | Beta — Tree-based retrieval for PDF/DOCX/HTML/Markdown, LLM-navigated section selection |
+| **CAG Layer (Cache-Augmented Generation)** | Beta — Deterministic prefix generation for LLM KV-cache reuse, prefix + native builders |
+| **CLI Config TUI** | Stable — Interactive terminal config editor (rich + prompt_toolkit), model discovery |
+| **AST-Based Security** | Stable — Python AST + bashlex shell analysis replacing regex-based guards |
 | **OSINT / HIM Module** | Beta — person/project/org investigation with trust scoring |
 
 **What the test suite covers:** Unit tests, integration tests, real-life scenario tests, and live Ollama tests for all modules. The 13,000+ tests verify code correctness in controlled environments.
@@ -114,12 +119,12 @@ What makes it different from other local AI tools is that Cognithor is not just 
 - **18 LLM Providers** — Ollama (local), LM Studio (local), vLLM (local), llama-cpp-python (local), OpenAI, Anthropic, Google Gemini, Groq, DeepSeek, Mistral, Together AI, OpenRouter, xAI (Grok), Cerebras, GitHub Models, AWS Bedrock, Hugging Face, Moonshot/Kimi — plus any custom OpenAI-compatible endpoint
 - **18 Communication Channels** — CLI, Web UI, REST API, Telegram, Discord, Slack, WhatsApp, Signal, iMessage, Microsoft Teams, Matrix, Google Chat, Mattermost, Feishu/Lark, IRC, Twitch, Voice (STT/TTS)
 - **6-Tier Cognitive Memory** — Core identity, episodic logs, semantic knowledge graph, procedural skills, working memory, tactical memory
-- **3-Channel Hybrid Search** — BM25 full-text + vector embeddings + knowledge graph traversal with score fusion
+- **4-Channel Hybrid Search** — BM25 full-text + vector embeddings + knowledge graph traversal + hierarchical document reasoning with score fusion
 - **PGE Architecture** — Planner (LLM) -> Gatekeeper (deterministic policy engine) -> Executor (sandboxed)
-- **Security** — Platform-adaptive sandbox (bubblewrap on Linux, subprocess+timeout fallback), AST-based Python/Shell code analysis, SHA-256 audit chain, credential vault, runtime token encryption (Fernet AES-256), Gatekeeper policy engine with GREEN/YELLOW/ORANGE/RED risk classification (not independently audited — see [Status & Maturity](#status--maturity))
+- **Security** — Platform-adaptive sandbox (bubblewrap on Linux, subprocess+timeout fallback), AST-based Python/Shell code analysis (Python `ast.NodeVisitor` + `bashlex` parser), SHA-256 audit chain, credential vault, runtime token encryption (Fernet AES-256), Gatekeeper policy engine with GREEN/YELLOW/ORANGE/RED risk classification (not independently audited — see [Status & Maturity](#status--maturity))
 - **Knowledge Vault** — Obsidian-compatible Markdown vault with YAML frontmatter, tags, `[[backlinks]]`, full-text search
 - **Document Analysis** — LLM-powered structured analysis of PDF/DOCX/HTML (summary, risks, action items, decisions)
-- **Model Context Protocol (MCP)** — 120+ tools across 12 modules (filesystem, shell, memory, web, browser, media, vault, synthesis, code, skills, documents, reddit, kanban, identity) + A2A delegation
+- **Model Context Protocol (MCP)** — 130+ tools across 14 modules (filesystem, shell, memory, web, browser, media, vault, synthesis, code, skills, documents, reddit, social, kanban, identity) + A2A delegation
 - **Computer Use** — Complete desktop automation: screenshots, clicking, typing, scrolling, dragging, Windows UI Automation via pywinauto for exact element coordinates, 3-layer security, adaptive wait
 - **ARC-AGI-3 Benchmark Agent** — Compete in ARC Prize 2026: 13/25 games solved (24 levels), 4 solver families (ClusterClick, SequenceClick+SimA*, KeyboardDFS, SmartExplorer), persistent game profiles, multimodal vision (qwen3-vl)
 - **Distributed Locking** — Redis-backed (with file-based fallback) locks for multi-instance deployments
@@ -131,7 +136,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 - **Auto-Dependency Loading** — Missing optional packages detected and installed at startup
 - **Agent-to-Agent Protocol (A2A)** — Linux Foundation RC v1.0 with full JSON-RPC 2.0 server/client, Planner-level delegation via MCP tools, auto-discovery, SSE streaming
 - **Integrated Chat** — Full chat page in the Flutter Command Center with WebSocket streaming, tool indicators, canvas panel, approval banners, and voice mode
-- **Flutter Command Center** — Cross-platform UI (Flutter 3.41, Web/Desktop/Mobile) with Sci-Fi aesthetic, GEPA pipeline visualization, Robot Office pathfinding, 18 editable config pages, Observe panel, Knowledge Graph, Voice Mode, Learning Dashboard, Light/Dark theme, 4-language i18n
+- **Flutter Command Center** — Cross-platform UI (Flutter 3.41, Web/Desktop/Mobile) with Sci-Fi aesthetic, GEPA pipeline visualization, Robot Office pathfinding, 20+ editable config pages, Observe panel, Knowledge Graph, Voice Mode, Learning Dashboard, Light/Dark theme, 4-language i18n
 - **Active Learning & Curiosity** — CuriosityEngine detects knowledge gaps, KnowledgeConfidenceManager with time decay and feedback, ActiveLearner processes files in background during idle time
 - **Human Feel** — Personality Engine (warmth, humor, greetings), sentiment detection (frustrated/urgent/confused/positive), user preference learning, real-time status callbacks, user-friendly German error messages
 - **Auto-Detect Channels** — Channels activate automatically when tokens are present in `.env` — no manual config flags needed
@@ -152,6 +157,12 @@ What makes it different from other local AI tools is that Cognithor is not just 
 - **Deterministic Replay** — Record and replay agent executions with what-if analysis and diff comparison
 - **Agent SDK** — Decorator-based agent registration (`@agent`, `@tool`, `@hook`), project scaffolding
 - **Plugin Remote Registry** — Remote manifests with SHA-256 checksums, dependency resolution, install/update/rollback
+- **Cross-Platform Social Listening** — Reddit + Hacker News (Firebase/Algolia) + Discord (REST API v10) scanning with LLM lead scoring. 2 unified MCP tools (`social_scan`, `social_leads`), configurable per-platform intervals, auto-post opt-in
+- **Hierarchical Document Reasoning** — Tree-based retrieval (4th search channel): 5 parsers (Markdown, PDF, DOCX, HTML, plaintext) build heading trees, LLM-navigated section selection, no embedding required
+- **CAG Layer (Cache-Augmented Generation)** — Deterministic prefix generation for LLM KV-cache reuse. Prefix builder (Ollama-compatible) + native llama.cpp builder, content normalization, hit-rate metrics
+- **CLI Config TUI** — Interactive terminal config editor (rich + prompt_toolkit): model discovery from live providers, section navigation, validation, save/discard
+- **AST-Based Security Guards** — Python `ast.NodeVisitor` + `bashlex` shell parser replacing regex-based code analysis. Detects imports, subprocess calls, eval, network access, file operations at the syntax tree level
+- **`_safe_call()` Pattern** — Unified error handling replacing silent `except Exception: pass`. Failure registry with per-function tracking, async variant, circuit-breaker integration
 - **uv Installer Support** — Automatic uv detection for 10x faster installs, transparent pip fallback
 - **13,000+ tests** · **89% coverage** · **0 lint errors** · **0 CodeQL alerts**
 
@@ -185,11 +196,11 @@ What makes it different from other local AI tools is that Cognithor is not just 
 ├─────────────┴──────────────┴──────────────────────────────────────┤
 │  DAG Workflow Engine · Workflow Adapter · Benchmark Suite             │
 ├───────────────────────────────────────────────────────────────────┤
-│                   MCP Tool Layer (125+ tools)                        │
+│                   MCP Tool Layer (130+ tools)                        │
 │   Filesystem · Shell · Memory · Web · Browser · Media · Vault      │
-│   Synthesis · Skills Marketplace · Remote Registry                  │
+│   Synthesis · Skills · Social Listening · Kanban · Documents        │
 ├───────────────────────────────────────────────────────────────────┤
-│               Multi-LLM Backend Layer (16)                         │
+│               Multi-LLM Backend Layer (18)                         │
 │   Ollama · OpenAI · Anthropic · Gemini · Groq · DeepSeek           │
 │   Mistral · Together · OpenRouter · xAI · Cerebras · ...           │
 ├───────────────────────────────────────────────────────────────────┤
@@ -221,11 +232,11 @@ Every user request passes through three stages:
 | 5 | **Working** | RAM (volatile) | Active session context |
 | 6 | **Tactical** | SQLite | Active goals, pending actions, rollback |
 
-Memory search uses a 3-channel hybrid approach: **BM25** (full-text search with FTS5, optimized for German compound words) + **Vector Search** (Ollama embeddings, cosine similarity) + **Graph Traversal** (entity relations). Score fusion with configurable weights and recency decay.
+Memory search uses a 4-channel hybrid approach: **BM25** (full-text search with FTS5, optimized for German compound words) + **Vector Search** (Ollama embeddings, cosine similarity) + **Graph Traversal** (entity relations) + **Hierarchical Document Reasoning** (tree-based section navigation for long documents). Score fusion with configurable weights and recency decay.
 
 ### Knowledge Vault
 
-In addition to the 6-tier memory, Cognithor includes an **Obsidian-compatible Knowledge Vault** (`~/.jarvis/vault/`) for persistent, human-readable notes:
+In addition to the 6-tier memory, Cognithor includes an **Obsidian-compatible Knowledge Vault** (`~/.cognithor/vault/`) for persistent, human-readable notes:
 
 - **Folder structure**: `recherchen/`, `meetings/`, `wissen/`, `projekte/`, `daily/`
 - **Obsidian format**: YAML frontmatter (title, tags, sources, dates), `[[backlinks]]`
@@ -349,7 +360,7 @@ ollama pull qwen3:8b                # Pull a model
 cognithor                           # Start
 
 # Upgrade to a specific version:
-pip install cognithor[all]==0.87.0
+pip install cognithor[all]==0.90.0
 
 # Upgrade to latest:
 pip install --upgrade cognithor[all]
@@ -416,9 +427,9 @@ flutter run       # Desktop, or:
 flutter run -d chrome  # Web
 ```
 
-The Flutter Command Center connects to the Python backend on port 8741. Start the backend first (`python -m cognithor --no-cli`), then launch the Flutter app. The **Chat page** opens as the default start page — start talking to Jarvis immediately, or activate **Voice Mode** for hands-free conversation. The Sci-Fi aesthetic features dark translucent panels, neon accents, and GEPA pipeline visualization.
+The Flutter Command Center connects to the Python backend on port 8741. Start the backend first (`python -m cognithor --no-cli`), then launch the Flutter app. The **Chat page** opens as the default start page — start talking to Cognithor immediately, or activate **Voice Mode** for hands-free conversation. The Sci-Fi aesthetic features dark translucent panels, neon accents, and GEPA pipeline visualization.
 
-All configuration — agents, prompts, cron jobs, MCP servers, A2A settings — can be edited and saved through the dashboard. Changes persist to YAML files under `~/.jarvis/`.
+All configuration — agents, prompts, cron jobs, MCP servers, A2A settings — can be edited and saved through the dashboard. Changes persist to YAML files under `~/.cognithor/`.
 
 > **Legacy React UI (deprecated):** The old React + Vite UI in `ui/` is deprecated and will be removed in a future release. Use the Flutter Command Center instead.
 
@@ -426,10 +437,10 @@ All configuration — agents, prompts, cron jobs, MCP servers, A2A settings — 
 
 ### Channel Auto-Detection
 
-Channels start automatically when their tokens are found in `~/.jarvis/.env`:
+Channels start automatically when their tokens are found in `~/.cognithor/.env`:
 
 ```bash
-# ~/.jarvis/.env — just add your tokens, channels activate automatically
+# ~/.cognithor/.env — just add your tokens, channels activate automatically
 JARVIS_TELEGRAM_TOKEN=your-bot-token
 JARVIS_TELEGRAM_ALLOWED_USERS=123456789
 JARVIS_DISCORD_TOKEN=your-discord-token
@@ -458,6 +469,10 @@ No need to set `telegram_enabled: true` in the config — the presence of the to
 │   └── _index.json      # Quick lookup index
 ├── index/
 │   └── cognithor.db     # SQLite index (FTS5 + vectors + entities)
+├── hierarchical/
+│   └── trees.db         # Hierarchical document trees (SQLite)
+├── cag/
+│   └── cache.db         # CAG prefix cache (SQLite)
 ├── mcp/
 │   └── config.yaml      # MCP server configuration
 ├── queue/
@@ -468,7 +483,7 @@ No need to set `telegram_enabled: true` in the config — the presence of the to
 
 ## Configuration
 
-Cognithor is configured via `~/.cognithor/config.yaml`. All values can be overridden with environment variables using the `JARVIS_` prefix (legacy) or `COGNITHOR_` prefix.
+Cognithor is configured via `~/.cognithor/config.yaml`. All values can be overridden with environment variables using the `COGNITHOR_` prefix (or legacy `JARVIS_` prefix for backward compatibility).
 
 ```yaml
 # Example: ~/.cognithor/config.yaml
@@ -499,12 +514,12 @@ web:
 
 vault:
   enabled: true
-  path: "~/.jarvis/vault"
+  path: "~/.cognithor/vault"
   # auto_save_research: false     # Auto-save web research results
 
 channels:
   cli_enabled: true
-  # Channels auto-detect from tokens in ~/.jarvis/.env
+  # Channels auto-detect from tokens in ~/.cognithor/.env
   # Set to false only to explicitly disable a channel:
   # telegram_enabled: false
 
@@ -601,9 +616,9 @@ python -m pytest tests/test_memory/ -v
 python -m pytest tests/test_channels/ -v
 ```
 
-Current status: **13,000+ tests** · **100% pass rate** · **89% coverage** · **~201,000 LOC source** · **~163,000 LOC tests**
+Current status: **13,000+ tests** · **100% pass rate** · **89% coverage** · **~205,000 LOC source** · **~168,000 LOC tests**
 
-Notable test suites: 183 Computer Use tests, 176 ARC tests.
+Notable test suites: 183 Computer Use tests, 176 ARC tests, 136 Hierarchical Retrieval tests, 71 CAG tests.
 
 | Area | Tests | Description |
 |------|-------|-------------|
@@ -711,7 +726,7 @@ print(t("error.timeout"))  # "The operation timed out..."
 ### Switching Language
 
 1. **Flutter Command Center**: General → "Sprache / Language" dropdown, or click the language button in the header
-2. **Config file**: Set `language: en` in `~/.jarvis/config.yaml`
+2. **Config file**: Set `language: en` in `~/.cognithor/config.yaml`
 3. **Environment variable**: `JARVIS_LANGUAGE=en`
 
 | Area | i18n Status | Notes |
@@ -730,7 +745,7 @@ print(t("error.timeout"))  # "The operation timed out..."
 3. Run `python -c "from cognithor.i18n import generate_pack_hash; generate_pack_hash('<locale>')"`
 4. Submit a PR
 
-**Metrics:** ~201,000 LOC source · ~163,000 LOC tests · 13,000+ tests · 89% coverage · 0 lint errors · **Status: Beta**
+**Metrics:** ~205,000 LOC source · ~168,000 LOC tests · 13,000+ tests · 89% coverage · 0 lint errors · **Status: Beta**
 
 ## Contributors
 
@@ -762,6 +777,17 @@ Copyright 2026 Alexander Soellner
 ---
 
 ## What's New
+
+### v0.90.0 (2026-04-11)
+- **Cross-Platform Social Listening** — Hacker News (Firebase + Algolia API, zero auth) + Discord (REST API v10, bot token) scanners join Reddit. Unified `social_scan` and `social_leads` MCP tools. Per-platform config: intervals, min scores, categories/channels. Flutter config UI with HN + Discord sections.
+- **Hierarchical Document Reasoning** — 4th retrieval channel: tree-based section navigation for PDF, DOCX, HTML, Markdown, plaintext. `TreeBuilder` + `NodeSelector` (LLM-navigated) + `TreeStore` (SQLite). No embeddings required — structural understanding through heading hierarchy.
+- **CAG Layer (Cache-Augmented Generation)** — Deterministic prefix generation for LLM KV-cache reuse. `PrefixBuilder` (Ollama-compatible) + `NativeLlamaCppBuilder`, `ContentNormalizer`, `CacheStore`, hit-rate metrics. Hooks into Planner for automatic prefix injection.
+- **CLI Config TUI** — Interactive terminal config editor via `cognithor --config-tui`. Dynamic model discovery from live LLM providers, section navigation, validation, rich formatting.
+- **AST-Based Security** — Python `ast.NodeVisitor` guard (40 tests) + `bashlex` shell parser (48 tests) replace regex-based code analysis. Detects dangerous imports, subprocess calls, eval, network access at syntax tree level.
+- **`_safe_call()` Pattern** — Unified error handling replacing 79 silent `except Exception: pass` across codebase. Per-function failure registry, async variant, structured logging.
+- **Package Rename** — `jarvis` → `cognithor` across 1,265 files (5,770 replacements). Both `cognithor` and `jarvis` entry points preserved for compatibility.
+- **Installer Overhaul** — `install.bat` + `install.sh` rewritten with GPU detection, model auto-pull, health checks, auto-upgrade system syncing source tree to installed version on every launch.
+- **13,000+ tests passing** across Python 3.12/3.13 x Ubuntu/Windows
 
 ### v0.84.0 (2026-04-09)
 - **Reddit Lead Hunter** — Full social listening system: scans Reddit for high-intent posts, scores them 0-100 via LLM, drafts context-aware replies. 3 trigger paths (Chat, Cron, REST API). No Reddit API key needed.

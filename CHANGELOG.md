@@ -5,6 +5,64 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.90.0] -- 2026-04-11
+
+### Added
+- **Cross-Platform Social Listening** — Hacker News + Discord scanners join existing Reddit system
+  - `src/cognithor/social/hn_scanner.py` — HackerNewsScanner: Firebase API for story IDs, Algolia for search, HN-culture-aware LLM scoring, zero auth required
+  - `src/cognithor/social/discord_scanner.py` — DiscordScanner: REST API v10 via httpx, bot token auth, message history fetch, 1s rate limiting between channels
+  - `src/cognithor/mcp/social_tools.py` — 2 unified MCP tools: `social_scan` (dispatches to any/all platforms), `social_leads` (unified listing with platform filter)
+  - Lead model gains `platform`, `platform_id`, `platform_url` fields; store migration with platform-aware queries
+  - `RedditLeadService` extended with `scan_hackernews()`, `scan_discord()`, `scan_all()` methods
+  - Config: `hn_enabled`, `hn_categories`, `hn_min_score`, `hn_scan_interval_minutes`, `discord_scanner_enabled`, `discord_scan_channels`, `discord_min_score`, `discord_scan_interval_minutes`
+  - Gateway wiring: HN/Discord scanners initialized in post-init block
+  - Flutter: HN + Discord config sections in Social Listening page
+  - Gatekeeper: `social_scan` and `social_leads` classified as GREEN
+- **Hierarchical Document Reasoning** — 4th retrieval channel (tree-based, vectorless)
+  - `src/cognithor/memory/hierarchical/` — 8 modules: 5 parsers (markdown, pdf, docx, html, plaintext), `tree_builder`, `tree_store` (SQLite), `node_selector` (LLM-navigated), `retrieval`, `manager`
+  - Builds heading-based document trees; LLM navigates tree structure to find relevant sections
+  - No embeddings required — structural understanding through document hierarchy
+  - 136 tests
+- **CAG Layer (Cache-Augmented Generation)** — KV-cache prefix reuse for LLM acceleration
+  - `src/cognithor/memory/cag/` — 7 modules: `content_normalizer`, `cache_store`, `selectors`, `metrics`, `builders/prefix_builder`, `builders/native_builder`, `manager`
+  - Deterministic prefix generation from memory/vault/episodes context
+  - Hooks into Planner for automatic prefix injection
+  - Hit-rate metrics and cache eviction
+  - 71 tests
+- **CLI Config TUI** — Interactive terminal config editor
+  - `src/cognithor/cli/config_tui.py` — rich + prompt_toolkit based TUI
+  - `src/cognithor/cli/model_registry.py` — Dynamic model discovery from live LLM providers
+  - Section navigation, validation, model selection from available models
+  - Launched via `cognithor --config-tui`
+
+### Changed
+- **Package rename**: `jarvis` → `cognithor` across 1,265 files (5,770 replacements)
+  - Both `cognithor` and `jarvis` entry points preserved for backward compatibility
+  - All internal imports, config paths, env vars updated
+- **AST-Based Security** — Python `ast.NodeVisitor` + `bashlex` shell parser replace regex guards
+  - `src/cognithor/security/python_ast_guard.py` (40 tests)
+  - `src/cognithor/security/shell_ast_guard.py` (48 tests, bashlex + regex fallback)
+- **`_safe_call()` pattern** — 79 silent `except Exception: pass` replaced with tracked error handling
+  - `src/cognithor/core/safe_call.py` — `_safe_call()` + `_safe_call_async()` with failure registry
+- **Installer overhaul** — `install.bat` + `install.sh` rewritten
+  - GPU detection, model auto-pull, health checks, uv support
+  - `installer/auto_upgrade.py` — Syncs source tree to installed version on every launch
+  - Inno Setup `{%USERPROFILE}` fix for runtime env var resolution
+- **Vault search** upgraded from substring matching to word-level scoring with title boost
+- **Evolution deep learner** — Fixed infinite loop (hardcoded queries → LLM-generated), max rounds limit
+
+### Fixed
+- `await` outside async function in gateway.py (CAG hook in sync function)
+- `cag_prefix` MagicMock crash in tests (isinstance check)
+- `_BootstrapRequest` missing at runtime (TYPE_CHECKING import)
+- Reddit tools `parameters` vs `input_schema` keyword mismatch
+- Reddit tools missing JSON Schema `"type": "object"` wrapper
+- `ModelsConfig.default` AttributeError (field doesn't exist)
+- Reddit LLM scoring missing `model` parameter
+- `WindowsPath` concatenation in `encrypted_db.py`
+- Evolution goals dict vs string format mismatch
+- Multiple CI failures from rename leftovers (python -m jarvis, PREREQUISITES.md, first_boot.py)
+
 ## [0.84.0] -- 2026-04-09
 
 ### Added
