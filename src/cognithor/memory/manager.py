@@ -13,6 +13,7 @@ Provides a unified API for search, indexing, and lifecycle management.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import anyio
@@ -39,8 +40,6 @@ from cognithor.memory.working import WorkingMemoryManager
 from cognithor.models import MemorySearchResult, MemoryTier
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from cognithor.memory.episodic_store import EpisodicStore
     from cognithor.memory.weight_optimizer import SearchWeightOptimizer
 
@@ -119,6 +118,31 @@ class MemoryManager:
             vector_index=self._vector_index,
             weight_optimizer=self._weight_optimizer,
         )
+
+        # Hierarchical Document Reasoning (4th retrieval channel)
+        self._hierarchical_manager: Any = None
+        if self._mc.hierarchical.enabled:
+            try:
+                from cognithor.memory.hierarchical.manager import HierarchicalIndexManager
+                from cognithor.memory.hierarchical.node_selector import LLMNodeSelector
+                from cognithor.memory.hierarchical.retrieval import HierarchicalRetriever
+                from cognithor.memory.hierarchical.tree_builder import DocumentTreeBuilder
+                from cognithor.memory.hierarchical.tree_store import TreeStore
+
+                _h_db = str(self._config.db_path.with_name("memory_hierarchical.db"))
+                _h_store = TreeStore(Path(_h_db))
+                _h_selector = LLMNodeSelector(
+                    llm_fn=None, language=getattr(self._config, "language", "de")
+                )
+                _h_retriever = HierarchicalRetriever(_h_store, _h_selector)
+                _h_builder = DocumentTreeBuilder(llm_fn=None)
+                self._hierarchical_manager = HierarchicalIndexManager(
+                    _h_store, _h_builder, _h_retriever
+                )
+                # Pass retriever to HybridSearch
+                self._search._hierarchical_retriever = _h_retriever
+            except Exception:
+                logger.debug("hierarchical_init_failed", exc_info=True)
 
         # Graph Ranking (PageRank + Staleness)
         self._graph_ranking = GraphRanking(
@@ -789,3 +813,44 @@ class MemoryManager:
                 self._tactical.close()
             except Exception:
                 logger.debug("tactical_memory_close_failed", exc_info=True)
+
+    # ── Hierarchical Document Reasoning ─────────────────────────
+
+    async def index_document_hierarchical(
+        self,
+        source_path: str | Path,
+        document_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Any:
+        """Index a document into the hierarchical tree store.
+
+        Returns:
+            The ``DocumentTree`` built from the source file.
+        """
+        if not self._hierarchical_manager:
+            raise RuntimeError("Hierarchical indexing not enabled")
+        return await self._hierarchical_manager.index_document(
+            Path(source_path), document_id, metadata
+        )
+
+    async def remove_hierarchical_document(self, document_id: str) -> None:
+        """Remove a document from the hierarchical store."""
+        if not self._hierarchical_manager:
+            raise RuntimeError("Hierarchical indexing not enabled")
+        await self._hierarchical_manager.remove_document(document_id)
+
+    async def list_hierarchical_documents(self) -> list[Any]:
+        """List all hierarchically indexed documents."""
+        if not self._hierarchical_manager:
+            return []
+        return await self._hierarchical_manager.list_documents()
+
+    async def reindex_hierarchical_document(self, document_id: str) -> Any:
+        """Re-index an existing hierarchical document.
+
+        Returns:
+            The newly built ``DocumentTree``.
+        """
+        if not self._hierarchical_manager:
+            raise RuntimeError("Hierarchical indexing not enabled")
+        return await self._hierarchical_manager.reindex_document(document_id)

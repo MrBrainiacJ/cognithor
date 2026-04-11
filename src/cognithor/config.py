@@ -566,6 +566,19 @@ class TacticalMemoryConfig(BaseModel):
     )
 
 
+class HierarchicalConfig(BaseModel):
+    """Hierarchical Document Reasoning configuration."""
+
+    enabled: bool = Field(default=True, description="Enable hierarchical document indexing")
+    default_max_nodes_per_query: int = Field(default=5, ge=1, le=20)
+    default_max_tokens_per_node: int = Field(default=2000, ge=100, le=8000)
+    score_weight: float = Field(default=0.25, ge=0.0, le=1.0)
+    max_branching_factor: int = Field(default=50, ge=5, le=200)
+    max_tree_depth: int = Field(default=8, ge=2, le=15)
+    node_split_token_threshold: int = Field(default=4000, ge=500, le=16000)
+    parallel_summary_generation: int = Field(default=10, ge=1, le=50)
+
+
 class MemoryConfig(BaseModel):
     """Memory-System Konfiguration. [B§4]"""
 
@@ -602,6 +615,9 @@ class MemoryConfig(BaseModel):
     # Gewichtungen (weight_vector, weight_bm25, weight_graph) aus der
     # Konfiguration verwendet.
     dynamic_weighting: bool = False
+
+    # Hierarchical Document Reasoning (4th retrieval channel)
+    hierarchical: HierarchicalConfig = Field(default_factory=HierarchicalConfig)
 
     @model_validator(mode="after")
     def validate_weights(self) -> MemoryConfig:

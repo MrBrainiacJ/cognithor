@@ -87,6 +87,7 @@ class HybridSearch:
         config: MemoryConfig | None = None,
         vector_index: VectorIndex | None = None,
         weight_optimizer: Any = None,
+        hierarchical_retriever: Any = None,
     ) -> None:
         """Initialisiert die Hybrid-Suche mit Index, Embeddings und Konfiguration."""
         self._index = index
@@ -96,6 +97,7 @@ class HybridSearch:
             backend="auto", dimension=embedding_client.dimensions
         )
         self._weight_optimizer = weight_optimizer
+        self._hierarchical_retriever = hierarchical_retriever
         # Cached mapping content_hash -> [chunk_ids] (built lazily)
         self._chunk_hash_map: dict[str, list[str]] | None = None
         # LRU cache for graph search results keyed by frozenset of query words
@@ -137,6 +139,17 @@ class HybridSearch:
         """Invalidiert den gecachten Chunk-Hash-Map und den Graph-Search-Cache."""
         self._chunk_hash_map = None
         self._graph_search_cache.clear()
+
+    async def _hierarchical_channel(self, query: str, top_k: int) -> dict[str, float]:
+        """4th channel: hierarchical document retrieval."""
+        if not self._hierarchical_retriever:
+            return {}
+        try:
+            results = await self._hierarchical_retriever.search(query, max_results=top_k)
+            return {r.get("node_id", f"h_{i}"): r.get("score", 0.0) for i, r in enumerate(results)}
+        except Exception:
+            logger.debug("hierarchical_search_failed", exc_info=True)
+            return {}
 
     async def search(
         self,
@@ -262,6 +275,13 @@ class HybridSearch:
             except Exception as exc:
                 logger.debug("Dynamische Gewichtung fehlgeschlagen (Fallback): %s", exc)
 
+        # ── Kanal 4: Hierarchical ────────────────────────────────
+        hierarchical_scores = await self._hierarchical_channel(query, fetch_k)
+
+        # Hierarchical weight (0 when no retriever is configured)
+        _h_cfg = getattr(self._config, "hierarchical", None)
+        w_h = _h_cfg.score_weight if _h_cfg and self._hierarchical_retriever else 0.0
+
         # Batch-fetch all chunks (1 query instead of N+1)
         all_chunk_ids = list(scores.keys())
         chunks_by_id = self._index.get_chunks_by_ids(all_chunk_ids)
@@ -288,8 +308,18 @@ class HybridSearch:
             bm25_s = channel_scores["bm25"]
             vector_s = channel_scores["vector"]
             graph_s = channel_scores["graph"]
+            h_score = hierarchical_scores.get(chunk_id, 0.0)
 
-            final_score = (w_vector * vector_s + w_bm25 * bm25_s + w_graph * graph_s) * decay
+            total_w = w_vector + w_bm25 + w_graph + w_h
+            if total_w > 0:
+                final_score = (
+                    w_vector / total_w * vector_s
+                    + w_bm25 / total_w * bm25_s
+                    + w_graph / total_w * graph_s
+                    + w_h / total_w * h_score
+                ) * decay
+            else:
+                final_score = 0.0
 
             results.append(
                 MemorySearchResult(
