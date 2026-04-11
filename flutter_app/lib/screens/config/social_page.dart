@@ -105,6 +105,74 @@ class SocialPage extends StatelessWidget {
               description: l.autoPostHint,
               onChanged: (v) => cfg.set('social.reddit_auto_post', v),
             ),
+
+            // ── Hacker News ─────────────────────────────────
+            const Divider(height: 32),
+            Text('Hacker News', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            JarvisToggleField(
+              label: 'HN Scanning',
+              value: social['hn_enabled'] == true,
+              onChanged: (v) => cfg.set('social.hn_enabled', v),
+            ),
+            JarvisTextField(
+              label: 'HN Categories',
+              value: (social['hn_categories'] as List<dynamic>?)?.join(', ') ?? 'top, new',
+              placeholder: 'top, new, best, ask, show',
+              onChanged: (v) => cfg.set(
+                'social.hn_categories',
+                v.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
+              ),
+            ),
+            JarvisNumberField(
+              label: 'HN Min Score',
+              value: (social['hn_min_score'] as num?) ?? 60,
+              min: 0,
+              max: 100,
+              onChanged: (v) => cfg.set('social.hn_min_score', v),
+            ),
+            JarvisNumberField(
+              label: 'HN Scan Interval (min)',
+              value: (social['hn_scan_interval_minutes'] as num?) ?? 60,
+              min: 10,
+              max: 1440,
+              onChanged: (v) => cfg.set('social.hn_scan_interval_minutes', v),
+            ),
+
+            // ── Discord ─────────────────────────────────────
+            const Divider(height: 32),
+            Text('Discord', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            JarvisToggleField(
+              label: 'Discord Scanning',
+              value: social['discord_scanner_enabled'] == true,
+              description: 'Requires COGNITHOR_DISCORD_TOKEN env var',
+              onChanged: (v) => cfg.set('social.discord_scanner_enabled', v),
+            ),
+            JarvisTextField(
+              label: 'Discord Channel IDs',
+              value: (social['discord_scan_channels'] as List<dynamic>?)?.join(', ') ?? '',
+              placeholder: '123456789, 987654321',
+              description: 'Comma-separated Discord channel IDs to monitor',
+              onChanged: (v) => cfg.set(
+                'social.discord_scan_channels',
+                v.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
+              ),
+            ),
+            JarvisNumberField(
+              label: 'Discord Min Score',
+              value: (social['discord_min_score'] as num?) ?? 60,
+              min: 0,
+              max: 100,
+              onChanged: (v) => cfg.set('social.discord_min_score', v),
+            ),
+            JarvisNumberField(
+              label: 'Discord Scan Interval (min)',
+              value: (social['discord_scan_interval_minutes'] as num?) ?? 30,
+              min: 5,
+              max: 1440,
+              onChanged: (v) => cfg.set('social.discord_scan_interval_minutes', v),
+            ),
           ],
         );
       },
