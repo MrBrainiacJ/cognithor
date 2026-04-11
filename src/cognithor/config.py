@@ -579,6 +579,16 @@ class HierarchicalConfig(BaseModel):
     parallel_summary_generation: int = Field(default=10, ge=1, le=50)
 
 
+class CAGConfig(BaseModel):
+    """Context-Augmented Generation (CAG) KV-cache preloading config."""
+
+    enabled: bool = Field(default=False, description="Enable CAG (opt-in)")
+    backend: str = Field(default="auto", description="'auto' | 'prefix' | 'llamacpp_native'")
+    cache_dir: str = Field(default="~/.cognithor/cag_cache")
+    auto_rebuild_on_change: bool = Field(default=True)
+    rebuild_debounce_seconds: int = Field(default=30, ge=5, le=300)
+
+
 class MemoryConfig(BaseModel):
     """Memory-System Konfiguration. [B§4]"""
 
@@ -618,6 +628,9 @@ class MemoryConfig(BaseModel):
 
     # Hierarchical Document Reasoning (4th retrieval channel)
     hierarchical: HierarchicalConfig = Field(default_factory=HierarchicalConfig)
+
+    # CAG KV-cache preloading
+    cag: CAGConfig = Field(default_factory=CAGConfig)
 
     @model_validator(mode="after")
     def validate_weights(self) -> MemoryConfig:

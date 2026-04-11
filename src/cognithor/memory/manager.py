@@ -144,6 +144,28 @@ class MemoryManager:
             except Exception:
                 logger.debug("hierarchical_init_failed", exc_info=True)
 
+        # CAG KV-cache preloading
+        self._cag_manager: Any = None
+        if self._mc.cag.enabled:
+            try:
+                from cognithor.memory.cag.cache_store import CacheStore
+                from cognithor.memory.cag.selectors import CAGSelector
+                from cognithor.memory.cag.metrics import CAGMetricsCollector
+                from cognithor.memory.cag.manager import CAGManager
+                from cognithor.memory.cag.builders import get_builder
+
+                _cag_dir = Path(self._mc.cag.cache_dir).expanduser()
+                self._cag_manager = CAGManager(
+                    self._mc.cag,
+                    CacheStore(_cag_dir),
+                    get_builder(self._mc.cag.backend),
+                    CAGSelector(),
+                    CAGMetricsCollector(),
+                )
+                logger.info("cag_manager_initialized")
+            except Exception:
+                logger.debug("cag_init_failed", exc_info=True)
+
         # Graph Ranking (PageRank + Staleness)
         self._graph_ranking = GraphRanking(
             self._index,
@@ -854,3 +876,31 @@ class MemoryManager:
         if not self._hierarchical_manager:
             raise RuntimeError("Hierarchical indexing not enabled")
         return await self._hierarchical_manager.reindex_document(document_id)
+
+    # ------------------------------------------------------------------
+    # CAG KV-cache preloading
+    # ------------------------------------------------------------------
+
+    async def enable_cag(self, enabled: bool = True) -> None:
+        """Enable or disable CAG at runtime."""
+        if self._cag_manager:
+            self._cag_manager._config = type(self._cag_manager._config)(
+                enabled=enabled,
+                backend=self._cag_manager._config.backend,
+                cache_dir=self._cag_manager._config.cache_dir,
+                auto_rebuild_on_change=self._cag_manager._config.auto_rebuild_on_change,
+                rebuild_debounce_seconds=self._cag_manager._config.rebuild_debounce_seconds,
+            )
+            logger.info("cag_enabled_changed", enabled=enabled)
+
+    async def refresh_cag_cache(self, core_memory_text: str, model_id: str) -> Any:
+        """Force a CAG cache rebuild."""
+        if not self._cag_manager:
+            return None
+        return await self._cag_manager.build_all(core_memory_text, model_id)
+
+    async def get_cag_status(self) -> Any:
+        """Return CAG layer status."""
+        if not self._cag_manager:
+            return None
+        return await self._cag_manager.get_status()

@@ -489,6 +489,7 @@ class WorkingMemory(BaseModel):
     injected_procedures: list[str] = Field(default_factory=list)  # Relevante Prozeduren als Text
     injected_tactical: str = ""  # Taktische Einsichten (TacticalMemory)
     core_memory_text: str = ""  # CORE.md Inhalt
+    cag_prefix: str | None = None  # CAG KV-cache prefix (replaces core_memory_text when set)
     token_count: int = 0
     max_tokens: int = 32768  # Qwen3-32B Default
 
