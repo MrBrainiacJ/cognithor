@@ -4,13 +4,13 @@ import dataclasses
 
 import pytest
 
-from jarvis.memory.cag.models import (
+from cognithor.memory.cag.models import (
     CAGMetrics,
     CAGRefreshReport,
     CAGStatus,
     CacheEntry,
 )
-from jarvis.memory.cag.builders import get_builder
+from cognithor.memory.cag.builders import get_builder
 
 
 # ---------------------------------------------------------------------------
@@ -95,19 +95,19 @@ class TestCAGRefreshReport:
 
 class TestGetBuilder:
     def test_auto_returns_prefix(self):
-        from jarvis.memory.cag.builders.prefix import PrefixCacheBuilder
+        from cognithor.memory.cag.builders.prefix import PrefixCacheBuilder
 
         builder = get_builder("auto")
         assert isinstance(builder, PrefixCacheBuilder)
 
     def test_prefix_returns_prefix(self):
-        from jarvis.memory.cag.builders.prefix import PrefixCacheBuilder
+        from cognithor.memory.cag.builders.prefix import PrefixCacheBuilder
 
         builder = get_builder("prefix")
         assert isinstance(builder, PrefixCacheBuilder)
 
     def test_llamacpp_native_returns_native(self):
-        from jarvis.memory.cag.builders.native import NativeLlamaCppBuilder
+        from cognithor.memory.cag.builders.native import NativeLlamaCppBuilder
 
         builder = get_builder("llamacpp_native")
         assert isinstance(builder, NativeLlamaCppBuilder)

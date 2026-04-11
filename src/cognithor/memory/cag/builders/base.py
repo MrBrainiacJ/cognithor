@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from jarvis.memory.cag.models import CacheEntry
+from cognithor.memory.cag.models import CacheEntry
 
 
 class CacheBuilder(ABC):

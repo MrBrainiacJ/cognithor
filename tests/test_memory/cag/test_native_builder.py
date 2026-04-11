@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from jarvis.memory.cag.builders.native import NativeLlamaCppBuilder
-from jarvis.memory.cag.models import CacheEntry
+from cognithor.memory.cag.builders.native import NativeLlamaCppBuilder
+from cognithor.memory.cag.models import CacheEntry
 
 
 def _entry(cache_id: str = "core", text: str = "hello") -> CacheEntry:
@@ -42,7 +42,7 @@ class TestNativeLlamaCppBuilder:
 
     @pytest.mark.asyncio
     async def test_prepare_prefix_same_as_prefix_builder(self):
-        from jarvis.memory.cag.builders.prefix import PrefixCacheBuilder
+        from cognithor.memory.cag.builders.prefix import PrefixCacheBuilder
 
         entries = [_entry("b", "bb"), _entry("a", "aa")]
         native = await NativeLlamaCppBuilder().prepare_prefix(entries, "m")

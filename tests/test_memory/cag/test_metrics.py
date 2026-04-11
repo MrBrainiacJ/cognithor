@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.memory.cag.metrics import CAGMetricsCollector
+from cognithor.memory.cag.metrics import CAGMetricsCollector
 
 
 class TestCAGMetricsCollector:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from jarvis.memory.cag.content_normalizer import ContentNormalizer
+from cognithor.memory.cag.content_normalizer import ContentNormalizer
 
 
 class TestNormalize:

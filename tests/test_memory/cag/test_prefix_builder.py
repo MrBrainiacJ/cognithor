@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from jarvis.memory.cag.builders.prefix import PrefixCacheBuilder
-from jarvis.memory.cag.models import CacheEntry
+from cognithor.memory.cag.builders.prefix import PrefixCacheBuilder
+from cognithor.memory.cag.models import CacheEntry
 
 
 def _entry(cache_id: str = "core", text: str = "hello") -> CacheEntry:

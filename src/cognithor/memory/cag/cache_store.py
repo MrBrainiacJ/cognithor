@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 
-from jarvis.memory.cag.models import CacheEntry
+from cognithor.memory.cag.models import CacheEntry
 
 
 class CacheStore:

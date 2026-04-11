@@ -6,11 +6,11 @@ from __future__ import annotations
 def get_builder(backend: str):
     """Factory: return the appropriate CacheBuilder for the backend."""
     if backend in ("auto", "prefix"):
-        from jarvis.memory.cag.builders.prefix import PrefixCacheBuilder
+        from cognithor.memory.cag.builders.prefix import PrefixCacheBuilder
 
         return PrefixCacheBuilder()
     elif backend == "llamacpp_native":
-        from jarvis.memory.cag.builders.native import NativeLlamaCppBuilder
+        from cognithor.memory.cag.builders.native import NativeLlamaCppBuilder
 
         return NativeLlamaCppBuilder()
     else:

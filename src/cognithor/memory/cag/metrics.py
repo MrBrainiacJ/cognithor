@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from jarvis.memory.cag.models import CAGMetrics
+from cognithor.memory.cag.models import CAGMetrics
 
 
 class CAGMetricsCollector:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from jarvis.memory.cag.builders.base import CacheBuilder
-from jarvis.memory.cag.models import CacheEntry
+from cognithor.memory.cag.builders.base import CacheBuilder
+from cognithor.memory.cag.models import CacheEntry
 
 
 class PrefixCacheBuilder(CacheBuilder):

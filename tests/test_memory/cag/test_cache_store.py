@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from jarvis.memory.cag.cache_store import CacheStore
-from jarvis.memory.cag.models import CacheEntry
+from cognithor.memory.cag.cache_store import CacheStore
+from cognithor.memory.cag.models import CacheEntry
 
 
 def _make_entry(**overrides) -> CacheEntry:

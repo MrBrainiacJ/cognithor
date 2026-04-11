@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from jarvis.memory.cag.selectors import CAGSelector
+from cognithor.memory.cag.selectors import CAGSelector
 
 
 class TestCAGSelector:
