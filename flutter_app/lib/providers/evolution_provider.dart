@@ -170,12 +170,16 @@ class EvolutionProvider extends ChangeNotifier {
 
   Future<bool> updateGoal(
     String goalId, {
+    String? title,
+    String? description,
     String? status,
     int? priority,
   }) async {
     if (_api == null) return false;
     try {
       final body = <String, dynamic>{};
+      if (title != null) body['title'] = title;
+      if (description != null) body['description'] = description;
       if (status != null) body['status'] = status;
       if (priority != null) body['priority'] = priority;
       final data = await _api!.patch('evolution/goals/$goalId', body);

@@ -4003,6 +4003,7 @@ def _register_ui_routes(
             return new_goal
         except Exception as exc:
             import traceback
+
             traceback.print_exc()
             return {"error": str(exc)}
 

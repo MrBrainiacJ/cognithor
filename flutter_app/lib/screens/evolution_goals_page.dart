@@ -165,7 +165,11 @@ class _EvolutionGoalsPageState extends State<EvolutionGoalsPage>
 class _GoalsTab extends StatelessWidget {
   final List<EvolutionGoal> goals;
   final Map<String, dynamic> stats;
-  final Future<bool> Function(String, {String? status, int? priority}) onUpdate;
+  final Future<bool> Function(String,
+      {String? title,
+      String? description,
+      String? status,
+      int? priority}) onUpdate;
   final Future<bool> Function(String) onDelete;
 
   const _GoalsTab({
@@ -190,6 +194,106 @@ class _GoalsTab extends StatelessWidget {
     'mastered': Icons.star,
     'abandoned': Icons.cancel,
   };
+
+  Future<void> _editGoal(BuildContext context, EvolutionGoal goal) async {
+    final titleCtrl = TextEditingController(text: goal.title);
+    final descCtrl = TextEditingController(text: goal.description);
+    int priority = goal.priority;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Lernziel bearbeiten'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Goal',
+                    border: OutlineInputBorder(),
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  value: priority,
+                  decoration: const InputDecoration(
+                    labelText: 'Priority',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [1, 2, 3, 4, 5]
+                      .map((p) => DropdownMenuItem(
+                            value: p,
+                            child: Text('P$p'),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setDialogState(() => priority = v ?? 3),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == true && titleCtrl.text.trim().isNotEmpty) {
+      await onUpdate(
+        goal.id,
+        title: titleCtrl.text.trim(),
+        description: descCtrl.text.trim(),
+        priority: priority,
+      );
+    }
+    titleCtrl.dispose();
+    descCtrl.dispose();
+  }
+
+  Future<void> _confirmDelete(BuildContext context, EvolutionGoal goal) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Lernziel loeschen?'),
+        content: Text('"${goal.title}" wirklich loeschen?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Loeschen'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await onDelete(goal.id);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -265,6 +369,8 @@ class _GoalsTab extends StatelessWidget {
             trailing: PopupMenuButton<String>(
               onSelected: (action) {
                 switch (action) {
+                  case 'edit':
+                    _editGoal(context, goal);
                   case 'pause':
                     onUpdate(goal.id, status: 'paused');
                   case 'resume':
@@ -272,10 +378,19 @@ class _GoalsTab extends StatelessWidget {
                   case 'complete':
                     onUpdate(goal.id, status: 'completed');
                   case 'delete':
-                    onDelete(goal.id);
+                    _confirmDelete(context, goal);
                 }
               },
               itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: Icon(Icons.edit, size: 20),
+                    title: Text('Bearbeiten'),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
                 if (goal.status == 'active')
                   const PopupMenuItem(value: 'pause', child: Text('Pause')),
                 if (goal.status == 'paused')
@@ -283,9 +398,16 @@ class _GoalsTab extends StatelessWidget {
                 if (goal.status != 'completed' && goal.status != 'mastered')
                   const PopupMenuItem(
                       value: 'complete', child: Text('Mark Complete')),
+                const PopupMenuDivider(),
                 const PopupMenuItem(
                   value: 'delete',
-                  child: Text('Delete', style: TextStyle(color: Colors.red)),
+                  child: ListTile(
+                    leading: Icon(Icons.delete, size: 20, color: Colors.red),
+                    title:
+                        Text('Loeschen', style: TextStyle(color: Colors.red)),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
               ],
             ),
