@@ -1,4 +1,4 @@
-"""Data models for the Reddit Lead Hunter."""
+"""Data models for the Social Lead Hunter."""
 
 from __future__ import annotations
 
@@ -39,6 +39,11 @@ class Lead:
     status: LeadStatus = LeadStatus.NEW
     replied_at: float = 0.0
     scan_id: str = ""
+
+    # Platform fields
+    platform: str = "reddit"  # "reddit" | "hackernews" | "discord"
+    platform_id: str = ""  # Original ID on the platform
+    platform_url: str = ""  # Direct link
 
     # Auto-generated
     id: str = field(default_factory=lambda: str(uuid4()))

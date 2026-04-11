@@ -121,6 +121,20 @@ class LeadStore:
         self._conn.execute("PRAGMA busy_timeout=5000")
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.executescript(_SCHEMA)
+        # Migration: add platform columns for cross-platform support
+        for col, default in [
+            ("platform", "'reddit'"),
+            ("platform_id", "''"),
+            ("platform_url", "''"),
+        ]:
+            try:
+                self._conn.execute(f"ALTER TABLE leads ADD COLUMN {col} TEXT DEFAULT {default}")
+            except Exception:
+                pass  # Column already exists
+        try:
+            self._conn.execute("CREATE INDEX IF NOT EXISTS idx_leads_platform ON leads(platform)")
+        except Exception:
+            pass
         return self._conn
 
     def save_lead(self, lead: Lead) -> None:
@@ -129,8 +143,9 @@ class LeadStore:
             """INSERT INTO leads
                 (id, post_id, subreddit, title, body, url, author, created_utc,
                  upvotes, num_comments, intent_score, score_reason, reply_draft,
-                 reply_final, status, replied_at, detected_at, content_hash, scan_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 reply_final, status, replied_at, detected_at, content_hash, scan_id,
+                 platform, platform_id, platform_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(post_id) DO UPDATE SET
                 intent_score=excluded.intent_score,
                 score_reason=excluded.score_reason,
@@ -160,6 +175,9 @@ class LeadStore:
                 lead.detected_at,
                 lead.content_hash,
                 lead.scan_id,
+                lead.platform,
+                lead.platform_id,
+                lead.platform_url,
             ),
         )
         self.conn.commit()
@@ -177,6 +195,7 @@ class LeadStore:
         min_score: int = 0,
         limit: int = 50,
         offset: int = 0,
+        platform: str | None = None,
     ) -> list[Lead]:
         """Return leads ordered by detected_at DESC with optional filters."""
         query = "SELECT * FROM leads WHERE intent_score >= ?"
@@ -184,6 +203,9 @@ class LeadStore:
         if status is not None:
             query += " AND status = ?"
             params.append(status.value if isinstance(status, LeadStatus) else status)
+        if platform is not None:
+            query += " AND platform = ?"
+            params.append(platform)
         query += " ORDER BY detected_at DESC LIMIT ? OFFSET ?"
         params.extend([limit, offset])
         rows = self.conn.execute(query, params).fetchall()
@@ -469,6 +491,19 @@ class LeadStore:
     @staticmethod
     def _row_to_lead(row: Any) -> Lead:
         """Convert a sqlite3.Row to a Lead dataclass."""
+        # Platform fields may be absent in legacy databases before migration runs
+        try:
+            platform = row["platform"]
+        except (IndexError, KeyError):
+            platform = "reddit"
+        try:
+            platform_id = row["platform_id"]
+        except (IndexError, KeyError):
+            platform_id = ""
+        try:
+            platform_url = row["platform_url"]
+        except (IndexError, KeyError):
+            platform_url = ""
         return Lead(
             id=row["id"],
             post_id=row["post_id"],
@@ -489,4 +524,7 @@ class LeadStore:
             detected_at=row["detected_at"],
             content_hash=row["content_hash"],
             scan_id=row["scan_id"],
+            platform=platform,
+            platform_id=platform_id,
+            platform_url=platform_url,
         )
