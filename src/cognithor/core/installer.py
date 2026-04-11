@@ -234,11 +234,13 @@ class ModelRecommender:
         ModelRecommendation("gemma3:4b", "4B", "Q4_K_M", 3.0, 6.0, 6, 8, "Multimodal, kompakt"),
         # Mittlere Modelle (4-8GB VRAM)
         ModelRecommendation("qwen3.5:8b", "8B", "Q4_K_M", 5.0, 8.0, 8, 7, "Deutsch, Tool-Use"),
-        ModelRecommendation("llama4-scout:8b", "8B", "Q4_K_M", 5.0, 8.0, 8, 7, "Allgemein, schnell"),
-        ModelRecommendation("gemma3:12b", "12B", "Q4_K_M", 7.5, 12.0, 8, 6, "Multimodal, Reasoning"),
         ModelRecommendation(
-            "devstral:24b", "24B", "Q4_K_M", 8.0, 14.0, 8, 6, "Code-Spezialist"
+            "llama4-scout:8b", "8B", "Q4_K_M", 5.0, 8.0, 8, 7, "Allgemein, schnell"
         ),
+        ModelRecommendation(
+            "gemma3:12b", "12B", "Q4_K_M", 7.5, 12.0, 8, 6, "Multimodal, Reasoning"
+        ),
+        ModelRecommendation("devstral:24b", "24B", "Q4_K_M", 8.0, 14.0, 8, 6, "Code-Spezialist"),
         # Large models (8-16GB VRAM)
         ModelRecommendation("qwen3.5:14b", "14B", "Q4_K_M", 9.0, 14.0, 9, 6, "Deutsch exzellent"),
         ModelRecommendation(
@@ -249,12 +251,16 @@ class ModelRecommender:
         ModelRecommendation(
             "deepseek-r1:32b", "32B", "Q4_K_M", 18.0, 32.0, 9, 4, "Reasoning-Champion"
         ),
-        ModelRecommendation("llama4-maverick:17b", "17B", "Q4_K_M", 12.0, 20.0, 9, 5, "Frontier MoE"),
+        ModelRecommendation(
+            "llama4-maverick:17b", "17B", "Q4_K_M", 12.0, 20.0, 9, 5, "Frontier MoE"
+        ),
         ModelRecommendation(
             "qwen3-coder:30b", "30B", "Q4_K_M", 18.0, 32.0, 9, 5, "Code-Generation, Debugging"
         ),
         # Enterprise (48GB+ VRAM / multi-GPU)
-        ModelRecommendation("llama4-maverick:70b", "70B", "Q4_K_M", 40.0, 64.0, 10, 3, "Frontier quality"),
+        ModelRecommendation(
+            "llama4-maverick:70b", "70B", "Q4_K_M", 40.0, 64.0, 10, 3, "Frontier quality"
+        ),
         # CPU-only
         ModelRecommendation(
             "qwen3.5:3b", "3B", "Q4_K_M", 0, 5.0, 7, 6, "CPU-only, Deutsch", "llama.cpp"

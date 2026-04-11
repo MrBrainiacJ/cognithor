@@ -2501,11 +2501,11 @@ class JarvisConfig(BaseModel):
                 expected = provider_defaults.get(role, {}).get("name", "")
                 if expected and current_model.name != expected:
                     log.info(
-                        "config_model_kept_custom",
-                        role=role,
-                        model=current_model.name,
-                        expected_default=expected,
-                        backend=backend,
+                        "config_model_kept_custom role=%s model=%s expected_default=%s backend=%s",
+                        role,
+                        current_model.name,
+                        expected,
+                        backend,
                     )
                 continue
             if current_model.name in _OLLAMA_DEFAULT_MODEL_NAMES:

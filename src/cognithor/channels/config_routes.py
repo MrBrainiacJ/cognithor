@@ -4002,6 +4002,8 @@ def _register_ui_routes(
             _save_goals(existing)
             return new_goal
         except Exception as exc:
+            import traceback
+            traceback.print_exc()
             return {"error": str(exc)}
 
     @app.patch("/api/v1/evolution/goals/{goal_id}", dependencies=deps)
@@ -4037,6 +4039,21 @@ def _register_ui_routes(
                 return {"error": "Goal not found"}
             _save_goals(goals)
             return updated
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    @app.delete("/api/v1/evolution/goals/{goal_id}", dependencies=deps)
+    async def delete_evolution_goal(goal_id: str) -> dict[str, Any]:
+        """Delete a single learning goal."""
+        try:
+            evo = getattr(config_manager.config, "evolution", None)
+            raw = getattr(evo, "learning_goals", []) if evo else []
+            goals = [g for g in raw if isinstance(g, dict)]
+            filtered = [g for g in goals if g.get("id") != goal_id]
+            if len(filtered) == len(goals):
+                return {"error": "Goal not found"}
+            _save_goals(filtered)
+            return {"deleted": goal_id}
         except Exception as exc:
             return {"error": str(exc)}
 

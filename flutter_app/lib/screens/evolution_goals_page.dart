@@ -142,6 +142,7 @@ class _EvolutionGoalsPageState extends State<EvolutionGoalsPage>
                 goals: evo.goals,
                 stats: evo.stats,
                 onUpdate: evo.updateGoal,
+                onDelete: evo.deleteGoal,
               ),
               _PlansTab(plans: evo.plans),
               _JournalTab(journal: evo.journal),
@@ -165,11 +166,13 @@ class _GoalsTab extends StatelessWidget {
   final List<EvolutionGoal> goals;
   final Map<String, dynamic> stats;
   final Future<bool> Function(String, {String? status, int? priority}) onUpdate;
+  final Future<bool> Function(String) onDelete;
 
   const _GoalsTab({
     required this.goals,
     required this.stats,
     required this.onUpdate,
+    required this.onDelete,
   });
 
   static const _statusColors = <String, Color>{
@@ -268,6 +271,8 @@ class _GoalsTab extends StatelessWidget {
                     onUpdate(goal.id, status: 'active');
                   case 'complete':
                     onUpdate(goal.id, status: 'completed');
+                  case 'delete':
+                    onDelete(goal.id);
                 }
               },
               itemBuilder: (_) => [
@@ -278,6 +283,10 @@ class _GoalsTab extends StatelessWidget {
                 if (goal.status != 'completed' && goal.status != 'mastered')
                   const PopupMenuItem(
                       value: 'complete', child: Text('Mark Complete')),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Delete', style: TextStyle(color: Colors.red)),
+                ),
               ],
             ),
           ),

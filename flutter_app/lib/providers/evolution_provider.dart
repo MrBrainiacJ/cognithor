@@ -187,6 +187,18 @@ class EvolutionProvider extends ChangeNotifier {
     return false;
   }
 
+  Future<bool> deleteGoal(String goalId) async {
+    if (_api == null) return false;
+    try {
+      final data = await _api!.delete('evolution/goals/$goalId');
+      if (data['error'] == null) {
+        await fetchGoals();
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   Future<void> fetchAll() async {
     await Future.wait([fetchGoals(), fetchPlans(), fetchJournal(), fetchStats()]);
   }
