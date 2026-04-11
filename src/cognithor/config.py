@@ -2144,6 +2144,18 @@ class SocialConfig(BaseModel):
     reddit_auto_post: bool = Field(
         default=False, description="Enable Playwright auto-posting (requires login)"
     )
+    hn_enabled: bool = Field(default=False, description="Enable Hacker News scanning")
+    hn_categories: list[str] = Field(default_factory=lambda: ["top", "new"])
+    hn_min_score: int = Field(default=60, ge=0, le=100)
+    hn_scan_interval_minutes: int = Field(default=60, ge=10, le=1440)
+    discord_scanner_enabled: bool = Field(
+        default=False, description="Enable Discord channel scanning"
+    )
+    discord_scan_channels: list[str] = Field(
+        default_factory=list, description="Discord channel IDs to monitor"
+    )
+    discord_min_score: int = Field(default=60, ge=0, le=100)
+    discord_scan_interval_minutes: int = Field(default=30, ge=5, le=1440)
 
 
 # ============================================================================

@@ -23,6 +23,9 @@ log = get_logger(__name__)
 class RedditLeadService:
     """Orchestrates Reddit lead scanning, persistence, and reply posting."""
 
+    _hn_scanner: Any = None  # Set by gateway
+    _discord_scanner: Any = None  # Set by gateway
+
     def __init__(
         self,
         db_path: str,
@@ -164,14 +167,41 @@ class RedditLeadService:
         log.info("scan_complete", summary=result.summary())
         return result
 
+    async def scan_hackernews(
+        self, categories: list[str] | None = None, min_score: int = 60
+    ) -> dict[str, Any]:
+        """Delegate scan to HN scanner (set by gateway)."""
+        if not self._hn_scanner:
+            return {"error": "HN scanner not initialized", "leads_found": 0, "posts_checked": 0}
+        product = self._scan_config.product_name
+        desc = self._scan_config.product_description
+        return await self._hn_scanner.scan(product, desc, categories, min_score)
+
+    async def scan_discord(
+        self, channel_ids: list[str] | None = None, min_score: int = 60
+    ) -> dict[str, Any]:
+        """Delegate scan to Discord scanner (set by gateway)."""
+        if not self._discord_scanner:
+            return {
+                "error": "Discord scanner not initialized",
+                "leads_found": 0,
+                "posts_checked": 0,
+            }
+        product = self._scan_config.product_name
+        desc = self._scan_config.product_description
+        return await self._discord_scanner.scan(channel_ids or [], product, desc, min_score)
+
     def get_leads(
         self,
-        status: LeadStatus | None = None,
+        status: LeadStatus | str | None = None,
         min_score: int = 0,
         limit: int = 50,
         offset: int = 0,
+        platform: str | None = None,
     ) -> list[Lead]:
-        return self._store.get_leads(status=status, min_score=min_score, limit=limit, offset=offset)
+        return self._store.get_leads(
+            status=status, min_score=min_score, limit=limit, offset=offset, platform=platform
+        )
 
     def get_lead(self, lead_id: str) -> Lead | None:
         return self._store.get_lead(lead_id)

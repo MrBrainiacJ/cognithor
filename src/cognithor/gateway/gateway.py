@@ -417,6 +417,50 @@ class Gateway:
             if browser_agent:
                 self._reddit_lead_service._poster._browser_agent = browser_agent
 
+            # Hacker News Scanner
+            _social_cfg_post = getattr(self._config, "social", None)
+            if getattr(_social_cfg_post, "hn_enabled", False):
+                try:
+                    from cognithor.social.hn_scanner import HackerNewsScanner
+
+                    self._reddit_lead_service._hn_scanner = HackerNewsScanner(
+                        llm_fn=_reddit_llm_fn
+                        if hasattr(self, "_ollama") and self._ollama is not None
+                        else None
+                    )
+                    log.info("hn_scanner_initialized")
+                except Exception:
+                    log.debug("hn_scanner_init_failed", exc_info=True)
+
+            # Discord Scanner
+            if getattr(_social_cfg_post, "discord_scanner_enabled", False):
+                import os as _os_discord
+
+                _discord_token = _os_discord.environ.get("COGNITHOR_DISCORD_TOKEN", "")
+                if _discord_token:
+                    try:
+                        from cognithor.social.discord_scanner import DiscordScanner
+
+                        self._reddit_lead_service._discord_scanner = DiscordScanner(
+                            bot_token=_discord_token,
+                            llm_fn=_reddit_llm_fn
+                            if hasattr(self, "_ollama") and self._ollama is not None
+                            else None,
+                        )
+                        log.info("discord_scanner_initialized")
+                    except Exception:
+                        log.debug("discord_scanner_init_failed", exc_info=True)
+
+            # Register unified social tools
+            if self._mcp_client:
+                try:
+                    from cognithor.mcp.social_tools import register_social_tools
+
+                    register_social_tools(self._mcp_client, self._reddit_lead_service)
+                    log.info("social_tools_registered")
+                except Exception:
+                    log.debug("social_tools_registration_failed", exc_info=True)
+
         # Identity Tools: register MCP tools for cognitive identity interface
         if getattr(self, "_identity_layer", None) and self._mcp_client:
             try:
