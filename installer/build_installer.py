@@ -261,7 +261,7 @@ def step_launcher() -> Path:
         "\r\n"
         "REM Start Cognithor\r\n"
         'if "%1"=="--ui" (\r\n'
-        '    start "" "%PYTHON%" -m jarvis --no-cli --api-port 8741\r\n'
+        '    start "Cognithor Server" cmd /k ""%PYTHON%" -m cognithor --no-cli --api-port 8741"\r\n'
         "    echo Waiting for Cognithor to start...\r\n"
         "    set RETRIES=0\r\n"
         "    :wait_loop\r\n"
@@ -280,7 +280,7 @@ def step_launcher() -> Path:
         '    start "" http://localhost:8741\r\n'
         "    exit /b 0\r\n"
         ") else (\r\n"
-        '    "%PYTHON%" -m jarvis %*\r\n'
+        '    "%PYTHON%" -m cognithor %*\r\n'
         "    if errorlevel 1 (\r\n"
         "        echo.\r\n"
         "        echo [ERROR] Cognithor exited with an error.\r\n"

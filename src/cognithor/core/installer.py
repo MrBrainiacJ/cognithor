@@ -229,34 +229,38 @@ class ModelRecommender:
 
     MODELS = [
         # Kleine Modelle (< 4GB VRAM)
-        ModelRecommendation("gemma2:2b", "2B", "Q4_K_M", 2.0, 4.0, 5, 9, "Chat, einfache Aufgaben"),
-        ModelRecommendation("phi3:mini", "3.8B", "Q4_K_M", 3.0, 6.0, 6, 8, "Reasoning, Code"),
-        ModelRecommendation("llama3.2:3b", "3B", "Q4_K_M", 2.5, 5.0, 6, 9, "Allgemein, schnell"),
+        ModelRecommendation("qwen3.5:3b", "3B", "Q4_K_M", 2.5, 5.0, 7, 9, "Deutsch, schnell"),
+        ModelRecommendation("llama4-scout:1b", "1B", "Q4_K_M", 1.5, 3.0, 5, 10, "Ultra-kompakt"),
+        ModelRecommendation("gemma3:4b", "4B", "Q4_K_M", 3.0, 6.0, 6, 8, "Multimodal, kompakt"),
         # Mittlere Modelle (4-8GB VRAM)
-        ModelRecommendation("llama3.1:8b", "8B", "Q4_K_M", 5.0, 8.0, 7, 7, "Allgemein, gut"),
-        ModelRecommendation("mistral:7b", "7B", "Q4_K_M", 4.5, 8.0, 7, 7, "Chat, Reasoning"),
+        ModelRecommendation("qwen3.5:8b", "8B", "Q4_K_M", 5.0, 8.0, 8, 7, "Deutsch, Tool-Use"),
+        ModelRecommendation("llama4-scout:8b", "8B", "Q4_K_M", 5.0, 8.0, 8, 7, "Allgemein, schnell"),
+        ModelRecommendation("gemma3:12b", "12B", "Q4_K_M", 7.5, 12.0, 8, 6, "Multimodal, Reasoning"),
         ModelRecommendation(
-            "deepseek-coder:6.7b", "6.7B", "Q4_K_M", 4.0, 8.0, 8, 7, "Code-Spezialist"
+            "devstral:24b", "24B", "Q4_K_M", 8.0, 14.0, 8, 6, "Code-Spezialist"
         ),
-        ModelRecommendation("command-r:7b", "7B", "Q4_K_M", 5.0, 8.0, 7, 7, "Tool-Use, RAG"),
         # Large models (8-16GB VRAM)
-        ModelRecommendation("llama3.1:8b", "8B", "Q8_0", 8.0, 12.0, 8, 6, "Highest 8B quality"),
-        ModelRecommendation("mixtral:8x7b", "47B", "Q4_K_M", 14.0, 24.0, 8, 5, "MoE, vielseitig"),
+        ModelRecommendation("qwen3.5:14b", "14B", "Q4_K_M", 9.0, 14.0, 9, 6, "Deutsch exzellent"),
         ModelRecommendation(
-            "qwen2.5:14b", "14B", "Q4_K_M", 9.0, 14.0, 8, 6, "Mehrsprachig, Deutsch"
+            "deepseek-r1:14b", "14B", "Q4_K_M", 9.0, 14.0, 8, 6, "Reasoning, Chain-of-Thought"
         ),
         # Power-Modelle (16-24GB+ VRAM)
-        ModelRecommendation("llama3.1:70b", "70B", "Q4_K_M", 20.0, 48.0, 9, 4, "Frontier quality"),
-        ModelRecommendation("qwen2.5:32b", "32B", "Q4_K_M", 18.0, 32.0, 9, 5, "Deutsch exzellent"),
+        ModelRecommendation("qwen3.5:27b", "27B", "Q4_K_M", 16.0, 28.0, 10, 5, "Deutsch, Flagship"),
         ModelRecommendation(
             "deepseek-r1:32b", "32B", "Q4_K_M", 18.0, 32.0, 9, 4, "Reasoning-Champion"
         ),
+        ModelRecommendation("llama4-maverick:17b", "17B", "Q4_K_M", 12.0, 20.0, 9, 5, "Frontier MoE"),
+        ModelRecommendation(
+            "qwen3-coder:30b", "30B", "Q4_K_M", 18.0, 32.0, 9, 5, "Code-Generation, Debugging"
+        ),
+        # Enterprise (48GB+ VRAM / multi-GPU)
+        ModelRecommendation("llama4-maverick:70b", "70B", "Q4_K_M", 40.0, 64.0, 10, 3, "Frontier quality"),
         # CPU-only
         ModelRecommendation(
-            "gemma2:2b", "2B", "Q4_K_M", 0, 4.0, 5, 6, "CPU-only, kompakt", "llama.cpp"
+            "qwen3.5:3b", "3B", "Q4_K_M", 0, 5.0, 7, 6, "CPU-only, Deutsch", "llama.cpp"
         ),
         ModelRecommendation(
-            "phi3:mini", "3.8B", "Q4_K_M", 0, 6.0, 6, 5, "CPU-only, Reasoning", "llama.cpp"
+            "gemma3:1b", "1B", "Q4_K_M", 0, 3.0, 5, 7, "CPU-only, kompakt", "llama.cpp"
         ),
     ]
 
@@ -345,7 +349,7 @@ PRESETS = {
         PresetLevel.MINIMAL,
         "Minimal",
         "For older hardware (4-8 GB RAM, no GPU)",
-        "gemma2:2b",
+        "qwen3.5:3b",
         max_agents=1,
         max_concurrent=1,
         memory_limit_mb=2048,
@@ -360,7 +364,7 @@ PRESETS = {
         PresetLevel.STANDARD,
         "Standard",
         "For gaming PCs (16 GB RAM, 8 GB VRAM)",
-        "llama3.1:8b",
+        "qwen3.5:8b",
         max_agents=3,
         max_concurrent=2,
         memory_limit_mb=8192,
@@ -375,7 +379,7 @@ PRESETS = {
         PresetLevel.POWER,
         "Power",
         "For workstations (32+ GB RAM, 16+ GB VRAM)",
-        "qwen2.5:32b",
+        "qwen3.5:27b",
         max_agents=10,
         max_concurrent=4,
         memory_limit_mb=32768,
@@ -390,7 +394,7 @@ PRESETS = {
         PresetLevel.ENTERPRISE,
         "Enterprise",
         "For servers (64+ GB RAM, multi-GPU)",
-        "llama3.1:70b",
+        "llama4-maverick:70b",
         max_agents=50,
         max_concurrent=10,
         memory_limit_mb=65536,
@@ -581,7 +585,7 @@ class SetupWizard:
         if not self._state.hardware:
             self.step_hardware()
         recs = self._recommender.recommend(self._state.hardware)
-        self._state.selected_model = override or (recs[0].model_name if recs else "gemma2:2b")
+        self._state.selected_model = override or (recs[0].model_name if recs else "qwen3.5:3b")
         self._state.current_step = SetupStep.MODEL_SELECT
         return recs
 
