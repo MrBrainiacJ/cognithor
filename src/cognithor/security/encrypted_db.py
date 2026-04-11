@@ -214,6 +214,7 @@ def _migrate_to_encrypted(
     """
     import shutil
 
+    db_path = str(db_path)  # Ensure string for path concatenation
     backup_path = db_path + ".unencrypted.bak"
     tmp_path = db_path + ".encrypting"
 
@@ -276,6 +277,7 @@ def encrypted_connect(
     Returns:
         sqlite3.Connection (either encrypted or standard)
     """
+    db_path = str(db_path)  # Ensure string — Path objects break concatenation + slicing
     # Respect the global encryption_enabled config flag.
     # If encryption is disabled, skip SQLCipher entirely — avoids
     # VirtualLock quota exhaustion on Windows from dozens of open
