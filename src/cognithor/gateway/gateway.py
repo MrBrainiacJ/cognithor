@@ -2031,6 +2031,22 @@ class Gateway:
         if core_path and hasattr(core_path, "exists") and core_path.exists():
             wm.core_memory_text = core_path.read_text(encoding="utf-8")
 
+        # CAG prefix injection
+        if (
+            hasattr(self, "_memory_manager")
+            and self._memory_manager
+            and getattr(self._memory_manager, "_cag_manager", None)
+        ):
+            try:
+                _cag_mgr = self._memory_manager._cag_manager
+                if _cag_mgr.is_active:
+                    _model_id = self._config.models.planner.name
+                    _cag_prefix = await _cag_mgr.get_stable_prefix(wm.core_memory_text, _model_id)
+                    if _cag_prefix:
+                        wm.cag_prefix = _cag_prefix
+            except Exception:
+                log.debug("cag_prefix_preparation_failed", exc_info=True)
+
         for msg_data in messages:
             role = MessageRole.USER if msg_data["role"] == "user" else MessageRole.ASSISTANT
             wm.add_message(
@@ -5282,6 +5298,22 @@ class Gateway:
                 wm.core_memory_text = core_path.read_text(encoding="utf-8")
             except Exception as exc:
                 log.warning("core_memory_load_failed", error=str(exc))
+
+        # CAG prefix injection
+        if (
+            hasattr(self, "_memory_manager")
+            and self._memory_manager
+            and getattr(self._memory_manager, "_cag_manager", None)
+        ):
+            try:
+                _cag_mgr = self._memory_manager._cag_manager
+                if _cag_mgr.is_active:
+                    _model_id = self._config.models.planner.name
+                    _cag_prefix = await _cag_mgr.get_stable_prefix(wm.core_memory_text, _model_id)
+                    if _cag_prefix:
+                        wm.cag_prefix = _cag_prefix
+            except Exception:
+                log.debug("cag_prefix_preparation_failed", exc_info=True)
 
         # Chat-History aus SessionStore wiederherstellen
         if self._session_store:
