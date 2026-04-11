@@ -139,8 +139,8 @@ class QualityAssessor:
                 parts.append(cleaned)
 
         combined = "\n".join(parts) if parts else ""
-        # Cap at 1500 chars — enough for grading, not a wall of text
-        q.actual_answer = combined[:1500] if combined else ""
+        # Cap at 3000 chars — needs enough content for grading complex topics
+        q.actual_answer = combined[:3000] if combined else ""
         return q
 
     @staticmethod

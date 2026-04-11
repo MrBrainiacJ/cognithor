@@ -210,8 +210,12 @@ class VaultFileBackend(VaultBackend):
     def search(
         self, query: str, folder: str = "", tags: str = "", limit: int = 10
     ) -> list[NoteData]:
-        results: list[NoteData] = []
+        import re as _re
+
+        scored: list[tuple[float, NoteData]] = []
         query_lower = query.lower()
+        # Tokenize query into words for word-level matching
+        query_words = [w for w in _re.findall(r"\w{3,}", query_lower) if len(w) >= 3]
         tag_filter = parse_tags(tags) if tags else []
         folder_filter = self._resolve_folder(folder) if folder else ""
         for md_file in self._vault_root.rglob("*.md"):
@@ -232,12 +236,30 @@ class VaultFileBackend(VaultBackend):
                 ]
                 if not any(t in fm_tags for t in tag_filter):
                     continue
-            if query_lower in content.lower():
-                note = self.read(rel)
-                if note:
-                    results.append(note)
-                if len(results) >= limit:
-                    break
+            # Word-level scoring: count how many query words appear in content
+            content_lower = content.lower()
+            if not query_words:
+                # Fallback to substring match
+                if query_lower in content_lower:
+                    note = self.read(rel)
+                    if note:
+                        scored.append((1.0, note))
+                continue
+            matches = sum(1 for w in query_words if w in content_lower)
+            if matches == 0:
+                continue
+            score = matches / len(query_words)
+            # Boost: title match gets extra weight
+            title_lower = md_file.stem.replace("-", " ").lower()
+            title_matches = sum(1 for w in query_words if w in title_lower)
+            score += title_matches * 0.3
+            note = self.read(rel)
+            if note:
+                scored.append((score, note))
+
+        # Sort by score descending, return top N
+        scored.sort(key=lambda x: x[0], reverse=True)
+        results = [note for _, note in scored[:limit]]
         return results
 
     def list_notes(
