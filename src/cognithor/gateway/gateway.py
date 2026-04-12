@@ -5068,7 +5068,9 @@ class Gateway:
         return ActionPlan(
             goal=f"Reddit-Leads fuer {product} scannen"
             + (f" in r/{',r/'.join(subs)}" if subs else ""),
-            reasoning=f"Skill reddit_lead_hunter matched — direkter reddit_scan Aufruf (hard-routed)",
+            reasoning=(
+                "Skill reddit_lead_hunter matched — direkter reddit_scan Aufruf (hard-routed)"
+            ),
             steps=[
                 PlannedAction(
                     tool="reddit_scan",

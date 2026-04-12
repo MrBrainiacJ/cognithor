@@ -29,7 +29,11 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
         if not lead_service._scan_config.product_name:
             return json.dumps(
                 {
-                    "error": "Reddit product not configured. Set social.reddit_product_name in config or Flutter UI (Administration > Social).",
+                    "error": (
+                        "Reddit product not configured."
+                        " Set social.reddit_product_name in config"
+                        " or Flutter UI (Administration > Social)."
+                    ),
                 }
             )
 
@@ -172,7 +176,10 @@ def register_reddit_tools(mcp_client: Any, lead_service: Any) -> None:
     mcp_client.register_builtin_handler(
         "reddit_reply",
         _reddit_reply,
-        description="Antwort auf einen Reddit-Lead erstellen. Kopiert in Zwischenablage und oeffnet Browser.",
+        description=(
+            "Antwort auf einen Reddit-Lead erstellen."
+            " Kopiert in Zwischenablage und oeffnet Browser."
+        ),
         input_schema={
             "type": "object",
             "properties": {

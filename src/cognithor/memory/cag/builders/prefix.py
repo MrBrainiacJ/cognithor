@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from cognithor.memory.cag.builders.base import CacheBuilder
-from cognithor.memory.cag.models import CacheEntry
+
+if TYPE_CHECKING:
+    from cognithor.memory.cag.models import CacheEntry
 
 
 class PrefixCacheBuilder(CacheBuilder):

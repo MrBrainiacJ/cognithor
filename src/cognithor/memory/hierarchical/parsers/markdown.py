@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 from cognithor.memory.hierarchical.models import RawSection
 from cognithor.memory.hierarchical.parsers.base import DocumentParser
-
 
 _ATX_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 _FENCE_RE = re.compile(r"^(`{3,}|~{3,})")

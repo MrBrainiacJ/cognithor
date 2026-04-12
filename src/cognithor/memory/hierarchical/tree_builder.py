@@ -6,10 +6,12 @@ import asyncio
 import hashlib
 import logging
 import uuid
-from collections.abc import Callable
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 from cognithor.memory.hierarchical.models import DocumentTree, RawSection, TreeNode
 from cognithor.memory.hierarchical.parsers import get_parser
@@ -93,7 +95,7 @@ class DocumentTreeBuilder:
                 title=source_path.stem,
                 root_node_id=root_id,
                 nodes={root_id: root},
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
                 parser_used=parser_name,
                 total_tokens=0,
             )
@@ -151,7 +153,7 @@ class DocumentTreeBuilder:
             title=doc_title,
             root_node_id=root_id,
             nodes=nodes,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             parser_used=parser_name,
             total_tokens=sum(n.token_count for n in nodes.values()),
         )

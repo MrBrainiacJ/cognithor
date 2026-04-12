@@ -4,19 +4,21 @@ import asyncio
 import hashlib
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from cognithor.memory.cag.builders.base import CacheBuilder
-from cognithor.memory.cag.cache_store import CacheStore
 from cognithor.memory.cag.content_normalizer import ContentNormalizer
-from cognithor.memory.cag.metrics import CAGMetricsCollector
 from cognithor.memory.cag.models import (
+    CacheEntry,
     CAGMetrics,
     CAGRefreshReport,
     CAGStatus,
-    CacheEntry,
 )
-from cognithor.memory.cag.selectors import CAGSelector
+
+if TYPE_CHECKING:
+    from cognithor.memory.cag.builders.base import CacheBuilder
+    from cognithor.memory.cag.cache_store import CacheStore
+    from cognithor.memory.cag.metrics import CAGMetricsCollector
+    from cognithor.memory.cag.selectors import CAGSelector
 
 logger = logging.getLogger(__name__)
 

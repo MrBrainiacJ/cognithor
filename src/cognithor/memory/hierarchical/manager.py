@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from cognithor.memory.hierarchical.models import DocumentMetadata, DocumentTree
-from cognithor.memory.hierarchical.retrieval import HierarchicalRetriever
-from cognithor.memory.hierarchical.tree_builder import DocumentTreeBuilder
-from cognithor.memory.hierarchical.tree_store import TreeStore
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from cognithor.memory.hierarchical.models import DocumentMetadata, DocumentTree
+    from cognithor.memory.hierarchical.retrieval import HierarchicalRetriever
+    from cognithor.memory.hierarchical.tree_builder import DocumentTreeBuilder
+    from cognithor.memory.hierarchical.tree_store import TreeStore
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,10 @@ from __future__ import annotations
 import logging
 import threading
 import traceback
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,7 @@ def _safe_call(name: str, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> 
     """Call *fn*. On exception: log WARNING, record in registry, return None."""
     try:
         return fn(*args, **kwargs)
-    except Exception:  # noqa: BLE001
+    except Exception:
         tb = traceback.format_exc()
         logger.warning(
             "Optional subsystem '%s' failed to initialise:\n%s",
@@ -43,7 +46,7 @@ async def _safe_call_async(
     """Async variant of ``_safe_call``."""
     try:
         return await fn(*args, **kwargs)
-    except Exception:  # noqa: BLE001
+    except Exception:
         tb = traceback.format_exc()
         logger.warning(
             "Optional subsystem '%s' failed to initialise:\n%s",

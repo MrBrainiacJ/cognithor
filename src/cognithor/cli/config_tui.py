@@ -55,7 +55,7 @@ def _prompt_selection(label: str, options: list[str], current: Any) -> str | Non
         console.print(f"  {i}) {opt}")
     console.print("  0) Cancel")
     while True:
-        raw = pt_prompt("Pick [0-{}]: ".format(len(options))).strip()
+        raw = pt_prompt(f"Pick [0-{len(options)}]: ").strip()
         if raw == "0":
             return None
         if raw.isdigit() and 1 <= int(raw) <= len(options):

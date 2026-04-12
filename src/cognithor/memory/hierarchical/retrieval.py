@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from cognithor.memory.hierarchical.node_selector import LLMNodeSelector
-from cognithor.memory.hierarchical.tree_store import TreeStore
+if TYPE_CHECKING:
+    from cognithor.memory.hierarchical.node_selector import LLMNodeSelector
+    from cognithor.memory.hierarchical.tree_store import TreeStore
 
 logger = logging.getLogger(__name__)
 

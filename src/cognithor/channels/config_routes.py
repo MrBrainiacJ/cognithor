@@ -4062,8 +4062,8 @@ def _register_ui_routes(
     async def get_evolution_journal(days: int = 7) -> dict[str, Any]:
         """Get evolution journal from recent cycle results and vault entries."""
         try:
+            from datetime import UTC, datetime, timedelta
             from pathlib import Path as _P
-            from datetime import datetime, timedelta, UTC
 
             lines: list[str] = []
             cutoff = datetime.now(UTC) - timedelta(days=days)
@@ -4080,14 +4080,15 @@ def _register_ui_routes(
                     title = f.stem.replace("-", " ")[:80]
                     size_kb = f.stat().st_size / 1024
                     lines.append(
-                        f"[{mtime.strftime('%Y-%m-%d %H:%M')}] Researched: {title} ({size_kb:.1f} KB)"
+                        f"[{mtime.strftime('%Y-%m-%d %H:%M')}]"
+                        f" Researched: {title} ({size_kb:.1f} KB)"
                     )
 
             # Source 2: Evolution loop stats
             evo_loop = getattr(gateway, "_evolution_loop", None)
             if evo_loop:
                 stats = evo_loop.stats()
-                lines.insert(0, f"## Evolution Engine Status")
+                lines.insert(0, "## Evolution Engine Status")
                 lines.insert(1, f"- Cycles today: {stats.get('cycles_today', 0)}")
                 lines.insert(2, f"- Total cycles: {stats.get('total_cycles', 0)}")
                 lines.insert(3, f"- Status: {'Running' if stats.get('running') else 'Stopped'}")

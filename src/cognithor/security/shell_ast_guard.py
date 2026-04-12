@@ -147,7 +147,10 @@ class _ShellASTVisitor:
             ShellViolation(
                 pos=pos[0] if isinstance(pos, tuple) else pos,
                 rule="command-substitution",
-                detail="Command substitution detected ($(...) or backticks). Bypasses command-name checks.",
+                detail=(
+                    "Command substitution detected ($(...) or backticks)."
+                    " Bypasses command-name checks."
+                ),
             )
         )
         self.generic_visit(part)
@@ -257,5 +260,5 @@ def is_safe_shell(command: str) -> bool:
     """Return True only if ``analyse_shell`` finds zero violations."""
     try:
         return len(analyse_shell(command)) == 0
-    except Exception:  # noqa: BLE001
+    except Exception:
         return False

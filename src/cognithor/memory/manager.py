@@ -148,11 +148,11 @@ class MemoryManager:
         self._cag_manager: Any = None
         if self._mc.cag.enabled:
             try:
-                from cognithor.memory.cag.cache_store import CacheStore
-                from cognithor.memory.cag.selectors import CAGSelector
-                from cognithor.memory.cag.metrics import CAGMetricsCollector
-                from cognithor.memory.cag.manager import CAGManager
                 from cognithor.memory.cag.builders import get_builder
+                from cognithor.memory.cag.cache_store import CacheStore
+                from cognithor.memory.cag.manager import CAGManager
+                from cognithor.memory.cag.metrics import CAGMetricsCollector
+                from cognithor.memory.cag.selectors import CAGSelector
 
                 _cag_dir = Path(self._mc.cag.cache_dir).expanduser()
                 self._cag_manager = CAGManager(

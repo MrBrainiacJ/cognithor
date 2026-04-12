@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cognithor.memory.cag.builders.base import CacheBuilder
-from cognithor.memory.cag.models import CacheEntry
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from cognithor.memory.cag.models import CacheEntry
 
 
 class NativeLlamaCppBuilder(CacheBuilder):

@@ -47,7 +47,7 @@ class ModelRegistry:
         block = self._provider_block(provider)
         if block is None:
             return [_CUSTOM_OPTION]
-        return list(block.get("models", [])) + [_CUSTOM_OPTION]
+        return [*list(block.get("models", [])), _CUSTOM_OPTION]
 
     # ------------------------------------------------------------------
     # Live discovery
@@ -82,7 +82,7 @@ class ModelRegistry:
                 payload = resp.json()
                 models = self._parse_response(provider, payload)
                 if models:
-                    return models + [_CUSTOM_OPTION]
+                    return [*models, _CUSTOM_OPTION]
         except Exception:
             logger.debug("Live discovery failed for %s, falling back to cache", provider)
 

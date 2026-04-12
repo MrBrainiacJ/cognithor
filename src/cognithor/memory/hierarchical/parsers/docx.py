@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 from cognithor.memory.hierarchical.models import ParserError, RawSection
 from cognithor.memory.hierarchical.parsers.base import DocumentParser
@@ -124,18 +126,16 @@ class DocxParser(DocumentParser):
     def _is_bold_large(para: Any) -> bool:
         """Check if paragraph is bold with font size >= 14pt."""
         for run in para.runs:
-            if run.bold and run.font.size is not None:
-                # python-docx stores size in EMU; Pt(14) = 177800
-                if run.font.size >= 177800:
-                    return True
+            # python-docx stores size in EMU; Pt(14) = 177800
+            if run.bold and run.font.size is not None and run.font.size >= 177800:
+                return True
         return False
 
     @staticmethod
     def _extract_table_text(tbl_element: Any) -> str:
         """Extract all text from a table XML element."""
-        from xml.etree.ElementTree import tostring
 
-        ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+        _ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
         cells: list[str] = []
         for tc in tbl_element.iter(
             "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc"

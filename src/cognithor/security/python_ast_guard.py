@@ -206,7 +206,10 @@ class _ASTGuardVisitor(ast.NodeVisitor):
                         lineno=node.lineno,
                         col_offset=node.col_offset,
                         rule="dangerous-getattr",
-                        detail=f"getattr() on restricted module {first.id!r} — bypasses import restrictions.",
+                        detail=(
+                            f"getattr() on restricted module {first.id!r}"
+                            " — bypasses import restrictions."
+                        ),
                     )
                 )
 
@@ -224,16 +227,19 @@ class _ASTGuardVisitor(ast.NodeVisitor):
                 )
 
         # Attribute access on dangerous modules: os.system, subprocess.run, etc.
-        if isinstance(func, ast.Attribute):
-            if isinstance(func.value, ast.Name) and func.value.id in self.DANGEROUS_MODULES:
-                self.violations.append(
-                    Violation(
-                        lineno=node.lineno,
-                        col_offset=node.col_offset,
-                        rule="dangerous-call",
-                        detail=f"Call to {func.value.id!r}.{func.attr!r} on restricted module.",
-                    )
+        if (
+            isinstance(func, ast.Attribute)
+            and isinstance(func.value, ast.Name)
+            and func.value.id in self.DANGEROUS_MODULES
+        ):
+            self.violations.append(
+                Violation(
+                    lineno=node.lineno,
+                    col_offset=node.col_offset,
+                    rule="dangerous-call",
+                    detail=f"Call to {func.value.id!r}.{func.attr!r} on restricted module.",
                 )
+            )
 
         # __import__("os") as attribute call: builtins.__import__
         if isinstance(func, ast.Attribute) and func.attr == "__import__":
@@ -252,16 +258,17 @@ class _ASTGuardVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute) -> None:
         # Block access to __subclasses__, __bases__, __mro__ — class hierarchy escape
-        if node.attr in ("__subclasses__", "__bases__", "__mro__", "__class__"):
-            if self.strict:
-                self.violations.append(
-                    Violation(
-                        lineno=node.lineno,
-                        col_offset=node.col_offset,
-                        rule="dangerous-dunder-access",
-                        detail=f"Access to {node.attr!r} — potential sandbox escape via class hierarchy.",
-                    )
+        if node.attr in ("__subclasses__", "__bases__", "__mro__", "__class__") and self.strict:
+            self.violations.append(
+                Violation(
+                    lineno=node.lineno,
+                    col_offset=node.col_offset,
+                    rule="dangerous-dunder-access",
+                    detail=(
+                        f"Access to {node.attr!r} — potential sandbox escape via class hierarchy."
+                    ),
                 )
+            )
         self.generic_visit(node)
 
 

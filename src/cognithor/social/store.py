@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sqlite3
 import time
@@ -127,14 +128,10 @@ class LeadStore:
             ("platform_id", "''"),
             ("platform_url", "''"),
         ]:
-            try:
+            with contextlib.suppress(Exception):
                 self._conn.execute(f"ALTER TABLE leads ADD COLUMN {col} TEXT DEFAULT {default}")
-            except Exception:
-                pass  # Column already exists
-        try:
+        with contextlib.suppress(Exception):
             self._conn.execute("CREATE INDEX IF NOT EXISTS idx_leads_platform ON leads(platform)")
-        except Exception:
-            pass
         return self._conn
 
     def save_lead(self, lead: Lead) -> None:

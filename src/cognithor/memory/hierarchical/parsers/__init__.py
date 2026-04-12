@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cognithor.memory.hierarchical.models import ParserError
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from cognithor.memory.hierarchical.parsers.base import DocumentParser
 
 _EXTENSION_MAP: dict[str, str] = {

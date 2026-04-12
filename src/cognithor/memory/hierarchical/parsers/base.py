@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from cognithor.memory.hierarchical.models import RawSection
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from cognithor.memory.hierarchical.models import RawSection
 
 
 class DocumentParser(ABC):
