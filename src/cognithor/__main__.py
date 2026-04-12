@@ -1264,6 +1264,17 @@ def main() -> None:
                                         )
                                 continue
 
+                            if msg_type == "approval_response":
+                                _req_id = msg.get("id", "") or msg.get("request_id", "")
+                                _approved = msg.get("approved", False)
+                                _future = _pending_approvals.get(_req_id)
+                                if _future and not _future.done():
+                                    _future.set_result(bool(_approved))
+                                    log.info(
+                                        "approval_received", request_id=_req_id, approved=_approved
+                                    )
+                                continue
+
                             if not await _ws_safe_send(
                                 websocket,
                                 {"type": "error", "error": f"Unbekannter Typ: {msg_type}"},
@@ -1282,6 +1293,8 @@ def main() -> None:
                 # Damit send_status() und send_pipeline_event() den
                 # Browser ueber die bestehenden _ws_connections erreichen.
                 from cognithor.channels.base import Channel, StatusType
+
+                _pending_approvals: dict[str, asyncio.Future[bool]] = {}
 
                 class _WebUIBridge(Channel):
                     """Leichtgewichtiger Adapter: Gateway-Channel → WS."""
@@ -1313,10 +1326,39 @@ def main() -> None:
                         reason: str = "",
                         **kwargs: Any,
                     ) -> bool:
-                        # Auto-approve for autonomous operation
+                        ws = _ws_connections.get(session_id)
+                        if not ws:
+                            log.warning("approval_no_ws", session_id=session_id[:8])
+                            return False
+
+                        import uuid
+
                         _tool = tool or (getattr(action, "tool", "") if action else "")
-                        log.info("auto_approved", tool=_tool, session_id=session_id[:8])
-                        return True
+                        _params = params or (getattr(action, "params", {}) if action else {})
+                        request_id = uuid.uuid4().hex[:12]
+                        future: asyncio.Future[bool] = asyncio.get_running_loop().create_future()
+                        _pending_approvals[request_id] = future
+
+                        await _ws_safe_send(
+                            ws,
+                            {
+                                "type": "approval_request",
+                                "request_id": request_id,
+                                "session_id": session_id,
+                                "tool": _tool,
+                                "params": _params,
+                                "reason": reason,
+                            },
+                        )
+                        log.info("approval_sent", tool=_tool, request_id=request_id)
+
+                        try:
+                            return await asyncio.wait_for(future, timeout=300)
+                        except TimeoutError:
+                            log.warning("approval_timeout", request_id=request_id)
+                            return False
+                        finally:
+                            _pending_approvals.pop(request_id, None)
 
                     async def send_status(
                         self, session_id: str, status: StatusType, text: str
