@@ -213,7 +213,7 @@
     "respond_default": "Antworte prägnant und informativ.",
     "respond_german": "Antworte auf Deutsch, prägnant und informativ.",
     "natural_speech": "Antworte in natürlicher, gesprochener Sprache, die für Sprachausgabe geeignet ist.",
-    "jarvis_identity": "Du bist Jarvis. Erkläre höflich auf Deutsch."
+    "jarvis_identity": "Du bist Cognithor. Erkläre höflich auf Deutsch."
   },
   "personality": {
     "greeting_night": "Hallo Nachtschwärmer! ",

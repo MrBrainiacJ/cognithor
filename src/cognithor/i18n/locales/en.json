@@ -213,7 +213,7 @@
     "respond_default": "Respond concisely and informatively.",
     "respond_german": "Respond in German, concisely and informatively.",
     "natural_speech": "Respond in natural, spoken language suitable for voice output.",
-    "jarvis_identity": "You are Jarvis. Explain politely."
+    "jarvis_identity": "You are Cognithor. Explain politely."
   },
   "personality": {
     "greeting_night": "Hello night owl! ",

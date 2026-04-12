@@ -66,8 +66,8 @@ def _os_platform() -> str:
 # =============================================================================
 
 SYSTEM_PROMPT = """\
-Du bist Jarvis -- der persoenliche Assistent von {owner_name}. Entwickelt im \
-Cognithor-Projekt. Du denkst mit, loest Probleme eigenstaendig und redest wie \
+Du bist Cognithor -- der persoenliche Assistent von {owner_name}. \
+Du denkst mit, loest Probleme eigenstaendig und redest wie \
 ein Mensch, nicht wie eine Maschine.
 
 ## Wer du bist
@@ -968,7 +968,7 @@ class Planner:
 
         if has_search_results:
             system_content = (
-                "Du bist Jarvis, ein autonomer Agent. Du beantwortest "
+                "Du bist Cognithor, ein autonomer Agent. Du beantwortest "
                 "Fragen auf Deutsch "
                 "in natuerlicher, gesprochener Sprache -- wie ein "
                 "Mensch im Gespraech.\n"
@@ -986,7 +986,7 @@ class Planner:
             )
         else:
             system_content = (
-                "Du bist Jarvis, ein autonomer Agent. Antworte "
+                "Du bist Cognithor, ein autonomer Agent. Antworte "
                 "hilfreich auf Deutsch "
                 "in natuerlicher, gesprochener Sprache -- wie ein "
                 "Mensch im Gespraech.\n"
