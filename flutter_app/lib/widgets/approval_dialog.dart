@@ -1,12 +1,12 @@
-import 'dart:developer' as developer;
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
+import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
-class ApprovalDialog extends StatelessWidget {
+class ApprovalDialog extends StatefulWidget {
   const ApprovalDialog({
     super.key,
     required this.request,
@@ -16,22 +16,61 @@ class ApprovalDialog extends StatelessWidget {
   final ApprovalRequest request;
   final void Function(bool approved) onRespond;
 
-  void _handleApprove(BuildContext context) {
-    developer.log(
-      '[APPROVAL] APPROVE clicked id=${request.requestId}',
-      name: 'approval',
-    );
-    // Use context.read directly instead of the passed callback
-    // to guarantee we get the CURRENT ChatProvider instance.
-    context.read<ChatProvider>().respondApproval(true);
-  }
+  @override
+  State<ApprovalDialog> createState() => _ApprovalDialogState();
+}
 
-  void _handleReject(BuildContext context) {
-    developer.log(
-      '[APPROVAL] REJECT clicked id=${request.requestId}',
-      name: 'approval',
-    );
-    context.read<ChatProvider>().respondApproval(false);
+class _ApprovalDialogState extends State<ApprovalDialog> {
+  bool _busy = false;
+  String? _localError;
+  String? _lastClickStatus;
+
+  Future<void> _handle(bool approved) async {
+    if (_busy) return;
+    final reqId = widget.request.requestId;
+    // ignore: avoid_print
+    debugPrint('[APPROVAL] clicked approved=$approved id=$reqId');
+    setState(() {
+      _busy = true;
+      _localError = null;
+      _lastClickStatus = approved ? 'Sende Genehmigung...' : 'Sende Ablehnung...';
+    });
+
+    try {
+      // Call REST endpoint directly via the connection provider's API client.
+      final api = context.read<ConnectionProvider>().api;
+      debugPrint('[APPROVAL] posting REST request_id=$reqId approved=$approved');
+      final resp = await api.post('approval_response', {
+        'request_id': reqId,
+        'approved': approved,
+      });
+      debugPrint('[APPROVAL] REST response: $resp');
+
+      if (!mounted) return;
+      if (resp['ok'] == true) {
+        // Clear the pending approval in the chat provider so the dialog
+        // disappears.
+        setState(() {
+          _lastClickStatus = 'OK — Aktion ${approved ? "genehmigt" : "abgelehnt"}';
+        });
+        if (!mounted) return;
+        context.read<ChatProvider>().clearPendingApproval();
+      } else {
+        final err = (resp['error'] as String?) ?? 'unbekannt';
+        debugPrint('[APPROVAL] REST failed: $err');
+        setState(() {
+          _busy = false;
+          _localError = 'Fehler: $err';
+        });
+      }
+    } catch (e, st) {
+      debugPrint('[APPROVAL] REST exception: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _localError = 'Fehler: $e';
+      });
+    }
   }
 
   @override
@@ -66,7 +105,7 @@ class ApprovalDialog extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            l.approvalBody(request.tool),
+            l.approvalBody(widget.request.tool),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 8),
@@ -78,18 +117,40 @@ class ApprovalDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: SelectableText(
-              request.params.toString(),
+              widget.request.params.toString(),
               style: const TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 12,
               ),
             ),
           ),
-          if (request.reason.isNotEmpty) ...[
+          if (widget.request.reason.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              l.approvalReason(request.reason),
+              l.approvalReason(widget.request.reason),
               style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          if (_lastClickStatus != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _lastClickStatus!,
+              style: TextStyle(
+                color: JarvisTheme.accent,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          if (_localError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _localError!,
+              style: TextStyle(
+                color: JarvisTheme.red,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
           const SizedBox(height: 12),
@@ -97,7 +158,7 @@ class ApprovalDialog extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               OutlinedButton(
-                onPressed: () => _handleReject(context),
+                onPressed: _busy ? null : () => _handle(false),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: JarvisTheme.red,
                   side: BorderSide(color: JarvisTheme.red),
@@ -106,7 +167,7 @@ class ApprovalDialog extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: () => _handleApprove(context),
+                onPressed: _busy ? null : () => _handle(true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: JarvisTheme.green,
                 ),

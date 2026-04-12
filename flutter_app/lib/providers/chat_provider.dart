@@ -288,6 +288,14 @@ class ChatProvider extends ChangeNotifier {
   /// successful action.
   String? lastError;
 
+  /// Called by the ApprovalDialog after a successful REST call to dismiss
+  /// the dialog from the UI.
+  void clearPendingApproval() {
+    pendingApproval = null;
+    lastError = null;
+    notifyListeners();
+  }
+
   Future<void> respondApproval(bool approved) async {
     if (pendingApproval == null) return;
     final requestId = pendingApproval!.requestId;
