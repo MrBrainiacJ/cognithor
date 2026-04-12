@@ -38,8 +38,41 @@ jobs:
         env:
           COGNITHOR_TEST_MODE: "1"
 
-  publish:
+  validate:
+    name: Validate wheel (${{ matrix.os }})
     needs: [lint, test]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build wheel
+        run: python -m build --wheel --outdir dist/
+
+      - name: Install wheel
+        shell: bash
+        run: pip install dist/*.whl
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          cognithor --version
+          python -c "from cognithor.config import load_config; print('Config OK')"
+
+  publish:
+    needs: [lint, test, validate]
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

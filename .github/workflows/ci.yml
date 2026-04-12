@@ -30,6 +30,24 @@ jobs:
       - name: Ruff format check
         run: ruff format --check src/ tests/
 
+      - name: Version consistency check
+        run: |
+          python -c "
+          import tomllib, ast, sys
+          with open('pyproject.toml', 'rb') as f:
+              toml_ver = tomllib.load(f)['project']['version']
+          tree = ast.parse(open('src/cognithor/__init__.py').read())
+          init_ver = next(
+              n.value.value for n in tree.body
+              if isinstance(n, ast.Assign)
+              and any(isinstance(t, ast.Name) and t.id == '__version__' for t in n.targets)
+          )
+          if toml_ver != init_ver:
+              print(f'::error::Version mismatch: pyproject.toml={toml_ver}, __init__.py={init_ver}')
+              sys.exit(1)
+          print(f'Version OK: {toml_ver}')
+          "
+
   test:
     name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
