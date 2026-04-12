@@ -398,7 +398,8 @@ class TestApprovalHandling:
             )
         ]
         result = await gw._handle_approvals(steps, decisions, session, "unknown_ch")
-        assert result[0].status == GateStatus.APPROVE
+        # No channel → ORANGE converts to BLOCK (no approval channel available)
+        assert result[0].status == GateStatus.BLOCK
 
 
 # ============================================================================
