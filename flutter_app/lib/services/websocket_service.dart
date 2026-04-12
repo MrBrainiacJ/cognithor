@@ -175,14 +175,22 @@ class WebSocketService {
     });
   }
 
-  /// Respond to an approval request.
-  void respondApproval(String requestId, bool approved) {
-    _send({
+  /// Respond to an approval request. Returns `true` if the message was
+  /// actually written to the socket, `false` if the send was dropped
+  /// (e.g. channel not connected).
+  bool respondApproval(String requestId, bool approved) {
+    final ok = _send({
       'type': WsType.approvalResponse,
       'id': requestId,
       'approved': approved,
       'session_id': _sessionId,
     });
+    if (ok) {
+      _log('[WS] approval_response sent: id=$requestId approved=$approved');
+    } else {
+      _log('[WS] approval_response DROPPED: id=$requestId approved=$approved (channel null)');
+    }
+    return ok;
   }
 
   /// Cancel the current operation.
@@ -321,15 +329,26 @@ class WebSocketService {
     });
   }
 
-  void _send(Map<String, dynamic> msg) {
+  /// Write a message to the socket.
+  ///
+  /// Returns `true` on success, `false` if the channel is not connected
+  /// or the write threw. Callers that care about delivery (e.g. the
+  /// approval_response path) must check the return value and retry.
+  bool _send(Map<String, dynamic> msg) {
     if (_channel == null) {
       _log('[WS] WARN: _send called but _channel is null (type=${msg['type']})');
-      return;
+      return false;
     }
     final type = msg['type'] as String? ?? '?';
     if (type != WsType.ping) {
       _log('[WS] → $type');
     }
-    _channel!.sink.add(jsonEncode(msg));
+    try {
+      _channel!.sink.add(jsonEncode(msg));
+      return true;
+    } catch (e) {
+      _log('[WS] _send failed for type=$type: $e');
+      return false;
+    }
   }
 }

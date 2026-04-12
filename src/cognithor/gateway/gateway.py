@@ -904,12 +904,13 @@ class Gateway:
                     )
                     self._evolution_loop._deep_learner = self._deep_learner
 
-                    # Wire a lightweight LLM for entity extraction (qwen3:8b)
-                    # to avoid blocking the 27B planner model for 10+ minutes.
+                    # Wire LLM for entity extraction. Use the SAME model as the planner
+                    # to avoid loading a second model in parallel (which causes VRAM
+                    # thrashing / model swap and 10+ minute delays).
                     if self._llm and self._model_router:
 
                         async def _entity_llm_call(prompt: str) -> str:
-                            _entity_model = self._model_router.select_model("summarization", "low")
+                            _entity_model = self._config.models.planner.name
                             resp = await self._llm.chat(
                                 model=_entity_model,
                                 messages=[{"role": "user", "content": prompt}],

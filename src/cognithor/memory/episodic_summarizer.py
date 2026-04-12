@@ -21,9 +21,24 @@ class EpisodicSummarizer:
         compression via a daily background task in gateway.py instead.
     """
 
-    def __init__(self, store: EpisodicStore, llm: Any = None) -> None:
+    def __init__(
+        self,
+        store: EpisodicStore,
+        llm: Any = None,
+        model: str | None = None,
+    ) -> None:
         self._store = store
         self._llm = llm
+        # Use the planner model by default to avoid loading a second model
+        # in parallel (which causes VRAM thrashing and long delays).
+        if model is None:
+            try:
+                from cognithor.config import load_config
+
+                model = load_config().models.planner.name
+            except Exception:
+                model = "qwen3:32b"
+        self._model = model
 
     async def summarize_day(self, target_date: date) -> str:
         """Create a daily summary."""
@@ -58,7 +73,7 @@ class EpisodicSummarizer:
                     f"Fokus auf Erfolge, Misserfolge, Muster:\n\n{summary}"
                 )
                 response = await self._llm.chat(
-                    model="qwen3:8b",
+                    model=self._model,
                     messages=[
                         {
                             "role": "system",

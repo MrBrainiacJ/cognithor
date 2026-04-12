@@ -427,7 +427,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       }
                       return ApprovalDialog(
                         request: chat.pendingApproval!,
-                        onRespond: chat.respondApproval,
+                        onRespond: (approved) {
+                          chat.respondApproval(approved);
+                        },
                       );
                     },
                   ),

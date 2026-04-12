@@ -39,7 +39,7 @@ class OllamaConfig(BaseModel):
     )
     base_url: str = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
     timeout_seconds: int = Field(default=360, ge=10, le=1800)
-    keep_alive: str = "5m"  # How long models stay in VRAM after last request
+    keep_alive: str = "30m"  # How long models stay in VRAM after last request
 
 
 class ModelsConfig(BaseModel):
@@ -107,7 +107,7 @@ class PlannerConfig(BaseModel):
     max_iterations: int = Field(default=25, ge=1, le=50)
     escalation_after: int = Field(default=3, ge=1, le=10)
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
-    response_token_budget: int = Field(default=4000, ge=500, le=8000)
+    response_token_budget: int = Field(default=1500, ge=500, le=8000)
 
 
 class WebConfig(BaseModel):

@@ -283,9 +283,51 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void respondApproval(bool approved) {
+  /// Last error shown to the user (e.g. approval send failed). UI can
+  /// observe this and surface it. Cleared automatically on the next
+  /// successful action.
+  String? lastError;
+
+  Future<void> respondApproval(bool approved) async {
     if (pendingApproval == null) return;
-    _ws?.respondApproval(pendingApproval!.requestId, approved);
+    final requestId = pendingApproval!.requestId;
+    if (_ws == null) {
+      _log('[Chat] ERROR: respondApproval called but _ws is null! id=$requestId');
+      lastError = 'Keine Verbindung zum Backend. Bitte Verbindung pruefen.';
+      // Do not clear pendingApproval so user can retry
+      notifyListeners();
+      return;
+    }
+    _log('[Chat] respondApproval sending: id=$requestId, approved=$approved');
+    var ok = _ws!.respondApproval(requestId, approved);
+
+    // If the socket was not connected, try to reconnect once and retry.
+    if (!ok) {
+      _log('[Chat] respondApproval: initial send failed, attempting reconnect');
+      try {
+        final sid = _ws!.sessionId;
+        if (sid != null) {
+          await _ws!.connect(sid);
+          // Give the connection a brief moment to establish + auth.
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+          ok = _ws!.respondApproval(requestId, approved);
+        }
+      } catch (e) {
+        _log('[Chat] respondApproval reconnect failed: $e');
+      }
+    }
+
+    if (!ok) {
+      _log('[Chat] respondApproval FINAL FAILURE: id=$requestId');
+      lastError =
+          'Genehmigung konnte nicht gesendet werden (Verbindung verloren). Bitte erneut versuchen.';
+      // Keep pendingApproval so the user can retry.
+      notifyListeners();
+      return;
+    }
+
+    _log('[Chat] respondApproval delivered: id=$requestId');
+    lastError = null;
     pendingApproval = null;
     notifyListeners();
   }

@@ -18,6 +18,21 @@ from cognithor.models import CronJob
 
 logger = logging.getLogger(__name__)
 
+
+def _default_model() -> str:
+    """Return the current planner model so cron defaults follow user config.
+
+    Using the planner model everywhere avoids loading a second model in
+    parallel (which causes VRAM thrashing and long delays).
+    """
+    try:
+        from cognithor.config import load_config
+
+        return load_config().models.planner.name
+    except Exception:
+        return "qwen3:32b"
+
+
 # Default-Jobs gemaess Architektur-Bibel §10.1
 DEFAULT_JOBS: list[dict[str, Any]] = [
     {
@@ -31,7 +46,7 @@ DEFAULT_JOBS: list[dict[str, Any]] = [
             "4. Wetter für Nürnberg"
         ),
         "channel": "telegram",
-        "model": "qwen3:8b",
+        "model": _default_model(),
         "enabled": False,  # Disabled by default bis Telegram konfiguriert
     },
     {
@@ -44,7 +59,7 @@ DEFAULT_JOBS: list[dict[str, Any]] = [
             "- Was ist noch offen?"
         ),
         "channel": "telegram",
-        "model": "qwen3:32b",
+        "model": _default_model(),
         "enabled": False,
     },
     {
@@ -57,7 +72,7 @@ DEFAULT_JOBS: list[dict[str, Any]] = [
             "- Entitäten mit confidence < 0.3 markieren"
         ),
         "channel": "none",
-        "model": "qwen3:8b",
+        "model": _default_model(),
         "enabled": False,
     },
 ]
