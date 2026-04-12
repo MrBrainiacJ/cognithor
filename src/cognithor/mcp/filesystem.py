@@ -397,18 +397,38 @@ def register_fs_tools(
         },
     )
 
+    _write_file_schema = {
+        "type": "object",
+        "properties": {
+            "path": {"type": "string", "description": "Dateipfad"},
+            "content": {"type": "string", "description": "Dateiinhalt"},
+        },
+        "required": ["path", "content"],
+    }
+
+    async def _write_file_compat(**kwargs: Any) -> Any:
+        """Wrapper that accepts both `path` and `file_path` parameter names.
+
+        LLMs sometimes hallucinate `file_path` instead of `path`.
+        """
+        if "path" not in kwargs and "file_path" in kwargs:
+            kwargs["path"] = kwargs.pop("file_path")
+        if "path" not in kwargs and "filepath" in kwargs:
+            kwargs["path"] = kwargs.pop("filepath")
+        return await fs.write_file(**kwargs)
+
     mcp_client.register_builtin_handler(
         "write_file",
-        fs.write_file,
+        _write_file_compat,
         description="Erstellt oder überschreibt eine Datei (atomar).",
-        input_schema={
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "Dateipfad"},
-                "content": {"type": "string", "description": "Dateiinhalt"},
-            },
-            "required": ["path", "content"],
-        },
+        input_schema=_write_file_schema,
+    )
+    # Alias for LLM hallucinations (file_write vs write_file)
+    mcp_client.register_builtin_handler(
+        "file_write",
+        _write_file_compat,
+        description="Alias für write_file. Erstellt oder überschreibt eine Datei.",
+        input_schema=_write_file_schema,
     )
 
     mcp_client.register_builtin_handler(
