@@ -4534,6 +4534,17 @@ class Gateway:
             depth=delegation.depth,
         )
 
+        # Broadcast delegation status to frontend
+        try:
+            channel_name = session.channel or "webui"
+            status_cb = self._make_status_callback(channel_name, session.session_id)
+            await status_cb(
+                "working",
+                f"Delegation: {from_agent} -> {to_agent}: {task[:100]}",
+            )
+        except Exception:
+            log.debug("delegation_status_broadcast_failed", exc_info=True)
+
         # Create forked session for delegated agent (provenance tracking)
         from cognithor.models import SessionContext as _SC
 

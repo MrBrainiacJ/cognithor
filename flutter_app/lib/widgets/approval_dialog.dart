@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
 import 'package:cognithor_ui/theme/jarvis_theme.dart';
@@ -17,7 +18,22 @@ class ApprovalDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
 
-    return Container(
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            onRespond(true);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.escape) {
+            onRespond(false);
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Container(
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -95,6 +111,7 @@ class ApprovalDialog extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

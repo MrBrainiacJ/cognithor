@@ -144,6 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
         key: _scaffoldKey,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(l),
         drawer: Consumer<SessionsProvider>(
           builder: (context, sessions, _) {
@@ -301,6 +302,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 role: msg.role,
                                 text: msg.text,
                                 metadata: msg.metadata,
+                                agentName: msg.agentName,
                               ),
                             );
                             if (msg.role == MessageRole.assistant) {

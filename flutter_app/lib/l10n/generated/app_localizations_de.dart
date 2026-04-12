@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'Jarvis';
+  String get appTitle => 'Cognithor';
 
   @override
   String get chat => 'Chat';

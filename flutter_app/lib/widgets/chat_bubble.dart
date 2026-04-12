@@ -13,12 +13,14 @@ class ChatBubble extends StatelessWidget {
     required this.text,
     this.isStreaming = false,
     this.metadata = const {},
+    this.agentName,
   });
 
   final MessageRole role;
   final String text;
   final bool isStreaming;
   final Map<String, dynamic> metadata;
+  final String? agentName;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +96,13 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
+  /// Whether the agent name is a non-default agent (i.e. a delegated agent).
+  bool get _isDelegatedAgent {
+    if (agentName == null || agentName!.isEmpty) return false;
+    final lower = agentName!.toLowerCase();
+    return lower != 'jarvis' && lower != 'cognithor';
+  }
+
   // ── Assistant Bubble ─────────────────────────────────────────────────
   Widget _buildAssistantBubble(BuildContext context) {
     const tint = JarvisTheme.sectionChat;
@@ -103,6 +112,21 @@ class ChatBubble extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_isDelegatedAgent)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4, left: 4),
+            child: Chip(
+              label: Text(
+                agentName!,
+                style: const TextStyle(fontSize: 11, color: Colors.white),
+              ),
+              backgroundColor: JarvisTheme.purple.withValues(alpha: 0.7),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              side: BorderSide.none,
+            ),
+          ),
         Container(
           decoration: BoxDecoration(
             color: isDark

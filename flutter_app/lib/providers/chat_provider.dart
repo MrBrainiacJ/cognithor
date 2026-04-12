@@ -21,6 +21,7 @@ class ChatMessage {
     required this.text,
     DateTime? timestamp,
     this.metadata = const {},
+    this.agentName,
   })  : id = id ?? 'msg_${DateTime.now().millisecondsSinceEpoch}_${_msgCounter++}',
         timestamp = timestamp ?? DateTime.now();
 
@@ -31,6 +32,9 @@ class ChatMessage {
   String text;
   final DateTime timestamp;
   Map<String, dynamic> metadata;
+
+  /// Name of the agent that produced this message (for delegation visibility).
+  final String? agentName;
 
   /// Version history for edit support (Claude-style).
   /// Each entry is a (userText, assistantText) pair.
@@ -422,7 +426,8 @@ class ChatProvider extends ChangeNotifier {
     }
     if (text.isNotEmpty) {
       final meta = msg['metadata'] as Map<String, dynamic>? ?? {};
-      messages.add(ChatMessage(role: MessageRole.assistant, text: text, metadata: meta));
+      final agent = msg['agent_name'] as String? ?? meta['agent_name'] as String?;
+      messages.add(ChatMessage(role: MessageRole.assistant, text: text, metadata: meta, agentName: agent));
 
       // If this is a response to an edited message, store in version history
       if (_editingUserIndex != null &&
@@ -528,6 +533,15 @@ class ChatProvider extends ChangeNotifier {
       }
       notifyListeners();
       return;
+    }
+
+    // Detect delegation status and add a system message for visibility
+    if (text.startsWith('Delegation:')) {
+      messages.add(ChatMessage(
+        role: MessageRole.system,
+        text: text,
+        agentName: 'delegation',
+      ));
     }
 
     statusText = text;
