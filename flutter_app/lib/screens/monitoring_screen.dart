@@ -11,6 +11,7 @@ import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
 import 'package:cognithor_ui/widgets/jarvis_section.dart';
 import 'package:cognithor_ui/widgets/jarvis_stat.dart';
 import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
+import 'package:cognithor_ui/widgets/monitoring/live_logs_tab.dart';
 
 class MonitoringScreen extends StatefulWidget {
   const MonitoringScreen({super.key});
@@ -78,15 +79,6 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
     }
   }
 
-  Color _severityColor(String severity) {
-    return switch (severity.toUpperCase()) {
-      'ERROR' || 'CRITICAL' => JarvisTheme.red,
-      'WARNING' || 'WARN' => JarvisTheme.orange,
-      'INFO' => JarvisTheme.accent,
-      _ => JarvisTheme.green,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -117,19 +109,77 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
       );
     }
 
-    final uptime = _dashboard!['uptime']?.toString() ?? '-';
-    final activeSessions =
-        _dashboard!['active_sessions']?.toString() ?? '0';
-    final totalRequests =
-        _dashboard!['total_requests']?.toString() ?? '0';
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: TabBar(
+              indicatorColor: JarvisTheme.accent,
+              labelColor: JarvisTheme.accent,
+              unselectedLabelColor: JarvisTheme.textSecondary,
+              tabs: const [
+                Tab(
+                  icon: Icon(Icons.dashboard_outlined),
+                  text: 'Dashboard',
+                ),
+                Tab(
+                  icon: Icon(Icons.event_note_outlined),
+                  text: 'Events',
+                ),
+                Tab(
+                  icon: Icon(Icons.terminal_outlined),
+                  text: 'Live Logs',
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                _DashboardTab(
+                  dashboard: _dashboard!,
+                  onRefresh: _loadData,
+                ),
+                _EventsTab(
+                  events: _events,
+                  onRefresh: _loadData,
+                ),
+                const LiveLogsTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Dashboard Tab ────────────────────────────────────────────────────
+
+class _DashboardTab extends StatelessWidget {
+  const _DashboardTab({
+    required this.dashboard,
+    required this.onRefresh,
+  });
+
+  final Map<String, dynamic> dashboard;
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final uptime = dashboard['uptime']?.toString() ?? '-';
+    final activeSessions = dashboard['active_sessions']?.toString() ?? '0';
+    final totalRequests = dashboard['total_requests']?.toString() ?? '0';
 
     return RefreshIndicator(
-      onRefresh: _loadData,
+      onRefresh: onRefresh,
       color: JarvisTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Stats row
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -154,9 +204,42 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
 
-          // Events
+// ── Events Tab ───────────────────────────────────────────────────────
+
+class _EventsTab extends StatelessWidget {
+  const _EventsTab({
+    required this.events,
+    required this.onRefresh,
+  });
+
+  final List<dynamic>? events;
+  final Future<void> Function() onRefresh;
+
+  Color _severityColor(String severity) {
+    return switch (severity.toUpperCase()) {
+      'ERROR' || 'CRITICAL' => JarvisTheme.red,
+      'WARNING' || 'WARN' => JarvisTheme.orange,
+      'INFO' => JarvisTheme.accent,
+      _ => JarvisTheme.green,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: JarvisTheme.accent,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
           JarvisSection(
             title: l.events,
             trailing: Text(
@@ -164,8 +247,7 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
-
-          if (_events == null || _events!.isEmpty)
+          if (events == null || events!.isEmpty)
             NeonCard(
               tint: JarvisTheme.sectionAdmin,
               child: Center(
@@ -179,14 +261,14 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
               ),
             )
           else
-            ..._events!.map<Widget>((event) {
+            ...events!.map<Widget>((event) {
               final e = event as Map<String, dynamic>;
               final severity = e['severity']?.toString() ?? 'INFO';
               final message = e['message']?.toString() ?? '';
               final timestamp = e['timestamp']?.toString() ?? '';
 
               return NeonCard(
-              tint: JarvisTheme.sectionAdmin,
+                tint: JarvisTheme.sectionAdmin,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 10,
