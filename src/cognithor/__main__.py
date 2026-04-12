@@ -765,7 +765,7 @@ def main() -> None:
 
                 @api_app.get("/api/v1/health")
                 async def _cc_health() -> dict[str, Any]:
-                    from cognithor.core.safe_call import get_failure_report, has_failures
+                    from cognithor.core.safe_call import get_failure_report
 
                     _failures = get_failure_report()
                     return {
@@ -2159,10 +2159,8 @@ def main() -> None:
             # Graceful shutdown: stop uvicorn before closing the event loop
             if api_server:
                 api_server.should_exit = True
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await asyncio.sleep(0.5)  # Give uvicorn time to finish requests
-                except asyncio.CancelledError:
-                    pass
             await gateway.shutdown()
             log.info("jarvis_stopped")
 

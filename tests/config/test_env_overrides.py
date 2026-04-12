@@ -63,3 +63,75 @@ class TestEnvOverrides:
         monkeypatch.setenv("COGNITHOR_LANGUAGE", "zh")
         cfg = load_config(tmp_path / "empty.yaml")
         assert cfg.language == "zh"
+
+
+class TestBackendAutoDetection:
+    """Verify that explicit llm_backend_type is respected (#105)."""
+
+    def test_explicit_ollama_not_overridden_by_api_key(self, tmp_path):
+        """User sets llm_backend_type: ollama + has openai_api_key → stays ollama."""
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text(
+            "llm_backend_type: ollama\nopenai_api_key: sk-test-key\n",
+            encoding="utf-8",
+        )
+        cfg = load_config(yaml_file)
+        assert cfg.llm_backend_type == "ollama"
+
+    def test_explicit_ollama_not_overridden_by_anthropic_key(self, tmp_path):
+        """User sets llm_backend_type: ollama + has anthropic_api_key → stays ollama."""
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text(
+            "llm_backend_type: ollama\nanthropic_api_key: sk-ant-test\n",
+            encoding="utf-8",
+        )
+        cfg = load_config(yaml_file)
+        assert cfg.llm_backend_type == "ollama"
+
+    def test_default_ollama_auto_detects_openai(self, tmp_path):
+        """No explicit backend + openai_api_key → auto-detects to openai."""
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text(
+            "openai_api_key: sk-test-key\n",
+            encoding="utf-8",
+        )
+        cfg = load_config(yaml_file)
+        assert cfg.llm_backend_type == "openai"
+
+    def test_default_ollama_auto_detects_anthropic(self, tmp_path):
+        """No explicit backend + anthropic_api_key → auto-detects to anthropic."""
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text(
+            "anthropic_api_key: sk-ant-test\n",
+            encoding="utf-8",
+        )
+        cfg = load_config(yaml_file)
+        assert cfg.llm_backend_type == "anthropic"
+
+    def test_explicit_ollama_via_env_not_overridden(self, monkeypatch, tmp_path):
+        """Backend set via env var is also considered explicit."""
+        monkeypatch.setenv("COGNITHOR_LLM_BACKEND_TYPE", "ollama")
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text(
+            "openai_api_key: sk-test-key\n",
+            encoding="utf-8",
+        )
+        cfg = load_config(yaml_file)
+        assert cfg.llm_backend_type == "ollama"
+
+    def test_no_api_keys_stays_ollama(self, tmp_path):
+        """No API keys, no explicit backend → stays ollama (default)."""
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text("language: de\n", encoding="utf-8")
+        cfg = load_config(yaml_file)
+        assert cfg.llm_backend_type == "ollama"
+
+    def test_explicit_openai_backend_respected(self, tmp_path):
+        """User explicitly sets llm_backend_type: openai → stays openai."""
+        yaml_file = tmp_path / "config.yaml"
+        yaml_file.write_text(
+            "llm_backend_type: openai\nopenai_api_key: sk-test-key-long-enough\n",
+            encoding="utf-8",
+        )
+        cfg = load_config(yaml_file)
+        assert cfg.llm_backend_type == "openai"

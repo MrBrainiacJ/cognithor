@@ -2401,9 +2401,16 @@ class JarvisConfig(BaseModel):
         """
         # Backend-Typ bestimmen: explizit gesetzt oder aus API-Key ableiten
         backend = self.llm_backend_type
-        if backend == "ollama" and self.operation_mode not in ("offline", "hybrid"):
+        _backend_was_explicit = "llm_backend_type" in self.model_fields_set
+        if (
+            backend == "ollama"
+            and not _backend_was_explicit
+            and self.operation_mode not in ("offline", "hybrid")
+        ):
             # Auto-Detection: Wenn ein API-Key vorhanden ist aber der
-            # Backend-Typ noch auf "ollama" steht, Backend automatisch setzen
+            # Backend-Typ NICHT explizit gesetzt wurde, Backend automatisch setzen.
+            # Wenn der Nutzer llm_backend_type in config.yaml/env gesetzt hat,
+            # wird dieser Wert respektiert (#105).
             # Priority: anthropic > openai > gemini > groq > deepseek > mistral > together
             # NICHT wenn operation_mode="offline" — dann bleibt Ollama.
             # NICHT wenn operation_mode="hybrid" — Hybrid nutzt Ollama als
@@ -2450,6 +2457,13 @@ class JarvisConfig(BaseModel):
             elif self.moonshot_api_key:
                 backend = "moonshot"
                 object.__setattr__(self, "llm_backend_type", "moonshot")
+
+        if _backend_was_explicit and backend == "ollama":
+            log.info(
+                "config_backend_explicit llm_backend_type=%s set explicitly, "
+                "skipping auto-detection from API keys",
+                backend,
+            )
 
         # Auto-detect OperationMode (VOR dem fruehen Return)
         from cognithor.models import OperationMode
