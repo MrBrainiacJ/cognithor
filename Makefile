@@ -1,12 +1,12 @@
 # ============================================================================
-# Jarvis · Agent OS – Makefile
+# Cognithor · Agent OS – Makefile
 # ============================================================================
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
-VENV := $(HOME)/.jarvis/venv
+VENV := $(HOME)/.cognithor/venv
 PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
-JARVIS := $(VENV)/bin/jarvis
+COGNITHOR := $(VENV)/bin/cognithor
 
 # ============================================================================
 # Hilfe
@@ -47,16 +47,16 @@ dev: venv ## Installiert im Entwicklungsmodus
 # ============================================================================
 
 .PHONY: run
-run: ## Startet Jarvis CLI
-	$(JARVIS)
+run: ## Startet Cognithor CLI
+	$(COGNITHOR)
 
 .PHONY: run-debug
 run-debug: ## Startet mit Debug-Logging
-	$(JARVIS) --log-level DEBUG
+	$(COGNITHOR) --log-level DEBUG
 
 .PHONY: init
 init: ## Erstellt nur Verzeichnisstruktur
-	$(JARVIS) --init-only
+	$(COGNITHOR) --init-only
 
 # ============================================================================
 # Systemd
@@ -67,28 +67,28 @@ systemd-install: ## Installiert Systemd-Services
 	@./install.sh --systemd
 
 .PHONY: start
-start: ## Startet Jarvis als Systemd-Service
-	systemctl --user start jarvis
+start: ## Startet Cognithor als Systemd-Service
+	systemctl --user start cognithor
 
 .PHONY: stop
-stop: ## Stoppt Jarvis-Service
-	systemctl --user stop jarvis
+stop: ## Stoppt Cognithor-Service
+	systemctl --user stop cognithor
 
 .PHONY: restart
-restart: ## Neustart Jarvis-Service
-	systemctl --user restart jarvis
+restart: ## Neustart Cognithor-Service
+	systemctl --user restart cognithor
 
 .PHONY: status
 status: ## Zeigt Service-Status
-	systemctl --user status jarvis
+	systemctl --user status cognithor
 
 .PHONY: logs
 logs: ## Zeigt Live-Logs
-	journalctl --user -u jarvis -f
+	journalctl --user -u cognithor -f
 
 .PHONY: enable
 enable: ## Aktiviert Autostart
-	systemctl --user enable jarvis
+	systemctl --user enable cognithor
 
 # ============================================================================
 # Tests
@@ -172,7 +172,7 @@ check: lint typecheck test ## Alles prüfen (lint + types + tests)
 .PHONY: stats
 stats: ## Projekt-Statistiken
 	@echo ""
-	@echo "═══ Jarvis · Projekt-Statistiken ═══"
+	@echo "═══ Cognithor · Projekt-Statistiken ═══"
 	@echo ""
 	@echo "Source Code:"
 	@find src/jarvis -name "*.py" | xargs wc -l | tail -1
