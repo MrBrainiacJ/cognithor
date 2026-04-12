@@ -84,7 +84,21 @@ def parse_args() -> argparse.Namespace:
     """Kommandozeilen-Argumente parsen."""
     parser = argparse.ArgumentParser(
         prog="cognithor",
-        description="Cognithor · Agent OS -- Local-first autonomous agent operating system",
+        description=(
+            "Cognithor -- Local-first autonomous agent OS.\n\n"
+            "Common usage / Haeufige Nutzung:\n"
+            "  cognithor                     # Start with CLI + web UI\n"
+            "  cognithor --ui                # Headless + open browser\n"
+            "  cognithor --no-cli            # Headless backend only\n"
+            "  cognithor config              # Interactive config TUI\n"
+            "  cognithor config list         # Show current config\n"
+            "  cognithor config set KEY VAL  # Set a config value\n"
+            "  cognithor config get KEY      # Get a config value\n"
+            "  cognithor --lite              # Lite mode (6GB VRAM)\n"
+            "  cognithor --log-level DEBUG   # Verbose logging\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=("For more documentation see:\n  https://github.com/Alex8791-cyber/cognithor\n"),
     )
     parser.add_argument(
         "--version",
@@ -95,45 +109,72 @@ def parse_args() -> argparse.Namespace:
         "--config",
         type=Path,
         default=None,
-        help="Pfad zur config.yaml (Default: ~/.cognithor/config.yaml)",
+        help=(
+            "Pfad zur config.yaml / Path to config.yaml "
+            "(e.g. ~/.cognithor/config.yaml). "
+            "NOTE: To open the interactive config editor use: 'cognithor config'"
+        ),
     )
     parser.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default=None,
-        help="Log-Level überschreiben",
+        help="Log-Level ueberschreiben / Override log level",
     )
     parser.add_argument(
         "--init-only",
         action="store_true",
-        help="Nur Verzeichnisstruktur erstellen, nicht starten",
+        help=(
+            "Nur Verzeichnisstruktur erstellen, nicht starten / "
+            "Only create directory structure, do not start"
+        ),
     )
     parser.add_argument(
         "--no-cli",
         action="store_true",
-        help="CLI-Channel nicht starten (Headless-Betrieb für Control Center)",
+        help=(
+            "CLI-Channel nicht starten (Headless-Betrieb fuer Control Center) / "
+            "Do not start the CLI channel (headless mode for Control Center)"
+        ),
+    )
+    parser.add_argument(
+        "--ui",
+        action="store_true",
+        help=(
+            "UI-Modus: Headless-Backend + Browser oeffnen auf http://localhost:<port> / "
+            "UI mode: headless backend + open browser to http://localhost:<port>"
+        ),
     )
     parser.add_argument(
         "--api-port",
         type=int,
         default=8741,
-        help="Port für die Control Center API (Default: 8741)",
+        help="Port fuer die Control Center API / Control Center API port (default: 8741)",
     )
     parser.add_argument(
         "--api-host",
         type=str,
         default=None,
-        help="Host für die Control Center API (Default: COGNITHOR_API_HOST env oder 127.0.0.1)",
+        help=(
+            "Host fuer die Control Center API / Control Center API bind host "
+            "(default: 127.0.0.1; use 0.0.0.0 for LAN access)"
+        ),
     )
     parser.add_argument(
         "--lite",
         action="store_true",
-        help="Lite-Modus: qwen3:8b als Planner und Executor (6 GB statt 26 GB VRAM)",
+        help=(
+            "Lite-Modus: qwen3:8b als Planner und Executor (6 GB statt 26 GB VRAM) / "
+            "Lite mode: qwen3:8b as planner and executor (6 GB instead of 26 GB VRAM)"
+        ),
     )
     parser.add_argument(
         "--auto-install",
         action="store_true",
-        help="Fehlende Python-Pakete automatisch installieren (Default: nur Warning)",
+        help=(
+            "Fehlende Python-Pakete automatisch installieren / "
+            "Automatically install missing Python packages (default: warn only)"
+        ),
     )
     parser.add_argument(
         "--mcp-server",
@@ -318,6 +359,12 @@ def main() -> None:
 
     args = parse_args()
 
+    # --ui: headless mode + auto-open browser, bind to 127.0.0.1 by default
+    if getattr(args, "ui", False):
+        args.no_cli = True
+        if not args.api_host:
+            args.api_host = "127.0.0.1"
+
     if getattr(args, "command", None) == "config":
         from cognithor.cli import config_cmd, config_tui
 
@@ -490,16 +537,9 @@ def main() -> None:
             log.debug("created_path", path=path)
 
     # 5. System-Check -- startup banner (intentional CLI output)
-    _explicit_host = args.api_host or os.environ.get("COGNITHOR_API_HOST") or None
-    if _explicit_host:
-        _api_host = _explicit_host
-    else:
-        try:
-            from cognithor.core.network_endpoints import NetworkEndpointManager
-
-            _api_host = NetworkEndpointManager().get_bind_host()
-        except Exception:
-            _api_host = "127.0.0.1"
+    # Default to 127.0.0.1 for safety. Users can set --api-host 0.0.0.0
+    # or COGNITHOR_API_HOST env var for LAN access.
+    _api_host = args.api_host or os.environ.get("COGNITHOR_API_HOST") or "127.0.0.1"
     _print_banner(config, api_host=_api_host, api_port=args.api_port, lite=args.lite)
 
     # Phase 0 Checkpoint: Setup OK (logged at debug level — banner already shows this)
@@ -647,16 +687,9 @@ def main() -> None:
                 from cognithor.channels.config_routes import create_config_routes
                 from cognithor.config_manager import ConfigManager
 
-                _explicit_host2 = args.api_host or os.environ.get("COGNITHOR_API_HOST") or None
-                if _explicit_host2:
-                    api_host = _explicit_host2
-                else:
-                    try:
-                        from cognithor.core.network_endpoints import NetworkEndpointManager
-
-                        api_host = NetworkEndpointManager().get_bind_host()
-                    except Exception:
-                        api_host = "127.0.0.1"
+                # Default to 127.0.0.1 for safety. Users can set --api-host 0.0.0.0
+                # or COGNITHOR_API_HOST env var for LAN access.
+                api_host = args.api_host or os.environ.get("COGNITHOR_API_HOST") or "127.0.0.1"
 
                 # ── Internal session token ────────────────────────────────
                 # Always generate a per-session token.  An explicit env var
@@ -2014,6 +2047,29 @@ def main() -> None:
                     port=args.api_port,
                     tls=bool(_ssl_cert),
                 )
+
+                # --ui: open default browser once the server is ready
+                if getattr(args, "ui", False):
+                    import webbrowser
+
+                    _scheme = "https" if _ssl_cert else "http"
+                    _ui_url = f"{_scheme}://localhost:{args.api_port}"
+
+                    async def _open_browser_when_ready() -> None:
+                        # Wait for uvicorn to accept connections
+                        for _ in range(50):
+                            if api_server is not None and getattr(api_server, "started", False):
+                                break
+                            await asyncio.sleep(0.1)
+                        try:
+                            webbrowser.open(_ui_url)
+                            print(f"  [OK] Browser opened: {_ui_url}")
+                        except Exception as _exc:
+                            log.warning("ui_browser_open_failed", error=str(_exc))
+
+                    _bt = asyncio.create_task(_open_browser_when_ready())
+                    _bg_tasks.add(_bt)
+                    _bt.add_done_callback(_bg_tasks.discard)
             except ImportError:
                 log.warning("control_center_api_requires_fastapi_uvicorn")
             except Exception as exc:
