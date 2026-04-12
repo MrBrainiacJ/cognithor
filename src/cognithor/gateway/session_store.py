@@ -88,6 +88,10 @@ _MIGRATIONS = [
     "ALTER TABLE sessions ADD COLUMN folder TEXT DEFAULT '';",
     # Migration 6: Incognito mode
     "ALTER TABLE sessions ADD COLUMN incognito INTEGER DEFAULT 0;",
+    # Migration 7: conversation_id for ConversationTree link
+    "ALTER TABLE sessions ADD COLUMN conversation_id TEXT DEFAULT '';",
+    # Migration 8: active_leaf_id for ConversationTree link
+    "ALTER TABLE sessions ADD COLUMN active_leaf_id TEXT DEFAULT '';",
 ]
 
 
@@ -153,17 +157,22 @@ class SessionStore:
     def save_session(self, session: SessionContext) -> None:
         """Speichert oder aktualisiert eine Session."""
         agent_id = getattr(session, "agent_name", "jarvis") or "jarvis"
+        conversation_id = getattr(session, "conversation_id", "") or ""
+        active_leaf_id = getattr(session, "active_leaf_id", "") or ""
         self.conn.execute(
             """
             INSERT INTO sessions
                 (session_id, user_id, channel, agent_id, started_at,
-                 last_activity, message_count, active, max_iterations, incognito)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 last_activity, message_count, active, max_iterations, incognito,
+                 conversation_id, active_leaf_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(session_id) DO UPDATE SET
                 last_activity=excluded.last_activity,
                 message_count=excluded.message_count,
                 active=excluded.active,
-                incognito=excluded.incognito
+                incognito=excluded.incognito,
+                conversation_id=excluded.conversation_id,
+                active_leaf_id=excluded.active_leaf_id
             """,
             (
                 session.session_id,
@@ -176,6 +185,8 @@ class SessionStore:
                 int(session.active),
                 session.max_iterations,
                 int(getattr(session, "incognito", False)),
+                conversation_id,
+                active_leaf_id,
             ),
         )
         self.conn.commit()
@@ -215,6 +226,50 @@ class SessionStore:
             session.incognito = bool(row["incognito"])
         except (KeyError, IndexError):
             session.incognito = False
+        try:
+            session.conversation_id = row["conversation_id"] or ""
+        except (KeyError, IndexError):
+            pass
+        try:
+            session.active_leaf_id = row["active_leaf_id"] or ""
+        except (KeyError, IndexError):
+            pass
+        return session
+
+    def load_session_by_id(self, session_id: str) -> SessionContext | None:
+        """Laedt eine Session anhand ihrer session_id."""
+        row = self.conn.execute(
+            "SELECT * FROM sessions WHERE session_id = ?",
+            (session_id,),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        agent_id = row["agent_id"] if "agent_id" in row.keys() else "jarvis"
+        session = SessionContext(
+            session_id=row["session_id"],
+            user_id=row["user_id"],
+            channel=row["channel"],
+            agent_name=agent_id,
+            started_at=_from_ts(row["started_at"]),
+            last_activity=_from_ts(row["last_activity"]),
+            message_count=row["message_count"],
+            active=bool(row["active"]),
+            max_iterations=row["max_iterations"],
+        )
+        try:
+            session.incognito = bool(row["incognito"])
+        except (KeyError, IndexError):
+            session.incognito = False
+        try:
+            session.conversation_id = row["conversation_id"] or ""
+        except (KeyError, IndexError):
+            pass
+        try:
+            session.active_leaf_id = row["active_leaf_id"] or ""
+        except (KeyError, IndexError):
+            pass
         return session
 
     def deactivate_session(self, session_id: str) -> None:

@@ -6218,18 +6218,38 @@ def _register_feedback_routes(
     # ── Chat Tree / Branching ────────────────────────────────────────
 
     @app.get("/api/v1/chat/tree/latest", dependencies=deps)
-    async def get_latest_chat_tree() -> dict[str, Any]:
-        """Get the most recent conversation tree."""
+    async def get_latest_chat_tree(session_id: str = "") -> dict[str, Any]:
+        """Get the most recent conversation tree.
+
+        If session_id is provided, look up the session's persisted
+        conversation_id first so the correct tree is returned.
+        """
         tree = getattr(gateway, "_conversation_tree", None)
         if not tree:
             return {"nodes": [], "conversation_id": None}
-        with tree._conn() as conn:
-            row = conn.execute(
-                "SELECT id FROM conversations ORDER BY updated_at DESC LIMIT 1"
-            ).fetchone()
-        if not row:
+
+        conv_id = None
+
+        # Try session-specific conversation first
+        if session_id:
+            store = getattr(gateway, "_session_store", None)
+            if store:
+                session = store.load_session_by_id(session_id)
+                if session and getattr(session, "conversation_id", ""):
+                    conv_id = session.conversation_id
+
+        # Fallback: most recent conversation
+        if not conv_id:
+            with tree._conn() as conn:
+                row = conn.execute(
+                    "SELECT id FROM conversations ORDER BY updated_at DESC LIMIT 1"
+                ).fetchone()
+                if row:
+                    conv_id = row["id"]
+
+        if not conv_id:
             return {"nodes": [], "conversation_id": None}
-        return tree.get_tree_structure(row["id"])
+        return tree.get_tree_structure(conv_id)
 
     @app.get("/api/v1/chat/tree/{conversation_id}", dependencies=deps)
     async def get_chat_tree(conversation_id: str) -> dict[str, Any]:

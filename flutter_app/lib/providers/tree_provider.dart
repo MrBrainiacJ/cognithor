@@ -132,10 +132,17 @@ class TreeProvider extends ChangeNotifier {
   bool isForkPoint(String nodeId) => (forkPoints[nodeId] ?? 0) > 1;
 
   /// Refresh tree by loading the latest conversation from backend.
-  Future<void> refreshFromSession(ApiClient api) async {
+  ///
+  /// If [sessionId] is provided it is sent as query parameter so the
+  /// backend returns the conversation linked to that session instead of
+  /// the globally most-recent one.
+  Future<void> refreshFromSession(ApiClient api, {String? sessionId}) async {
     _api ??= api;
     try {
-      final data = await api.get('chat/tree/latest');
+      final path = sessionId != null && sessionId.isNotEmpty
+          ? 'chat/tree/latest?session_id=$sessionId'
+          : 'chat/tree/latest';
+      final data = await api.get(path);
       final convId = data['conversation_id'] as String?;
       if (convId != null && convId.isNotEmpty) {
         await loadTree(convId);

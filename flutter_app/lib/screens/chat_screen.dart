@@ -224,8 +224,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (tree.activePath.length != chat.messages.length && !chat.isStreaming) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               final conn = context.read<ConnectionProvider>();
+                              final sessions = context.read<SessionsProvider>();
                               tree.setApi(conn.api);
-                              tree.refreshFromSession(conn.api);
+                              tree.refreshFromSession(conn.api, sessionId: sessions.activeSessionId);
                             });
                           }
                         }
