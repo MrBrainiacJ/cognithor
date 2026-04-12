@@ -406,16 +406,18 @@ def register_fs_tools(
         "required": ["path", "content"],
     }
 
-    async def _write_file_compat(**kwargs: Any) -> Any:
+    def _write_file_compat(**kwargs: Any) -> Any:
         """Wrapper that accepts both `path` and `file_path` parameter names.
 
         LLMs sometimes hallucinate `file_path` instead of `path`.
+        Note: fs.write_file is a SYNC method, so this wrapper is sync too.
+        The MCP client handles sync/async uniformly.
         """
         if "path" not in kwargs and "file_path" in kwargs:
             kwargs["path"] = kwargs.pop("file_path")
         if "path" not in kwargs and "filepath" in kwargs:
             kwargs["path"] = kwargs.pop("filepath")
-        return await fs.write_file(**kwargs)
+        return fs.write_file(**kwargs)
 
     mcp_client.register_builtin_handler(
         "write_file",
