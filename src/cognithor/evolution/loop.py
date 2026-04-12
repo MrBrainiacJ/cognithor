@@ -1414,9 +1414,9 @@ class EvolutionLoop:
         if not self._skill_gen:
             return ""
         try:
-            from cognithor.skills.generator import SkillGap, SkillGapType
-
             import uuid
+
+            from cognithor.skills.generator import SkillGap, SkillGapType
 
             skill_gap = SkillGap(
                 id=f"evo_{uuid.uuid4().hex[:8]}",

@@ -5,6 +5,34 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.91.0] -- 2026-04-12
+
+### Fixed
+- **i18n language selection (#109)** — Installer post-processes `agents.yaml` based on chosen language, planner uses `_FORMULATE_TEMPLATES` dict (de/en) for all response prompts, voice STT channels (Telegram, Signal, WhatsApp, voice_ws_bridge) honor `config.language`
+- **Approval flow** — `_WebUIBridge.request_approval()` no longer auto-approves; sends real `approval_request` over WebSocket and waits for client response (30min timeout)
+- **Approval timeout** — Extended from 5min to 30min to accommodate user review time
+- **Conversation tree empty** — `conversation_id` and `active_leaf_id` now persisted in session store; `/chat/tree/latest` endpoint accepts session_id query param
+- **Chat dark background** — Chat body wrapped in Container with `scaffoldBackgroundColor` to prevent white background in tree view
+- **Kanban sqlcipher crash** — `sqlite3.Row` row_factory incompatible with sqlcipher3 cursor; use `sqlcipher3.Row` with `_dict_row_factory` fallback
+- **ORANGE approval routing** — Session ID mismatch fixed: gateway's internal session key vs WS client-facing session ID
+- **Duplicate evolution plans** — Loop checked for existing plans by goal before creating new ones; cleaned up 323 duplicates
+- **Evolution build TypeError** — `SkillGap()` missing required `id` argument prevented all build cycles
+- **Gateway evolution goal progress endpoint** — Now reads from GoalManager (live progress) instead of config.yaml (static)
+- **Planner refusal on action requests** — Retry with explicit tool-plan hint when LLM self-censors on file/delete operations
+- **Config auto-swap** — `model_post_init` no longer overrides explicit `llm_backend_type` setting
+- **DB migration** — Auto-migrate `~/.jarvis/` data to `~/.cognithor/` on first start; keyring key fallback; corrupt session DB recovery
+- **Chat header "Jarvis"** — Renamed to "Cognithor" in all 4 locales (en/de/zh/ar) and planner system prompt
+- **Agent roster** — System prompt lists all 6 available agents (Cognithor, Researcher, Coder, Office, Operator, Frontier)
+
+### Added
+- **Live Logs tab** in MonitoringScreen — polls `/api/v1/monitoring/events` every 5s, severity filter chips, auto-scroll with "new events" button
+- **Invisible backend** — `cognithor.bat` uses `pythonw.exe` in `--ui` mode, no console window
+- **ConnectionGuard overlay** — Blocks UI with non-dismissible overlay when backend unreachable, 15s health polling
+- **Agent delegation visibility** — Backend broadcasts delegation status, Flutter shows agent badge on messages
+- **Evolution goal edit/delete** — New popup menu entries with confirmation dialog
+- **GitHub model list update** — Cognithor installer recommender updated to qwen3.5, llama4, gemma3, devstral (from obsolete qwen2.5, llama3.1)
+- **Backend migration on upgrade** — Auto-copies data from legacy `~/.jarvis/` location
+
 ## [0.90.0] -- 2026-04-11
 
 ### Added

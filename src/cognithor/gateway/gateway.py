@@ -5468,9 +5468,12 @@ class Gateway:
             result = list(decisions)
             for i, decision in enumerate(result):
                 if decision.status == GateStatus.APPROVE:
+                    _no_channel_reason = (
+                        f"Kein interaktiver Kanal verfuegbar fuer Bestaetigung: {decision.reason}"
+                    )
                     result[i] = GateDecision(
                         status=GateStatus.BLOCK,
-                        reason=f"Kein interaktiver Kanal verfuegbar fuer Bestaetigung: {decision.reason}",
+                        reason=_no_channel_reason,
                         risk_level=decision.risk_level,
                         original_action=decision.original_action,
                         policy_name=f"{decision.policy_name}:no_channel",

@@ -10,6 +10,7 @@ Tabellen:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import sqlite3
 import threading
@@ -226,14 +227,10 @@ class SessionStore:
             session.incognito = bool(row["incognito"])
         except (KeyError, IndexError):
             session.incognito = False
-        try:
+        with contextlib.suppress(KeyError, IndexError):
             session.conversation_id = row["conversation_id"] or ""
-        except (KeyError, IndexError):
-            pass
-        try:
+        with contextlib.suppress(KeyError, IndexError):
             session.active_leaf_id = row["active_leaf_id"] or ""
-        except (KeyError, IndexError):
-            pass
         return session
 
     def load_session_by_id(self, session_id: str) -> SessionContext | None:
@@ -246,7 +243,7 @@ class SessionStore:
         if row is None:
             return None
 
-        agent_id = row["agent_id"] if "agent_id" in row.keys() else "jarvis"
+        agent_id = row.get("agent_id", "jarvis")
         session = SessionContext(
             session_id=row["session_id"],
             user_id=row["user_id"],
@@ -262,14 +259,10 @@ class SessionStore:
             session.incognito = bool(row["incognito"])
         except (KeyError, IndexError):
             session.incognito = False
-        try:
+        with contextlib.suppress(KeyError, IndexError):
             session.conversation_id = row["conversation_id"] or ""
-        except (KeyError, IndexError):
-            pass
-        try:
+        with contextlib.suppress(KeyError, IndexError):
             session.active_leaf_id = row["active_leaf_id"] or ""
-        except (KeyError, IndexError):
-            pass
         return session
 
     def deactivate_session(self, session_id: str) -> None:
