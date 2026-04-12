@@ -1150,8 +1150,11 @@ class EvolutionLoop:
                 and self._config
                 and getattr(self._config, "deep_learning_enabled", True)
             ):
+                existing_goals = {
+                    p.goal for p in self._deep_learner.list_plans() if p.status == "active"
+                }
                 for g in list(goals):
-                    if self._deep_learner.is_complex_goal(g):
+                    if self._deep_learner.is_complex_goal(g) and g not in existing_goals:
                         log.info("evolution_promoting_to_deep_plan", goal=g[:60])
                         try:
                             await self._deep_learner.create_plan(g)
