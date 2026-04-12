@@ -1012,6 +1012,8 @@ def main() -> None:
                                 continue
 
                             msg_type = msg.get("type", "")
+                            if msg_type != "ping":
+                                log.info("ws_msg_received", type=msg_type, keys=list(msg.keys()))
 
                             if msg_type == "ping":
                                 if not await _ws_safe_send(websocket, {"type": "pong"}):
@@ -1267,11 +1269,24 @@ def main() -> None:
                             if msg_type == "approval_response":
                                 _req_id = msg.get("id", "") or msg.get("request_id", "")
                                 _approved = msg.get("approved", False)
+                                log.info(
+                                    "approval_response_raw",
+                                    request_id=_req_id,
+                                    approved=_approved,
+                                    pending_keys=list(_pending_approvals.keys()),
+                                )
                                 _future = _pending_approvals.get(_req_id)
                                 if _future and not _future.done():
                                     _future.set_result(bool(_approved))
                                     log.info(
                                         "approval_received", request_id=_req_id, approved=_approved
+                                    )
+                                else:
+                                    log.warning(
+                                        "approval_response_no_future",
+                                        request_id=_req_id,
+                                        future_exists=_future is not None,
+                                        future_done=_future.done() if _future else None,
                                     )
                                 continue
 
@@ -1353,7 +1368,7 @@ def main() -> None:
                         log.info("approval_sent", tool=_tool, request_id=request_id)
 
                         try:
-                            return await asyncio.wait_for(future, timeout=300)
+                            return await asyncio.wait_for(future, timeout=1800)
                         except TimeoutError:
                             log.warning("approval_timeout", request_id=request_id)
                             return False
