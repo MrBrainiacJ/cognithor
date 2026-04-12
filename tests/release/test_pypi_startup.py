@@ -7,6 +7,7 @@ before it ever reaches PyPI.
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import re
 import subprocess
 import sys
@@ -68,6 +69,10 @@ class TestPyPIStartup:
         assert not missing, f"Missing package data files: {missing}"
 
     @pytest.mark.release
+    @pytest.mark.skipif(
+        not importlib.util.find_spec("build"),
+        reason="'build' package not installed — skipped in CI",
+    )
     def test_wheel_builds_cleanly(self, tmp_path: Path) -> None:
         """A wheel can be built from the current tree without errors."""
         result = subprocess.run(
