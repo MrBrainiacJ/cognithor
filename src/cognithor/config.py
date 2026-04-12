@@ -2703,41 +2703,46 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
 
 
 def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
-    """Wendet COGNITHOR_* Umgebungsvariablen an.
+    """Wendet COGNITHOR_* und legacy JARVIS_* Umgebungsvariablen an.
 
     Konvention: COGNITHOR_SECTION_KEY → data["section"]["key"]
     Beispiel: COGNITHOR_OLLAMA_BASE_URL → data["ollama"]["base_url"]
+
+    Legacy JARVIS_* vars are processed first (lower priority).
+    COGNITHOR_* vars are processed second and overwrite any JARVIS_* values.
     """
-    prefix = "COGNITHOR_"
-    for key, value in os.environ.items():
-        if not key.startswith(prefix):
-            continue
-        parts = key[len(prefix) :].lower().split("_")
-        if len(parts) >= 2:
-            # Recursive descent: walk into existing dict sections,
-            # then set the remaining parts (joined with _) as leaf key.
-            node = data
-            consumed = 0
-            for i in range(len(parts) - 1):
-                candidate = parts[i]
-                if candidate in node and isinstance(node[candidate], dict):
-                    node = node[candidate]
-                    consumed = i + 1
-                else:
-                    break
-            if consumed == 0:
-                # No existing section found -- use first part as section
-                section = parts[0]
-                if section not in node:
-                    node[section] = {}
-                if isinstance(node[section], dict):
-                    node = node[section]
-                    consumed = 1
-            leaf_key = "_".join(parts[consumed:])
-            if leaf_key:
-                node[leaf_key] = value
-        elif len(parts) == 1:
-            data[parts[0]] = value
+    for prefix in ("JARVIS_", "COGNITHOR_"):
+        for key, value in os.environ.items():
+            if not key.startswith(prefix):
+                continue
+            parts = key[len(prefix) :].lower().split("_")
+            if len(parts) >= 2:
+                # Recursive descent: walk into existing dict sections,
+                # then set the remaining parts (joined with _) as leaf key.
+                node = data
+                consumed = 0
+                for i in range(len(parts) - 1):
+                    candidate = parts[i]
+                    if candidate in node and isinstance(node[candidate], dict):
+                        node = node[candidate]
+                        consumed = i + 1
+                    else:
+                        break
+                if consumed == 0:
+                    # No existing section found -- set as top-level key
+                    # AND try section-based approach for forward compat.
+                    data["_".join(parts)] = value
+                    section = parts[0]
+                    if section not in node:
+                        node[section] = {}
+                    if isinstance(node[section], dict):
+                        node = node[section]
+                        consumed = 1
+                leaf_key = "_".join(parts[consumed:])
+                if leaf_key:
+                    node[leaf_key] = value
+            elif len(parts) == 1:
+                data[parts[0]] = value
     return data
 
 

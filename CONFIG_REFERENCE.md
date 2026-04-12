@@ -4,7 +4,9 @@ Cognithor uses a YAML configuration file at `~/.jarvis/config.yaml`. Settings ca
 
 1. **Defaults** (defined in `src/jarvis/config.py`)
 2. **config.yaml** (overrides defaults)
-3. **Environment variables** `JARVIS_*` (overrides everything)
+3. **Environment variables** `COGNITHOR_*` (overrides everything)
+
+> Legacy `JARVIS_*` environment variables are still supported for backward compatibility but `COGNITHOR_*` is preferred and takes precedence.
 
 The configuration file is automatically created on first start.
 
@@ -14,10 +16,10 @@ The configuration file is automatically created on first start.
 
 | Key | Type | Default | Env Var | Description |
 |-----|------|---------|---------|-------------|
-| `language` | string | `"de"` | `JARVIS_LANGUAGE` | UI language for error messages, greetings, status texts. Supports any installed i18n pack (en, de, zh, ar). |
-| `owner_name` | string | `"User"` | `JARVIS_OWNER_NAME` | Owner name used in prompts and CORE.md personalization. |
-| `operation_mode` | string | `"auto"` | `JARVIS_OPERATION_MODE` | Operation mode: `offline`, `online`, `hybrid`, `auto`. Auto-detects from API keys. |
-| `jarvis_home` | path | `~/.jarvis` | `JARVIS_HOME` | Base directory for all Cognithor data. |
+| `language` | string | `"de"` | `COGNITHOR_LANGUAGE` | UI language for error messages, greetings, status texts. Supports any installed i18n pack (en, de, zh, ar). |
+| `owner_name` | string | `"User"` | `COGNITHOR_OWNER_NAME` | Owner name used in prompts and CORE.md personalization. |
+| `operation_mode` | string | `"auto"` | `COGNITHOR_OPERATION_MODE` | Operation mode: `offline`, `online`, `hybrid`, `auto`. Auto-detects from API keys. |
+| `jarvis_home` | path | `~/.jarvis` | `COGNITHOR_HOME` | Base directory for all Cognithor data. |
 | `version` | string | *(from package)* | -- | Read-only. Current package version. |
 
 ---
@@ -778,27 +780,27 @@ Section key: `model_overrides`
 
 ## Environment Variable Override Pattern
 
-Any config key can be overridden with a `JARVIS_` prefixed environment variable. Nested keys use underscores:
+Any config key can be overridden with a `COGNITHOR_` prefixed environment variable. Nested keys use underscores:
 
 ```bash
 # Top-level
-export JARVIS_LANGUAGE=en
-export JARVIS_OWNER_NAME="John Doe"
-export JARVIS_LLM_BACKEND_TYPE=openai
+export COGNITHOR_LANGUAGE=en
+export COGNITHOR_OWNER_NAME="John Doe"
+export COGNITHOR_LLM_BACKEND_TYPE=openai
 
 # API Keys
-export JARVIS_OPENAI_API_KEY=sk-...
-export JARVIS_ANTHROPIC_API_KEY=sk-ant-...
+export COGNITHOR_OPENAI_API_KEY=sk-...
+export COGNITHOR_ANTHROPIC_API_KEY=sk-ant-...
 
 # Nested (use section_key format)
-export JARVIS_OLLAMA_TIMEOUT_SECONDS=180
-export JARVIS_PLANNER_MAX_ITERATIONS=15
+export COGNITHOR_OLLAMA_TIMEOUT_SECONDS=180
+export COGNITHOR_PLANNER_MAX_ITERATIONS=15
 ```
 
 Channel tokens are typically set in `~/.jarvis/.env`:
 
 ```bash
-JARVIS_TELEGRAM_TOKEN=123456:ABC...
-JARVIS_SLACK_TOKEN=xoxb-...
-JARVIS_DISCORD_TOKEN=...
+COGNITHOR_TELEGRAM_TOKEN=123456:ABC...
+COGNITHOR_SLACK_TOKEN=xoxb-...
+COGNITHOR_DISCORD_TOKEN=...
 ```
