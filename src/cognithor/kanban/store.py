@@ -56,6 +56,17 @@ CREATE INDEX IF NOT EXISTS idx_history_task ON task_history(task_id);
 """
 
 
+def _dict_row_factory(cursor: sqlite3.Cursor, row: tuple) -> sqlite3.Row:
+    """Row factory that returns dict-like objects compatible with ``row["col"]`` access.
+
+    Used as a fallback when ``sqlcipher3.Row`` is not available.
+    """
+    # Build a lightweight object that supports both index and key access
+    desc = cursor.description
+    fields = {col[0]: row[idx] for idx, col in enumerate(desc)}
+    return type("Row", (), {"__getitem__": lambda self, k: fields[k] if isinstance(k, str) else row[k], "keys": lambda self: fields.keys()})()
+
+
 class KanbanStore:
     """SQLite-backed store for Kanban tasks with optional SQLCipher encryption."""
 
@@ -68,16 +79,27 @@ class KanbanStore:
     def _get_conn(self) -> sqlite3.Connection:
         if self._conn is not None:
             return self._conn
+        _is_sqlcipher = False
         if self._use_encryption:
             try:
                 from cognithor.security.encrypted_db import encrypted_connect
 
                 self._conn = encrypted_connect(self._db_path)
+                _is_sqlcipher = True
             except Exception:
                 self._conn = sqlite3.connect(self._db_path, check_same_thread=False)
         else:
             self._conn = sqlite3.connect(self._db_path, check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
+        # sqlcipher3 cursors are incompatible with sqlite3.Row — use
+        # the matching Row class or fall back to a dict factory.
+        if _is_sqlcipher:
+            try:
+                import sqlcipher3
+                self._conn.row_factory = sqlcipher3.Row
+            except (ImportError, AttributeError):
+                self._conn.row_factory = _dict_row_factory
+        else:
+            self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA foreign_keys = ON")
         return self._conn
 

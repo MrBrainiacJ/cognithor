@@ -3524,12 +3524,15 @@ class Gateway:
                     )
                 )
 
-            # Approvals
+            # Approvals — use msg.session_id (client-facing WS session)
+            # instead of session.session_id (internal gateway key) so the
+            # channel can find the active WebSocket connection.
             approved_decisions = await self._handle_approvals(
                 plan.steps,
                 decisions,
                 session,
                 msg.channel,
+                ws_session_id=msg.session_id,
             )
 
             _n_blocked = sum(1 for d in approved_decisions if d.status == GateStatus.BLOCK)
@@ -5446,16 +5449,37 @@ class Gateway:
         decisions: list[GateDecision],
         session: SessionContext,
         channel_name: str,
+        *,
+        ws_session_id: str | None = None,
     ) -> list[GateDecision]:
         """Holt User-Bestaetigungen fuer ORANGE-Aktionen ein.
+
+        Args:
+            ws_session_id: Client-facing session ID (e.g. from the WS URL).
+                           Used for connection lookup instead of the internal
+                           ``session.session_id``.
 
         Returns:
             Aktualisierte Liste von Entscheidungen (APPROVE → ALLOW oder BLOCK).
         """
         channel = self._channels.get(channel_name)
         if channel is None:
-            return decisions
+            # No channel available — convert unresolved APPROVE to BLOCK
+            result = list(decisions)
+            for i, decision in enumerate(result):
+                if decision.status == GateStatus.APPROVE:
+                    result[i] = GateDecision(
+                        status=GateStatus.BLOCK,
+                        reason=f"Kein interaktiver Kanal verfuegbar fuer Bestaetigung: {decision.reason}",
+                        risk_level=decision.risk_level,
+                        original_action=decision.original_action,
+                        policy_name=f"{decision.policy_name}:no_channel",
+                    )
+                    log.warning("approval_no_channel", tool=getattr(decision.original_action, "tool", "?"))
+            return result
 
+        # Use client-facing session ID for WS connection lookup
+        _approval_sid = ws_session_id or session.session_id
         result = list(decisions)  # Kopie
 
         for i, (step, decision) in enumerate(zip(steps, decisions, strict=False)):
@@ -5463,11 +5487,15 @@ class Gateway:
                 continue
 
             # User fragen
-            approved = await channel.request_approval(
-                session_id=session.session_id,
-                action=step,
-                reason=decision.reason,
-            )
+            try:
+                approved = await channel.request_approval(
+                    session_id=_approval_sid,
+                    action=step,
+                    reason=decision.reason,
+                )
+            except Exception:
+                log.warning("approval_request_failed", tool=step.tool, exc_info=True)
+                approved = False
 
             if approved:
                 result[i] = GateDecision(

@@ -34,7 +34,7 @@ class _TreeSidebarState extends State<TreeSidebar> {
             return Container(
               width: _width,
               decoration: BoxDecoration(
-                color: cs.surface,
+                color: theme.scaffoldBackgroundColor,
                 border: Border(
                   right: BorderSide(color: cs.outlineVariant, width: 1),
                 ),
@@ -45,6 +45,7 @@ class _TreeSidebarState extends State<TreeSidebar> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
+                      color: cs.surface,
                       border: Border(
                         bottom: BorderSide(color: cs.outlineVariant, width: 1),
                       ),
