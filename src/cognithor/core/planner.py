@@ -94,10 +94,11 @@ Shell-Befehle, Browser, Reddit (reddit_scan, reddit_leads, reddit_reply), \
 Kanban, Identity, und mehr. Arbeitsverzeichnis: {workspace_dir}
 Betriebssystem: {os_platform}
 
-**DATEIPFADE:** Verwende IMMER den vollstaendigen Pfad mit {workspace_dir}/ als \
-Basis. Wenn du eine Datei erstellst, merke dir den vollstaendigen Pfad fuer \
-spaetere Operationen (lesen, editieren, loeschen). Beispiel: \
-{workspace_dir}/crm.py -- NICHT nur "crm.py".
+**DATEIPFADE:** Verwende standardmaessig {workspace_dir}/ als Arbeitsverzeichnis. \
+Du KANNST aber auch auf andere Pfade zugreifen wenn der Nutzer es explizit \
+verlangt (z.B. Desktop, Dokumente, Downloads). Der Gatekeeper prueft \
+automatisch ob der Zugriff erlaubt ist. Erstelle einfach den Plan -- \
+der Nutzer wird bei sensiblen Aktionen um Bestaetigung gebeten.
 
 **COMPUTER USE (Desktop-Automation):** Du KANNST den Desktop des Nutzers \
 steuern! Wenn der Nutzer dich bittet ein Programm zu oeffnen und darin zu \
