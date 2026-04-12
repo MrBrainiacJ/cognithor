@@ -1311,6 +1311,35 @@ def main() -> None:
 
                 _pending_approvals: dict[str, asyncio.Future[bool]] = {}
 
+                # ── REST fallback for approval responses ────────────────
+                # If the WebSocket connection drops between sending the
+                # approval_request and receiving the user's response, the
+                # frontend can POST the decision here instead.
+                @api_app.post(
+                    "/api/v1/approval_response",
+                    dependencies=[_Depends(_verify_cc_token)],
+                )
+                async def _cc_approval_response_rest(
+                    request: _STRequest,
+                ) -> dict:
+                    try:
+                        body = await request.json()
+                    except Exception:
+                        return {"ok": False, "error": "invalid_json"}
+                    _req_id = body.get("request_id", "") or body.get("id", "")
+                    _approved = bool(body.get("approved", False))
+                    log.info(
+                        "approval_rest_received",
+                        request_id=_req_id,
+                        approved=_approved,
+                        pending_keys=list(_pending_approvals.keys()),
+                    )
+                    _future = _pending_approvals.get(_req_id)
+                    if _future and not _future.done():
+                        _future.set_result(_approved)
+                        return {"ok": True}
+                    return {"ok": False, "error": "no_pending_future"}
+
                 class _WebUIBridge(Channel):
                     """Leichtgewichtiger Adapter: Gateway-Channel → WS."""
 
@@ -1341,9 +1370,18 @@ def main() -> None:
                         reason: str = "",
                         **kwargs: Any,
                     ) -> bool:
+                        log.info(
+                            "approval_called",
+                            session_id=session_id[:8],
+                            available_ws=list(_ws_connections.keys()),
+                        )
                         ws = _ws_connections.get(session_id)
                         if not ws:
-                            log.warning("approval_no_ws", session_id=session_id[:8])
+                            log.warning(
+                                "approval_no_ws",
+                                session_id=session_id[:8],
+                                available=list(_ws_connections.keys()),
+                            )
                             return False
 
                         import uuid
@@ -1354,7 +1392,7 @@ def main() -> None:
                         future: asyncio.Future[bool] = asyncio.get_running_loop().create_future()
                         _pending_approvals[request_id] = future
 
-                        await _ws_safe_send(
+                        _sent = await _ws_safe_send(
                             ws,
                             {
                                 "type": "approval_request",
@@ -1365,7 +1403,12 @@ def main() -> None:
                                 "reason": reason,
                             },
                         )
-                        log.info("approval_sent", tool=_tool, request_id=request_id)
+                        log.info(
+                            "approval_sent",
+                            tool=_tool,
+                            request_id=request_id,
+                            ws_send_ok=_sent,
+                        )
 
                         try:
                             return await asyncio.wait_for(future, timeout=1800)

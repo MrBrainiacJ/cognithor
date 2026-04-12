@@ -1,5 +1,7 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
 import 'package:cognithor_ui/theme/jarvis_theme.dart';
@@ -14,26 +16,29 @@ class ApprovalDialog extends StatelessWidget {
   final ApprovalRequest request;
   final void Function(bool approved) onRespond;
 
+  void _handleApprove(BuildContext context) {
+    developer.log(
+      '[APPROVAL] APPROVE clicked id=${request.requestId}',
+      name: 'approval',
+    );
+    // Use context.read directly instead of the passed callback
+    // to guarantee we get the CURRENT ChatProvider instance.
+    context.read<ChatProvider>().respondApproval(true);
+  }
+
+  void _handleReject(BuildContext context) {
+    developer.log(
+      '[APPROVAL] REJECT clicked id=${request.requestId}',
+      name: 'approval',
+    );
+    context.read<ChatProvider>().respondApproval(false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
 
-    return Focus(
-      autofocus: true,
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.enter) {
-            onRespond(true);
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.escape) {
-            onRespond(false);
-            return KeyEventResult.handled;
-          }
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Container(
+    return Container(
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -92,7 +97,7 @@ class ApprovalDialog extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               OutlinedButton(
-                onPressed: () => onRespond(false),
+                onPressed: () => _handleReject(context),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: JarvisTheme.red,
                   side: BorderSide(color: JarvisTheme.red),
@@ -101,7 +106,7 @@ class ApprovalDialog extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: () => onRespond(true),
+                onPressed: () => _handleApprove(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: JarvisTheme.green,
                 ),
@@ -111,7 +116,6 @@ class ApprovalDialog extends StatelessWidget {
           ),
         ],
       ),
-    ),
     );
   }
 }

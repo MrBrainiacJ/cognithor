@@ -291,14 +291,37 @@ class ChatProvider extends ChangeNotifier {
   Future<void> respondApproval(bool approved) async {
     if (pendingApproval == null) return;
     final requestId = pendingApproval!.requestId;
+    _log('[Chat] respondApproval CALLED: id=$requestId, approved=$approved, ws=${_ws != null}');
+
+    // ALWAYS use REST for approval — the WebSocket path has proven unreliable.
+    // The REST endpoint directly resolves the pending future on the backend.
+    if (_ws != null) {
+      try {
+        final resp = await _ws!.apiClient.post('approval_response', {
+          'request_id': requestId,
+          'approved': approved,
+        });
+        _log('[Chat] respondApproval REST response: $resp');
+        if (resp['ok'] == true) {
+          lastError = null;
+          pendingApproval = null;
+          notifyListeners();
+          return;
+        }
+        _log('[Chat] respondApproval REST failed: ${resp['error']}');
+      } catch (e) {
+        _log('[Chat] respondApproval REST exception: $e');
+      }
+    }
+
+    // REST failed — try WebSocket as last resort
     if (_ws == null) {
       _log('[Chat] ERROR: respondApproval called but _ws is null! id=$requestId');
       lastError = 'Keine Verbindung zum Backend. Bitte Verbindung pruefen.';
-      // Do not clear pendingApproval so user can retry
       notifyListeners();
       return;
     }
-    _log('[Chat] respondApproval sending: id=$requestId, approved=$approved');
+    _log('[Chat] respondApproval falling back to WS send: id=$requestId');
     var ok = _ws!.respondApproval(requestId, approved);
 
     // If the socket was not connected, try to reconnect once and retry.
