@@ -123,14 +123,27 @@ class GoalManager:
         goal.updated_at = _now_iso()
         self._save()
 
-    def migrate_learning_goals(self, old_goals: list[str]) -> None:
-        """Convert plain string goals into structured Goal objects."""
-        for title in old_goals:
-            self.add_goal(
-                Goal(
-                    title=title,
-                    description=title,
-                    priority=3,
-                    source="user",
+    def migrate_learning_goals(self, old_goals: list) -> None:
+        """Convert plain string or dict goals into structured Goal objects."""
+        for entry in old_goals:
+            if isinstance(entry, dict):
+                self.add_goal(
+                    Goal(
+                        id=entry.get("id", ""),
+                        title=str(entry.get("title", "")),
+                        description=str(entry.get("description", "")),
+                        priority=entry.get("priority", 3),
+                        status=entry.get("status", "active"),
+                        progress=entry.get("progress", 0.0),
+                        source="user",
+                    )
                 )
-            )
+            elif isinstance(entry, str):
+                self.add_goal(
+                    Goal(
+                        title=entry,
+                        description=entry,
+                        priority=3,
+                        source="user",
+                    )
+                )
