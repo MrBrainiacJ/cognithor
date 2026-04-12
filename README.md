@@ -757,6 +757,7 @@ print(t("error.timeout"))  # "The operation timed out..."
 ### Special Thanks
 
 [@TomiWebPro](https://github.com/TomiWebPro) — Now a core member of the development team and Head of Marketing. Helped with early testing and debugging, contributed security suggestions, and supports community Q&A.
+
 [u/_D4rk4_](https://www.reddit.com/user/_D4rk4_/) — Provided valuable feedback about non-solidified features between releases. Highlighted the need for more stable, well tested releases. 
 
 ## License
