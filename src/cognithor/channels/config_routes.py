@@ -3900,9 +3900,17 @@ def _register_ui_routes(
     @app.get("/api/v1/evolution/goals", dependencies=deps)
     async def get_evolution_goals() -> dict[str, Any]:
         """Get user-defined learning goals as structured objects."""
+        # Primary source: GoalManager (has real-time progress from Evolution Engine)
+        evo_loop = getattr(gateway, "_evolution_loop", None)
+        gm = getattr(evo_loop, "_goal_manager", None) if evo_loop else None
+        if gm is not None:
+            from dataclasses import asdict
+
+            return {"goals": [asdict(g) for g in gm._goals.values()]}
+
+        # Fallback: config.yaml (no live progress)
         evo = getattr(config_manager.config, "evolution", None)
         raw = getattr(evo, "learning_goals", []) if evo else []
-        # Normalize: support both string list and dict list
         goals = []
         for i, g in enumerate(raw):
             if isinstance(g, str):
