@@ -254,6 +254,51 @@ def _expand_working_set(min_mb: int = 128, max_mb: int = 512) -> None:
         pass  # Not on Windows, or insufficient privileges
 
 
+def _migrate_jarvis_home() -> None:
+    """Migrate data from ~/.jarvis/ to ~/.cognithor/ if needed (one-time).
+
+    When upgrading from the old 'jarvis' package to 'cognithor', DB files,
+    config, and caches remain under ~/.jarvis/ while code now looks in
+    ~/.cognithor/.  This copies the relevant subdirectories once and writes
+    a marker so the migration is never repeated.
+    """
+    import shutil
+
+    cognithor_home = Path.home() / ".cognithor"
+    jarvis_home = Path.home() / ".jarvis"
+    marker = cognithor_home / ".migrated_from_jarvis"
+
+    if marker.exists() or not jarvis_home.is_dir():
+        return
+
+    cognithor_home.mkdir(parents=True, exist_ok=True)
+
+    dirs_to_migrate = ["memory", "data", "vault", "skills", "config", "cache"]
+    migrated: list[str] = []
+
+    for dirname in dirs_to_migrate:
+        src = jarvis_home / dirname
+        dst = cognithor_home / dirname
+        if src.is_dir() and not dst.is_dir():
+            shutil.copytree(str(src), str(dst))
+            migrated.append(dirname)
+
+    # Also migrate top-level files
+    for filename in ["config.yaml", "agents.yaml", "CORE.md"]:
+        src = jarvis_home / filename
+        dst = cognithor_home / filename
+        if src.is_file() and not dst.is_file():
+            shutil.copy2(str(src), str(dst))
+            migrated.append(filename)
+
+    if migrated:
+        marker.write_text(f"Migrated from {jarvis_home}: {', '.join(migrated)}")
+        print(f"  [OK] Migrated data from {jarvis_home}: {', '.join(migrated)}")
+    else:
+        # Nothing to migrate but mark as done so we don't re-check
+        marker.write_text("No migration needed")
+
+
 def main() -> None:
     """Main entry point for Jarvis."""
     _check_python_version()
@@ -287,6 +332,9 @@ def main() -> None:
         else:
             config_tui.launch(config_path=config_path)
             sys.exit(0)
+
+    # 0a. Auto-migrate data from ~/.jarvis/ to ~/.cognithor/ (one-time, on upgrade)
+    _migrate_jarvis_home()
 
     # 0. Load .env file (secrets from ~/.cognithor/.env or project root)
     try:

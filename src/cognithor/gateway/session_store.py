@@ -123,7 +123,19 @@ class SessionStore:
             # Double-check after acquiring lock
             if self._conn is not None:
                 return self._conn
-            self._conn = encrypted_connect(str(self._db_path), check_same_thread=False)
+            try:
+                self._conn = encrypted_connect(str(self._db_path), check_same_thread=False)
+            except Exception as exc:
+                logger.warning(
+                    "session_db_corrupt_recovery: path=%s error=%s",
+                    self._db_path,
+                    exc,
+                )
+                # Rename corrupt DB and start fresh
+                corrupt_path = self._db_path.with_suffix(".db.corrupt.bak")
+                if self._db_path.exists():
+                    self._db_path.rename(corrupt_path)
+                self._conn = encrypted_connect(str(self._db_path), check_same_thread=False)
             self._conn.row_factory = compatible_row_factory()
             self._conn.execute("PRAGMA journal_mode=WAL")
             self._conn.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")

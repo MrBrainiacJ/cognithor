@@ -167,6 +167,17 @@ def _get_db_key() -> str:
         if existing:
             return existing
 
+        # Legacy fallback: try "jarvis" service name (pre-rename)
+        try:
+            stored = keyring.get_password("jarvis", _KEYRING_KEY_NAME)
+            if stored:
+                # Migrate to new service name
+                keyring.set_password(_KEYRING_SERVICE, _KEYRING_KEY_NAME, stored)
+                log.info("keyring_key_migrated", from_service="jarvis", to_service=_KEYRING_SERVICE)
+                return stored
+        except Exception:
+            pass
+
         # Auto-generate and store in keyring
         import secrets
 
