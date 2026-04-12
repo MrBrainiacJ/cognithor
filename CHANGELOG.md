@@ -34,6 +34,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   - `src/cognithor/cli/model_registry.py` — Dynamic model discovery from live LLM providers
   - Section navigation, validation, model selection from available models
   - Launched via `cognithor --config-tui`
+- Pre-release smoke test in publish workflow (wheel build + install + startup verification)
+- Version consistency check in CI (pyproject.toml vs __init__.py)
+- `scripts/prepare_release.py` for local pre-release validation
+- `scripts/verify_readme_claims.py` for README claims verification
+- 17 new tests (release smoke, env overrides, security regression)
 
 ### Changed
 - **Package rename**: `jarvis` → `cognithor` across 1,265 files (5,770 replacements)
@@ -52,6 +57,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - **Evolution deep learner** — Fixed infinite loop (hardcoded queries → LLM-generated), max rounds limit
 
 ### Fixed
+- Environment variable overrides: JARVIS_* prefix now supported for backward compatibility
+- Multi-word top-level config keys (owner_name, llm_backend_type) now correctly overridden via env vars
+- Makefile venv path updated from .jarvis to .cognithor
+- README numeric claims verified and corrected
 - `await` outside async function in gateway.py (CAG hook in sync function)
 - `cag_prefix` MagicMock crash in tests (isinstance check)
 - `_BootstrapRequest` missing at runtime (TYPE_CHECKING import)
