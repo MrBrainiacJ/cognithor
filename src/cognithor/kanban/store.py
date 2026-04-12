@@ -64,7 +64,14 @@ def _dict_row_factory(cursor: sqlite3.Cursor, row: tuple) -> sqlite3.Row:
     # Build a lightweight object that supports both index and key access
     desc = cursor.description
     fields = {col[0]: row[idx] for idx, col in enumerate(desc)}
-    return type("Row", (), {"__getitem__": lambda self, k: fields[k] if isinstance(k, str) else row[k], "keys": lambda self: fields.keys()})()
+    return type(
+        "Row",
+        (),
+        {
+            "__getitem__": lambda self, k: fields[k] if isinstance(k, str) else row[k],
+            "keys": lambda self: fields.keys(),
+        },
+    )()
 
 
 class KanbanStore:
@@ -95,6 +102,7 @@ class KanbanStore:
         if _is_sqlcipher:
             try:
                 import sqlcipher3
+
                 self._conn.row_factory = sqlcipher3.Row
             except (ImportError, AttributeError):
                 self._conn.row_factory = _dict_row_factory

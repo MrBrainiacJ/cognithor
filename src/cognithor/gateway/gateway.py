@@ -5475,7 +5475,9 @@ class Gateway:
                         original_action=decision.original_action,
                         policy_name=f"{decision.policy_name}:no_channel",
                     )
-                    log.warning("approval_no_channel", tool=getattr(decision.original_action, "tool", "?"))
+                    log.warning(
+                        "approval_no_channel", tool=getattr(decision.original_action, "tool", "?")
+                    )
             return result
 
         # Use client-facing session ID for WS connection lookup
