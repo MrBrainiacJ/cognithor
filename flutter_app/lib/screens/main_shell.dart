@@ -15,6 +15,7 @@ import 'package:cognithor_ui/screens/reddit_leads_screen.dart';
 import 'package:cognithor_ui/screens/skills_screen.dart';
 import 'package:cognithor_ui/widgets/global_search_dialog.dart';
 import 'package:cognithor_ui/widgets/responsive_scaffold.dart';
+import 'package:cognithor_ui/widgets/connection_guard.dart';
 import 'package:cognithor_ui/widgets/robot_office/pip_overlay.dart';
 
 class MainShell extends StatefulWidget {
@@ -117,37 +118,39 @@ class _MainShellState extends State<MainShell> {
 
     final pipProvider = context.watch<PipProvider>();
 
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyK, control: true):
-            _openSearch,
-        const SingleActivator(LogicalKeyboardKey.digit1, control: true):
-            () => _navigateTab(0),
-        const SingleActivator(LogicalKeyboardKey.digit2, control: true):
-            () => _navigateTab(1),
-        const SingleActivator(LogicalKeyboardKey.digit3, control: true):
-            () => _navigateTab(2),
-        const SingleActivator(LogicalKeyboardKey.digit4, control: true):
-            () => _navigateTab(3),
-        const SingleActivator(LogicalKeyboardKey.digit5, control: true):
-            () => _navigateTab(4),
-        const SingleActivator(LogicalKeyboardKey.digit6, control: true):
-            () => _navigateTab(5),
-        const SingleActivator(LogicalKeyboardKey.digit7, control: true):
-            () => _navigateTab(6),
-      },
-      child: Focus(
-        autofocus: true,
-        child: _wrapWithPip(
-          pipProvider,
-          ResponsiveScaffold(
-            screens: _screens,
-            navItems: navItems,
-            currentIndex: nav.currentTab,
-            onIndexChanged: _navigateTab,
-            onSearchTap: _openSearch,
-            onThemeToggle: () => themeProvider.toggle(),
-            isDark: themeProvider.isDark,
+    return ConnectionGuard(
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyK, control: true):
+              _openSearch,
+          const SingleActivator(LogicalKeyboardKey.digit1, control: true):
+              () => _navigateTab(0),
+          const SingleActivator(LogicalKeyboardKey.digit2, control: true):
+              () => _navigateTab(1),
+          const SingleActivator(LogicalKeyboardKey.digit3, control: true):
+              () => _navigateTab(2),
+          const SingleActivator(LogicalKeyboardKey.digit4, control: true):
+              () => _navigateTab(3),
+          const SingleActivator(LogicalKeyboardKey.digit5, control: true):
+              () => _navigateTab(4),
+          const SingleActivator(LogicalKeyboardKey.digit6, control: true):
+              () => _navigateTab(5),
+          const SingleActivator(LogicalKeyboardKey.digit7, control: true):
+              () => _navigateTab(6),
+        },
+        child: Focus(
+          autofocus: true,
+          child: _wrapWithPip(
+            pipProvider,
+            ResponsiveScaffold(
+              screens: _screens,
+              navItems: navItems,
+              currentIndex: nav.currentTab,
+              onIndexChanged: _navigateTab,
+              onSearchTap: _openSearch,
+              onThemeToggle: () => themeProvider.toggle(),
+              isDark: themeProvider.isDark,
+            ),
           ),
         ),
       ),

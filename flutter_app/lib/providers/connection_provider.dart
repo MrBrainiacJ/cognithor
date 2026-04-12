@@ -33,6 +33,14 @@ class ConnectionProvider extends ChangeNotifier {
   String? errorMessage;
   String? backendVersion;
 
+  /// Whether initial connection has ever succeeded (guards health polling).
+  bool _wasConnected = false;
+
+  /// Public accessor so [ConnectionGuard] can distinguish initial vs. lost.
+  bool get wasConnected => _wasConnected;
+
+  Timer? _healthTimer;
+
   ApiClient? _api;
   WebSocketService? _ws;
 
@@ -90,6 +98,8 @@ class ConnectionProvider extends ChangeNotifier {
       _ws = WebSocketService(apiClient: _api!, wsBaseUrl: wsUrl);
 
       state = JarvisConnectionState.connected;
+      _wasConnected = true;
+      _startHealthPolling();
     } on TimeoutException catch (e) {
       state = JarvisConnectionState.error;
       errorMessage = e.message ?? 'Backend nicht erreichbar ($serverUrl)';
@@ -100,8 +110,56 @@ class ConnectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Starts periodic health checks (every 15s).
+  void _startHealthPolling() {
+    _healthTimer?.cancel();
+    _healthTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _checkHealth(),
+    );
+  }
+
+  /// Pings /health and transitions state on failure/recovery.
+  Future<void> _checkHealth() async {
+    if (_api == null) return;
+    try {
+      final resp = await _api!.get('/health').timeout(
+            const Duration(seconds: 5),
+          );
+      if (resp['status'] != 'ok' &&
+          state == JarvisConnectionState.connected) {
+        state = JarvisConnectionState.error;
+        errorMessage = 'Backend health check failed';
+        notifyListeners();
+        _scheduleReconnect();
+      } else if (resp['status'] == 'ok' &&
+          state != JarvisConnectionState.connected) {
+        state = JarvisConnectionState.connected;
+        errorMessage = null;
+        notifyListeners();
+      }
+    } catch (_) {
+      if (state == JarvisConnectionState.connected) {
+        state = JarvisConnectionState.error;
+        errorMessage = 'Backend nicht erreichbar';
+        notifyListeners();
+        _scheduleReconnect();
+      }
+    }
+  }
+
+  /// Schedules a reconnection attempt after 5 seconds.
+  void _scheduleReconnect() {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (state != JarvisConnectionState.connected) {
+        connect();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _healthTimer?.cancel();
     _ws?.disconnect();
     super.dispose();
   }
