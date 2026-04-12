@@ -289,5 +289,5 @@ class TestApprovalHandling:
         ]
 
         result = await gateway._handle_approvals(steps, decisions, session, "nonexistent_channel")
-        # Kein Channel → Entscheidungen unverändert
-        assert result[0].status == GateStatus.APPROVE
+        # Kein Channel → ORANGE wird zu BLOCK (kein Approval-Kanal verfügbar)
+        assert result[0].status == GateStatus.BLOCK

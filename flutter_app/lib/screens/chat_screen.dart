@@ -166,7 +166,9 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           },
         ),
-        body: Row(
+        body: Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Row(
           children: [
             // Tree sidebar (when toggled)
             if (_showTreeSidebar) const TreeSidebar(),
@@ -516,6 +518,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               ),
           ],
+        ),
         ),
     );
   }
