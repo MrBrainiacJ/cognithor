@@ -278,6 +278,180 @@ Locker, verstaendlich, keine technischen Details.
 """
 
 
+# =============================================================================
+# Formulate-Response Templates (locale-aware) -- Issue #109
+# =============================================================================
+#
+# All user-facing strings that _build_formulate_messages injects into the final
+# response-formulation prompt. Keyed by language code. If a language is missing
+# a key, German is used as fallback.
+
+_FORMULATE_TEMPLATES: dict[str, dict[str, str]] = {
+    "de": {
+        "no_results_prompt": (
+            "Der User hat gesagt: {msg}\n\n"
+            "Beantworte die Nachricht des Users direkt und hilfreich "
+            "auf Deutsch in natuerlicher, gesprochener Sprache.\n"
+            "Generiere KEINE Planungs-Metaebene, KEIN REPLAN-Format. "
+            "Antworte wie ein Mensch im Gespraech."
+        ),
+        "search_prompt": (
+            "Der User hat gefragt: {msg}\n\n"
+            "## Suchergebnisse aus dem Internet (AKTUELLE FAKTEN)\n\n"
+            "{search}\n\n"
+            "## Anweisungen\n"
+            "Beantworte die Frage des Users AUSSCHLIEẞLICH "
+            "auf Basis der obigen Suchergebnisse.\n"
+            "REGELN:\n"
+            "1. Die Suchergebnisse sind AKTUELL und KORREKT. "
+            "Dein Trainingswissen ist VERALTET.\n"
+            "2. Wenn die Suchergebnisse ein Ereignis beschreiben, "
+            "dann IST es passiert.\n"
+            "3. Sage NIEMALS 'es gibt keinen Beleg' oder "
+            "'das ist nicht passiert', wenn die "
+            "Suchergebnisse das Gegenteil zeigen.\n"
+            "4. Zitiere konkrete Daten, Namen, Orte und Fakten "
+            "DIREKT aus den Suchergebnissen.\n"
+            "5. Erfinde KEINE Details, die nicht in den "
+            "Suchergebnissen stehen.\n"
+            "6. Antworte auf Deutsch, praegnant und faktenbasiert.\n"
+            "7. Antworte in natuerlicher, gesprochener Sprache "
+            "-- wie ein Mensch im Gespraech. "
+            "Keine Bullet-Points oder Listen, sondern "
+            "fliessende Saetze."
+        ),
+        "default_prompt": (
+            "Der User hat gefragt: {msg}\n\n"
+            "Du hast folgende Aktionen ausgefuehrt und "
+            "Ergebnisse erhalten:\n\n"
+            "{results}\n\n"
+            "Formuliere jetzt eine hilfreiche Antwort auf Deutsch "
+            "in natuerlicher, gesprochener Sprache.\n"
+            "WICHTIG: Nutze die ERFOLGREICHEN Ergebnisse "
+            "direkt in deiner Antwort. "
+            "Ignoriere fehlgeschlagene/blockierte Schritte, "
+            "wenn das Ziel trotzdem erreicht wurde. "
+            "Gib dem User KEINE Anleitungen fuer Dinge, "
+            "die du bereits erledigt hast. "
+            "Antworte wie ein Mensch im Gespraech -- "
+            "fliessende Saetze, keine Bullet-Points."
+        ),
+        "date_line": "\nHeutiges Datum und Uhrzeit: {dt}\n",
+        "date_fmt": "%A, %d. %B %Y, %H:%M Uhr",
+        "system_search": (
+            "Du bist Cognithor, ein autonomer Agent. Du beantwortest "
+            "Fragen auf Deutsch "
+            "in natuerlicher, gesprochener Sprache -- wie ein "
+            "Mensch im Gespraech.\n"
+            "{date_line}"
+            "KRITISCHE REGEL: Dein Trainingswissen ist VERALTET. "
+            "Bei Suchergebnissen aus dem Internet basiert deine "
+            "Antwort AUSSCHLIEẞLICH "
+            "auf den gefundenen Informationen. Die Suchergebnisse "
+            "sind die WAHRHEIT. "
+            "Widerspricht dein Vorwissen den Suchergebnissen, sind "
+            "die Suchergebnisse KORREKT. "
+            "Du darfst Suchergebnisse NICHT als 'fiktiv', "
+            "'hypothetisch' oder 'unbelegte "
+            "Behauptung' bezeichnen."
+        ),
+        "system_default": (
+            "Du bist Cognithor, ein autonomer Agent. Antworte "
+            "hilfreich auf Deutsch "
+            "in natuerlicher, gesprochener Sprache -- wie ein "
+            "Mensch im Gespraech.\n"
+            "{date_line}"
+            "Du nutzt Tool-Ergebnisse direkt und gibst dem User "
+            "NICHT Anleitungen, "
+            "Dinge selbst zu tun. Du loest Probleme eigenstaendig."
+        ),
+        "background_prefix": "Dein Hintergrund:\n{core}",
+    },
+    "en": {
+        "no_results_prompt": (
+            "User said: {msg}\n\n"
+            "Answer the user's message directly and helpfully in English using "
+            "natural spoken language.\n"
+            "Do NOT produce planning meta-output or REPLAN format. "
+            "Answer like a human in conversation."
+        ),
+        "search_prompt": (
+            "User asked: {msg}\n\n"
+            "## Search results from the internet (CURRENT FACTS)\n\n"
+            "{search}\n\n"
+            "## Instructions\n"
+            "Answer the user's question EXCLUSIVELY based on the search "
+            "results above.\n"
+            "RULES:\n"
+            "1. The search results are CURRENT and CORRECT. "
+            "Your training data is OUTDATED.\n"
+            "2. If the search results describe an event, "
+            "then it DID happen.\n"
+            "3. NEVER say 'there is no evidence' or "
+            "'that didn't happen' when the "
+            "search results show otherwise.\n"
+            "4. Cite concrete dates, names, places, and facts "
+            "DIRECTLY from the search results.\n"
+            "5. Do NOT invent details that are not in the "
+            "search results.\n"
+            "6. Answer in English, concise and fact-based.\n"
+            "7. Answer in natural spoken language -- like a human "
+            "in conversation. No bullet points or lists, use "
+            "flowing sentences."
+        ),
+        "default_prompt": (
+            "User asked: {msg}\n\n"
+            "You performed the following actions and got "
+            "these results:\n\n"
+            "{results}\n\n"
+            "Now formulate a helpful answer in English using "
+            "natural spoken language.\n"
+            "IMPORTANT: Use the SUCCESSFUL results directly in your answer. "
+            "Ignore failed/blocked steps if the goal was reached anyway. "
+            "Do NOT give the user instructions for things you already did. "
+            "Answer like a human in conversation -- "
+            "flowing sentences, no bullet points."
+        ),
+        "date_line": "\nCurrent date and time: {dt}\n",
+        "date_fmt": "%A, %d %B %Y, %H:%M",
+        "system_search": (
+            "You are Cognithor, an autonomous agent. You answer "
+            "questions in English using natural spoken language -- "
+            "like a human in conversation.\n"
+            "{date_line}"
+            "CRITICAL RULE: Your training data is OUTDATED. "
+            "For search results from the internet, your answer is "
+            "based EXCLUSIVELY on the information found. The search "
+            "results are the TRUTH. "
+            "If your prior knowledge contradicts the search results, "
+            "the search results are CORRECT. "
+            "You must NOT label search results as 'fictional', "
+            "'hypothetical', or 'unsubstantiated claim'."
+        ),
+        "system_default": (
+            "You are Cognithor, an autonomous agent. Answer helpfully "
+            "in English using natural spoken language -- like a human "
+            "in conversation.\n"
+            "{date_line}"
+            "You use tool results directly and do NOT give the user "
+            "instructions to do things themselves. You solve problems "
+            "autonomously."
+        ),
+        "background_prefix": "Your background:\n{core}",
+    },
+}
+
+
+def _fmt(lang: str, key: str, **kwargs: Any) -> str:
+    """Look up a formulate-template for ``lang`` (falling back to German)."""
+    tpl = _FORMULATE_TEMPLATES.get(lang, {}).get(key)
+    if tpl is None:
+        tpl = _FORMULATE_TEMPLATES["de"][key]
+    if kwargs:
+        return tpl.format(**kwargs)
+    return tpl
+
+
 class PlannerError(Exception):
     """Error in the Planner."""
 
@@ -976,7 +1150,12 @@ class Planner:
         results: list[ToolResult],
         working_memory: WorkingMemory,
     ) -> list[dict[str, Any]]:
-        """Baut die Messages fuer formulate_response (shared by stream/non-stream)."""
+        """Baut die Messages fuer formulate_response (shared by stream/non-stream).
+
+        Locale-aware via ``_FORMULATE_TEMPLATES`` (issue #109). Falls back to
+        German templates if the configured language is missing a key.
+        """
+        _lang = getattr(self._config, "language", "de") or "de"
         results_text = self._format_results(results)
 
         has_search_results = any(
@@ -986,13 +1165,7 @@ class Planner:
         )
 
         if not results:
-            prompt = (
-                f"Der User hat gesagt: {user_message}\n\n"
-                f"Beantworte die Nachricht des Users direkt und hilfreich "
-                f"auf Deutsch in natuerlicher, gesprochener Sprache.\n"
-                f"Generiere KEINE Planungs-Metaebene, KEIN REPLAN-Format. "
-                f"Antworte wie ein Mensch im Gespraech."
-            )
+            prompt = _fmt(_lang, "no_results_prompt", msg=user_message)
         elif has_search_results:
             search_content_parts = []
             for r in results:
@@ -1002,85 +1175,24 @@ class Planner:
                 ):
                     search_content_parts.append(r.content[:5000])
             search_content_block = "\n\n".join(search_content_parts)
-
-            prompt = (
-                f"Der User hat gefragt: {user_message}\n\n"
-                f"## Suchergebnisse aus dem Internet (AKTUELLE FAKTEN)\n\n"
-                f"{search_content_block}\n\n"
-                f"## Anweisungen\n"
-                f"Beantworte die Frage des Users AUSSCHLIEẞLICH "
-                f"auf Basis der obigen Suchergebnisse.\n"
-                f"REGELN:\n"
-                f"1. Die Suchergebnisse sind AKTUELL und KORREKT. "
-                f"Dein Trainingswissen ist VERALTET.\n"
-                f"2. Wenn die Suchergebnisse ein Ereignis beschreiben, "
-                f"dann IST es passiert.\n"
-                f"3. Sage NIEMALS 'es gibt keinen Beleg' oder "
-                f"'das ist nicht passiert', wenn die "
-                f"Suchergebnisse das Gegenteil zeigen.\n"
-                f"4. Zitiere konkrete Daten, Namen, Orte und Fakten "
-                f"DIREKT aus den Suchergebnissen.\n"
-                f"5. Erfinde KEINE Details, die nicht in den "
-                f"Suchergebnissen stehen.\n"
-                f"6. Antworte auf Deutsch, praegnant und faktenbasiert.\n"
-                f"7. Antworte in natuerlicher, gesprochener Sprache "
-                f"-- wie ein Mensch im Gespraech. "
-                f"Keine Bullet-Points oder Listen, sondern "
-                f"fliessende Saetze."
-            )
+            prompt = _fmt(_lang, "search_prompt", msg=user_message, search=search_content_block)
         else:
-            prompt = (
-                f"Der User hat gefragt: {user_message}\n\n"
-                f"Du hast folgende Aktionen ausgefuehrt und "
-                f"Ergebnisse erhalten:\n\n"
-                f"{results_text}\n\n"
-                f"Formuliere jetzt eine hilfreiche Antwort auf Deutsch "
-                f"in natuerlicher, gesprochener Sprache.\n"
-                f"WICHTIG: Nutze die ERFOLGREICHEN Ergebnisse "
-                f"direkt in deiner Antwort. "
-                f"Ignoriere fehlgeschlagene/blockierte Schritte, "
-                f"wenn das Ziel trotzdem erreicht wurde. "
-                f"Gib dem User KEINE Anleitungen fuer Dinge, "
-                f"die du bereits erledigt hast. "
-                f"Antworte wie ein Mensch im Gespraech -- "
-                f"fliessende Saetze, keine Bullet-Points."
-            )
+            prompt = _fmt(_lang, "default_prompt", msg=user_message, results=results_text)
 
         from datetime import datetime
 
         now = datetime.now()
-        current_dt = now.strftime("%A, %d. %B %Y, %H:%M Uhr")
-        date_line = f"\nHeutiges Datum und Uhrzeit: {current_dt}\n"
+        date_fmt = _fmt(_lang, "date_fmt")
+        try:
+            current_dt = now.strftime(date_fmt)
+        except Exception:
+            current_dt = now.strftime("%Y-%m-%d %H:%M")
+        date_line = _fmt(_lang, "date_line", dt=current_dt)
 
         if has_search_results:
-            system_content = (
-                "Du bist Cognithor, ein autonomer Agent. Du beantwortest "
-                "Fragen auf Deutsch "
-                "in natuerlicher, gesprochener Sprache -- wie ein "
-                "Mensch im Gespraech.\n"
-                f"{date_line}"
-                "KRITISCHE REGEL: Dein Trainingswissen ist VERALTET. "
-                "Bei Suchergebnissen aus dem Internet basiert deine "
-                "Antwort AUSSCHLIEẞLICH "
-                "auf den gefundenen Informationen. Die Suchergebnisse "
-                "sind die WAHRHEIT. "
-                "Widerspricht dein Vorwissen den Suchergebnissen, sind "
-                "die Suchergebnisse KORREKT. "
-                "Du darfst Suchergebnisse NICHT als 'fiktiv', "
-                "'hypothetisch' oder 'unbelegte "
-                "Behauptung' bezeichnen."
-            )
+            system_content = _fmt(_lang, "system_search", date_line=date_line)
         else:
-            system_content = (
-                "Du bist Cognithor, ein autonomer Agent. Antworte "
-                "hilfreich auf Deutsch "
-                "in natuerlicher, gesprochener Sprache -- wie ein "
-                "Mensch im Gespraech.\n"
-                f"{date_line}"
-                "Du nutzt Tool-Ergebnisse direkt und gibst dem User "
-                "NICHT Anleitungen, "
-                "Dinge selbst zu tun. Du loest Probleme eigenstaendig."
-            )
+            system_content = _fmt(_lang, "system_default", date_line=date_line)
 
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": system_content},
@@ -1093,7 +1205,11 @@ class Planner:
             messages.append(
                 {
                     "role": "system",
-                    "content": f"Dein Hintergrund:\n{working_memory.core_memory_text[:500]}",
+                    "content": _fmt(
+                        _lang,
+                        "background_prefix",
+                        core=working_memory.core_memory_text[:500],
+                    ),
                 }
             )
 

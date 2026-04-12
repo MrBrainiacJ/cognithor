@@ -9,14 +9,11 @@ from __future__ import annotations
 
 import json
 import os
-import secrets
 import shutil
 import sys
 import urllib.request
 from pathlib import Path
 from typing import Any
-
-
 
 REGISTRY_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/registry.json"
 SKILL_BASE_URL = "https://raw.githubusercontent.com/Alex8791-cyber/skill-registry/main/skills"
@@ -45,6 +42,43 @@ def setup_agents() -> int:
     else:
         print("  [WARN] No agents.yaml.default found")
         return 0
+
+
+def _update_agents_language(lang: str) -> None:
+    """Rewrite ``agents.yaml`` so every agent uses the user's chosen language.
+
+    Issue #109: The default agents.yaml ships with ``language: de`` hardcoded.
+    When the user picks a different language in the setup wizard, we post-process
+    the file to replace those lines.
+    """
+    if not lang or lang == "de":
+        return
+    agents_path = JARVIS_HOME / "agents.yaml"
+    if not agents_path.exists():
+        return
+    try:
+        text = agents_path.read_text(encoding="utf-8")
+    except Exception as exc:
+        print(f"  [WARN] Could not read agents.yaml: {exc}")
+        return
+
+    new_lines: list[str] = []
+    replaced = 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped == "language: de" or stripped.startswith("language: de "):
+            indent = line[: len(line) - len(line.lstrip())]
+            new_lines.append(f"{indent}language: {lang}")
+            replaced += 1
+        else:
+            new_lines.append(line)
+    if replaced == 0:
+        return
+    try:
+        agents_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+        print(f"  [OK] Updated {replaced} agent language entries to '{lang}'")
+    except Exception as exc:
+        print(f"  [WARN] Could not update agents.yaml language: {exc}")
 
 
 def setup_skills() -> int:
@@ -221,7 +255,7 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
         api_env_keys = {"1": "OPENAI_API_KEY", "2": "ANTHROPIC_API_KEY", "3": "GOOGLE_API_KEY"}
         backend_map = {"1": "openai", "2": "anthropic", "3": "gemini"}
 
-        provider = api_providers[api_choice]
+        _ = api_providers[api_choice]  # validates choice; value unused
         if api_choice in backend_map:
             config["llm_backend_type"] = backend_map[api_choice]
 
@@ -383,7 +417,13 @@ def main() -> None:
     setup_skills()
 
     # Interactive setup wizard
-    run_setup_wizard(encryption_ok=encryption_ok)
+    wizard_config = run_setup_wizard(encryption_ok=encryption_ok)
+
+    # Issue #109: Apply chosen language to agents.yaml (which defaults to German)
+    if wizard_config and isinstance(wizard_config, dict):
+        chosen_lang = wizard_config.get("language", "de")
+        if chosen_lang and chosen_lang != "de":
+            _update_agents_language(chosen_lang)
 
     mark_initialized()
 

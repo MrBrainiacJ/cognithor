@@ -67,8 +67,10 @@ class SignalChannel(Channel):
         use_polling: bool = False,
         polling_interval: float = 1.0,
         workspace_dir: Path | None = None,
+        stt_language: str = "de",
     ) -> None:
         self._api_url = api_url.rstrip("/")
+        self._stt_language = stt_language or "de"
         self._phone_number = phone_number
         self._allowed_numbers = set(allowed_numbers or [])
         self._webhook_host = webhook_host
@@ -481,7 +483,9 @@ class SignalChannel(Channel):
         if not self._whisper:
             return "[Voice-Nachricht -- Transkription nicht verfuegbar]"
         try:
-            segments, _ = self._whisper.transcribe(io.BytesIO(audio_data), language="de")
+            segments, _ = self._whisper.transcribe(
+                io.BytesIO(audio_data), language=self._stt_language
+            )
             text = " ".join(seg.text.strip() for seg in segments)
             return text.strip() or "[Leere Voice-Nachricht]"
         except Exception as exc:

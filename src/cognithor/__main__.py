@@ -2006,6 +2006,7 @@ def main() -> None:
                         webhook_host=_tg_webhook_host,
                         ssl_certfile=_ssl_cert,
                         ssl_keyfile=_ssl_key,
+                        stt_language=getattr(config, "language", "de"),
                     )
                 )
                 _tg_mode = "webhook" if (_tg_use_webhook and _tg_webhook_url) else "polling"
@@ -2077,6 +2078,7 @@ def main() -> None:
                             ssl_certfile=_ssl_cert,
                             ssl_keyfile=_ssl_key,
                             session_store=_session_store,
+                            stt_language=getattr(config, "language", "de"),
                         )
                     )
                 else:

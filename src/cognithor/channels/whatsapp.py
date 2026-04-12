@@ -61,9 +61,11 @@ class WhatsAppChannel(Channel):
         ssl_certfile: str = "",
         ssl_keyfile: str = "",
         session_store: SessionStore | None = None,
+        stt_language: str = "de",
     ) -> None:
         self._token_store = get_token_store()
         self._token_store.store("whatsapp_api_token", api_token)
+        self._stt_language = stt_language or "de"
         if app_secret:
             self._token_store.store("whatsapp_app_secret", app_secret)
         self._has_app_secret = bool(app_secret)
@@ -224,7 +226,9 @@ class WhatsAppChannel(Channel):
             return "[Voice-Nachricht empfangen -- Transkription nicht verfuegbar]"
 
         try:
-            segments, _ = self._whisper.transcribe(io.BytesIO(audio_data), language="de")
+            segments, _ = self._whisper.transcribe(
+                io.BytesIO(audio_data), language=self._stt_language
+            )
             text = " ".join(seg.text for seg in segments)
             return text.strip() or "[Leere Voice-Nachricht]"
         except Exception as e:

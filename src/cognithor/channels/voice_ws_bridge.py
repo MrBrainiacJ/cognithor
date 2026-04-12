@@ -36,9 +36,14 @@ class VoiceMessageHandler:
     channels/voice_bridge.py:VoiceWebSocketBridge zu vermeiden.
     """
 
-    def __init__(self, workspace_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        workspace_dir: Path | None = None,
+        default_language: str = "de",
+    ) -> None:
         self._workspace = workspace_dir or Path.home() / ".cognithor" / "workspace" / "voice_ws"
         self._workspace.mkdir(parents=True, exist_ok=True)
+        self._default_language = default_language or "de"
         self._media: Any = None  # Lazy-loaded MediaPipeline
 
     def _get_media(self) -> Any:
@@ -53,7 +58,7 @@ class VoiceMessageHandler:
         self,
         audio_base64: str,
         audio_type: str = "audio/webm",
-        language: str = "de",
+        language: str | None = None,
     ) -> str | None:
         """Transkribiert eine Base64-encodierte Sprachnachricht.
 
@@ -75,6 +80,8 @@ class VoiceMessageHandler:
             "audio/mp4": ".m4a",
         }
         ext = ext_map.get(audio_type, ".webm")
+        if not language:
+            language = self._default_language
 
         try:
             # Audio dekodieren und speichern
@@ -219,7 +226,7 @@ class VoiceMessageHandler:
         """
         audio_b64 = msg.get("audio_base64", "")
         audio_type = msg.get("audio_type", "audio/webm")
-        language = msg.get("language", "de")
+        language = msg.get("language") or self._default_language
 
         if not audio_b64:
             return {

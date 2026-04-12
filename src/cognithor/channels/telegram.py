@@ -81,6 +81,7 @@ class TelegramChannel(Channel):
         webhook_host: str = "0.0.0.0",
         ssl_certfile: str = "",
         ssl_keyfile: str = "",
+        stt_language: str = "de",
     ) -> None:
         """Initialisiert den Telegram-Channel.
 
@@ -99,6 +100,7 @@ class TelegramChannel(Channel):
         """
         self._token_store = get_token_store()
         self._token_store.store("telegram_bot_token", token)
+        self._stt_language = stt_language or "de"
         self.allowed_users: set[int] = set(allowed_users or [])
         self._workspace_dir = workspace_dir or Path.home() / ".cognithor" / "workspace" / "telegram"
         self._max_reconnect = max_reconnect_attempts
@@ -948,7 +950,7 @@ class TelegramChannel(Channel):
             if self._whisper_model is None:
                 self._whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
             model = self._whisper_model
-            segments, _info = model.transcribe(str(audio_path), language="de")
+            segments, _info = model.transcribe(str(audio_path), language=self._stt_language)
             text = " ".join(seg.text.strip() for seg in segments)
             logger.info("Voice transkribiert: %d Zeichen", len(text))
             return text if text.strip() else None

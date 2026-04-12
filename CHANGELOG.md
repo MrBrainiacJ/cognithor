@@ -57,6 +57,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - **Evolution deep learner** — Fixed infinite loop (hardcoded queries → LLM-generated), max rounds limit
 
 ### Fixed
+- **i18n language selection** (#109) — English language selection now fully applied during installation; previously agents, planner formulate-response prompts, and voice channels defaulted to German even when English was selected. `installer/first_run.py` post-processes `agents.yaml` after wizard; `planner._build_formulate_messages` uses locale-aware `_FORMULATE_TEMPLATES` dict; telegram/whatsapp/signal/voice_ws_bridge accept `stt_language` from config.
 - Environment variable overrides: JARVIS_* prefix now supported for backward compatibility
 - Multi-word top-level config keys (owner_name, llm_backend_type) now correctly overridden via env vars
 - Makefile venv path updated from .jarvis to .cognithor
