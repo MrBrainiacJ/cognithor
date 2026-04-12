@@ -1416,7 +1416,10 @@ class EvolutionLoop:
         try:
             from cognithor.skills.generator import SkillGap, SkillGapType
 
+            import uuid
+
             skill_gap = SkillGap(
+                id=f"evo_{uuid.uuid4().hex[:8]}",
                 gap_type=SkillGapType.NO_SKILL_MATCH,
                 description=getattr(gap, "query", str(gap))[:200],
                 context=research[:500],
