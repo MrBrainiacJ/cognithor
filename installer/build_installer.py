@@ -261,7 +261,12 @@ def step_launcher() -> Path:
         "\r\n"
         "REM Start Cognithor\r\n"
         'if "%1"=="--ui" (\r\n'
-        '    start "Cognithor Server" cmd /k ""%PYTHON%" -m cognithor --no-cli --api-port 8741"\r\n'
+        '    set "PYTHONW=%COGNITHOR_HOME%python\\pythonw.exe"\r\n'
+        '    if exist "%PYTHONW%" (\r\n'
+        '        start "" "%PYTHONW%" -m cognithor --no-cli --api-port 8741\r\n'
+        "    ) else (\r\n"
+        '        start "Cognithor Server" cmd /k ""%PYTHON%" -m cognithor --no-cli --api-port 8741"\r\n'
+        "    )\r\n"
         "    echo Waiting for Cognithor to start...\r\n"
         "    set RETRIES=0\r\n"
         "    :wait_loop\r\n"
