@@ -173,13 +173,15 @@ class TestFormatSize:
 
 
 class TestRegisterFsTools:
-    def test_registers_four_tools(self, config: MagicMock) -> None:
+    def test_registers_five_tools(self, config: MagicMock) -> None:
         mock_client = MagicMock()
         fs = register_fs_tools(mock_client, config)
         assert isinstance(fs, FileSystemTools)
-        assert mock_client.register_builtin_handler.call_count == 4
+        # 4 real tools + 1 alias (file_write -> write_file) for LLM compat
+        assert mock_client.register_builtin_handler.call_count == 5
         names = [call.args[0] for call in mock_client.register_builtin_handler.call_args_list]
         assert "read_file" in names
         assert "write_file" in names
+        assert "file_write" in names  # alias
         assert "edit_file" in names
         assert "list_directory" in names
