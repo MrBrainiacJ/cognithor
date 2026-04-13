@@ -2144,6 +2144,23 @@ class SocialConfig(BaseModel):
     reddit_auto_post: bool = Field(
         default=False, description="Enable Playwright auto-posting (requires login)"
     )
+    reddit_auto_post_whitelist: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Subreddits where auto-posting is allowed (without r/ prefix). "
+            "Empty list = auto-posting globally disabled. Leads on non-whitelisted "
+            "subs always fall back to clipboard/manual review."
+        ),
+    )
+    reddit_min_auto_score: int = Field(
+        default=85,
+        ge=0,
+        le=100,
+        description=(
+            "Minimum intent score required to auto-post a reply. Leads below this "
+            "threshold fall back to clipboard/manual review even on whitelisted subs."
+        ),
+    )
     hn_enabled: bool = Field(default=False, description="Enable Hacker News scanning")
     hn_categories: list[str] = Field(default_factory=lambda: ["top", "new"])
     hn_min_score: int = Field(default=60, ge=0, le=100)

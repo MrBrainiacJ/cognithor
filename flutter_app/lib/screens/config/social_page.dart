@@ -105,6 +105,36 @@ class SocialPage extends StatelessWidget {
               description: l.autoPostHint,
               onChanged: (v) => cfg.set('social.reddit_auto_post', v),
             ),
+            JarvisTextField(
+              label: 'Auto-Post Whitelist',
+              value: (social['reddit_auto_post_whitelist'] as List<dynamic>?)
+                      ?.join(', ') ??
+                  '',
+              placeholder: 'ollama, selfhosted',
+              description:
+                  'Subreddits where auto-posting is allowed (comma-separated, '
+                  'without r/). Leave empty to disable auto-posting globally. '
+                  'Non-whitelisted subs always fall back to clipboard review.',
+              onChanged: (v) => cfg.set(
+                'social.reddit_auto_post_whitelist',
+                v
+                    .split(',')
+                    .map((s) => s.trim())
+                    .where((s) => s.isNotEmpty)
+                    .toList(),
+              ),
+            ),
+            JarvisNumberField(
+              label: 'Min Auto-Post Score',
+              value: (social['reddit_min_auto_score'] as num?) ?? 85,
+              min: 0,
+              max: 100,
+              description:
+                  'Minimum intent score required to auto-post. Leads below '
+                  'this threshold always fall back to clipboard review, '
+                  'even on whitelisted subs.',
+              onChanged: (v) => cfg.set('social.reddit_min_auto_score', v),
+            ),
 
             // ── Hacker News ─────────────────────────────────
             const Divider(height: 32),
