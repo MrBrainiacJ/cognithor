@@ -89,7 +89,10 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
             color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           ),
-          child: ListView(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
             controller: scrollController,
             padding: const EdgeInsets.all(20),
             children: [
@@ -182,44 +185,6 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Action buttons
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _posting ? null : _postReply,
-                    icon: _posting
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.reply, size: 18),
-                    label: Text(l.postReply),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _copyReply,
-                    icon: const Icon(Icons.copy, size: 18),
-                    label: Text(l.copyReply),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _openOnReddit,
-                    icon: const Icon(Icons.open_in_new, size: 18),
-                    label: Text(l.openOnReddit),
-                  ),
-                  if (lead.status == 'new')
-                    TextButton.icon(
-                      onPressed: _markReviewed,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: Text(l.markReviewed),
-                    ),
-                  if (lead.status != 'archived')
-                    TextButton.icon(
-                      onPressed: _archive,
-                      icon: Icon(Icons.archive, size: 18, color: JarvisTheme.textSecondary),
-                      label: Text(l.archiveLead,
-                          style: TextStyle(color: JarvisTheme.textSecondary)),
-                    ),
-                ],
-              ),
-
               // Metadata
               const SizedBox(height: 16),
               DefaultTextStyle(
@@ -274,6 +239,56 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                   ],
                 ),
               ],
+            ],
+                ),
+              ),
+              // Sticky footer with action buttons
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  border: Border(
+                    top: BorderSide(color: theme.dividerColor, width: 0.5),
+                  ),
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _posting ? null : _postReply,
+                      icon: _posting
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.reply, size: 18),
+                      label: Text(l.postReply),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: _copyReply,
+                      icon: const Icon(Icons.copy, size: 18),
+                      label: Text(l.copyReply),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: _openOnReddit,
+                      icon: const Icon(Icons.open_in_new, size: 18),
+                      label: Text(l.openOnReddit),
+                    ),
+                    if (lead.status == 'new')
+                      TextButton.icon(
+                        onPressed: _markReviewed,
+                        icon: const Icon(Icons.check, size: 18),
+                        label: Text(l.markReviewed),
+                      ),
+                    if (lead.status != 'archived')
+                      TextButton.icon(
+                        onPressed: _archive,
+                        icon: Icon(Icons.archive, size: 18, color: JarvisTheme.textSecondary),
+                        label: Text(l.archiveLead,
+                            style: TextStyle(color: JarvisTheme.textSecondary)),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         );

@@ -55,6 +55,8 @@ class RedditLeadsProvider extends ChangeNotifier {
   Timer? _pollTimer;
 
   List<RedditLead> _leads = [];
+  final Set<String> _preloadedIds = <String>{};
+  final Map<String, Map<String, dynamic>> _performanceCache = <String, Map<String, dynamic>>{};
   Map<String, dynamic> _stats = {};
   bool _loading = false;
   bool _scanning = false;
@@ -201,13 +203,33 @@ class RedditLeadsProvider extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> getPerformance(String id) async {
+    final cached = _performanceCache[id];
+    if (cached != null) return cached;
     if (_api == null) return {};
     try {
-      return await _api!.getRedditLeadPerformance(id);
+      final result = await _api!.getRedditLeadPerformance(id);
+      _performanceCache[id] = result;
+      return result;
     } catch (_) {
       return {};
     }
   }
+
+  /// Preload performance data for a lead so the UI has it ready before
+  /// the user navigates to it. Silently no-ops on failure.
+  Future<void> preloadPerformance(String id) async {
+    if (_api == null) return;
+    if (_preloadedIds.contains(id)) return;
+    _preloadedIds.add(id);
+    try {
+      final perf = await _api!.getRedditLeadPerformance(id);
+      _performanceCache[id] = perf;
+    } catch (_) {
+      _preloadedIds.remove(id);
+    }
+  }
+
+  Map<String, dynamic>? getCachedPerformance(String id) => _performanceCache[id];
 
   Future<bool> setFeedback(String id, {required String tag, String note = ''}) async {
     if (_api == null) return false;

@@ -34,6 +34,18 @@ class _LeadWizardState extends State<LeadWizard> {
   void initState() {
     super.initState();
     _replyCtrl = TextEditingController(text: widget.leads.isNotEmpty ? widget.leads[0].effectiveReply : '');
+    WidgetsBinding.instance.addPostFrameCallback((_) => _preloadAhead());
+  }
+
+  void _preloadAhead() {
+    if (!mounted) return;
+    final provider = context.read<RedditLeadsProvider>();
+    for (var i = 1; i <= 2; i++) {
+      final idx = _currentIndex + i;
+      if (idx < widget.leads.length) {
+        provider.preloadPerformance(widget.leads[idx].id);
+      }
+    }
   }
 
   @override
@@ -54,6 +66,7 @@ class _LeadWizardState extends State<LeadWizard> {
       _replyCtrl.text = widget.leads[next].effectiveReply;
       _showRefine = false;
     });
+    _preloadAhead();
   }
 
   Future<void> _reply() async {
@@ -125,7 +138,14 @@ class _LeadWizardState extends State<LeadWizard> {
             if (event.logicalKey == LogicalKeyboardKey.keyI) setState(() => _showRefine = !_showRefine);
           }
         },
-        child: ListView(
+        child: Column(
+          children: [
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+                child: ListView(
+          key: ValueKey<int>(_currentIndex),
           padding: const EdgeInsets.all(16),
           children: [
             // Score + subreddit
@@ -205,34 +225,49 @@ class _LeadWizardState extends State<LeadWizard> {
               ),
             ],
             const SizedBox(height: 24),
-
-            // Action row
-            Row(
-              children: [
-                TextButton.icon(
-                  onPressed: _archive,
-                  icon: Icon(Icons.archive, size: 16, color: JarvisTheme.textSecondary),
-                  label: Text(l.archiveLead, style: TextStyle(color: JarvisTheme.textSecondary)),
+          ],
                 ),
-                const Spacer(),
-                OutlinedButton.icon(
-                  onPressed: _skip,
-                  icon: const Icon(Icons.skip_next, size: 16),
-                  label: Text(l.skipLead),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: _posting ? null : _reply,
-                  icon: _posting
-                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.reply, size: 16),
-                  label: Text(l.postReply),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text('Shortcuts: A=Archive  S=Skip  I=Improve  R=Reply',
-                style: theme.textTheme.bodySmall?.copyWith(color: JarvisTheme.textSecondary, fontSize: 10)),
+            // Sticky footer with action buttons
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                border: Border(top: BorderSide(color: theme.dividerColor, width: 0.5)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      TextButton.icon(
+                        onPressed: _archive,
+                        icon: Icon(Icons.archive, size: 16, color: JarvisTheme.textSecondary),
+                        label: Text(l.archiveLead, style: TextStyle(color: JarvisTheme.textSecondary)),
+                      ),
+                      const Spacer(),
+                      OutlinedButton.icon(
+                        onPressed: _skip,
+                        icon: const Icon(Icons.skip_next, size: 16),
+                        label: Text(l.skipLead),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _posting ? null : _reply,
+                        icon: _posting
+                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.reply, size: 16),
+                        label: Text(l.postReply),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Shortcuts: A=Archive  S=Skip  I=Improve  R=Reply',
+                      style: theme.textTheme.bodySmall?.copyWith(color: JarvisTheme.textSecondary, fontSize: 10)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
