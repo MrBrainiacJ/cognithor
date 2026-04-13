@@ -10,6 +10,20 @@ import 'package:cognithor_ui/services/websocket_service.dart';
 
 enum JarvisConnectionState { disconnected, connecting, connected, error }
 
+/// Frontend version — must match backend `__version__` (major.minor).
+/// See issue #111: version mismatch between Flutter and Python backend
+/// should block entry to the app.
+const String kFrontendVersion = '0.91.0';
+
+/// Extracts "major.minor" from a semver-ish string like "0.91.0" or "0.91.0+1".
+String? _majorMinor(String? v) {
+  if (v == null || v.isEmpty) return null;
+  final core = v.split('+').first.split('-').first;
+  final parts = core.split('.');
+  if (parts.length < 2) return null;
+  return '${parts[0]}.${parts[1]}';
+}
+
 class ConnectionProvider extends ChangeNotifier {
   ConnectionProvider();
 
@@ -32,6 +46,14 @@ class ConnectionProvider extends ChangeNotifier {
   String serverUrl = _defaultUrl;
   String? errorMessage;
   String? backendVersion;
+
+  /// True when backend major.minor does not match [kFrontendVersion] major.minor.
+  /// When true, [state] is forced to [JarvisConnectionState.error] and the
+  /// app refuses to enter the main shell (see SplashScreen / ConnectionGuard).
+  bool versionMismatch = false;
+
+  /// Frontend version exposed for UI display.
+  String get frontendVersion => kFrontendVersion;
 
   /// Whether initial connection has ever succeeded (guards health polling).
   bool _wasConnected = false;
@@ -68,6 +90,7 @@ class ConnectionProvider extends ChangeNotifier {
   Future<void> connect() async {
     state = JarvisConnectionState.connecting;
     errorMessage = null;
+    versionMismatch = false;
     notifyListeners();
 
     _ws?.disconnect();
@@ -84,6 +107,21 @@ class ConnectionProvider extends ChangeNotifier {
         throw Exception(health['error']);
       }
       backendVersion = health['version'] as String?;
+
+      // Version compatibility check (major.minor only, patch allowed to differ).
+      // If backend doesn't report a version, assume OK (fallback).
+      final feMM = _majorMinor(kFrontendVersion);
+      final beMM = _majorMinor(backendVersion);
+      if (beMM != null && feMM != null && beMM != feMM) {
+        versionMismatch = true;
+        state = JarvisConnectionState.error;
+        errorMessage =
+            'Version mismatch: Frontend v$kFrontendVersion, Backend v$backendVersion. '
+            'Please update one side.';
+        notifyListeners();
+        return;
+      }
+      versionMismatch = false;
 
       // Bootstrap token
       final token = await _api!.bootstrap();

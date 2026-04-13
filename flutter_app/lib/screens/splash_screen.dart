@@ -104,19 +104,48 @@ class _SplashScreenState extends State<SplashScreen> {
               ],
 
               if (conn.state == JarvisConnectionState.error) ...[
-                Icon(Icons.cloud_off, size: 48, color: JarvisTheme.red),
-                const SizedBox(height: 16),
-                Text(l.connectionError,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(color: JarvisTheme.red)),
-                const SizedBox(height: 8),
-                Text(
-                  l.connectionErrorDetail(conn.serverUrl),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
+                Icon(
+                  conn.versionMismatch
+                      ? Icons.system_update_alt
+                      : Icons.cloud_off,
+                  size: 48,
+                  color: JarvisTheme.red,
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  conn.versionMismatch
+                      ? 'Version Mismatch'
+                      : l.connectionError,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(color: JarvisTheme.red),
+                ),
+                const SizedBox(height: 8),
+                if (conn.versionMismatch) ...[
+                  Text(
+                    'Frontend version: ${conn.frontendVersion}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  Text(
+                    'Backend version: ${conn.backendVersion ?? "unknown"}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Update Cognithor via the EXE installer or run:\n'
+                    'pip install --upgrade cognithor',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ] else
+                  Text(
+                    l.connectionErrorDetail(conn.serverUrl),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisSize: MainAxisSize.min,

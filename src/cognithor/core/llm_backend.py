@@ -521,16 +521,26 @@ class OpenAIBackend(LLMBackend):
             import json as _json
 
             async for line in resp.aiter_lines():
-                if not line.startswith("data: "):
+                # Skip empty lines (SSE keep-alive) but continue iteration
+                if not line or not line.startswith("data: "):
                     continue
                 data_str = line[6:]
                 if data_str.strip() == "[DONE]":
                     break
-                chunk = _json.loads(data_str)
-                delta = (chunk.get("choices") or [{}])[0].get("delta", {})
+                try:
+                    chunk = _json.loads(data_str)
+                except _json.JSONDecodeError:
+                    continue
+                choice = (chunk.get("choices") or [{}])[0]
+                delta = choice.get("delta", {})
                 token = delta.get("content", "")
                 if token:
                     yield token
+                # LM Studio compat: some servers don't send "[DONE]" but
+                # instead set finish_reason in the last chunk. Break on that
+                # so the stream doesn't hang for the full timeout.
+                if choice.get("finish_reason"):
+                    break
 
     async def embed(self, model: str, text: str) -> EmbedResponse:
         client = await self._ensure_client()
