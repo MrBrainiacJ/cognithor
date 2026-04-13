@@ -327,9 +327,10 @@ class TestRegisterFsTools:
         tools = client.get_tool_list()
         assert "read_file" in tools
         assert "write_file" in tools
+        assert "file_write" in tools  # alias for LLM compat
         assert "edit_file" in tools
         assert "list_directory" in tools
-        assert len(tools) == 4
+        assert len(tools) == 5
 
     def test_schemas_contain_descriptions(self, config: JarvisConfig) -> None:
         """Tool-Schemas enthalten Beschreibungen."""
