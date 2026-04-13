@@ -256,9 +256,7 @@ class CliChannel(Channel):
                 webbrowser.open(url)
                 self._console.print(f"[{COLOR_INFO}]Browser geoeffnet: {url}[/{COLOR_INFO}]")
             except Exception as exc:
-                self._console.print(
-                    f"[{COLOR_ERROR}]Failed to open browser: {exc}[/{COLOR_ERROR}]"
-                )
+                self._console.print(f"[{COLOR_ERROR}]Failed to open browser: {exc}[/{COLOR_ERROR}]")
             return True
 
         if cmd == "/clear":
