@@ -2077,7 +2077,7 @@ def main() -> None:
 
             # Register and start CLI channel
             if config.channels.cli_enabled and not args.no_cli:
-                cli = CliChannel(version=__version__)
+                cli = CliChannel(version=__version__, config=config, api_port=args.api_port)
                 gateway.register_channel(cli)
 
             # Telegram channel (auto-detect: token in env -> start)

@@ -45,13 +45,15 @@ BANNER = r"""
 class CliChannel(Channel):
     """Terminal-REPL-Channel. [B§9.3]"""
 
-    def __init__(self, version: str = "0.1.0") -> None:
+    def __init__(self, version: str = "0.1.0", config=None, api_port: int = 8741) -> None:
         """Initialisiert den CLI-Channel mit Prompt-Toolkit."""
         self._handler: MessageHandler | None = None
         self._console = Console()
         self._running = False
         self._version = version
         self._session_id = "cli-session"
+        self._config = config
+        self._api_port = api_port
 
     @property
     def name(self) -> str:
@@ -215,15 +217,48 @@ class CliChannel(Channel):
             self._console.print(
                 Panel(
                     "[bold]Available commands:[/bold]\n\n"
-                    "/quit     -- Exit Jarvis\n"
-                    "/help     -- Show this help\n"
-                    "/status   -- Show system status\n"
-                    "/clear    -- Clear screen\n"
-                    "/version  -- Version info",
+                    "/quit     -- Exit Jarvis / Cognithor beenden\n"
+                    "/help     -- Show this help / Diese Hilfe anzeigen\n"
+                    "/status   -- Show system status / System-Status\n"
+                    "/clear    -- Clear screen / Bildschirm loeschen\n"
+                    "/version  -- Version info / Versionsinfo\n"
+                    "/config   -- Open config editor / Config-Editor oeffnen\n"
+                    "/ui       -- Open web UI in browser / Web-UI im Browser oeffnen",
                     border_style="dim",
                     title="Help",
                 )
             )
+            return True
+
+        if cmd == "/config":
+            try:
+                from cognithor.cli.config_tui import launch as _launch_config_tui
+
+                config_path = None
+                if self._config is not None:
+                    config_path = getattr(self._config, "jarvis_home", None)
+                    if config_path is not None:
+                        config_path = config_path / "config.yaml"
+                _launch_config_tui(config_path)
+                self._console.print(
+                    f"[{COLOR_INFO}]Config geschlossen. Fortfahren mit Chat.[/{COLOR_INFO}]"
+                )
+            except Exception as exc:
+                self._console.print(f"[{COLOR_ERROR}]Config TUI error: {exc}[/{COLOR_ERROR}]")
+            return True
+
+        if cmd == "/ui":
+            import webbrowser
+
+            try:
+                port = self._api_port
+                url = f"http://localhost:{port}"
+                webbrowser.open(url)
+                self._console.print(f"[{COLOR_INFO}]Browser geoeffnet: {url}[/{COLOR_INFO}]")
+            except Exception as exc:
+                self._console.print(
+                    f"[{COLOR_ERROR}]Failed to open browser: {exc}[/{COLOR_ERROR}]"
+                )
             return True
 
         if cmd == "/clear":

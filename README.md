@@ -484,6 +484,32 @@ No need to set `telegram_enabled: true` in the config — the presence of the to
     └── cognithor.log    # Structured logs (JSON)
 ```
 
+## CLI Commands
+
+Once Cognithor is running, you can use these slash commands in the chat:
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Show available commands |
+| `/status` | Show system status |
+| `/version` | Show version |
+| `/config` | Open interactive config editor |
+| `/ui` | Open web UI in browser |
+| `/clear` | Clear screen |
+| `/quit` | Exit Cognithor |
+
+### Startup Flags
+
+| Flag | Description |
+|------|-------------|
+| `cognithor` | Start with CLI chat |
+| `cognithor --ui` | Start headless + auto-open browser |
+| `cognithor --no-cli` | Headless backend only |
+| `cognithor config` | Open config editor (one-shot) |
+| `cognithor config set KEY VAL` | Set a config value |
+| `cognithor --lite` | Lite mode (6GB VRAM) |
+| `cognithor --log-level DEBUG` | Verbose logging |
+
 ## Configuration
 
 Cognithor is configured via `~/.cognithor/config.yaml`. All values can be overridden with environment variables using the `COGNITHOR_` prefix (or legacy `JARVIS_` prefix for backward compatibility).
