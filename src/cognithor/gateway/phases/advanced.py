@@ -312,9 +312,7 @@ async def init_advanced(
             auto_post_whitelist=(
                 getattr(social_cfg, "reddit_auto_post_whitelist", []) if social_cfg else []
             ),
-            min_auto_score=(
-                getattr(social_cfg, "reddit_min_auto_score", 85) if social_cfg else 85
-            ),
+            min_auto_score=(getattr(social_cfg, "reddit_min_auto_score", 85) if social_cfg else 85),
         )
 
     _init_subsystem("reddit_lead_service", result, _init_reddit)
