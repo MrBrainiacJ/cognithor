@@ -15,6 +15,10 @@ log = get_logger(__name__)
 
 _USER_AGENT = "cognithor:reddit_lead_hunter:v1.0 (by u/cognithor-bot)"
 
+# Minimum intent_score to include the GitHub link in a reply. Below this, replies
+# are link-free so we don't look like a drive-by marketer.
+MIN_LINK_SCORE = 75
+
 SCORE_PROMPT = """
 You are a B2B lead qualification expert. Score this Reddit post for purchase intent.
 
@@ -37,28 +41,86 @@ Reply ONLY in this JSON format:
 {{"score": <int 0-100>, "reasoning": "<max 1 sentence>"}}
 """.strip()
 
+# Shared anti-patterns used by scanner and refiner to kill "AI slop" tone.
+# Anything in this list triggers instant downvotes on r/LocalLLaMA and similar subs.
+ANTI_PATTERNS = """
+NEVER do ANY of this (instant AI-slop detection):
+- Do not start with "Great question", "I understand", "You might want to",
+  "Have you considered", or "Thanks for sharing"
+- Use em-dashes (—). Use a comma or period instead.
+- Use bullet-point lists in a conversational reply
+- End with "Hope this helps!", "Let me know if...", "Good luck!", "Cheers!"
+- Use words like "leverage", "seamlessly", "robust", "streamline",
+  "powerful tool", "game-changer", or "empower"
+- Sound cheerful, enthusiastic, or customer-support-y
+- Pretend to be a brand or support agent
+- Pad answers with context the OP already stated
+- Refer to "the user" or "your needs"
+""".strip()
+
+# Per-subreddit persona hints — the LLM matches the culture of each sub.
+SUBREDDIT_PERSONAS: dict[str, str] = {
+    "LocalLLaMA": (
+        "This is r/LocalLLaMA: extremely AI-literate, skeptical of hype, benchmark-obsessed. "
+        "They care about VRAM, tokens/sec, quant levels, context length. They hate marketing. "
+        "Lowercase is common. Sarcasm is common. They will downvote anything that smells like "
+        "an LLM output or a product pitch. Reply like a tired dev with strong opinions."
+    ),
+    "selfhosted": (
+        "This is r/selfhosted: pragmatic, docker-native, values stability and simplicity over "
+        "features. They distrust cloud-first tools. They ask about backups, resource usage, "
+        "and 'what happens when this project dies'. Blunt, no fluff."
+    ),
+    "ollama": (
+        "This is r/ollama: practical users focused on which model+quant fits their hardware. "
+        "Short replies. Casual. Often just a command or a model name."
+    ),
+    "homelab": (
+        "This is r/homelab: hardware-focused, loves actual specs and setups. Blunt, no fluff. "
+        "Will ask 'why not just use X' if you suggest something overengineered."
+    ),
+    "MachineLearning": (
+        "This is r/MachineLearning: academic-leaning, cites papers, values rigor. "
+        "They hate marketing even more than LocalLLaMA. Mention only if genuinely on-topic."
+    ),
+}
+
+DEFAULT_PERSONA = (
+    "You're a regular redditor. Informal. No marketing tone. "
+    "Answer like you're typing from your phone on the couch."
+)
+
 REPLY_PROMPT = """
-You are a helpful expert replying on Reddit.
+You are a redditor who happens to use {product_name}.
+You are NOT a marketer, brand, or support agent.
+You scroll r/{subreddit}, see a post, and reply only if you have
+something actually useful to say.
 
-PRODUCT: {product_name}
-YOUR TONE: {reply_tone}
+{persona_hint}
 
-REDDIT POST:
-Subreddit: r/{subreddit}
+POST:
 Title: {title}
 Text: {body}
 
 {style_context}
 {few_shot_context}
 
-Write a short, helpful Reddit reply (max {max_words} words):
-- Acknowledge the user's problem
-- Briefly explain how {product_name} can help
-- No hard sales pitch
-- Subreddit-native tone (informal, direct)
-- End with the GitHub link: github.com/Alex8791-cyber/cognithor
+TASK: Write a Reddit reply.
 
-Reply ONLY with the response text, no meta-comments.
+Rules:
+- Answer the ACTUAL question first. If someone else's tool is
+  obviously better for their case, say that instead.
+- Mention {product_name} ONLY if it's genuinely the best fit.
+  One sentence, in passing. Never as a pitch.
+- {link_instruction}
+- Max {max_words} words. Usually half that is better.
+- Lowercase is fine. Typos are fine. Incomplete sentences are fine.
+- Be specific: numbers, version names, actual commands, real tradeoffs.
+- If you have nothing useful to add, reply with exactly: SKIP
+
+{anti_patterns}
+
+Output ONLY the reply text. No preamble, no sign-off, no meta-commentary.
 """.strip()
 
 
@@ -155,51 +217,80 @@ class RedditScanner:
         *,
         style_profile: dict[str, Any] | None = None,
         few_shot_examples: list[dict[str, Any]] | None = None,
+        intent_score: int = 0,
     ) -> str:
-        """Draft a reply for a post via LLM."""
+        """Draft a reply for a post via LLM.
+
+        The reply is intentionally terse and reddit-native. The GitHub link is only
+        included for high-intent posts (score >= MIN_LINK_SCORE) — low-intent posts
+        get a link-free answer so we don't look like a drive-by marketer.
+        """
         if not self._llm_fn:
             return "[No LLM available for reply drafting]"
 
-        style_ctx = ""
-        if style_profile:
-            style_ctx = (
-                f"STYLE PROFILE for r/{post.get('subreddit', '')}:\n"
-                f"- What works: {style_profile.get('what_works', '')}\n"
-                f"- Avoid: {style_profile.get('what_fails', '')}\n"
-                f"- Optimal tone: {style_profile.get('optimal_tone', config.reply_tone)}"
-            )
+        subreddit = post.get("subreddit", "") or ""
+        persona_hint = SUBREDDIT_PERSONAS.get(subreddit, DEFAULT_PERSONA)
 
+        # TONE EXAMPLES (not content templates): match the vibe, don't copy the words.
         few_shot_ctx = ""
         if few_shot_examples:
-            lines = ["PROVEN REPLIES that performed well in this subreddit:"]
+            lines = [
+                "TONE EXAMPLES from this subreddit (match the VIBE, not the content — "
+                "do not copy phrasing, only the register/length/rhythm):"
+            ]
             for i, ex in enumerate(few_shot_examples[:3], 1):
                 upv = ex.get("reply_upvotes", 0)
                 txt = ex.get("reply_text", "")[:150]
                 lines.append(f'{i}. [{upv} upvotes] "{txt}"')
             few_shot_ctx = "\n".join(lines)
 
-        max_words = style_profile.get("optimal_length", 150) if style_profile else 150
+        style_ctx = ""
+        if style_profile:
+            works = style_profile.get("what_works", "")
+            fails = style_profile.get("what_fails", "")
+            if works or fails:
+                style_ctx = f"SUBREDDIT NOTES:\n- What lands: {works}\n- What flops: {fails}"
+
+        # Shorter is better — cap optimal_length aggressively.
+        raw_len = style_profile.get("optimal_length", 80) if style_profile else 80
+        max_words = min(raw_len, 120)
+
+        # Link-gating: only high-intent posts get the GitHub link, and never as markdown.
+        if intent_score >= MIN_LINK_SCORE:
+            link_instruction = (
+                "If — and only if — the OP is explicitly asking for tool recommendations, "
+                "you may mention 'github.com/Alex8791-cyber/cognithor' in plain text (no "
+                "markdown link, no 'check out', no 'you should try'). If they're not asking, "
+                "skip the link entirely."
+            )
+        else:
+            link_instruction = (
+                "Do NOT include any link. Do NOT mention GitHub. "
+                "Your Reddit profile bio has the link if anyone cares to look."
+            )
 
         prompt = REPLY_PROMPT.format(
             product_name=config.product_name,
-            reply_tone=(
-                style_profile.get("optimal_tone", config.reply_tone)
-                if style_profile
-                else config.reply_tone
-            ),
-            subreddit=post.get("subreddit", ""),
+            subreddit=subreddit,
+            persona_hint=persona_hint,
             title=post.get("title", ""),
             body=(post.get("selftext") or "")[:1000],
             style_context=style_ctx,
             few_shot_context=few_shot_ctx,
+            link_instruction=link_instruction,
+            anti_patterns=ANTI_PATTERNS,
             max_words=max_words,
         )
         try:
             response = await self._llm_fn(
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.4,
+                temperature=0.85,  # high variance — predictability is what gets caught
             )
-            return response.get("message", {}).get("content", "").strip()
+            text = response.get("message", {}).get("content", "").strip()
+            # LLM self-veto: return empty string so caller can skip archiving this lead
+            if text.strip().upper() == "SKIP":
+                return ""
+            return text
         except Exception as exc:
             log.warning("draft_failed", post_id=post.get("id"), error=str(exc))
             return "[Reply draft failed]"

@@ -37,6 +37,8 @@ class RedditLeadService:
         min_score: int = 60,
         browser_agent: Any = None,
         notification_callback: Callable[[Lead], None] | None = None,
+        auto_post_whitelist: list[str] | None = None,
+        min_auto_score: int = 85,
     ) -> None:
         self._store = LeadStore(db_path)
         self._scanner = RedditScanner(llm_fn=llm_fn)
@@ -45,6 +47,13 @@ class RedditLeadService:
         self._template_mgr = TemplateManager(self._store)
         self._notification_cb = notification_callback
         self._default_subreddits = default_subreddits or []
+        # Auto-post guardrails: mode="auto" is rejected unless the subreddit is on
+        # this whitelist AND the lead's intent_score is at least min_auto_score.
+        # Empty whitelist (default) = auto-post globally disabled.
+        self._auto_post_whitelist: set[str] = {
+            s.strip().lower() for s in (auto_post_whitelist or []) if s.strip()
+        }
+        self._min_auto_score = min_auto_score
         self._scan_config = ScanConfig(
             product_name=product_name,
             min_score=min_score,
@@ -120,13 +129,40 @@ class RedditLeadService:
                 style_profile = self._store.get_profile(sub)
                 few_shot = self._store.get_top_performers(sub, limit=3) if style_profile else []
 
-                # 4. Reply-Draft with learning context
+                # 4. Reply-Draft with learning context + intent score for link gating
                 draft = await self._scanner.draft_reply(
                     post,
                     config,
                     style_profile=style_profile,
                     few_shot_examples=few_shot,
+                    intent_score=score,
                 )
+                # LLM self-veto: if draft is empty ("SKIP"), archive the lead.
+                if not draft.strip():
+                    log.info(
+                        "lead_skipped_by_llm",
+                        subreddit=sub,
+                        score=score,
+                        title=post.get("title", "")[:60],
+                    )
+                    self._store.save_lead(
+                        Lead(
+                            post_id=post_id,
+                            subreddit=sub,
+                            title=post.get("title", ""),
+                            url=f"https://reddit.com{post.get('permalink', '')}",
+                            intent_score=score,
+                            score_reason=reasoning + " [LLM skipped: nothing useful to add]",
+                            status=LeadStatus.ARCHIVED,
+                            scan_id=result.id,
+                            author=post.get("author", ""),
+                            body=(post.get("selftext") or "")[:500],
+                            created_utc=post.get("created_utc", 0),
+                            upvotes=post.get("score", 0),
+                            num_comments=post.get("num_comments", 0),
+                        )
+                    )
+                    continue
 
                 # Create and save lead
                 lead = Lead(
@@ -219,6 +255,29 @@ class RedditLeadService:
         if lead is None:
             return ReplyResult(success=False, mode=ReplyMode(mode), error="Lead not found")
         reply_mode = ReplyMode(mode)
+
+        # Auto-post safety gate: downgrade to clipboard unless the subreddit is
+        # explicitly whitelisted AND the lead passes the intent threshold. This
+        # prevents accidental drive-by posting on sensitive subs like LocalLLaMA
+        # where AI-slop replies get torched.
+        if reply_mode == ReplyMode.AUTO:
+            sub = (lead.subreddit or "").lower()
+            if sub not in self._auto_post_whitelist:
+                log.warning(
+                    "auto_post_blocked_not_whitelisted",
+                    lead_id=lead_id,
+                    subreddit=lead.subreddit,
+                )
+                reply_mode = ReplyMode.CLIPBOARD
+            elif lead.intent_score < self._min_auto_score:
+                log.warning(
+                    "auto_post_blocked_low_score",
+                    lead_id=lead_id,
+                    score=lead.intent_score,
+                    threshold=self._min_auto_score,
+                )
+                reply_mode = ReplyMode.CLIPBOARD
+
         result = self._poster.post(lead, mode=reply_mode)
         if result.success:
             self._store.update_lead(lead_id, status=LeadStatus.REPLIED)

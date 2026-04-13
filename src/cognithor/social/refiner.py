@@ -6,6 +6,11 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
+from cognithor.social.scanner import (
+    ANTI_PATTERNS,
+    DEFAULT_PERSONA,
+    SUBREDDIT_PERSONAS,
+)
 from cognithor.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -13,57 +18,70 @@ log = get_logger(__name__)
 LLMFn = Callable[..., Awaitable[dict[str, Any]]]
 
 REFINE_PROMPT = """
-You are an expert Reddit reply editor. Improve this draft reply.
+You are rewriting a Reddit reply to sound less like an LLM and more like a real redditor.
 
-PRODUCT: {product_name}
-SUBREDDIT: r/{subreddit}
+{persona_hint}
 
 ORIGINAL POST:
 Title: {title}
 Text: {body}
 
-CURRENT DRAFT:
+CURRENT DRAFT (probably too formal, too long, or too AI-sounding):
 {current_draft}
 
 {style_context}
 {few_shot_context}
 {hint_context}
 
-Rewrite the reply to be more effective. Keep it under {max_words} words.
-Maintain a {tone} tone. No meta-commentary, output ONLY the improved reply.
+TASK: Rewrite the draft. Keep what's factually useful, strip everything else.
+- Max {max_words} words. Usually half that is better.
+- Answer the question first. Everything else is optional.
+- Mention {product_name} in passing only if the draft did so helpfully; otherwise drop it.
+- Lowercase, typos, and fragments are all fine.
+
+{anti_patterns}
+
+Output ONLY the rewritten reply. No meta-commentary, no "Here's the improved version:".
 """.strip()
 
 VARIANT_PROMPT = """
-You are an expert Reddit reply writer. Write a {style_name} reply.
+You are writing a Reddit reply in a specific style: "{style_name}".
 
-PRODUCT: {product_name}
-SUBREDDIT: r/{subreddit}
+{persona_hint}
 
-ORIGINAL POST:
+POST:
 Title: {title}
 Text: {body}
 
-Style: {style_description}
+STYLE BRIEF: {style_description}
+
 Max length: {max_words} words.
-Tone: {tone}
+Product to mention (only if genuinely relevant): {product_name}
 
 {style_context}
 
-Output ONLY the reply text, no meta-commentary.
+{anti_patterns}
+
+Output ONLY the reply text. No preamble, no sign-off.
 """.strip()
 
+# Reddit-native variants — these are the patterns that actually get upvotes on
+# tech subs, not the generic "technical / casual / question" framings.
 VARIANT_STYLES = [
     (
-        "technical",
-        "Technically detailed with specific features, code examples or architecture details",
+        "one_liner",
+        "A single sentence, max 15 words. Blunt, direct, like a dismissive power-user "
+        "reply. Example tone: 'just use llama.cpp with q4, ollama adds nothing here'",
     ),
     (
-        "casual",
-        "Short, casual, reddit-native. Conversational tone, like talking to a friend",
+        "specific",
+        "Two or three sentences with concrete numbers, version names, or actual commands. "
+        "Zero fluff. The kind of reply someone screenshots and saves.",
     ),
     (
-        "question",
-        "Start with a question that shows understanding, then suggest the product as one option",
+        "contrarian",
+        "Start by partially pushing back on the OP's framing ('fwiw that's not really "
+        "the bottleneck'), then give your actual take. Skeptical but not rude.",
     ),
 ]
 
@@ -93,24 +111,28 @@ class ReplyRefiner:
         tone: str = "helpful, technically credible",
         max_words: int = 150,
     ) -> RefinedReply:
+        del tone  # tone is now baked into persona_hint + ANTI_PATTERNS
         if not self._llm_fn:
             return RefinedReply(
                 text=current_draft, style="original", changes_summary="No LLM available"
             )
 
+        subreddit = post.get("subreddit", "") or ""
+        persona_hint = SUBREDDIT_PERSONAS.get(subreddit, DEFAULT_PERSONA)
+
         style_ctx = ""
         if style_profile:
-            style_ctx = (
-                f"STYLE PROFILE for r/{post.get('subreddit', '')}:\n"
-                f"- What works: {style_profile.get('what_works', '')}\n"
-                f"- What fails: {style_profile.get('what_fails', '')}\n"
-                f"- Optimal length: ~{style_profile.get('optimal_length', 150)} words"
-            )
-            max_words = style_profile.get("optimal_length", max_words)
+            works = style_profile.get("what_works", "")
+            fails = style_profile.get("what_fails", "")
+            if works or fails:
+                style_ctx = f"SUBREDDIT NOTES:\n- What lands: {works}\n- What flops: {fails}"
+            max_words = min(style_profile.get("optimal_length", max_words), 120)
+        else:
+            max_words = min(max_words, 120)
 
         few_shot_ctx = ""
         if few_shot_examples:
-            lines = ["TOP PERFORMING REPLIES in this subreddit:"]
+            lines = ["TONE EXAMPLES from this subreddit (match the VIBE, not the content):"]
             for i, ex in enumerate(few_shot_examples[:3], 1):
                 upvotes = ex.get("reply_upvotes", 0)
                 snippet = ex.get("reply_text", "")[:200]
@@ -121,7 +143,7 @@ class ReplyRefiner:
 
         prompt = REFINE_PROMPT.format(
             product_name=product_name,
-            subreddit=post.get("subreddit", ""),
+            persona_hint=persona_hint,
             title=post.get("title", ""),
             body=(post.get("selftext") or "")[:500],
             current_draft=current_draft,
@@ -129,12 +151,12 @@ class ReplyRefiner:
             few_shot_context=few_shot_ctx,
             hint_context=hint_ctx,
             max_words=max_words,
-            tone=tone,
+            anti_patterns=ANTI_PATTERNS,
         )
 
         try:
             response = await self._llm_fn(
-                messages=[{"role": "user", "content": prompt}], temperature=0.4
+                messages=[{"role": "user", "content": prompt}], temperature=0.75
             )
             text = response.get("message", {}).get("content", "").strip()
             return RefinedReply(
@@ -160,34 +182,40 @@ class ReplyRefiner:
         tone: str = "helpful, technically credible",
         max_words: int = 150,
     ) -> list[RefinedReply]:
+        del tone  # tone is now baked into persona_hint + ANTI_PATTERNS
         if not self._llm_fn:
             return []
 
+        subreddit = post.get("subreddit", "") or ""
+        persona_hint = SUBREDDIT_PERSONAS.get(subreddit, DEFAULT_PERSONA)
+
         style_ctx = ""
         if style_profile:
-            style_ctx = (
-                f"STYLE PROFILE:\n"
-                f"- What works: {style_profile.get('what_works', '')}\n"
-                f"- Avoid: {style_profile.get('what_fails', '')}"
-            )
+            works = style_profile.get("what_works", "")
+            fails = style_profile.get("what_fails", "")
+            if works or fails:
+                style_ctx = f"SUBREDDIT NOTES:\n- What lands: {works}\n- What flops: {fails}"
+
+        # Cap variants at a tight reddit-friendly length regardless of input.
+        capped_max = min(max_words, 100)
 
         variants = []
         for i in range(min(count, len(VARIANT_STYLES))):
             style_name, style_desc = VARIANT_STYLES[i]
             prompt = VARIANT_PROMPT.format(
                 product_name=product_name,
-                subreddit=post.get("subreddit", ""),
+                persona_hint=persona_hint,
                 title=post.get("title", ""),
                 body=(post.get("selftext") or "")[:500],
                 style_name=style_name,
                 style_description=style_desc,
-                max_words=max_words,
-                tone=tone,
+                max_words=capped_max,
                 style_context=style_ctx,
+                anti_patterns=ANTI_PATTERNS,
             )
             try:
                 response = await self._llm_fn(
-                    messages=[{"role": "user", "content": prompt}], temperature=0.6
+                    messages=[{"role": "user", "content": prompt}], temperature=0.9
                 )
                 text = response.get("message", {}).get("content", "").strip()
                 if text:
