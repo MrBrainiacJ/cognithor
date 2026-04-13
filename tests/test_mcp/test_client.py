@@ -401,8 +401,11 @@ class TestBuiltinIntegration:
         register_shell_tools(client, config)
 
         tools = client.get_tool_list()
-        assert len(tools) == 5  # read, write, edit, list_dir, exec_command
+        # read_file, write_file, file_write (alias), edit_file, list_directory, exec_command
+        assert len(tools) == 6
         assert "read_file" in tools
+        assert "write_file" in tools
+        assert "file_write" in tools  # alias for LLM compat
         assert "exec_command" in tools
 
         # Beide Typen funktionieren
