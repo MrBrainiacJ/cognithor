@@ -99,6 +99,15 @@ class RevenueShare(BaseModel):
     platform: int = 30  # percentage
 
 
+class PricingTier(BaseModel):
+    """One pricing tier (indie, commercial, ...). Used for price anchoring."""
+    list_price: int               # visually struck-through, e.g. 149
+    launch_price: int             # active sale price, e.g. 79
+    post_launch_price: int        # what it rises to after launch_cap hit
+    currency: str = "USD"
+    launch_cap: int               # seats available at launch_price
+
+
 class PackManifest(BaseModel):
     """Validated manifest stored as pack_manifest.json at the pack root."""
     schema_version: int = 1
@@ -117,7 +126,10 @@ class PackManifest(BaseModel):
     # Declarative UI contributions for the generic LeadsScreen (see 4.5).
     lead_sources: list[str] = Field(default_factory=list)
     tools: list[str] = Field(default_factory=list)   # MCP tool names registered
-    checkout_url: str | None = None    # LS URL for paid packs; None for free
+    # Commerce — one checkout URL per pricing tier. None for free packs.
+    checkout_url: str | None = None              # primary (indie) tier
+    commercial_checkout_url: str | None = None
+    pricing: dict[str, PricingTier] = Field(default_factory=dict)   # keys: "indie", "commercial"
 
 
 class PackContext(BaseModel):
@@ -341,7 +353,17 @@ The existing `/api/v1/leads/scan/rss`, `/api/v1/leads/scan/hn`, `/api/v1/leads/s
 
 **No Flutter code ships from packs.** Flutter is ahead-of-time compiled; dynamic UI from a third-party pack is not possible without a rebuild. Core Flutter knows the generic rendering contract, packs provide only backend + metadata.
 
-**Honest caveat for MVP:** Core Flutter's `config/social_page.dart` keeps its Reddit-specific configuration section (subreddits list, auto-post whitelist, reply tone, etc.) even though the Reddit backend now lives in a pack. This is tolerated because (a) the UI knowledge already exists in Core pre-extraction — removing it would regress UX for paying customers, and (b) building a generic form-schema rendering engine is a meaningful chunk of work that belongs to Phase 2. The section is conditionally shown based on whether the Reddit pack is loaded (the `/api/v1/leads/sources` response drives visibility). Future packs contributed by community creators will NOT get this privilege — they must render through the generic form schema system delivered in Phase 2, or accept text-field-only configuration. This asymmetry is explicit: Cognithor's first-party packs carry forward grandfathered UI; third-party packs start fresh under the generic contract. This is documented in the community creator guide (Phase 2 deliverable) so outside creators know the UI boundary.
+**Pack-catalog + upsell UX.** Core Flutter ships with a **hardcoded pack catalog** (`lib/data/known_packs.dart`) that lists every pack Cognithor knows about — including paid ones the current user has not purchased. The catalog entry for each pack contains: `qualified_id`, `display_name`, `tagline`, `feature_list`, `price_display`, `pack_detail_url` (points at `cognithor.com/packs/<slug>`), `icon`, `accent_color`. The catalog is updated in Core releases; it is not dynamically fetched.
+
+At runtime, the Flutter UI merges the hardcoded catalog with the live `/api/v1/leads/sources` response to produce three states per pack:
+
+1. **Installed + loaded** — pack backend is running. Full config UI is rendered. For Reddit Lead Hunter Pro, this means the existing subreddit/template/auto-post config section in `config/social_page.dart` is shown, wired to live backend state.
+2. **Installed but not yet configured** — pack is present but source isn't registered (e.g., missing credentials). Render the config form but mark "Not yet active" and show an "Activate" CTA.
+3. **Not installed (upsell)** — pack appears in the catalog but is absent from the sources response. Render a **locked upsell card** instead of the config form. The card shows: pack icon, name, tagline, three feature bullets, price badge, and a prominent "Get Reddit Lead Hunter Pro — from $79" button. The button opens `https://cognithor.com/packs/reddit-lead-hunter` in the system browser via `url_launcher`. Same behavior on the LeadsScreen — locked sources appear as ghost cards with "Install this source" CTAs.
+
+This gives Cognithor a **professional, consistent upsell funnel** directly inside the product (what JetBrains does for Community vs. Ultimate, what 1Password does for personal vs. business tiers) without any dynamic code loading into Flutter. It also avoids the grandfathered-UI compromise: there is no "special case" for Reddit — Reddit is just the first paid pack to use the locked-state pattern, and future packs reuse the same widget.
+
+The hardcoded catalog is a **duplicate source of truth** (the private pack repo's `index.json` is the primary). This is acceptable because (a) the Flutter catalog only needs basic metadata for the upsell card, not the full pack details, (b) Flutter ships infrequently compared to site updates, so stale Flutter catalog entries just mean a user sees an outdated price for ~2-4 weeks until the next Core release, which is fine for an indie product, and (c) the `pack_detail_url` always opens the live site, so the authoritative pricing/features are one click away. A Phase 2 improvement is to cache the catalog from a signed `cognithor.com/api/packs/catalog` endpoint at first run, so prices stay fresh without Core rebuilds.
 
 ## 5. Initial Pack Catalog
 
@@ -350,9 +372,42 @@ Four packs are created in MVP. All live in the private `cognithor-packs` reposit
 ### 5.1 `cognithor-official/reddit-lead-hunter-pro`
 
 **License:** proprietary
-**Price:** $79 one-time (Launch). Commercial tier $199 one-time.
-**Checkout:** Lemon Squeezy product URL, one per tier.
 **Min Cognithor version:** `>=0.83.0` (the version that ships the pack SDK).
+**Checkout:** Lemon Squeezy, one product per tier (Indie / Commercial).
+
+#### Pricing strategy — three-tier price-anchor
+
+The site shows a visibly-struck-through "list price" next to the active launch price, plus a scarcity cap. This is honest price-anchoring: the list price reflects the realistic long-term value given SaaS alternatives cost `$49-499/month`, and the post-launch price is the actual ladder we commit to.
+
+| Tier | List price (struck) | **Launch price** | Post-launch target | Scarcity |
+|---|---|---|---|---|
+| **Indie** | ~~$149~~ | **$79** | $99 (after first 100 sales) | "First 100 customers" badge |
+| **Commercial** | ~~$399~~ | **$199** | $249 (after first 25 sales) | "First 25 teams" badge |
+| **Early-bird launch** (optional, first 48h) | ~~$149~~ | **$59** | — | "Product Hunt / Twitter launch only" |
+
+**On the site**, the pack card and detail page render the list price with a strike-through, the launch price in the brand accent color, and a small caption: "Launch pricing · 73 of 100 seats left" (live counter updated at build time from LS Sales API; stale counter is fine for anchoring purposes).
+
+**The scarcity counter is real.** We commit to raising the price once the launch batch sells out — LS has a `variant` feature that can swap the active pricing automatically when the first variant reaches its sales cap. The rising-price-ladder is documented publicly on the roadmap page so buyers trust the cap. Pirates of the first 100 are acceptable social proof.
+
+**Value-comparison framing on the detail page.** The `catalog.mdx` for RLH Pro is updated to explicitly anchor against SaaS alternatives:
+- "One-time $79. SaaS alternatives charge $49-499/month. Break-even: 0.16 months for agency use."
+- "Lifetime updates included. SaaS alternatives bill updates monthly."
+- "Your data stays on your machine. SaaS alternatives ship conversations to their servers."
+
+These framings already exist in the current mdx file (I read it in § 1 context-gathering). The pricing overhaul just leans into them harder.
+
+#### Pack manifest fields
+
+```json
+{
+  "checkout_url": "https://cognithor.lemonsqueezy.com/buy/<indie-variant-id>",
+  "commercial_checkout_url": "https://cognithor.lemonsqueezy.com/buy/<commercial-variant-id>",
+  "pricing": {
+    "indie": { "list_price": 149, "launch_price": 79, "post_launch_price": 99, "currency": "USD", "launch_cap": 100 },
+    "commercial": { "list_price": 399, "launch_price": 199, "post_launch_price": 249, "currency": "USD", "launch_cap": 25 }
+  }
+}
+```
 
 **Contents** (extracted from current `src/cognithor/social/`):
 - `src/scanner.py` — `RedditScanner` (public JSON API + LLM scoring)
@@ -449,12 +504,15 @@ cognithor-packs/                    # GitHub Alex8791-cyber/cognithor-packs (pri
       "display_name": "Reddit Lead Hunter Pro",
       "tagline": "Find high-intent leads on Reddit before your competitors.",
       "license": "proprietary",
-      "price": 79,
-      "currency": "USD",
       "status": "live",
       "tier": "S",
       "checkout_url": "https://cognithor.lemonsqueezy.com/buy/<id>",
       "commercial_checkout_url": "https://cognithor.lemonsqueezy.com/buy/<id-commercial>",
+      "pricing": {
+        "indie":      { "list_price": 149, "launch_price":  79, "post_launch_price":  99, "currency": "USD", "launch_cap": 100 },
+        "commercial": { "list_price": 399, "launch_price": 199, "post_launch_price": 249, "currency": "USD", "launch_cap":  25 }
+      },
+      "launch_seats_remaining": 100,
       "catalog_path": "reddit-lead-hunter-pro/catalog/catalog.mdx",
       "og_image_path": "reddit-lead-hunter-pro/catalog/og-image.png",
       "last_updated": "2026-04-15T20:00:00Z"
@@ -787,6 +845,9 @@ The MVP is complete when ALL of the following are true:
 - [ ] Existing Core test suite is green (with updated assertions for the smaller tool count)
 - [ ] Bundled HN/Discord/RSS packs are auto-copied on first Cognithor start; a new user without purchases still sees a working Leads tab
 - [ ] Flutter `LeadsScreen` (renamed from `RedditLeadsScreen`) renders source metadata from `/api/v1/leads/sources` and gates the sidebar on an empty source list
+- [ ] Flutter ships `lib/data/known_packs.dart` with the hardcoded pack catalog. `config/social_page.dart` and `LeadsScreen` render upsell cards for packs in the catalog that are not installed, opening `cognithor.com/packs/<slug>` via `url_launcher` on tap
+- [ ] Site pack cards and detail page render struck-through list price + launch price + "seats remaining" scarcity badge, fed from `index.json` `pricing` field
+- [ ] Pack manifest validates the `pricing` map shape for paid packs (at least `indie` tier required, `commercial` optional); free packs may omit the field entirely
 - [ ] No new runtime secrets are required on the site (build-time token only)
 - [ ] Git-cleanup commands are printed to the user at the end of the implementation run (not executed)
 
