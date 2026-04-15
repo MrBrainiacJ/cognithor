@@ -6319,6 +6319,31 @@ def _register_social_routes(
             },
         }
 
+    @app.get("/api/v1/leads/sources", dependencies=deps)
+    async def list_lead_sources() -> dict[str, Any]:
+        """Return registered LeadSource metadata.
+
+        Feeds Flutter's LeadsScreen + locked-pack-card UX. An empty list
+        means the backend has no lead sources and the sidebar tab should
+        be hidden by the frontend.
+        """
+        svc = _get_service()
+        inner = getattr(svc, "_service", None) if svc else None
+        if inner is None:
+            return {"sources": []}
+        sources: list[dict[str, Any]] = []
+        for source in inner.list_sources():
+            sources.append(
+                {
+                    "source_id": source.source_id,
+                    "display_name": source.display_name,
+                    "icon": source.icon,
+                    "color": source.color,
+                    "capabilities": sorted(source.capabilities),
+                }
+            )
+        return {"sources": sources}
+
     @app.post("/api/v1/leads/scan/rss", dependencies=deps)
     async def scan_leads_rss(request: Request) -> dict[str, Any]:
         svc = _get_service()
