@@ -6386,14 +6386,1740 @@ cd "D:/Jarvis/cognithor-packs" && git tag -a phase4-packs-extracted -m "Phase 4 
 
 ---
 
-<!-- PHASE-5-START -->
+## Phase 5 — Site Migration to Build-Time Pack Fetcher
 
-### Placeholder — Phases 5-7 (expanded in the next plan segment)
+**Goal:** Replace the hand-maintained `lib/data/home-packs.ts` + `content/packs/*.mdx` on the site with a build-time fetcher that pulls pack metadata and catalog MDX from the private `cognithor-packs` repo via GitHub REST API. Add the post-purchase `/packs/[slug]/installed` thank-you route.
 
-Phase 4 leaves the plan at ~60 tasks. The remaining phases are:
+**Outcome:** `pnpm build` in `cognithor-site` fetches live pack data from GitHub at build time, generates `HOME_PACKS` dynamically, and statically renders `/packs` and `/packs/[slug]` pages with up-to-date pricing, version, and marketing copy. The obsolete MDX and hand-maintained teaser list are deleted.
 
-- **Phase 5** (13 tasks): Site fetcher (`@octokit/rest`), `lib/data/fetch-packs.ts`, local-dev cache, `pnpm run packs:fetch`, rewire `PackStoreGrid` + `PackSpotlightSection` + `/packs/[slug]`, `/installed` thank-you route, delete obsolete MDX + home-packs.ts, update tests.
-- **Phase 6** (12 tasks): Flutter — `lib/data/known_packs.dart`, `LockedPackCard` widget, `SourcesProvider`, rename and rewrite `leads_screen.dart`, wire upsell into `config/social_page.dart`, update `main_shell.dart`, widget tests, flutter analyze.
-- **Phase 7** (7 tasks): Final full-suite gate across Core/site/Flutter, print git hygiene commands + Lemon Squeezy setup checklist + manual smoke test, tag `phase7-complete`, final summary commit.
+**Working directory for this phase:** `D:\Jarvis\cognithor-site\`.
 
-<!-- PHASE-5-END -->
+### Task 5.1 — Install `@octokit/rest`
+
+- [ ] **Step 1: Add the dependency**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm add @octokit/rest
+```
+
+Expected: dependency added, `pnpm-lock.yaml` updated.
+
+- [ ] **Step 2: Verify**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && grep -A1 '"@octokit/rest"' package.json
+```
+
+Expected: the dependency appears in `dependencies`.
+
+---
+
+### Task 5.2 — Create the GitHub read-only token for the site build
+
+Manual step — the token needs to be issued from the GitHub UI and pasted into Vercel + a local `.env.local`. Document in the plan so the engineer has the exact clicks.
+
+- [ ] **Step 1: Create a fine-grained PAT**
+
+In the GitHub web UI: Settings → Developer Settings → Personal access tokens → Fine-grained tokens → Generate new token.
+
+- Token name: `cognithor-site build-time read`
+- Expiration: 1 year
+- Resource owner: Alex8791-cyber
+- Repository access: Only select repositories → `cognithor-packs`
+- Permissions: Repository permissions → Contents → **Read-only**
+- Click Generate token. Copy the `github_pat_...` value — it's shown only once.
+
+- [ ] **Step 2: Add to `cognithor-site/.env.local`**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && cat >> .env.local <<EOF
+COGNITHOR_PACKS_READ_TOKEN=github_pat_PASTE_HERE
+EOF
+```
+
+Verify `.env.local` is in `.gitignore` (it should be, Next.js adds it by default):
+
+```bash
+grep -n ".env.local" "D:/Jarvis/cognithor-site/.gitignore"
+```
+
+Expected: one match.
+
+- [ ] **Step 3: Add to Vercel project settings**
+
+Via the Vercel dashboard: cognithor-site → Settings → Environment Variables:
+- Name: `COGNITHOR_PACKS_READ_TOKEN`
+- Value: paste the PAT
+- Environments: Production + Preview
+- Mark **"Available at build time"** (NOT "Available at runtime")
+
+---
+
+### Task 5.3 — Write `lib/data/fetch-packs.ts`
+
+**Files:**
+- Create: `D:/Jarvis/cognithor-site/lib/data/fetch-packs.ts`
+
+- [ ] **Step 1: Write the fetcher**
+
+```typescript
+/**
+ * Build-time pack catalog fetcher.
+ *
+ * Reads `index.json` and per-pack `catalog/catalog.mdx` from the private
+ * `Alex8791-cyber/cognithor-packs` repository via the GitHub REST API.
+ * Called from Next.js Server Components / generateStaticParams at build
+ * time. Never exposed to the browser.
+ */
+
+import { Octokit } from '@octokit/rest';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const OWNER = 'Alex8791-cyber';
+const REPO = 'cognithor-packs';
+const BRANCH = 'main';
+
+export interface PricingTier {
+  list_price: number;
+  launch_price: number;
+  post_launch_price: number;
+  launch_cap: number;
+  currency: string;
+}
+
+export interface PackPublisher {
+  id: string;
+  display_name: string;
+  website?: string | null;
+  contact_email?: string | null;
+}
+
+export interface PackIndexEntry {
+  qualified_id: string;
+  namespace: string;
+  pack_id: string;
+  version: string;
+  display_name: string;
+  description: string;
+  tagline: string;
+  license: string;
+  status: 'live' | 'coming-soon' | 'beta';
+  tier: 'S' | 'A' | 'B';
+  publisher: PackPublisher;
+  checkout_url: string | null;
+  commercial_checkout_url?: string | null;
+  pricing: Record<string, PricingTier>;
+  launch_seats_remaining: number | null;
+  lead_sources: string[];
+  tools: string[];
+  catalog_path: string | null;
+  og_image_path: string | null;
+}
+
+export interface PackCatalog {
+  generated_at: string;
+  schema_version: number;
+  packs: PackIndexEntry[];
+}
+
+export interface PackDetail extends PackIndexEntry {
+  catalog_mdx: string;
+}
+
+const CACHE_PATH = path.resolve(process.cwd(), 'lib/data/_packs_cache.json');
+
+function createClient(): Octokit {
+  const token = process.env.COGNITHOR_PACKS_READ_TOKEN;
+  if (!token) {
+    throw new Error(
+      'COGNITHOR_PACKS_READ_TOKEN is not set. Set it in .env.local for local ' +
+        'dev or in Vercel env vars for build. Alternative for local dev: run ' +
+        '`pnpm run packs:fetch` to refresh lib/data/_packs_cache.json from a ' +
+        'local cognithor-packs checkout.',
+    );
+  }
+  return new Octokit({ auth: token });
+}
+
+async function readLocalCache(): Promise<PackCatalog | null> {
+  try {
+    const raw = await fs.readFile(CACHE_PATH, 'utf-8');
+    return JSON.parse(raw) as PackCatalog;
+  } catch {
+    return null;
+  }
+}
+
+async function writeLocalCache(catalog: PackCatalog): Promise<void> {
+  await fs.writeFile(CACHE_PATH, JSON.stringify(catalog, null, 2) + '\n', 'utf-8');
+}
+
+async function fetchIndexFromGithub(): Promise<PackCatalog> {
+  const kit = createClient();
+  const { data } = await kit.repos.getContent({
+    owner: OWNER,
+    repo: REPO,
+    path: 'index.json',
+    ref: BRANCH,
+  });
+  if (Array.isArray(data) || data.type !== 'file') {
+    throw new Error('index.json is not a file in the packs repo');
+  }
+  if (!('content' in data) || typeof data.content !== 'string') {
+    throw new Error('index.json content missing from GitHub response');
+  }
+  const raw = Buffer.from(data.content, 'base64').toString('utf-8');
+  return JSON.parse(raw) as PackCatalog;
+}
+
+export async function fetchPackIndex(): Promise<PackIndexEntry[]> {
+  // If token is present, always prefer the live fetch and refresh the cache.
+  if (process.env.COGNITHOR_PACKS_READ_TOKEN) {
+    try {
+      const catalog = await fetchIndexFromGithub();
+      await writeLocalCache(catalog);
+      return catalog.packs;
+    } catch (err) {
+      console.warn(
+        '[fetch-packs] live fetch failed, falling back to local cache:',
+        (err as Error).message,
+      );
+    }
+  }
+  const cached = await readLocalCache();
+  if (cached) return cached.packs;
+  throw new Error(
+    'No pack catalog available: set COGNITHOR_PACKS_READ_TOKEN or run `pnpm run packs:fetch` to populate lib/data/_packs_cache.json',
+  );
+}
+
+export async function fetchPackDetail(slug: string): Promise<PackDetail | null> {
+  const packs = await fetchPackIndex();
+  const entry = packs.find((p) => p.pack_id === slug);
+  if (!entry) return null;
+
+  if (!entry.catalog_path) {
+    return { ...entry, catalog_mdx: '' };
+  }
+
+  // Fetch the mdx file content.
+  if (process.env.COGNITHOR_PACKS_READ_TOKEN) {
+    try {
+      const kit = createClient();
+      const { data } = await kit.repos.getContent({
+        owner: OWNER,
+        repo: REPO,
+        path: entry.catalog_path,
+        ref: BRANCH,
+      });
+      if (!Array.isArray(data) && data.type === 'file' && 'content' in data) {
+        const mdx = Buffer.from(data.content, 'base64').toString('utf-8');
+        return { ...entry, catalog_mdx: mdx };
+      }
+    } catch (err) {
+      console.warn(
+        `[fetch-packs] catalog mdx fetch failed for ${slug}:`,
+        (err as Error).message,
+      );
+    }
+  }
+  return { ...entry, catalog_mdx: '' };
+}
+```
+
+- [ ] **Step 2: Write a minimal smoke test**
+
+Create `lib/data/fetch-packs.test.ts`:
+
+```typescript
+import { describe, expect, it, vi } from 'vitest';
+
+describe('fetchPackIndex', () => {
+  it('throws when no token and no cache', async () => {
+    vi.stubEnv('COGNITHOR_PACKS_READ_TOKEN', '');
+    const mod = await import('./fetch-packs');
+    await expect(mod.fetchPackIndex()).rejects.toThrow();
+    vi.unstubAllEnvs();
+  });
+});
+```
+
+- [ ] **Step 3: Run tests**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm vitest run lib/data/fetch-packs.test.ts
+```
+
+Expected: 1 test passes (provided the `_packs_cache.json` doesn't exist yet).
+
+---
+
+### Task 5.4 — Local-dev helper: `pnpm run packs:fetch`
+
+For contributors without a GitHub token, let them point at a local `cognithor-packs` checkout to populate the cache.
+
+**Files:**
+- Create: `D:/Jarvis/cognithor-site/scripts/fetch-packs-local.ts`
+- Modify: `D:/Jarvis/cognithor-site/package.json` (add script)
+
+- [ ] **Step 1: Write the helper script**
+
+```typescript
+#!/usr/bin/env tsx
+/**
+ * Local-dev helper: read a local `cognithor-packs` checkout and regenerate
+ * `lib/data/_packs_cache.json` so the site can build without a GitHub token.
+ *
+ * Usage: pnpm run packs:fetch [--repo <path>]
+ *
+ * Default repo path: ../cognithor-packs (relative to the site root)
+ */
+
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const args = process.argv.slice(2);
+let repoPath = path.resolve(process.cwd(), '../cognithor-packs');
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--repo' && args[i + 1]) {
+    repoPath = path.resolve(args[i + 1]);
+    i++;
+  }
+}
+
+async function main() {
+  const indexPath = path.join(repoPath, 'index.json');
+  try {
+    await fs.access(indexPath);
+  } catch {
+    console.error(`[packs:fetch] index.json not found at ${indexPath}`);
+    console.error('Pass --repo <path-to-cognithor-packs> to override.');
+    process.exit(1);
+  }
+  const raw = await fs.readFile(indexPath, 'utf-8');
+  const parsed = JSON.parse(raw);
+
+  const cachePath = path.resolve(process.cwd(), 'lib/data/_packs_cache.json');
+  await fs.writeFile(cachePath, JSON.stringify(parsed, null, 2) + '\n', 'utf-8');
+  console.log(`[packs:fetch] wrote ${cachePath} with ${parsed.packs.length} packs`);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+- [ ] **Step 2: Add the script to `package.json`**
+
+Find the `"scripts":` block and add:
+
+```json
+"packs:fetch": "tsx scripts/fetch-packs-local.ts"
+```
+
+- [ ] **Step 3: Run it once**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm run packs:fetch
+```
+
+Expected: `[packs:fetch] wrote ...lib/data/_packs_cache.json with 4 packs`.
+
+- [ ] **Step 4: Commit the cache as a fallback**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && git add lib/data/_packs_cache.json scripts/fetch-packs-local.ts package.json pnpm-lock.yaml
+```
+
+The cache file is committed so CI + new contributors have a starting point even without the token.
+
+---
+
+### Task 5.5 — Rewire `PackStoreGrid.tsx` to use the fetcher
+
+**Files:**
+- Modify: `D:/Jarvis/cognithor-site/components/sections/packs/PackStoreGrid.tsx`
+
+- [ ] **Step 1: Rewrite the component**
+
+The existing component imports `HOME_PACKS` from `@/lib/data/home-packs` synchronously. The new version is a Server Component that awaits `fetchPackIndex()`.
+
+```typescript
+import { PackCard } from '@/components/primitives/PackCard';
+import { NeonButton } from '@/components/primitives/NeonButton';
+import { fetchPackIndex } from '@/lib/data/fetch-packs';
+
+function formatPricing(pack: Awaited<ReturnType<typeof fetchPackIndex>>[number]) {
+  const indie = pack.pricing.indie;
+  if (!indie) return { price: 0, currency: 'USD', listPrice: null };
+  return {
+    price: indie.launch_price,
+    currency: indie.currency,
+    listPrice: indie.list_price > indie.launch_price ? indie.list_price : null,
+  };
+}
+
+export async function PackStoreGrid() {
+  const packs = await fetchPackIndex();
+
+  return (
+    <section className="bg-void relative overflow-hidden pb-16 md:pb-24">
+      <div className="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-12">
+        <div className="mb-10 flex flex-col gap-3 md:mb-14">
+          <div className="text-cy-electric/60 font-mono text-xs tracking-widest uppercase">
+            ▸ LIBRARY
+          </div>
+          <h2 className="text-text-primary font-mono text-3xl font-extrabold md:text-5xl">
+            THE FULL LIBRARY.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {packs.map((pack) => {
+            const { price, currency, listPrice } = formatPricing(pack);
+            return (
+              <PackCard
+                key={pack.pack_id}
+                slug={pack.pack_id}
+                title={pack.display_name}
+                tagline={pack.tagline}
+                status={pack.status}
+                tier={pack.tier}
+                price={price}
+                listPrice={listPrice}
+                currency={currency}
+                features={[]}
+                tools={pack.tools}
+              />
+            );
+          })}
+        </div>
+
+        <aside
+          aria-label="Creator waitlist"
+          className="border-cy-electric/20 bg-panel mt-12 flex flex-col items-start gap-4 rounded-[2px] border p-8 md:flex-row md:items-center md:justify-between md:p-10"
+        >
+          <div>
+            <h3 className="text-text-primary mb-2 font-mono text-2xl font-extrabold tracking-tight md:text-3xl">
+              BUILD YOUR OWN PACK.{' '}
+              <span className="text-am-highlight">KEEP 70%.</span>
+            </h3>
+            <p className="text-text-secondary max-w-xl text-sm md:text-base">
+              Creator marketplace opens Q4 2026. Publish once, earn forever.
+              70/30 revenue share, transparent payouts, no venture capital
+              in the middle.
+            </p>
+          </div>
+          <NeonButton size="lg" href="/publish">
+            ▶ Join creator waitlist
+          </NeonButton>
+        </aside>
+      </div>
+    </section>
+  );
+}
+```
+
+- [ ] **Step 2: Update `PackCard` to support the strikethrough list price**
+
+Find `components/primitives/PackCard.tsx` and add an optional `listPrice?: number | null` prop. Render it as `<span class="line-through">{currency} {listPrice}</span>` next to the launch price. If `listPrice` is null, render nothing.
+
+- [ ] **Step 3: Update the existing test for `PackStoreGrid`**
+
+The test asserts specific hardcoded pack names from the old `HOME_PACKS`. Change it to mock `fetchPackIndex` and assert the mocked data renders.
+
+```typescript
+// components/sections/packs/PackStoreGrid.test.tsx
+
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/lib/data/fetch-packs', () => ({
+  fetchPackIndex: vi.fn().mockResolvedValue([
+    {
+      qualified_id: 'cognithor-official/reddit-lead-hunter-pro',
+      pack_id: 'reddit-lead-hunter-pro',
+      display_name: 'Reddit Lead Hunter Pro',
+      tagline: 'Find leads on Reddit',
+      status: 'live',
+      tier: 'S',
+      pricing: { indie: { list_price: 149, launch_price: 79, post_launch_price: 99, launch_cap: 100, currency: 'USD' } },
+      tools: ['reddit_scan'],
+      version: '1.2.0',
+    },
+  ]),
+}));
+
+describe('PackStoreGrid', () => {
+  it('renders the pack catalog from fetch-packs', async () => {
+    const { PackStoreGrid } = await import('./PackStoreGrid');
+    const tree = await PackStoreGrid();
+    render(tree);
+    expect(screen.getByText(/Reddit Lead Hunter Pro/)).toBeInTheDocument();
+  });
+});
+```
+
+---
+
+### Task 5.6 — Rewire `PackSpotlightSection.tsx`
+
+Similar pattern: pick the first live pack from `fetchPackIndex()`, render its card, point the BuyButton at `checkout_url` (not a hardcoded Gumroad URL).
+
+- [ ] **Step 1: Rewrite**
+
+```typescript
+import { BuyButton } from '@/components/primitives/BuyButton';
+import { TerminalWindow } from '@/components/primitives/TerminalWindow';
+import { AudioProvider } from '@/lib/hooks/useAudio';
+import { fetchPackIndex } from '@/lib/data/fetch-packs';
+import { packRedditLeadHunterScript } from '@/lib/data/demo-scripts/pack-reddit-lead-hunter';
+
+export async function PackSpotlightSection() {
+  const packs = await fetchPackIndex();
+  const featured = packs.find((p) => p.status === 'live' && p.license === 'proprietary') ?? packs[0];
+  if (!featured) return null;
+
+  const indie = featured.pricing?.indie;
+  const priceLabel = indie ? `$${indie.launch_price}` : 'Free';
+  const listLabel = indie && indie.list_price > indie.launch_price ? `$${indie.list_price}` : null;
+
+  // Prefer the on-site pack detail page for discoverability;
+  // the thank-you page handles the LS checkout flow separately.
+  const detailHref = `/packs/${featured.pack_id}`;
+
+  return (
+    <AudioProvider>
+      <section className="bg-void relative overflow-hidden py-12 md:py-24">
+        {/* ... existing decorative gradient + grid markup ... */}
+        <div className="relative mx-auto max-w-[1280px] px-4 md:px-6 lg:px-12">
+          <div className="text-cy-electric/60 mb-6 font-mono text-xs tracking-widest uppercase">
+            ▸ FEATURED PACK
+          </div>
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+            <div>
+              <h2 className="text-text-primary mb-4 font-mono text-3xl font-extrabold md:text-6xl">
+                {featured.display_name}
+              </h2>
+              <p className="text-text-secondary mb-8 text-lg">{featured.tagline}</p>
+              <div className="mb-6 flex items-baseline gap-3">
+                {listLabel && (
+                  <span className="text-text-secondary line-through">{listLabel}</span>
+                )}
+                <span className="text-cy-electric font-mono text-3xl font-bold">
+                  {priceLabel}
+                </span>
+                <span className="text-text-secondary text-xs">one-time · launch price</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <BuyButton href={detailHref}>Install Pack</BuyButton>
+              </div>
+            </div>
+            <div>
+              <TerminalWindow
+                title={`${featured.pack_id}.run`}
+                scripts={[packRedditLeadHunterScript]}
+                variant="embedded"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </AudioProvider>
+  );
+}
+```
+
+- [ ] **Step 2: Update the existing `PackSpotlightSection.test.tsx`**
+
+Replace the hardcoded-href assertion (still points at the Gumroad URL after a previous edit) with a mock-based assertion that verifies the link goes to `/packs/reddit-lead-hunter-pro`.
+
+---
+
+### Task 5.7 — Rewire `/packs/[slug]/page.tsx`
+
+**Files:**
+- Modify: `D:/Jarvis/cognithor-site/app/[locale]/(marketing)/packs/[slug]/page.tsx`
+
+- [ ] **Step 1: Generate static params from the fetcher**
+
+```typescript
+import { fetchPackDetail, fetchPackIndex } from '@/lib/data/fetch-packs';
+import { notFound } from 'next/navigation';
+// ... existing imports for the detail rendering components ...
+
+export async function generateStaticParams() {
+  const packs = await fetchPackIndex();
+  return packs.map((p) => ({ slug: p.pack_id }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const pack = await fetchPackDetail(slug);
+  if (!pack) return { title: 'Pack not found' };
+  return {
+    title: `${pack.display_name} · Cognithor Agent Pack`,
+    description: pack.tagline,
+  };
+}
+
+export default async function PackDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const pack = await fetchPackDetail(slug);
+  if (!pack) notFound();
+
+  // Render existing detail sections with `pack` fields.
+  // The MDX body is in `pack.catalog_mdx` — compile it with next-mdx-remote
+  // (already used elsewhere on the site) and render inline.
+  // For MVP, keep existing sections (hero, features, FAQ, etc.) but feed them
+  // from `pack` instead of a synchronous MDX import.
+  return (
+    // ... existing detail markup, with fields sourced from `pack` ...
+    <div>{/* hero, features, FAQ, etc. */}</div>
+  );
+}
+```
+
+- [ ] **Step 2: Adapt the existing detail sections**
+
+The existing `PackDetailHero`, `PackFinalCtaSection`, `PackFeatureGrid` components currently take props from the MDX frontmatter. Keep the same props, but pass `pack.display_name`, `pack.tagline`, `pack.pricing.indie`, etc.
+
+---
+
+### Task 5.8 — Create the `/packs/[slug]/installed` thank-you route
+
+**Files:**
+- Create: `D:/Jarvis/cognithor-site/app/[locale]/(marketing)/packs/[slug]/installed/page.tsx`
+
+- [ ] **Step 1: Write the route**
+
+```typescript
+import { fetchPackDetail } from '@/lib/data/fetch-packs';
+import { notFound } from 'next/navigation';
+import { CopyableCodeBlock } from '@/components/primitives/CopyableCodeBlock';
+
+interface Props {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ order_id?: string; token?: string }>;
+}
+
+export const dynamic = 'force-dynamic';  // reads searchParams
+
+export default async function PackInstalledPage({ params, searchParams }: Props) {
+  const { slug } = await params;
+  const { order_id, token } = await searchParams;
+  const pack = await fetchPackDetail(slug);
+  if (!pack) notFound();
+
+  const hasValidQuery = Boolean(order_id && token);
+  const zipUrl = token ? `https://assets.lemonsqueezy.com/${token}` : null;
+  const installCmd = zipUrl ? `cognithor pack install ${zipUrl}` : '';
+
+  return (
+    <main className="bg-void min-h-screen px-4 py-16 md:px-6 lg:px-12">
+      <div className="mx-auto max-w-[720px] space-y-10">
+        <header>
+          <div className="text-cy-electric/60 mb-2 font-mono text-xs tracking-widest uppercase">
+            ▸ purchase complete
+          </div>
+          <h1 className="text-text-primary font-mono text-4xl font-extrabold md:text-5xl">
+            Thanks for buying {pack.display_name}
+          </h1>
+          {order_id && (
+            <p className="text-text-secondary mt-4 font-mono text-sm">
+              Order: <code className="text-cy-electric">{order_id}</code>
+            </p>
+          )}
+        </header>
+
+        {hasValidQuery ? (
+          <>
+            <section className="space-y-4">
+              <h2 className="text-text-primary font-mono text-2xl font-bold">
+                Option 1 — One-line install
+              </h2>
+              <p className="text-text-secondary">
+                Paste this into your Cognithor CLI:
+              </p>
+              <CopyableCodeBlock value={installCmd} />
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-text-primary font-mono text-2xl font-bold">
+                Option 2 — Download the zip manually
+              </h2>
+              <a
+                href={zipUrl!}
+                className="bg-cy-electric text-void inline-block rounded px-6 py-3 font-mono font-bold hover:opacity-90"
+              >
+                ▼ Download {pack.pack_id}.zip
+              </a>
+              <p className="text-text-secondary text-sm">
+                Then run: <code>cognithor pack install ~/Downloads/{pack.pack_id}.zip</code>
+              </p>
+            </section>
+
+            <section className="border-cy-electric/20 bg-panel rounded-[2px] border p-6">
+              <h2 className="text-text-primary mb-2 font-mono text-xl font-bold">
+                Save this email
+              </h2>
+              <p className="text-text-secondary text-sm">
+                Lemon Squeezy has sent you the same links by email. Keep that
+                mail — you can re-download the pack anytime from the LS
+                customer portal.
+              </p>
+            </section>
+          </>
+        ) : (
+          <section className="bg-panel border-am-highlight/20 rounded-[2px] border p-6">
+            <h2 className="text-am-highlight mb-2 font-mono text-xl font-bold">
+              Missing or invalid download link
+            </h2>
+            <p className="text-text-secondary text-sm">
+              This page expects an order_id and token in the URL. If you got
+              here from a Lemon Squeezy receipt, check that the link wasn&apos;t
+              broken by your mail client. Otherwise, email{' '}
+              <a href="mailto:support@cognithor.com" className="text-cy-electric">
+                support@cognithor.com
+              </a>{' '}
+              with your order id and we&apos;ll get you a fresh link.
+            </p>
+          </section>
+        )}
+      </div>
+    </main>
+  );
+}
+```
+
+- [ ] **Step 2: Ensure `CopyableCodeBlock` exists**
+
+If it's not already a primitive, create it at `components/primitives/CopyableCodeBlock.tsx`:
+
+```typescript
+'use client';
+
+import { useState } from 'react';
+
+export function CopyableCodeBlock({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const onCopy = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="group relative">
+      <pre className="bg-panel border-cy-electric/30 text-cy-electric overflow-x-auto rounded-[2px] border p-4 font-mono text-sm">
+        {value}
+      </pre>
+      <button
+        onClick={onCopy}
+        className="border-cy-electric/40 bg-void text-text-secondary hover:text-cy-electric absolute top-2 right-2 rounded border px-3 py-1 font-mono text-xs"
+      >
+        {copied ? '✓ copied' : 'copy'}
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+### Task 5.9 — Delete the obsolete site files
+
+- [ ] **Step 1: Delete**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && rm -f content/packs/reddit-lead-hunter.mdx lib/data/home-packs.ts
+```
+
+- [ ] **Step 2: Grep for stragglers**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && grep -rn "home-packs\|content/packs/reddit" --include="*.ts" --include="*.tsx" 2>&1 | head
+```
+
+Expected: zero matches. Any that remain need updating.
+
+---
+
+### Task 5.10 — Update tests and run the full site suite
+
+- [ ] **Step 1: Run vitest**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm vitest run 2>&1 | tail -30
+```
+
+Expected: all tests pass. Fix any that reference the deleted files.
+
+- [ ] **Step 2: Type-check**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm tsc --noEmit 2>&1 | tail -20
+```
+
+Expected: no errors.
+
+- [ ] **Step 3: Next build**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm build 2>&1 | tail -30
+```
+
+Expected: build succeeds. The build output should list all 4 packs as statically generated routes under `/packs/[slug]`.
+
+---
+
+### Task 5.11 — Commit the site migration
+
+- [ ] **Step 1: Commit**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && git add -A && git commit -m "feat(site): migrate pack catalog to build-time fetch from private repo
+
+- lib/data/fetch-packs.ts: Octokit-based build-time fetcher with local cache fallback
+- scripts/fetch-packs-local.ts + 'pnpm run packs:fetch' for contributors without token
+- PackStoreGrid + PackSpotlightSection now async Server Components pulling from fetchPackIndex
+- /packs/[slug] uses generateStaticParams from the fetcher
+- /packs/[slug]/installed: new Lemon Squeezy thank-you route with one-line install command
+- PackCard gains optional listPrice prop for strikethrough pricing
+- delete content/packs/reddit-lead-hunter.mdx and lib/data/home-packs.ts
+- lib/data/_packs_cache.json committed as fallback"
+```
+
+Note: this commit is NOT pushed (user asked earlier to wait on pushing the site) — only local.
+
+---
+
+### Task 5.12 — Verify CI-driven rebuild works end-to-end
+
+After Phase 5 Task 5.11, the site's local state is the post-migration one. The CI pipeline (`cognithor-packs` push → `index.json` regenerated → Vercel deploy hook → site rebuild) is live but hasn't been tested end-to-end against a real publish yet.
+
+- [ ] **Step 1: Make a trivial content change in the packs repo**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && python -c "
+import json, pathlib
+p = pathlib.Path('rss-lead-hunter/pack_manifest.json')
+d = json.loads(p.read_text(encoding='utf-8'))
+d['description'] = d['description'].rstrip('.') + ' (deploy-hook smoke test).'
+p.write_text(json.dumps(d, indent=2) + '\n', encoding='utf-8')
+"
+git add rss-lead-hunter/pack_manifest.json && git commit -m "chore: smoke-test deploy-hook" && git push
+```
+
+- [ ] **Step 2: Watch the CI run**
+
+```bash
+sleep 20
+GH_TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill 2>&1 | awk -F= '/^password=/ {print $2}')
+curl -sfSL -H "Authorization: Bearer ${GH_TOKEN}" "https://api.github.com/repos/Alex8791-cyber/cognithor-packs/actions/runs?per_page=1" | python -c "import json,sys;r=json.load(sys.stdin)['workflow_runs'][0];print(r['status'],r['conclusion'],r['html_url'])"
+```
+
+Expected: `completed success ...`. Open the URL and verify the deploy hook step ran.
+
+- [ ] **Step 3: Revert the smoke-test change**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && git revert --no-edit HEAD && git push
+```
+
+---
+
+### Task 5.13 — Phase 5 end-of-phase gate
+
+- [ ] **Step 1: Site tests**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm vitest run && pnpm tsc --noEmit && pnpm build 2>&1 | tail -10
+```
+
+Expected: green across all three.
+
+- [ ] **Step 2: Tag**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && git tag -a phase5-site-migration -m "Phase 5 complete: site fetches pack catalog from private repo"
+```
+
+---
+
+## Phase 6 — Flutter Upsell UX
+
+**Goal:** Rewrite the Reddit-specific `RedditLeadsScreen` as a source-agnostic `LeadsScreen`, add a hardcoded `known_packs.dart` catalog for upsell rendering, build a `LockedPackCard` widget, and wire the whole thing into `main_shell.dart` + `config/social_page.dart`.
+
+**Outcome:** Users who have not installed RLH Pro see a locked upsell card where Reddit config would be. Clicking the card opens `https://cognithor.com/packs/reddit-lead-hunter-pro` in the system browser. Users who have installed RLH Pro see the full Reddit config section. The sidebar tab is gated on having at least one lead source registered.
+
+**Working directory for this phase:** `D:\Jarvis\jarvis complete v20\flutter_app\`.
+
+### Task 6.1 — Write `lib/data/known_packs.dart`
+
+**Files:**
+- Create: `D:/Jarvis/jarvis complete v20/flutter_app/lib/data/known_packs.dart`
+
+- [ ] **Step 1: Write the catalog**
+
+```dart
+/// Hardcoded pack catalog that Flutter ships with.
+///
+/// Used by the Leads screen and social config page to render locked upsell
+/// cards for packs the user hasn't installed yet. The live pricing / version
+/// is always on the pack detail page at cognithor.com — this local catalog
+/// is stale-tolerant because the "Get this pack" button always opens the
+/// browser to the authoritative URL.
+///
+/// Update this file on Core releases. Phase 2 will replace it with a
+/// once-a-day fetch from a signed cognithor.com/api/packs/catalog endpoint.
+
+library;
+
+import 'package:flutter/material.dart';
+
+class KnownPack {
+  final String qualifiedId;
+  final String packId;
+  final String displayName;
+  final String tagline;
+  final List<String> featureBullets;
+  final String priceBadge;
+  final String? listPriceBadge;
+  final String packDetailUrl;
+  final IconData icon;
+  final Color accentColor;
+  final String sourceId;
+
+  const KnownPack({
+    required this.qualifiedId,
+    required this.packId,
+    required this.displayName,
+    required this.tagline,
+    required this.featureBullets,
+    required this.priceBadge,
+    this.listPriceBadge,
+    required this.packDetailUrl,
+    required this.icon,
+    required this.accentColor,
+    required this.sourceId,
+  });
+}
+
+const List<KnownPack> kKnownPacks = [
+  KnownPack(
+    qualifiedId: 'cognithor-official/reddit-lead-hunter-pro',
+    packId: 'reddit-lead-hunter-pro',
+    displayName: 'Reddit Lead Hunter Pro',
+    tagline:
+        'Find high-intent leads on Reddit, score them with your local LLM, '
+        'draft replies from 50 curated templates, and drop them into an '
+        'encrypted CRM.',
+    featureBullets: [
+      'OAuth Reddit API (rate-safe, never banned)',
+      '50 curated reply templates + stil learner',
+      'Playwright auto-poster + Telegram/Slack alerts',
+    ],
+    priceBadge: 'from \$79',
+    listPriceBadge: '\$149',
+    packDetailUrl: 'https://cognithor.com/packs/reddit-lead-hunter-pro',
+    icon: Icons.forum,
+    accentColor: Color(0xFFFF4500),
+    sourceId: 'reddit',
+  ),
+  KnownPack(
+    qualifiedId: 'cognithor-official/hn-lead-hunter',
+    packId: 'hn-lead-hunter',
+    displayName: 'Hacker News Lead Hunter',
+    tagline: 'Monitor HN top/new/best with local LLM scoring. Free, bundled.',
+    featureBullets: [
+      'Official HN Firebase + Algolia APIs',
+      'Local LLM scoring with your own model',
+      'Ships with Cognithor Core',
+    ],
+    priceBadge: 'free · bundled',
+    packDetailUrl: 'https://cognithor.com/packs/hn-lead-hunter',
+    icon: Icons.article,
+    accentColor: Color(0xFFFF6600),
+    sourceId: 'hn',
+  ),
+  KnownPack(
+    qualifiedId: 'cognithor-official/discord-lead-hunter',
+    packId: 'discord-lead-hunter',
+    displayName: 'Discord Lead Hunter',
+    tagline: 'Score messages in your Discord channels. Requires your own bot token.',
+    featureBullets: [
+      'Bring your own Discord bot token',
+      'Local LLM scoring — no cloud roundtrips',
+      'Ships with Cognithor Core',
+    ],
+    priceBadge: 'free · bundled',
+    packDetailUrl: 'https://cognithor.com/packs/discord-lead-hunter',
+    icon: Icons.tag,
+    accentColor: Color(0xFF5865F2),
+    sourceId: 'discord',
+  ),
+  KnownPack(
+    qualifiedId: 'cognithor-official/rss-lead-hunter',
+    packId: 'rss-lead-hunter',
+    displayName: 'RSS Lead Hunter',
+    tagline: 'Score any RSS/Atom feed (news sites, blogs, forums) with your local LLM.',
+    featureBullets: [
+      'Stdlib XML parser — no extra dependencies',
+      'RSS 2.0 + Atom support',
+      'Ships with Cognithor Core',
+    ],
+    priceBadge: 'free · bundled',
+    packDetailUrl: 'https://cognithor.com/packs/rss-lead-hunter',
+    icon: Icons.rss_feed,
+    accentColor: Color(0xFFFFA500),
+    sourceId: 'rss',
+  ),
+];
+
+KnownPack? findKnownPackBySourceId(String sourceId) {
+  for (final p in kKnownPacks) {
+    if (p.sourceId == sourceId) return p;
+  }
+  return null;
+}
+```
+
+---
+
+### Task 6.2 — Write `SourcesProvider`
+
+Fetches `/api/v1/leads/sources` from the backend, exposes registered sources to widgets.
+
+**Files:**
+- Create: `D:/Jarvis/jarvis complete v20/flutter_app/lib/providers/sources_provider.dart`
+
+- [ ] **Step 1: Write the provider**
+
+```dart
+import 'package:flutter/foundation.dart';
+import 'package:cognithor_ui/services/api_client.dart';
+
+class LeadSource {
+  final String sourceId;
+  final String displayName;
+  final String icon;
+  final String color;
+  final Set<String> capabilities;
+
+  const LeadSource({
+    required this.sourceId,
+    required this.displayName,
+    required this.icon,
+    required this.color,
+    required this.capabilities,
+  });
+
+  factory LeadSource.fromJson(Map<String, dynamic> json) {
+    return LeadSource(
+      sourceId: json['source_id'] as String,
+      displayName: json['display_name'] as String,
+      icon: json['icon'] as String,
+      color: json['color'] as String,
+      capabilities: Set<String>.from(json['capabilities'] as List),
+    );
+  }
+}
+
+class SourcesProvider extends ChangeNotifier {
+  ApiClient? _api;
+  List<LeadSource> _sources = [];
+  bool _loading = false;
+  String? _error;
+
+  List<LeadSource> get sources => _sources;
+  bool get loading => _loading;
+  String? get error => _error;
+  bool get isEmpty => _sources.isEmpty;
+  bool hasSource(String sourceId) => _sources.any((s) => s.sourceId == sourceId);
+
+  void setApi(ApiClient api) {
+    _api = api;
+  }
+
+  Future<void> refresh() async {
+    if (_api == null) return;
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final resp = await _api!.get('/api/v1/leads/sources');
+      final raw = resp['sources'] as List? ?? [];
+      _sources = raw.map((e) => LeadSource.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+}
+```
+
+- [ ] **Step 2: Wire the provider into `main.dart`**
+
+Find the `MultiProvider` block in `lib/main.dart` and add `ChangeNotifierProvider(create: (_) => SourcesProvider())`. Then in `MainShell.initState`, call `refresh()` after the API client is set.
+
+---
+
+### Task 6.3 — Write `LockedPackCard` widget
+
+**Files:**
+- Create: `D:/Jarvis/jarvis complete v20/flutter_app/lib/widgets/packs/locked_pack_card.dart`
+
+- [ ] **Step 1: Write the widget**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cognithor_ui/data/known_packs.dart';
+
+class LockedPackCard extends StatelessWidget {
+  final KnownPack pack;
+
+  const LockedPackCard({super.key, required this.pack});
+
+  Future<void> _openDetail() async {
+    final uri = Uri.parse(pack.packDetailUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: pack.accentColor.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      color: theme.colorScheme.surface,
+      child: InkWell(
+        onTap: _openDetail,
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: pack.accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(pack.icon, color: pack.accentColor, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      pack.displayName,
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Icon(Icons.lock_outline, size: 18, color: theme.colorScheme.outline),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                pack.tagline,
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              ...pack.featureBullets.map(
+                (b) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('▸ ', style: TextStyle(color: pack.accentColor, fontFamily: 'monospace')),
+                      Expanded(
+                        child: Text(
+                          b,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  if (pack.listPriceBadge != null) ...[
+                    Text(
+                      pack.listPriceBadge!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        decoration: TextDecoration.lineThrough,
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    pack.priceBadge,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: pack.accentColor,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    onPressed: _openDetail,
+                    icon: const Icon(Icons.open_in_new, size: 16),
+                    label: Text('Get ${pack.displayName.split(' ').first}'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: pack.accentColor,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+- [ ] **Step 2: Ensure `url_launcher` is a dependency**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20/flutter_app" && grep -n "url_launcher" pubspec.yaml
+```
+
+Expected: already present. If not, add it and run `flutter pub get`.
+
+---
+
+### Task 6.4 — Rename `reddit_leads_screen.dart` → `leads_screen.dart` and rewrite
+
+**Files:**
+- Rename: `lib/screens/reddit_leads_screen.dart` → `lib/screens/leads_screen.dart`
+- Modify: `lib/screens/main_shell.dart`
+
+- [ ] **Step 1: Rename**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20/flutter_app" && git mv lib/screens/reddit_leads_screen.dart lib/screens/leads_screen.dart
+```
+
+- [ ] **Step 2: Rewrite the body**
+
+Open `lib/screens/leads_screen.dart` and replace the class body with a source-agnostic version:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cognithor_ui/data/known_packs.dart';
+import 'package:cognithor_ui/providers/sources_provider.dart';
+import 'package:cognithor_ui/providers/reddit_leads_provider.dart';  // still used for the lead list
+import 'package:cognithor_ui/widgets/leads/lead_card.dart';
+import 'package:cognithor_ui/widgets/leads/lead_detail_sheet.dart';
+import 'package:cognithor_ui/widgets/packs/locked_pack_card.dart';
+
+class LeadsScreen extends StatefulWidget {
+  const LeadsScreen({super.key});
+
+  @override
+  State<LeadsScreen> createState() => _LeadsScreenState();
+}
+
+class _LeadsScreenState extends State<LeadsScreen> {
+  String? _activeSourceFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SourcesProvider>().refresh();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sources = context.watch<SourcesProvider>();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Leads'), elevation: 0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildSourceChips(sources),
+            const SizedBox(height: 16),
+            _buildUpsellSection(sources),
+            const SizedBox(height: 24),
+            _buildLeadList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourceChips(SourcesProvider sources) {
+    return Wrap(
+      spacing: 8,
+      children: [
+        ChoiceChip(
+          label: const Text('All'),
+          selected: _activeSourceFilter == null,
+          onSelected: (_) => setState(() => _activeSourceFilter = null),
+        ),
+        for (final s in sources.sources)
+          ChoiceChip(
+            label: Text(s.displayName),
+            selected: _activeSourceFilter == s.sourceId,
+            onSelected: (_) => setState(() => _activeSourceFilter = s.sourceId),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildUpsellSection(SourcesProvider sources) {
+    final installed = sources.sources.map((s) => s.sourceId).toSet();
+    final lockedPacks = kKnownPacks.where((p) => !installed.contains(p.sourceId)).toList();
+    if (lockedPacks.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'More sources available',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        ...lockedPacks.map((p) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: LockedPackCard(pack: p),
+            )),
+      ],
+    );
+  }
+
+  Widget _buildLeadList() {
+    return Consumer<RedditLeadsProvider>(
+      builder: (context, provider, _) {
+        final leads = _activeSourceFilter == null
+            ? provider.leads
+            : provider.leads.where((l) => l.sourceId == _activeSourceFilter).toList();
+        if (leads.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: Text('No leads yet — run a scan from the Settings → Social page.')),
+          );
+        }
+        return Column(
+          children: leads
+              .map((l) => LeadCard(
+                    lead: l,
+                    onTap: () => _openDetail(context, l),
+                  ))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  void _openDetail(BuildContext context, dynamic lead) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => LeadDetailSheet(lead: lead),
+    );
+  }
+}
+```
+
+**Note:** `RedditLeadsProvider` is renamed to `LeadsProvider` in a follow-up refactor later in this phase. For now, update the import and keep it working.
+
+- [ ] **Step 3: Update `main_shell.dart`**
+
+Replace `import 'package:cognithor_ui/screens/reddit_leads_screen.dart'` with `import 'package:cognithor_ui/screens/leads_screen.dart'`, and `RedditLeadsScreen()` with `LeadsScreen()`.
+
+---
+
+### Task 6.5 — Wire upsell into `config/social_page.dart`
+
+Instead of "grandfathered UI" — when the Reddit source is not registered, show a `LockedPackCard` in place of the Reddit config section. HN/Discord/RSS sections continue to show their own config (free packs are expected to be installed).
+
+- [ ] **Step 1: Modify the page**
+
+At the top of `config/social_page.dart`, add:
+
+```dart
+import 'package:cognithor_ui/data/known_packs.dart';
+import 'package:cognithor_ui/providers/sources_provider.dart';
+import 'package:cognithor_ui/widgets/packs/locked_pack_card.dart';
+```
+
+Inside the `Consumer<ConfigProvider>` builder, wrap the Reddit section with:
+
+```dart
+Consumer<SourcesProvider>(
+  builder: (context, sources, _) {
+    final hasReddit = sources.hasSource('reddit');
+    if (!hasReddit) {
+      final pack = findKnownPackBySourceId('reddit');
+      return pack != null ? LockedPackCard(pack: pack) : const SizedBox.shrink();
+    }
+    // ... existing Reddit config widgets (JarvisToggleField, etc.) ...
+    return Column(children: [/* original Reddit fields */]);
+  },
+),
+```
+
+Leave the HN, Discord, and RSS sections unchanged — those are bundled free packs, so if they're not registered there's a real problem, not a monetization moment.
+
+---
+
+### Task 6.6 — Widget test for `LockedPackCard`
+
+**Files:**
+- Create: `D:/Jarvis/jarvis complete v20/flutter_app/test/widgets/locked_pack_card_test.dart`
+
+- [ ] **Step 1: Write the test**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:cognithor_ui/data/known_packs.dart';
+import 'package:cognithor_ui/widgets/packs/locked_pack_card.dart';
+
+void main() {
+  testWidgets('LockedPackCard renders pack metadata', (tester) async {
+    const pack = KnownPack(
+      qualifiedId: 'test/test-pack',
+      packId: 'test-pack',
+      displayName: 'Test Pack',
+      tagline: 'test tagline',
+      featureBullets: ['f1', 'f2'],
+      priceBadge: 'from \$79',
+      listPriceBadge: '\$149',
+      packDetailUrl: 'https://example.com/packs/test',
+      icon: Icons.science,
+      accentColor: Color(0xFFFF00FF),
+      sourceId: 'test',
+    );
+
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: LockedPackCard(pack: pack)),
+    ));
+
+    expect(find.text('Test Pack'), findsOneWidget);
+    expect(find.text('test tagline'), findsOneWidget);
+    expect(find.text('f1'), findsOneWidget);
+    expect(find.text('f2'), findsOneWidget);
+    expect(find.text('from \$79'), findsOneWidget);
+    expect(find.text('\$149'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+    expect(find.byIcon(Icons.science), findsOneWidget);
+  });
+}
+```
+
+- [ ] **Step 2: Run**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20/flutter_app" && flutter test test/widgets/locked_pack_card_test.dart
+```
+
+Expected: 1 test passes.
+
+---
+
+### Task 6.7 — Update sidebar gating to use `SourcesProvider`
+
+The current `main_shell.dart` (from Issue #113) checks `ConfigProvider.leadsEngineEnabled`. Replace with a check against `SourcesProvider.sources.isNotEmpty` so the tab shows whenever the backend has at least one source registered.
+
+- [ ] **Step 1: Update the watcher**
+
+In `main_shell.dart`, replace:
+
+```dart
+final leadsEngineEnabled = context.watch<ConfigProvider>().leadsEngineEnabled;
+```
+
+with:
+
+```dart
+final leadsEngineEnabled = context.watch<SourcesProvider>().sources.isNotEmpty;
+```
+
+- [ ] **Step 2: Flutter analyze + test**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20/flutter_app" && flutter analyze lib/ test/ 2>&1 | tail -20
+```
+
+Expected: no issues in modified files.
+
+```bash
+cd "D:/Jarvis/jarvis complete v20/flutter_app" && flutter test 2>&1 | tail -10
+```
+
+Expected: all tests pass.
+
+---
+
+### Task 6.8 — Commit Flutter Phase 6
+
+- [ ] **Step 1: Commit**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && git add flutter_app/ && git commit -m "feat(flutter): pack-aware LeadsScreen with locked upsell cards
+
+- lib/data/known_packs.dart: hardcoded catalog of all known packs
+- lib/providers/sources_provider.dart: polls /api/v1/leads/sources
+- lib/widgets/packs/locked_pack_card.dart: upsell card that opens the pack
+  detail page in the system browser
+- lib/screens/leads_screen.dart: renamed from reddit_leads_screen.dart,
+  now source-agnostic with multi-source filter chips and an upsell section
+  for packs the user hasn't installed yet
+- config/social_page.dart: conditional rendering — Reddit config section
+  is replaced by a LockedPackCard when the Reddit pack is not loaded
+- main_shell.dart: sidebar gating now uses SourcesProvider instead of
+  ConfigProvider.leadsEngineEnabled
+- test/widgets/locked_pack_card_test.dart: widget test for the card"
+```
+
+---
+
+## Phase 7 — Final Validation + Release Prep
+
+**Goal:** Run the full cross-repo validation (Core + packs + site + Flutter), print the git hygiene commands for the user to execute manually, print the Lemon Squeezy setup checklist, print the manual smoke-test checklist, tag the release.
+
+### Task 7.1 — Core full-suite gate
+
+- [ ] **Step 1: Ruff + pytest**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && python -m ruff check src/cognithor tests/ && python -m ruff format --check src/cognithor tests/ && python -m pytest tests/ -q
+```
+
+Expected: all green.
+
+---
+
+### Task 7.2 — All four pack test suites
+
+- [ ] **Step 1: Run**
+
+```bash
+for pack in reddit-lead-hunter-pro hn-lead-hunter discord-lead-hunter rss-lead-hunter; do
+    echo "=== $pack ==="
+    cd "D:/Jarvis/cognithor-packs/$pack" && python -m pytest tests/ --import-mode=importlib -q
+done
+```
+
+Expected: all four pass.
+
+---
+
+### Task 7.3 — Site gate
+
+- [ ] **Step 1: Run**
+
+```bash
+cd "D:/Jarvis/cognithor-site" && pnpm vitest run && pnpm tsc --noEmit && pnpm build 2>&1 | tail -15
+```
+
+Expected: vitest green, tsc clean, next build succeeds with all 4 packs listed as statically generated routes.
+
+---
+
+### Task 7.4 — Flutter gate
+
+- [ ] **Step 1: Run**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20/flutter_app" && flutter analyze lib/ test/ && flutter test 2>&1 | tail -10
+```
+
+Expected: no analyze issues, all tests pass.
+
+---
+
+### Task 7.5 — Print git-hygiene commands for the user
+
+These are printed for the user, NOT executed by the plan. The user runs them manually when they're ready to publish the Core cleanup.
+
+- [ ] **Step 1: Print the commands**
+
+```
+# Push Core cleanup
+cd "D:/Jarvis/jarvis complete v20"
+git log phase1-leads-sdk..phase4-packs-extracted --oneline
+git push origin main
+git push --tags
+
+# Verify no Reddit code escaped to public
+git grep -i "reddit" -- 'src/cognithor/**'
+#   Expected: only comments, docstrings, and possibly the _bundled_packs/
+#   directory (which is fine — those are free packs, apache-2.0).
+
+# Push the private packs repo
+cd "D:/Jarvis/cognithor-packs"
+git push origin main --follow-tags
+
+# Site is NOT pushed yet per earlier decision (user wants to wait until hosting is set up).
+cd "D:/Jarvis/cognithor-site"
+git log phase5-site-migration^..HEAD --oneline
+# When ready: git push origin master
+```
+
+No history rewriting is needed. The `cognithor.social` directory was Apache-2.0 code when it existed; deleting it in a forward commit is sufficient. Old git commits still show it — that's fine, old commits stay Apache-2.0.
+
+---
+
+### Task 7.6 — Print Lemon Squeezy setup checklist
+
+- [ ] **Step 1: Print the checklist**
+
+The user runs this manually in the LS dashboard. Required before Reddit Lead Hunter Pro can actually be sold.
+
+```
+Lemon Squeezy setup checklist for Reddit Lead Hunter Pro:
+
+1. Create a Lemon Squeezy store at cognithor.lemonsqueezy.com (or your chosen subdomain).
+2. Settings → Store → Business type → Digital products.
+3. Verify your payout method (Stripe Connect or direct bank).
+4. Products → New product:
+   - Name: Reddit Lead Hunter Pro
+   - Description: (copy from catalog.mdx)
+   - Type: Digital download (Single payment)
+   - Status: Draft until smoke-test passes
+5. Variants → Add two variants:
+   a) Indie License
+      - Price: $79 USD
+      - Max sales: 100 (to enforce launch cap)
+      - Post-launch price variant: $99 (create as separate variant, activate
+        manually after cap reached)
+   b) Commercial License
+      - Price: $199 USD
+      - Max sales: 25
+      - Post-launch: $249 variant
+6. Upload file: reddit-lead-hunter-pro-1.2.0.zip
+   - Build with: cd cognithor-packs && zip -r reddit-lead-hunter-pro-1.2.0.zip \
+     reddit-lead-hunter-pro/ -x '*/tests/*' -x '*/__pycache__/*'
+   - Attach to BOTH variants.
+7. Checkout → Thank-you URL:
+   https://cognithor.com/packs/reddit-lead-hunter-pro/installed?order_id={order_id}&token={download_token}
+8. Webhooks: (leave empty for MVP — Phase 2 adds license-key validation)
+9. Copy each variant's checkout URL into:
+   cognithor-packs/reddit-lead-hunter-pro/pack_manifest.json
+   - `checkout_url` = indie variant URL
+   - `commercial_checkout_url` = commercial variant URL
+   - Commit + push (CI rebuilds index.json + site)
+10. Set store to Live when ready.
+```
+
+---
+
+### Task 7.7 — Print manual smoke-test checklist
+
+- [ ] **Step 1: Print the checklist**
+
+```
+Manual smoke test before announcing RLH Pro:
+
+Core + pack install:
+[ ] Fresh Cognithor install on a clean machine (VM or reset $HOME).
+[ ] First start: bootstrap copies the 3 bundled free packs to ~/.cognithor/packs/.
+[ ] `cognithor pack list` shows HN, Discord, RSS.
+[ ] `cognithor pack install <LS-test-link>` downloads the zip, prompts EULA,
+    installs to ~/.cognithor/packs/cognithor-official/reddit-lead-hunter-pro/.
+[ ] Restart Cognithor. Pack loader log shows reddit_lead_hunter_pro_registered.
+[ ] `cognithor pack list` now shows all 4 packs.
+
+Flutter UI:
+[ ] Launch Command Center.
+[ ] Sidebar shows Leads tab (at least 1 source registered).
+[ ] Leads tab loads, shows source filter chips for all 4 sources.
+[ ] Settings → Social shows Reddit section (now that RLH Pro is installed).
+[ ] Uninstall RLH Pro: `cognithor pack remove cognithor-official/reddit-lead-hunter-pro`.
+[ ] Restart. Settings → Social now shows LockedPackCard in place of Reddit config.
+[ ] Click "Get Reddit Lead Hunter Pro" — opens browser to cognithor.com/packs/reddit-lead-hunter-pro.
+
+Site:
+[ ] /packs page shows all 4 packs.
+[ ] RLH Pro shows strikethrough $149 next to $79 and a "launch price" badge.
+[ ] /packs/reddit-lead-hunter-pro detail page renders from the fetched MDX.
+[ ] Click "Install Pack" → routes to LS checkout.
+[ ] Complete a test purchase (LS has a sandbox mode).
+[ ] LS redirects to /packs/reddit-lead-hunter-pro/installed?order_id=X&token=Y.
+[ ] Thank-you page renders with the one-line install command.
+[ ] Copy command, paste into Cognithor CLI, verify install succeeds.
+[ ] Refund the test purchase in LS sandbox (verifies refund flow works).
+
+End-to-end:
+[ ] Push an empty commit to cognithor-packs. CI run green.
+[ ] Vercel deploy hook fires. Site rebuilds. New packs (if any) visible.
+```
+
+---
+
+### Task 7.8 — Tag final release and commit summary
+
+- [ ] **Step 1: Tag across all repos**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && git tag -a v0.83.0 -m "v0.83.0 — Agent Pack Architecture
+
+- cognithor.packs plugin system (interface, loader, installer, CLI)
+- cognithor.leads.sdk source-agnostic lead engine
+- 4 agent packs extracted to private cognithor-packs repo:
+  - reddit-lead-hunter-pro (\$79 paid)
+  - hn-lead-hunter, discord-lead-hunter, rss-lead-hunter (free bundled)
+- Flutter LeadsScreen rewritten source-agnostic with locked-card upsells
+- /api/v1/leads/sources REST endpoint for source registry
+- Bundled pack auto-copy on first-run bootstrap
+- EULA click-through with manifest-pinned SHA-256
+- Forward-compatible publisher + revenue_share (70/30) for Q4 community marketplace"
+
+cd "D:/Jarvis/cognithor-packs" && git tag -a v0.1.0 -m "v0.1.0 — initial pack catalog with 4 packs"
+
+cd "D:/Jarvis/cognithor-site" && git tag -a v2026-04-packs -m "Site migrated to build-time pack fetcher"
+```
+
+- [ ] **Step 2: Final summary commit (Core)**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && git status
+```
+
+Expected: clean working tree.
+
+---
+
+## Plan complete
+
+- **Total tasks:** 75
+- **Estimated effort:** 3-4 focused sessions
+- **Main risks:**
+  - **Hyphenated directory names** — the pack directories use hyphens (`reddit-lead-hunter-pro`) but Python packages use underscores. Addressed by pytest `--import-mode=importlib` and sys.path manipulation in `conftest.py`.
+  - **Gateway wiring ordering** — the pack loader runs in Phase F after the legacy social service init is torn down. Task 4.14 deletes the legacy wiring; if the order is wrong, Phase 2's integration test misses a bug. Covered by the full test suite at Phase 4 Task 4.15.
+  - **Vercel build-time secret handling** — if `COGNITHOR_PACKS_READ_TOKEN` is accidentally marked as runtime-available, it could leak via a misconfigured Next.js page. Mitigation: document clearly in Task 5.2, verify in Task 5.13.
+  - **Lemon Squeezy thank-you URL** — the URL pattern depends on LS's template variables (`{order_id}`, `{download_token}`). If LS changes the format, the route breaks. Covered manually by Task 7.7 smoke test.
+
