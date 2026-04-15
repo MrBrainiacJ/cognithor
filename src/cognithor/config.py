@@ -30,6 +30,29 @@ log = logging.getLogger(__name__)
 # ============================================================================
 
 
+def _normalize_ollama_url(raw: str | None) -> str:
+    """Normalize OLLAMA_HOST into a full URL with scheme and port.
+
+    Ollama's own convention uses OLLAMA_HOST as a bind address (e.g. "0.0.0.0"
+    or "0.0.0.0:11434"), which httpx rejects as a client URL. Accept bare hosts,
+    host:port, and full URLs; always return "scheme://host:port".
+    """
+    value = (raw or "").strip()
+    if not value:
+        return "http://localhost:11434"
+    if "://" not in value:
+        value = "http://" + value
+    from urllib.parse import urlparse, urlunparse
+
+    parsed = urlparse(value)
+    host = parsed.hostname or "localhost"
+    if host in ("0.0.0.0", "::", ""):
+        host = "localhost"
+    port = parsed.port or 11434
+    netloc = f"{host}:{port}"
+    return urlunparse((parsed.scheme or "http", netloc, parsed.path or "", "", "", ""))
+
+
 class OllamaConfig(BaseModel):
     """Ollama-Server Konfiguration."""
 
@@ -37,7 +60,15 @@ class OllamaConfig(BaseModel):
         default="local",
         description="'local' = Ollama on this machine (auto-start), 'remote' = external API server",
     )
-    base_url: str = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+    base_url: str = Field(
+        default_factory=lambda: _normalize_ollama_url(os.environ.get("OLLAMA_HOST"))
+    )
+
+    @field_validator("base_url", mode="before")
+    @classmethod
+    def _validate_base_url(cls, v: Any) -> str:
+        return _normalize_ollama_url(v if isinstance(v, str) else None)
+
     timeout_seconds: int = Field(default=360, ge=10, le=1800)
     keep_alive: str = "30m"  # How long models stay in VRAM after last request
 

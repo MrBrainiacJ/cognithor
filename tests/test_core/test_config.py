@@ -709,3 +709,32 @@ class TestLiveReload:
         config = JarvisConfig(jarvis_home=tmp_path)
         config.security.max_sub_agent_depth = 5
         assert config.security.max_sub_agent_depth == 5
+
+
+class TestOllamaBaseUrlNormalization:
+    """Regression: OLLAMA_HOST=0.0.0.0 crashed httpx (issue #115)."""
+
+    def test_bare_host_gets_scheme_and_port(self) -> None:
+        from cognithor.config import OllamaConfig, _normalize_ollama_url
+
+        assert _normalize_ollama_url("0.0.0.0") == "http://localhost:11434"
+        assert _normalize_ollama_url("localhost") == "http://localhost:11434"
+        assert _normalize_ollama_url("127.0.0.1:11500") == "http://127.0.0.1:11500"
+        assert _normalize_ollama_url("http://remote:11434") == "http://remote:11434"
+        assert (
+            _normalize_ollama_url("https://ollama.example.com")
+            == "https://ollama.example.com:11434"
+        )
+        assert _normalize_ollama_url(None) == "http://localhost:11434"
+        assert _normalize_ollama_url("") == "http://localhost:11434"
+
+        cfg = OllamaConfig(base_url="0.0.0.0:11434")
+        assert cfg.base_url == "http://localhost:11434"
+
+    def test_env_var_bare_host_normalized(self, monkeypatch) -> None:
+        from cognithor.config import OllamaConfig
+
+        monkeypatch.setenv("OLLAMA_HOST", "0.0.0.0")
+        cfg = OllamaConfig()
+        assert cfg.base_url.startswith("http://")
+        assert "0.0.0.0" not in cfg.base_url
