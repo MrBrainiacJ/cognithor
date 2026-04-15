@@ -4975,13 +4975,1425 @@ cd "D:/Jarvis/cognithor-packs" && git tag -a phase3-bootstrap -m "Phase 3 comple
 
 ---
 
-<!-- PHASE-4-START -->
+## Phase 4 — Pack Extraction
 
-### Placeholder — Phases 4-7 (expanded in the next plan segment)
+**Goal:** Move the four packs' code out of `src/cognithor/social/` into `D:\Jarvis\cognithor-packs\`, write each pack's `pack.py`, `pack_manifest.json`, `eula.md`, and `src/<source>_source.py` adapter, migrate their tests, and delete the originals from Core. Populate `src/cognithor/_bundled_packs/` with the three free packs so first-run bootstrap copies them.
 
-- **Phase 4** (24 tasks): Extract RLH Pro to `cognithor-packs/reddit-lead-hunter-pro/` (file moves + write `reddit_source.py` adapter + `pack.py` + manifest with pricing + catalog.mdx migration from site + test migration); same for HN/Discord/RSS free packs (4 tasks each); populate Core's `_bundled_packs/`; delete `src/cognithor/social/`, `mcp/reddit_tools.py`, and their tests; update `test_skill_tools_coverage.py` assertion; final Core test run.
-- **Phase 5** (13 tasks): `pnpm add @octokit/rest`, write `lib/data/fetch-packs.ts`, local-dev fallback cache, `pnpm run packs:fetch` helper, rewire `PackStoreGrid`/`PackSpotlightSection`/`/packs/[slug]`, create `/packs/[slug]/installed` thank-you route, delete obsolete MDX + home-packs.ts, update site tests.
-- **Phase 6** (12 tasks): Flutter — `lib/data/known_packs.dart`, `SourcesProvider`, `LockedPackCard` widget, rename + rewrite `leads_screen.dart`, wire upsell into `config/social_page.dart`, update `main_shell.dart` imports, widget tests, flutter analyze + test.
-- **Phase 7** (7 tasks): Full-suite gate (Core pytest + ruff + Flutter analyze + site build), print git hygiene commands for user, print Lemon Squeezy setup checklist, print manual smoke-test checklist, tag `phase7-complete`, final summary commit.
+**Outcome:** Core contains zero Reddit-specific code. `src/cognithor/social/` no longer exists. Four packs live in the private repo. CI regenerates `index.json` with 4 entries. Core test suite is green with an updated tool-count assertion.
 
-<!-- PHASE-4-END -->
+**Working directories:** Both `D:\Jarvis\jarvis complete v20\` (Core) and `D:\Jarvis\cognithor-packs\` (packs repo). Commits land in whichever repo each task touches.
+
+### Task 4.1 — Create Reddit Lead Hunter Pro directory skeleton
+
+**Target:** `D:\Jarvis\cognithor-packs\reddit-lead-hunter-pro\`
+
+- [ ] **Step 1: Scaffold directories**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && mkdir -p reddit-lead-hunter-pro/src reddit-lead-hunter-pro/tests reddit-lead-hunter-pro/catalog
+```
+
+- [ ] **Step 2: Create `src/__init__.py` and `tests/__init__.py`**
+
+```bash
+touch "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/src/__init__.py"
+touch "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/tests/__init__.py"
+```
+
+---
+
+### Task 4.2 — Copy Reddit source files from Core to the pack
+
+Files to copy (source locations in Core, target paths in pack):
+
+| Core source | Pack destination |
+|---|---|
+| `src/cognithor/social/scanner.py` | `reddit-lead-hunter-pro/src/scanner.py` |
+| `src/cognithor/social/reply.py` | `reddit-lead-hunter-pro/src/reply.py` |
+| `src/cognithor/social/refiner.py` | `reddit-lead-hunter-pro/src/refiner.py` |
+| `src/cognithor/social/templates.py` | `reddit-lead-hunter-pro/src/templates.py` |
+| `src/cognithor/social/discovery.py` | `reddit-lead-hunter-pro/src/discovery.py` |
+| `src/cognithor/social/learner.py` | `reddit-lead-hunter-pro/src/learner.py` |
+| `src/cognithor/social/tracker.py` | `reddit-lead-hunter-pro/src/tracker.py` |
+| `src/cognithor/mcp/reddit_tools.py` | `reddit-lead-hunter-pro/src/tools.py` |
+
+- [ ] **Step 1: Run the copies**
+
+```bash
+CORE="D:/Jarvis/jarvis complete v20/src/cognithor"
+PACK="D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/src"
+
+cp "$CORE/social/scanner.py"   "$PACK/scanner.py"
+cp "$CORE/social/reply.py"     "$PACK/reply.py"
+cp "$CORE/social/refiner.py"   "$PACK/refiner.py"
+cp "$CORE/social/templates.py" "$PACK/templates.py"
+cp "$CORE/social/discovery.py" "$PACK/discovery.py"
+cp "$CORE/social/learner.py"   "$PACK/learner.py"
+cp "$CORE/social/tracker.py"   "$PACK/tracker.py"
+cp "$CORE/mcp/reddit_tools.py" "$PACK/tools.py"
+```
+
+- [ ] **Step 2: Rewrite imports inside the copied files**
+
+Every copied file has imports like `from cognithor.social.models import Lead`. In the pack, these should become `from cognithor.leads.models import Lead` (because the pack consumes the public SDK in Core, not the legacy `social/` tree that we're about to delete).
+
+```bash
+cd "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/src" && python -c "
+import re
+from pathlib import Path
+
+replacements = [
+    (r'from cognithor\.social\.models\b', 'from cognithor.leads.models'),
+    (r'from cognithor\.social\.store\b', 'from cognithor.leads.store'),
+    (r'from cognithor\.social\.scanner\b', 'from .scanner'),
+    (r'from cognithor\.social\.reply\b', 'from .reply'),
+    (r'from cognithor\.social\.refiner\b', 'from .refiner'),
+    (r'from cognithor\.social\.templates\b', 'from .templates'),
+    (r'from cognithor\.social\.discovery\b', 'from .discovery'),
+    (r'from cognithor\.social\.learner\b', 'from .learner'),
+    (r'from cognithor\.social\.tracker\b', 'from .tracker'),
+]
+
+for path in Path('.').glob('*.py'):
+    if path.name == '__init__.py':
+        continue
+    text = path.read_text(encoding='utf-8')
+    orig = text
+    for pattern, replacement in replacements:
+        text = re.sub(pattern, replacement, text)
+    if text != orig:
+        path.write_text(text, encoding='utf-8')
+        print(f'rewrote: {path}')
+"
+```
+
+Expected: a handful of files report `rewrote: ...`.
+
+- [ ] **Step 3: Smoke-check the imports**
+
+```bash
+cd "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/src" && python -c "
+import ast
+for f in ['scanner.py', 'reply.py', 'refiner.py', 'templates.py', 'discovery.py', 'learner.py', 'tracker.py', 'tools.py']:
+    try:
+        ast.parse(open(f, encoding='utf-8').read())
+        print(f'{f}: ast ok')
+    except SyntaxError as e:
+        print(f'{f}: SYNTAX ERROR {e}')
+"
+```
+
+Expected: `ast ok` for every file.
+
+---
+
+### Task 4.3 — Write `reddit_source.py` — the LeadSource adapter
+
+This is the bridge between the pack's Reddit scanner and Core's generic `LeadService`. Similar to the `LegacyRedditSource` in `cognithor/social/_legacy_adapters.py`, but the pack version uses its own local scanner.py, reply.py, refiner.py via relative imports.
+
+**Files:**
+- Create: `D:\Jarvis\cognithor-packs\reddit-lead-hunter-pro\src\reddit_source.py`
+
+- [ ] **Step 1: Write the adapter**
+
+```python
+"""Reddit LeadSource adapter — bridges the pack's Reddit scanner into
+Cognithor Core's generic LeadService.
+
+Registered with ``PackContext.leads.register_source(...)`` in ``pack.py``.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from cognithor.leads.models import Lead, LeadStatus
+from cognithor.leads.source import LeadSource
+
+from .refiner import ReplyRefiner
+from .reply import ReplyPoster
+from .scanner import RedditScanner, ScanConfig
+from .templates import TemplateManager
+
+
+class RedditLeadSource(LeadSource):
+    source_id = "reddit"
+    display_name = "Reddit"
+    icon = "forum"
+    color = "#FF4500"
+    capabilities = frozenset({"scan", "draft_reply", "refine_reply", "auto_post", "discover_targets"})
+
+    def __init__(
+        self,
+        llm_fn: Any = None,
+        browser_agent: Any = None,
+        template_manager: TemplateManager | None = None,
+    ) -> None:
+        self._scanner = RedditScanner(llm_fn=llm_fn)
+        self._refiner = ReplyRefiner(llm_fn=llm_fn)
+        self._poster = ReplyPoster(browser_agent=browser_agent)
+        self._templates = template_manager
+
+    async def scan(
+        self,
+        *,
+        config: dict[str, Any],
+        product: str,
+        product_description: str,
+        min_score: int,
+    ) -> list[Lead]:
+        subreddits: list[str] = list(config.get("subreddits") or [])
+        if not subreddits:
+            return []
+
+        scan_cfg = ScanConfig(
+            product_name=product,
+            product_description=product_description,
+            min_score=min_score,
+            reply_tone=config.get("reply_tone", "helpful, technically credible, no sales pitch"),
+        )
+
+        leads: list[Lead] = []
+        for sub in subreddits:
+            posts = self._scanner.fetch_posts(sub, limit=100)
+            for post in posts:
+                if len(post.get("title", "")) < 15:
+                    continue
+                score, reasoning = await self._scanner.score_post(post, scan_cfg)
+                if score < min_score:
+                    continue
+                draft = await self._scanner.draft_reply(post, scan_cfg, intent_score=score)
+                if not draft.strip():
+                    continue
+                leads.append(
+                    Lead(
+                        post_id=post.get("id", ""),
+                        source_id="reddit",
+                        subreddit=sub,
+                        title=post.get("title", ""),
+                        body=(post.get("selftext") or "")[:500],
+                        url=f"https://reddit.com{post.get('permalink', '')}",
+                        author=post.get("author", "[deleted]"),
+                        created_utc=post.get("created_utc", 0),
+                        upvotes=post.get("score", 0),
+                        num_comments=post.get("num_comments", 0),
+                        intent_score=score,
+                        score_reason=reasoning,
+                        reply_draft=draft,
+                        status=LeadStatus.NEW,
+                    )
+                )
+        return leads
+
+    async def draft_reply(self, lead: Lead, *, tone: str) -> str:
+        fake_post = {
+            "id": lead.post_id,
+            "title": lead.title,
+            "selftext": lead.body,
+            "author": lead.author,
+            "permalink": lead.url.removeprefix("https://reddit.com"),
+        }
+        cfg = ScanConfig(product_name="", reply_tone=tone)
+        return await self._scanner.draft_reply(fake_post, cfg, intent_score=lead.intent_score)
+
+    async def refine_reply(self, lead: Lead, draft: str) -> str:
+        return await self._refiner.refine(draft, lead=lead)
+
+    async def post_reply(self, lead: Lead, text: str) -> None:
+        await self._poster.post(lead=lead, text=text)
+```
+
+Write to `D:\Jarvis\cognithor-packs\reddit-lead-hunter-pro\src\reddit_source.py`.
+
+---
+
+### Task 4.4 — Write the pack entrypoint `pack.py`
+
+**Files:**
+- Create: `D:\Jarvis\cognithor-packs\reddit-lead-hunter-pro\pack.py`
+
+- [ ] **Step 1: Write the entrypoint**
+
+```python
+"""Reddit Lead Hunter Pro — pack entrypoint.
+
+Registers a RedditLeadSource with the generic LeadService, plus the
+Reddit-specific MCP tools.
+"""
+
+from __future__ import annotations
+
+from cognithor.packs.interface import AgentPack, PackContext
+from cognithor.utils.logging import get_logger
+
+from .src.reddit_source import RedditLeadSource
+from .src.templates import TemplateManager
+
+log = get_logger(__name__)
+
+
+class Pack(AgentPack):
+    def __init__(self, manifest) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(manifest)
+        self._source: RedditLeadSource | None = None
+
+    def register(self, context: PackContext) -> None:
+        leads_service = context.leads
+        if leads_service is None:
+            log.warning("reddit_pack_no_leads_service")
+            return
+
+        # Pull llm_fn from the gateway's ollama adapter if available.
+        llm_fn = None
+        gateway = context.gateway
+        if gateway is not None and hasattr(gateway, "_ollama") and gateway._ollama is not None:
+            _model = getattr(gateway._config.models.planner, "name", "qwen3:27b") if gateway._config else "qwen3:27b"
+
+            async def _llm_fn(**kwargs):  # type: ignore[no-untyped-def]
+                return await gateway._ollama.chat(model=_model, **kwargs)
+
+            llm_fn = _llm_fn
+
+        browser_agent = getattr(gateway, "_browser_agent", None) if gateway is not None else None
+
+        # Lazy template manager — needs a LeadStore instance.
+        store = getattr(leads_service, "_store", None)
+        template_manager = TemplateManager(store) if store is not None else None
+
+        self._source = RedditLeadSource(
+            llm_fn=llm_fn,
+            browser_agent=browser_agent,
+            template_manager=template_manager,
+        )
+        leads_service.register_source(self._source)
+        log.info("reddit_lead_hunter_pro_registered")
+
+        # Register the pack's MCP tools, if the mcp client is available.
+        mcp_client = context.mcp_client
+        if mcp_client is not None:
+            try:
+                from .src.tools import register_reddit_tools
+
+                register_reddit_tools(mcp_client, leads_service)
+                log.info("reddit_mcp_tools_registered")
+            except Exception as exc:
+                log.warning("reddit_mcp_tools_registration_failed", error=str(exc))
+
+    def unregister(self, context: PackContext) -> None:
+        if context.leads is not None and self._source is not None:
+            context.leads.unregister_source("reddit")
+            self._source = None
+```
+
+Note: the pack's `tools.py` (originally `mcp/reddit_tools.py`) may need a rename of its top-level function from whatever it was to `register_reddit_tools`. Check and rename if needed in the next step.
+
+- [ ] **Step 2: Find and align the tools registration function name**
+
+```bash
+cd "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/src" && grep -n "^def register" tools.py
+```
+
+If the existing function is named differently (e.g., `register_reddit_lead_tools`), either:
+- Rename it in `tools.py`, or
+- Update the import in `pack.py` to match.
+
+Pick consistency with the existing name; don't rename just for the plan.
+
+---
+
+### Task 4.5 — Write the Reddit Lead Hunter Pro `pack_manifest.json`
+
+**Files:**
+- Create: `D:\Jarvis\cognithor-packs\reddit-lead-hunter-pro\pack_manifest.json`
+
+- [ ] **Step 1: Write the manifest**
+
+The `eula_sha256` will be filled in after writing `eula.md`, so we use a placeholder now and update it in the next task.
+
+```bash
+cat > "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/pack_manifest.json" <<'EOF'
+{
+  "schema_version": 1,
+  "namespace": "cognithor-official",
+  "pack_id": "reddit-lead-hunter-pro",
+  "version": "1.2.0",
+  "display_name": "Reddit Lead Hunter Pro",
+  "description": "Find high-intent leads on Reddit, score them with your local LLM, draft replies from 50 curated templates, and drop them into an encrypted CRM. Auto-post with Playwright, real-time Telegram + Slack alerts, and a Flutter command-center tab.",
+  "license": "proprietary",
+  "min_cognithor_version": ">=0.83.0",
+  "entrypoint": "pack.py",
+  "eula_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "publisher": {
+    "id": "cognithor-official",
+    "display_name": "Cognithor",
+    "website": "https://cognithor.com",
+    "contact_email": "support@cognithor.com",
+    "payout_provider": "lemonsqueezy"
+  },
+  "revenue_share": {"creator": 70, "platform": 30},
+  "lead_sources": ["reddit"],
+  "tools": [
+    "reddit_scan",
+    "reddit_score_leads",
+    "reddit_reply",
+    "reddit_crm_upsert",
+    "reddit_discover_subreddits"
+  ],
+  "checkout_url": "https://cognithor.lemonsqueezy.com/buy/REPLACE-WITH-INDIE-VARIANT-ID",
+  "commercial_checkout_url": "https://cognithor.lemonsqueezy.com/buy/REPLACE-WITH-COMMERCIAL-VARIANT-ID",
+  "pricing": {
+    "indie": {
+      "list_price": 149,
+      "launch_price": 79,
+      "post_launch_price": 99,
+      "launch_cap": 100,
+      "currency": "USD"
+    },
+    "commercial": {
+      "list_price": 399,
+      "launch_price": 199,
+      "post_launch_price": 249,
+      "launch_cap": 25,
+      "currency": "USD"
+    }
+  }
+}
+EOF
+```
+
+---
+
+### Task 4.6 — Write the RLH Pro EULA
+
+**Files:**
+- Create: `D:\Jarvis\cognithor-packs\reddit-lead-hunter-pro\eula.md`
+
+- [ ] **Step 1: Copy from the template, then customize**
+
+```bash
+cp "D:/Jarvis/cognithor-packs/_template/eula.md" "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/eula.md"
+```
+
+- [ ] **Step 2: Customize the EULA for RLH Pro**
+
+Edit the file to replace the first three lines:
+
+```markdown
+**Pack:** Reddit Lead Hunter Pro
+**Version:** 1.2.0
+**Publisher:** Cognithor (cognithor-official) · support@cognithor.com
+```
+
+Leave the rest of the EULA body unchanged (the terms are generic enough to reuse).
+
+- [ ] **Step 3: Compute the EULA SHA-256 and update the manifest**
+
+```bash
+cd "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro" && python -c "
+import hashlib, json, pathlib
+eula = pathlib.Path('eula.md').read_bytes()
+sha = hashlib.sha256(eula).hexdigest()
+print('sha:', sha)
+manifest_path = pathlib.Path('pack_manifest.json')
+data = json.loads(manifest_path.read_text(encoding='utf-8'))
+data['eula_sha256'] = sha
+manifest_path.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+print('updated pack_manifest.json')
+"
+```
+
+Expected: prints the hash and `updated pack_manifest.json`.
+
+- [ ] **Step 4: Validate the pack**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && python scripts/validate_pack.py reddit-lead-hunter-pro
+```
+
+Expected: `[OK] reddit-lead-hunter-pro`.
+
+---
+
+### Task 4.7 — Migrate the RLH Pro catalog from the site
+
+**Files:**
+- Move: `D:\Jarvis\cognithor-site\content\packs\reddit-lead-hunter.mdx` → `D:\Jarvis\cognithor-packs\reddit-lead-hunter-pro\catalog\catalog.mdx`
+
+- [ ] **Step 1: Copy the MDX**
+
+```bash
+cp "D:/Jarvis/cognithor-site/content/packs/reddit-lead-hunter.mdx" "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/catalog/catalog.mdx"
+```
+
+- [ ] **Step 2: Update the frontmatter to match the new pricing model**
+
+Open `D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/catalog/catalog.mdx` and replace the `price: 79` / `currency: USD` block with a structured `pricing` object that mirrors the manifest. Also update `version`, `lastUpdated`, and add `tier` / `tagline` if missing.
+
+Replace lines 10-12 (`price`, `currency`, `bundleSize`) with:
+
+```yaml
+pricing:
+  indie:
+    listPrice: 149
+    launchPrice: 79
+    postLaunchPrice: 99
+    launchCap: 100
+    currency: USD
+  commercial:
+    listPrice: 399
+    launchPrice: 199
+    postLaunchPrice: 249
+    launchCap: 25
+    currency: USD
+bundleSize: '6.2 MB'
+```
+
+- [ ] **Step 3: Do NOT delete the MDX from the site yet**
+
+Phase 5 deletes it. Leaving it in place now means both the old and new locations exist briefly, but the site still builds.
+
+---
+
+### Task 4.8 — Migrate RLH Pro tests
+
+Move the Reddit-specific test files from Core's `tests/test_social/` into the pack's `tests/` directory.
+
+**Files:**
+- Move: `tests/test_social/test_scanner.py` → `reddit-lead-hunter-pro/tests/test_scanner.py`
+- Move: `tests/test_social/test_reply.py` → `reddit-lead-hunter-pro/tests/test_reply.py`
+- Move: `tests/test_social/test_refiner.py` → `reddit-lead-hunter-pro/tests/test_refiner.py`
+- Move: `tests/test_social/test_templates.py` → `reddit-lead-hunter-pro/tests/test_templates.py`
+- Move: `tests/test_social/test_discovery.py` → `reddit-lead-hunter-pro/tests/test_discovery.py`
+- Move: `tests/test_social/test_learner.py` → `reddit-lead-hunter-pro/tests/test_learner.py`
+- Move: `tests/test_social/test_tracker.py` → `reddit-lead-hunter-pro/tests/test_tracker.py`
+
+- [ ] **Step 1: Copy the test files**
+
+```bash
+CORE_TESTS="D:/Jarvis/jarvis complete v20/tests/test_social"
+PACK_TESTS="D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/tests"
+
+for f in test_scanner test_reply test_refiner test_templates test_discovery test_learner test_tracker; do
+    cp "$CORE_TESTS/$f.py" "$PACK_TESTS/$f.py"
+done
+```
+
+- [ ] **Step 2: Rewrite imports**
+
+```bash
+cd "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/tests" && python -c "
+import re
+from pathlib import Path
+
+replacements = [
+    (r'from cognithor\.social\.scanner\b', 'from reddit_lead_hunter_pro.src.scanner'),
+    (r'from cognithor\.social\.reply\b', 'from reddit_lead_hunter_pro.src.reply'),
+    (r'from cognithor\.social\.refiner\b', 'from reddit_lead_hunter_pro.src.refiner'),
+    (r'from cognithor\.social\.templates\b', 'from reddit_lead_hunter_pro.src.templates'),
+    (r'from cognithor\.social\.discovery\b', 'from reddit_lead_hunter_pro.src.discovery'),
+    (r'from cognithor\.social\.learner\b', 'from reddit_lead_hunter_pro.src.learner'),
+    (r'from cognithor\.social\.tracker\b', 'from reddit_lead_hunter_pro.src.tracker'),
+    (r'from cognithor\.social\.models\b', 'from cognithor.leads.models'),
+]
+
+for path in Path('.').glob('test_*.py'):
+    text = path.read_text(encoding='utf-8')
+    orig = text
+    for pattern, replacement in replacements:
+        text = re.sub(pattern, replacement, text)
+    if text != orig:
+        path.write_text(text, encoding='utf-8')
+        print(f'rewrote: {path}')
+"
+```
+
+- [ ] **Step 3: Write a `conftest.py` for the pack tests**
+
+The pack isn't a pip package yet, so pytest needs help finding the `reddit_lead_hunter_pro` module. Create `D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/tests/conftest.py`:
+
+```python
+"""Make the pack importable as ``reddit_lead_hunter_pro`` during pytest."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+_PACK_ROOT = Path(__file__).resolve().parent.parent
+_PACKS_ROOT = _PACK_ROOT.parent
+
+# Add the packs root (cognithor-packs/) so `import reddit_lead_hunter_pro` works.
+if str(_PACKS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PACKS_ROOT))
+
+# The pack dir name has hyphens but Python packages use underscores.
+# Create an alias by registering a module in sys.modules under the hyphenated name.
+```
+
+Actually the hyphen-to-underscore problem is real. The pack directory is `reddit-lead-hunter-pro` but Python can't import that name. Two options:
+
+Option A: Rename the directory to `reddit_lead_hunter_pro`. Cleaner, but the qualified_id in the manifest is `cognithor-official/reddit-lead-hunter-pro` (with hyphens) — that's the user-facing id. We'd need to sanitize the disk path.
+
+Option B: Load the pack tests by file path, not by importable name — pytest supports this via `--rootdir` and `--import-mode=importlib`.
+
+Option C: Leave the tests in Core's `tests/test_reddit_pack/` but import from the pack directory via a sys.path hack.
+
+**Decision: Option B.** In the pack repo, run pytest with `--import-mode=importlib`. This lets the tests import files by path without making the pack directory a conventional Python package. Document the run command in the pack's README.
+
+Replace the `conftest.py` content above with:
+
+```python
+"""Add the pack src directory to sys.path so tests can import the modules directly.
+
+Run these tests from the pack directory:
+    cd reddit-lead-hunter-pro
+    python -m pytest tests/ --import-mode=importlib
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+_PACK_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_PACK_SRC) not in sys.path:
+    sys.path.insert(0, str(_PACK_SRC))
+```
+
+And update the import-rewrite step 2 above to use `from scanner import`, `from reply import`, etc. (flat imports, no package prefix), since the `src/` directory is on `sys.path`.
+
+Re-run Step 2 with the adjusted regex:
+
+```bash
+cd "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro/tests" && python -c "
+import re
+from pathlib import Path
+
+replacements = [
+    (r'from cognithor\.social\.scanner\b',   'from scanner'),
+    (r'from cognithor\.social\.reply\b',     'from reply'),
+    (r'from cognithor\.social\.refiner\b',   'from refiner'),
+    (r'from cognithor\.social\.templates\b', 'from templates'),
+    (r'from cognithor\.social\.discovery\b', 'from discovery'),
+    (r'from cognithor\.social\.learner\b',   'from learner'),
+    (r'from cognithor\.social\.tracker\b',   'from tracker'),
+    (r'from cognithor\.social\.models\b',    'from cognithor.leads.models'),
+]
+for path in Path('.').glob('test_*.py'):
+    text = path.read_text(encoding='utf-8')
+    orig = text
+    for pattern, replacement in replacements:
+        text = re.sub(pattern, replacement, text)
+    if text != orig:
+        path.write_text(text, encoding='utf-8')
+        print(f'rewrote: {path}')
+"
+```
+
+- [ ] **Step 4: Run pack tests**
+
+```bash
+cd "D:/Jarvis/cognithor-packs/reddit-lead-hunter-pro" && python -m pytest tests/ --import-mode=importlib -q
+```
+
+Expected: all ported tests pass. Some may need small adjustments if they mocked Reddit-specific internals that changed during the import rewrite.
+
+---
+
+### Task 4.9 — HN Lead Hunter pack extraction
+
+Same shape as RLH Pro, smaller scope (HN is a single scanner file + tests).
+
+**Files:**
+- Create: `D:/Jarvis/cognithor-packs/hn-lead-hunter/` directory tree
+- Move: `src/cognithor/social/hn_scanner.py` → `hn-lead-hunter/src/hn_scanner.py`
+- Create: `hn-lead-hunter/src/hn_source.py`
+- Create: `hn-lead-hunter/pack.py`
+- Create: `hn-lead-hunter/pack_manifest.json`
+- Create: `hn-lead-hunter/eula.md`
+- Create: `hn-lead-hunter/catalog/catalog.mdx`
+- Move: `tests/test_social/test_hn_scanner.py` → `hn-lead-hunter/tests/test_hn_scanner.py`
+
+- [ ] **Step 1: Scaffold**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && mkdir -p hn-lead-hunter/src hn-lead-hunter/tests hn-lead-hunter/catalog
+touch hn-lead-hunter/src/__init__.py hn-lead-hunter/tests/__init__.py
+```
+
+- [ ] **Step 2: Copy source and rewrite imports**
+
+```bash
+cp "D:/Jarvis/jarvis complete v20/src/cognithor/social/hn_scanner.py" "D:/Jarvis/cognithor-packs/hn-lead-hunter/src/hn_scanner.py"
+
+python -c "
+from pathlib import Path
+import re
+p = Path('D:/Jarvis/cognithor-packs/hn-lead-hunter/src/hn_scanner.py')
+t = p.read_text(encoding='utf-8')
+t = re.sub(r'from cognithor\.social\.', 'from cognithor.leads.', t)
+p.write_text(t, encoding='utf-8')
+print('ok')
+"
+```
+
+- [ ] **Step 3: Write `hn-lead-hunter/src/hn_source.py`**
+
+```python
+"""Hacker News LeadSource adapter."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from cognithor.leads.models import Lead
+from cognithor.leads.source import LeadSource
+
+from .hn_scanner import HackerNewsScanner
+
+
+class HnLeadSource(LeadSource):
+    source_id = "hn"
+    display_name = "Hacker News"
+    icon = "article"
+    color = "#FF6600"
+    capabilities = frozenset({"scan"})
+
+    def __init__(self, llm_fn: Any = None) -> None:
+        self._scanner = HackerNewsScanner(llm_fn=llm_fn)
+
+    async def scan(
+        self,
+        *,
+        config: dict[str, Any],
+        product: str,
+        product_description: str,
+        min_score: int,
+    ) -> list[Lead]:
+        categories = list(config.get("categories") or ["top", "new"])
+        raw = await self._scanner.scan(
+            product_name=product,
+            product_description=product_description,
+            categories=categories,
+            min_score=min_score,
+        )
+        return [
+            Lead(
+                post_id=f"hn-{entry.get('id', '')}",
+                source_id="hn",
+                title=entry.get("title", ""),
+                url=entry.get("url", "") or f"https://news.ycombinator.com/item?id={entry.get('id', '')}",
+                intent_score=entry.get("intent_score", 0),
+                score_reason=entry.get("score_reason", ""),
+            )
+            for entry in raw.get("leads", [])
+        ]
+```
+
+- [ ] **Step 4: Write `hn-lead-hunter/pack.py`**
+
+```python
+"""Hacker News Lead Hunter — pack entrypoint."""
+
+from __future__ import annotations
+
+from cognithor.packs.interface import AgentPack, PackContext
+from cognithor.utils.logging import get_logger
+
+from .src.hn_source import HnLeadSource
+
+log = get_logger(__name__)
+
+
+class Pack(AgentPack):
+    def register(self, context: PackContext) -> None:
+        if context.leads is None:
+            return
+        llm_fn = None
+        if context.gateway is not None and hasattr(context.gateway, "_ollama"):
+            _model = getattr(context.gateway._config.models.planner, "name", "qwen3:27b") if context.gateway._config else "qwen3:27b"
+            async def _llm_fn(**kwargs):  # type: ignore[no-untyped-def]
+                return await context.gateway._ollama.chat(model=_model, **kwargs)
+            llm_fn = _llm_fn
+        context.leads.register_source(HnLeadSource(llm_fn=llm_fn))
+        log.info("hn_lead_hunter_registered")
+
+    def unregister(self, context: PackContext) -> None:
+        if context.leads is not None:
+            context.leads.unregister_source("hn")
+```
+
+- [ ] **Step 5: Write `hn-lead-hunter/pack_manifest.json`**
+
+```bash
+cat > "D:/Jarvis/cognithor-packs/hn-lead-hunter/pack_manifest.json" <<'EOF'
+{
+  "schema_version": 1,
+  "namespace": "cognithor-official",
+  "pack_id": "hn-lead-hunter",
+  "version": "1.0.0",
+  "display_name": "Hacker News Lead Hunter",
+  "description": "Monitor Hacker News top, new, and best stories for posts matching your product pitch. Scored by your local LLM.",
+  "license": "apache-2.0",
+  "min_cognithor_version": ">=0.83.0",
+  "entrypoint": "pack.py",
+  "eula_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "publisher": {
+    "id": "cognithor-official",
+    "display_name": "Cognithor",
+    "website": "https://cognithor.com"
+  },
+  "revenue_share": {"creator": 70, "platform": 30},
+  "lead_sources": ["hn"],
+  "tools": ["hn_scan"],
+  "checkout_url": null,
+  "pricing": {}
+}
+EOF
+```
+
+- [ ] **Step 6: Write EULA, update hash, validate**
+
+```bash
+cd "D:/Jarvis/cognithor-packs/hn-lead-hunter" && cp "../_template/eula.md" eula.md
+
+# Customize header
+python -c "
+from pathlib import Path
+p = Path('eula.md')
+t = p.read_text(encoding='utf-8')
+t = t.replace(
+    '**Pack:** (see \`pack_manifest.json\`)\n**Version:** (see \`pack_manifest.json\`)\n**Publisher:** (see \`pack_manifest.json\`)',
+    '**Pack:** Hacker News Lead Hunter\n**Version:** 1.0.0\n**Publisher:** Cognithor (cognithor-official)\n**License:** Apache-2.0 (free, bundled with Core)'
+)
+p.write_text(t, encoding='utf-8')
+
+import hashlib, json
+sha = hashlib.sha256(Path('eula.md').read_bytes()).hexdigest()
+m = json.loads(Path('pack_manifest.json').read_text())
+m['eula_sha256'] = sha
+Path('pack_manifest.json').write_text(json.dumps(m, indent=2) + '\n', encoding='utf-8')
+print('sha:', sha)
+"
+
+cd "D:/Jarvis/cognithor-packs" && python scripts/validate_pack.py hn-lead-hunter
+```
+
+Expected: `[OK] hn-lead-hunter`.
+
+- [ ] **Step 7: Migrate HN test**
+
+```bash
+cp "D:/Jarvis/jarvis complete v20/tests/test_social/test_hn_scanner.py" "D:/Jarvis/cognithor-packs/hn-lead-hunter/tests/test_hn_scanner.py"
+
+python -c "
+from pathlib import Path
+import re
+p = Path('D:/Jarvis/cognithor-packs/hn-lead-hunter/tests/test_hn_scanner.py')
+t = p.read_text(encoding='utf-8')
+t = re.sub(r'from cognithor\.social\.hn_scanner\b', 'from hn_scanner', t)
+p.write_text(t, encoding='utf-8')
+"
+
+# Write conftest
+cat > "D:/Jarvis/cognithor-packs/hn-lead-hunter/tests/conftest.py" <<'EOF'
+from __future__ import annotations
+import sys
+from pathlib import Path
+_src = Path(__file__).resolve().parent.parent / "src"
+if str(_src) not in sys.path:
+    sys.path.insert(0, str(_src))
+EOF
+
+cd "D:/Jarvis/cognithor-packs/hn-lead-hunter" && python -m pytest tests/ --import-mode=importlib -q
+```
+
+Expected: HN scanner tests pass.
+
+- [ ] **Step 8: Write the catalog mdx**
+
+```bash
+cat > "D:/Jarvis/cognithor-packs/hn-lead-hunter/catalog/catalog.mdx" <<'EOF'
+---
+slug: hn-lead-hunter
+title: Hacker News Lead Hunter
+tagline: Monitor HN top, new, and best for prospects. Free, bundled, Apache 2.0.
+status: live
+tier: B
+category:
+  - lead-generation
+license: apache-2.0
+bundleSize: '0.2 MB'
+fileCount: 5
+version: 1.0.0
+releasedAt: '2026-04-15T00:00:00Z'
+lastUpdated: '2026-04-15T00:00:00Z'
+requires:
+  cognithor: '>=0.83.0'
+  llm: 'qwen3:7b'
+  ram: '8 GB'
+tools:
+  - hn_scan
+seo:
+  title: 'Hacker News Lead Hunter · Cognithor Agent Pack'
+  description: 'Free Hacker News monitoring pack for Cognithor. Scores top, new, and best stories with your local LLM.'
+---
+
+## Hacker News Lead Hunter
+
+A small, free, bundled pack that fetches the top / new / best Hacker News
+story feeds and scores each one with your local LLM against your product
+pitch. Ships with Cognithor Core — no purchase, no install step.
+
+Use it alongside a paid **Reddit Lead Hunter Pro** subscription to cover
+both of the big technical discussion hubs in one place.
+EOF
+```
+
+---
+
+### Task 4.10 — Discord Lead Hunter pack extraction
+
+Same shape as HN, with Discord scanner.
+
+- [ ] **Step 1: Scaffold**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && mkdir -p discord-lead-hunter/src discord-lead-hunter/tests discord-lead-hunter/catalog
+touch discord-lead-hunter/src/__init__.py discord-lead-hunter/tests/__init__.py
+```
+
+- [ ] **Step 2: Copy source + rewrite imports**
+
+```bash
+cp "D:/Jarvis/jarvis complete v20/src/cognithor/social/discord_scanner.py" "D:/Jarvis/cognithor-packs/discord-lead-hunter/src/discord_scanner.py"
+
+python -c "
+from pathlib import Path
+import re
+p = Path('D:/Jarvis/cognithor-packs/discord-lead-hunter/src/discord_scanner.py')
+t = p.read_text(encoding='utf-8')
+t = re.sub(r'from cognithor\.social\.', 'from cognithor.leads.', t)
+p.write_text(t, encoding='utf-8')
+"
+```
+
+- [ ] **Step 3: Write `discord-lead-hunter/src/discord_source.py`**
+
+Same shape as `hn_source.py`, adapted for Discord. Use `LegacyDiscordSource` from `_legacy_adapters.py` as the reference.
+
+```python
+"""Discord LeadSource adapter."""
+
+from __future__ import annotations
+
+import os
+from typing import Any
+
+from cognithor.leads.models import Lead
+from cognithor.leads.source import LeadSource
+
+from .discord_scanner import DiscordScanner
+
+
+class DiscordLeadSource(LeadSource):
+    source_id = "discord"
+    display_name = "Discord"
+    icon = "tag"
+    color = "#5865F2"
+    capabilities = frozenset({"scan"})
+
+    def __init__(self, llm_fn: Any = None) -> None:
+        token = os.environ.get("COGNITHOR_DISCORD_TOKEN", "")
+        self._scanner: DiscordScanner | None = (
+            DiscordScanner(bot_token=token, llm_fn=llm_fn) if token else None
+        )
+
+    async def scan(
+        self,
+        *,
+        config: dict[str, Any],
+        product: str,
+        product_description: str,
+        min_score: int,
+    ) -> list[Lead]:
+        if self._scanner is None:
+            return []
+        channel_ids = list(config.get("channel_ids") or [])
+        raw = await self._scanner.scan(
+            channel_ids=channel_ids,
+            product_name=product,
+            product_description=product_description,
+            min_score=min_score,
+        )
+        return [
+            Lead(
+                post_id=f"discord-{entry.get('id', '')}",
+                source_id="discord",
+                title=entry.get("title", "")[:200],
+                url=entry.get("url", ""),
+                intent_score=entry.get("intent_score", 0),
+                score_reason=entry.get("score_reason", ""),
+                body=entry.get("content", "")[:500],
+                author=entry.get("author", ""),
+            )
+            for entry in raw.get("leads", [])
+        ]
+```
+
+- [ ] **Step 4: Write `pack.py`**
+
+Copy `hn-lead-hunter/pack.py` and replace `HnLeadSource` with `DiscordLeadSource`, `hn` with `discord`, `hn_lead_hunter_registered` with `discord_lead_hunter_registered`.
+
+- [ ] **Step 5: Write `pack_manifest.json`**
+
+```bash
+cat > "D:/Jarvis/cognithor-packs/discord-lead-hunter/pack_manifest.json" <<'EOF'
+{
+  "schema_version": 1,
+  "namespace": "cognithor-official",
+  "pack_id": "discord-lead-hunter",
+  "version": "1.0.0",
+  "display_name": "Discord Lead Hunter",
+  "description": "Scan Discord channels your bot is in for high-intent messages, scored by your local LLM. Requires your own bot token.",
+  "license": "apache-2.0",
+  "min_cognithor_version": ">=0.83.0",
+  "entrypoint": "pack.py",
+  "eula_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "publisher": {"id": "cognithor-official", "display_name": "Cognithor"},
+  "revenue_share": {"creator": 70, "platform": 30},
+  "lead_sources": ["discord"],
+  "tools": ["discord_scan"],
+  "checkout_url": null,
+  "pricing": {}
+}
+EOF
+```
+
+- [ ] **Step 6: EULA, hash, validate, migrate test, catalog mdx**
+
+Repeat the pattern from Task 4.9 Steps 6-8, substituting `discord` for `hn`:
+
+```bash
+cd "D:/Jarvis/cognithor-packs/discord-lead-hunter" && cp "../_template/eula.md" eula.md
+
+python -c "
+from pathlib import Path
+p = Path('eula.md')
+t = p.read_text(encoding='utf-8')
+t = t.replace(
+    '**Pack:** (see \`pack_manifest.json\`)\n**Version:** (see \`pack_manifest.json\`)\n**Publisher:** (see \`pack_manifest.json\`)',
+    '**Pack:** Discord Lead Hunter\n**Version:** 1.0.0\n**Publisher:** Cognithor (cognithor-official)\n**License:** Apache-2.0 (free, bundled with Core)'
+)
+p.write_text(t, encoding='utf-8')
+import hashlib, json
+sha = hashlib.sha256(Path('eula.md').read_bytes()).hexdigest()
+m = json.loads(Path('pack_manifest.json').read_text())
+m['eula_sha256'] = sha
+Path('pack_manifest.json').write_text(json.dumps(m, indent=2) + '\n', encoding='utf-8')
+"
+
+cd "D:/Jarvis/cognithor-packs" && python scripts/validate_pack.py discord-lead-hunter
+```
+
+Then migrate `tests/test_social/test_discord_scanner.py` (if it exists) and write a short `catalog.mdx`.
+
+```bash
+cat > "D:/Jarvis/cognithor-packs/discord-lead-hunter/catalog/catalog.mdx" <<'EOF'
+---
+slug: discord-lead-hunter
+title: Discord Lead Hunter
+tagline: Score messages in your Discord channels with local LLM. Free, bundled.
+status: live
+tier: B
+category:
+  - lead-generation
+license: apache-2.0
+version: 1.0.0
+releasedAt: '2026-04-15T00:00:00Z'
+lastUpdated: '2026-04-15T00:00:00Z'
+requires:
+  cognithor: '>=0.83.0'
+  llm: 'qwen3:7b'
+  ram: '8 GB'
+  discordBotToken: 'yes'
+tools:
+  - discord_scan
+seo:
+  title: 'Discord Lead Hunter · Cognithor Agent Pack'
+  description: 'Free Discord message scanner for Cognithor. Scores high-intent conversations with your local LLM.'
+---
+
+## Discord Lead Hunter
+
+A free, bundled Cognithor pack that lets you monitor Discord channels
+your own bot has access to. Each new message is scored by your local LLM
+against your product pitch, and high-intent ones land in the unified
+Leads tab.
+
+You supply the bot token via `COGNITHOR_DISCORD_TOKEN`; the pack never
+sends your token or messages to any cloud service.
+EOF
+```
+
+---
+
+### Task 4.11 — RSS Lead Hunter pack extraction
+
+Same pattern as HN and Discord.
+
+- [ ] **Step 1: Scaffold + copy**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && mkdir -p rss-lead-hunter/src rss-lead-hunter/tests rss-lead-hunter/catalog
+touch rss-lead-hunter/src/__init__.py rss-lead-hunter/tests/__init__.py
+
+cp "D:/Jarvis/jarvis complete v20/src/cognithor/social/rss_scanner.py" "D:/Jarvis/cognithor-packs/rss-lead-hunter/src/rss_scanner.py"
+
+python -c "
+from pathlib import Path
+import re
+p = Path('D:/Jarvis/cognithor-packs/rss-lead-hunter/src/rss_scanner.py')
+t = p.read_text(encoding='utf-8')
+t = re.sub(r'from cognithor\.social\.', 'from cognithor.leads.', t)
+p.write_text(t, encoding='utf-8')
+"
+```
+
+- [ ] **Step 2: Write `rss-lead-hunter/src/rss_source.py`**
+
+```python
+"""RSS / Atom feed LeadSource adapter."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from cognithor.leads.models import Lead
+from cognithor.leads.source import LeadSource
+
+from .rss_scanner import RssFeedScanner
+
+
+class RssLeadSource(LeadSource):
+    source_id = "rss"
+    display_name = "RSS Feeds"
+    icon = "rss_feed"
+    color = "#FFA500"
+    capabilities = frozenset({"scan"})
+
+    def __init__(self, llm_fn: Any = None) -> None:
+        self._scanner = RssFeedScanner(llm_fn=llm_fn)
+
+    async def scan(
+        self,
+        *,
+        config: dict[str, Any],
+        product: str,
+        product_description: str,
+        min_score: int,
+    ) -> list[Lead]:
+        feeds = list(config.get("feeds") or [])
+        if not feeds:
+            return []
+        raw = await self._scanner.scan(
+            feeds=feeds,
+            product_name=product,
+            product_description=product_description,
+            min_score=min_score,
+        )
+        return [
+            Lead(
+                post_id=entry.get("entry_hash") or entry.get("id") or entry.get("url", ""),
+                source_id="rss",
+                title=entry.get("title", ""),
+                url=entry.get("url", ""),
+                intent_score=entry.get("intent_score", 0),
+                score_reason=entry.get("score_reason", ""),
+                body=(entry.get("summary") or "")[:500],
+            )
+            for entry in raw.get("leads", [])
+        ]
+```
+
+- [ ] **Step 3: Write `pack.py`, `pack_manifest.json`, `eula.md`, `catalog/catalog.mdx`**
+
+Use the HN/Discord patterns, substituting `rss` / `RssLeadSource` / `RSS Lead Hunter`.
+
+Manifest:
+
+```json
+{
+  "schema_version": 1,
+  "namespace": "cognithor-official",
+  "pack_id": "rss-lead-hunter",
+  "version": "1.0.0",
+  "display_name": "RSS Lead Hunter",
+  "description": "Score any RSS or Atom feed (news sites, blogs, forums) with your local LLM for leads. Free, bundled.",
+  "license": "apache-2.0",
+  "min_cognithor_version": ">=0.83.0",
+  "entrypoint": "pack.py",
+  "eula_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "publisher": {"id": "cognithor-official", "display_name": "Cognithor"},
+  "revenue_share": {"creator": 70, "platform": 30},
+  "lead_sources": ["rss"],
+  "tools": ["rss_scan"],
+  "checkout_url": null,
+  "pricing": {}
+}
+```
+
+Migrate `tests/test_social/test_rss_scanner.py`.
+
+- [ ] **Step 4: Validate**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && python scripts/validate_pack.py rss-lead-hunter
+```
+
+---
+
+### Task 4.12 — Regenerate index.json and commit all four packs
+
+- [ ] **Step 1: Regenerate**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && python scripts/build_index.py
+```
+
+Expected: `[OK] wrote index.json with 4 packs`.
+
+- [ ] **Step 2: Stage, commit, push**
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && git add -A && git status
+```
+
+Expected: four new pack directories + updated `index.json`.
+
+```bash
+cd "D:/Jarvis/cognithor-packs" && git commit -m "feat: extract 4 initial packs from cognithor core
+
+- reddit-lead-hunter-pro: paid (\$79 indie / \$199 commercial), proprietary
+- hn-lead-hunter:       free, apache-2.0, bundled
+- discord-lead-hunter:  free, apache-2.0, bundled
+- rss-lead-hunter:      free, apache-2.0, bundled
+
+Each pack ships its own source, tests, EULA, manifest, and catalog.mdx.
+index.json regenerated (4 entries)." && git push
+```
+
+Expected: push succeeds. The CI action re-generates `index.json` and tries to call the Vercel deploy hook (which won't have anything new to display until Phase 5 is done, but the hook will trigger a site rebuild that safely no-ops on the missing `fetch-packs.ts`).
+
+---
+
+### Task 4.13 — Populate `src/cognithor/_bundled_packs/` in Core
+
+Core must ship the three free packs so first-run bootstrap can copy them to `~/.cognithor/packs/`. Copy (not symlink, to keep the Python wheel self-contained).
+
+**Files:**
+- Create: `D:/Jarvis/jarvis complete v20/src/cognithor/_bundled_packs/cognithor-official/{hn,discord,rss}-lead-hunter/`
+
+- [ ] **Step 1: Scaffold**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20/src/cognithor" && mkdir -p _bundled_packs/cognithor-official
+```
+
+- [ ] **Step 2: Copy the three free packs**
+
+```bash
+PACKS="D:/Jarvis/cognithor-packs"
+BUNDLED="D:/Jarvis/jarvis complete v20/src/cognithor/_bundled_packs/cognithor-official"
+
+for pack in hn-lead-hunter discord-lead-hunter rss-lead-hunter; do
+    rm -rf "$BUNDLED/$pack"
+    cp -r "$PACKS/$pack" "$BUNDLED/$pack"
+done
+```
+
+- [ ] **Step 3: Remove `tests/` from the bundled copies (not needed in Core wheel)**
+
+```bash
+for pack in hn-lead-hunter discord-lead-hunter rss-lead-hunter; do
+    rm -rf "D:/Jarvis/jarvis complete v20/src/cognithor/_bundled_packs/cognithor-official/$pack/tests"
+done
+```
+
+- [ ] **Step 4: Add `_bundled_packs` to pyproject.toml package data**
+
+Find the `[tool.setuptools.package-data]` or `[tool.poetry.include]` section in `pyproject.toml` and ensure `_bundled_packs/**/*` is included. If the project uses `setuptools` with `include-package-data = true` and an `__init__.py` is present in every directory, this works automatically — but `_bundled_packs` is a data directory with no Python imports, so it needs explicit inclusion.
+
+```bash
+grep -n "package-data\|include-package-data\|packages" "D:/Jarvis/jarvis complete v20/pyproject.toml"
+```
+
+If `include-package-data = true` is set, add a `MANIFEST.in` entry:
+
+```bash
+cat >> "D:/Jarvis/jarvis complete v20/MANIFEST.in" <<'EOF'
+recursive-include src/cognithor/_bundled_packs *
+EOF
+```
+
+- [ ] **Step 5: Smoke test — `bootstrap_windows._copy_bundled_packs` now works**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && python -c "
+import sys
+sys.path.insert(0, 'scripts')
+from pathlib import Path
+import importlib.util
+spec = importlib.util.spec_from_file_location('bw', 'scripts/bootstrap_windows.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+import tempfile
+with tempfile.TemporaryDirectory() as tmp:
+    mod._copy_bundled_packs(Path(tmp))
+    installed = list((Path(tmp) / 'packs').rglob('pack_manifest.json'))
+    print(f'bundled packs installed: {len(installed)}')
+    for p in installed:
+        print(f'  {p.relative_to(tmp)}')
+"
+```
+
+Expected: 3 pack_manifest.json files listed under `packs/cognithor-official/{hn,discord,rss}-lead-hunter/`.
+
+- [ ] **Step 6: Commit Core**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && git add src/cognithor/_bundled_packs MANIFEST.in && git commit -m "feat(packs): ship HN/Discord/RSS as bundled default free packs"
+```
+
+---
+
+### Task 4.14 — Delete the old `src/cognithor/social/` directory from Core
+
+This is the destructive step. Only run after Phase 1 Task 1.11 confirmed the test suite passes with the `_legacy_adapters` shim, AND Tasks 4.1-4.13 have the four pack directories fully built + tested.
+
+**Files:**
+- Delete: `src/cognithor/social/`
+- Delete: `src/cognithor/mcp/reddit_tools.py`
+- Delete: `tests/test_social/`
+
+- [ ] **Step 1: Stop referencing `social` from `gateway.py` and bootstrap**
+
+The Gateway's Phase F block currently imports `HackerNewsScanner`, `DiscordScanner`, `RedditScanner` from `cognithor.social.*` and sets them on `self._reddit_lead_service`. That code is now obsolete because the bundled packs register themselves via the loader.
+
+Find and remove the obsolete wiring:
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && grep -n "HackerNewsScanner\|DiscordScanner\|from cognithor.social" src/cognithor/gateway/gateway.py
+```
+
+Delete those blocks (they're in the Phase F init, roughly lines 380-460 — the Reddit Lead Service creation, HN scanner wiring, Discord scanner wiring, RSS scanner wiring, and `register_social_tools` call). The pack loader takes over all of this.
+
+Keep: `self._reddit_lead_service` variable as an alias for the `LeadService` inner that the shim created, OR replace all references to `self._reddit_lead_service` with `self._leads_service` (cleaner). For MVP, alias:
+
+```python
+# After the pack loader runs:
+self._reddit_lead_service = getattr(self, "_pack_loader", None) and pack_context.leads
+self._leads_service = pack_context.leads
+```
+
+- [ ] **Step 2: Delete the legacy adapters shim + social/ directory**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && rm -rf src/cognithor/social tests/test_social
+rm -f src/cognithor/mcp/reddit_tools.py
+```
+
+- [ ] **Step 3: Verify nothing in Core still imports from `cognithor.social`**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && grep -rn "from cognithor.social\|import cognithor.social" src/ tests/ scripts/ 2>&1 | head -20
+```
+
+Expected: zero matches. If there are any, fix them now.
+
+- [ ] **Step 4: Update `test_skill_tools_coverage.py` for the new tool count**
+
+The test asserts a specific number of registered MCP tools. With Reddit-specific tools moving to the pack, the count drops.
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && grep -n "call_count\|register_builtin_handler" tests/test_skill_tools_coverage.py
+```
+
+Lower the assertion by however many Reddit tools existed (check `reddit_tools.py` in the pack to count).
+
+- [ ] **Step 5: Run full test suite**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && python -m pytest tests/ -q
+```
+
+Expected: mostly passing. Any remaining failures are likely in integration tests that directly instantiated `RedditLeadService` with positional args — update them to use `LeadService` or skip them as "now covered by pack tests."
+
+- [ ] **Step 6: Commit the deletion**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && git add -A && git commit -m "refactor(core): delete src/cognithor/social (extracted to packs)
+
+All Reddit-specific code now lives in the cognithor-packs private repo
+as reddit-lead-hunter-pro (paid) and the three free bundled packs
+(hn-lead-hunter, discord-lead-hunter, rss-lead-hunter). Core now only
+contains the generic cognithor.leads.sdk.
+
+The legacy RedditLeadService class is gone; code that needs a LeadService
+uses cognithor.leads.LeadService directly.
+
+Closes out the Core side of issue #113."
+```
+
+---
+
+### Task 4.15 — Phase 4 end-of-phase gate
+
+- [ ] **Step 1: Core ruff + format**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && python -m ruff check src/cognithor tests/ && python -m ruff format --check src/cognithor tests/
+```
+
+Expected: all checks passed (with exceptions for pre-existing warnings tracked separately).
+
+- [ ] **Step 2: Core full test suite**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && python -m pytest tests/ -q
+```
+
+Expected: all passing. Test count is now lower than before (~2249 → ~2100) because ~150 Reddit-specific tests moved to the pack.
+
+- [ ] **Step 3: Pack tests (all four packs)**
+
+```bash
+for pack in reddit-lead-hunter-pro hn-lead-hunter discord-lead-hunter rss-lead-hunter; do
+    echo "=== $pack ==="
+    cd "D:/Jarvis/cognithor-packs/$pack" && python -m pytest tests/ --import-mode=importlib -q
+done
+```
+
+Expected: each pack's tests pass independently.
+
+- [ ] **Step 4: Tag Phase 4**
+
+```bash
+cd "D:/Jarvis/jarvis complete v20" && git tag -a phase4-packs-extracted -m "Phase 4 complete: 4 packs extracted, Core social/ deleted"
+cd "D:/Jarvis/cognithor-packs" && git tag -a phase4-packs-extracted -m "Phase 4 complete: initial packs committed" && git push --tags
+```
+
+---
+
+<!-- PHASE-5-START -->
+
+### Placeholder — Phases 5-7 (expanded in the next plan segment)
+
+Phase 4 leaves the plan at ~60 tasks. The remaining phases are:
+
+- **Phase 5** (13 tasks): Site fetcher (`@octokit/rest`), `lib/data/fetch-packs.ts`, local-dev cache, `pnpm run packs:fetch`, rewire `PackStoreGrid` + `PackSpotlightSection` + `/packs/[slug]`, `/installed` thank-you route, delete obsolete MDX + home-packs.ts, update tests.
+- **Phase 6** (12 tasks): Flutter — `lib/data/known_packs.dart`, `LockedPackCard` widget, `SourcesProvider`, rename and rewrite `leads_screen.dart`, wire upsell into `config/social_page.dart`, update `main_shell.dart`, widget tests, flutter analyze.
+- **Phase 7** (7 tasks): Final full-suite gate across Core/site/Flutter, print git hygiene commands + Lemon Squeezy setup checklist + manual smoke test, tag `phase7-complete`, final summary commit.
+
+<!-- PHASE-5-END -->
