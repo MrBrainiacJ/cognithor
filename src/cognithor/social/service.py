@@ -1,4 +1,19 @@
-"""RedditLeadService — orchestrates scanning, storing, and replying."""
+"""Back-compat shim over cognithor.leads.sdk.
+
+The real implementation for new sources lives in
+``cognithor.leads.service.LeadService``. This module keeps
+``RedditLeadService`` importable so existing code continues to work
+through Phase 1-3 of the agent pack extraction. Phase 4 deletes this
+file entirely.
+
+Private attributes preserved for test/gateway compatibility:
+- ``_scanner``       — RedditScanner instance (tests patch this)
+- ``_store``         — social.store.LeadStore (tests call save_lead/etc.)
+- ``_scan_config``   — ScanConfig (social_tools tests set fields on it)
+- ``_hn_scanner``    — set by gateway (None by default)
+- ``_discord_scanner`` — set by gateway (None by default)
+- ``_rss_scanner``   — set by gateway (None by default)
+"""
 
 from __future__ import annotations
 
@@ -9,6 +24,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
+from cognithor.leads.service import LeadService
+from cognithor.leads.store import LeadStore as _GenericLeadStore
 from cognithor.social.models import Lead, LeadStats, LeadStatus, ScanResult
 from cognithor.social.refiner import ReplyRefiner
 from cognithor.social.reply import ReplyMode, ReplyPoster, ReplyResult
@@ -21,11 +38,21 @@ log = get_logger(__name__)
 
 
 class RedditLeadService:
-    """Orchestrates Reddit lead scanning, persistence, and reply posting."""
+    """Legacy facade that now also owns a generic LeadService.
 
-    _hn_scanner: Any = None  # Set by gateway
-    _discord_scanner: Any = None  # Set by gateway
-    _rss_scanner: Any = None  # Set by gateway
+    Preserves the original private-attribute contract so existing tests
+    and gateway code that patches ``_scanner``, reads ``_scan_config``,
+    or sets ``_hn_scanner`` / ``_discord_scanner`` keep working unchanged.
+
+    Internally wires the four legacy scanner adapters into a ``LeadService``
+    so higher-level SDK callers can use the generic scan/query API in
+    parallel. Scheduled for deletion in Phase 4 of the agent pack extraction.
+    """
+
+    # These are set by the gateway after construction.
+    _hn_scanner: Any = None
+    _discord_scanner: Any = None
+    _rss_scanner: Any = None
 
     def __init__(
         self,
@@ -37,10 +64,11 @@ class RedditLeadService:
         default_subreddits: list[str] | None = None,
         min_score: int = 60,
         browser_agent: Any = None,
-        notification_callback: Callable[[Lead], None] | None = None,
+        notification_callback: Any = None,
         auto_post_whitelist: list[str] | None = None,
         min_auto_score: int = 85,
     ) -> None:
+        # --- legacy attributes (preserved for backward compat) ---
         self._store = LeadStore(db_path)
         self._scanner = RedditScanner(llm_fn=llm_fn)
         self._poster = ReplyPoster(browser_agent=browser_agent)
@@ -48,9 +76,6 @@ class RedditLeadService:
         self._template_mgr = TemplateManager(self._store)
         self._notification_cb = notification_callback
         self._default_subreddits = default_subreddits or []
-        # Auto-post guardrails: mode="auto" is rejected unless the subreddit is on
-        # this whitelist AND the lead's intent_score is at least min_auto_score.
-        # Empty whitelist (default) = auto-post globally disabled.
         self._auto_post_whitelist: set[str] = {
             s.strip().lower() for s in (auto_post_whitelist or []) if s.strip()
         }
@@ -61,6 +86,40 @@ class RedditLeadService:
             product_description=product_description,
             reply_tone=reply_tone,
         )
+
+        # --- generic LeadService (new SDK path) ---
+        self._generic_store = _GenericLeadStore(db_path + ".generic.db")
+        self._service = LeadService(store=self._generic_store, llm_fn=llm_fn)
+        self._register_legacy_sources(llm_fn=llm_fn, browser_agent=browser_agent)
+
+    def _register_legacy_sources(
+        self,
+        llm_fn: Callable[..., Awaitable[dict[str, Any]]] | None,
+        browser_agent: Any,
+    ) -> None:
+        """Register the four existing scanners as LeadSources under LeadService."""
+        try:
+            from cognithor.social._legacy_adapters import (
+                LegacyDiscordSource,
+                LegacyHnSource,
+                LegacyRedditSource,
+                LegacyRssSource,
+            )
+        except Exception as exc:
+            log.warning("legacy_source_import_failed", error=str(exc))
+            return
+
+        self._service.register_source(
+            LegacyRedditSource(llm_fn=llm_fn, browser_agent=browser_agent)
+        )
+        self._service.register_source(LegacyHnSource(llm_fn=llm_fn))
+        self._service.register_source(LegacyDiscordSource(llm_fn=llm_fn))
+        self._service.register_source(LegacyRssSource(llm_fn=llm_fn))
+
+    # ------------------------------------------------------------------
+    # Legacy API — original Reddit scan logic preserved so tests that
+    # patch _scanner.fetch_posts / score_post / draft_reply keep working.
+    # ------------------------------------------------------------------
 
     async def scan(
         self,
@@ -130,7 +189,7 @@ class RedditLeadService:
                 style_profile = self._store.get_profile(sub)
                 few_shot = self._store.get_top_performers(sub, limit=3) if style_profile else []
 
-                # 4. Reply-Draft with learning context + intent score for link gating
+                # Reply-Draft with learning context + intent score for link gating
                 draft = await self._scanner.draft_reply(
                     post,
                     config,
@@ -270,9 +329,7 @@ class RedditLeadService:
         reply_mode = ReplyMode(mode)
 
         # Auto-post safety gate: downgrade to clipboard unless the subreddit is
-        # explicitly whitelisted AND the lead passes the intent threshold. This
-        # prevents accidental drive-by posting on sensitive subs like LocalLLaMA
-        # where AI-slop replies get torched.
+        # explicitly whitelisted AND the lead passes the intent threshold.
         if reply_mode == ReplyMode.AUTO:
             sub = (lead.subreddit or "").lower()
             if sub not in self._auto_post_whitelist:
