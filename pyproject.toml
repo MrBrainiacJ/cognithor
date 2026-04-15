@@ -236,6 +236,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # Re-exports in __init__.py are intentional
 "tests/test_install_fixes.py" = ["E501"]  # Embedded shell/JS scripts in strings
+"tests/test_leads/test_registry.py" = ["TC001"]  # Lead used only in annotations in helper; exact test content required
 
 [tool.mypy]
 python_version = "3.12"
