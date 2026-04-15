@@ -107,22 +107,28 @@ class TestLeadService:
 
     @pytest.mark.asyncio
     async def test_scan_persists_leads(self, service: LeadService) -> None:
+        from cognithor.leads.models import LeadStatus
+
         await service.scan(source_id="reddit", min_score=60)
-        fetched = service.get_leads(source_id="reddit")
-        assert len(fetched) == 1
-        assert fetched[0].source_id == "reddit"
+        new_leads = service.get_leads(source_id="reddit", status=LeadStatus.NEW)
+        assert len(new_leads) == 1
+        assert new_leads[0].source_id == "reddit"
+        # The low-score lead is persisted with status=ARCHIVED so a future
+        # scan's already_seen() check can skip it without re-scoring.
+        archived_leads = service.get_leads(source_id="reddit", status=LeadStatus.ARCHIVED)
+        assert len(archived_leads) == 1
 
     @pytest.mark.asyncio
     async def test_scan_dedups_across_runs(self, service: LeadService) -> None:
+        from cognithor.leads.models import LeadStatus
+
         await service.scan(source_id="reddit", min_score=60)
         await service.scan(source_id="reddit", min_score=60)
-        # Reddit fake source generates new post_ids each call (r-1-1, r-2-1),
-        # so leads_found increments. Verify via posts_checked for dedup semantics:
-        # the service's internal already_seen filter only kicks in for identical
-        # post_ids. This test verifies the dedup PATH runs (no crash) and the
-        # store holds distinct records.
-        fetched = service.get_leads(source_id="reddit")
-        assert len(fetched) == 2  # two scan runs produced two distinct post_ids
+        # FakeRedditSource generates fresh post_ids on each call (r-1-1, r-2-1, ...)
+        # so the store accumulates distinct records. Each run produces one NEW and
+        # one ARCHIVED lead, so after two runs there are 2 NEW + 2 ARCHIVED = 4.
+        new_leads = service.get_leads(source_id="reddit", status=LeadStatus.NEW)
+        assert len(new_leads) == 2
 
     def test_list_sources(self, service: LeadService) -> None:
         ids = {s.source_id for s in service.list_sources()}

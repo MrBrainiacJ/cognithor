@@ -110,7 +110,12 @@ class LeadService:
                     continue
 
                 if lead.intent_score < min_score:
+                    # Persist as ARCHIVED so the next scan skips this post
+                    # via already_seen() — saves an expensive LLM re-score.
                     result.posts_skipped_low_score += 1
+                    lead.status = LeadStatus.ARCHIVED
+                    lead.scan_id = result.id
+                    self._store.save_lead(lead)
                     continue
 
                 lead.scan_id = result.id
