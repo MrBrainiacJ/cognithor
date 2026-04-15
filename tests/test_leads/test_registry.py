@@ -2,38 +2,42 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from cognithor.leads.models import Lead
 from cognithor.leads.registry import SourceRegistry
 from cognithor.leads.source import LeadSource
 
+if TYPE_CHECKING:
+    from cognithor.leads.models import Lead
 
-def _make_source(source_id: str) -> LeadSource:
-    """Create a concrete LeadSource subclass with the given id for registry tests."""
+
+def _make_source(source_id_value: str) -> LeadSource:
+    """Build a concrete LeadSource with the given id for registry tests.
+
+    Defines a proper subclass with ``scan`` in the class body (not a
+    post-body assignment) so ABC's ``__abstractmethods__`` is empty at
+    class creation time and the instance can be constructed normally.
+    """
 
     class _Concrete(LeadSource):
-        pass
+        source_id = source_id_value
+        display_name = source_id_value.upper()
+        icon = "forum"
+        color = "#123456"
+        capabilities = frozenset({"scan"})
 
-    _Concrete.source_id = source_id
-    _Concrete.display_name = source_id.upper()
-    _Concrete.icon = "forum"
-    _Concrete.color = "#123456"
-    _Concrete.capabilities = frozenset({"scan"})
+        async def scan(
+            self,
+            *,
+            config: dict[str, Any],
+            product: str,
+            product_description: str,
+            min_score: int,
+        ) -> list[Lead]:
+            return []
 
-    async def _scan(
-        self,
-        *,
-        config: dict[str, Any],
-        product: str,
-        product_description: str,
-        min_score: int,
-    ) -> list[Lead]:
-        return []
-
-    _Concrete.scan = _scan  # type: ignore[assignment]
     return _Concrete()
 
 
