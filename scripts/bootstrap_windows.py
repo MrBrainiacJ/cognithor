@@ -24,6 +24,40 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+def resolve_install_language(jarvis_home: Path) -> tuple[str, str]:
+    """Resolve the UI language for a fresh install.
+
+    Priority (Issue #114):
+      1. ``install_language.txt`` marker written by the Inno Setup installer
+         — honors the user's choice in the installer wizard.
+      2. OS locale (de → "de", otherwise → "en").
+      3. Fallback "de".
+
+    Returns ``(lang_code, source)`` where ``source`` is ``"installer"`` or
+    ``"locale"``. The marker file is consumed (deleted) on read so later runs
+    fall through to the locale path.
+    """
+    marker = jarvis_home / "install_language.txt"
+    if marker.exists():
+        try:
+            raw = marker.read_text(encoding="utf-8").strip().lower()[:2]
+        except Exception:
+            raw = ""
+        with contextlib.suppress(Exception):
+            marker.unlink()
+        if raw in ("en", "de", "zh"):
+            return raw, "installer"
+
+    import locale as _locale_mod
+
+    try:
+        sys_locale = _locale_mod.getlocale()[0] or ""
+        lang_code = sys_locale[:2].lower() if len(sys_locale) >= 2 else "de"
+    except Exception:
+        lang_code = "de"
+    return ("de" if lang_code == "de" else "en"), "locale"
+
+
 # ── Version (dynamisch aus pyproject.toml lesen) ──────────────────────────
 def _read_version() -> str:
     """Liest die Version aus pyproject.toml oder src/cognithor/__init__.py."""
@@ -91,13 +125,13 @@ def _download_flutter_web(repo_root: str) -> bool:
     try:
         os.makedirs(target_dir, exist_ok=True)
         archive_path = os.path.join(target_dir, "flutter-web.tar.gz")
-        print(f"           Downloading Flutter Web UI from GitHub Release ...", flush=True)
+        print("           Downloading Flutter Web UI from GitHub Release ...", flush=True)
         t0 = time.time()
         urllib.request.urlretrieve(url, archive_path, reporthook=_progress_hook)
         elapsed = time.time() - t0
         size_mb = os.path.getsize(archive_path) / (1024 * 1024)
         print(f"\n           Download complete: {size_mb:.1f} MB in {elapsed:.1f}s", flush=True)
-        print(f"           Extracting ...", flush=True)
+        print("           Extracting ...", flush=True)
         with tarfile.open(archive_path, "r:gz") as tar:
             tar.extractall(path=target_dir)
         os.remove(archive_path)
@@ -980,24 +1014,17 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
     else:
         result.add_warn("config.yaml.example not found -- skipped")
 
-    # Locale-basierte Spracherkennung
+    # Sprache bestimmen: Installer-Marker (#114) > OS-Locale > Default "de"
     if config_dest.exists():
         _cfg_text = config_dest.read_text(encoding="utf-8")
         if "language:" not in _cfg_text:
-            import locale as _locale_mod
-
-            try:
-                _sys_locale = _locale_mod.getlocale()[0] or ""
-                _lang_code = _sys_locale[:2].lower() if len(_sys_locale) >= 2 else "de"
-            except Exception:
-                _lang_code = "de"
-            _detected_lang = "de" if _lang_code == "de" else "en"
+            _detected_lang, _source = resolve_install_language(JARVIS_HOME)
             # Sprache an den Anfang der config.yaml schreiben
             config_dest.write_text(
                 f'language: "{_detected_lang}"\n' + _cfg_text,
                 encoding="utf-8",
             )
-            ok(f"Language detected: {_detected_lang} (Locale: {_lang_code})")
+            ok(f"Language set to '{_detected_lang}' (source: {_source})")
 
     env_dest = JARVIS_HOME / ".env"
     env_src = Path(repo_root) / ".env.example"

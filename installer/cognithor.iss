@@ -224,6 +224,30 @@ begin
   Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
 end;
 
+// Issue #114: Persist the installer's language choice so first-run setup and
+// bootstrap pick it up instead of falling back to OS-locale detection.
+// Writes %USERPROFILE%\.cognithor\install_language.txt with "en" or "de".
+// The marker is consumed (and deleted) on first run.
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  LangCode: string;
+  JarvisDir: string;
+  MarkerPath: string;
+begin
+  if CurStep = ssPostInstall then
+  begin
+    if ActiveLanguage() = 'german' then
+      LangCode := 'de'
+    else
+      LangCode := 'en';
+    JarvisDir := ExpandConstant('{%USERPROFILE}\.cognithor');
+    if not DirExists(JarvisDir) then
+      ForceDirectories(JarvisDir);
+    MarkerPath := JarvisDir + '\install_language.txt';
+    SaveStringToFile(MarkerPath, LangCode, False);
+  end;
+end;
+
 // Remove from PATH on uninstall + optional user data cleanup
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var

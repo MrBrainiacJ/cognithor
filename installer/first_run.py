@@ -310,16 +310,44 @@ def run_setup_wizard(encryption_ok: bool = False) -> dict | None:
     config["database"] = {"encryption_enabled": encryption_ok}
 
     # Step 6: Language
-    print()
-    print("  --- Language ---")
-    print()
-    print("    [1] English")
-    print("    [2] Deutsch")
-    print("    [3] Chinese")
-    print()
-    lang_choice = _ask_choice("  Language [1/2/3]", ["1", "2", "3"], default="1")
+    # Issue #114: honor the installer's language choice via the marker file
+    # written by Inno Setup's CurStepChanged(ssPostInstall). If present, we
+    # skip the interactive question so the user isn't asked twice.
     lang_map = {"1": "en", "2": "de", "3": "zh"}
-    config["language"] = lang_map[lang_choice]
+    rev_lang_map = {v: k for k, v in lang_map.items()}
+    marker_path = JARVIS_HOME / "install_language.txt"
+    installer_lang: str | None = None
+    if marker_path.exists():
+        try:
+            raw = marker_path.read_text(encoding="utf-8").strip().lower()[:2]
+            if raw in lang_map.values():
+                installer_lang = raw
+        except Exception:
+            installer_lang = None
+
+    if installer_lang:
+        config["language"] = installer_lang
+        print()
+        print(f"  --- Language: {installer_lang} (from installer) ---")
+        # Clean up the marker so a later re-run falls through to the wizard.
+        import contextlib as _ctx
+
+        with _ctx.suppress(Exception):
+            marker_path.unlink()
+    else:
+        print()
+        print("  --- Language ---")
+        print()
+        print("    [1] English")
+        print("    [2] Deutsch")
+        print("    [3] Chinese")
+        print()
+        lang_choice = _ask_choice(
+            "  Language [1/2/3]",
+            ["1", "2", "3"],
+            default=rev_lang_map.get("en", "1"),
+        )
+        config["language"] = lang_map[lang_choice]
 
     # Write config.yaml (load_config reads from ~/.cognithor/config.yaml)
     config_path = JARVIS_HOME / "config.yaml"
