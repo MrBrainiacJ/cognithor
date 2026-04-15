@@ -16,24 +16,19 @@ Public API (re-exported here for convenience):
 
 from __future__ import annotations
 
-# Re-exports wired up once the submodules land. Kept as TYPE_CHECKING
-# imports so this file is importable the moment the package exists.
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from cognithor.leads.models import Lead, LeadStats, LeadStatus, ScanResult
-    from cognithor.leads.registry import SourceRegistry
-    from cognithor.leads.service import LeadService
-    from cognithor.leads.source import LeadSource
-    from cognithor.leads.store import LeadStore
+from cognithor.leads.models import Lead, LeadStats, LeadStatus, ScanResult
+from cognithor.leads.registry import SourceRegistry
+from cognithor.leads.service import LeadService
+from cognithor.leads.source import LeadSource
+from cognithor.leads.store import LeadStore
 
 __all__ = [
     "Lead",
-    "LeadStats",
-    "LeadStatus",
-    "ScanResult",
     "LeadService",
     "LeadSource",
+    "LeadStats",
+    "LeadStatus",
     "LeadStore",
+    "ScanResult",
     "SourceRegistry",
 ]
