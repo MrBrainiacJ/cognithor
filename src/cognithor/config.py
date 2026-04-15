@@ -2157,8 +2157,8 @@ class SocialConfig(BaseModel):
 
     reddit_scan_enabled: bool = Field(default=False, description="Enable automatic Reddit scanning")
     reddit_subreddits: list[str] = Field(
-        default_factory=lambda: ["LocalLLaMA", "SaaS"],
-        description="Subreddits to scan (without r/ prefix)",
+        default_factory=list,
+        description="Subreddits to scan (without r/ prefix). Empty by default — configure via UI.",
     )
     reddit_min_score: int = Field(
         default=60, ge=0, le=100, description="Minimum intent score for leads"
@@ -2204,6 +2204,23 @@ class SocialConfig(BaseModel):
     )
     discord_min_score: int = Field(default=60, ge=0, le=100)
     discord_scan_interval_minutes: int = Field(default=30, ge=5, le=1440)
+    rss_enabled: bool = Field(default=False, description="Enable RSS/Atom feed scanning")
+    rss_feeds: list[str] = Field(
+        default_factory=list,
+        description="RSS/Atom feed URLs to scan for leads (full URL with http(s)://)",
+    )
+    rss_min_score: int = Field(default=60, ge=0, le=100)
+    rss_scan_interval_minutes: int = Field(default=60, ge=5, le=1440)
+
+    @property
+    def leads_engine_enabled(self) -> bool:
+        """True if ANY lead source is enabled. Frontend uses this to gate the sidebar tab."""
+        return bool(
+            self.reddit_scan_enabled
+            or self.hn_enabled
+            or self.discord_scanner_enabled
+            or self.rss_enabled
+        )
 
 
 # ============================================================================

@@ -203,6 +203,43 @@ class SocialPage extends StatelessWidget {
               max: 1440,
               onChanged: (v) => cfg.set('social.discord_scan_interval_minutes', v),
             ),
+
+            // ── RSS / Atom ──────────────────────────────────
+            const Divider(height: 32),
+            Text('RSS / Atom Feeds', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            JarvisToggleField(
+              label: 'RSS Scanning',
+              value: social['rss_enabled'] == true,
+              description:
+                  'Scan any RSS or Atom feed (news sites, blogs, forums) for leads',
+              onChanged: (v) => cfg.set('social.rss_enabled', v),
+            ),
+            JarvisTextField(
+              label: 'RSS Feed URLs',
+              value: (social['rss_feeds'] as List<dynamic>?)?.join(', ') ?? '',
+              placeholder: 'https://example.com/feed.xml, https://blog.example.com/rss',
+              description:
+                  'Comma-separated full feed URLs (RSS 2.0 or Atom). Each entry is scored by the LLM.',
+              onChanged: (v) => cfg.set(
+                'social.rss_feeds',
+                v.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
+              ),
+            ),
+            JarvisNumberField(
+              label: 'RSS Min Score',
+              value: (social['rss_min_score'] as num?) ?? 60,
+              min: 0,
+              max: 100,
+              onChanged: (v) => cfg.set('social.rss_min_score', v),
+            ),
+            JarvisNumberField(
+              label: 'RSS Scan Interval (min)',
+              value: (social['rss_scan_interval_minutes'] as num?) ?? 60,
+              min: 5,
+              max: 1440,
+              onChanged: (v) => cfg.set('social.rss_scan_interval_minutes', v),
+            ),
           ],
         );
       },

@@ -25,6 +25,7 @@ class RedditLeadService:
 
     _hn_scanner: Any = None  # Set by gateway
     _discord_scanner: Any = None  # Set by gateway
+    _rss_scanner: Any = None  # Set by gateway
 
     def __init__(
         self,
@@ -226,6 +227,18 @@ class RedditLeadService:
         product = self._scan_config.product_name
         desc = self._scan_config.product_description
         return await self._discord_scanner.scan(channel_ids or [], product, desc, min_score)
+
+    async def scan_rss(self, feeds: list[str] | None = None, min_score: int = 60) -> dict[str, Any]:
+        """Delegate scan to RSS/Atom feed scanner (set by gateway)."""
+        if not self._rss_scanner:
+            return {
+                "error": "RSS scanner not initialized",
+                "leads_found": 0,
+                "posts_checked": 0,
+            }
+        product = self._scan_config.product_name
+        desc = self._scan_config.product_description
+        return await self._rss_scanner.scan(feeds or [], product, desc, min_score)
 
     def get_leads(
         self,

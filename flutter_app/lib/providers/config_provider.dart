@@ -42,6 +42,16 @@ class ConfigProvider extends ChangeNotifier {
 
   bool get hasChanges => _currentSnapshot() != _savedSnapshot;
 
+  /// True if ANY lead source (Reddit, HN, Discord, RSS) is enabled.
+  /// Used to gate the Leads tab in the sidebar.
+  bool get leadsEngineEnabled {
+    final social = _cfg['social'] as Map<String, dynamic>? ?? {};
+    return social['reddit_scan_enabled'] == true ||
+        social['hn_enabled'] == true ||
+        social['discord_scanner_enabled'] == true ||
+        social['rss_enabled'] == true;
+  }
+
   /// Trigger rebuild for direct mutations on [cfg], [prompts], etc.
   void notify() => notifyListeners();
 

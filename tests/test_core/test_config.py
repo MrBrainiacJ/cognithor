@@ -738,3 +738,43 @@ class TestOllamaBaseUrlNormalization:
         cfg = OllamaConfig()
         assert cfg.base_url.startswith("http://")
         assert "0.0.0.0" not in cfg.base_url
+
+
+class TestSocialConfigLeadsEngine:
+    """Issue #113: no hardcoded sources, unified engine-enabled flag."""
+
+    def test_no_hardcoded_subreddits(self) -> None:
+        from cognithor.config import SocialConfig
+
+        cfg = SocialConfig()
+        assert cfg.reddit_subreddits == []
+        assert cfg.rss_feeds == []
+        assert cfg.discord_scan_channels == []
+
+    def test_engine_disabled_when_all_sources_off(self) -> None:
+        from cognithor.config import SocialConfig
+
+        cfg = SocialConfig()
+        assert cfg.leads_engine_enabled is False
+
+    def test_engine_enabled_when_any_source_on(self) -> None:
+        from cognithor.config import SocialConfig
+
+        assert SocialConfig(reddit_scan_enabled=True).leads_engine_enabled is True
+        assert SocialConfig(hn_enabled=True).leads_engine_enabled is True
+        assert SocialConfig(discord_scanner_enabled=True).leads_engine_enabled is True
+        assert SocialConfig(rss_enabled=True).leads_engine_enabled is True
+
+    def test_rss_fields_present(self) -> None:
+        from cognithor.config import SocialConfig
+
+        cfg = SocialConfig(
+            rss_enabled=True,
+            rss_feeds=["https://example.com/feed.xml"],
+            rss_min_score=70,
+            rss_scan_interval_minutes=120,
+        )
+        assert cfg.rss_enabled is True
+        assert cfg.rss_feeds == ["https://example.com/feed.xml"]
+        assert cfg.rss_min_score == 70
+        assert cfg.rss_scan_interval_minutes == 120

@@ -6303,6 +6303,42 @@ def _register_social_routes(
     def _get_service() -> Any:
         return getattr(gateway, "_reddit_lead_service", None) if gateway else None
 
+    @app.get("/api/v1/leads/engine-status", dependencies=deps)
+    async def leads_engine_status() -> dict[str, Any]:
+        """Return which lead sources are enabled. Frontend uses this to gate the sidebar tab."""
+        social_cfg = getattr(getattr(gateway, "_config", None), "social", None)
+        if social_cfg is None:
+            return {"enabled": False, "sources": {}}
+        return {
+            "enabled": bool(getattr(social_cfg, "leads_engine_enabled", False)),
+            "sources": {
+                "reddit": bool(getattr(social_cfg, "reddit_scan_enabled", False)),
+                "hackernews": bool(getattr(social_cfg, "hn_enabled", False)),
+                "discord": bool(getattr(social_cfg, "discord_scanner_enabled", False)),
+                "rss": bool(getattr(social_cfg, "rss_enabled", False)),
+            },
+        }
+
+    @app.post("/api/v1/leads/scan/rss", dependencies=deps)
+    async def scan_leads_rss(request: Request) -> dict[str, Any]:
+        svc = _get_service()
+        if not svc:
+            return {"error": "Lead service not initialized", "status": 503}
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        social_cfg = getattr(getattr(gateway, "_config", None), "social", None)
+        feeds = body.get("feeds") or (
+            list(getattr(social_cfg, "rss_feeds", [])) if social_cfg else []
+        )
+        min_score = body.get("min_score") or (
+            getattr(social_cfg, "rss_min_score", 60) if social_cfg else 60
+        )
+        if not feeds:
+            return {"error": "No RSS feeds configured", "leads_found": 0, "posts_checked": 0}
+        return await svc.scan_rss(feeds=feeds, min_score=min_score)
+
     @app.post("/api/v1/leads/scan", dependencies=deps)
     async def scan_leads(request: Request) -> dict[str, Any]:
         svc = _get_service()

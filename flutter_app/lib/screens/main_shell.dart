@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/navigation_provider.dart';
 import 'package:cognithor_ui/providers/pip_provider.dart';
 import 'package:cognithor_ui/providers/theme_provider.dart';
@@ -26,14 +27,13 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  final List<Widget> _screens = const [
+  static const List<Widget> _baseScreens = [
     ChatScreen(),
     DashboardScreen(),
     SkillsScreen(),
     AdminHubScreen(),
     IdentityScreen(),
     KanbanScreen(),
-    RedditLeadsScreen(),
   ];
 
   void _openSearch() {
@@ -52,7 +52,9 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _navigateTab(int index) {
-    if (index >= 0 && index < _screens.length) {
+    final leadsOn = context.read<ConfigProvider>().leadsEngineEnabled;
+    final maxIndex = leadsOn ? _baseScreens.length : _baseScreens.length - 1;
+    if (index >= 0 && index <= maxIndex) {
       context.read<NavigationProvider>().setTab(index);
     }
   }
@@ -70,8 +72,14 @@ class _MainShellState extends State<MainShell> {
     final l = AppLocalizations.of(context);
     final themeProvider = context.watch<ThemeProvider>();
     final nav = context.watch<NavigationProvider>();
+    final leadsEngineEnabled = context.watch<ConfigProvider>().leadsEngineEnabled;
 
-    final navItems = [
+    final screens = <Widget>[
+      ..._baseScreens,
+      if (leadsEngineEnabled) const RedditLeadsScreen(),
+    ];
+
+    final navItems = <NavItem>[
       NavItem(
         icon: Icons.chat_bubble_outline,
         selectedIcon: Icons.chat_bubble,
@@ -108,13 +116,17 @@ class _MainShellState extends State<MainShell> {
         label: l.kanban,
         shortcut: '^6',
       ),
-      NavItem(
-        icon: Icons.track_changes_outlined,
-        selectedIcon: Icons.track_changes,
-        label: l.redditLeads,
-        shortcut: '^7',
-      ),
+      if (leadsEngineEnabled)
+        NavItem(
+          icon: Icons.track_changes_outlined,
+          selectedIcon: Icons.track_changes,
+          label: l.redditLeads,
+          shortcut: '^7',
+        ),
     ];
+
+    // Clamp current tab if leads was disabled while on that tab.
+    final safeIndex = nav.currentTab >= screens.length ? 0 : nav.currentTab;
 
     final pipProvider = context.watch<PipProvider>();
 
@@ -135,17 +147,18 @@ class _MainShellState extends State<MainShell> {
               () => _navigateTab(4),
           const SingleActivator(LogicalKeyboardKey.digit6, control: true):
               () => _navigateTab(5),
-          const SingleActivator(LogicalKeyboardKey.digit7, control: true):
-              () => _navigateTab(6),
+          if (leadsEngineEnabled)
+            const SingleActivator(LogicalKeyboardKey.digit7, control: true):
+                () => _navigateTab(6),
         },
         child: Focus(
           autofocus: true,
           child: _wrapWithPip(
             pipProvider,
             ResponsiveScaffold(
-              screens: _screens,
+              screens: screens,
               navItems: navItems,
-              currentIndex: nav.currentTab,
+              currentIndex: safeIndex,
               onIndexChanged: _navigateTab,
               onSearchTap: _openSearch,
               onThemeToggle: () => themeProvider.toggle(),

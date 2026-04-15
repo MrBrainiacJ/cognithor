@@ -432,6 +432,20 @@ class Gateway:
                 except Exception:
                     log.debug("hn_scanner_init_failed", exc_info=True)
 
+            # RSS Feed Scanner
+            if getattr(_social_cfg_post, "rss_enabled", False):
+                try:
+                    from cognithor.social.rss_scanner import RssFeedScanner
+
+                    self._reddit_lead_service._rss_scanner = RssFeedScanner(
+                        llm_fn=_reddit_llm_fn
+                        if hasattr(self, "_ollama") and self._ollama is not None
+                        else None
+                    )
+                    log.info("rss_scanner_initialized")
+                except Exception:
+                    log.debug("rss_scanner_init_failed", exc_info=True)
+
             # Discord Scanner
             if getattr(_social_cfg_post, "discord_scanner_enabled", False):
                 import os as _os_discord
