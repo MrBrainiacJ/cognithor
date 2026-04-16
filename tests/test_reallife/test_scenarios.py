@@ -59,8 +59,8 @@ class TestWebResearch:
 
         lower = REPLAN_PROMPT.lower()
         assert "quellen" in lower, "REPLAN_PROMPT must mention Quellen (sources)"
-        assert "search_and_read" in lower or "deep_research" in lower, (
-            "REPLAN_PROMPT must reference search_and_read or deep_research"
+        assert "search_and_read" in lower, (
+            "REPLAN_PROMPT must reference search_and_read"
         )
 
 
@@ -176,7 +176,7 @@ class TestToolCoverage:
         config = JarvisConfig()
         gk = Gatekeeper(config)
 
-        for tool in ["web_search", "web_fetch", "search_and_read", "deep_research"]:
+        for tool in ["web_search", "web_fetch", "search_and_read"]:
             action = PlannedAction(tool=tool, params={}, rationale=f"Test {tool}")
             risk = gk._classify_risk(action)
             assert risk == RiskLevel.GREEN, f"{tool} should be GREEN, got {risk}"
