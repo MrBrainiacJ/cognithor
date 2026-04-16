@@ -1,6 +1,6 @@
 """Cognithor agent pack plugin system.
 
-Public API (wired up as submodules land in tasks 2.2-2.4):
+Public API:
 
 - ``AgentPack`` — abstract base class packs inherit from
 - ``PackManifest`` — validated manifest model
@@ -18,10 +18,28 @@ from cognithor.packs.errors import (
     PackLoadError,
     PackValidationError,
 )
+from cognithor.packs.installer import PackInstaller
+from cognithor.packs.interface import (
+    AgentPack,
+    PackContext,
+    PackManifest,
+    PricingTier,
+    Publisher,
+    RevenueShare,
+)
+from cognithor.packs.loader import PackLoader
 
 __all__ = [
+    "AgentPack",
+    "PackContext",
     "PackError",
     "PackInstallError",
+    "PackInstaller",
     "PackLoadError",
+    "PackLoader",
+    "PackManifest",
     "PackValidationError",
+    "PricingTier",
+    "Publisher",
+    "RevenueShare",
 ]
