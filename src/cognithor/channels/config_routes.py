@@ -6327,6 +6327,25 @@ def _register_social_routes(
             },
         }
 
+    @app.get("/api/v1/packs/loaded", dependencies=deps)
+    async def list_loaded_packs() -> dict[str, Any]:
+        """Return currently loaded packs for Flutter tab gating."""
+        loader = getattr(gateway, "_pack_loader", None)
+        if loader is None:
+            return {"packs": []}
+        return {
+            "packs": [
+                {
+                    "qualified_id": p.manifest.qualified_id,
+                    "version": p.manifest.version,
+                    "display_name": p.manifest.display_name,
+                    "tools": p.manifest.tools,
+                    "lead_sources": p.manifest.lead_sources,
+                }
+                for p in loader.loaded()
+            ]
+        }
+
     @app.get("/api/v1/leads/sources", dependencies=deps)
     async def list_lead_sources() -> dict[str, Any]:
         """Return registered LeadSource metadata.

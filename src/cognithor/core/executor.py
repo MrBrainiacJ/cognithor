@@ -130,7 +130,6 @@ class Executor:
             "web_fetch": 32_768,
             "search_and_read": 32_768,
             "web_search": 16_384,
-            "deep_research": 32_768,
             "fs_read": 16_384,
         }
         # Longer timeouts for tools that load large models (e.g. Vision 20 GB+)
@@ -145,8 +144,6 @@ class Executor:
             "knowledge_synthesize": 120,
             "knowledge_gaps": 120,
             "knowledge_timeline": 90,
-            # Deep research can take multiple rounds
-            "deep_research": 180,
             "search_and_read": 60,
             # OSINT investigations run multiple collectors
             "investigate_person": 120,
@@ -210,7 +207,6 @@ class Executor:
             "knowledge_synthesize": 120,
             "knowledge_gaps": 120,
             "knowledge_timeline": 90,
-            "deep_research": 180,
             "search_and_read": 60,
             "investigate_person": 120,
             "investigate_project": 120,

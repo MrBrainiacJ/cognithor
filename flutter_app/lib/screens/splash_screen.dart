@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,8 @@ import 'package:cognithor_ui/providers/security_provider.dart';
 import 'package:cognithor_ui/providers/sessions_provider.dart';
 import 'package:cognithor_ui/providers/skills_provider.dart';
 import 'package:cognithor_ui/providers/workflow_provider.dart';
+import 'package:cognithor_ui/providers/packs_provider.dart';
+import 'package:cognithor_ui/providers/research_provider.dart';
 import 'package:cognithor_ui/theme/jarvis_theme.dart';
 import 'package:cognithor_ui/screens/main_shell.dart';
 import 'package:cognithor_ui/screens/settings_screen.dart';
@@ -40,6 +43,13 @@ class _SplashScreenState extends State<SplashScreen> {
     context.read<MemoryProvider>().setApi(api);
     context.read<SkillsProvider>().setApi(api);
     context.read<WorkflowProvider>().setApi(api);
+
+    final packsProvider = context.read<PacksProvider>();
+    packsProvider.setApi(api);
+    unawaited(packsProvider.refresh());
+
+    final researchProvider = context.read<ResearchProvider>();
+    researchProvider.setApi(api);
 
     final sessions = context.read<SessionsProvider>();
     sessions.setApi(api);

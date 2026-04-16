@@ -11,8 +11,12 @@ import 'package:cognithor_ui/screens/config_screen.dart';
 import 'package:cognithor_ui/screens/dashboard_screen.dart';
 import 'package:cognithor_ui/screens/identity_screen.dart';
 import 'package:cognithor_ui/screens/kanban_screen.dart';
+import 'package:cognithor_ui/providers/packs_provider.dart';
 import 'package:cognithor_ui/providers/sources_provider.dart';
 import 'package:cognithor_ui/screens/leads_screen.dart';
+import 'package:cognithor_ui/screens/research_screen.dart';
+import 'package:cognithor_ui/widgets/packs/pack_preview_overlay.dart';
+import 'package:cognithor_ui/data/known_packs.dart';
 import 'package:cognithor_ui/screens/skills_screen.dart';
 import 'package:cognithor_ui/widgets/global_search_dialog.dart';
 import 'package:cognithor_ui/widgets/responsive_scaffold.dart';
@@ -53,7 +57,8 @@ class _MainShellState extends State<MainShell> {
 
   void _navigateTab(int index) {
     final leadsOn = context.read<SourcesProvider>().sources.isNotEmpty;
-    final maxIndex = leadsOn ? _baseScreens.length : _baseScreens.length - 1;
+    // base screens + optional leads + always-present research
+    final maxIndex = leadsOn ? _baseScreens.length + 1 : _baseScreens.length;
     if (index >= 0 && index <= maxIndex) {
       context.read<NavigationProvider>().setTab(index);
     }
@@ -73,10 +78,21 @@ class _MainShellState extends State<MainShell> {
     final themeProvider = context.watch<ThemeProvider>();
     final nav = context.watch<NavigationProvider>();
     final leadsEngineEnabled = context.watch<SourcesProvider>().sources.isNotEmpty;
+    final packsProvider = context.watch<PacksProvider>();
+    final researchPackLoaded = packsProvider.hasPackLoaded('cognithor-official/deep-research-analyst');
+
+    final deepResearchPack = findKnownPackBySourceId('research')!;
 
     final screens = <Widget>[
       ..._baseScreens,
       if (leadsEngineEnabled) const LeadsScreen(),
+      if (researchPackLoaded)
+        const ResearchScreen()
+      else
+        PackPreviewOverlay(
+          pack: deepResearchPack,
+          child: const ResearchScreen(),
+        ),
     ];
 
     final navItems = <NavItem>[
@@ -123,6 +139,12 @@ class _MainShellState extends State<MainShell> {
           label: l.redditLeads,
           shortcut: '^7',
         ),
+      NavItem(
+        icon: Icons.biotech_outlined,
+        selectedIcon: Icons.biotech,
+        label: l.research,
+        shortcut: '^8',
+      ),
     ];
 
     // Clamp current tab if leads was disabled while on that tab.
@@ -150,6 +172,8 @@ class _MainShellState extends State<MainShell> {
           if (leadsEngineEnabled)
             const SingleActivator(LogicalKeyboardKey.digit7, control: true):
                 () => _navigateTab(6),
+          const SingleActivator(LogicalKeyboardKey.digit8, control: true):
+              () => _navigateTab(leadsEngineEnabled ? 7 : 6),
         },
         child: Focus(
           autofocus: true,

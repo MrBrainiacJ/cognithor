@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from rss_scanner import RssFeedScanner
+
 from cognithor.leads.models import Lead
 from cognithor.leads.source import LeadSource
-
-from rss_scanner import RssFeedScanner
 
 
 class RssLeadSource(LeadSource):

@@ -80,7 +80,6 @@ TOOL_ROLE_DEFAULTS: dict[str, set[str]] = {
         "web_search",
         "search_and_read",
         "verified_web_lookup",
-        "deep_research",
         "web_news_search",
         "memory_stats",
         "list_skills",
@@ -181,7 +180,6 @@ TOOL_ROLE_DEFAULTS: dict[str, set[str]] = {
         "web_fetch",
         "search_and_read",
         "verified_web_lookup",
-        "deep_research",
         "search_memory",
         "vault_search",
         "vault_read",
@@ -213,7 +211,6 @@ TOOL_CATEGORIES: dict[str, str] = {
     "web_fetch": "web",
     "search_and_read": "web",
     "verified_web_lookup": "web",
-    "deep_research": "web",
     "http_request": "web",
     "identity_recall": "memory",
     "identity_state": "memory",
@@ -637,9 +634,6 @@ _TOOL_DESCRIPTIONS_DE: dict[str, str] = {
     "verified_web_lookup": (
         "Mehrstufiges Fakten-Pruefverfahren mit Quellenvergleich und Konfidenz-Score."
     ),
-    "deep_research": (
-        "Tiefgehende Multi-Source-Recherche mit Follow-Up-Suchen und strukturiertem Report."
-    ),
     "web_fetch": "Ruft den Inhalt einer URL ab.",
     "http_request": "Fuehrt einen HTTP-Request aus (GET/POST/PUT/PATCH/DELETE).",
     "read_file": "Liest den Inhalt einer Datei.",
@@ -702,7 +696,6 @@ _TOOL_DESCRIPTIONS_ZH: dict[str, str] = {
     "web_news_search": "搜索最新新闻。",
     "search_and_read": "搜索互联网并完整阅读最佳结果。",
     "verified_web_lookup": "多阶段事实验证流程，包含来源比较和置信度评分。",
-    "deep_research": "深度多来源研究，包含后续搜索和结构化报告。",
     "web_fetch": "获取URL的内容。",
     "read_file": "读取文件内容。",
     "write_file": "将内容写入文件。",
