@@ -59,9 +59,7 @@ class TestWebResearch:
 
         lower = REPLAN_PROMPT.lower()
         assert "quellen" in lower, "REPLAN_PROMPT must mention Quellen (sources)"
-        assert "search_and_read" in lower, (
-            "REPLAN_PROMPT must reference search_and_read"
-        )
+        assert "search_and_read" in lower, "REPLAN_PROMPT must reference search_and_read"
 
 
 # ---------------------------------------------------------------------------
