@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/navigation_provider.dart';
 import 'package:cognithor_ui/providers/pip_provider.dart';
 import 'package:cognithor_ui/providers/theme_provider.dart';
@@ -12,7 +11,8 @@ import 'package:cognithor_ui/screens/config_screen.dart';
 import 'package:cognithor_ui/screens/dashboard_screen.dart';
 import 'package:cognithor_ui/screens/identity_screen.dart';
 import 'package:cognithor_ui/screens/kanban_screen.dart';
-import 'package:cognithor_ui/screens/reddit_leads_screen.dart';
+import 'package:cognithor_ui/providers/sources_provider.dart';
+import 'package:cognithor_ui/screens/leads_screen.dart';
 import 'package:cognithor_ui/screens/skills_screen.dart';
 import 'package:cognithor_ui/widgets/global_search_dialog.dart';
 import 'package:cognithor_ui/widgets/responsive_scaffold.dart';
@@ -52,7 +52,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _navigateTab(int index) {
-    final leadsOn = context.read<ConfigProvider>().leadsEngineEnabled;
+    final leadsOn = context.read<SourcesProvider>().sources.isNotEmpty;
     final maxIndex = leadsOn ? _baseScreens.length : _baseScreens.length - 1;
     if (index >= 0 && index <= maxIndex) {
       context.read<NavigationProvider>().setTab(index);
@@ -72,11 +72,11 @@ class _MainShellState extends State<MainShell> {
     final l = AppLocalizations.of(context);
     final themeProvider = context.watch<ThemeProvider>();
     final nav = context.watch<NavigationProvider>();
-    final leadsEngineEnabled = context.watch<ConfigProvider>().leadsEngineEnabled;
+    final leadsEngineEnabled = context.watch<SourcesProvider>().sources.isNotEmpty;
 
     final screens = <Widget>[
       ..._baseScreens,
-      if (leadsEngineEnabled) const RedditLeadsScreen(),
+      if (leadsEngineEnabled) const LeadsScreen(),
     ];
 
     final navItems = <NavItem>[

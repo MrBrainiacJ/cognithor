@@ -1,25 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:cognithor_ui/data/known_packs.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
+import 'package:cognithor_ui/providers/sources_provider.dart';
 import 'package:cognithor_ui/theme/jarvis_theme.dart';
 import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
 import 'package:cognithor_ui/widgets/jarvis_stat.dart';
 import 'package:cognithor_ui/widgets/leads/lead_card.dart';
 import 'package:cognithor_ui/widgets/leads/lead_detail_sheet.dart';
 import 'package:cognithor_ui/widgets/leads/lead_wizard.dart';
+import 'package:cognithor_ui/widgets/packs/locked_pack_card.dart';
 
-class RedditLeadsScreen extends StatefulWidget {
-  const RedditLeadsScreen({super.key});
+class LeadsScreen extends StatefulWidget {
+  const LeadsScreen({super.key});
 
   @override
-  State<RedditLeadsScreen> createState() => _RedditLeadsScreenState();
+  State<LeadsScreen> createState() => _LeadsScreenState();
 }
 
-class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
+class _LeadsScreenState extends State<LeadsScreen> {
   bool _initialized = false;
+  String? _activeSourceFilter;
+
+  // Source chips shown in the filter bar (sourceId -> display label)
+  static const List<(String, String)> _sourceChips = [
+    ('', 'All'),
+    ('reddit', 'Reddit'),
+    ('hn', 'HN'),
+    ('discord', 'Discord'),
+    ('rss', 'RSS'),
+  ];
 
   @override
   void didChangeDependencies() {
@@ -31,6 +44,14 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
         context.read<RedditLeadsProvider>().init(conn.api);
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SourcesProvider>().refresh();
+    });
   }
 
   void _openDetail(RedditLead lead) {
@@ -51,7 +72,7 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
       ..sort((a, b) => b.intentScore.compareTo(a.intentScore));
     if (newLeads.isEmpty) return;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => LeadWizard(leads: newLeads)),
+      MaterialPageRoute<void>(builder: (_) => LeadWizard(leads: newLeads)),
     ).then((_) => provider.fetchLeads());
   }
 
@@ -63,9 +84,34 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
     context.read<RedditLeadsProvider>().replyToLead(id);
   }
 
+  Widget _buildUpsellSection(SourcesProvider sources) {
+    final installed = sources.sources.map((s) => s.sourceId).toSet();
+    final lockedPacks = kKnownPacks.where((p) => !installed.contains(p.sourceId)).toList();
+    if (lockedPacks.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'More sources available',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        ...lockedPacks.map(
+          (p) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: LockedPackCard(pack: p),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final sources = context.watch<SourcesProvider>();
 
     return Consumer<RedditLeadsProvider>(
       builder: (context, provider, _) {
@@ -74,41 +120,61 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
             children: [
               // Stats bar
               _StatsBar(provider: provider, onProcessQueue: _openWizard),
-              // Filter row
+              // Source filter chips
+              _SourceFilterBar(
+                sourceChips: _sourceChips,
+                activeFilter: _activeSourceFilter,
+                onFilterChanged: (v) => setState(() => _activeSourceFilter = v),
+              ),
+              // Status filter row
               _FilterRow(provider: provider),
-              // Lead list
+              // Upsell section + lead list
               Expanded(
                 child: provider.loading && provider.leads.isEmpty
                     ? const Center(child: CircularProgressIndicator())
-                    : provider.leads.isEmpty
-                        ? JarvisEmptyState(
-                            icon: Icons.track_changes,
-                            title: l.noLeadsFound,
-                            subtitle: l.noLeadsHint,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () => provider.fetchLeads(),
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              itemCount: provider.leads.length,
-                              itemBuilder: (context, i) {
-                                final lead = provider.leads[i];
-                                return LeadCard(
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          await Future.wait([
+                            provider.fetchLeads(),
+                            sources.refresh(),
+                          ]);
+                        },
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          children: [
+                            _buildUpsellSection(sources),
+                            if (provider.leads.isEmpty)
+                              JarvisEmptyState(
+                                icon: Icons.track_changes,
+                                title: l.noLeadsFound,
+                                subtitle: l.noLeadsHint,
+                              )
+                            else
+                              ...provider.leads.map(
+                                (lead) => LeadCard(
                                   lead: lead,
                                   onTap: () => _openDetail(lead),
                                   onReply: () => _replyLead(lead.id),
                                   onArchive: () => _archiveLead(lead.id),
-                                );
-                              },
-                            ),
-                          ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
               ),
             ],
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: provider.scanning ? null : _scanNow,
             icon: provider.scanning
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.radar),
             label: Text(provider.scanning ? l.scanning : l.scanNow),
             backgroundColor: JarvisTheme.accent,
@@ -118,6 +184,44 @@ class _RedditLeadsScreenState extends State<RedditLeadsScreen> {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+
+class _SourceFilterBar extends StatelessWidget {
+  const _SourceFilterBar({
+    required this.sourceChips,
+    required this.activeFilter,
+    required this.onFilterChanged,
+  });
+
+  final List<(String, String)> sourceChips;
+  final String? activeFilter;
+  final ValueChanged<String?> onFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        children: [
+          for (final (id, label) in sourceChips) ...[
+            ChoiceChip(
+              label: Text(label),
+              selected: (activeFilter ?? '') == id,
+              onSelected: (_) => onFilterChanged(id.isEmpty ? null : id),
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 
 class _StatsBar extends StatelessWidget {
   const _StatsBar({required this.provider, this.onProcessQueue});
@@ -163,6 +267,8 @@ class _StatsBar extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
 
 class _FilterRow extends StatelessWidget {
   const _FilterRow({required this.provider});
