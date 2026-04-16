@@ -357,6 +357,12 @@ def main() -> None:
         # 128 MB min / 512 MB max is enough for ~40 encrypted DBs.
         _expand_working_set(min_mb=128, max_mb=512)
 
+    # Intercept `cognithor pack <subcommand>` before the main parser runs.
+    if len(sys.argv) > 1 and sys.argv[1] == "pack":
+        from cognithor.packs.cli import main as pack_main
+
+        raise SystemExit(pack_main(sys.argv[2:]))
+
     args = parse_args()
 
     # --ui: headless mode + auto-open browser, bind to 127.0.0.1 by default
