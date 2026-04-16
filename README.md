@@ -7,6 +7,12 @@
     <em>Cognition + Thor — Intelligence with Power</em>
   </p>
   <p align="center">
+    <a href="https://cognithor.ai"><strong>cognithor.ai</strong></a> &middot;
+    <a href="https://cognithor.ai/packs">Agent Packs</a> &middot;
+    <a href="https://cognithor.ai/docs">Docs</a> &middot;
+    <a href="https://cognithor.ai/blog">Blog</a>
+  </p>
+  <p align="center">
     <a href="#llm-providers">19 LLM Providers</a> &middot; <a href="#channels">18 Channels</a> &middot; <a href="#6-tier-cognitive-memory">6-Tier Memory</a> &middot; <a href="#4-channel-hybrid-search">4-Channel Search</a> &middot; <a href="#knowledge-vault">Knowledge Vault</a> &middot; <a 
     href="#security">Security</a> &middot; <a href="LICENSE">Apache 2.0</a>
   </p>
