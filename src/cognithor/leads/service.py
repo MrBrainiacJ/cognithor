@@ -197,9 +197,7 @@ class LeadService:
         stub.mode = mode  # type: ignore[attr-defined]
         return stub
 
-    async def refine_reply(
-        self, lead_id: str, hint: str = "", variants: int = 0
-    ) -> None:
+    async def refine_reply(self, lead_id: str, hint: str = "", variants: int = 0) -> None:
         """Reply refinement is handled by the reddit-lead-hunter-pro pack."""
         _ = (lead_id, hint, variants)
         return None

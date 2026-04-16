@@ -413,9 +413,7 @@ class Gateway:
 
             from cognithor import __version__ as _cog_version
 
-            self._pack_loader = PackLoader(
-                packs_dir=_packs_path, cognithor_version=_cog_version
-            )
+            self._pack_loader = PackLoader(packs_dir=_packs_path, cognithor_version=_cog_version)
             _leads_svc = getattr(self, "_leads_service", None)
             _pack_context = PackContext(
                 gateway=self,

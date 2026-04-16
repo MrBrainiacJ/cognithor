@@ -6303,9 +6303,13 @@ def _register_social_routes(
     def _get_service() -> Any:
         # Prefer the new source-agnostic LeadService; fall back to legacy alias.
         return (
-            getattr(gateway, "_leads_service", None)
-            or getattr(gateway, "_reddit_lead_service", None)
-        ) if gateway else None
+            (
+                getattr(gateway, "_leads_service", None)
+                or getattr(gateway, "_reddit_lead_service", None)
+            )
+            if gateway
+            else None
+        )
 
     @app.get("/api/v1/leads/engine-status", dependencies=deps)
     async def leads_engine_status() -> dict[str, Any]:
@@ -6364,9 +6368,10 @@ def _register_social_routes(
         feeds = body.get("feeds") or (
             list(getattr(social_cfg, "rss_feeds", [])) if social_cfg else []
         )
-        min_score = int(body.get("min_score") or (
-            getattr(social_cfg, "rss_min_score", 60) if social_cfg else 60
-        ))
+        min_score = int(
+            body.get("min_score")
+            or (getattr(social_cfg, "rss_min_score", 60) if social_cfg else 60)
+        )
         if not feeds:
             return {"error": "No RSS feeds configured", "leads_found": 0, "posts_checked": 0}
         # Delegate to the rss-lead-hunter pack source (source_id="rss") if registered.

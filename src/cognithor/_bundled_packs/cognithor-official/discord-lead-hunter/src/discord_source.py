@@ -49,7 +49,10 @@ class DiscordLeadSource(LeadSource):
                 post_id=f"discord-{entry.get('id', '')}",
                 source_id="discord",
                 title=entry.get("content", "")[:120],
-                url=f"https://discord.com/channels/@me/{entry.get('channel_id', '')}/{entry.get('id', '')}",
+                url=(
+                    f"https://discord.com/channels/@me/"
+                    f"{entry.get('channel_id', '')}/{entry.get('id', '')}"
+                ),
                 intent_score=entry.get("intent_score", 0),
                 score_reason=entry.get("score_reason", ""),
             )
