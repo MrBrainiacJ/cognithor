@@ -146,10 +146,6 @@ MCP_WORKSPACE_SAFE_TOOLS = frozenset(
         # Database (read-only queries)
         "db_query",
         "db_schema",
-        # Search
-        "deep_research",
-        "deep_research_v2",
-        "verified_web_lookup",
         # Browser (read-only navigation)
         "browse_url",
         "browse_page_info",

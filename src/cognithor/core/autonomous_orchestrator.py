@@ -223,7 +223,7 @@ class AutonomousOrchestrator:
 
         if any(
             getattr(r, "tool_name", "")
-            in ("search_and_read", "deep_research", "verified_web_lookup")
+            in ("search_and_read",)
             for r in tool_results
         ):
             score += 0.1  # Used research tools
