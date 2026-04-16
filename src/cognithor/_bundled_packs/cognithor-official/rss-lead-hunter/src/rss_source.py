@@ -7,7 +7,7 @@ from typing import Any
 from cognithor.leads.models import Lead
 from cognithor.leads.source import LeadSource
 
-from .rss_scanner import RssFeedScanner
+from rss_scanner import RssFeedScanner
 
 
 class RssLeadSource(LeadSource):

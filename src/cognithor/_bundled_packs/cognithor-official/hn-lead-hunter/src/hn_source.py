@@ -7,7 +7,7 @@ from typing import Any
 from cognithor.leads.models import Lead
 from cognithor.leads.source import LeadSource
 
-from .hn_scanner import HackerNewsScanner
+from hn_scanner import HackerNewsScanner
 
 
 class HnLeadSource(LeadSource):
@@ -40,8 +40,7 @@ class HnLeadSource(LeadSource):
                 post_id=f"hn-{entry.get('id', '')}",
                 source_id="hn",
                 title=entry.get("title", ""),
-                url=entry.get("url", "")
-                or f"https://news.ycombinator.com/item?id={entry.get('id', '')}",
+                url=entry.get("url", "") or f"https://news.ycombinator.com/item?id={entry.get('id', '')}",
                 intent_score=entry.get("intent_score", 0),
                 score_reason=entry.get("score_reason", ""),
             )
