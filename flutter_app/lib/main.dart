@@ -25,6 +25,7 @@ import 'package:cognithor_ui/providers/evolution_provider.dart';
 import 'package:cognithor_ui/providers/robot_office_provider.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
 import 'package:cognithor_ui/providers/cron_provider.dart';
+import 'package:cognithor_ui/providers/sources_provider.dart';
 import 'package:cognithor_ui/screens/splash_screen.dart';
 import 'package:cognithor_ui/theme/jarvis_theme.dart';
 
@@ -62,6 +63,7 @@ class JarvisApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EvolutionProvider()),
         ChangeNotifierProvider(create: (_) => RobotOfficeProvider()),
         ChangeNotifierProvider(create: (_) => RedditLeadsProvider()),
+        ChangeNotifierProvider(create: (_) => SourcesProvider()),
       ],
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, _) {

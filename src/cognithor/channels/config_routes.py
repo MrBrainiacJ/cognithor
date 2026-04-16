@@ -6301,7 +6301,11 @@ def _register_social_routes(
     """REST endpoints for Reddit Lead Hunter."""
 
     def _get_service() -> Any:
-        return getattr(gateway, "_reddit_lead_service", None) if gateway else None
+        # Prefer the new source-agnostic LeadService; fall back to legacy alias.
+        return (
+            getattr(gateway, "_leads_service", None)
+            or getattr(gateway, "_reddit_lead_service", None)
+        ) if gateway else None
 
     @app.get("/api/v1/leads/engine-status", dependencies=deps)
     async def leads_engine_status() -> dict[str, Any]:
@@ -6319,6 +6323,34 @@ def _register_social_routes(
             },
         }
 
+    @app.get("/api/v1/leads/sources", dependencies=deps)
+    async def list_lead_sources() -> dict[str, Any]:
+        """Return registered LeadSource metadata.
+
+        Feeds Flutter's LeadsScreen + locked-pack-card UX. An empty list
+        means the backend has no lead sources and the sidebar tab should
+        be hidden by the frontend.
+        """
+        svc = _get_service()
+        if svc is None:
+            return {"sources": []}
+        # LeadService.list_sources() returns registered LeadSource instances.
+        sources: list[dict[str, Any]] = []
+        try:
+            for source in svc.list_sources():
+                sources.append(
+                    {
+                        "source_id": source.source_id,
+                        "display_name": source.display_name,
+                        "icon": getattr(source, "icon", ""),
+                        "color": getattr(source, "color", ""),
+                        "capabilities": sorted(getattr(source, "capabilities", [])),
+                    }
+                )
+        except Exception:
+            pass
+        return {"sources": sources}
+
     @app.post("/api/v1/leads/scan/rss", dependencies=deps)
     async def scan_leads_rss(request: Request) -> dict[str, Any]:
         svc = _get_service()
@@ -6332,27 +6364,49 @@ def _register_social_routes(
         feeds = body.get("feeds") or (
             list(getattr(social_cfg, "rss_feeds", [])) if social_cfg else []
         )
-        min_score = body.get("min_score") or (
+        min_score = int(body.get("min_score") or (
             getattr(social_cfg, "rss_min_score", 60) if social_cfg else 60
-        )
+        ))
         if not feeds:
             return {"error": "No RSS feeds configured", "leads_found": 0, "posts_checked": 0}
-        return await svc.scan_rss(feeds=feeds, min_score=min_score)
+        # Delegate to the rss-lead-hunter pack source (source_id="rss") if registered.
+        try:
+            result = await svc.scan(
+                source_id="rss",
+                min_score=min_score,
+                config={"rss": {"feeds": feeds}},
+                trigger="ui",
+            )
+            return {
+                "id": result.id,
+                "summary": result.summary(),
+                "posts_checked": result.posts_checked,
+                "leads_found": result.leads_found,
+            }
+        except ValueError:
+            return {
+                "error": "RSS source not registered — install rss-lead-hunter pack",
+                "leads_found": 0,
+                "posts_checked": 0,
+            }
 
     @app.post("/api/v1/leads/scan", dependencies=deps)
     async def scan_leads(request: Request) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         try:
             body = await request.json()
         except Exception:
             body = {}
-        subreddits = body.get("subreddits")
-        min_score = body.get("min_score", 0)
+        min_score = int(body.get("min_score") or 0)
+        source_id = body.get("source_id") or body.get("platform") or None
+        social_cfg = getattr(getattr(gateway, "_config", None), "social", None)
+        product = body.get("product") or getattr(social_cfg, "reddit_product_name", "") or ""
         result = await svc.scan(
-            subreddits=subreddits,
-            min_score=min_score or 0,
+            source_id=source_id,
+            min_score=min_score,
+            product=product,
             trigger="ui",
         )
         return {
@@ -6371,8 +6425,8 @@ def _register_social_routes(
     ) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
-        from cognithor.social.models import LeadStatus
+            return {"error": "Lead Service not initialized", "status": 503}
+        from cognithor.leads.models import LeadStatus
 
         status_filter = None
         if status and status in [s.value for s in LeadStatus]:
@@ -6387,7 +6441,7 @@ def _register_social_routes(
     async def lead_stats() -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         stats = svc.get_stats()
         history = svc.get_scan_history(limit=10)
         return {
@@ -6406,46 +6460,25 @@ def _register_social_routes(
 
     @app.post("/api/v1/leads/discover-subreddits", dependencies=deps)
     async def discover_subreddits(request: Request) -> dict[str, Any]:
-        svc = _get_service()
-        if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
-        try:
-            body = await request.json()
-        except Exception:
-            body = {}
-        from cognithor.social.discovery import SubredditDiscovery
-
-        discovery = SubredditDiscovery(llm_fn=svc._scanner._llm_fn)
-        name = body.get("product_name", svc._scan_config.product_name)
-        desc = body.get("product_description", svc._scan_config.product_description)
-        results = await discovery.discover(name, desc)
-        discovery.close()
+        # Subreddit discovery is provided by the reddit-lead-hunter-pro pack.
+        # Without the pack installed, this endpoint returns an empty suggestion list.
         return {
-            "suggestions": [
-                {
-                    "name": s.name,
-                    "subscribers": s.subscribers,
-                    "posts_per_day": s.posts_per_day,
-                    "relevance_score": s.relevance_score,
-                    "reasoning": s.reasoning,
-                    "sample_posts": s.sample_posts,
-                }
-                for s in results
-            ]
+            "suggestions": [],
+            "note": "Install reddit-lead-hunter-pro pack to enable subreddit discovery.",
         }
 
     @app.get("/api/v1/leads/templates", dependencies=deps)
     async def list_templates(subreddit: str = "") -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         return {"templates": svc.get_templates(subreddit)}
 
     @app.post("/api/v1/leads/templates", dependencies=deps)
     async def create_template(request: Request) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         body = await request.json()
         tid = svc.create_template(
             name=body.get("name", ""),
@@ -6459,7 +6492,7 @@ def _register_social_routes(
     async def delete_template(template_id: str) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         svc.delete_template(template_id)
         return {"status": "deleted"}
 
@@ -6467,7 +6500,7 @@ def _register_social_routes(
     async def get_lead(lead_id: str) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         lead = svc.get_lead(lead_id)
         if lead is None:
             raise HTTPException(404, "Lead not found")
@@ -6477,9 +6510,9 @@ def _register_social_routes(
     async def update_lead(lead_id: str, request: Request) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         body = await request.json()
-        from cognithor.social.models import LeadStatus
+        from cognithor.leads.models import LeadStatus
 
         status = LeadStatus(body["status"]) if "status" in body else None
         reply_final = body.get("reply_final")
@@ -6492,7 +6525,7 @@ def _register_social_routes(
     async def reply_to_lead(lead_id: str, request: Request) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         try:
             body = await request.json()
         except Exception:
@@ -6509,7 +6542,7 @@ def _register_social_routes(
     async def refine_lead(lead_id: str, request: Request) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         try:
             body = await request.json()
         except Exception:
@@ -6527,13 +6560,23 @@ def _register_social_routes(
     async def get_lead_performance(lead_id: str) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         perf = svc.get_performance(lead_id)
         if perf is None:
             return {"performance": None}
-        from cognithor.social.tracker import engagement_score
 
-        perf["engagement_score"] = engagement_score(
+        def _engagement_score(upvotes: int, replies: int, author_replied: bool, tag: str) -> float:
+            """Inline engagement score — simple weighted heuristic."""
+            score = min(upvotes * 0.3 + replies * 0.5, 80.0)
+            if author_replied:
+                score += 15.0
+            if tag == "good":
+                score += 5.0
+            elif tag == "bad":
+                score -= 10.0
+            return round(max(0.0, min(score, 100.0)), 1)
+
+        perf["engagement_score"] = _engagement_score(
             perf.get("reply_upvotes", 0),
             perf.get("reply_replies", 0),
             bool(perf.get("author_replied", 0)),
@@ -6545,7 +6588,7 @@ def _register_social_routes(
     async def set_lead_feedback(lead_id: str, request: Request) -> dict[str, Any]:
         svc = _get_service()
         if not svc:
-            return {"error": "Reddit Lead Service not initialized", "status": 503}
+            return {"error": "Lead Service not initialized", "status": 503}
         body = await request.json()
         svc.set_feedback(lead_id, tag=body.get("tag", ""), note=body.get("note", ""))
         return {"status": "ok"}

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cognithor"
-version = "0.91.0"
+version = "0.92.0"
 description = "Cognithor · Agent OS — Local-first autonomous agent operating system"
 readme = "README.md"
 license = "Apache-2.0"
@@ -236,6 +236,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # Re-exports in __init__.py are intentional
 "tests/test_install_fixes.py" = ["E501"]  # Embedded shell/JS scripts in strings
+"tests/test_packs/test_installer.py" = ["TC003"]  # Path used in runtime test bodies via pytest fixtures
 
 [tool.mypy]
 python_version = "3.12"

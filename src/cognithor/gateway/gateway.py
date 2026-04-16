@@ -378,102 +378,58 @@ class Gateway:
         if getattr(self, "_knowledge_ingest", None) and self._memory_manager:
             self._knowledge_ingest._memory = self._memory_manager
 
-        # Reddit Lead Hunter: register MCP tools + wire LLM (BUG 1+2 fix)
-        _rls = getattr(self, "_reddit_lead_service", None)
-        log.info(
-            "reddit_post_init_check",
-            has_service=_rls is not None,
-            has_mcp=self._mcp_client is not None,
-        )
-        if _rls:
-            if self._mcp_client:
-                try:
-                    from cognithor.mcp.reddit_tools import register_reddit_tools
+        # ── Lead Service (source-agnostic) ──────────────────────────────────
+        # The generic LeadService is already initialized by Phase F (advanced.py).
+        # Packs register their sources via PackContext.leads.register_source().
+        # Register the generic social MCP tools if the service is available.
+        _leads_svc_mcp = getattr(self, "_leads_service", None)
+        if _leads_svc_mcp and self._mcp_client:
+            try:
+                from cognithor.mcp.social_tools import register_social_tools
 
-                    register_reddit_tools(self._mcp_client, self._reddit_lead_service)
-                    log.info("reddit_mcp_tools_registered")
-                except Exception as _reddit_exc:
-                    log.warning(
-                        "reddit_mcp_tools_registration_failed",
-                        error=str(_reddit_exc),
-                        exc_info=True,
-                    )
-            # Wire LLM function (was None during Phase F init)
-            if hasattr(self, "_ollama") and self._ollama is not None:
-                _fast_model = (
-                    self._config.models.planner.name
-                    if hasattr(self._config, "models")
-                    else "qwen3:32b"
+                register_social_tools(self._mcp_client, _leads_svc_mcp)
+                log.info("social_tools_registered")
+            except Exception:
+                log.debug("social_tools_registration_failed", exc_info=True)
+
+        # Agent Pack Loader — loads installed packs from ~/.cognithor/packs/
+        try:
+            import os as _os_packs
+            from pathlib import Path as _PathPacks
+
+            from cognithor.packs.interface import PackContext
+            from cognithor.packs.loader import PackLoader
+
+            _packs_dir_env = _os_packs.environ.get("COGNITHOR_PACKS_DIR")
+            if _packs_dir_env:
+                _packs_path = _PathPacks(_packs_dir_env)
+            else:
+                _home_env = _os_packs.environ.get("COGNITHOR_HOME")
+                _packs_path = (
+                    _PathPacks(_home_env) / "packs"
+                    if _home_env
+                    else _PathPacks.home() / ".cognithor" / "packs"
                 )
-                _ollama_ref = self._ollama
 
-                async def _reddit_llm_fn(**kwargs: Any) -> dict[str, Any]:
-                    return await _ollama_ref.chat(model=_fast_model, **kwargs)
+            from cognithor import __version__ as _cog_version
 
-                self._reddit_lead_service._scanner._llm_fn = _reddit_llm_fn
-                self._reddit_lead_service._refiner._llm_fn = _reddit_llm_fn
-            # Wire BrowserAgent for auto-post (if available)
-            browser_agent = getattr(self, "_browser_agent", None)
-            if browser_agent:
-                self._reddit_lead_service._poster._browser_agent = browser_agent
-
-            # Hacker News Scanner
-            _social_cfg_post = getattr(self._config, "social", None)
-            if getattr(_social_cfg_post, "hn_enabled", False):
-                try:
-                    from cognithor.social.hn_scanner import HackerNewsScanner
-
-                    self._reddit_lead_service._hn_scanner = HackerNewsScanner(
-                        llm_fn=_reddit_llm_fn
-                        if hasattr(self, "_ollama") and self._ollama is not None
-                        else None
-                    )
-                    log.info("hn_scanner_initialized")
-                except Exception:
-                    log.debug("hn_scanner_init_failed", exc_info=True)
-
-            # RSS Feed Scanner
-            if getattr(_social_cfg_post, "rss_enabled", False):
-                try:
-                    from cognithor.social.rss_scanner import RssFeedScanner
-
-                    self._reddit_lead_service._rss_scanner = RssFeedScanner(
-                        llm_fn=_reddit_llm_fn
-                        if hasattr(self, "_ollama") and self._ollama is not None
-                        else None
-                    )
-                    log.info("rss_scanner_initialized")
-                except Exception:
-                    log.debug("rss_scanner_init_failed", exc_info=True)
-
-            # Discord Scanner
-            if getattr(_social_cfg_post, "discord_scanner_enabled", False):
-                import os as _os_discord
-
-                _discord_token = _os_discord.environ.get("COGNITHOR_DISCORD_TOKEN", "")
-                if _discord_token:
-                    try:
-                        from cognithor.social.discord_scanner import DiscordScanner
-
-                        self._reddit_lead_service._discord_scanner = DiscordScanner(
-                            bot_token=_discord_token,
-                            llm_fn=_reddit_llm_fn
-                            if hasattr(self, "_ollama") and self._ollama is not None
-                            else None,
-                        )
-                        log.info("discord_scanner_initialized")
-                    except Exception:
-                        log.debug("discord_scanner_init_failed", exc_info=True)
-
-            # Register unified social tools
-            if self._mcp_client:
-                try:
-                    from cognithor.mcp.social_tools import register_social_tools
-
-                    register_social_tools(self._mcp_client, self._reddit_lead_service)
-                    log.info("social_tools_registered")
-                except Exception:
-                    log.debug("social_tools_registration_failed", exc_info=True)
+            self._pack_loader = PackLoader(
+                packs_dir=_packs_path, cognithor_version=_cog_version
+            )
+            _leads_svc = getattr(self, "_leads_service", None)
+            _pack_context = PackContext(
+                gateway=self,
+                config=self._config,
+                mcp_client=self._mcp_client,
+                leads=_leads_svc,
+            )
+            self._pack_loader.load_all(_pack_context)
+            log.info(
+                "packs_loaded",
+                count=len(self._pack_loader.loaded()),
+            )
+        except Exception:
+            log.debug("pack_loader_init_failed", exc_info=True)
 
         # Identity Tools: register MCP tools for cognitive identity interface
         if getattr(self, "_identity_layer", None) and self._mcp_client:
@@ -5074,10 +5030,10 @@ class Gateway:
                 subs = [m.group(1)]
 
         # Extract product name — use config default or try to find in text
-        svc = getattr(self, "_reddit_lead_service", None)
         product = ""
-        if svc:
-            product = svc._scan_config.product_name
+        _social_cfg_route = getattr(self._config, "social", None)
+        if _social_cfg_route:
+            product = getattr(_social_cfg_route, "reddit_product_name", "") or ""
 
         # Try to find product in text (after "für/for")
         m = _re.search(r"(?:fuer|für|for)\s+(\w+)", user_text, _re.IGNORECASE)
@@ -5543,24 +5499,9 @@ class Gateway:
     # ------------------------------------------------------------------
 
     async def _track_reddit_replies(self) -> None:
-        svc = getattr(self, "_reddit_lead_service", None)
-        if not svc:
-            return
-        from cognithor.social.tracker import PerformanceTracker
-
-        tracker = PerformanceTracker(store=svc._store)
-        try:
-            result = await tracker.track_all()
-            log.info("reddit_tracking_complete", **result)
-        finally:
-            tracker.close()
+        # Legacy stub — Reddit tracking now handled by the reddit-lead-hunter-pro pack.
+        log.debug("reddit_reply_tracker_stub_called")
 
     async def _run_reddit_learner(self) -> None:
-        svc = getattr(self, "_reddit_lead_service", None)
-        if not svc:
-            return
-        from cognithor.social.learner import ReplyLearner
-
-        learner = ReplyLearner(store=svc._store, llm_fn=svc._scanner._llm_fn)
-        result = await learner.run_learning_cycle()
-        log.info("reddit_learning_complete", **result)
+        # Legacy stub — Reddit learning now handled by the reddit-lead-hunter-pro pack.
+        log.debug("reddit_style_learner_stub_called")

@@ -69,6 +69,8 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
         "command_registry": None,
         "interaction_store": None,
         "reddit_lead_service": None,
+        "leads_service": None,
+        "leads_store": None,
     }
 
     # ── Enterprise Placeholders (deferred) ──────────────────────────────
@@ -295,27 +297,19 @@ async def init_advanced(
 
     _init_subsystem("knowledge_ingest", result, _init_knowledge_ingest)
 
-    def _init_reddit():
-        from cognithor.social.service import RedditLeadService
+    def _init_leads_service():
+        from cognithor.leads.service import LeadService
+        from cognithor.leads.store import LeadStore
 
-        social_cfg = getattr(config, "social", None)
-        return RedditLeadService(
-            db_path=str(Path(jarvis_home) / "leads.db"),
-            llm_fn=result.get("llm_fn"),
-            product_name=getattr(social_cfg, "reddit_product_name", "") if social_cfg else "",
-            product_description=getattr(social_cfg, "reddit_product_description", "")
-            if social_cfg
-            else "",
-            reply_tone=getattr(social_cfg, "reddit_reply_tone", "") if social_cfg else "",
-            default_subreddits=getattr(social_cfg, "reddit_subreddits", []) if social_cfg else [],
-            min_score=getattr(social_cfg, "reddit_min_score", 60) if social_cfg else 60,
-            auto_post_whitelist=(
-                getattr(social_cfg, "reddit_auto_post_whitelist", []) if social_cfg else []
-            ),
-            min_auto_score=(getattr(social_cfg, "reddit_min_auto_score", 85) if social_cfg else 85),
-        )
+        _db_path = str(Path(jarvis_home) / "leads.db")
+        _store = LeadStore(_db_path)
+        result["leads_store"] = _store
+        return LeadService(store=_store)
 
-    _init_subsystem("reddit_lead_service", result, _init_reddit)
+    _init_subsystem("leads_service", result, _init_leads_service)
+    # Legacy alias — gateway code that still uses _reddit_lead_service gets None
+    # which is handled gracefully by getattr(..., None) guards everywhere.
+    result["reddit_lead_service"] = None
 
     if gatekeeper is not None:
 
