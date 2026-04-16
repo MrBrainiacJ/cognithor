@@ -1,4 +1,9 @@
-"""Unified MCP tools for cross-platform social listening."""
+"""Unified MCP tools for cross-platform social listening.
+
+Works with the source-agnostic cognithor.leads.LeadService.
+Individual scan sources (Reddit, HN, Discord, RSS) are provided
+by agent packs that register a LeadSource via PackContext.leads.
+"""
 
 from __future__ import annotations
 
@@ -21,57 +26,52 @@ def register_social_tools(mcp_client: Any, lead_service: Any) -> None:
         channel_ids: str = "",
         min_score: int = 0,
     ) -> str:
-        """Scan social platforms for leads. platform: reddit|hackernews|discord|'' (all enabled)"""
+        """Scan social platforms for leads.
+
+        platform: reddit|hackernews|discord|rss|'' (all enabled)
+        """
         if lead_service is None:
             return json.dumps({"error": "Social listening not initialized"})
 
-        results: dict[str, Any] = {}
-        _product = product or lead_service._scan_config.product_name
+        _min = min_score or 60
+        _source_id: str | None = platform or None
 
-        if platform in ("", "reddit"):
-            try:
-                subs = (
-                    [s.strip() for s in subreddits.split(",") if s.strip()] if subreddits else None
-                )
-                r = await lead_service.scan(subreddits=subs, min_score=min_score or 60)
-                results["reddit"] = {
-                    "leads_found": r.leads_found,
-                    "posts_checked": r.posts_checked,
-                }
-            except Exception as e:
-                results["reddit"] = {"error": str(e)}
+        # Build per-source config from legacy parameters
+        _config: dict[str, Any] = {}
+        if subreddits:
+            _config["reddit"] = {
+                "subreddits": [s.strip() for s in subreddits.split(",") if s.strip()]
+            }
+        if categories:
+            _config["hackernews"] = {
+                "categories": [c.strip() for c in categories.split(",") if c.strip()]
+            }
+        if channel_ids:
+            _config["discord"] = {
+                "channel_ids": [c.strip() for c in channel_ids.split(",") if c.strip()]
+            }
 
-        if platform in ("", "hackernews"):
-            hn = getattr(lead_service, "_hn_scanner", None)
-            if hn:
-                try:
-                    cats = (
-                        [c.strip() for c in categories.split(",") if c.strip()]
-                        if categories
-                        else None
-                    )
-                    r = await lead_service.scan_hackernews(
-                        categories=cats, min_score=min_score or 60
-                    )
-                    results["hackernews"] = r
-                except Exception as e:
-                    results["hackernews"] = {"error": str(e)}
-
-        if platform in ("", "discord"):
-            dc = getattr(lead_service, "_discord_scanner", None)
-            if dc:
-                try:
-                    cids = (
-                        [c.strip() for c in channel_ids.split(",") if c.strip()]
-                        if channel_ids
-                        else None
-                    )
-                    r = await lead_service.scan_discord(channel_ids=cids, min_score=min_score or 60)
-                    results["discord"] = r
-                except Exception as e:
-                    results["discord"] = {"error": str(e)}
-
-        return json.dumps(results, ensure_ascii=False)
+        try:
+            result = await lead_service.scan(
+                source_id=_source_id,
+                min_score=_min,
+                product=product,
+                config=_config,
+                trigger="chat",
+            )
+            return json.dumps(
+                {
+                    "leads_found": result.leads_found,
+                    "posts_checked": result.posts_checked,
+                    "summary": result.summary(),
+                },
+                ensure_ascii=False,
+            )
+        except ValueError as exc:
+            return json.dumps({"error": str(exc)})
+        except Exception as exc:
+            log.warning("social_scan_failed", error=str(exc), exc_info=True)
+            return json.dumps({"error": str(exc)})
 
     async def _social_leads(
         platform: str = "",
@@ -83,7 +83,7 @@ def register_social_tools(mcp_client: Any, lead_service: Any) -> None:
         if lead_service is None:
             return json.dumps({"error": "Social listening not initialized"})
         leads = lead_service.get_leads(
-            platform=platform or None,
+            source_id=platform or None,
             status=status or None,
             min_score=min_score,
             limit=limit,
@@ -94,11 +94,11 @@ def register_social_tools(mcp_client: Any, lead_service: Any) -> None:
                 "leads": [
                     {
                         "id": l.id,
-                        "platform": l.platform,
+                        "platform": getattr(l, "source_id", getattr(l, "platform", "")),
                         "score": l.intent_score,
                         "title": l.title[:80],
                         "status": l.status.value if hasattr(l.status, "value") else l.status,
-                        "url": l.platform_url or l.url,
+                        "url": getattr(l, "platform_url", None) or getattr(l, "url", ""),
                     }
                     for l in leads
                 ],
@@ -110,13 +110,13 @@ def register_social_tools(mcp_client: Any, lead_service: Any) -> None:
     mcp_client.register_builtin_handler(
         "social_scan",
         _social_scan,
-        description="Scanne soziale Plattformen nach Leads (Reddit, Hacker News, Discord)",
+        description="Scanne soziale Plattformen nach Leads (Reddit, Hacker News, Discord, RSS)",
         input_schema={
             "type": "object",
             "properties": {
                 "platform": {
                     "type": "string",
-                    "description": "reddit, hackernews, discord, oder leer fuer alle",
+                    "description": "reddit, hackernews, discord, rss, oder leer fuer alle",
                 },
                 "product": {"type": "string", "description": "Produktname"},
                 "subreddits": {
@@ -148,7 +148,7 @@ def register_social_tools(mcp_client: Any, lead_service: Any) -> None:
             "properties": {
                 "platform": {
                     "type": "string",
-                    "description": "Filter: reddit, hackernews, discord",
+                    "description": "Filter: reddit, hackernews, discord, rss",
                 },
                 "status": {
                     "type": "string",

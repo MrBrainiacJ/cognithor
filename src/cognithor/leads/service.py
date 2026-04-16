@@ -146,3 +146,67 @@ class LeadService:
 
     def get_stats(self) -> LeadStats:
         return self._store.get_stats()
+
+    def get_scan_history(self, limit: int = 10) -> list[dict[str, Any]]:
+        return self._store.get_scan_history(limit=limit)
+
+    def get_lead(self, post_id: str) -> Lead | None:
+        return self._store.get_lead(post_id)
+
+    def update_lead(
+        self, post_id: str, *, status: LeadStatus | None = None, reply_final: str | None = None
+    ) -> Lead | None:
+        """Update lead status / reply text and return the updated lead."""
+        from cognithor.leads.models import Lead as _Lead  # noqa: F401
+
+        lead = self._store.get_lead(post_id)
+        if lead is None:
+            return None
+        if status is not None:
+            lead.status = status
+        if reply_final is not None:
+            lead.reply_final = reply_final  # type: ignore[assignment]
+        self._store.save_lead(lead)
+        return lead
+
+    # ---------- stubs for Reddit-specific features (now in packs) ----------
+
+    def get_templates(self, subreddit: str = "") -> list[dict[str, Any]]:
+        """Templates are managed by the reddit-lead-hunter-pro pack."""
+        _ = subreddit
+        return []
+
+    def create_template(
+        self, name: str = "", text: str = "", subreddit: str = "", style: str = ""
+    ) -> str:
+        _ = (name, text, subreddit, style)
+        return "not_implemented"
+
+    def delete_template(self, template_id: str) -> None:
+        _ = template_id
+
+    def post_reply(self, lead_id: str, mode: str = "clipboard") -> Any:
+        """Reply posting is handled by the reddit-lead-hunter-pro pack."""
+        _ = lead_id
+
+        class _StubResult:
+            success = False
+            error = "Reddit reply requires the reddit-lead-hunter-pro pack."
+
+        stub = _StubResult()
+        stub.mode = mode  # type: ignore[attr-defined]
+        return stub
+
+    async def refine_reply(
+        self, lead_id: str, hint: str = "", variants: int = 0
+    ) -> None:
+        """Reply refinement is handled by the reddit-lead-hunter-pro pack."""
+        _ = (lead_id, hint, variants)
+        return None
+
+    def get_performance(self, lead_id: str) -> dict[str, Any] | None:
+        _ = lead_id
+        return None
+
+    def set_feedback(self, lead_id: str, tag: str = "", note: str = "") -> None:
+        _ = (lead_id, tag, note)
