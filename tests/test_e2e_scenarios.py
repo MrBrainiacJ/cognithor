@@ -1738,7 +1738,7 @@ class TestWebResearch:
 
     @pytest.mark.asyncio
     async def test_deep_research_multiple_sources(self, gateway_extended_tools):
-        """'Recherchiere ausfuehrlich' triggers deep_research or multiple search_and_read."""
+        """'Recherchiere ausfuehrlich' triggers search_and_read (deep_research extracted to pack)."""
         gw, mock_ollama, mock_mcp, _ = gateway_extended_tools
 
         call_count = 0
@@ -1751,9 +1751,9 @@ class TestWebResearch:
                     _plan_json(
                         [
                             {
-                                "tool": "deep_research",
-                                "params": {"topic": "Quantencomputing Fortschritte 2026"},
-                                "rationale": "Ausfuehrliche Recherche zum Thema",
+                                "tool": "search_and_read",
+                                "params": {"query": "Quantencomputing Fortschritte 2026"},
+                                "rationale": "Recherche zum Thema via Web",
                             }
                         ],
                         goal="Umfassende Recherche zu Quantencomputing",
