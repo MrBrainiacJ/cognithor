@@ -1,7 +1,7 @@
 /// Hardcoded pack catalog for the Flutter Command Center.
 ///
 /// Used to render locked upsell cards for packs the user hasn't installed.
-/// The live pricing is always on cognithor.com — this catalog is
+/// The live pricing is always on cognithor.ai — this catalog is
 /// stale-tolerant because the CTA button always opens the browser.
 library;
 
@@ -47,9 +47,9 @@ const List<KnownPack> kKnownPacks = [
       '50 curated reply templates + style learner',
       'Playwright auto-poster + Telegram/Slack alerts',
     ],
-    priceBadge: 'from \$79',
-    listPriceBadge: '\$149',
-    packDetailUrl: 'https://cognithor.com/packs/reddit-lead-hunter-pro',
+    priceBadge: 'ab 75 EUR',
+    listPriceBadge: '129 EUR',
+    packDetailUrl: 'https://cognithor.ai/packs/reddit-lead-hunter-pro',
     icon: Icons.forum,
     accentColor: Color(0xFFFF4500),
     sourceId: 'reddit',
@@ -65,7 +65,7 @@ const List<KnownPack> kKnownPacks = [
       'Ships with Cognithor Core',
     ],
     priceBadge: 'free',
-    packDetailUrl: 'https://cognithor.com/packs/hn-lead-hunter',
+    packDetailUrl: 'https://cognithor.ai/packs/hn-lead-hunter',
     icon: Icons.article,
     accentColor: Color(0xFFFF6600),
     sourceId: 'hn',
@@ -81,7 +81,7 @@ const List<KnownPack> kKnownPacks = [
       'Ships with Cognithor Core',
     ],
     priceBadge: 'free',
-    packDetailUrl: 'https://cognithor.com/packs/discord-lead-hunter',
+    packDetailUrl: 'https://cognithor.ai/packs/discord-lead-hunter',
     icon: Icons.tag,
     accentColor: Color(0xFF5865F2),
     sourceId: 'discord',
@@ -97,7 +97,7 @@ const List<KnownPack> kKnownPacks = [
       'Ships with Cognithor Core',
     ],
     priceBadge: 'free',
-    packDetailUrl: 'https://cognithor.com/packs/rss-lead-hunter',
+    packDetailUrl: 'https://cognithor.ai/packs/rss-lead-hunter',
     icon: Icons.rss_feed,
     accentColor: Color(0xFFFFA500),
     sourceId: 'rss',
