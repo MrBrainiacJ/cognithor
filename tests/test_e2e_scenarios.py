@@ -1784,7 +1784,7 @@ class TestWebResearch:
 
     @pytest.mark.asyncio
     async def test_price_comparison(self, gateway_extended_tools):
-        """'Was kostet ein iPhone 16?' triggers verified_web_lookup for exact numbers."""
+        """'Was kostet ein iPhone 16?' triggers search_and_read for exact numbers (verified_web_lookup extracted to pack)."""
         gw, mock_ollama, mock_mcp, _ = gateway_extended_tools
 
         call_count = 0
@@ -1797,9 +1797,9 @@ class TestWebResearch:
                     _plan_json(
                         [
                             {
-                                "tool": "verified_web_lookup",
+                                "tool": "search_and_read",
                                 "params": {"query": "iPhone 16 Preis Deutschland"},
-                                "rationale": "Aktuellen Preis verifizieren",
+                                "rationale": "Aktuellen Preis via Web verifizieren",
                             }
                         ],
                         goal="iPhone 16 Preis herausfinden",
