@@ -815,6 +815,24 @@ Copyright 2026 Alexander Soellner
 
 ## What's New
 
+### v0.92.0 (2026-04-16)
+- **Agent Pack Architecture** — Full plugin system for paid & free agent packs. `cognithor.packs` module: `PackManifest` (Pydantic v2), `PackLoader` (importlib isolation), `PackInstaller` (zip/URL + EULA click-through), CLI (`cognithor pack install|list|remove|update|accept-eula`). Packs live in `~/.cognithor/packs/` and register at startup.
+- **Leads SDK** — `cognithor.leads` replaces the old `cognithor.social` module. Source-agnostic `LeadSource` ABC, `SourceRegistry`, `LeadService` orchestrator, `LeadStore` with `source_id` column. Any pack can register a lead source — Reddit, HN, Discord, RSS, or future custom sources.
+- **Reddit Lead Hunter Pro** — First paid Agent Pack (€75 indie / €179 commercial via Lemon Squeezy). Extracted from Core into private `cognithor-packs` repo. Includes: Reddit scanner, 50 reply templates, Playwright auto-poster, style learner, subreddit discovery. Core retains zero Reddit-specific code.
+- **3 Free Bundled Packs** — Hacker News Lead Hunter, Discord Lead Hunter, RSS Lead Hunter. Apache 2.0, auto-installed on first Cognithor start. Same pack interface as paid packs.
+- **cognithor.ai** — Marketing site deployed on Vercel. Build-time pack catalog fetch from private GitHub repo via Octokit. Auto-rebuild on pack repo push via deploy hook. Pack detail pages with strikethrough pricing, checkout flow, post-purchase install command page.
+- **Flutter Pack-Aware UI** — `PackPreviewOverlay` shows real pack UI greyed out with unlock CTA. `LockedPackCard` for free packs. `SourcesProvider` polls `/api/v1/leads/sources`. Leads tab gated on registered sources. Settings → Social shows Reddit config disabled with "Get this Pack" overlay when pack not installed.
+- **Anti-Enshittification Promise** — `/promise` page: Core stays free forever, packs add but never subtract, zero telemetry. "This isn't marketing copy. It's a contract. If we ever break it, fork the repo."
+- **EULA System** — Every pack ships `eula.md` with SHA-256 pinned in manifest. Installer prompts click-through, persists acceptance. Loader rejects packs with hash mismatch or missing acceptance.
+- **`src/cognithor/social/` DELETED** — 15 Python files (~4000 LOC) extracted to agent packs. Gateway rewritten for source-agnostic `LeadService`. No backward compatibility shim remains.
+- **13,600+ tests passing** across Core + packs + site (657 vitest)
+
+### v0.91.0 (2026-04-14)
+- **Unified Leads Engine** — Generalized the Reddit-only lead system into a multi-source engine (#113). RSS/Atom feed scanner (stdlib `xml.etree`, no new deps), configurable per-source in Flutter Settings → Social. Sidebar Leads tab gated on `leads_engine_enabled` — hidden when all sources disabled.
+- **Installer Language Fix** — Inno Setup language choice now persists to Cognithor config (#114). `install_language.txt` marker from installer → `bootstrap_windows.py` reads before OS-locale fallback. `first_run.py` skips the language question when marker present.
+- **OLLAMA_HOST Normalization** — `OLLAMA_HOST=0.0.0.0` no longer crashes httpx (#115). `_normalize_ollama_url()` helper accepts bare hosts, host:port, full URLs. Wired as `default_factory` + `before` validator on `OllamaConfig.base_url`.
+- **13,500+ tests passing**
+
 ### v0.90.0 (2026-04-11)
 - **Cross-Platform Social Listening** — Hacker News (Firebase + Algolia API, zero auth) + Discord (REST API v10, bot token) scanners join Reddit. Unified `social_scan` and `social_leads` MCP tools. Per-platform config: intervals, min scores, categories/channels. Flutter config UI with HN + Discord sections.
 - **Hierarchical Document Reasoning** — 4th retrieval channel: tree-based section navigation for PDF, DOCX, HTML, Markdown, plaintext. `TreeBuilder` + `NodeSelector` (LLM-navigated) + `TreeStore` (SQLite). No embeddings required — structural understanding through heading hierarchy.
