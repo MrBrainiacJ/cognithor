@@ -22,7 +22,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 _SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z\.-]+)?$")
-_NS_PACK_RE = re.compile(r"^[a-z][a-z0-9-]{1,63}$")
+_NS_PACK_RE = re.compile(r"^[a-z][a-z0-9-]{0,63}$")
 _SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 
 
