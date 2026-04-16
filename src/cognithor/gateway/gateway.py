@@ -475,6 +475,47 @@ class Gateway:
                 except Exception:
                     log.debug("social_tools_registration_failed", exc_info=True)
 
+        # Agent Pack Loader — loads installed packs from ~/.cognithor/packs/
+        try:
+            import os as _os_packs
+            from pathlib import Path as _PathPacks
+
+            from cognithor.packs.interface import PackContext
+            from cognithor.packs.loader import PackLoader
+
+            _packs_dir_env = _os_packs.environ.get("COGNITHOR_PACKS_DIR")
+            if _packs_dir_env:
+                _packs_path = _PathPacks(_packs_dir_env)
+            else:
+                _home_env = _os_packs.environ.get("COGNITHOR_HOME")
+                _packs_path = (
+                    _PathPacks(_home_env) / "packs"
+                    if _home_env
+                    else _PathPacks.home() / ".cognithor" / "packs"
+                )
+
+            from cognithor import __version__ as _cog_version
+
+            self._pack_loader = PackLoader(
+                packs_dir=_packs_path, cognithor_version=_cog_version
+            )
+            _leads_svc = getattr(
+                getattr(self, "_reddit_lead_service", None), "_service", None
+            )
+            _pack_context = PackContext(
+                gateway=self,
+                config=self._config,
+                mcp_client=self._mcp_client,
+                leads=_leads_svc,
+            )
+            self._pack_loader.load_all(_pack_context)
+            log.info(
+                "packs_loaded",
+                count=len(self._pack_loader.loaded()),
+            )
+        except Exception:
+            log.debug("pack_loader_init_failed", exc_info=True)
+
         # Identity Tools: register MCP tools for cognitive identity interface
         if getattr(self, "_identity_layer", None) and self._mcp_client:
             try:
