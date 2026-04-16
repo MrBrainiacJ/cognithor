@@ -58,6 +58,38 @@ def resolve_install_language(jarvis_home: Path) -> tuple[str, str]:
     return ("de" if lang_code == "de" else "en"), "locale"
 
 
+def _copy_bundled_packs(jarvis_home: Path) -> None:
+    """Copy bundled free packs into ~/.cognithor/packs/ on first run.
+
+    Idempotent — skips packs whose target directory already exists.
+    The source is ``<site-packages>/cognithor/_bundled_packs/`` which
+    Phase 4 of the agent-pack architecture populates.
+    """
+    try:
+        import cognithor
+
+        bundled_root = Path(cognithor.__file__).parent / "_bundled_packs"
+        if not bundled_root.exists():
+            return
+        target_root = jarvis_home / "packs"
+        target_root.mkdir(parents=True, exist_ok=True)
+        for ns_dir in bundled_root.iterdir():
+            if not ns_dir.is_dir():
+                continue
+            ns_target = target_root / ns_dir.name
+            ns_target.mkdir(exist_ok=True)
+            for pack_dir in ns_dir.iterdir():
+                if not pack_dir.is_dir():
+                    continue
+                dest = ns_target / pack_dir.name
+                if dest.exists():
+                    continue
+                shutil.copytree(pack_dir, dest)
+                print(f"  [OK] Bundled pack installed: {ns_dir.name}/{pack_dir.name}")
+    except Exception as exc:
+        print(f"  [WARN] Bundled pack copy failed: {exc}")
+
+
 # ── Version (dynamisch aus pyproject.toml lesen) ──────────────────────────
 def _read_version() -> str:
     """Liest die Version aus pyproject.toml oder src/cognithor/__init__.py."""
@@ -1035,6 +1067,9 @@ def first_start(repo_root: str, *, skip_models: bool = False) -> bool:
         ok(".env already exists")
     else:
         result.add_warn(".env.example not found -- skipped")
+
+    # ── 8b. Bundled agent packs (HN, Discord, RSS — free, apache-2.0)
+    _copy_bundled_packs(JARVIS_HOME)
 
     # ── 9. Piper TTS Voice-Modell ────────────────────────────────────
     header("9/14  Piper TTS Voice Model")
