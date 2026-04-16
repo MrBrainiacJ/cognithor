@@ -5,7 +5,7 @@ import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/sources_provider.dart';
 import 'package:cognithor_ui/widgets/form/form_widgets.dart';
-import 'package:cognithor_ui/widgets/packs/locked_pack_card.dart';
+import 'package:cognithor_ui/widgets/packs/pack_preview_overlay.dart';
 
 class SocialPage extends StatelessWidget {
   const SocialPage({super.key});
@@ -25,17 +25,10 @@ class SocialPage extends StatelessWidget {
           children: [
             Consumer<SourcesProvider>(
               builder: (context, sources, _) {
-                if (!sources.hasSource('reddit')) {
-                  final pack = findKnownPackBySourceId('reddit');
-                  if (pack != null) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: LockedPackCard(pack: pack),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }
-                return Column(
+                final redditInstalled = sources.hasSource('reddit');
+                final redditPack = findKnownPackBySourceId('reddit');
+
+                Widget redditConfig = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!isConfigured)
@@ -155,6 +148,18 @@ class SocialPage extends StatelessWidget {
                     ),
                   ],
                 );
+
+                if (!redditInstalled && redditPack != null) {
+                  redditConfig = SizedBox(
+                    height: 400,
+                    child: PackPreviewOverlay(
+                      pack: redditPack,
+                      child: redditConfig,
+                    ),
+                  );
+                }
+
+                return redditConfig;
               },
             ),
 

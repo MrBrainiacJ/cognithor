@@ -13,6 +13,7 @@ import 'package:cognithor_ui/widgets/leads/lead_card.dart';
 import 'package:cognithor_ui/widgets/leads/lead_detail_sheet.dart';
 import 'package:cognithor_ui/widgets/leads/lead_wizard.dart';
 import 'package:cognithor_ui/widgets/packs/locked_pack_card.dart';
+import 'package:cognithor_ui/widgets/packs/pack_preview_overlay.dart';
 
 class LeadsScreen extends StatefulWidget {
   const LeadsScreen({super.key});
@@ -88,23 +89,115 @@ class _LeadsScreenState extends State<LeadsScreen> {
     final installed = sources.sources.map((s) => s.sourceId).toSet();
     final lockedPacks = kKnownPacks.where((p) => !installed.contains(p.sourceId)).toList();
     if (lockedPacks.isEmpty) return const SizedBox.shrink();
+
+    final paidLocked = lockedPacks.where((p) => p.listPriceBadge != null).toList();
+    final freeLocked = lockedPacks.where((p) => p.listPriceBadge == null).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
-            'More sources available',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-        ...lockedPacks.map(
-          (p) => Padding(
+        if (paidLocked.isNotEmpty) ...[
+          Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: LockedPackCard(pack: p),
+            child: Text(
+              'Premium packs available',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
-        ),
+          ...paidLocked.map(
+            (p) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: SizedBox(
+                height: 220,
+                child: PackPreviewOverlay(
+                  pack: p,
+                  child: _buildFakeLeadPreview(p),
+                ),
+              ),
+            ),
+          ),
+        ],
+        if (freeLocked.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12, top: 8),
+            child: Text(
+              'Free sources (not yet configured)',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          ...freeLocked.map(
+            (p) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: LockedPackCard(pack: p),
+            ),
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildFakeLeadPreview(KnownPack pack) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(pack.icon, color: pack.accentColor, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              pack.displayName,
+              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _fakeLeadRow('Looking for a local LLM alternative to...', 92, pack.accentColor),
+        _fakeLeadRow('Anyone tried self-hosted AI agents for...', 87, pack.accentColor),
+        _fakeLeadRow('Switching from OpenAI to local — need...', 78, pack.accentColor),
+      ],
+    );
+  }
+
+  Widget _fakeLeadRow(String title, int score, Color accent) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: theme.textTheme.bodySmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              '$score',
+              style: TextStyle(
+                color: accent,
+                fontFamily: 'monospace',
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
