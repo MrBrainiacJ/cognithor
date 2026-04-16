@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from hn_scanner import HackerNewsScanner
+
 from cognithor.leads.models import Lead
 from cognithor.leads.source import LeadSource
-
-from hn_scanner import HackerNewsScanner
 
 
 class HnLeadSource(LeadSource):

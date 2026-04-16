@@ -37,6 +37,24 @@ class KnownPack {
 
 const List<KnownPack> kKnownPacks = [
   KnownPack(
+    qualifiedId: 'cognithor-official/deep-research-analyst',
+    packId: 'deep-research-analyst',
+    displayName: 'Deep Research Analyst',
+    tagline:
+        'Multi-hop web research with citations. Your private Perplexity replacement.',
+    featureBullets: [
+      'Multi-hop iterative research (up to 5 hops)',
+      'Citation graph with confidence scores',
+      'Source triangulation \u2014 flags unverified claims',
+    ],
+    priceBadge: 'ab 65 EUR',
+    listPriceBadge: '119 EUR',
+    packDetailUrl: 'https://cognithor.ai/packs/deep-research-analyst',
+    icon: Icons.biotech,
+    accentColor: Color(0xFF00BCD4),
+    sourceId: 'research',
+  ),
+  KnownPack(
     qualifiedId: 'cognithor-official/reddit-lead-hunter-pro',
     packId: 'reddit-lead-hunter-pro',
     displayName: 'Reddit Lead Hunter Pro',

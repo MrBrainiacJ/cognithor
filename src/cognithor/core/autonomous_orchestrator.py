@@ -221,11 +221,7 @@ class AutonomousOrchestrator:
         if len(response) > 100:
             score += 0.1  # Substantive response
 
-        if any(
-            getattr(r, "tool_name", "")
-            in ("search_and_read",)
-            for r in tool_results
-        ):
+        if any(getattr(r, "tool_name", "") in ("search_and_read",) for r in tool_results):
             score += 0.1  # Used research tools
 
         # Negative signals
