@@ -1,0 +1,215 @@
+"""cognithor pack CLI — thin argparse wrapper over PackInstaller.
+
+Entry point: ``cognithor pack <subcommand> [args]``
+
+Subcommands
+-----------
+install <path-or-url>   Install a pack from a local zip or HTTP(S) URL.
+list                    List all installed packs.
+remove <namespace/id>   Remove an installed pack.
+update <namespace/id>   MVP stub: prints re-install instructions.
+accept-eula <namespace/id>  Re-prompt and record EULA acceptance.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from cognithor.packs.errors import PackInstallError
+from cognithor.packs.installer import PackInstaller
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _resolve_packs_root() -> Path:
+    """Return the packs root directory from environment / defaults.
+
+    Resolution order:
+    1. ``$COGNITHOR_PACKS_DIR``
+    2. ``$COGNITHOR_HOME/packs``
+    3. ``~/.cognithor/packs``
+    """
+    env_dir = os.environ.get("COGNITHOR_PACKS_DIR")
+    if env_dir:
+        return Path(env_dir)
+
+    cognithor_home = os.environ.get("COGNITHOR_HOME")
+    if cognithor_home:
+        return Path(cognithor_home) / "packs"
+
+    return Path.home() / ".cognithor" / "packs"
+
+
+def _make_installer() -> PackInstaller:
+    return PackInstaller(packs_root=_resolve_packs_root())
+
+
+# ---------------------------------------------------------------------------
+# Subcommand handlers
+# ---------------------------------------------------------------------------
+
+
+def _cmd_install(args: argparse.Namespace) -> int:
+    installer = _make_installer()
+    source: str = args.source
+    try:
+        if source.startswith("http://") or source.startswith("https://"):
+            manifest = installer.install_from_url(source)
+        else:
+            manifest = installer.install_from_path(Path(source))
+    except PackInstallError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"[OK] Installed {manifest.qualified_id} v{manifest.version}")
+    return 0
+
+
+def _cmd_list(args: argparse.Namespace) -> int:
+    installer = _make_installer()
+    try:
+        packs = installer.list_installed()
+    except PackInstallError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    if not packs:
+        print("(no packs installed)")
+        return 0
+
+    # Simple tabular output
+    col_id = max(len(p.qualified_id) for p in packs)
+    col_ver = max(len(p.version) for p in packs)
+    header = f"{'PACK ID':<{col_id}}  {'VERSION':<{col_ver}}  DISPLAY NAME"
+    print(header)
+    print("-" * len(header))
+    for p in packs:
+        print(f"{p.qualified_id:<{col_id}}  {p.version:<{col_ver}}  {p.display_name}")
+    return 0
+
+
+def _cmd_remove(args: argparse.Namespace) -> int:
+    installer = _make_installer()
+    try:
+        installer.remove(args.qualified_id)
+    except PackInstallError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"[OK] Removed {args.qualified_id}")
+    return 0
+
+
+def _cmd_update(args: argparse.Namespace) -> int:
+    print(
+        "Update is not yet automated.\n"
+        "To update a pack, re-install it with the URL from your purchase email:\n"
+        "  cognithor pack install https://example.com/updated-pack.zip"
+    )
+    return 0
+
+
+def _cmd_accept_eula(args: argparse.Namespace) -> int:
+    installer = _make_installer()
+    try:
+        installer.accept_eula(args.qualified_id)
+    except PackInstallError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"[OK] EULA accepted for {args.qualified_id}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Parser
+# ---------------------------------------------------------------------------
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Return the top-level ``cognithor pack`` argument parser."""
+    parser = argparse.ArgumentParser(
+        prog="cognithor pack",
+        description="Manage agent packs for Cognithor.",
+    )
+    sub = parser.add_subparsers(dest="command", metavar="<command>")
+    sub.required = True
+
+    # install
+    p_install = sub.add_parser("install", help="Install a pack from a local zip or URL.")
+    p_install.add_argument(
+        "source",
+        metavar="PATH_OR_URL",
+        help="Local .zip path or HTTP(S) URL.",
+    )
+    p_install.set_defaults(func=_cmd_install)
+
+    # list
+    p_list = sub.add_parser("list", help="List all installed packs.")
+    p_list.set_defaults(func=_cmd_list)
+
+    # remove
+    p_remove = sub.add_parser("remove", help="Remove an installed pack.")
+    p_remove.add_argument(
+        "qualified_id",
+        metavar="NAMESPACE/PACK_ID",
+        help="Qualified pack identifier, e.g. cognithor-official/my-pack.",
+    )
+    p_remove.set_defaults(func=_cmd_remove)
+
+    # update
+    p_update = sub.add_parser("update", help="Update an installed pack (MVP stub).")
+    p_update.add_argument(
+        "qualified_id",
+        metavar="NAMESPACE/PACK_ID",
+        nargs="?",
+        help="Qualified pack identifier (optional for stub).",
+    )
+    p_update.set_defaults(func=_cmd_update)
+
+    # accept-eula
+    p_eula = sub.add_parser("accept-eula", help="Re-accept the EULA for an installed pack.")
+    p_eula.add_argument(
+        "qualified_id",
+        metavar="NAMESPACE/PACK_ID",
+        help="Qualified pack identifier.",
+    )
+    p_eula.set_defaults(func=_cmd_accept_eula)
+
+    return parser
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Parse *argv* and dispatch to the appropriate subcommand handler.
+
+    Parameters
+    ----------
+    argv:
+        Argument list (defaults to ``sys.argv[1:]`` when ``None``).
+
+    Returns
+    -------
+    int
+        Exit code (0 = success, non-zero = failure).
+    """
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
