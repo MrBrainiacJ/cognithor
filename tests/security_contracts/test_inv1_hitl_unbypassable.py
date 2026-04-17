@@ -163,11 +163,21 @@ async def test_fake_channel_default_is_false():
 
 
 ORANGE_TOOLS = [
-    "email_send", "calendar_create_event", "delete_file", "fetch_url",
-    "http_request", "db_execute", "docker_run", "remote_exec",
-    "browse_click", "browse_fill", "browse_execute_js",
-    "browser_solve_captcha", "investigate_person",
-    "investigate_project", "investigate_org",
+    "email_send",
+    "calendar_create_event",
+    "delete_file",
+    "fetch_url",
+    "http_request",
+    "db_execute",
+    "docker_run",
+    "remote_exec",
+    "browse_click",
+    "browse_fill",
+    "browse_execute_js",
+    "browser_solve_captcha",
+    "investigate_person",
+    "investigate_project",
+    "investigate_org",
 ]
 
 
@@ -237,10 +247,12 @@ def test_handle_approvals_preserves_non_approve(gatekeeper, session):
 @pytest.mark.asyncio
 async def test_concurrent_approvals_isolated():
     """Two concurrent ORANGE requests must not cross-contaminate."""
-    channel = FakeChannel(approval_responses={
-        "email_send": True,
-        "delete_file": False,
-    })
+    channel = FakeChannel(
+        approval_responses={
+            "email_send": True,
+            "delete_file": False,
+        }
+    )
     action_email = make_action("email_send")
     action_delete = make_action("delete_file")
 
@@ -277,11 +289,13 @@ async def test_channel_records_approval_request():
 @pytest.mark.asyncio
 async def test_partial_approval():
     """3 ORANGE tools: 2 approved, 1 rejected → 2 True + 1 False."""
-    channel = FakeChannel(approval_responses={
-        "email_send": True,
-        "delete_file": True,
-        "remote_exec": False,
-    })
+    channel = FakeChannel(
+        approval_responses={
+            "email_send": True,
+            "delete_file": True,
+            "remote_exec": False,
+        }
+    )
     results = []
     for tool in ["email_send", "delete_file", "remote_exec"]:
         action = make_action(tool)

@@ -16,9 +16,23 @@ from .conftest import make_action, make_session
 pytestmark = pytest.mark.security_contract
 
 CHANNELS = [
-    "cli", "telegram", "discord", "slack", "whatsapp", "signal",
-    "matrix", "irc", "mattermost", "teams", "google_chat", "feishu",
-    "imessage", "twitch", "webui", "voice", "api",
+    "cli",
+    "telegram",
+    "discord",
+    "slack",
+    "whatsapp",
+    "signal",
+    "matrix",
+    "irc",
+    "mattermost",
+    "teams",
+    "google_chat",
+    "feishu",
+    "imessage",
+    "twitch",
+    "webui",
+    "voice",
+    "api",
 ]
 
 REPRESENTATIVE_TOOLS = {
@@ -65,8 +79,7 @@ def test_same_tool_same_risk_all_channels(tool, expected_risk, channel, gatekeep
     action = make_action(tool)
     decision = gatekeeper.evaluate(action, session)
     assert decision.risk_level == expected_risk, (
-        f"Tool '{tool}' got {decision.risk_level} via channel '{channel}', "
-        f"expected {expected_risk}"
+        f"Tool '{tool}' got {decision.risk_level} via channel '{channel}', expected {expected_risk}"
     )
 
 

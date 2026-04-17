@@ -204,8 +204,16 @@ def test_shell_safe_command_passes():
 
 
 DANGEROUS_MODULES = [
-    "os", "sys", "subprocess", "shutil", "pickle", "marshal",
-    "ctypes", "socket", "importlib", "multiprocessing",
+    "os",
+    "sys",
+    "subprocess",
+    "shutil",
+    "pickle",
+    "marshal",
+    "ctypes",
+    "socket",
+    "importlib",
+    "multiprocessing",
 ]
 
 
@@ -218,9 +226,24 @@ def test_fuzz_python_import_always_caught(module):
 
 
 BLOCKED_COMMANDS = [
-    "rm", "wget", "curl", "sudo", "chmod", "chown", "python",
-    "python3", "bash", "sh", "nc", "ssh", "kill", "reboot",
-    "shutdown", "dd", "mkfs", "crontab",
+    "rm",
+    "wget",
+    "curl",
+    "sudo",
+    "chmod",
+    "chown",
+    "python",
+    "python3",
+    "bash",
+    "sh",
+    "nc",
+    "ssh",
+    "kill",
+    "reboot",
+    "shutdown",
+    "dd",
+    "mkfs",
+    "crontab",
 ]
 
 

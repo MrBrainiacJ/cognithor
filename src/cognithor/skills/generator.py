@@ -638,7 +638,8 @@ class SkillGenerator:
             # expected (the skill may define new tools). Only block on security
             # checks 2-4 (injection, tool permissions, content safety).
             security_checks = [
-                c for c in validation.checks
+                c
+                for c in validation.checks
                 if c.check_name in ("injection_scan", "tool_permissions", "content_safety")
             ]
             security_errors = []

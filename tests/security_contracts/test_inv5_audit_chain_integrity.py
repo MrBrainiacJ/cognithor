@@ -54,9 +54,7 @@ def test_chain_links_correctly(audit_trail: AuditTrail, audit_log_path):
     assert len(entries) == 5
     assert entries[0]["prev_hash"] == "genesis"
     for i in range(1, len(entries)):
-        assert entries[i]["prev_hash"] == entries[i - 1]["hash"], (
-            f"Entry {i} prev_hash mismatch"
-        )
+        assert entries[i]["prev_hash"] == entries[i - 1]["hash"], f"Entry {i} prev_hash mismatch"
 
 
 # ---------------------------------------------------------------------------
@@ -112,19 +110,21 @@ def test_verify_chain_detects_insertion(audit_trail: AuditTrail, audit_log_path)
         audit_trail.record(make_audit_entry(tool=f"tool_{i}"))
 
     lines = audit_log_path.read_text(encoding="utf-8").splitlines()
-    fake = json.dumps({
-        "timestamp": "2026-01-01T00:00:00+00:00",
-        "session_id": "fake",
-        "action_tool": "fake_tool",
-        "action_params_hash": "0" * 64,
-        "decision_status": "ALLOW",
-        "decision_reason": "injected",
-        "risk_level": "green",
-        "policy_name": "",
-        "user_override": False,
-        "prev_hash": "fakehash",
-        "hash": "fakehash2",
-    })
+    fake = json.dumps(
+        {
+            "timestamp": "2026-01-01T00:00:00+00:00",
+            "session_id": "fake",
+            "action_tool": "fake_tool",
+            "action_params_hash": "0" * 64,
+            "decision_status": "ALLOW",
+            "decision_reason": "injected",
+            "risk_level": "green",
+            "policy_name": "",
+            "user_override": False,
+            "prev_hash": "fakehash",
+            "hash": "fakehash2",
+        }
+    )
     lines.insert(1, fake)
     audit_log_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -164,7 +164,9 @@ def test_hash_excludes_meta_fields(audit_trail: AuditTrail, audit_log_path):
     with open(audit_log_path, encoding="utf-8") as f:
         entry = json.loads(f.readline())
 
-    data_fields = {k: v for k, v in entry.items() if k not in ("prev_hash", "hash", "hmac", "ed25519_sig")}
+    data_fields = {
+        k: v for k, v in entry.items() if k not in ("prev_hash", "hash", "hmac", "ed25519_sig")
+    }
     data_str = json.dumps(data_fields, ensure_ascii=False, sort_keys=True)
     expected = _compute_hash(data_str, "genesis")
 

@@ -57,7 +57,9 @@ def test_cost_budget_blocks_when_exceeded(tmp_path):
 
     db = str(tmp_path / "cost.db")
     tracker = CostTracker(db_path=db, daily_budget=0.01, monthly_budget=1.0)
-    tracker.record_llm_call(model="claude-sonnet-4-5", input_tokens=1_000_000, output_tokens=500_000)
+    tracker.record_llm_call(
+        model="claude-sonnet-4-5", input_tokens=1_000_000, output_tokens=500_000
+    )
 
     status = tracker.check_budget()
     assert not status.ok
@@ -80,9 +82,7 @@ def test_cost_budget_checked_mid_loop():
     from cognithor.gateway.gateway import Gateway
 
     source = inspect.getsource(Gateway._run_pge_loop)
-    assert "check_budget" in source, (
-        "check_budget() must be called inside _run_pge_loop"
-    )
+    assert "check_budget" in source, "check_budget() must be called inside _run_pge_loop"
 
 
 def test_cost_budget_daily_and_monthly_independent(tmp_path):
@@ -91,7 +91,9 @@ def test_cost_budget_daily_and_monthly_independent(tmp_path):
 
     db = str(tmp_path / "cost.db")
     tracker = CostTracker(db_path=db, daily_budget=0.001, monthly_budget=1000.0)
-    tracker.record_llm_call(model="claude-sonnet-4-5", input_tokens=1_000_000, output_tokens=500_000)
+    tracker.record_llm_call(
+        model="claude-sonnet-4-5", input_tokens=1_000_000, output_tokens=500_000
+    )
     status = tracker.check_budget()
     assert not status.ok
 
@@ -178,11 +180,17 @@ def test_tool_enforcer_max_calls_blocks():
     from pathlib import Path
 
     manifest = CommunitySkillManifest(
-        name="test", tools_required=["web_search"], max_tool_calls=2,
+        name="test",
+        tools_required=["web_search"],
+        max_tool_calls=2,
     )
     skill = Skill(
-        name="test", slug="test", file_path=Path("/fake.md"),
-        tools_required=["web_search"], source="community", manifest=manifest,
+        name="test",
+        slug="test",
+        file_path=Path("/fake.md"),
+        tools_required=["web_search"],
+        source="community",
+        manifest=manifest,
     )
     enforcer = ToolEnforcer(max_tool_calls=10)
     action = PlannedAction(tool="web_search", params={})

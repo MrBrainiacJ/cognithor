@@ -26,11 +26,15 @@ def _skill(
     tools: list[str] | None = None,
     max_calls: int = 10,
 ) -> Skill:
-    manifest = CommunitySkillManifest(
-        name=name,
-        tools_required=tools or ["web_search"],
-        max_tool_calls=max_calls,
-    ) if source == "community" else None
+    manifest = (
+        CommunitySkillManifest(
+            name=name,
+            tools_required=tools or ["web_search"],
+            max_tool_calls=max_calls,
+        )
+        if source == "community"
+        else None
+    )
     return Skill(
         name=name,
         slug=name,
@@ -68,9 +72,7 @@ def test_tool_enforcer_blocks_generated_skills():
 
     dangerous_action = _action("vault_delete")
     result = enforcer.check(dangerous_action, skill)
-    assert result.allowed is False, (
-        "Generated skill must be blocked when calling undeclared tool"
-    )
+    assert result.allowed is False, "Generated skill must be blocked when calling undeclared tool"
 
 
 # ---------------------------------------------------------------------------
@@ -104,9 +106,7 @@ def test_generated_skill_runs_security_validation():
     from cognithor.skills.generator import SkillGenerator
 
     source = inspect.getsource(SkillGenerator.register)
-    assert "SkillValidator" in source, (
-        "SkillValidator must be called in register()"
-    )
+    assert "SkillValidator" in source, "SkillValidator must be called in register()"
     assert "injection_scan" in source or "content_safety" in source, (
         "Security checks (injection, content safety) must be enforced"
     )
@@ -152,9 +152,7 @@ def test_generated_skill_undeclared_tool_blocked():
     skill = _skill(source="generated", tools=["web_search"])
 
     result = enforcer.check(_action("vault_delete"), skill)
-    assert result.allowed is False, (
-        "Generated skill must be blocked when calling undeclared tool"
-    )
+    assert result.allowed is False, "Generated skill must be blocked when calling undeclared tool"
 
 
 # ---------------------------------------------------------------------------
@@ -166,9 +164,7 @@ def test_auto_approve_threshold():
     """Default auto_approve_threshold (0.7) must result in require_approval=True."""
     threshold = 0.7  # default
     require_approval = threshold < 1.0
-    assert require_approval is True, (
-        "Default threshold must require approval for generated skills"
-    )
+    assert require_approval is True, "Default threshold must require approval for generated skills"
 
 
 # ---------------------------------------------------------------------------
@@ -189,13 +185,9 @@ tools_required: [web_search]
 Do something with web_search.
 """
     result = validator.validate(skill_md, manifest=None, existing_names=set())
-    integrity_check = next(
-        (c for c in result.checks if c.check_name == "manifest_integrity"), None
-    )
+    integrity_check = next((c for c in result.checks if c.check_name == "manifest_integrity"), None)
     assert integrity_check is not None
-    assert integrity_check.passed is False, (
-        "manifest=None must fail integrity check"
-    )
+    assert integrity_check.passed is False, "manifest=None must fail integrity check"
 
 
 # ---------------------------------------------------------------------------

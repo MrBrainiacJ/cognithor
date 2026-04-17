@@ -63,9 +63,7 @@ def test_no_channel_approval_returns_block(security_config):
     session = make_session()
     decision = gk.evaluate(action, session)
 
-    assert decision.status == GateStatus.APPROVE, (
-        "email_send should be APPROVE (ORANGE)"
-    )
+    assert decision.status == GateStatus.APPROVE, "email_send should be APPROVE (ORANGE)"
     # The gateway converts APPROVE to BLOCK when no channel exists.
     # This simulates that logic:
     from cognithor.models import GateDecision
