@@ -298,11 +298,51 @@ def step_launcher() -> Path:
     return launcher
 
 
+def step_launcher_exe() -> Path:
+    """Step 5: Build Cognithor.exe (C# app shell)."""
+    print("\n=== Step 5: Launcher EXE ===")
+
+    launcher_proj = PROJECT_ROOT / "launcher" / "Cognithor" / "Cognithor.csproj"
+    if not launcher_proj.exists():
+        print(f"  [SKIP] {launcher_proj} not found")
+        return Path("")
+
+    dotnet = shutil.which("dotnet")
+    if dotnet is None:
+        print("  [SKIP] dotnet SDK not found — using .bat launcher only")
+        return Path("")
+
+    publish_dir = BUILD_DIR / "launcher_publish"
+    subprocess.run(
+        [
+            dotnet, "publish", str(launcher_proj),
+            "-c", "Release",
+            "-r", "win-x64",
+            "--self-contained",
+            "-p:PublishSingleFile=true",
+            "-p:PublishTrimmed=true",
+            "-p:TrimMode=partial",
+            "-o", str(publish_dir),
+        ],
+        check=True,
+    )
+
+    exe = publish_dir / "Cognithor.exe"
+    if not exe.exists():
+        print("  [ERROR] Cognithor.exe not found after publish")
+        return Path("")
+
+    dest = BUILD_DIR / "Cognithor.exe"
+    shutil.copy2(exe, dest)
+    print(f"  [OK] {dest} ({dest.stat().st_size / 1024 / 1024:.1f} MB)")
+    return dest
+
+
 def step_inno_setup(
     version: str, python_dir: Path, ollama_dir: Path, flutter_dir: Path | None
 ) -> Path:
-    """Step 5: Compile Inno Setup installer."""
-    print("\n=== Step 5: Inno Setup Compiler ===")
+    """Step 6: Compile Inno Setup installer."""
+    print("\n=== Step 6: Inno Setup Compiler ===")
 
     iss_template = PROJECT_ROOT / "installer" / "cognithor.iss"
     if not iss_template.exists():
@@ -372,6 +412,7 @@ def main() -> int:
     ollama_dir = step_ollama()
     flutter_dir = step_flutter_ui()
     step_launcher()
+    step_launcher_exe()
     installer = step_inno_setup(version, python_dir, ollama_dir, flutter_dir)
 
     print("\n" + "=" * 60)
