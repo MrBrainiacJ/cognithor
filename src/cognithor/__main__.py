@@ -407,11 +407,7 @@ def main() -> None:
     # 1.1 i18n: Set locale from config (or COGNITHOR_LANGUAGE env var)
     from cognithor.i18n import set_locale
 
-    _lang = (
-        os.environ.get("COGNITHOR_LANGUAGE")
-        or os.environ.get("COGNITHOR_LANGUAGE")
-        or config.language
-    )
+    _lang = os.environ.get("COGNITHOR_LANGUAGE") or config.language
     set_locale(_lang)
 
     # 1.5 Lite mode: smaller models for low VRAM usage

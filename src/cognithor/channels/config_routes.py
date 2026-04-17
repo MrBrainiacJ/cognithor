@@ -2032,26 +2032,30 @@ def _register_skill_routes(
     @app.get("/api/v1/i18n/locales", dependencies=deps)
     async def i18n_locales() -> dict[str, Any]:
         """Verfuegbare Sprachen."""
-        mgr = getattr(gateway, "_i18n", None)
-        if mgr is None:
-            return {"locales": [], "default": "de"}
-        return {"locales": mgr.available_locales(), "default": mgr.default_locale}
+        from cognithor.i18n import get_available_locales, get_locale
+
+        return {"locales": get_available_locales(), "default": get_locale()}
 
     @app.get("/api/v1/i18n/translate/{key}", dependencies=deps)
     async def i18n_translate(key: str, locale: str = "") -> dict[str, Any]:
         """Einzelnen Key uebersetzen."""
-        mgr = getattr(gateway, "_i18n", None)
-        if mgr is None:
-            return {"key": key, "translation": key}
-        return {"key": key, "translation": mgr.t(key, locale=locale)}
+        from cognithor.i18n import get_locale, set_locale, t
+
+        if locale and locale != get_locale():
+            prev = get_locale()
+            set_locale(locale)
+            result = t(key)
+            set_locale(prev)
+            return {"key": key, "translation": result}
+        return {"key": key, "translation": t(key)}
 
     @app.get("/api/v1/i18n/stats", dependencies=deps)
     async def i18n_stats() -> dict[str, Any]:
-        """i18n-Manager Statistiken."""
-        mgr = getattr(gateway, "_i18n", None)
-        if mgr is None:
-            return {"default_locale": "de", "locale_count": 0, "locales": []}
-        return mgr.stats()
+        """i18n-Statistiken."""
+        from cognithor.i18n import get_available_locales, get_locale
+
+        locales = get_available_locales()
+        return {"default_locale": get_locale(), "locale_count": len(locales), "locales": locales}
 
     # -- Skill-CLI (Phase 35) ---------------------------------------------
 

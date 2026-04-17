@@ -1928,11 +1928,7 @@ class Gateway:
 
                 from cognithor.i18n import set_locale
 
-                _lang = (
-                    os.environ.get("COGNITHOR_LANGUAGE")
-                    or os.environ.get("COGNITHOR_LANGUAGE")
-                    or new_config.language
-                )
+                _lang = os.environ.get("COGNITHOR_LANGUAGE") or new_config.language
                 set_locale(_lang)
             except Exception:
                 log.debug("i18n_locale_reload_failed", exc_info=True)

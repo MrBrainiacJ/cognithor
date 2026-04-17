@@ -756,10 +756,11 @@ class TestSkillRoutes:
         assert result["translation"] == "hello"
 
     @pytest.mark.asyncio
-    async def test_i18n_stats_none(self, registered_app: FakeApp) -> None:
+    async def test_i18n_stats_returns_locales(self, registered_app: FakeApp) -> None:
         handler = registered_app.routes["GET /api/v1/i18n/stats"]
         result = await handler()
-        assert result["locale_count"] == 0
+        assert result["locale_count"] >= 1
+        assert "default_locale" in result
 
     @pytest.mark.asyncio
     async def test_skill_cli_stats_none(self, registered_app: FakeApp) -> None:
