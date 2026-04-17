@@ -10,6 +10,14 @@
     <Company>Cognithor</Company>
     <Product>Cognithor Agent OS</Product>
     <Description>Cognithor App Shell — system tray launcher</Description>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Resources\app_icon.ico">
