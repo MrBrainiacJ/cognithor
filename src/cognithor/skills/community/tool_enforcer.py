@@ -107,15 +107,15 @@ class ToolEnforcer:
                 reason="No skill active",
             )
 
-        # Builtin-Skills → kein Enforcement
+        # Only builtin skills skip enforcement — community AND generated are checked
         source = getattr(skill, "source", "builtin")
-        if source != "community":
+        if source == "builtin":
             return ToolEnforcementResult(
                 allowed=True,
                 tool=action.tool,
                 skill_name=skill.name,
                 declared_tools=skill.tools_required,
-                reason="Builtin skill, no community enforcement",
+                reason="Builtin skill, no enforcement needed",
             )
 
         # Community-Skill → tools_required enforcement

@@ -198,9 +198,10 @@ class _ASTGuardVisitor(ast.NodeVisitor):
             )
 
         # getattr(os, ...) / getattr(sys, ...) — bypass detection
+        _GETATTR_BLOCKED = self.DANGEROUS_MODULES | {"__builtins__", "builtins"}
         if isinstance(func, ast.Name) and func.id == "getattr" and len(node.args) >= 1:
             first = node.args[0]
-            if isinstance(first, ast.Name) and first.id in self.DANGEROUS_MODULES:
+            if isinstance(first, ast.Name) and first.id in _GETATTR_BLOCKED:
                 self.violations.append(
                     Violation(
                         lineno=node.lineno,

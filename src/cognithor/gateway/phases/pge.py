@@ -151,7 +151,7 @@ async def init_pge(
             skills_dir=skills_dir,
             sandbox_executor=sandbox_executor,
             llm_fn=_skill_llm_fn,
-            require_approval=getattr(config.gatekeeper, "auto_approve_threshold", 0.7) < 0.5,
+            require_approval=getattr(config.gatekeeper, "auto_approve_threshold", 0.7) < 1.0,
             audit_logger=audit_logger,
         )
         # Wire skill_registry for hot-reload after generation.

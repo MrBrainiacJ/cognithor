@@ -3103,6 +3103,17 @@ class Gateway:
                 final_response = t("gateway.processing_cancelled")
                 break
 
+            # Mid-loop cost budget check — abort if daily/monthly limit exceeded
+            if hasattr(self, "_cost_tracker") and self._cost_tracker:
+                try:
+                    _budget = self._cost_tracker.check_budget()
+                    if not _budget.ok:
+                        log.warning("pge_budget_exceeded_mid_loop", session=session.session_id[:8])
+                        final_response = t("gateway.budget_limit_reached", warning=_budget.warning)
+                        break
+                except Exception:
+                    log.debug("pge_budget_check_failed", exc_info=True)
+
             session.iteration_count += 1
             await _pipeline_cb("iteration", "start", iteration=session.iteration_count)
 

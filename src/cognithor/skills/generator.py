@@ -624,6 +624,38 @@ class SkillGenerator:
             log.info("skill_awaiting_approval", name=skill.name)
             return False
 
+        # Security validation (checks 2-4: injection, permissions, content safety)
+        try:
+            from cognithor.skills.community.validator import SkillValidator
+
+            validator = SkillValidator()
+            validation = validator.validate(
+                skill.skill_markdown,
+                manifest=None,
+                existing_names=set(),
+            )
+            # For generated skills, unknown-tool-name errors in check 1 are
+            # expected (the skill may define new tools). Only block on security
+            # checks 2-4 (injection, tool permissions, content safety).
+            security_checks = [
+                c for c in validation.checks
+                if c.check_name in ("injection_scan", "tool_permissions", "content_safety")
+            ]
+            security_errors = []
+            for c in security_checks:
+                security_errors.extend(c.errors)
+            if security_errors:
+                skill.status = GenerationStatus.FAILED
+                log.warning(
+                    "skill_register_validation_failed",
+                    name=skill.name,
+                    errors=security_errors,
+                )
+                return False
+        except Exception as exc:
+            log.warning("skill_register_validation_error", name=skill.name, error=str(exc))
+            return False
+
         # Archive old version
         self._archive_if_exists(skill)
 

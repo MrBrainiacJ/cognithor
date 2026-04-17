@@ -192,6 +192,7 @@ asyncio_default_fixture_loop_scope = "function"
 markers = [
     "slow: marks tests as slow",
     "integration: marks tests requiring external services",
+    "security_contract: marks security contract invariant tests",
 ]
 filterwarnings = [
     # starlette uses deprecated multipart import — third-party, can't fix

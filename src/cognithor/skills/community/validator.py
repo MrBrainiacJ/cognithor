@@ -306,8 +306,8 @@ class SkillValidator:
             checks.append(
                 CheckResult(
                     check_name="manifest_integrity",
-                    passed=True,
-                    warnings=["Kein Manifest vorhanden — Check uebersprungen"],
+                    passed=False,
+                    errors=["Kein Manifest vorhanden — Integritaetspruefung nicht moeglich"],
                 )
             )
 
