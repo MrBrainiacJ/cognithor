@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Resources\app_icon.ico</ApplicationIcon>
+    <AssemblyName>Cognithor</AssemblyName>
+    <RootNamespace>Cognithor</RootNamespace>
+    <Version>0.92.1</Version>
+    <Company>Cognithor</Company>
+    <Product>Cognithor Agent OS</Product>
+    <Description>Cognithor App Shell — system tray launcher</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Resources\app_icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>
