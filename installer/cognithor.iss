@@ -73,6 +73,9 @@ Source: "{#PythonDir}\*"; DestDir: "{app}\python"; Components: core; Flags: igno
 ; Launcher
 Source: "{#BuildDir}\cognithor.bat"; DestDir: "{app}"; Components: core; Flags: ignoreversion
 
+; App shell (tray launcher)
+Source: "{#BuildDir}\Cognithor.exe"; DestDir: "{app}"; Components: core; Flags: ignoreversion
+
 ; Ollama
 Source: "{#OllamaDir}\*"; DestDir: "{app}\ollama"; Components: ollama; Flags: ignoreversion recursesubdirs createallsubdirs
 
@@ -95,10 +98,10 @@ Source: "{#ProjectRoot}\config.yaml.example"; DestDir: "{app}"; DestName: "confi
 Source: "{#ProjectRoot}\flutter_app\windows\runner\resources\app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Cognithor"; Filename: "{app}\cognithor.bat"; Parameters: "--ui"; IconFilename: "{app}\app_icon.ico"; Comment: "Start Cognithor with Web UI"
+Name: "{group}\Cognithor"; Filename: "{app}\Cognithor.exe"; IconFilename: "{app}\app_icon.ico"; Comment: "Start Cognithor"
 Name: "{group}\Cognithor CLI"; Filename: "cmd.exe"; Parameters: "/k ""{app}\cognithor.bat"""; IconFilename: "{app}\app_icon.ico"; Comment: "Cognithor Command Line"
 Name: "{group}\Uninstall Cognithor"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\Cognithor"; Filename: "{app}\cognithor.bat"; Parameters: "--ui"; IconFilename: "{app}\app_icon.ico"; Comment: "Start Cognithor"
+Name: "{autodesktop}\Cognithor"; Filename: "{app}\Cognithor.exe"; IconFilename: "{app}\app_icon.ico"; Comment: "Start Cognithor"
 
 [Registry]
 ; Add to PATH if selected
@@ -108,7 +111,7 @@ Root: HKCU; Subkey: "Environment"; \
 
 [Run]
 ; Post-install: offer to start Cognithor
-Filename: "{cmd}"; Parameters: "/c ""{app}\cognithor.bat"" --ui"; Description: "Start Cognithor"; \
+Filename: "{app}\Cognithor.exe"; Description: "Start Cognithor"; \
     Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
@@ -118,6 +121,7 @@ Type: filesandordirs; Name: "{app}\python"
 Type: filesandordirs; Name: "{app}\ollama"
 Type: filesandordirs; Name: "{app}\flutter_app"
 Type: files; Name: "{app}\cognithor.bat"
+Type: files; Name: "{app}\Cognithor.exe"
 Type: files; Name: "{app}\first_run.py"
 Type: files; Name: "{app}\agents.yaml.default"
 Type: files; Name: "{app}\config.yaml"
