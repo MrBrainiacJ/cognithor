@@ -132,11 +132,11 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
+      - name: Install hatchling
+        run: pip install hatchling
+
       - name: Build embedded Python + installer
-        shell: bash
-        run: |
-          pip install hatchling
-          python installer/build_installer.py --skip-flutter --skip-launcher-exe
+        run: python installer/build_installer.py --skip-flutter --skip-launcher-exe
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
