@@ -62,7 +62,6 @@ jobs:
   build-flutter-desktop:
     name: Build Flutter Desktop
     runs-on: windows-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -72,7 +71,10 @@ jobs:
           flutter-version: '3.41.4'
           channel: stable
 
-      - name: Regenerate plugin registrant + Build Windows desktop
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Clean build + generate l10n + build desktop
         working-directory: flutter_app
         run: |
           flutter clean
@@ -89,8 +91,7 @@ jobs:
   build-installer:
     name: Build Windows Installer
     runs-on: windows-latest
-    needs: [build-launcher, build-flutter-web]
-    if: always() && needs.build-launcher.result == 'success' && needs.build-flutter-web.result == 'success'
+    needs: [build-launcher, build-flutter-web, build-flutter-desktop]
     steps:
       - uses: actions/checkout@v4
 
@@ -111,8 +112,7 @@ jobs:
           name: flutter-web
           path: installer/build/flutter_web/
 
-      - name: Download Flutter desktop artifact (optional)
-        continue-on-error: true
+      - name: Download Flutter desktop artifact
         uses: actions/download-artifact@v4
         with:
           name: flutter-desktop
