@@ -205,6 +205,43 @@ def step_flutter_ui() -> Path | None:
     return web_build
 
 
+def step_flutter_desktop() -> Path | None:
+    """Step 3b: Build Flutter desktop app (Windows)."""
+    print("\n=== Step 3b: Flutter Desktop ===")
+
+    flutter_app = PROJECT_ROOT / "flutter_app"
+    desktop_build = flutter_app / "build" / "windows" / "x64" / "runner" / "Release"
+
+    if desktop_build.exists() and (desktop_build / "cognithor_ui.exe").exists():
+        dest = BUILD_DIR / "flutter_desktop"
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(desktop_build, dest)
+        print(f"  [OK] Pre-built Flutter desktop copied")
+        return dest
+
+    if not flutter_app.exists() or shutil.which("flutter") is None:
+        print("  [SKIP] Flutter desktop build not available")
+        return None
+
+    print("  Building Flutter desktop (windows)...")
+    subprocess.run(
+        ["flutter", "build", "windows", "--release"],
+        check=True,
+        cwd=str(flutter_app),
+    )
+    if desktop_build.exists():
+        dest = BUILD_DIR / "flutter_desktop"
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(desktop_build, dest)
+        print("  [OK] Flutter desktop build complete")
+        return dest
+
+    print("  [WARN] Flutter desktop build produced no output")
+    return None
+
+
 def step_launcher() -> Path:
     """Step 4: Create launcher batch script."""
     print("\n=== Step 4: Launcher ===")
@@ -411,6 +448,7 @@ def main() -> int:
     python_dir = step_python_embed()
     ollama_dir = step_ollama()
     flutter_dir = step_flutter_ui()
+    step_flutter_desktop()
     step_launcher()
     step_launcher_exe()
     installer = step_inno_setup(version, python_dir, ollama_dir, flutter_dir)

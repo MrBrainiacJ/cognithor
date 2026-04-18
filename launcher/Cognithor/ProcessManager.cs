@@ -64,6 +64,7 @@ sealed class ProcessManager : IDisposable
     readonly string _baseDir;
     Process? _pythonProcess;
     Process? _ollamaProcess;
+    Process? _desktopUiProcess;
 
     public ProcessManager()
     {
@@ -148,6 +149,54 @@ sealed class ProcessManager : IDisposable
     }
 
     public bool IsPythonRunning => _pythonProcess is { HasExited: false };
+    public bool IsDesktopUiRunning => _desktopUiProcess is { HasExited: false };
+
+    public string? FindDesktopUi()
+    {
+        var local = Path.Combine(_baseDir, "flutter_app", "cognithor_ui.exe");
+        if (File.Exists(local)) return local;
+
+        var alt = Path.Combine(_baseDir, "flutter_app", "jarvis_ui.exe");
+        if (File.Exists(alt)) return alt;
+
+        return null;
+    }
+
+    public bool StartDesktopUi()
+    {
+        if (IsDesktopUiRunning)
+        {
+            BringDesktopToFront();
+            return true;
+        }
+
+        var uiPath = FindDesktopUi();
+        if (uiPath == null) return false;
+
+        _desktopUiProcess = SpawnAndAssign(uiPath, "", createWindow: true);
+        return true;
+    }
+
+    void BringDesktopToFront()
+    {
+        if (_desktopUiProcess is not { HasExited: false }) return;
+        try
+        {
+            var hwnd = _desktopUiProcess.MainWindowHandle;
+            if (hwnd != IntPtr.Zero)
+            {
+                SetForegroundWindow(hwnd);
+                ShowWindow(hwnd, 9); // SW_RESTORE
+            }
+        }
+        catch { }
+    }
+
+    [DllImport("user32.dll")]
+    static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     public void RestartBackend()
     {
@@ -161,6 +210,8 @@ sealed class ProcessManager : IDisposable
 
     public void KillAll()
     {
+        if (_desktopUiProcess is { HasExited: false })
+            try { _desktopUiProcess.Kill(entireProcessTree: true); } catch { }
         if (_pythonProcess is { HasExited: false })
             try { _pythonProcess.Kill(entireProcessTree: true); } catch { }
         if (_ollamaProcess is { HasExited: false })

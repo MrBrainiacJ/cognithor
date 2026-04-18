@@ -79,8 +79,11 @@ Source: "{#BuildDir}\Cognithor.exe"; DestDir: "{app}"; Components: core; Flags: 
 ; Ollama
 Source: "{#OllamaDir}\*"; DestDir: "{app}\ollama"; Components: ollama; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; Flutter UI — always include from build dir if present
+; Flutter UI — web build (served via backend)
 Source: "{#BuildDir}\flutter_web\*"; DestDir: "{app}\flutter_app\web"; Components: flutter; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+
+; Flutter Desktop app (native Windows UI)
+Source: "{#BuildDir}\flutter_desktop\*"; DestDir: "{app}\flutter_app"; Components: flutter; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 
 ; First-run setup script
 Source: "{#ProjectRoot}\installer\first_run.py"; DestDir: "{app}"; Components: core; Flags: ignoreversion

@@ -10,21 +10,38 @@ sealed class AppShell : IDisposable
 {
     readonly ProcessManager _processes;
     readonly HealthChecker _health;
+    readonly LauncherSettings _settings;
     readonly NotifyIcon _trayIcon;
     readonly ToolStripMenuItem _statusItem;
+    readonly ToolStripMenuItem _defaultToggle;
 
     static readonly string Version = typeof(AppShell).Assembly
-        .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
         ?.InformationalVersion ?? "dev";
 
     public AppShell(string[] args)
     {
         _processes = new ProcessManager();
         _health = new HealthChecker();
+        _settings = LauncherSettings.Load();
 
-        var openItem = new ToolStripMenuItem("Open Command Center");
-        openItem.Click += (_, _) => OpenBrowser();
-        openItem.Font = new Font(openItem.Font, FontStyle.Bold);
+        var hasDesktop = _processes.FindDesktopUi() != null;
+
+        // --- Menu items ---
+        var openBrowserItem = new ToolStripMenuItem("Open in Browser");
+        openBrowserItem.Click += (_, _) => OpenBrowser();
+
+        var openDesktopItem = new ToolStripMenuItem("Open Desktop App");
+        openDesktopItem.Click += (_, _) => _processes.StartDesktopUi();
+        openDesktopItem.Enabled = hasDesktop;
+
+        _defaultToggle = new ToolStripMenuItem(DefaultToggleLabel);
+        _defaultToggle.Click += (_, _) =>
+        {
+            _settings.TogglePreferredUi();
+            _defaultToggle.Text = DefaultToggleLabel;
+        };
+        _defaultToggle.Enabled = hasDesktop;
 
         _statusItem = new ToolStripMenuItem("Status: Starting...") { Enabled = false };
 
@@ -41,13 +58,20 @@ sealed class AppShell : IDisposable
         var versionItem = new ToolStripMenuItem($"v{Version}") { Enabled = false };
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add(openItem);
+        menu.Items.Add(openBrowserItem);
+        menu.Items.Add(openDesktopItem);
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(_defaultToggle);
         menu.Items.Add(_statusItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(restartItem);
         menu.Items.Add(quitItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(versionItem);
+
+        // Bold the default action
+        (hasDesktop && _settings.PreferDesktop ? openDesktopItem : openBrowserItem)
+            .Font = new Font(openBrowserItem.Font, FontStyle.Bold);
 
         _trayIcon = new NotifyIcon
         {
@@ -56,7 +80,7 @@ sealed class AppShell : IDisposable
             ContextMenuStrip = menu,
             Visible = true,
         };
-        _trayIcon.DoubleClick += (_, _) => OpenBrowser();
+        _trayIcon.DoubleClick += (_, _) => OpenDefault();
 
         _health.StatusChanged += (prev, next) =>
         {
@@ -71,6 +95,17 @@ sealed class AppShell : IDisposable
 
         _processes.StartAll();
         _health.Start();
+    }
+
+    string DefaultToggleLabel =>
+        _settings.PreferDesktop ? "Default: Desktop App  \u2713" : "Default: Browser  \u2713";
+
+    void OpenDefault()
+    {
+        if (_settings.PreferDesktop && _processes.FindDesktopUi() != null)
+            _processes.StartDesktopUi();
+        else
+            OpenBrowser();
     }
 
     void SetStatus(AppStatus status)
