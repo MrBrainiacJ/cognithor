@@ -455,7 +455,11 @@ def main() -> int:
 
     if os.environ.get("SKIP_FLUTTER_BUILD"):
         flutter_dir = BUILD_DIR / "flutter_web" if (BUILD_DIR / "flutter_web").exists() else None
-        print(f"\n=== Flutter builds: SKIPPED (pre-built artifacts) ===")
+        print("\n=== Flutter web: SKIPPED (pre-built artifact) ===")
+        if (BUILD_DIR / "flutter_desktop").exists():
+            print("=== Flutter desktop: SKIPPED (pre-built artifact) ===")
+        else:
+            print("=== Flutter desktop: not available ===")
     else:
         flutter_dir = step_flutter_ui()
         step_flutter_desktop()

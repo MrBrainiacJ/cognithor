@@ -71,13 +71,9 @@ jobs:
           flutter-version: '3.41.4'
           channel: stable
 
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Clean build + generate l10n + build desktop
+      - name: Generate l10n + build desktop
         working-directory: flutter_app
         run: |
-          flutter clean
           flutter pub get
           flutter gen-l10n
           flutter build windows --release
