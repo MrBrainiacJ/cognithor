@@ -93,7 +93,6 @@ class FakeChannel:
         if self.should_raise:
             raise ConnectionError("channel down")
         if self.should_timeout:
-
             raise TimeoutError()
         if tool in self.approval_responses:
             return self.approval_responses[tool]

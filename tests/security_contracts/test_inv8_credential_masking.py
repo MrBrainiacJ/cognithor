@@ -31,9 +31,7 @@ CREDENTIAL_SAMPLES = {
     "generic_secret": "secret=my_very_secret_value_here",
     "generic_api_key": "api_key = sk_live_abcdefghijklmnop",
     "private_key": (
-        "-----BEGIN RSA PRIVATE KEY-----\n"
-        "MIIE...content...\n"
-        "-----END RSA PRIVATE KEY-----"
+        "-----BEGIN RSA PRIVATE KEY-----\nMIIE...content...\n-----END RSA PRIVATE KEY-----"
     ),
     "token_prefix": "token_abcd1234567890abcdef",
 }
