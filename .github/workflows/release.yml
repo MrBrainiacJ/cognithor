@@ -71,25 +71,27 @@ jobs:
           flutter-version: '3.41.4'
           channel: stable
 
-      - name: Generate l10n + strip broken speech plugin + build desktop
+      - name: Resolve deps + strip broken native plugin + build
         working-directory: flutter_app
         run: |
           flutter pub get
           flutter gen-l10n
 
-          # The speech_to_text_windows v1.0.0+beta.8 plugin cannot compile
-          # in CI — its native code uses SAPI headers that fail silently.
-          # Strip it from the registrant and plugins list so the build succeeds.
-          # Voice input on Windows Desktop uses the web engine fallback instead.
+          # speech_to_text_windows v1.0.0+beta.8 native code fails in CI.
+          # Strip from generated files AFTER pub get, then build with --no-pub
+          # so Flutter doesn't regenerate them.
           $reg = "windows\flutter\generated_plugin_registrant.cc"
-          (Get-Content $reg) | Where-Object { $_ -notmatch 'speech_to_text_windows' -and $_ -notmatch 'SpeechToTextWindows' } | Set-Content $reg
-          Write-Host "Stripped speech_to_text_windows from plugin registrant"
+          $content = Get-Content $reg -Raw
+          $content = $content -replace '#include <speech_to_text_windows/speech_to_text_windows\.h>\r?\n', ''
+          $content = $content -replace '\s*SpeechToTextWindowsRegisterWithRegistrar\(\s*\r?\n\s*registry->GetRegistrarForPlugin\("SpeechToTextWindows"\)\);?\r?\n', ''
+          Set-Content $reg $content
+          Write-Host "Stripped SpeechToTextWindows from registrant"
 
           $cmake = "windows\flutter\generated_plugins.cmake"
           (Get-Content $cmake) | Where-Object { $_ -notmatch 'speech_to_text_windows' } | Set-Content $cmake
-          Write-Host "Stripped speech_to_text_windows from plugins cmake"
+          Write-Host "Stripped speech_to_text_windows from cmake"
 
-          flutter build windows --release
+          flutter build windows --release --no-pub
 
       - name: Upload desktop artifact
         uses: actions/upload-artifact@v4

@@ -453,7 +453,10 @@ def main() -> int:
     python_dir = step_python_embed()
     ollama_dir = step_ollama()
 
-    if os.environ.get("SKIP_FLUTTER_BUILD"):
+    skip_flutter = os.environ.get("SKIP_FLUTTER_BUILD", "")
+    print(f"  SKIP_FLUTTER_BUILD={skip_flutter!r}")
+
+    if skip_flutter:
         flutter_dir = BUILD_DIR / "flutter_web" if (BUILD_DIR / "flutter_web").exists() else None
         print("\n=== Flutter web: SKIPPED (pre-built artifact) ===")
         if (BUILD_DIR / "flutter_desktop").exists():
