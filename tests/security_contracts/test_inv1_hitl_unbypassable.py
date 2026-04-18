@@ -7,13 +7,10 @@ If approval never comes, the call must fail closed (BLOCK).
 
 from __future__ import annotations
 
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from cognithor.core.gatekeeper import Gatekeeper
-from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel, SessionContext
+from cognithor.models import GateDecision, GateStatus, RiskLevel
 
 from .conftest import FakeChannel, make_action, make_session
 
@@ -76,7 +73,7 @@ async def test_timeout_channel_returns_false():
     action = make_action("email_send")
     try:
         result = await channel.request_approval("sess-1", action=action, reason="test")
-    except (TimeoutError, asyncio.TimeoutError):
+    except TimeoutError:
         result = False
     assert result is False
 

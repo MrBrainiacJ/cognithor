@@ -132,7 +132,7 @@ class _CronJobCard extends StatelessWidget {
                 Switch(
                   value: job.enabled,
                   onChanged: (_) => context.read<CronProvider>().toggleJob(job.name),
-                  activeColor: JarvisTheme.accent,
+                  activeThumbColor: JarvisTheme.accent,
                 ),
               ],
             ),

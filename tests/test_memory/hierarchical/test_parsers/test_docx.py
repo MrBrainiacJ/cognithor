@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 from xml.etree.ElementTree import Element, SubElement
 
 import pytest
 
-from cognithor.memory.hierarchical.models import ParserError, RawSection
+from cognithor.memory.hierarchical.models import ParserError
 from cognithor.memory.hierarchical.parsers.docx import DocxParser
 
 

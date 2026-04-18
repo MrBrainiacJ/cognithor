@@ -116,8 +116,6 @@ class TestLiveGatekeeperSafety:
         green_tools = [
             "web_search",
             "search_and_read",
-            "deep_research",
-            "verified_web_lookup",
             "web_fetch",
             "read_file",
             "list_directory",

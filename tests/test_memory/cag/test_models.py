@@ -4,14 +4,13 @@ import dataclasses
 
 import pytest
 
+from cognithor.memory.cag.builders import get_builder
 from cognithor.memory.cag.models import (
+    CacheEntry,
     CAGMetrics,
     CAGRefreshReport,
     CAGStatus,
-    CacheEntry,
 )
-from cognithor.memory.cag.builders import get_builder
-
 
 # ---------------------------------------------------------------------------
 # CacheEntry

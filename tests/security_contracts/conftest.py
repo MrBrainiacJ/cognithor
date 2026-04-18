@@ -16,7 +16,6 @@ import pytest
 from cognithor.config import JarvisConfig
 from cognithor.models import (
     AuditEntry,
-    GateDecision,
     GateStatus,
     PlannedAction,
     RiskLevel,
@@ -94,9 +93,8 @@ class FakeChannel:
         if self.should_raise:
             raise ConnectionError("channel down")
         if self.should_timeout:
-            import asyncio
 
-            raise asyncio.TimeoutError()
+            raise TimeoutError()
         if tool in self.approval_responses:
             return self.approval_responses[tool]
         if self.default_response is not None:

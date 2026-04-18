@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import codecs
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -14,12 +14,10 @@ from cognithor.memory.hierarchical.models import (
     DocumentMetadata,
     DocumentTree,
     ParserError,
-    SelectedNode,
     TreeNode,
 )
 from cognithor.memory.hierarchical.tree_builder import DocumentTreeBuilder
 from cognithor.memory.hierarchical.tree_store import TreeStore
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -59,7 +57,7 @@ def _make_tree(
         title="Test Doc",
         root_node_id=root.node_id,
         nodes=nodes,
-        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
         parser_used="MarkdownParser",
         total_tokens=5,
     )
@@ -316,7 +314,7 @@ async def test_encoding_issues(tmp_path: Path) -> None:
     # Write with UTF-8 BOM
     with open(doc, "wb") as f:
         f.write(codecs.BOM_UTF8)
-        f.write("# BOM Test\n\nContent after BOM.\n".encode("utf-8"))
+        f.write(b"# BOM Test\n\nContent after BOM.\n")
 
     builder = DocumentTreeBuilder(llm_fn=_make_llm_fn(), max_parallel_summaries=1)
     tree = await builder.build(doc, document_id="bom")

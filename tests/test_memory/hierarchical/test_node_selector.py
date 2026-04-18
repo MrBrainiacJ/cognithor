@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock
 
-import pytest
-
-from cognithor.memory.hierarchical.models import DocumentTree, SelectedNode, TreeNode
+from cognithor.memory.hierarchical.models import DocumentTree, TreeNode
 from cognithor.memory.hierarchical.node_selector import LLMNodeSelector
 from cognithor.memory.hierarchical.prompts import format_selection_prompt
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -67,7 +64,7 @@ def _make_tree_with_children() -> DocumentTree:
         title="Test Doc",
         root_node_id="root",
         nodes={"root": root, "child-a": child_a, "child-b": child_b},
-        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
         parser_used="MarkdownParser",
         total_tokens=20,
     )
@@ -121,7 +118,7 @@ def _make_nested_tree() -> DocumentTree:
         title="Nested Doc",
         root_node_id="root",
         nodes={"root": root, "mid": mid, "leaf": leaf},
-        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
         parser_used="MarkdownParser",
         total_tokens=5,
     )
@@ -192,7 +189,10 @@ class TestNodeSelector:
         tree = _make_tree_with_children()
         # Response with extra text around JSON
         llm_fn = AsyncMock(
-            return_value='Here is my answer: {"selected_node_ids": ["child-b"], "reasoning": "B is best"} hope that helps!'
+            return_value=(
+                'Here is my answer: {"selected_node_ids": ["child-b"], '
+                '"reasoning": "B is best"} hope that helps!'
+            )
         )
         selector = LLMNodeSelector(llm_fn=llm_fn)
         results = await selector.select_nodes("find B", tree)

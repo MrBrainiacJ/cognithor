@@ -154,9 +154,9 @@ def _cmd_create(args: argparse.Namespace) -> int:
     print("  src/__init__.py       [OK]")
     print("  tests/test_pack.py    [OK]")
     print("  catalog/catalog.mdx   [OK]")
-    print(f"\nNext steps:")
-    print(f"  1. Edit src/ to add your tools")
-    print(f"  2. Wire them in pack.py register()")
+    print("\nNext steps:")
+    print("  1. Edit src/ to add your tools")
+    print("  2. Wire them in pack.py register()")
     print(f"  3. Test: cognithor pack install {pack_dir}")
     return 0
 

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from cognithor.cli.model_registry import ModelRegistry, _CUSTOM_OPTION, _REGISTRY_PATH
+from cognithor.cli.model_registry import _CUSTOM_OPTION, _REGISTRY_PATH, ModelRegistry
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ------------------------------------------------------------------
 # Fixtures

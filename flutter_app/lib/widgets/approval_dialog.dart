@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
@@ -34,8 +33,8 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
       _busy = true;
       _localError = null;
       _lastClickStatus = approved
-          ? AppLocalizations.of(context)?.sendingApproval ?? 'Sending approval...'
-          : AppLocalizations.of(context)?.sendingRejection ?? 'Sending rejection...';
+          ? AppLocalizations.of(context).sendingApproval
+          : AppLocalizations.of(context).sendingRejection;
     });
 
     try {
@@ -54,8 +53,8 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
         // disappears.
         setState(() {
           _lastClickStatus = approved
-            ? (AppLocalizations.of(context)?.actionApproved ?? 'OK — Action approved')
-            : (AppLocalizations.of(context)?.actionRejected ?? 'OK — Action rejected');
+            ? AppLocalizations.of(context).actionApproved
+            : AppLocalizations.of(context).actionRejected;
         });
         if (!mounted) return;
         context.read<ChatProvider>().clearPendingApproval();
@@ -64,7 +63,7 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
         debugPrint('[APPROVAL] REST failed: $err');
         setState(() {
           _busy = false;
-          _localError = AppLocalizations.of(context)?.errorWithDetail(err) ?? 'Error: $err';
+          _localError = AppLocalizations.of(context).errorWithDetail(err);
         });
       }
     } catch (e, st) {
@@ -72,7 +71,7 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _localError = AppLocalizations.of(context)?.errorWithDetail('$e') ?? 'Error: $e';
+        _localError = AppLocalizations.of(context).errorWithDetail('$e');
       });
     }
   }

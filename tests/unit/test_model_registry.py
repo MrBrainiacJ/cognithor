@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
 
-from cognithor.cli.model_registry import ModelRegistry, _CUSTOM_OPTION
+from cognithor.cli.model_registry import _CUSTOM_OPTION, ModelRegistry
 
 # ------------------------------------------------------------------
 # Fixtures

@@ -35,7 +35,7 @@ class TestPrefixCacheBuilder:
     async def test_multiple_entries(self):
         b = PrefixCacheBuilder()
         result = await b.prepare_prefix([_entry("b", "bb"), _entry("a", "aa")], "m")
-        assert "[CAG:a]\naa\n\n[CAG:b]\nbb" == result
+        assert result == "[CAG:a]\naa\n\n[CAG:b]\nbb"
 
     @pytest.mark.asyncio
     async def test_empty_entries(self):

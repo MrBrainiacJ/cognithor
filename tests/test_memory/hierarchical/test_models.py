@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -20,7 +20,6 @@ from cognithor.memory.hierarchical.models import (
     TreeNode,
 )
 from cognithor.memory.hierarchical.parsers import get_parser
-
 
 # ---------------------------------------------------------------------------
 # Frozen checks
@@ -73,7 +72,7 @@ class TestFrozen:
             title="Doc",
             root_node_id="n1",
             nodes={"n1": node},
-            created_at=datetime.now(tz=timezone.utc),
+            created_at=datetime.now(tz=UTC),
             parser_used="MarkdownParser",
             total_tokens=10,
         )

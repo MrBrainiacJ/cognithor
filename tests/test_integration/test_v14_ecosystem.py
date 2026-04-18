@@ -57,7 +57,10 @@ class TestSkillLinter:
             "SKILL.md": (
                 "# My Skill\n\n## Beschreibung\nEin toller Skill der viel kann und gut ist."
             ),
-            "skill.py": "from cognithor.skills.base import BaseSkill\nclass MySkill(BaseSkill): pass",
+            "skill.py": (
+                "from cognithor.skills.base import BaseSkill\n"
+                "class MySkill(BaseSkill): pass"
+            ),
             "manifest.json": '{"name": "my", "version": "0.1.0", "permissions": []}',
             "test_skill.py": "def test_it(): pass",
         }

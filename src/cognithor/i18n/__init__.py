@@ -1,4 +1,4 @@
-"""Jarvis i18n — Language Pack System.
+"""Cognithor i18n — Language Pack System.
 
 Provides a lightweight, hash-verified internationalization layer.
 Language packs are JSON files in the ``locales/`` directory.

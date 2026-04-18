@@ -1,137 +1,206 @@
-"""Comprehensive verification of Reddit Lead Hunter integration."""
+"""Comprehensive verification of Cognithor v0.92.x architecture.
+
+Verifies that the v0.92.0 agent-pack refactor is wired correctly:
+- Core imports (packs, leads, gateway)
+- Config schema
+- Flutter pack-aware UI
+- Version consistency
+- i18n locale integrity
+- Test structure
+"""
+
+from __future__ import annotations
+
 import json
 import os
 import subprocess
 import sys
 import tomllib
 
-sys.stdout.reconfigure(encoding="utf-8")
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-errors = []
+errors: list[str] = []
 
-def read(path):
+
+def read(path: str) -> str:
     with open(path, encoding="utf-8") as f:
         return f.read()
 
-def check(name, ok):
+
+def check(name: str, ok: bool) -> None:
     status = "OK" if ok else "FAIL"
     print(f"[{status}] {name}")
     if not ok:
         errors.append(name)
 
-# 1. Backend imports
-print("=== 1. Backend Module Imports ===")
+
+# ----------------------------------------------------------------------
+# 1. Core module imports (packs/leads replaced social/)
+# ----------------------------------------------------------------------
+print("=== 1. Core Module Imports ===")
 try:
-    from cognithor.social.models import Lead, LeadStatus, ScanResult, LeadStats
-    from cognithor.social.store import LeadStore
-    from cognithor.social.scanner import RedditScanner, ScanConfig
-    from cognithor.social.reply import ReplyPoster, ReplyMode, ReplyResult
-    from cognithor.social.service import RedditLeadService
-    from cognithor.mcp.reddit_tools import register_reddit_tools
-    check("All social modules importable", True)
+    from cognithor.leads.service import LeadService
+    from cognithor.leads.source import LeadSource
+    from cognithor.packs.installer import PackInstaller
+    from cognithor.packs.loader import PackLoader
+
+    check("Pack+Leads SDK importable", True)
 except Exception as e:
     check(f"Import failed: {e}", False)
 
-# 2. Config
-print("\n=== 2. Config ===")
+try:
+    from cognithor.core.gatekeeper import Gatekeeper  # noqa: F401
+    from cognithor.core.planner import SYSTEM_PROMPT  # noqa: F401
+    from cognithor.gateway.gateway import Gateway  # noqa: F401
+
+    check("Planner/Gatekeeper/Gateway importable", True)
+except Exception as e:
+    check(f"Core import failed: {e}", False)
+
+# Confirm legacy social module is really gone
+try:
+    import cognithor.social  # type: ignore # noqa: F401
+
+    check("cognithor.social correctly removed (v0.92.0)", False)
+except ImportError:
+    check("cognithor.social correctly removed (v0.92.0)", True)
+
+# ----------------------------------------------------------------------
+# 2. Config schema
+# ----------------------------------------------------------------------
+print("\n=== 2. Config Schema ===")
 from cognithor.config import JarvisConfig
+
 cfg = JarvisConfig()
-for f in ["reddit_scan_enabled", "reddit_subreddits", "reddit_min_score",
-          "reddit_product_name", "reddit_product_description", "reddit_reply_tone", "reddit_auto_post"]:
-    check(f"social.{f}", hasattr(cfg.social, f))
+for f in ["jarvis_home", "language", "ollama", "gatekeeper", "planner", "memory", "security"]:
+    check(f"JarvisConfig.{f}", hasattr(cfg, f))
 
-# 3. Gateway wiring
+# ----------------------------------------------------------------------
+# 3. Gateway wiring (pack loader + lead service)
+# ----------------------------------------------------------------------
 print("\n=== 3. Gateway Wiring ===")
-adv = read("src/jarvis/gateway/phases/advanced.py")
-check("RedditLeadService in advanced.py", "RedditLeadService" in adv)
-tools = read("src/jarvis/gateway/phases/tools.py")
-check("register_reddit_tools in tools.py", "register_reddit_tools" in tools)
-gw = read("src/jarvis/gateway/gateway.py")
-check("reddit_lead_scan cron in gateway.py", "reddit_lead_scan" in gw)
-routes = read("src/jarvis/channels/config_routes.py")
-check("_register_social_routes", "_register_social_routes" in routes)
-for ep in ["/api/v1/leads/scan", "/api/v1/leads/stats", "/api/v1/leads/{lead_id}", "/api/v1/leads/{lead_id}/reply"]:
-    check(f"Endpoint {ep}", ep in routes)
+gw = read("src/cognithor/gateway/gateway.py")
+check("PackLoader in gateway.py", "PackLoader" in gw)
+check("LeadService in gateway.py", "LeadService" in gw)
 
-# 4. Skill file
-print("\n=== 4. Skill File ===")
-skill = read("data/procedures/reddit-lead-hunter.md")
-check("trigger_keywords", "trigger_keywords" in skill)
-check("reddit_scan tool", "reddit_scan" in skill)
-check("Asks for product", "Produkt" in skill or "product" in skill.lower())
-
-# 5. Version
-print("\n=== 5. Version ===")
-with open("pyproject.toml", "rb") as f:
-    ver = tomllib.load(f)["project"]["version"]
-init = read("src/jarvis/__init__.py")
-check(f"Version {ver} consistent", f'__version__ = "{ver}"' in init)
-
-# 6. Flutter files
-print("\n=== 6. Flutter Files ===")
+# ----------------------------------------------------------------------
+# 4. Flutter pack-aware UI
+# ----------------------------------------------------------------------
+print("\n=== 4. Flutter Pack-Aware UI ===")
 for f in [
-    "flutter_app/lib/providers/reddit_leads_provider.dart",
-    "flutter_app/lib/screens/reddit_leads_screen.dart",
-    "flutter_app/lib/widgets/leads/lead_card.dart",
-    "flutter_app/lib/widgets/leads/lead_detail_sheet.dart",
-    "flutter_app/lib/screens/config/social_page.dart",
+    "flutter_app/lib/providers/sources_provider.dart",
+    "flutter_app/lib/widgets/packs/locked_pack_card.dart",
+    "flutter_app/lib/widgets/packs/pack_preview_overlay.dart",
+    "flutter_app/lib/data/known_packs.dart",
+    "flutter_app/lib/screens/leads_screen.dart",
 ]:
     check(f, os.path.exists(f))
 
-# 7. Flutter wiring
-print("\n=== 7. Flutter Wiring ===")
-main_dart = read("flutter_app/lib/main.dart")
-shell = read("flutter_app/lib/screens/main_shell.dart")
-api = read("flutter_app/lib/services/api_client.dart")
-check("RedditLeadsProvider in main.dart", "RedditLeadsProvider" in main_dart)
-check("RedditLeadsScreen in main_shell", "RedditLeadsScreen" in shell)
-check("7th NavItem (redditLeads)", "redditLeads" in shell)
-check("Ctrl+7 shortcut", "digit7" in shell)
-check("scanRedditLeads in api_client", "scanRedditLeads" in api)
-check("getRedditLeads in api_client", "getRedditLeads" in api)
-check("replyToRedditLead in api_client", "replyToRedditLead" in api)
-check("SocialPage in config_screen", "SocialPage" in read("flutter_app/lib/screens/config_screen.dart"))
-check("Social in search index", "Social Listening" in read("flutter_app/lib/widgets/global_search_dialog.dart"))
+# ----------------------------------------------------------------------
+# 5. Version consistency
+# ----------------------------------------------------------------------
+print("\n=== 5. Version Consistency ===")
+with open("pyproject.toml", "rb") as f:
+    ver = tomllib.load(f)["project"]["version"]
+init = read("src/cognithor/__init__.py")
+check(f"src/cognithor/__init__.py declares {ver}", f'"{ver}"' in init)
 
-# 8. i18n
-print("\n=== 8. i18n ===")
-with open("flutter_app/lib/l10n/app_en.arb", encoding="utf-8") as f:
-    en = json.load(f)
-en_keys = {k for k in en if not k.startswith("@") and k != "@@locale"}
-for lang in ["de", "zh", "ar"]:
-    with open(f"flutter_app/lib/l10n/app_{lang}.arb", encoding="utf-8") as f:
-        loc = json.load(f)
-    loc_keys = {k for k in loc if not k.startswith("@") and k != "@@locale"}
-    missing = en_keys - loc_keys
-    check(f"{lang}: {len(loc_keys)} keys, {len(missing)} missing", len(missing) == 0)
+# ----------------------------------------------------------------------
+# 6. i18n locale integrity (parity between en/de/zh)
+# ----------------------------------------------------------------------
+print("\n=== 6. i18n Locale Integrity ===")
 
-for k in ["redditLeads", "noLeadsFound", "scanNow", "leadNew", "postReply", "copyReply", "socialListening"]:
-    check(f"i18n key: {k}", k in en_keys)
 
-# 9. Tests
-print("\n=== 9. Test Files ===")
-for f in ["tests/test_social/test_models.py", "tests/test_social/test_store.py",
-          "tests/test_social/test_scanner.py", "tests/test_social/test_reply.py",
-          "tests/test_social/test_service.py", "tests/test_mcp/test_reddit_tools.py"]:
-    check(f, os.path.exists(f))
+def _count_leaf_keys(data: dict) -> int:
+    n = 0
+    for v in data.values():
+        n += _count_leaf_keys(v) if isinstance(v, dict) else 1
+    return n
 
-# 10. Git
-print("\n=== 10. Git Status ===")
-result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
-uncommitted = [l for l in result.stdout.strip().split("\n") if l.strip()]
-if uncommitted:
-    print(f"[WARN] {len(uncommitted)} uncommitted changes:")
-    for l in uncommitted[:10]:
-        print(f"  {l}")
+
+counts: dict[str, int] = {}
+for lang in ["en", "de", "zh"]:
+    path = f"src/cognithor/i18n/locales/{lang}.json"
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        counts[lang] = _count_leaf_keys(data)
+        check(f"{lang}.json valid JSON ({counts[lang]} keys)", True)
+    except Exception as e:
+        check(f"{lang}.json parse error: {e}", False)
+
+if len(counts) == 3:
+    check(
+        f"Locale parity en={counts['en']} de={counts['de']} zh={counts['zh']}",
+        counts["en"] == counts["de"] == counts["zh"],
+    )
+
+# ----------------------------------------------------------------------
+# 7. Flutter i18n ARB files
+# ----------------------------------------------------------------------
+print("\n=== 7. Flutter i18n ARB Files ===")
+arb_en = "flutter_app/lib/l10n/app_en.arb"
+if os.path.exists(arb_en):
+    with open(arb_en, encoding="utf-8") as f:
+        en = json.load(f)
+    en_keys = {k for k in en if not k.startswith("@") and k != "@@locale"}
+    for lang in ["de", "zh", "ar"]:
+        path = f"flutter_app/lib/l10n/app_{lang}.arb"
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                loc = json.load(f)
+            loc_keys = {k for k in loc if not k.startswith("@") and k != "@@locale"}
+            missing = en_keys - loc_keys
+            check(f"{lang}: {len(loc_keys)} keys, {len(missing)} missing", len(missing) == 0)
+        else:
+            check(f"{lang}.arb exists", False)
 else:
-    check("Working tree clean", True)
+    check("flutter_app/lib/l10n/app_en.arb exists", False)
 
+# ----------------------------------------------------------------------
+# 8. Test structure
+# ----------------------------------------------------------------------
+print("\n=== 8. Test Structure ===")
+for d in [
+    "tests/test_core",
+    "tests/test_mcp",
+    "tests/test_channels",
+    "tests/test_packs",
+    "tests/test_leads",
+    "tests/test_evolution",
+    "tests/test_security",
+    "tests/unit",
+]:
+    check(f"{d} exists", os.path.isdir(d))
+
+# ----------------------------------------------------------------------
+# 9. Git status
+# ----------------------------------------------------------------------
+print("\n=== 9. Git Status ===")
+try:
+    result = subprocess.run(
+        ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=10
+    )
+    uncommitted = [line for line in result.stdout.strip().split("\n") if line.strip()]
+    if uncommitted:
+        print(f"[INFO] {len(uncommitted)} uncommitted changes (not a hard failure)")
+        for line in uncommitted[:10]:
+            print(f"  {line}")
+    else:
+        check("Working tree clean", True)
+except (FileNotFoundError, subprocess.TimeoutExpired):
+    print("[INFO] git not available or timed out -- skipping")
+
+# ----------------------------------------------------------------------
 # Summary
+# ----------------------------------------------------------------------
 print("\n" + "=" * 60)
 if errors:
     print(f"FOUND {len(errors)} ISSUES:")
     for e in errors:
         print(f"  - {e}")
+    sys.exit(1)
 else:
     print("ALL CHECKS PASSED - ZERO ISSUES")
-print("=" * 60)
+    sys.exit(0)

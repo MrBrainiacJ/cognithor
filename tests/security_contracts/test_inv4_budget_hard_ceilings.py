@@ -6,9 +6,6 @@ exceeded. This suite tests what's enforced and documents what isn't.
 
 from __future__ import annotations
 
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from cognithor.core.token_budget import TokenBudgetManager
@@ -147,7 +144,7 @@ async def test_ralph_loop_max_iterations_hard_stop():
         iteration_count += 1
         return f"[CONTINUE: step {iteration_count}]", [f"tool_{iteration_count}"]
 
-    result = await loop.run("test task", fast_pge)
+    await loop.run("test task", fast_pge)
     assert iteration_count <= 3
 
 
@@ -174,10 +171,11 @@ async def test_ralph_loop_respects_cancellation():
 
 def test_tool_enforcer_max_calls_blocks():
     """ToolEnforcer must block when max_tool_calls exceeded."""
+    from pathlib import Path
+
     from cognithor.models import PlannedAction
     from cognithor.skills.community.tool_enforcer import ToolEnforcer
     from cognithor.skills.registry import CommunitySkillManifest, Skill
-    from pathlib import Path
 
     manifest = CommunitySkillManifest(
         name="test",

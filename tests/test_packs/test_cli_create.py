@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
-import pytest
+from typing import TYPE_CHECKING
 
 from cognithor.packs.cli import main
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestPackCreate:

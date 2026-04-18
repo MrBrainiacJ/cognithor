@@ -108,11 +108,11 @@ class _ConnectionLostOverlay extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh),
-                    label: Text(AppLocalizations.of(context)?.recheck ?? 'Recheck'),
+                    label: Text(AppLocalizations.of(context).recheck),
                   ),
                 ] else ...[
                   Text(
-                    errorMessage ?? AppLocalizations.of(context)?.connectionLost ?? 'Connection to server lost',
+                    errorMessage ?? AppLocalizations.of(context).connectionLost,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface
                           .withValues(alpha: 0.7),
@@ -127,7 +127,7 @@ class _ConnectionLostOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppLocalizations.of(context)?.connectionRestoring ?? 'Restoring connection...',
+                    AppLocalizations.of(context).connectionRestoring,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface
                           .withValues(alpha: 0.5),
@@ -137,7 +137,7 @@ class _ConnectionLostOverlay extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh),
-                    label: Text(AppLocalizations.of(context)?.connectNow ?? 'Connect now'),
+                    label: Text(AppLocalizations.of(context).connectNow),
                   ),
                 ],
               ],

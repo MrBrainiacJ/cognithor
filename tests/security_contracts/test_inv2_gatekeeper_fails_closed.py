@@ -12,7 +12,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from cognithor.core.gatekeeper import Gatekeeper
-from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel, SessionContext
+from cognithor.models import GateDecision, GateStatus, RiskLevel, SessionContext
 
 from .conftest import make_action, make_session
 
@@ -76,7 +76,7 @@ def test_empty_tool_name_not_green(gatekeeper, session):
 
 
 def test_classification_robustness(gatekeeper, session):
-    """Even with unusual tool names, evaluate must not crash and must not return ALLOW for unknowns."""
+    """Unusual tool names must not crash and must not return ALLOW for unknowns."""
     weird_tools = [
         "../../etc/passwd",
         "\x00null_byte",
@@ -228,7 +228,7 @@ def test_fuzz_unknown_tool_names_never_green(tool_name, security_config):
         alphabet=st.characters(categories=("L", "N")),
         min_size=5,
         max_size=50,
-    ).filter(lambda s: s.strip() and "_" in s or len(s) > 10)
+    ).filter(lambda s: (s.strip() and "_" in s) or len(s) > 10)
 )
 @settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture])
 def test_fuzz_unknown_always_orange_or_higher(tool_name, security_config):

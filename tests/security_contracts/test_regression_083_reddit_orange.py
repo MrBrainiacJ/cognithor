@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from cognithor.core.gatekeeper import Gatekeeper
-from cognithor.models import GateStatus, RiskLevel
+from cognithor.models import RiskLevel
 
 from .conftest import make_action, make_session
 

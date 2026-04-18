@@ -229,7 +229,7 @@ class _GoalsTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  value: priority,
+                  initialValue: priority,
                   decoration: const InputDecoration(
                     labelText: 'Priority',
                     border: OutlineInputBorder(),

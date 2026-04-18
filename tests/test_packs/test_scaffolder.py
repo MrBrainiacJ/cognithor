@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
-import pytest
+from typing import TYPE_CHECKING
 
 from cognithor.packs.scaffolder import scaffold_pack
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestScaffoldPack:

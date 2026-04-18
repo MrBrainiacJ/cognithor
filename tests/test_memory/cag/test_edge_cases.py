@@ -11,7 +11,6 @@ from cognithor.memory.cag.builders.prefix import PrefixCacheBuilder
 from cognithor.memory.cag.cache_store import CacheStore
 from cognithor.memory.cag.manager import CAGManager
 from cognithor.memory.cag.metrics import CAGMetricsCollector
-from cognithor.memory.cag.models import CacheEntry
 from cognithor.memory.cag.selectors import CAGSelector
 
 
@@ -101,7 +100,7 @@ class TestEdgeCases:
         with patch.object(store, "save", side_effect=OSError("No space left")):
             report = await mgr.build_all(SAMPLE_CORE, MODEL_ID)
             assert len(report.failed) == 1
-            assert "core_memory" == report.failed[0][0]
+            assert report.failed[0][0] == "core_memory"
             assert "No space left" in report.failed[0][1]
 
     async def test_corrupt_cache_file(self, tmp_path):
@@ -111,12 +110,12 @@ class TestEdgeCases:
         corrupt_path = cache_dir / "core_memory.json"
         corrupt_path.write_text("{invalid json!!", encoding="utf-8")
 
+        import contextlib
+
         store = CacheStore(cache_dir)
         # load should fail gracefully
-        try:
-            loaded = store.load("core_memory")
-        except Exception:
-            loaded = None
+        with contextlib.suppress(Exception):
+            store.load("core_memory")
 
         cfg = _FakeCAGConfig(cache_dir=str(cache_dir))
         mgr = CAGManager(

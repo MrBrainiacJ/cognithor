@@ -41,8 +41,7 @@ class TestMemoryManagerEnhancedProperties:
             from cognithor.memory.manager import MemoryManager
 
             config = JarvisConfig(
-                jarvis_dir=tmp_path / ".cognithor",
-                memory_dir=tmp_path / ".cognithor" / "memory",
+                jarvis_home=tmp_path / ".cognithor",
             )
             mm = MemoryManager(config)
             return mm
@@ -186,8 +185,7 @@ class TestEnhancedSearchWithGraphBoost:
             from cognithor.memory.manager import MemoryManager
 
             config = JarvisConfig(
-                jarvis_dir=tmp_path / ".cognithor",
-                memory_dir=tmp_path / ".cognithor" / "memory",
+                jarvis_home=tmp_path / ".cognithor",
             )
             mm = MemoryManager(config)
 
@@ -256,8 +254,7 @@ class TestSearchMemorySignature:
             from cognithor.memory.manager import MemoryManager
 
             config = JarvisConfig(
-                jarvis_dir=tmp_path / ".cognithor",
-                memory_dir=tmp_path / ".cognithor" / "memory",
+                jarvis_home=tmp_path / ".cognithor",
             )
             return MemoryManager(config)
 

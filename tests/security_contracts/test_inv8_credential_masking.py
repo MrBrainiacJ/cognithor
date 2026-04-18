@@ -7,8 +7,6 @@ the hash covers the masked version.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -32,7 +30,11 @@ CREDENTIAL_SAMPLES = {
     "generic_password": "password = MySuperSecret123!",
     "generic_secret": "secret=my_very_secret_value_here",
     "generic_api_key": "api_key = sk_live_abcdefghijklmnop",
-    "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIIE...content...\n-----END RSA PRIVATE KEY-----",
+    "private_key": (
+        "-----BEGIN RSA PRIVATE KEY-----\n"
+        "MIIE...content...\n"
+        "-----END RSA PRIVATE KEY-----"
+    ),
     "token_prefix": "token_abcd1234567890abcdef",
 }
 
@@ -48,7 +50,6 @@ def test_mask_credentials_removes_secret(name: str, raw: str):
 @pytest.mark.parametrize("name,raw", list(CREDENTIAL_SAMPLES.items()))
 def test_credential_not_in_audit_log(name: str, raw: str, tmp_path):
     """Credentials in execution_result must not appear verbatim in the log."""
-    from cognithor.models import AuditEntry, GateStatus, RiskLevel
     from .conftest import make_audit_entry
 
     entry = make_audit_entry(execution_result=raw)

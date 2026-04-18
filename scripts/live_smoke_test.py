@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Jarvis · Live Smoke-Test — Erster echter Durchlauf.
+"""Cognithor - Live Smoke-Test - Erster echter Durchlauf.
 
 Dieses Skript testet den KOMPLETTEN Agent-Loop mit echtem Ollama.
-Kein Mock, kein Fake — ein richtiger End-to-End-Test.
+Kein Mock, kein Fake - ein richtiger End-to-End-Test.
 
 Voraussetzungen:
-    - Ollama läuft (http://localhost:11434)
+    - Ollama laeuft (http://localhost:11434)
     - Mindestens ein Modell geladen (qwen3:8b reicht)
     - pip install -e ".[all]"
 
@@ -25,7 +25,12 @@ import tempfile
 import time
 from pathlib import Path
 
-# Projekt-Root zum Path hinzufügen
+# Windows cp1252 stdout fallback: reconfigure to UTF-8 to render emojis
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+# Projekt-Root zum Path hinzufuegen
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 # When running under pytest, skip this module entirely.  This script is
@@ -72,18 +77,17 @@ async def test_ollama_connection(base_url: str) -> bool:
     print_step("🔌", "Test 1: Ollama-Verbindung")
 
     try:
+        from cognithor.config import JarvisConfig
         from cognithor.core.model_router import OllamaClient
 
-        config_module = __import__("jarvis.config", fromlist=["JarvisConfig"])
-        config = config_module.JarvisConfig()
+        config = JarvisConfig()
         client = OllamaClient(config)
 
         available = await client.is_available()
         print_result(available, f"Ollama erreichbar unter {base_url}")
 
         if available:
-            models = await client.list_models()
-            model_names = [m.get("name", "?") for m in models.get("models", [])]
+            model_names = await client.list_models()
             print_result(True, f"Geladene Modelle: {', '.join(model_names[:5])}")
             await client.close()
             return True
@@ -156,8 +160,8 @@ async def test_core_memory(jarvis_home: Path) -> bool:
 
     # Inhaltliche Checks
     checks = [
-        ("Identität" in content, "Identitäts-Sektion vorhanden"),
-        ("Jarvis" in content, "Jarvis referenziert"),
+        ("Identität" in content or "Identitaet" in content, "Identitaets-Sektion vorhanden"),
+        ("Cognithor" in content or "Jarvis" in content, "Assistent-Name referenziert"),
         ("Regeln" in content, "Regel-Sektion vorhanden"),
         ("DSGVO" in content or "Datenschutz" in content.lower(), "Datenschutz-Regeln"),
     ]
@@ -479,7 +483,7 @@ async def main() -> int:
     )
 
     print("=" * 60)
-    print("  🏠 Jarvis · Live Smoke-Test")
+    print("  🏠 Cognithor - Live Smoke-Test")
     print(f"  📁 Home: {jarvis_home}")
     print(f"  🤖 Modell: {args.model}")
     print("=" * 60)
@@ -523,13 +527,13 @@ async def main() -> int:
     print(f"\n  {passed}/{len(results)} bestanden · {duration_total:.1f}s gesamt")
 
     if failed == 0:
-        print("\n  🎉 Jarvis ist bereit!\n")
+        print("\n  🎉 Cognithor ist bereit!\n")
         return 0
     elif failed <= 2 and results.get("Verzeichnisstruktur") and results.get("Core Memory"):
-        print("\n  ⚠️  Teilweise bereit (LLM-Tests prüfen)\n")
+        print("\n  ⚠️  Teilweise bereit (LLM-Tests pruefen)\n")
         return 1
     else:
-        print("\n  ❌ Kritische Fehler — bitte prüfen\n")
+        print("\n  ❌ Kritische Fehler - bitte pruefen\n")
         return 2
 
 

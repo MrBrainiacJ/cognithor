@@ -1,7 +1,7 @@
-"""Jarvis · Red-Team-Testing Framework (Deprecation-Shim).
+"""Cognithor Red-Team-Testing Framework (Deprecation-Shim).
 
 This module exists only for backward compatibility.
-All classes and functions now live in ``jarvis.security.red_team``.
+All classes and functions now live in ``cognithor.security.red_team``.
 
 A ``DeprecationWarning`` is issued on import.
 """
@@ -11,7 +11,7 @@ from __future__ import annotations
 import warnings as _warnings
 
 _warnings.warn(
-    "cognithor.security.redteam is deprecated -- please use jarvis.security.red_team.",
+    "cognithor.security.redteam is deprecated -- please use cognithor.security.red_team.",
     DeprecationWarning,
     stacklevel=2,
 )

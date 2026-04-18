@@ -455,8 +455,8 @@
     "forbidden_value": "包含被禁止的值 '{value}'"
   },
   "privacy": {
-    "consent_prompt": "隐私声明：我会存储消息、提醒和处理日志。详情：cognithor.dev/privacy\n\n回复"接受"或"拒绝"。",
-    "consent_declined": "未经隐私同意，我无法处理您的消息。如果改变主意，请发送"接受"。",
+    "consent_prompt": "隐私声明：我会存储消息、提醒和处理日志。详情：cognithor.dev/privacy\n\n回复「接受」或「拒绝」。",
+    "consent_declined": "未经隐私同意，我无法处理您的消息。如果改变主意，请发送「接受」。",
     "send_text_first": "请先发送一条文字消息并接受隐私声明。"
   },
   "vault": {

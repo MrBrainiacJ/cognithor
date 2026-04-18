@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from cognithor.core.safe_call import (
-    _FAILURE_REGISTRY,
     _safe_call,
     _safe_call_async,
     clear_failures,

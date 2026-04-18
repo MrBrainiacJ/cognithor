@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Jarvis · Smoke-Test – Validiert die Installation.
+"""Cognithor - Smoke-Test - Validiert die Installation.
 
-Prüft:
+Prueft:
   1. Python-Version + kritische Imports
-  2. Verzeichnisstruktur (~/.jarvis/)
+  2. Verzeichnisstruktur (~/.cognithor/)
   3. Config laden + validieren
   4. Ollama-Verbindung + Modelle
   5. Memory-System Initialisierung
   6. Gatekeeper + Policies laden
   7. MCP-Tools registrieren
-  8. Credential-Store Verschlüsselung
+  8. Credential-Store Verschluesselung
   9. Audit-Trail schreiben + verifizieren
   10. Gateway-Instanziierung
 
@@ -25,7 +25,7 @@ import tempfile
 import time
 from pathlib import Path
 
-# Farben
+# ASCII-safe output (Windows cp1252 compatible)
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RED = "\033[91m"
@@ -35,19 +35,19 @@ RESET = "\033[0m"
 
 
 def ok(msg: str) -> None:
-    print(f"  {GREEN}✓{RESET} {msg}")
+    print(f"  {GREEN}[OK]{RESET} {msg}")
 
 
 def warn(msg: str) -> None:
-    print(f"  {YELLOW}⚠{RESET} {msg}")
+    print(f"  {YELLOW}[WARN]{RESET} {msg}")
 
 
 def fail(msg: str) -> None:
-    print(f"  {RED}✗{RESET} {msg}")
+    print(f"  {RED}[FAIL]{RESET} {msg}")
 
 
 def header(msg: str) -> None:
-    print(f"\n{BOLD}{CYAN}── {msg} ──{RESET}")
+    print(f"\n{BOLD}{CYAN}-- {msg} --{RESET}")
 
 
 class SmokeTest:
@@ -97,9 +97,9 @@ class SmokeTest:
         try:
             import cognithor
 
-            self._pass(f"jarvis v{jarvis.__version__}")
+            self._pass(f"cognithor v{cognithor.__version__}")
         except ImportError:
-            self._fail("jarvis nicht importierbar")
+            self._fail("cognithor nicht importierbar")
 
         for module, desc in [
             ("fastapi", "Web-UI"),
@@ -242,20 +242,20 @@ class SmokeTest:
         try:
             from cognithor.security.credentials import CredentialStore
 
-            with tempfile.NamedTemporaryFile(suffix=".enc", delete=False) as tmp:
-                store = CredentialStore(store_path=Path(tmp.name), passphrase="smoke-test-2026")
+            with tempfile.TemporaryDirectory() as tmpdir:
+                store_path = Path(tmpdir) / "credentials.enc"
+                store = CredentialStore(store_path=store_path, passphrase="smoke-test-2026")
                 store.store("test", "key", "geheim123")
                 result = store.retrieve("test", "key")
                 if result == "geheim123":
-                    self._pass("Verschlüsselung + Entschlüsselung OK")
+                    self._pass("Verschluesselung + Entschluesselung OK")
                 else:
-                    self._fail("Entschlüsselung fehlgeschlagen")
-                raw = Path(tmp.name).read_text(encoding="utf-8")
+                    self._fail("Entschluesselung fehlgeschlagen")
+                raw = store_path.read_text(encoding="utf-8")
                 if "geheim123" not in raw:
-                    self._pass("Datei korrekt verschlüsselt")
+                    self._pass("Datei korrekt verschluesselt")
                 else:
                     self._fail("Credential im Klartext!")
-                Path(tmp.name).unlink()
         except ImportError:
             self._warn("cryptography fehlt")
         except Exception as exc:
@@ -303,32 +303,32 @@ class SmokeTest:
     def summary(self) -> int:
         total = self.passed + self.warned + self.failed
         print(f"\n{BOLD}{'=' * 50}{RESET}")
-        print(f"  {GREEN}✓ {self.passed} bestanden{RESET}")
+        print(f"  {GREEN}[OK] {self.passed} bestanden{RESET}")
         if self.warned:
-            print(f"  {YELLOW}⚠ {self.warned} Warnungen{RESET}")
+            print(f"  {YELLOW}[WARN] {self.warned} Warnungen{RESET}")
         if self.failed:
-            print(f"  {RED}✗ {self.failed} fehlgeschlagen{RESET}")
-        print(f"  Gesamt: {total} Prüfungen")
+            print(f"  {RED}[FAIL] {self.failed} fehlgeschlagen{RESET}")
+        print(f"  Gesamt: {total} Pruefungen")
         print(f"{BOLD}{'=' * 50}{RESET}")
         if self.failed:
-            print(f"\n{RED}{BOLD}  ✗ Jarvis kann nicht starten.{RESET}\n")
+            print(f"\n{RED}{BOLD}  [FAIL] Cognithor kann nicht starten.{RESET}\n")
             return 1
         elif self.warned:
-            print(f"\n{YELLOW}{BOLD}  ⚠ Jarvis startet, aber eingeschränkt.{RESET}\n")
+            print(f"\n{YELLOW}{BOLD}  [WARN] Cognithor startet, aber eingeschraenkt.{RESET}\n")
             return 2
         else:
-            print(f"\n{GREEN}{BOLD}  ✓ Jarvis ist bereit! Starte mit: jarvis{RESET}\n")
+            print(f"\n{GREEN}{BOLD}  [OK] Cognithor ist bereit! Starte mit: cognithor{RESET}\n")
             return 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Jarvis Smoke-Test")
-    parser.add_argument("--jarvis-home", default=str(Path.home() / ".jarvis"))
+    parser = argparse.ArgumentParser(description="Cognithor Smoke-Test")
+    parser.add_argument("--jarvis-home", default=str(Path.home() / ".cognithor"))
     parser.add_argument("--ollama-url", default="http://localhost:11434")
     parser.add_argument("--venv", default="")
     args = parser.parse_args()
 
-    print(f"\n{BOLD}{CYAN}Jarvis · Smoke-Test{RESET}\n{'=' * 50}")
+    print(f"\n{BOLD}{CYAN}Cognithor - Smoke-Test{RESET}\n{'=' * 50}")
     st = SmokeTest(args.jarvis_home, args.ollama_url, args.venv)
     start = time.monotonic()
     st.test_python_imports()

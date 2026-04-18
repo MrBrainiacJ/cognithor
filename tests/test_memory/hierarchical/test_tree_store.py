@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
-import pytest
 
 from cognithor.memory.hierarchical.models import DocumentTree, TreeNode
 from cognithor.memory.hierarchical.tree_store import TreeStore
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -54,7 +51,7 @@ def _make_tree(doc_id: str = "doc-1", title: str = "Test Doc") -> DocumentTree:
         title=title,
         root_node_id=root_id,
         nodes={root_id: root, child_id: child},
-        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
         parser_used="MarkdownParser",
         total_tokens=18,
     )

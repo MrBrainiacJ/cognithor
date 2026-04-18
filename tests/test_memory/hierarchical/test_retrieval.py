@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
-
-import pytest
 
 from cognithor.memory.hierarchical.models import (
     DocumentMetadata,
@@ -15,7 +13,6 @@ from cognithor.memory.hierarchical.models import (
     TreeNode,
 )
 from cognithor.memory.hierarchical.retrieval import HierarchicalRetriever
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -56,7 +53,7 @@ def _make_tree() -> DocumentTree:
         title="Test",
         root_node_id="root",
         nodes={"root": root, "c1": child},
-        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
         parser_used="MarkdownParser",
         total_tokens=10,
     )

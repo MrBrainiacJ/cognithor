@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.memory.hierarchical.tree_builder import DocumentTreeBuilder, _token_estimate
+from cognithor.memory.hierarchical.tree_builder import DocumentTreeBuilder
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -40,7 +42,12 @@ class TestBasicBuild:
     async def test_basic_build(self, tmp_path: Path, builder: DocumentTreeBuilder) -> None:
         md = _write_md(
             tmp_path,
-            "# Title\nIntro\n## Section A\nContent A\n## Section B\nContent B\n## Section C\nContent C\n",
+            (
+                "# Title\nIntro\n"
+                "## Section A\nContent A\n"
+                "## Section B\nContent B\n"
+                "## Section C\nContent C\n"
+            ),
         )
         tree = await builder.build(md, document_id="doc-1")
 

@@ -7,11 +7,11 @@ when expressed through known bypass techniques.
 from __future__ import annotations
 
 import pytest
-from hypothesis import HealthCheck, given, settings
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from cognithor.security.python_ast_guard import analyse_python, is_safe_python
-from cognithor.security.shell_ast_guard import analyse_shell, is_safe_shell
+from cognithor.security.python_ast_guard import is_safe_python
+from cognithor.security.shell_ast_guard import is_safe_shell
 
 pytestmark = pytest.mark.security_contract
 

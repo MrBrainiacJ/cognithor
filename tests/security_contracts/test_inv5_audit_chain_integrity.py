@@ -195,7 +195,6 @@ def test_empty_chain_is_valid(tmp_path):
 @pytest.mark.asyncio
 async def test_concurrent_writes_maintain_chain(tmp_path):
     """Sequential record() calls must maintain the chain even under rapid fire."""
-    import asyncio
 
     trail = AuditTrail(log_path=tmp_path / "concurrent.jsonl")
 

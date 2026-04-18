@@ -1738,7 +1738,7 @@ class TestWebResearch:
 
     @pytest.mark.asyncio
     async def test_deep_research_multiple_sources(self, gateway_extended_tools):
-        """'Recherchiere ausfuehrlich' triggers search_and_read (deep_research extracted to pack)."""
+        """'Recherchiere ausfuehrlich' -> search_and_read (deep_research now a pack)."""
         gw, mock_ollama, mock_mcp, _ = gateway_extended_tools
 
         call_count = 0
@@ -1784,7 +1784,7 @@ class TestWebResearch:
 
     @pytest.mark.asyncio
     async def test_price_comparison(self, gateway_extended_tools):
-        """'Was kostet ein iPhone 16?' triggers search_and_read for exact numbers (verified_web_lookup extracted to pack)."""
+        """'Was kostet ein iPhone 16?' -> search_and_read (verified_web_lookup is a pack)."""
         gw, mock_ollama, mock_mcp, _ = gateway_extended_tools
 
         call_count = 0

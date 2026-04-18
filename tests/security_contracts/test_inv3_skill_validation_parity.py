@@ -7,7 +7,6 @@ generated skills currently bypass ToolEnforcer and the 5-check validation.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
