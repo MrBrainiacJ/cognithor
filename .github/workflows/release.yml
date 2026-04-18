@@ -71,18 +71,23 @@ jobs:
           flutter-version: '3.41.4'
           channel: stable
 
-      - name: Generate l10n + fix speech plugin + build desktop
+      - name: Generate l10n + strip broken speech plugin + build desktop
         working-directory: flutter_app
         run: |
           flutter pub get
           flutter gen-l10n
 
-          # Fix speech_to_text_windows CMakeLists.txt: INTERFACE -> PUBLIC includes
-          $pluginDir = "windows\flutter\ephemeral\.plugin_symlinks\speech_to_text_windows\windows"
-          if (Test-Path "$pluginDir\CMakeLists.txt") {
-            (Get-Content "$pluginDir\CMakeLists.txt") -replace 'target_include_directories\(\$\{PLUGIN_NAME\} INTERFACE', 'target_include_directories(${PLUGIN_NAME} PUBLIC' | Set-Content "$pluginDir\CMakeLists.txt"
-            Write-Host "Patched speech_to_text_windows CMakeLists.txt (INTERFACE -> PUBLIC)"
-          }
+          # The speech_to_text_windows v1.0.0+beta.8 plugin cannot compile
+          # in CI — its native code uses SAPI headers that fail silently.
+          # Strip it from the registrant and plugins list so the build succeeds.
+          # Voice input on Windows Desktop uses the web engine fallback instead.
+          $reg = "windows\flutter\generated_plugin_registrant.cc"
+          (Get-Content $reg) | Where-Object { $_ -notmatch 'speech_to_text_windows' -and $_ -notmatch 'SpeechToTextWindows' } | Set-Content $reg
+          Write-Host "Stripped speech_to_text_windows from plugin registrant"
+
+          $cmake = "windows\flutter\generated_plugins.cmake"
+          (Get-Content $cmake) | Where-Object { $_ -notmatch 'speech_to_text_windows' } | Set-Content $cmake
+          Write-Host "Stripped speech_to_text_windows from plugins cmake"
 
           flutter build windows --release
 
