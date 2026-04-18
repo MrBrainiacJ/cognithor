@@ -133,9 +133,11 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Build embedded Python + installer
+        shell: bash
+        env:
+          SKIP_FLUTTER_BUILD: "1"
+          SKIP_LAUNCHER_EXE: "1"
         run: |
-          $env:SKIP_FLUTTER_BUILD = "1"
-          $env:SKIP_LAUNCHER_EXE = "1"
           pip install hatchling
           python installer/build_installer.py
 
