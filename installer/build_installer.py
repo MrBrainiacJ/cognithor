@@ -352,14 +352,19 @@ def step_launcher_exe() -> Path:
     publish_dir = BUILD_DIR / "launcher_publish"
     subprocess.run(
         [
-            dotnet, "publish", str(launcher_proj),
-            "-c", "Release",
-            "-r", "win-x64",
+            dotnet,
+            "publish",
+            str(launcher_proj),
+            "-c",
+            "Release",
+            "-r",
+            "win-x64",
             "--self-contained",
             "-p:PublishSingleFile=true",
             "-p:PublishTrimmed=true",
             "-p:TrimMode=partial",
-            "-o", str(publish_dir),
+            "-o",
+            str(publish_dir),
         ],
         check=True,
     )
@@ -447,10 +452,21 @@ def main() -> int:
 
     python_dir = step_python_embed()
     ollama_dir = step_ollama()
-    flutter_dir = step_flutter_ui()
-    step_flutter_desktop()
+
+    if os.environ.get("SKIP_FLUTTER_BUILD"):
+        flutter_dir = BUILD_DIR / "flutter_web" if (BUILD_DIR / "flutter_web").exists() else None
+        print(f"\n=== Flutter builds: SKIPPED (pre-built artifacts) ===")
+    else:
+        flutter_dir = step_flutter_ui()
+        step_flutter_desktop()
+
     step_launcher()
-    step_launcher_exe()
+
+    if os.environ.get("SKIP_LAUNCHER_EXE"):
+        print(f"\n=== Launcher EXE: SKIPPED (pre-built artifact) ===")
+    else:
+        step_launcher_exe()
+
     installer = step_inno_setup(version, python_dir, ollama_dir, flutter_dir)
 
     print("\n" + "=" * 60)
