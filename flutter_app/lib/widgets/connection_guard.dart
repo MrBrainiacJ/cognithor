@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 
@@ -107,11 +108,11 @@ class _ConnectionLostOverlay extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Recheck'),
+                    label: Text(AppLocalizations.of(context)?.recheck ?? 'Recheck'),
                   ),
                 ] else ...[
                   Text(
-                    errorMessage ?? 'Verbindung zum Server verloren',
+                    errorMessage ?? AppLocalizations.of(context)?.connectionLost ?? 'Connection to server lost',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface
                           .withValues(alpha: 0.7),
@@ -126,7 +127,7 @@ class _ConnectionLostOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Verbindung wird wiederhergestellt...',
+                    AppLocalizations.of(context)?.connectionRestoring ?? 'Restoring connection...',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface
                           .withValues(alpha: 0.5),
@@ -136,7 +137,7 @@ class _ConnectionLostOverlay extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Jetzt verbinden'),
+                    label: Text(AppLocalizations.of(context)?.connectNow ?? 'Connect now'),
                   ),
                 ],
               ],

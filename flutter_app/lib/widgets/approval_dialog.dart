@@ -33,7 +33,9 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
     setState(() {
       _busy = true;
       _localError = null;
-      _lastClickStatus = approved ? 'Sende Genehmigung...' : 'Sende Ablehnung...';
+      _lastClickStatus = approved
+          ? AppLocalizations.of(context)?.sendingApproval ?? 'Sending approval...'
+          : AppLocalizations.of(context)?.sendingRejection ?? 'Sending rejection...';
     });
 
     try {
@@ -51,7 +53,9 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
         // Clear the pending approval in the chat provider so the dialog
         // disappears.
         setState(() {
-          _lastClickStatus = 'OK — Aktion ${approved ? "genehmigt" : "abgelehnt"}';
+          _lastClickStatus = approved
+            ? (AppLocalizations.of(context)?.actionApproved ?? 'OK — Action approved')
+            : (AppLocalizations.of(context)?.actionRejected ?? 'OK — Action rejected');
         });
         if (!mounted) return;
         context.read<ChatProvider>().clearPendingApproval();
@@ -60,7 +64,7 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
         debugPrint('[APPROVAL] REST failed: $err');
         setState(() {
           _busy = false;
-          _localError = 'Fehler: $err';
+          _localError = AppLocalizations.of(context)?.errorWithDetail(err) ?? 'Error: $err';
         });
       }
     } catch (e, st) {
@@ -68,7 +72,7 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _localError = 'Fehler: $e';
+        _localError = AppLocalizations.of(context)?.errorWithDetail('$e') ?? 'Error: $e';
       });
     }
   }

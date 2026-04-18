@@ -325,7 +325,7 @@ class ChatProvider extends ChangeNotifier {
     // REST failed — try WebSocket as last resort
     if (_ws == null) {
       _log('[Chat] ERROR: respondApproval called but _ws is null! id=$requestId');
-      lastError = 'Keine Verbindung zum Backend. Bitte Verbindung pruefen.';
+      lastError = 'No connection to backend. Please check your connection.';
       notifyListeners();
       return;
     }
@@ -350,8 +350,7 @@ class ChatProvider extends ChangeNotifier {
 
     if (!ok) {
       _log('[Chat] respondApproval FINAL FAILURE: id=$requestId');
-      lastError =
-          'Genehmigung konnte nicht gesendet werden (Verbindung verloren). Bitte erneut versuchen.';
+      lastError = 'Approval could not be sent (connection lost). Please try again.';
       // Keep pendingApproval so the user can retry.
       notifyListeners();
       return;

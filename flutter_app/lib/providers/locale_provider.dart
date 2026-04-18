@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,19 +8,26 @@ class LocaleProvider extends ChangeNotifier {
     _load();
   }
 
-  // Supported locales - must match ARB files
   static const supportedCodes = ['en', 'de', 'zh', 'ar'];
 
-  Locale _locale = const Locale('de'); // Default German per user preference
+  Locale _locale = const Locale('en');
   Locale get locale => _locale;
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString('app_locale') ?? 'de';
-    if (supportedCodes.contains(code)) {
-      _locale = Locale(code);
+    final saved = prefs.getString('app_locale');
+    if (saved != null && supportedCodes.contains(saved)) {
+      _locale = Locale(saved);
       notifyListeners();
+      return;
     }
+
+    // First launch: detect system language
+    final systemCode = ui.PlatformDispatcher.instance.locale.languageCode;
+    final detected = supportedCodes.contains(systemCode) ? systemCode : 'en';
+    _locale = Locale(detected);
+    await prefs.setString('app_locale', detected);
+    notifyListeners();
   }
 
   Future<void> setLocale(String code) async {
