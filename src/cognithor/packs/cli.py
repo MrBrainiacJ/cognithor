@@ -130,6 +130,37 @@ def _cmd_accept_eula(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_create(args: argparse.Namespace) -> int:
+    from cognithor.packs.scaffolder import scaffold_pack
+
+    output = Path(args.output) if args.output else _resolve_packs_root()
+    try:
+        pack_dir = scaffold_pack(
+            output_dir=output,
+            name=args.name,
+            namespace=args.namespace,
+            description=args.description or f"{args.name} pack for Cognithor",
+            with_leads=args.with_leads,
+            license_type=args.license,
+        )
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"\n[OK] Created pack at {pack_dir}/\n")
+    print("  pack_manifest.json    [OK]")
+    print("  pack.py               [OK]")
+    print("  eula.md               [OK]")
+    print("  src/__init__.py       [OK]")
+    print("  tests/test_pack.py    [OK]")
+    print("  catalog/catalog.mdx   [OK]")
+    print(f"\nNext steps:")
+    print(f"  1. Edit src/ to add your tools")
+    print(f"  2. Wire them in pack.py register()")
+    print(f"  3. Test: cognithor pack install {pack_dir}")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -184,6 +215,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Qualified pack identifier.",
     )
     p_eula.set_defaults(func=_cmd_accept_eula)
+
+    # create
+    p_create = sub.add_parser("create", help="Scaffold a new pack from template.")
+    p_create.add_argument("--name", required=True, help="Pack identifier (lowercase, e.g. my-pack)")
+    p_create.add_argument("--namespace", default="cognithor-community", help="Publisher namespace")
+    p_create.add_argument("--description", default="", help="Pack description")
+    p_create.add_argument("--with-leads", action="store_true", help="Include LeadSource stub")
+    p_create.add_argument(
+        "--license",
+        default="apache-2.0",
+        choices=["apache-2.0", "proprietary"],
+        help="License type",
+    )
+    p_create.add_argument("--output", default="", help="Output directory (default: packs root)")
+    p_create.set_defaults(func=_cmd_create)
 
     return parser
 
