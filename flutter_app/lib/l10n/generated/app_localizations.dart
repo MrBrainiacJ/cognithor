@@ -342,6 +342,72 @@ abstract class AppLocalizations {
   /// **'Backend is not reachable'**
   String get errorServerDown;
 
+  /// No description provided for @sendingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending approval...'**
+  String get sendingApproval;
+
+  /// No description provided for @sendingRejection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending rejection...'**
+  String get sendingRejection;
+
+  /// No description provided for @actionApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'OK — Action approved'**
+  String get actionApproved;
+
+  /// No description provided for @actionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'OK — Action rejected'**
+  String get actionRejected;
+
+  /// No description provided for @errorWithDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {detail}'**
+  String errorWithDetail(String detail);
+
+  /// No description provided for @noBackendConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to backend. Please check your connection.'**
+  String get noBackendConnection;
+
+  /// No description provided for @approvalSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval could not be sent (connection lost). Please try again.'**
+  String get approvalSendFailed;
+
+  /// No description provided for @connectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection to server lost'**
+  String get connectionLost;
+
+  /// No description provided for @connectionRestoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring connection...'**
+  String get connectionRestoring;
+
+  /// No description provided for @connectNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect now'**
+  String get connectNow;
+
+  /// No description provided for @recheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Recheck'**
+  String get recheck;
+
   /// No description provided for @identityNotAvailable.
   ///
   /// In en, this message translates to:

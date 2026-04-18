@@ -139,6 +139,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get errorServerDown => 'Backend nicht erreichbar';
 
   @override
+  String get sendingApproval => 'Sende Genehmigung...';
+
+  @override
+  String get sendingRejection => 'Sende Ablehnung...';
+
+  @override
+  String get actionApproved => 'OK — Aktion genehmigt';
+
+  @override
+  String get actionRejected => 'OK — Aktion abgelehnt';
+
+  @override
+  String errorWithDetail(String detail) {
+    return 'Fehler: $detail';
+  }
+
+  @override
+  String get noBackendConnection =>
+      'Keine Verbindung zum Backend. Bitte Verbindung pruefen.';
+
+  @override
+  String get approvalSendFailed =>
+      'Genehmigung konnte nicht gesendet werden (Verbindung verloren). Bitte erneut versuchen.';
+
+  @override
+  String get connectionLost => 'Verbindung zum Server verloren';
+
+  @override
+  String get connectionRestoring => 'Verbindung wird wiederhergestellt...';
+
+  @override
+  String get connectNow => 'Jetzt verbinden';
+
+  @override
+  String get recheck => 'Erneut pruefen';
+
+  @override
   String get identityNotAvailable => 'Identitaetsschicht nicht verfuegbar';
 
   @override

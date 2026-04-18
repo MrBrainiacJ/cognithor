@@ -139,6 +139,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorServerDown => 'الخادم غير متاح';
 
   @override
+  String get sendingApproval => 'Sending approval...';
+
+  @override
+  String get sendingRejection => 'Sending rejection...';
+
+  @override
+  String get actionApproved => 'OK — Action approved';
+
+  @override
+  String get actionRejected => 'OK — Action rejected';
+
+  @override
+  String errorWithDetail(String detail) {
+    return 'Error: $detail';
+  }
+
+  @override
+  String get noBackendConnection =>
+      'No connection to backend. Please check your connection.';
+
+  @override
+  String get approvalSendFailed =>
+      'Approval could not be sent (connection lost). Please try again.';
+
+  @override
+  String get connectionLost => 'Connection to server lost';
+
+  @override
+  String get connectionRestoring => 'Restoring connection...';
+
+  @override
+  String get connectNow => 'Connect now';
+
+  @override
+  String get recheck => 'Recheck';
+
+  @override
   String get identityNotAvailable => 'طبقة الهوية غير متوفرة';
 
   @override

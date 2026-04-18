@@ -46,9 +46,12 @@ jobs:
           flutter-version: '3.41.4'
           channel: stable
 
-      - name: Build web
+      - name: Generate l10n + Build web
         working-directory: flutter_app
-        run: flutter build web --release --no-tree-shake-icons
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          flutter build web --release --no-tree-shake-icons
 
       - name: Upload web artifact
         uses: actions/upload-artifact@v4
@@ -68,9 +71,12 @@ jobs:
           flutter-version: '3.41.4'
           channel: stable
 
-      - name: Build Windows desktop
+      - name: Generate l10n + Build Windows desktop
         working-directory: flutter_app
-        run: flutter build windows --release
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          flutter build windows --release
 
       - name: Upload desktop artifact
         uses: actions/upload-artifact@v4
