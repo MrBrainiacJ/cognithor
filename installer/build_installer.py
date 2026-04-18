@@ -49,15 +49,29 @@ def read_version() -> str:
     raise RuntimeError("Could not read version from pyproject.toml")
 
 
-def download(url: str, dest: Path, desc: str = "") -> None:
-    """Download a file with progress."""
+def download(url: str, dest: Path, desc: str = "", retries: int = 3) -> None:
+    """Download a file with retry logic."""
     print(f"  Downloading {desc or url}...")
     if dest.exists():
         print(f"  [SKIP] Already exists: {dest.name}")
         return
     dest.parent.mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(url, dest)
-    print(f"  [OK] {dest.name} ({dest.stat().st_size / 1024 / 1024:.1f} MB)")
+    import time
+
+    for attempt in range(1, retries + 1):
+        try:
+            urllib.request.urlretrieve(url, dest)
+            print(f"  [OK] {dest.name} ({dest.stat().st_size / 1024 / 1024:.1f} MB)")
+            return
+        except Exception as exc:
+            if attempt < retries:
+                wait = 10 * attempt
+                print(f"  [WARN] Attempt {attempt}/{retries} failed: {exc}. Retrying in {wait}s...")
+                time.sleep(wait)
+                if dest.exists():
+                    dest.unlink()
+            else:
+                raise
 
 
 def step_python_embed() -> Path:

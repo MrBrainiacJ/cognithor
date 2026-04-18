@@ -133,6 +133,7 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Build embedded Python + installer
+        shell: bash
         run: |
           pip install hatchling
           python installer/build_installer.py --skip-flutter --skip-launcher-exe
