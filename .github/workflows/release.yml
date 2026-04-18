@@ -72,9 +72,10 @@ jobs:
           flutter-version: '3.41.4'
           channel: stable
 
-      - name: Generate l10n + Build Windows desktop
+      - name: Regenerate plugin registrant + Build Windows desktop
         working-directory: flutter_app
         run: |
+          flutter clean
           flutter pub get
           flutter gen-l10n
           flutter build windows --release
