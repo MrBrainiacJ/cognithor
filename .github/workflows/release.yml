@@ -62,6 +62,7 @@ jobs:
   build-flutter-desktop:
     name: Build Flutter Desktop
     runs-on: windows-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -87,7 +88,8 @@ jobs:
   build-installer:
     name: Build Windows Installer
     runs-on: windows-latest
-    needs: [build-launcher, build-flutter-web, build-flutter-desktop]
+    needs: [build-launcher, build-flutter-web]
+    if: always() && needs.build-launcher.result == 'success' && needs.build-flutter-web.result == 'success'
     steps:
       - uses: actions/checkout@v4
 
@@ -108,7 +110,8 @@ jobs:
           name: flutter-web
           path: installer/build/flutter_web/
 
-      - name: Download Flutter desktop artifact
+      - name: Download Flutter desktop artifact (optional)
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: flutter-desktop
