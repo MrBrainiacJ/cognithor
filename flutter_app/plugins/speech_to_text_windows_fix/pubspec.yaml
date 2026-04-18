@@ -16,4 +16,5 @@ flutter:
   plugin:
     platforms:
       windows:
-        pluginClass: SpeechToTextWindowsPlugin
+        pluginClass: SpeechToTextWindows
+        dartPluginClass: SpeechToTextWindows
