@@ -439,6 +439,19 @@ def step_inno_setup(
 
 
 def main() -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Build Cognithor Windows Installer")
+    ap.add_argument(
+        "--skip-flutter", action="store_true", help="Skip Flutter builds (use pre-built artifacts)"
+    )
+    ap.add_argument("--skip-launcher-exe", action="store_true", help="Skip Cognithor.exe build")
+    args = ap.parse_args()
+
+    # Also check env vars as fallback
+    skip_flutter = args.skip_flutter or bool(os.environ.get("SKIP_FLUTTER_BUILD"))
+    skip_launcher = args.skip_launcher_exe or bool(os.environ.get("SKIP_LAUNCHER_EXE"))
+
     print("=" * 60)
     print("  Cognithor Installer Builder")
     print("=" * 60)
@@ -447,14 +460,13 @@ def main() -> int:
     print(f"  Version: {version}")
     print(f"  Project: {PROJECT_ROOT}")
     print(f"  Build:   {BUILD_DIR}")
+    print(f"  Skip Flutter: {skip_flutter}")
+    print(f"  Skip Launcher EXE: {skip_launcher}")
 
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
 
     python_dir = step_python_embed()
     ollama_dir = step_ollama()
-
-    skip_flutter = os.environ.get("SKIP_FLUTTER_BUILD", "")
-    print(f"  SKIP_FLUTTER_BUILD={skip_flutter!r}")
 
     if skip_flutter:
         flutter_dir = BUILD_DIR / "flutter_web" if (BUILD_DIR / "flutter_web").exists() else None
@@ -469,8 +481,8 @@ def main() -> int:
 
     step_launcher()
 
-    if os.environ.get("SKIP_LAUNCHER_EXE"):
-        print(f"\n=== Launcher EXE: SKIPPED (pre-built artifact) ===")
+    if skip_launcher:
+        print("\n=== Launcher EXE: SKIPPED (pre-built artifact) ===")
     else:
         step_launcher_exe()
 

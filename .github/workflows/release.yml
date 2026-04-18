@@ -133,13 +133,9 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Build embedded Python + installer
-        shell: bash
-        env:
-          SKIP_FLUTTER_BUILD: "1"
-          SKIP_LAUNCHER_EXE: "1"
         run: |
           pip install hatchling
-          python installer/build_installer.py
+          python installer/build_installer.py --skip-flutter --skip-launcher-exe
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
