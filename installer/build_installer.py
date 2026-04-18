@@ -455,6 +455,7 @@ def step_inno_setup(
 def main() -> int:
     import argparse
 
+    print(f"  sys.argv = {sys.argv}")
     ap = argparse.ArgumentParser(description="Build Cognithor Windows Installer")
     ap.add_argument(
         "--skip-flutter", action="store_true", help="Skip Flutter builds (use pre-built artifacts)"
