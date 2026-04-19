@@ -138,6 +138,34 @@ class GatekeeperConfig(BaseModel):
     max_blocked_retries: int = Field(default=3, ge=1, le=10)
 
 
+class ObserverConfig(BaseModel):
+    """LLM-based response quality audit. [Observer Spec §2.1]"""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    max_retries: int = Field(default=2, ge=0, le=5)
+    check_hallucination: bool = True
+    check_sycophancy: bool = True
+    check_laziness: bool = True
+    check_tool_ignorance: bool = True
+    blocking_dimensions: list[str] = Field(
+        default_factory=lambda: ["hallucination", "tool_ignorance"]
+    )
+    warning_prefix: str = "[Quality check flagged issues]"
+    timeout_seconds: int = Field(default=30, ge=5, le=120)
+    circuit_breaker_threshold: int = Field(default=5, ge=1, le=20)
+
+    @field_validator("blocking_dimensions")
+    @classmethod
+    def _validate_blocking(cls, v: list[str]) -> list[str]:
+        valid = {"hallucination", "sycophancy", "laziness", "tool_ignorance"}
+        invalid = set(v) - valid
+        if invalid:
+            raise ValueError(f"Unknown dimensions in blocking_dimensions: {sorted(invalid)}")
+        return v
+
+
 class PlannerConfig(BaseModel):
     """Planner-Einstellungen. [B§3.1, §3.4]"""
 
@@ -2449,6 +2477,7 @@ class JarvisConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
     models: ModelsConfig = Field(default_factory=ModelsConfig)
     gatekeeper: GatekeeperConfig = Field(default_factory=GatekeeperConfig)
+    observer: ObserverConfig = Field(default_factory=ObserverConfig)
     planner: PlannerConfig = Field(default_factory=PlannerConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     tactical_memory: TacticalMemoryConfig = Field(default_factory=TacticalMemoryConfig)
