@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -288,3 +289,123 @@ class ObserverAudit:
 
         # Any other blocking dimension currently collapses to response_regen.
         return False, "response_regen"
+
+    async def audit(
+        self,
+        *,
+        user_message: str,
+        response: str,
+        tool_results: list[ToolResult],
+        session_id: str,
+        retry_count: int = 0,
+    ) -> AuditResult:
+        """Run the four-dimension audit. Always returns an AuditResult — never raises."""
+        start = time.monotonic()
+        model = self._config.models.observer.name
+
+        if self._circuit_open or not self._config.observer.enabled:
+            # Fail-open placeholder: treat as pass so Core is never blocked.
+            return self._fail_open_result(
+                model=model,
+                reason="circuit_open" if self._circuit_open else "disabled",
+                duration_ms=int((time.monotonic() - start) * 1000),
+            )
+
+        messages = self._build_prompt(
+            user_message=user_message,
+            response=response,
+            tool_results=tool_results,
+        )
+        raw = await self._call_llm_audit(messages=messages)
+
+        if raw is None:
+            self._record_failure_for_circuit_breaker()
+            result = self._fail_open_result(
+                model=model,
+                reason="timeout",
+                duration_ms=int((time.monotonic() - start) * 1000),
+            )
+            self._store.record(
+                session_id=session_id, user_message=user_message,
+                response=response, result=result,
+            )
+            return result
+
+        dims = self._parse_response(raw)
+        if dims is None:
+            self._record_failure_for_circuit_breaker()
+            result = self._fail_open_result(
+                model=model,
+                reason="parse_failed",
+                duration_ms=int((time.monotonic() - start) * 1000),
+            )
+            self._store.record(
+                session_id=session_id, user_message=user_message,
+                response=response, result=result,
+            )
+            return result
+
+        self._consecutive_failures = 0  # successful call resets breaker
+
+        overall_passed, strategy = self._decide_retry_strategy(dims, retry_count=retry_count)
+        final_action: Literal["pass", "rejected_with_retry", "delivered_with_warning"]
+        if overall_passed:
+            final_action = "pass"
+        elif strategy == "deliver_with_warning":
+            final_action = "delivered_with_warning"
+        else:
+            final_action = "rejected_with_retry"
+
+        result = AuditResult(
+            overall_passed=overall_passed,
+            dimensions=dims,
+            retry_count=retry_count,
+            final_action=final_action,
+            retry_strategy=strategy,
+            model=model,
+            duration_ms=int((time.monotonic() - start) * 1000),
+            degraded_mode=False,
+            error_type=None,
+        )
+        self._store.record(
+            session_id=session_id, user_message=user_message,
+            response=response, result=result,
+        )
+        return result
+
+    def _fail_open_result(self, *, model: str, reason: str, duration_ms: int) -> AuditResult:
+        """Construct a pass result used when the observer itself couldn't run."""
+        def _skipped(name: str) -> DimensionResult:
+            return DimensionResult(
+                name=name,  # type: ignore[arg-type]
+                passed=True,
+                reason=f"fail_open: {reason}",
+                evidence="",
+                fix_suggestion="",
+            )
+        return AuditResult(
+            overall_passed=True,
+            dimensions={
+                "hallucination":  _skipped("hallucination"),
+                "sycophancy":     _skipped("sycophancy"),
+                "laziness":       _skipped("laziness"),
+                "tool_ignorance": _skipped("tool_ignorance"),
+            },
+            retry_count=0,
+            final_action="pass",
+            retry_strategy="deliver",
+            model=model,
+            duration_ms=duration_ms,
+            degraded_mode=False,
+            error_type=reason,
+        )
+
+    def _record_failure_for_circuit_breaker(self) -> None:
+        self._consecutive_failures += 1
+        if self._consecutive_failures >= self._config.observer.circuit_breaker_threshold:
+            self._circuit_open = True
+            log.info(
+                "observer_circuit_open",
+                consecutive_failures=self._consecutive_failures,
+                threshold=self._config.observer.circuit_breaker_threshold,
+            )

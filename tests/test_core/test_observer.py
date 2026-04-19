@@ -318,3 +318,97 @@ class TestDecideRetryStrategy:
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=2)
         assert overall is False
         assert strategy == "deliver_with_warning"
+
+
+def _all_pass_json() -> str:
+    """JSON string with all four dimensions passing — shared by multiple tests."""
+    dim = '"passed": true, "reason": "", "evidence": "", "fix_suggestion": ""'
+    return (
+        "{"
+        f'"hallucination": {{{dim}}},'
+        f'"sycophancy": {{{dim}}},'
+        f'"laziness": {{{dim}}},'
+        f'"tool_ignorance": {{{dim}}}'
+        "}"
+    )
+
+
+class TestAuditMain:
+    async def test_pass_path(self, observer):
+        observer._ollama = AsyncMock()
+        observer._ollama.chat = AsyncMock(
+            return_value={"message": {"content": _all_pass_json()}}
+        )
+        result = await observer.audit(
+            user_message="hi",
+            response="hello",
+            tool_results=[],
+            session_id="s1",
+            retry_count=0,
+        )
+        assert result.overall_passed is True
+        assert result.final_action == "pass"
+        assert result.retry_strategy == "deliver"
+        assert result.model == "qwen3:32b"
+        assert result.degraded_mode is False
+        assert result.duration_ms >= 0
+
+    async def test_hallucination_rejection(self, observer):
+        dim_pass = '"passed": true, "reason": "", "evidence": "", "fix_suggestion": ""'
+        dim_fail = (
+            '"passed": false, "reason": "unsupported date",'
+            ' "evidence": "2015", "fix_suggestion": "remove"'
+        )
+        audit_json = (
+            "{"
+            f'"hallucination": {{{dim_fail}}},'
+            f'"sycophancy": {{{dim_pass}}},'
+            f'"laziness": {{{dim_pass}}},'
+            f'"tool_ignorance": {{{dim_pass}}}'
+            "}"
+        )
+        observer._ollama = AsyncMock()
+        observer._ollama.chat = AsyncMock(
+            return_value={"message": {"content": audit_json}}
+        )
+        result = await observer.audit(
+            user_message="q", response="a", tool_results=[],
+            session_id="s2", retry_count=0,
+        )
+        assert result.overall_passed is False
+        assert result.final_action == "rejected_with_retry"
+        assert result.retry_strategy == "response_regen"
+
+    async def test_fail_open_on_timeout(self, observer):
+        import asyncio
+
+        async def _slow(**kwargs):
+            await asyncio.sleep(5)
+            return {"message": {"content": "x"}}
+
+        observer._ollama = AsyncMock()
+        observer._ollama.chat = _slow
+        observer._config.observer = observer._config.observer.model_copy(
+            update={"timeout_seconds": 1}
+        )
+
+        result = await observer.audit(
+            user_message="q", response="a", tool_results=[],
+            session_id="s3", retry_count=0,
+        )
+        assert result.overall_passed is True  # fail-open
+        assert result.error_type == "timeout"
+
+    async def test_records_to_store(self, observer):
+        observer._ollama = AsyncMock()
+        observer._ollama.chat = AsyncMock(
+            return_value={"message": {"content": _all_pass_json()}}
+        )
+        await observer.audit(
+            user_message="q", response="a", tool_results=[],
+            session_id="s4", retry_count=0,
+        )
+        import sqlite3
+        with sqlite3.connect(observer._store._db_path) as conn:
+            rows = conn.execute("SELECT session_id FROM audits").fetchall()
+        assert rows == [("s4",)]
