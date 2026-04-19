@@ -16,6 +16,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from cognithor.utils.logging import get_logger
+
+log = get_logger(__name__)
+
 
 @dataclass(frozen=True)
 class DimensionResult:
@@ -157,3 +161,44 @@ class ObserverAudit:
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": user_payload},
         ]
+
+    async def _call_llm_audit(
+        self,
+        *,
+        messages: list[dict[str, str]],
+    ) -> str | None:
+        """Call the Observer LLM with JSON format + timeout. Returns None on any failure."""
+        import asyncio
+
+        model_name = self._config.models.observer.name
+        timeout = self._config.observer.timeout_seconds
+        try:
+            response = await asyncio.wait_for(
+                self._ollama.chat(
+                    model=model_name,
+                    messages=messages,
+                    options={"temperature": 0.1},
+                    format="json",
+                ),
+                timeout=timeout,
+            )
+        except TimeoutError:
+            log.warning(
+                "observer_timeout",
+                model=model_name,
+                timeout_seconds=timeout,
+            )
+            return None
+        except Exception as exc:
+            log.warning(
+                "observer_connection_failed",
+                model=model_name,
+                error=str(exc),
+            )
+            return None
+
+        content = response.get("message", {}).get("content", "")
+        if not content:
+            log.warning("observer_empty_response", model=model_name)
+            return None
+        return content

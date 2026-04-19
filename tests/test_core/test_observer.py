@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -144,3 +145,40 @@ class TestBuildPrompt:
         # Must NOT contain the literal string "None" — use a sentinel instead.
         assert "ERROR: None" not in messages[1]["content"]
         assert "ERROR: (no error message)" in messages[1]["content"]
+
+
+class TestCallLlmAudit:
+    async def test_returns_raw_text_on_success(self, observer):
+        _audit_json = (
+            '{"hallucination": {"passed": true, "reason": "",'
+            ' "evidence": "", "fix_suggestion": ""}}'
+        )
+        observer._ollama = AsyncMock()
+        observer._ollama.chat = AsyncMock(return_value={
+            "message": {"content": _audit_json},
+        })
+        text = await observer._call_llm_audit(
+            messages=[{"role": "system", "content": "x"}],
+        )
+        assert text.startswith("{")
+
+    async def test_timeout_returns_none(self, observer, monkeypatch):
+        import asyncio
+
+        async def _slow_chat(**kwargs):
+            await asyncio.sleep(10)
+            return {"message": {"content": "x"}}
+
+        observer._ollama = AsyncMock()
+        observer._ollama.chat = _slow_chat
+
+        # Override timeout to 1s
+        observer._config.observer = observer._config.observer.model_copy(
+            update={"timeout_seconds": 1}
+        )
+
+        result = await observer._call_llm_audit(
+            messages=[{"role": "system", "content": "x"}],
+        )
+        # Must return None on timeout (fail-open signal)
+        assert result is None
