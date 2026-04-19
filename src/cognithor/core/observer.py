@@ -13,6 +13,7 @@ blocked by a broken observer.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -167,9 +168,12 @@ class ObserverAudit:
         *,
         messages: list[dict[str, str]],
     ) -> str | None:
-        """Call the Observer LLM with JSON format + timeout. Returns None on any failure."""
-        import asyncio
+        """Call the Observer LLM with JSON format + timeout. Returns None on any failure.
 
+        Expects the ollama client's chat() to return a dict shaped
+        ``{"message": {"content": "..."}}``. If a ``ChatResponse`` dataclass is
+        wired in later (Task 18), adapt accordingly.
+        """
         model_name = self._config.models.observer.name
         timeout = self._config.observer.timeout_seconds
         try:
@@ -189,6 +193,8 @@ class ObserverAudit:
                 timeout_seconds=timeout,
             )
             return None
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:
             log.warning(
                 "observer_connection_failed",
