@@ -7,6 +7,7 @@ does not contain verbatim content.
 
 from __future__ import annotations
 
+import gc
 import hashlib
 import json
 import sqlite3
@@ -61,9 +62,31 @@ class AuditStore:
         if self._initialized:
             return
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self._db_path) as conn:
+        # Use explicit open/close so the file handle is released before any
+        # rename attempt in _recover_from_corrupt() (critical on Windows).
+        conn = sqlite3.connect(self._db_path)
+        try:
+            # Validate by running a simple PRAGMA before the schema creation.
+            conn.execute("PRAGMA quick_check").fetchone()
             conn.executescript(_SCHEMA)
+            conn.commit()
+        finally:
+            conn.close()
+            del conn
+            gc.collect()
         self._initialized = True
+
+    def _recover_from_corrupt(self) -> None:
+        """Move corrupted DB aside so a fresh one can be created."""
+        if not self._db_path.exists():
+            return
+        broken = self._db_path.with_suffix(".broken.db")
+        try:
+            self._db_path.rename(broken)
+            log.warning("observer_store_moved_corrupt_aside", broken_path=str(broken))
+        except OSError:
+            pass
+        self._initialized = False
 
     def record(
         self,
@@ -74,7 +97,17 @@ class AuditStore:
         result: AuditResult,
     ) -> None:
         """Write one audit record. Fail-open on any I/O error."""
-        self._ensure_ready()
+        try:
+            self._ensure_ready()
+        except sqlite3.DatabaseError as exc:
+            log.warning("observer_store_corrupt_on_init", path=str(self._db_path), error=str(exc))
+            self._recover_from_corrupt()
+            try:
+                self._ensure_ready()
+            except Exception:
+                log.warning("observer_store_unrecoverable", path=str(self._db_path))
+                return
+
         log.debug(
             "observer.audit session=%s model=%s passed=%s",
             session_id, result.model, result.overall_passed)
@@ -82,25 +115,43 @@ class AuditStore:
             {name: asdict(dim) for name, dim in result.dimensions.items()},
             ensure_ascii=False,
         )
-        with sqlite3.connect(self._db_path) as conn:
-            conn.execute(
-                "INSERT INTO audits (session_id, timestamp, user_message_hash, "
-                "response_hash, model, dimensions_json, overall_passed, retry_count, "
-                "final_action, retry_strategy, duration_ms, degraded_mode, error_type) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    session_id,
-                    int(time.time() * 1000),
-                    _sha256(user_message),
-                    _sha256(response),
-                    result.model,
-                    dims_serialized,
-                    int(result.overall_passed),
-                    result.retry_count,
-                    result.final_action,
-                    result.retry_strategy,
-                    result.duration_ms,
-                    int(result.degraded_mode),
-                    result.error_type,
-                ),
-            )
+
+        backoffs = (0.05, 0.2, 0.5)  # 3 retries total
+        for attempt, delay in enumerate((0.0, *backoffs)):
+            if delay > 0:
+                time.sleep(delay)
+            try:
+                with sqlite3.connect(self._db_path) as conn:
+                    conn.execute(
+                        "INSERT INTO audits (session_id, timestamp, user_message_hash, "
+                        "response_hash, model, dimensions_json, overall_passed, retry_count, "
+                        "final_action, retry_strategy, duration_ms, degraded_mode, error_type) "
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        (
+                            session_id,
+                            int(time.time() * 1000),
+                            _sha256(user_message),
+                            _sha256(response),
+                            result.model,
+                            dims_serialized,
+                            int(result.overall_passed),
+                            result.retry_count,
+                            result.final_action,
+                            result.retry_strategy,
+                            result.duration_ms,
+                            int(result.degraded_mode),
+                            result.error_type,
+                        ),
+                    )
+                return
+            except sqlite3.DatabaseError as exc:
+                if attempt == len(backoffs):
+                    log.warning(
+                        "observer_store_write_failed",
+                        session_id=session_id,
+                        error=str(exc),
+                        attempts=attempt + 1,
+                    )
+                    return
+                # else: retry after backoff
+                continue
