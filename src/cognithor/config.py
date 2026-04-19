@@ -89,6 +89,10 @@ class ModelsConfig(BaseModel):
             speed="medium",
         )
     )
+    observer: ModelConfig = Field(
+        default_factory=lambda: ModelConfig(name="qwen3:32b"),
+        description="Model used by the Observer audit layer. Default matches planner.",
+    )
     executor: ModelConfig = Field(
         default_factory=lambda: ModelConfig(
             name="qwen3:8b",
@@ -977,20 +981,33 @@ class ModelOverrideConfig(BaseModel):
 # durch passende Modelle des jeweiligen Providers ersetzt -- aber nur, wenn
 # the user has not explicitly overridden the model names.
 
-_OLLAMA_DEFAULT_MODEL_NAMES = {
-    "qwen3:32b",
-    "qwen3:8b",
-    "qwen3-coder:30b",
-    "qwen2.5-coder:7b",
-    "nomic-embed-text",
-    "qwen3-embedding:0.6b",
-    "llava:13b",
-    "openbmb/minicpm-v4.5",
-    # Legacy detection for upgrades from older versions
-    "gpt-4o",
-    "gpt-4o-mini",
-    "claude-sonnet-4-20250514",
+# Role → default Ollama model name. Used by provider-switching logic to detect
+# when a user is still on the vanilla Ollama default for a given role, and by the
+# Observer audit layer to know which model to fall back to.
+_OLLAMA_DEFAULT_MODEL_NAMES: dict[str, str] = {
+    "planner": "qwen3:32b",
+    "observer": "qwen3:32b",
+    "executor": "qwen3:8b",
+    "coder": "qwen3-coder:30b",
+    "coder_fast": "qwen2.5-coder:7b",
+    "embedding": "qwen3-embedding:0.6b",
+    "vision": "openbmb/minicpm-v4.5",
 }
+
+# Legacy/default model names that should be treated as "still on a default" by
+# provider-switching logic. Includes current Ollama defaults plus historical
+# entries (older Ollama models, and defaults from prior provider switches).
+_DEFAULT_MODEL_NAME_VALUES: frozenset[str] = frozenset(
+    {
+        *_OLLAMA_DEFAULT_MODEL_NAMES.values(),
+        "nomic-embed-text",
+        "llava:13b",
+        # Legacy detection for upgrades from older versions
+        "gpt-4o",
+        "gpt-4o-mini",
+        "claude-sonnet-4-20250514",
+    }
+)
 
 _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
     "openai": {
@@ -2708,7 +2725,7 @@ class JarvisConfig(BaseModel):
         # Check each model role and adjust if necessary
         for role in ("planner", "executor", "coder", "coder_fast", "embedding"):
             current_model: ModelConfig = getattr(self.models, role)
-            if current_model.name not in _OLLAMA_DEFAULT_MODEL_NAMES:
+            if current_model.name not in _DEFAULT_MODEL_NAME_VALUES:
                 # User has a custom model set — keep it, but log for clarity
                 expected = provider_defaults.get(role, {}).get("name", "")
                 if expected and current_model.name != expected:
@@ -2720,7 +2737,7 @@ class JarvisConfig(BaseModel):
                         backend,
                     )
                 continue
-            if current_model.name in _OLLAMA_DEFAULT_MODEL_NAMES:
+            if current_model.name in _DEFAULT_MODEL_NAME_VALUES:
                 role_defaults = provider_defaults.get(role)
                 if role_defaults:
                     new_model = ModelConfig(**role_defaults)
@@ -2735,13 +2752,13 @@ class JarvisConfig(BaseModel):
                         )
 
         # Heartbeat-Modell ebenfalls anpassen wenn noch auf Ollama-Default
-        if self.heartbeat.model in _OLLAMA_DEFAULT_MODEL_NAMES:
+        if self.heartbeat.model in _DEFAULT_MODEL_NAME_VALUES:
             executor_default = provider_defaults.get("executor", {})
             if executor_default:
                 object.__setattr__(self.heartbeat, "model", executor_default["name"])
 
         # Vision-Modell anpassen (einfacher String, kein ModelConfig)
-        if self.vision_model in _OLLAMA_DEFAULT_MODEL_NAMES:
+        if self.vision_model in _DEFAULT_MODEL_NAME_VALUES:
             vision_default = provider_defaults.get("vision", {})
             if vision_default:
                 object.__setattr__(self, "vision_model", vision_default["name"])
