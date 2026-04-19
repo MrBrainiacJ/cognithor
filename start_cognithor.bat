@@ -67,14 +67,24 @@ if errorlevel 1 (
 :: ============================================================
 call :find_python
 if "!PYTHON_CMD!"=="" (
-    echo   [ERROR] Python not found!
+    echo   [ERROR] Python 3.12+ not found.
+    echo.
+    echo   Searched locations:
+    echo     - PATH ^(python, py^)
+    echo     - %%LOCALAPPDATA%%\Programs\Python\Python313\ and Python312\
+    echo     - %%ProgramFiles%%\Python313\ and Python312\
+    echo     - C:\Python313\ and C:\Python312\
     echo.
     echo   Please install Python 3.12+:
     echo   https://www.python.org/downloads/
     echo.
-    echo   IMPORTANT: Check "Add Python to PATH" during installation!
+    echo   IMPORTANT: Tick "Add python.exe to PATH" during installation,
+    echo   or reinstall using the bundled installer ^(CognithorSetup.exe^)
+    echo   which adds Python automatically.
+    pause
     exit /b 1
 )
+echo   [OK] Python: !PYTHON_CMD!
 
 :: ============================================================
 ::  2. Python >= 3.12?
@@ -238,6 +248,11 @@ exit /b 0
 :: ============================================================
 
 :find_python
+:: Locate a usable Python. Priority:
+::   1. `python` on PATH
+::   2. `py` launcher on PATH
+::   3. Well-known install paths (user + machine-wide, 3.13 / 3.12)
+::      -- catches installs where "Add to PATH" was NOT ticked during setup.
 set "PYTHON_CMD="
 where python >nul 2>&1
 if not errorlevel 1 (
@@ -251,6 +266,25 @@ if "!PYTHON_CMD!"=="" (
         if not errorlevel 1 set "PYTHON_CMD=py"
     )
 )
+if "!PYTHON_CMD!"=="" (
+    for %%P in (
+        "%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+        "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+        "%ProgramFiles%\Python313\python.exe"
+        "%ProgramFiles%\Python312\python.exe"
+        "C:\Python313\python.exe"
+        "C:\Python312\python.exe"
+    ) do (
+        if exist "%%~P" (
+            "%%~P" -c "import sys" >nul 2>&1
+            if not errorlevel 1 (
+                set "PYTHON_CMD=%%~P"
+                goto :_python_found
+            )
+        )
+    )
+)
+:_python_found
 goto :eof
 
 :detect_flutter
