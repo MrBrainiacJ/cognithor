@@ -256,3 +256,35 @@ class ObserverAudit:
                     fix_suggestion="",
                 )
         return dims
+
+    def _decide_retry_strategy(
+        self,
+        dimensions: dict[str, DimensionResult],
+        retry_count: int,
+    ) -> tuple[bool, Literal["response_regen", "pge_reloop", "deliver", "deliver_with_warning"]]:
+        """Determine overall pass/fail and retry strategy.
+
+        Priority when both blocking dimensions fail: tool_ignorance wins
+        because gathering new data is more fundamental than rewording.
+        """
+        blocking = self._config.observer.blocking_dimensions
+        blocking_failed = [
+            name for name in blocking
+            if name in dimensions and not dimensions[name].passed
+        ]
+        overall_passed = not blocking_failed
+
+        if overall_passed:
+            return True, "deliver"
+
+        if retry_count >= self._config.observer.max_retries:
+            return False, "deliver_with_warning"
+
+        # Priority: tool_ignorance > hallucination (more fundamental fix).
+        if "tool_ignorance" in blocking_failed:
+            return False, "pge_reloop"
+        if "hallucination" in blocking_failed:
+            return False, "response_regen"
+
+        # Any other blocking dimension currently collapses to response_regen.
+        return False, "response_regen"

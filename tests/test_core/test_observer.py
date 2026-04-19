@@ -237,3 +237,82 @@ class TestParseResponse:
         assert dims["hallucination"].reason == "skipped (missing from LLM response)"
         # sycophancy still parses normally from the well-formed dict
         assert dims["sycophancy"].passed is True
+
+
+def _dim(name: str, passed: bool) -> DimensionResult:
+    return DimensionResult(
+        name=name,  # type: ignore[arg-type]
+        passed=passed,
+        reason="" if passed else "bad",
+        evidence="" if passed else "x",
+        fix_suggestion="" if passed else "fix",
+    )
+
+
+class TestDecideRetryStrategy:
+    def test_all_pass_returns_deliver(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", True),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": _dim("tool_ignorance", True),
+        }
+        overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
+        assert overall is True
+        assert strategy == "deliver"
+
+    def test_only_advisory_fail_still_delivers(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", True),
+            "sycophancy":     _dim("sycophancy", False),
+            "laziness":       _dim("laziness", False),
+            "tool_ignorance": _dim("tool_ignorance", True),
+        }
+        overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
+        assert overall is True
+        assert strategy == "deliver"
+
+    def test_hallucination_fail_triggers_response_regen(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", False),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": _dim("tool_ignorance", True),
+        }
+        overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
+        assert overall is False
+        assert strategy == "response_regen"
+
+    def test_tool_ignorance_fail_triggers_pge_reloop(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", True),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": _dim("tool_ignorance", False),
+        }
+        overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
+        assert overall is False
+        assert strategy == "pge_reloop"
+
+    def test_both_blocking_fail_tool_ignorance_wins(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", False),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": _dim("tool_ignorance", False),
+        }
+        overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
+        # Tool-ignorance fix is more fundamental (new data via new tool call)
+        # than response regen — priority: pge_reloop wins.
+        assert strategy == "pge_reloop"
+
+    def test_retries_exhausted_switches_to_warning(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", False),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": _dim("tool_ignorance", True),
+        }
+        # max_retries is 2 by default; retry_count=2 means we've already retried twice
+        overall, strategy = observer._decide_retry_strategy(dims, retry_count=2)
+        assert strategy == "deliver_with_warning"
