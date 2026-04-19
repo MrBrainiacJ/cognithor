@@ -205,15 +205,20 @@ def step_flutter_ui() -> Path | None:
         print("  [SKIP] No flutter_app/ directory")
         return None
 
-    if shutil.which("flutter") is None:
+    flutter_bin = shutil.which("flutter")
+    if flutter_bin is None:
         print("  [WARN] flutter not in PATH, skipping UI build")
         return None
 
     print("  Building Flutter web...")
+    # See step_flutter_desktop: on Windows flutter is a .bat — pass the
+    # fully-qualified path from shutil.which to avoid a silent CreateProcess
+    # failure.
     subprocess.run(
-        ["flutter", "build", "web", "--release"],
+        [flutter_bin, "build", "web", "--release"],
         check=True,
         cwd=str(flutter_app),
+        shell=False,
     )
     print("  [OK] Flutter web build complete")
     return web_build
@@ -234,16 +239,30 @@ def step_flutter_desktop() -> Path | None:
         print(f"  [OK] Pre-built Flutter desktop copied")
         return dest
 
-    if not flutter_app.exists() or shutil.which("flutter") is None:
+    flutter_bin = shutil.which("flutter")
+    if not flutter_app.exists() or flutter_bin is None:
         print("  [SKIP] Flutter desktop build not available")
         return None
 
     print("  Building Flutter desktop (windows)...")
-    subprocess.run(
-        ["flutter", "build", "windows", "--release"],
-        check=True,
-        cwd=str(flutter_app),
-    )
+    # On Windows flutter is a .bat; CreateProcess won't resolve via PATHEXT
+    # unless we pass the fully-qualified path returned by shutil.which.
+    #
+    # Flutter windows builds require "Developer Mode" on the build host
+    # (for symlink support). If that's not on, `flutter build windows`
+    # exits non-zero — we don't want that to abort the whole installer
+    # build, so we treat it as a soft failure and continue with web-only.
+    try:
+        subprocess.run(
+            [flutter_bin, "build", "windows", "--release"],
+            check=True,
+            cwd=str(flutter_app),
+            shell=False,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(f"  [WARN] flutter build windows exited {exc.returncode} — skipping desktop UI")
+        return None
+
     if desktop_build.exists():
         dest = BUILD_DIR / "flutter_desktop"
         if dest.exists():
