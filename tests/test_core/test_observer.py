@@ -304,6 +304,7 @@ class TestDecideRetryStrategy:
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
         # Tool-ignorance fix is more fundamental (new data via new tool call)
         # than response regen — priority: pge_reloop wins.
+        assert overall is False
         assert strategy == "pge_reloop"
 
     def test_retries_exhausted_switches_to_warning(self, observer):
@@ -315,4 +316,5 @@ class TestDecideRetryStrategy:
         }
         # max_retries is 2 by default; retry_count=2 means we've already retried twice
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=2)
+        assert overall is False
         assert strategy == "deliver_with_warning"
