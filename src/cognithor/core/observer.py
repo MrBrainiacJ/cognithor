@@ -47,6 +47,8 @@ class AuditResult:
     model: str
     duration_ms: int
     degraded_mode: bool
+    # None on success. On fail-open: "timeout", "parse_failed", "circuit_open",
+    # "disabled". Task 13 will add "degraded" when degraded-mode falls back.
     error_type: str | None
 
 
@@ -309,6 +311,7 @@ class ObserverAudit:
                 model=model,
                 reason="circuit_open" if self._circuit_open else "disabled",
                 duration_ms=int((time.monotonic() - start) * 1000),
+                retry_count=retry_count,
             )
 
         messages = self._build_prompt(
@@ -324,8 +327,9 @@ class ObserverAudit:
                 model=model,
                 reason="timeout",
                 duration_ms=int((time.monotonic() - start) * 1000),
+                retry_count=retry_count,
             )
-            self._store.record(
+            self._persist(
                 session_id=session_id, user_message=user_message,
                 response=response, result=result,
             )
@@ -338,8 +342,9 @@ class ObserverAudit:
                 model=model,
                 reason="parse_failed",
                 duration_ms=int((time.monotonic() - start) * 1000),
+                retry_count=retry_count,
             )
-            self._store.record(
+            self._persist(
                 session_id=session_id, user_message=user_message,
                 response=response, result=result,
             )
@@ -367,13 +372,20 @@ class ObserverAudit:
             degraded_mode=False,
             error_type=None,
         )
-        self._store.record(
+        self._persist(
             session_id=session_id, user_message=user_message,
             response=response, result=result,
         )
         return result
 
-    def _fail_open_result(self, *, model: str, reason: str, duration_ms: int) -> AuditResult:
+    def _fail_open_result(
+        self,
+        *,
+        model: str,
+        reason: str,
+        duration_ms: int,
+        retry_count: int = 0,
+    ) -> AuditResult:
         """Construct a pass result used when the observer itself couldn't run."""
         def _skipped(name: str) -> DimensionResult:
             return DimensionResult(
@@ -391,7 +403,7 @@ class ObserverAudit:
                 "laziness":       _skipped("laziness"),
                 "tool_ignorance": _skipped("tool_ignorance"),
             },
-            retry_count=0,
+            retry_count=retry_count,
             final_action="pass",
             retry_strategy="deliver",
             model=model,
@@ -409,3 +421,19 @@ class ObserverAudit:
                 consecutive_failures=self._consecutive_failures,
                 threshold=self._config.observer.circuit_breaker_threshold,
             )
+
+    def _persist(
+        self,
+        *,
+        session_id: str,
+        user_message: str,
+        response: str,
+        result: AuditResult,
+    ) -> None:
+        """Forward an audit result to the store. Single call site for all 3 paths."""
+        self._store.record(
+            session_id=session_id,
+            user_message=user_message,
+            response=response,
+            result=result,
+        )
