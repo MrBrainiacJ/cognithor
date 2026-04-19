@@ -445,3 +445,56 @@ class TestBuildRetryFeedback:
         assert rejection["max_retries"] == 2
         assert len(rejection["reasons"]) == 1
         assert len(rejection["fix_suggestions"]) == 1
+
+
+class TestBuildPgeDirective:
+    def test_directive_includes_missing_data_and_suggestions(self, observer):
+        dim = DimensionResult(
+            name="tool_ignorance",
+            passed=False,
+            reason="Question required web research but no tool was called",
+            evidence="I don't have current data on that",
+            fix_suggestion="Call web_search to get current data",
+        )
+        dims = {
+            "hallucination":  _dim("hallucination", True),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": dim,
+        }
+        result = AuditResult(
+            overall_passed=False,
+            dimensions=dims,
+            retry_count=0,
+            final_action="rejected_with_retry",
+            retry_strategy="pge_reloop",
+            model="qwen3:32b",
+            duration_ms=100,
+            degraded_mode=False,
+            error_type=None,
+        )
+        directive = observer.build_pge_directive(result)
+        assert directive is not None
+        assert directive.reason == "tool_ignorance"
+        assert "web research" in directive.missing_data
+        assert "web_search" in directive.suggested_tools
+
+    def test_returns_none_when_no_tool_ignorance(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", False),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": _dim("tool_ignorance", True),
+        }
+        result = AuditResult(
+            overall_passed=False,
+            dimensions=dims,
+            retry_count=0,
+            final_action="rejected_with_retry",
+            retry_strategy="response_regen",
+            model="qwen3:32b",
+            duration_ms=100,
+            degraded_mode=False,
+            error_type=None,
+        )
+        assert observer.build_pge_directive(result) is None

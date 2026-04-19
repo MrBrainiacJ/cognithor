@@ -436,6 +436,29 @@ class ObserverAudit:
         }
         return {"role": "system", "content": json.dumps(payload, ensure_ascii=False)}
 
+    def build_pge_directive(self, result: AuditResult) -> PGEReloopDirective | None:
+        """Extract a PGE re-loop directive from a tool_ignorance failure.
+
+        Returns None if tool_ignorance passed (no re-loop needed). The directive
+        contains the missing-data description and the Observer's suggested tools
+        parsed out of the fix_suggestion.
+        """
+        ti = result.dimensions.get("tool_ignorance")
+        if ti is None or ti.passed:
+            return None
+        # Extract tool suggestions by scanning the fix_suggestion for known
+        # tool name patterns. Conservative: if none match, leave empty.
+        known_tools = (
+            "web_search", "web_fetch", "search_memory", "search_and_read",
+            "read_file", "list_directory", "api_call", "exec_command",
+        )
+        suggested = [t for t in known_tools if t in ti.fix_suggestion]
+        return PGEReloopDirective(
+            reason="tool_ignorance",
+            missing_data=ti.reason or ti.evidence,
+            suggested_tools=suggested,
+        )
+
     def _persist(
         self,
         *,
