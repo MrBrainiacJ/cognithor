@@ -412,3 +412,36 @@ class TestAuditMain:
         with sqlite3.connect(observer._store._db_path) as conn:
             rows = conn.execute("SELECT session_id FROM audits").fetchall()
         assert rows == [("s4",)]
+
+
+class TestBuildRetryFeedback:
+    def test_feedback_is_structured_json(self, observer):
+        dims = {
+            "hallucination":  _dim("hallucination", False),
+            "sycophancy":     _dim("sycophancy", True),
+            "laziness":       _dim("laziness", True),
+            "tool_ignorance": _dim("tool_ignorance", True),
+        }
+        result = AuditResult(
+            overall_passed=False,
+            dimensions=dims,
+            retry_count=0,
+            final_action="rejected_with_retry",
+            retry_strategy="response_regen",
+            model="qwen3:32b",
+            duration_ms=100,
+            degraded_mode=False,
+            error_type=None,
+        )
+        fb = observer.build_retry_feedback(result)
+        assert fb["role"] == "system"
+
+        import json as _json
+        payload = _json.loads(fb["content"])
+        assert "observer_rejection" in payload
+        rejection = payload["observer_rejection"]
+        assert rejection["dimensions_failed"] == ["hallucination"]
+        assert rejection["retry_count"] == 0
+        assert rejection["max_retries"] == 2
+        assert len(rejection["reasons"]) == 1
+        assert len(rejection["fix_suggestions"]) == 1

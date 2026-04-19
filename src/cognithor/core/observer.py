@@ -422,6 +422,20 @@ class ObserverAudit:
                 threshold=self._config.observer.circuit_breaker_threshold,
             )
 
+    def build_retry_feedback(self, result: AuditResult) -> dict[str, str]:
+        """Produce a system-message payload for response-regen retries."""
+        failed = [name for name, dim in result.dimensions.items() if not dim.passed]
+        payload = {
+            "observer_rejection": {
+                "retry_count": result.retry_count,
+                "max_retries": self._config.observer.max_retries,
+                "dimensions_failed": failed,
+                "reasons": [result.dimensions[n].reason for n in failed],
+                "fix_suggestions": [result.dimensions[n].fix_suggestion for n in failed],
+            }
+        }
+        return {"role": "system", "content": json.dumps(payload, ensure_ascii=False)}
+
     def _persist(
         self,
         *,
