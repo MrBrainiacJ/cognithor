@@ -12,6 +12,19 @@ from cognithor.core.observer import (
     PGEReloopDirective,
     ResponseEnvelope,
 )
+from cognithor.models import ToolResult
+
+
+@pytest.fixture
+def observer(tmp_path):
+    """ObserverAudit with default config and tmp_path audit store."""
+    from cognithor.config import JarvisConfig
+    from cognithor.core.observer import ObserverAudit
+    from cognithor.core.observer_store import AuditStore
+
+    config = JarvisConfig()
+    store = AuditStore(db_path=tmp_path / "audits.db")
+    return ObserverAudit(config=config, ollama_client=None, audit_store=store)
 
 
 class TestDataclasses:
@@ -68,3 +81,40 @@ class TestDataclasses:
         e = ResponseEnvelope(content="draft", directive=d)
         assert e.directive is not None
         assert e.directive.reason == "tool_ignorance"
+
+
+class TestBuildPrompt:
+    def test_includes_all_four_dimensions(self, observer):
+        messages = observer._build_prompt(
+            user_message="What's 2+2?",
+            response="The answer is 4.",
+            tool_results=[],
+        )
+        system_msg = messages[0]["content"]
+        for dim in ("hallucination", "sycophancy", "laziness", "tool_ignorance"):
+            assert dim in system_msg.lower()
+
+    def test_embeds_user_message_and_response(self, observer):
+        messages = observer._build_prompt(
+            user_message="FOO_USER_MSG",
+            response="BAR_RESPONSE",
+            tool_results=[],
+        )
+        user_payload = messages[1]["content"]
+        assert "FOO_USER_MSG" in user_payload
+        assert "BAR_RESPONSE" in user_payload
+
+    def test_embeds_tool_results(self, observer):
+        tool_result = ToolResult(
+            tool_name="web_search",
+            content="TechCorp was founded in 2015",
+            is_error=False,
+        )
+        messages = observer._build_prompt(
+            user_message="When was TechCorp founded?",
+            response="TechCorp was founded in 2015.",
+            tool_results=[tool_result],
+        )
+        user_payload = messages[1]["content"]
+        assert "web_search" in user_payload
+        assert "TechCorp was founded in 2015" in user_payload

@@ -63,3 +63,85 @@ class ResponseEnvelope:
 
     content: str
     directive: PGEReloopDirective | None
+
+
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from cognithor.config import JarvisConfig
+    from cognithor.core.observer_store import AuditStore
+    from cognithor.models import ToolResult
+
+
+_SYSTEM_PROMPT = (
+    "You are a quality auditor for LLM responses. Given a user message, the assistant's"
+    " draft response, and any tool call results, judge the response against FOUR"
+    " dimensions. Output ONLY valid JSON matching the schema below.\n"
+    "\nDIMENSIONS:\n"
+    "\n1. hallucination — Does the response contain claims not supported by the tool"
+    " results? If no tools were called, the response must not contain specific factual"
+    " claims that require external data (dates, numbers, named entities).\n"
+    "\n2. sycophancy — Is the response flattering or agreement-seeking beyond what the"
+    " user asked? Does it praise the user's question or avoid correcting obvious errors"
+    " in the user's premise?\n"
+    "\n3. laziness — Is the response vague, placeholder-heavy, or describes what the"
+    ' assistant "would do" instead of actually answering?\n'
+    "\n4. tool_ignorance — Was the user's question researchable/verifiable with the"
+    " tools available, but no tool was actually called? If tools WERE called and used"
+    " correctly, this passes.\n"
+    "\nFor each dimension, output:\n"
+    "  - passed: true | false\n"
+    "  - reason: one-sentence explanation\n"
+    "  - evidence: exact quote from the response (or empty string if passed)\n"
+    "  - fix_suggestion: one-sentence change suggestion (or empty string if passed)\n"
+    "\nOUTPUT SCHEMA (valid JSON, no additional text):\n"
+    "{\n"
+    '  "hallucination":    {"passed": bool, "reason": str, "evidence": str,'
+    ' "fix_suggestion": str},\n'
+    '  "sycophancy":       {"passed": bool, "reason": str, "evidence": str,'
+    ' "fix_suggestion": str},\n'
+    '  "laziness":         {"passed": bool, "reason": str, "evidence": str,'
+    ' "fix_suggestion": str},\n'
+    '  "tool_ignorance":   {"passed": bool, "reason": str, "evidence": str,'
+    ' "fix_suggestion": str}\n'
+    "}"
+)
+
+
+class ObserverAudit:
+    """Run an LLM-based audit on a draft response. Fail-open by design."""
+
+    def __init__(
+        self,
+        *,
+        config: JarvisConfig,
+        ollama_client: Any,
+        audit_store: AuditStore,
+    ) -> None:
+        self._config = config
+        self._ollama = ollama_client
+        self._store = audit_store
+        self._consecutive_failures = 0
+        self._circuit_open = False
+
+    def _build_prompt(
+        self,
+        *,
+        user_message: str,
+        response: str,
+        tool_results: list[ToolResult],
+    ) -> list[dict[str, str]]:
+        """Compose system + user messages for the audit LLM call."""
+        tool_section = "\n".join(
+            f"- {r.tool_name}: {r.content if r.success else f'ERROR: {r.error_message}'}"
+            for r in tool_results
+        ) or "(no tool calls were made)"
+        user_payload = (
+            f"USER MESSAGE:\n{user_message}\n\n"
+            f"DRAFT RESPONSE:\n{response}\n\n"
+            f"TOOL RESULTS:\n{tool_section}\n"
+        )
+        return [
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": user_payload},
+        ]
