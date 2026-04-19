@@ -80,13 +80,19 @@ sealed class ProcessManager : IDisposable
             throw new Win32Exception(Marshal.GetLastWin32Error());
     }
 
-    string FindPython()
+    string? FindPython()
     {
         var local = Path.Combine(_baseDir, "python", "python.exe");
         if (File.Exists(local)) return local;
-        return FindOnPath("python.exe")
-            ?? throw new FileNotFoundException("Python not found. Reinstall Cognithor.");
+        return FindOnPath("python.exe");
     }
+
+    /// <summary>
+    /// True if an earlier <see cref="StartPython"/> call did not find the
+    /// bundled interpreter. The tray UI uses this to show a "Backend not
+    /// installed" status instead of silently appearing healthy.
+    /// </summary>
+    public bool PythonMissing { get; private set; }
 
     string? FindOllama()
     {
@@ -145,6 +151,16 @@ sealed class ProcessManager : IDisposable
     void StartPython()
     {
         var pythonPath = FindPython();
+        if (pythonPath is null)
+        {
+            // Don't kill the launcher — the tray icon stays up and the user
+            // can read the status to understand what's wrong. The HealthChecker
+            // will report Unhealthy because the API won't answer, which surfaces
+            // in the tray tooltip.
+            PythonMissing = true;
+            return;
+        }
+        PythonMissing = false;
         _pythonProcess = SpawnAndAssign(pythonPath, "-m cognithor --no-cli --api-port 8741");
     }
 
@@ -155,10 +171,6 @@ sealed class ProcessManager : IDisposable
     {
         var local = Path.Combine(_baseDir, "flutter_app", "cognithor_ui.exe");
         if (File.Exists(local)) return local;
-
-        var alt = Path.Combine(_baseDir, "flutter_app", "jarvis_ui.exe");
-        if (File.Exists(alt)) return alt;
-
         return null;
     }
 

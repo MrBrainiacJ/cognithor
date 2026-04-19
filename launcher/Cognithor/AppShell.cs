@@ -95,6 +95,20 @@ sealed class AppShell : IDisposable
 
         _processes.StartAll();
         _health.Start();
+
+        // Surface a missing backend immediately so the user isn't left
+        // wondering why the tray icon stays on "Starting..." forever.
+        if (_processes.PythonMissing)
+        {
+            SetStatus(AppStatus.Stopped);
+            _statusItem.Text = "Status: Backend not installed";
+            _trayIcon.Text = "Cognithor - Backend not installed";
+            _trayIcon.ShowBalloonTip(
+                8000,
+                "Cognithor",
+                "Python backend not found. Reinstall Cognithor or check your PATH.",
+                ToolTipIcon.Error);
+        }
     }
 
     string DefaultToggleLabel =>
