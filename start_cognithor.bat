@@ -37,14 +37,17 @@ exit /b %MAIN_EXIT%
 :main
 :: ============================================================
 
-:: UTF-8 fuer Python-Output aktivieren
+:: UTF-8 fuer Python-Output aktivieren (Codepage + PYTHONIOENCODING
+:: verhindern cp1252-Crashes bei Umlauten, Emojis, Box-Drawing-Chars)
 chcp 65001 >nul 2>&1
+set "PYTHONIOENCODING=utf-8"
+set "PYTHONUTF8=1"
 
 echo.
 echo     COGNITHOR - Agent OS
 echo     ============================
 echo.
-echo   v0.90.0
+echo   v0.92.1
 echo.
 
 set "REPO_ROOT=%~dp0"

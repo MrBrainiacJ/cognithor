@@ -153,8 +153,8 @@ class TestDirectoryStructure:
 
         # CORE.md existiert
         assert config.core_memory_file.exists()
-        core_content = config.core_memory_file.read_text()
-        assert "Jarvis" in core_content
+        core_content = config.core_memory_file.read_text(encoding="utf-8")
+        assert "Cognithor" in core_content
         assert "User" in core_content  # Default owner_name
 
         # Default Policy existiert

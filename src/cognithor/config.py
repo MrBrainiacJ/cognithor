@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cognithor.models import ModelConfig, SandboxConfig
 
@@ -56,6 +56,8 @@ def _normalize_ollama_url(raw: str | None) -> str:
 class OllamaConfig(BaseModel):
     """Ollama-Server Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     mode: str = Field(
         default="local",
         description="'local' = Ollama on this machine (auto-start), 'remote' = external API server",
@@ -75,6 +77,8 @@ class OllamaConfig(BaseModel):
 
 class ModelsConfig(BaseModel):
     """Modell-Zuordnung. [B§8.1]"""
+
+    model_config = ConfigDict(extra="forbid")
 
     planner: ModelConfig = Field(
         default_factory=lambda: ModelConfig(
@@ -127,6 +131,8 @@ class ModelsConfig(BaseModel):
 class GatekeeperConfig(BaseModel):
     """Gatekeeper-Einstellungen. [B§3.2]"""
 
+    model_config = ConfigDict(extra="forbid")
+
     policies_dir: str = "policies"  # Relativ zu jarvis_home
     default_risk_level: Literal["green", "yellow", "orange", "red"] = "yellow"
     max_blocked_retries: int = Field(default=3, ge=1, le=10)
@@ -134,6 +140,8 @@ class GatekeeperConfig(BaseModel):
 
 class PlannerConfig(BaseModel):
     """Planner-Einstellungen. [B§3.1, §3.4]"""
+
+    model_config = ConfigDict(extra="forbid")
 
     max_iterations: int = Field(default=25, ge=1, le=50)
     escalation_after: int = Field(default=3, ge=1, le=10)
@@ -150,6 +158,8 @@ class WebConfig(BaseModel):
       - Google CSE: Custom Search Engine, 100 Anfragen/Tag kostenlos
       - DuckDuckGo: Immer verfuegbar, kein API-Key noetig (Standard-Fallback)
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     searxng_url: str = ""
     """URL der SearXNG-Instanz (z.B. 'http://localhost:8888')."""
@@ -217,6 +227,8 @@ class WebConfig(BaseModel):
 class BrowserConfig(BaseModel):
     """Browser-Automation Konfiguration (Playwright)."""
 
+    model_config = ConfigDict(extra="forbid")
+
     max_text_length: int = Field(default=8000, ge=1000, le=100_000)
     """Maximale Textlaenge die ans LLM zurueckgegeben wird."""
 
@@ -236,12 +248,16 @@ class BrowserConfig(BaseModel):
 class FilesystemConfig(BaseModel):
     """Dateisystem-Tools Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     max_tree_entries: int = Field(default=200, ge=10, le=10_000)
     """Maximale Eintraege im Verzeichnisbaum-Listing."""
 
 
 class ShellConfig(BaseModel):
     """Shell-Execution Konfiguration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     default_timeout_seconds: int = Field(default=30, ge=5, le=600)
     """Standard-Timeout fuer Shell-Befehle (Sekunden)."""
@@ -255,6 +271,8 @@ class ShellConfig(BaseModel):
 
 class ToolsConfig(BaseModel):
     """Konfiguration fuer Desktop-Automation und Desktop-Tools."""
+
+    model_config = ConfigDict(extra="forbid")
 
     computer_use_enabled: bool = Field(
         default=False,
@@ -294,6 +312,8 @@ class ToolsConfig(BaseModel):
 class MediaConfig(BaseModel):
     """Media-Pipeline Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     max_extract_length: int = Field(default=15_000, ge=1000, le=100_000)
     """Maximale Textlaenge fuer LLM-Kontext bei Extraktion."""
 
@@ -319,6 +339,8 @@ class MediaConfig(BaseModel):
 class SynthesisConfig(BaseModel):
     """Knowledge-Synthesis Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     max_source_chars: int = Field(default=4000, ge=500, le=50_000)
     """Maximale Zeichenzahl pro Quelle fuer LLM-Kontext."""
 
@@ -332,6 +354,8 @@ class EmailConfig(BaseModel):
     Passwort wird NIE in der Config gespeichert, sondern aus einer
     Umgebungsvariable gelesen (``password_env``).
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = False
     """Aktiviert oder deaktiviert die E-Mail-Tools."""
@@ -362,6 +386,8 @@ class CalendarConfig(BaseModel):
     Optional: CalDAV-Client wenn ``caldav``-Bibliothek installiert.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = False
     """Aktiviert oder deaktiviert die Kalender-Tools."""
 
@@ -384,6 +410,8 @@ class CalendarConfig(BaseModel):
 class CodeConfig(BaseModel):
     """Code-Execution Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     max_code_size: int = Field(default=1_048_576, ge=1024, le=10_485_760)
     """Maximale Code-Groesse (Bytes)."""
 
@@ -393,6 +421,8 @@ class CodeConfig(BaseModel):
 
 class PersonalityConfig(BaseModel):
     """Personality Engine Konfiguration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     warmth: float = Field(default=0.7, ge=0.0, le=1.0)
     """Waerme-Level: 0.0 = neutral/sachlich, 1.0 = sehr warm und empathisch."""
@@ -412,6 +442,8 @@ class PersonalityConfig(BaseModel):
 
 class IdentityConfig(BaseModel):
     """Immortal Mind Protocol — Kognitive Identitaetsschicht."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
     """Identity Layer aktivieren/deaktivieren."""
@@ -446,6 +478,8 @@ class IdentityConfig(BaseModel):
 
 class ExecutorConfig(BaseModel):
     """Executor Konfiguration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     default_timeout_seconds: int = Field(default=30, ge=5, le=600)
     """Standard-Timeout fuer Tool-Ausfuehrung (Sekunden)."""
@@ -487,6 +521,8 @@ class VaultConfig(BaseModel):
     YAML-Frontmatter und [[Backlinks]].
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = True
     """Aktiviert oder deaktiviert das Vault-System."""
 
@@ -520,6 +556,8 @@ class VaultConfig(BaseModel):
 class OsintConfig(BaseModel):
     """OSINT / Human Investigation Module configuration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = True
     github_token: str = ""
     default_depth: str = "standard"
@@ -530,6 +568,8 @@ class OsintConfig(BaseModel):
 
 class ContextPipelineConfig(BaseModel):
     """Adaptive Context Pipeline — automatische Kontext-Anreicherung vor dem Planner."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
     """Pipeline aktivieren/deaktivieren."""
@@ -570,6 +610,8 @@ class ContextPipelineConfig(BaseModel):
 class SkillLifecycleConfig(BaseModel):
     """Skill Lifecycle Manager -- periodic audit, repair, and suggestion of skills."""
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = Field(default=True, description="Enable skill lifecycle audits")
     audit_interval_hours: int = Field(default=24, ge=1, le=168, description="Hours between audits")
     auto_repair: bool = Field(default=True, description="Automatically repair broken skills")
@@ -581,6 +623,8 @@ class SkillLifecycleConfig(BaseModel):
 
 class TacticalMemoryConfig(BaseModel):
     """Tactical Memory (Tier 6) -- tool outcome tracking and avoidance rules."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = Field(default=True, description="Enable tactical memory tier")
     db_name: str = Field(default="tactical_memory.db", description="SQLite DB filename")
@@ -600,6 +644,8 @@ class TacticalMemoryConfig(BaseModel):
 class HierarchicalConfig(BaseModel):
     """Hierarchical Document Reasoning configuration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = Field(default=True, description="Enable hierarchical document indexing")
     default_max_nodes_per_query: int = Field(default=5, ge=1, le=20)
     default_max_tokens_per_node: int = Field(default=2000, ge=100, le=8000)
@@ -613,6 +659,8 @@ class HierarchicalConfig(BaseModel):
 class CAGConfig(BaseModel):
     """Context-Augmented Generation (CAG) KV-cache preloading config."""
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = Field(default=False, description="Enable CAG (opt-in)")
     backend: str = Field(default="auto", description="'auto' | 'prefix' | 'llamacpp_native'")
     cache_dir: str = Field(default="~/.cognithor/cag_cache")
@@ -622,6 +670,8 @@ class CAGConfig(BaseModel):
 
 class MemoryConfig(BaseModel):
     """Memory-System Konfiguration. [B§4]"""
+
+    model_config = ConfigDict(extra="forbid")
 
     chunk_size_tokens: int = Field(default=400, ge=100, le=2000)
     chunk_overlap_tokens: int = Field(default=80, ge=0, le=500)
@@ -697,6 +747,8 @@ class HeartbeatConfig(BaseModel):
     Aufmerksamkeit erfordern, ohne dass der Nutzer eine Anfrage stellt.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = False
     """Aktiviert oder deaktiviert den Heartbeat. Wenn ``False``, wird
     keine periodische Heartbeat-Nachricht gesendet."""
@@ -733,6 +785,8 @@ class PluginsConfig(BaseModel):
     ueber installierte Plugins wuenscht.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     skills_dir: str = "skills"
     """Relativer Name des Verzeichnisses im ``jarvis_home``, in dem
     zusaetzliche Skills installiert werden. Der Standardwert ist
@@ -752,6 +806,8 @@ class MarketplaceConfig(BaseModel):
     und Install von Skills. Daten werden in einer lokalen SQLite-Datenbank
     persistiert. Der Marketplace ist optional und kann deaktiviert werden.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = Field(
         default=True,
@@ -796,6 +852,8 @@ class CommunityMarketplaceConfig(BaseModel):
     (GitHub-Repo ``Alex8791-cyber/skill-registry``).  Community-Skills sind
     architektonisch malware-sicher: Skills sind Daten (Markdown), nicht Code.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = Field(
         default=True,
@@ -863,6 +921,8 @@ class DashboardConfig(BaseModel):
     vermeiden.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = False
     """Legt fest, ob das Dashboard beim Start automatisch geladen wird."""
 
@@ -877,6 +937,8 @@ class ModelOverrideConfig(BaseModel):
     Modelle definieren. Der Schluessel ist der Skill-Name (Dateiname ohne
     Erweiterung), der Wert der interne Modell-Name (z. B. "qwen3:32b").
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     skill_models: dict[str, str] = Field(default_factory=dict)
 
@@ -1601,6 +1663,8 @@ _PROVIDER_BASE_URLS: dict[str, str] = {
 class VoiceConfig(BaseModel):
     """Voice-spezifische Konfiguration (TTS/STT/Wake Word)."""
 
+    model_config = ConfigDict(extra="forbid")
+
     tts_backend: str = "piper"  # "piper" | "espeak" | "elevenlabs"
     piper_voice: str = "de_DE-thorsten_emotional-medium"  # Piper-Stimme (HuggingFace-ID)
     piper_length_scale: float = Field(default=1.0, ge=0.5, le=2.0)  # Sprechgeschwindigkeit
@@ -1616,6 +1680,8 @@ class VoiceConfig(BaseModel):
 
 class ChannelConfig(BaseModel):
     """Channel-Konfiguration. [B§9]"""
+
+    model_config = ConfigDict(extra="forbid")
 
     cli_enabled: bool = True
     telegram_enabled: bool = False
@@ -1707,6 +1773,8 @@ class ChannelConfig(BaseModel):
 class LoggingConfig(BaseModel):
     """Logging-Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     level: str = "INFO"
     json_logs: bool = False
     console: bool = True
@@ -1714,6 +1782,8 @@ class LoggingConfig(BaseModel):
 
 class MtlsConfig(BaseModel):
     """Mutual TLS Konfiguration fuer Frontend-Backend-Kommunikation."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = Field(default=False, description="mTLS fuer WebUI-API aktivieren")
     certs_dir: str = Field(
@@ -1724,6 +1794,8 @@ class MtlsConfig(BaseModel):
 
 class SecurityConfig(BaseModel):
     """Sicherheits-Konfiguration. [B§11]"""
+
+    model_config = ConfigDict(extra="forbid")
 
     # Maximale Agent-Loop Iterationen pro Anfrage
     max_iterations: int = Field(default=25, ge=1, le=50)
@@ -1792,6 +1864,8 @@ class SecurityConfig(BaseModel):
 class AuditConfig(BaseModel):
     """Audit-Trail Konfiguration fuer Compliance."""
 
+    model_config = ConfigDict(extra="forbid")
+
     hmac_enabled: bool = Field(
         default=True,
         description="HMAC-SHA256 Signaturen auf Audit-Eintraege",
@@ -1855,6 +1929,8 @@ class AuditConfig(BaseModel):
 class RecoveryConfig(BaseModel):
     """Smart Recovery & Transparency Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     pre_flight_enabled: bool = Field(
         default=True,
         description="Plan-Vorschau vor komplexen Aktionen anzeigen",
@@ -1891,6 +1967,8 @@ class RecoveryConfig(BaseModel):
 class ArcConfig(BaseModel):
     """ARC-AGI-3 Benchmark Agent configuration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = Field(default=False, description="Enable ARC-AGI-3 agent")
     api_key_env: str = Field(default="ARC_API_KEY", description="Env var for API key")
     operation_mode: str = Field(default="normal", description="normal or competition")
@@ -1911,6 +1989,8 @@ class ArcConfig(BaseModel):
 
 class EvolutionConfig(BaseModel):
     """Autonomous Evolution Engine configuration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = Field(
         default=False,
@@ -1987,6 +2067,8 @@ class EvolutionConfig(BaseModel):
 class DatabaseConfig(BaseModel):
     """Datenbank-Konfiguration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     backend: str = Field(default="sqlite", description="'sqlite' oder 'postgresql'")
     pg_host: str = "localhost"
     pg_port: int = Field(default=5432, ge=1, le=65535)
@@ -2010,6 +2092,8 @@ class DatabaseConfig(BaseModel):
 class QueueConfig(BaseModel):
     """Konfiguration fuer die Durable Message Queue."""
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = Field(default=False, description="Durable message queue aktivieren")
     max_size: int = Field(default=10_000, ge=100, le=1_000_000)
     ttl_hours: int = Field(default=24, ge=1, le=168)
@@ -2022,6 +2106,8 @@ class QueueConfig(BaseModel):
 
 class ImprovementGovernanceConfig(BaseModel):
     """Steuerung der Self-Improvement-Domains (SAFE_DOMAINS)."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
     auto_domains: list[str] = Field(
@@ -2040,6 +2126,8 @@ class ImprovementGovernanceConfig(BaseModel):
 class PromptEvolutionConfig(BaseModel):
     """A/B-Test-basierte Prompt-Evolution."""
 
+    model_config = ConfigDict(extra="forbid")
+
     enabled: bool = False  # Opt-in Feature
     min_sessions_per_arm: int = Field(default=20, ge=5, le=200)
     significance_threshold: float = Field(default=0.05, ge=0.01, le=0.5)
@@ -2049,6 +2137,8 @@ class PromptEvolutionConfig(BaseModel):
 
 class GEPAConfig(BaseModel):
     """GEPA — Guided Evolution through Pattern Analysis."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True  # Opt-out (enabled by default)
     evolution_interval_hours: int = Field(default=6, ge=1, le=168)
@@ -2065,6 +2155,8 @@ class GEPAConfig(BaseModel):
 
 class HashlineGuardConfig(BaseModel):
     """Configuration for the Hashline Guard line-level integrity system."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
     hash_algorithm: str = "xxhash64"
@@ -2092,6 +2184,8 @@ class HashlineGuardConfig(BaseModel):
 class RetentionConfig(BaseModel):
     """Data retention periods (days)."""
 
+    model_config = ConfigDict(extra="forbid")
+
     episodic_days: int = Field(default=90, ge=1, le=3650)
     processing_log_days: int = Field(default=90, ge=1, le=3650)
     model_usage_log_days: int = Field(default=180, ge=1, le=3650)
@@ -2103,6 +2197,8 @@ class RetentionConfig(BaseModel):
 class ComplianceConfig(BaseModel):
     """GDPR compliance configuration."""
 
+    model_config = ConfigDict(extra="forbid")
+
     consent_required: bool = True
     compliance_engine_enabled: bool = True
     privacy_mode: bool = False
@@ -2112,6 +2208,8 @@ class ComplianceConfig(BaseModel):
 
 class SessionConfig(BaseModel):
     """Session lifecycle settings."""
+
+    model_config = ConfigDict(extra="forbid")
 
     inactivity_timeout_minutes: int = Field(
         default=30,
@@ -2127,6 +2225,8 @@ class SessionConfig(BaseModel):
 
 class KanbanConfig(BaseModel):
     """Kanban Board configuration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
     max_auto_tasks_per_session: int = Field(default=10, ge=1, le=50)
@@ -2154,6 +2254,8 @@ class KanbanConfig(BaseModel):
 
 class SocialConfig(BaseModel):
     """Reddit Lead Hunter configuration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     reddit_scan_enabled: bool = Field(default=False, description="Enable automatic Reddit scanning")
     reddit_subreddits: list[str] = Field(
@@ -2233,6 +2335,8 @@ class JarvisConfig(BaseModel):
 
     Loaded once at startup and then used throughout the entire system.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     # Meta — version is always read from the package's __version__
     version: str = __import__("cognithor").__version__
@@ -2784,44 +2888,69 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
 def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
     """Wendet COGNITHOR_* und legacy JARVIS_* Umgebungsvariablen an.
 
-    Konvention: COGNITHOR_SECTION_KEY → data["section"]["key"]
-    Beispiel: COGNITHOR_OLLAMA_BASE_URL → data["ollama"]["base_url"]
+    Mapping-Regeln (in Reihenfolge):
+      1. Wenn ``parts`` eine existierende Dict-Sektion in ``data`` trifft,
+         descend rekursiv und setze den Rest als Leaf-Key.
+      2. Sonst: Wenn der volle joined Name (``"_".join(parts)``) ein
+         deklariertes JarvisConfig-Top-Level-Feld ist -> Flat-Key
+         (z. B. ``LLM_BACKEND_TYPE`` -> ``llm_backend_type``).
+      3. Sonst: Wenn ``parts[0]`` eine deklarierte Sub-Config ist
+         (z. B. ``ollama``, ``models``, ``planner``, ...) -> Sektion
+         erstellen und descend. Der Rest wird zum Leaf-Key.
+      4. Sonst: Ignorieren (die strikten Configs mit ``extra="forbid"``
+         würden eine unbekannte Section sowieso ablehnen).
 
-    Legacy JARVIS_* vars are processed first (lower priority).
-    COGNITHOR_* vars are processed second and overwrite any JARVIS_* values.
+    Legacy JARVIS_* werden zuerst angewendet (niedrigere Priorität);
+    COGNITHOR_* überschreibt.
     """
+    # Build once per call: cheap (no runtime cost to import here).
+    top_level_fields = set(JarvisConfig.model_fields.keys())
+
     for prefix in ("JARVIS_", "COGNITHOR_"):
         for key, value in os.environ.items():
             if not key.startswith(prefix):
                 continue
             parts = key[len(prefix) :].lower().split("_")
-            if len(parts) >= 2:
-                # Recursive descent: walk into existing dict sections,
-                # then set the remaining parts (joined with _) as leaf key.
-                node = data
-                consumed = 0
-                for i in range(len(parts) - 1):
-                    candidate = parts[i]
-                    if candidate in node and isinstance(node[candidate], dict):
-                        node = node[candidate]
-                        consumed = i + 1
-                    else:
-                        break
-                if consumed == 0:
-                    # No existing section found -- set as top-level key
-                    # AND try section-based approach for forward compat.
-                    data["_".join(parts)] = value
-                    section = parts[0]
-                    if section not in node:
-                        node[section] = {}
-                    if isinstance(node[section], dict):
-                        node = node[section]
-                        consumed = 1
+            if not parts:
+                continue
+            if len(parts) == 1:
+                data[parts[0]] = value
+                continue
+
+            # 1. Recursive descent into existing dict sections.
+            node = data
+            consumed = 0
+            for i in range(len(parts) - 1):
+                candidate = parts[i]
+                if candidate in node and isinstance(node[candidate], dict):
+                    node = node[candidate]
+                    consumed = i + 1
+                else:
+                    break
+            if consumed > 0:
                 leaf_key = "_".join(parts[consumed:])
                 if leaf_key:
                     node[leaf_key] = value
-            elif len(parts) == 1:
-                data[parts[0]] = value
+                continue
+
+            # 2. Full joined name hits a flat top-level field.
+            flat_key = "_".join(parts)
+            if flat_key in top_level_fields:
+                data[flat_key] = value
+                continue
+
+            # 3. parts[0] is a declared sub-config section.
+            section = parts[0]
+            if section in top_level_fields:
+                if section not in data or not isinstance(data[section], dict):
+                    data[section] = {}
+                leaf_key = "_".join(parts[1:])
+                if leaf_key:
+                    data[section][leaf_key] = value
+                continue
+
+            # 4. Nothing matched — ignore silently. The strict Configs would
+            # reject an unknown top-level key anyway.
     return data
 
 
@@ -2939,63 +3068,63 @@ def _resolve_secrets(config: JarvisConfig) -> None:
 
 
 _DEFAULT_CORE_MEMORY = """\
-# Identitaet
+# Identität
 
-Ich bin Jarvis, das lokale, autonome Agent-Betriebssystem von {owner_name}.
-Ich laufe vollstaendig auf dem lokalen Rechner -- keine Cloud, keine externen APIs,
+Ich bin Cognithor, das lokale, autonome Agent-Betriebssystem von {owner_name}.
+Ich laufe vollständig auf dem lokalen Rechner – keine Cloud, keine externen APIs,
 und damit voll DSGVO-konform. Mein Zuhause ist `~/.cognithor/`.
 
 {owner_name} ist der Besitzer und Benutzer dieses Systems.
 
-## Persoenlichkeit
+## Persönlichkeit
 
-Ich bin kompetent, direkt und effizient. Ich kommuniziere praegnant und
-respektvoll, ohne unnoetige Floskeln. Wenn etwas nicht funktioniert,
-formuliere ich das klar und mache konstruktive Vorschlaege zur Verbesserung.
+Ich bin kompetent, direkt und effizient. Ich kommuniziere prägnant und
+respektvoll, ohne unnötige Floskeln. Wenn etwas nicht funktioniert,
+formuliere ich das klar und mache konstruktive Vorschläge zur Verbesserung.
 Ich duze {owner_name} und stelle Fragen, wenn Informationen fehlen oder ich
-unsicher bin. Ich rate nicht -- ich frage nach.
+unsicher bin. Ich rate nicht – ich frage nach.
 
 ## Fachgebiet
 
-Jarvis ist nicht auf eine bestimmte Branche beschraenkt. Ich unterstuetze
+Cognithor ist nicht auf eine bestimmte Branche beschränkt. Ich unterstütze
 {owner_name} bei einer Vielzahl von Aufgaben wie Recherche, Projekt- und
 Organisationsmanagement, Dateiverwaltung, Notizen und Planung. Neue
-Faehigkeiten koennen jederzeit durch Prozeduren hinzugefuegt oder angepasst
+Fähigkeiten können jederzeit durch Prozeduren hinzugefügt oder angepasst
 werden.
 
-## Harte Regeln -- IMMER einhalten
+## Harte Regeln – IMMER einhalten
 
-1. DATENSCHUTZ: Niemals persoenliche Informationen (Namen, Adressen,
+1. DATENSCHUTZ: Niemals persönliche Informationen (Namen, Adressen,
    Geburtsdaten, Vertragsnummern oder Gesundheitsdaten) in Logs, Shell-Ausgaben
-   oder unverschluesselte Dateien schreiben.
+   oder unverschlüsselte Dateien schreiben.
 2. DATENBLEIBEN: Alle Daten bleiben lokal. Kein Upload, kein Cloud-Sync.
 3. E-MAILS: E-Mails IMMER als Entwurf vorlegen. Niemals automatisch
-   versenden, es sei denn {owner_name} bestaetigt es ausdruecklich.
-4. SHELL: Keine destruktiven Befehle (rm -rf, mkfs, dd). Im Zweifel nachfragen.
+   versenden, es sei denn {owner_name} bestätigt es ausdrücklich.
+4. SHELL: Keine destruktiven Befehle (rm -rf, mkfs, dd). Im Zweifel nachfragen.
 5. PLAN-LIMIT: Maximal 25 Iterationen pro Anfrage. Danach zusammenfassen
    und nachfragen.
-6. SICHERHEIT: Keine illegalen, unsicheren oder gegen Policies verstossenden
-   Handlungen ausfuehren.
+6. SICHERHEIT: Keine illegalen, unsicheren oder gegen Policies verstoßenden
+   Handlungen ausführen.
 
 ## Technisches Umfeld
 
--- Hardware: Haengt vom System ab (z. B. leistungsfaehige GPU empfohlen fuer
-  grosse Modelle)
--- LLM: Standard-Modelle via Ollama (lokal)
--- Planner: z. B. „qwen3:32b" fuer umfangreiche Planung
--- Executor: z. B. „qwen3:8b" fuer schnelle Tool-Aufrufe
--- Coder: Modell fuer Code-Generierung (optional)
--- Embeddings: Modell fuer Hybrid-Suche (z. B. „nomic-embed-text")
+- Hardware: Hängt vom System ab (z. B. leistungsfähige GPU empfohlen für
+  große Modelle)
+- LLM: Standard-Modelle via Ollama (lokal)
+- Planner: z. B. „qwen3:32b" für umfangreiche Planung
+- Executor: z. B. „qwen3:8b" für schnelle Tool-Aufrufe
+- Coder: Modell für Code-Generierung (optional)
+- Embeddings: Modell für Hybrid-Suche (z. B. „nomic-embed-text")
 
-## Praeferenzen
+## Präferenzen
 
--- Sprache: Deutsch (Code-Kommentare auf Deutsch, Variablennamen auf Englisch)
--- Codesprache: Python
--- Zeitzone: Europe/Berlin
--- Anrede: {owner_name} (Du)
--- Kommunikation: Direkt, substanziell, ohne Fuellwoerter
--- Bei Unsicherheit: Lieber nachfragen als raten
--- Ausgabeformat: Markdown fuer strukturierte Inhalte, Plaintext fuer kurze
+- Sprache: Deutsch (Code-Kommentare auf Deutsch, Variablennamen auf Englisch)
+- Codesprache: Python
+- Zeitzone: Europe/Berlin
+- Anrede: {owner_name} (Du)
+- Kommunikation: Direkt, substanziell, ohne Füllwörter
+- Bei Unsicherheit: Lieber nachfragen als raten
+- Ausgabeformat: Markdown für strukturierte Inhalte, Plaintext für kurze
   Antworten
 """
 

@@ -289,6 +289,7 @@ class PackLoader:
             pack_cls = module.Pack  # type: ignore[attr-defined]
             instance: AgentPack = pack_cls(manifest)
             instance.register(context)
+            self._register_tool_risks(manifest, context)
             self._loaded[qid] = instance
             _log.info("pack.loaded", qualified_id=qid, version=manifest.version)
         except Exception as exc:
@@ -298,3 +299,43 @@ class PackLoader:
                 error=str(exc),
             )
             raise PackLoadError(f"Failed to load pack {qid!r}: {exc}") from exc
+
+    @staticmethod
+    def _register_tool_risks(manifest: PackManifest, context: PackContext) -> None:
+        """Populate the MCP tool registry with risk levels declared in the manifest.
+
+        The Gatekeeper reads ``risk_level`` from ``mcp_client._tool_registry``
+        before falling back to its hardcoded lists (see
+        ``Gatekeeper._classify_risk``). Packs therefore don't need to register
+        every tool as an MCP handler to get correct risk classification —
+        declaring ``tool_risks`` in the manifest is enough.
+
+        If the pack already called ``mcp_client.register_builtin_handler``
+        with its own risk_level, the existing entry is preserved (we only
+        fill gaps with empty risk_level).
+        """
+        if not manifest.tool_risks:
+            return
+        mcp = getattr(context, "mcp_client", None)
+        if mcp is None:
+            return
+        registry = getattr(mcp, "_tool_registry", None)
+        if registry is None:
+            return
+
+        # Lazy import to avoid a hard dep on cognithor.models at module top
+        from cognithor.models import MCPToolInfo
+
+        pack_origin = f"pack:{manifest.qualified_id}"
+        for tool_name, risk in manifest.tool_risks.items():
+            existing = registry.get(tool_name)
+            # Preserve a non-empty existing risk_level; only fill gaps.
+            if existing is not None and getattr(existing, "risk_level", ""):
+                continue
+            registry[tool_name] = MCPToolInfo(
+                name=tool_name,
+                server=pack_origin,
+                description=(existing.description if existing else ""),
+                input_schema=(existing.input_schema if existing else {}),
+                risk_level=risk,
+            )

@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 _SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z\.-]+)?$")
 _NS_PACK_RE = re.compile(r"^[a-z][a-z0-9-]{0,63}$")
 _SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
+_VALID_RISK_LEVELS = frozenset({"green", "yellow", "orange", "red"})
 
 
 class Publisher(BaseModel):
@@ -92,6 +93,14 @@ class PackManifest(BaseModel):
     lead_sources: list[str] = Field(default_factory=list)
     tools: list[str] = Field(default_factory=list)
 
+    # Risk classification for the tools this pack exposes. Mapping of
+    # tool_name -> risk_level ("green" | "yellow" | "orange" | "red").
+    # Consumed by the PackLoader to populate the Gatekeeper's tool registry so
+    # pack tools get correct risk classification without requiring packs to
+    # register each tool via MCP. Tools not listed here fall through to the
+    # Gatekeeper's default ORANGE (unknown tools are treated as risky).
+    tool_risks: dict[str, str] = Field(default_factory=dict)
+
     # Commerce.
     checkout_url: str | None = None
     commercial_checkout_url: str | None = None
@@ -127,10 +136,32 @@ class PackManifest(BaseModel):
             raise ValueError("eula_sha256 must be 64 lowercase hex chars")
         return v
 
+    @field_validator("tool_risks")
+    @classmethod
+    def _validate_tool_risks(cls, v: dict[str, str]) -> dict[str, str]:
+        for tool, level in v.items():
+            if level not in _VALID_RISK_LEVELS:
+                raise ValueError(
+                    f"tool_risks[{tool!r}] = {level!r} must be one of {sorted(_VALID_RISK_LEVELS)}"
+                )
+        return v
+
     @model_validator(mode="after")
     def _pricing_required_for_paid(self) -> PackManifest:
         if self.license == "proprietary" and not self.pricing:
             raise ValueError("pricing is required for proprietary-licensed packs")
+        return self
+
+    @model_validator(mode="after")
+    def _tool_risks_subset_of_tools(self) -> PackManifest:
+        if self.tool_risks and self.tools:
+            declared = set(self.tools)
+            risked = set(self.tool_risks)
+            extra = risked - declared
+            if extra:
+                raise ValueError(
+                    f"tool_risks keys {sorted(extra)} not in declared tools={self.tools}"
+                )
         return self
 
     @property
