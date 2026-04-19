@@ -369,7 +369,7 @@ ollama pull qwen3:8b                # Pull a model
 cognithor                           # Start
 
 # Upgrade to a specific version:
-pip install cognithor[all]==0.90.0
+pip install cognithor[all]==0.92.2
 
 # Upgrade to latest:
 pip install --upgrade cognithor[all]
@@ -814,6 +814,28 @@ Copyright 2026 Alexander Soellner
 ---
 
 ## What's New
+
+### v0.92.2 (2026-04-19)
+- **Windows Launcher Hardening** — `Cognithor.exe` (the .NET tray app) no longer vanishes silently on startup. All exceptions in the AppShell constructor are now caught, logged to `%LOCALAPPDATA%\Cognithor\launcher-crash.log`, and shown via MessageBox. Previously a missing `python\python.exe` (e.g. AV quarantine) would throw `FileNotFoundException` before `Application.Run()` started the message loop, making the process disappear from Task Manager with no trace.
+- **Python Resolution 3-Tier Fallback** — Both `Cognithor.exe` and the installer-generated `cognithor.bat` now resolve Python in this order: (1) bundled `<install>\python\python.exe`, (2) `python`/`py` on PATH, (3) well-known install paths (`%LOCALAPPDATA%\Programs\Python\Python313|312`, `%ProgramFiles%\Python313|312`, `C:\Python313|312`). Users who installed Python without ticking "Add to PATH" (the default since Python 3.9) are no longer broken.
+- **Single-Instance Guard Actually Works** — The process-wide `Mutex` in `Program.cs` is no longer scoped with `using`, which previously disposed it at first return and defeated the guard. Now released explicitly in `finally`.
+- **Graceful Python-Missing UX** — `ProcessManager.StartPython` no longer throws when Python is missing. Instead it sets `PythonMissing = true`, and the tray icon shows "Backend not installed" with a balloon tip explaining what's wrong.
+- **Square Logos** — `flutter_app/assets/logo.png` and `assets/cognithor_logo.png` were 1536×1024 non-square and got cropped in every UI that used `BoxFit.cover`. Regenerated as 1024×1024 square from `Icon-512.png`. `cognithor_banner.png` rebuilt as 1920×640 dark-theme banner with the logo centered. `cognithor-logo.png` bumped from 52×52 to 192×192 (PWA standard).
+- **Flutter web `index.html` branding** — replaced leftover `jarvis_ui` title + apple-touch-title and the default "A new Flutter project." description with real Cognithor branding.
+- **Release-workflow idempotency** — explicit release-notes generation replaces `generate_release_notes: true`. The old setup prepended a fresh `**Full Changelog**: ...` line on every workflow re-run; `append_body: false` now guarantees idempotent re-runs.
+- **Installer Build Fixes** — `subprocess.run(["flutter",...])` on Windows now resolves via `shutil.which` (flutter is a `.bat`); failed `flutter build windows` (e.g. Developer Mode off) is caught as soft-fail so the rest of the installer still builds; `step_inno_setup` reports the correct version instead of alphabetically-first.
+- **Legacy `jarvis_ui.exe` fallback removed** from `ProcessManager.FindDesktopUi` — the only accepted name is `cognithor_ui.exe` (v0.42.0 rename).
+
+### v0.92.1 (2026-04-18)
+- **E2E Audit Fixes** — `zh.json` JSON syntax error (unescaped ASCII quotes inside Chinese text, line 458-460) — Chinese locale silently fell back to English until now. Fixed with `「」` corner brackets.
+- **Test isolation** — 3× fixture bug in `test_enhanced_integration.py` passed `jarvis_dir=` (unknown field, silently ignored by Pydantic), causing `MemoryManager` to hit the real `~/.cognithor/db/` and fail with "database disk image is malformed". Now uses `jarvis_home=` + all 52 Config classes have `model_config = ConfigDict(extra="forbid")` so unknown kwargs fail loudly.
+- **Tool-Risk Decorator** — `@cognithor_tool(risk_level="green"|"yellow"|"orange"|"red")` + `PackManifest.tool_risks` field. PackLoader pushes declared risks into `mcp_client._tool_registry` on load. Previously 15/18 pack tools defaulted to ORANGE (user approval required for read-only scans); now every pack tool gets its declared level.
+- **CI Hardening** — new `scripts` job runs `verify_all.py` and `smoke_test.py` so these stop rotting outside CI. New `flutter` job runs `dart analyze` and `flutter test`. Lint job gains full `ruff check` + `ruff format --check`.
+- **UTF-8 on Windows** — `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1` added to `start_cognithor.bat` and `install.bat`. `_DEFAULT_CORE_MEMORY` template now ships real umlauts ("Identität") instead of ASCII fallback ("Identitaet").
+- **Scripts repaired** — `smoke_test.py` cp1252-crash fixed (box-drawing + checkmark chars → ASCII `[OK]`/`[WARN]`/`[FAIL]`); `live_smoke_test.py` stdout UTF-8 + legacy `jarvis.config` import + `list_models()` API signature; `verify_all.py` completely rewritten for v0.92.x architecture (was checking deleted `cognithor.social` module and stale `src/jarvis/` paths).
+- **Flutter ARB parity** — 11 missing keys added to `app_zh.arb` + `app_ar.arb` (connectionLost, actionApproved, errorWithDetail, …).
+- **Lint + format green** — 90 ruff errors resolved (74 auto-fix + 16 manual), 17 dart-analyze issues resolved; `ruff format --check` now clean.
+- **13,791 tests passing** (+19 new tool-risk tests), 0 failures.
 
 ### v0.92.0 (2026-04-16)
 - **Agent Pack Architecture** — Full plugin system for paid & free agent packs. `cognithor.packs` module: `PackManifest` (Pydantic v2), `PackLoader` (importlib isolation), `PackInstaller` (zip/URL + EULA click-through), CLI (`cognithor pack install|list|remove|update|accept-eula`). Packs live in `~/.cognithor/packs/` and register at startup.

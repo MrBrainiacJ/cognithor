@@ -150,6 +150,8 @@ jobs:
     needs: [build-installer, build-launcher, build-flutter-web]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history so we can compute the previous tag
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -160,11 +162,54 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
+      - name: Generate release notes
+        id: notes
+        shell: bash
+        run: |
+          # Previous tag (skip the current one). Falls back to first commit
+          # if this is the first tag in the repo.
+          PREV=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -1)
+          CURRENT="${GITHUB_REF_NAME}"
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+
+          {
+            echo "## What's Changed"
+            echo ""
+            echo "### Features"
+            git log "${PREV}..${CURRENT}" --pretty=format:"- %s (%h)" --grep="^feat" 2>/dev/null || true
+            echo ""
+            echo ""
+            echo "### Fixes"
+            git log "${PREV}..${CURRENT}" --pretty=format:"- %s (%h)" --grep="^fix" 2>/dev/null || true
+            echo ""
+            echo ""
+            echo "### Other"
+            git log "${PREV}..${CURRENT}" --pretty=format:"- %s (%h)" --invert-grep --grep="^feat" --grep="^fix" 2>/dev/null | head -40 || true
+            echo ""
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Full Changelog**: ${REPO_URL}/compare/${PREV}...${CURRENT}"
+          } > release_notes.md
+
+          cat release_notes.md
+          {
+            echo "body<<RELEASE_NOTES_EOF"
+            cat release_notes.md
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           name: Cognithor ${{ steps.version.outputs.version }}
-          generate_release_notes: true
+          # We build our own notes explicitly. Previously `generate_release_notes: true`
+          # prepended a fresh "Full Changelog" line on every workflow re-run — ending up
+          # with N duplicate lines for N runs (see v0.92.2). Pinning an explicit body +
+          # append_body=false guarantees idempotent re-runs.
+          body: ${{ steps.notes.outputs.body }}
+          append_body: false
+          generate_release_notes: false
           files: |
             artifacts/installer/CognithorSetup-*.exe
             artifacts/launcher/Cognithor.exe
