@@ -118,3 +118,29 @@ class TestBuildPrompt:
         user_payload = messages[1]["content"]
         assert "web_search" in user_payload
         assert "TechCorp was founded in 2015" in user_payload
+
+    def test_renders_tool_error(self, observer):
+        result = ToolResult(
+            tool_name="api_call",
+            content="",
+            is_error=True,
+            error_message="timeout",
+        )
+        messages = observer._build_prompt(
+            user_message="Q", response="A", tool_results=[result]
+        )
+        assert "ERROR: timeout" in messages[1]["content"]
+
+    def test_renders_tool_error_without_message(self, observer):
+        result = ToolResult(
+            tool_name="api_call",
+            content="",
+            is_error=True,
+            error_message=None,
+        )
+        messages = observer._build_prompt(
+            user_message="Q", response="A", tool_results=[result]
+        )
+        # Must NOT contain the literal string "None" — use a sentinel instead.
+        assert "ERROR: None" not in messages[1]["content"]
+        assert "ERROR: (no error message)" in messages[1]["content"]

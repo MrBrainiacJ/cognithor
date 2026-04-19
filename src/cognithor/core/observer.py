@@ -73,6 +73,14 @@ if TYPE_CHECKING:
     from cognithor.models import ToolResult
 
 
+def _render_tool_line(r: Any) -> str:
+    """Render a single tool result line, handling None error messages."""
+    if r.success:
+        return f"- {r.tool_name}: {r.content}"
+    error_msg = r.error_message or "(no error message)"
+    return f"- {r.tool_name}: ERROR: {error_msg}"
+
+
 _SYSTEM_PROMPT = (
     "You are a quality auditor for LLM responses. Given a user message, the assistant's"
     " draft response, and any tool call results, judge the response against FOUR"
@@ -96,14 +104,18 @@ _SYSTEM_PROMPT = (
     "  - fix_suggestion: one-sentence change suggestion (or empty string if passed)\n"
     "\nOUTPUT SCHEMA (valid JSON, no additional text):\n"
     "{\n"
-    '  "hallucination":    {"passed": bool, "reason": str, "evidence": str,'
-    ' "fix_suggestion": str},\n'
-    '  "sycophancy":       {"passed": bool, "reason": str, "evidence": str,'
-    ' "fix_suggestion": str},\n'
-    '  "laziness":         {"passed": bool, "reason": str, "evidence": str,'
-    ' "fix_suggestion": str},\n'
-    '  "tool_ignorance":   {"passed": bool, "reason": str, "evidence": str,'
-    ' "fix_suggestion": str}\n'
+    '  "hallucination": {\n'
+    '    "passed": true, "reason": "...", "evidence": "...", "fix_suggestion": "..."\n'
+    "  },\n"
+    '  "sycophancy": {\n'
+    '    "passed": true, "reason": "...", "evidence": "...", "fix_suggestion": "..."\n'
+    "  },\n"
+    '  "laziness": {\n'
+    '    "passed": true, "reason": "...", "evidence": "...", "fix_suggestion": "..."\n'
+    "  },\n"
+    '  "tool_ignorance": {\n'
+    '    "passed": true, "reason": "...", "evidence": "...", "fix_suggestion": "..."\n'
+    "  }\n"
     "}"
 )
 
@@ -133,7 +145,7 @@ class ObserverAudit:
     ) -> list[dict[str, str]]:
         """Compose system + user messages for the audit LLM call."""
         tool_section = "\n".join(
-            f"- {r.tool_name}: {r.content if r.success else f'ERROR: {r.error_message}'}"
+            _render_tool_line(r)
             for r in tool_results
         ) or "(no tool calls were made)"
         user_payload = (
