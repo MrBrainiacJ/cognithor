@@ -182,3 +182,43 @@ class TestCallLlmAudit:
         )
         # Must return None on timeout (fail-open signal)
         assert result is None
+
+
+class TestParseResponse:
+    def test_parses_valid_four_dimensions(self, observer):
+        raw = (
+            '{"hallucination": {"passed": true, "reason": "all claims match tools",'
+            ' "evidence": "", "fix_suggestion": ""},'
+            ' "sycophancy": {"passed": true, "reason": "neutral tone",'
+            ' "evidence": "", "fix_suggestion": ""},'
+            ' "laziness": {"passed": true, "reason": "concrete answer",'
+            ' "evidence": "", "fix_suggestion": ""},'
+            ' "tool_ignorance": {"passed": true, "reason": "appropriate tool use",'
+            ' "evidence": "", "fix_suggestion": ""}}'
+        )
+        dims = observer._parse_response(raw)
+        assert dims is not None
+        assert set(dims.keys()) == {"hallucination", "sycophancy", "laziness", "tool_ignorance"}
+        assert all(d.passed for d in dims.values())
+
+    def test_invalid_json_returns_none(self, observer):
+        assert observer._parse_response("this is not json") is None
+
+    def test_missing_dimension_produces_partial(self, observer):
+        raw = (
+            '{"hallucination": {"passed": false, "reason": "made up date",'
+            ' "evidence": "2015", "fix_suggestion": "remove"},'
+            ' "sycophancy": {"passed": true, "reason": "",'
+            ' "evidence": "", "fix_suggestion": ""}}'
+        )
+        dims = observer._parse_response(raw)
+        assert dims is not None
+        assert dims["hallucination"].passed is False
+        assert dims["sycophancy"].passed is True
+        # Missing dimensions → treated as "skipped" = passed
+        assert dims["laziness"].passed is True
+        assert dims["laziness"].reason == "skipped (missing from LLM response)"
+        assert dims["tool_ignorance"].passed is True
+
+    def test_all_dimensions_missing_returns_none(self, observer):
+        assert observer._parse_response("{}") is None

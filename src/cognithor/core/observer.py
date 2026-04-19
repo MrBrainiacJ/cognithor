@@ -14,6 +14,7 @@ blocked by a broken observer.
 from __future__ import annotations
 
 import asyncio
+import json
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -208,3 +209,47 @@ class ObserverAudit:
             log.warning("observer_empty_response", model=model_name)
             return None
         return content
+
+    def _parse_response(self, raw_text: str) -> dict[str, DimensionResult] | None:
+        """Parse LLM JSON output. Returns dict of DimensionResults, or None on total failure.
+
+        If only some dimensions are present, missing ones are filled with a
+        'skipped' DimensionResult that counts as passed (so partial responses
+        still allow the audit to proceed).
+        """
+        try:
+            payload = json.loads(raw_text)
+        except json.JSONDecodeError as exc:
+            log.warning("observer_json_parse_failed", error=str(exc), raw_head=raw_text[:200])
+            return None
+
+        if not isinstance(payload, dict):
+            log.warning("observer_schema_validation_failed", reason="top-level not object")
+            return None
+
+        all_dims = ("hallucination", "sycophancy", "laziness", "tool_ignorance")
+        present = [d for d in all_dims if d in payload and isinstance(payload[d], dict)]
+        if not present:
+            log.warning("observer_schema_validation_failed", reason="no dimensions present")
+            return None
+
+        dims: dict[str, DimensionResult] = {}
+        for name in all_dims:
+            entry = payload.get(name)
+            if isinstance(entry, dict) and "passed" in entry:
+                dims[name] = DimensionResult(
+                    name=name,  # type: ignore[arg-type]
+                    passed=bool(entry.get("passed", True)),
+                    reason=str(entry.get("reason", "")),
+                    evidence=str(entry.get("evidence", "")),
+                    fix_suggestion=str(entry.get("fix_suggestion", "")),
+                )
+            else:
+                dims[name] = DimensionResult(
+                    name=name,  # type: ignore[arg-type]
+                    passed=True,  # skipped = pass
+                    reason="skipped (missing from LLM response)",
+                    evidence="",
+                    fix_suggestion="",
+                )
+        return dims
