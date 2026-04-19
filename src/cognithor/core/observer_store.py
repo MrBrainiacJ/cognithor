@@ -84,8 +84,12 @@ class AuditStore:
         try:
             self._db_path.rename(broken)
             log.warning("observer_store_moved_corrupt_aside", broken_path=str(broken))
-        except OSError:
-            pass
+        except OSError as rename_err:
+            log.warning(
+                "observer_store_rename_failed",
+                path=str(self._db_path),
+                error=str(rename_err),
+            )
         self._initialized = False
 
     def record(
