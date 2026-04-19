@@ -265,10 +265,43 @@ def step_launcher() -> Path:
         "@echo off\r\n"
         "setlocal enabledelayedexpansion\r\n"
         "title Cognithor\r\n"
+        "chcp 65001 >nul 2>&1\r\n"
+        'set "PYTHONIOENCODING=utf-8"\r\n'
+        'set "PYTHONUTF8=1"\r\n'
         "\r\n"
         'set "COGNITHOR_HOME=%~dp0"\r\n'
-        'set "PYTHON=%COGNITHOR_HOME%python\\python.exe"\r\n'
         'set "OLLAMA=%COGNITHOR_HOME%ollama\\ollama.exe"\r\n'
+        "\r\n"
+        "REM Resolve Python. Priority:\r\n"
+        "REM   1. Bundled %COGNITHOR_HOME%python\\python.exe (shipped by installer)\r\n"
+        "REM   2. `python` / `py` on PATH\r\n"
+        "REM   3. Well-known install paths (user+machine, 3.13/3.12)\r\n"
+        'set "PYTHON="\r\n'
+        'if exist "%COGNITHOR_HOME%python\\python.exe" set "PYTHON=%COGNITHOR_HOME%python\\python.exe"\r\n'
+        'if "!PYTHON!"=="" (\r\n'
+        "    where python >nul 2>&1\r\n"
+        "    if not errorlevel 1 (\r\n"
+        '        for /f "delims=" %%P in (\'where python\') do (\r\n'
+        '            if "!PYTHON!"=="" set "PYTHON=%%P"\r\n'
+        "        )\r\n"
+        "    )\r\n"
+        ")\r\n"
+        'if "!PYTHON!"=="" (\r\n'
+        "    where py >nul 2>&1\r\n"
+        '    if not errorlevel 1 set "PYTHON=py"\r\n'
+        ")\r\n"
+        'if "!PYTHON!"=="" (\r\n'
+        "    for %%P in (\r\n"
+        '        "%LOCALAPPDATA%\\Programs\\Python\\Python313\\python.exe"\r\n'
+        '        "%LOCALAPPDATA%\\Programs\\Python\\Python312\\python.exe"\r\n'
+        '        "%ProgramFiles%\\Python313\\python.exe"\r\n'
+        '        "%ProgramFiles%\\Python312\\python.exe"\r\n'
+        '        "C:\\Python313\\python.exe"\r\n'
+        '        "C:\\Python312\\python.exe"\r\n'
+        "    ) do (\r\n"
+        '        if "!PYTHON!"=="" if exist "%%~P" set "PYTHON=%%~P"\r\n'
+        "    )\r\n"
+        ")\r\n"
         "\r\n"
         "REM Check if already running (prevent duplicate instances)\r\n"
         'netstat -ano 2>NUL | find ":8741 " | find "LISTENING" >NUL 2>NUL\r\n'
@@ -279,13 +312,25 @@ def step_launcher() -> Path:
         "    exit /b 0\r\n"
         ")\r\n"
         "\r\n"
-        "REM Verify Python exists\r\n"
-        'if not exist "%PYTHON%" (\r\n'
-        "    echo [ERROR] Python not found: %PYTHON%\r\n"
-        "    echo Please reinstall Cognithor.\r\n"
+        'if "!PYTHON!"=="" (\r\n'
+        "    echo [ERROR] Python 3.12+ not found.\r\n"
+        "    echo.\r\n"
+        "    echo Searched:\r\n"
+        '    echo   - Bundled: "%COGNITHOR_HOME%python\\python.exe"\r\n'
+        "    echo   - PATH ^(python, py^)\r\n"
+        "    echo   - %%LOCALAPPDATA%%\\Programs\\Python\\Python313 / Python312\r\n"
+        "    echo   - %%ProgramFiles%%\\Python313 / Python312\r\n"
+        "    echo   - C:\\Python313 / C:\\Python312\r\n"
+        "    echo.\r\n"
+        "    echo Fix options:\r\n"
+        "    echo   1. Reinstall Cognithor using the bundled installer\r\n"
+        "    echo      ^(CognithorSetup.exe^). It ships Python automatically.\r\n"
+        "    echo   2. Or install Python 3.12+ from https://www.python.org/downloads/\r\n"
+        '    echo      and tick "Add python.exe to PATH" during install.\r\n'
         "    pause\r\n"
         "    exit /b 1\r\n"
         ")\r\n"
+        "echo [OK] Python: !PYTHON!\r\n"
         "\r\n"
         "REM Auto-upgrade: detect source tree with newer version\r\n"
         'if exist "%COGNITHOR_HOME%auto_upgrade.py" (\r\n'
