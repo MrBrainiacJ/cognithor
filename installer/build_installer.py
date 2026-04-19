@@ -505,12 +505,22 @@ def step_inno_setup(
     ]
     subprocess.run(cmd, check=True)
 
-    installers = list(output_dir.glob("CognithorSetup-*.exe"))
+    # Prefer the exact version we just built. If older releases linger in
+    # dist/ (e.g. 0.90.0 from a previous build), a plain glob+[0] would pick
+    # the oldest alphabetically and mis-report the build in the summary.
+    expected = output_dir / f"CognithorSetup-{version}.exe"
+    if expected.exists():
+        print(f"  [OK] Installer: {expected} ({expected.stat().st_size / 1024 / 1024:.0f} MB)")
+        return expected
+
+    # Fallback: pick the most recently modified matching file.
+    installers = sorted(
+        output_dir.glob("CognithorSetup-*.exe"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
     if installers:
-        print(
-            f"  [OK] Installer: {installers[0]}"
-            f" ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
-        )
+        print(f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)")
         return installers[0]
 
     return Path("")
