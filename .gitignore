@@ -71,6 +71,16 @@ flutter_app/build/web/canvaskit/wimp*
 # ── Claude Code ──────────────────────────────────────────────────
 .claude/
 
+# ── Superpowers skill session scratch ────────────────────────────
+# Brainstorm / write-plan / playground skills create ephemeral state
+# under .superpowers/<skill>/<pid>-<timestamp>/ with:
+#   - content/*.html     -- in-browser mockup for the session
+#   - state/events       -- user click log
+#   - state/server.pid   -- PID of the (local, short-lived) preview server
+#   - state/server-stopped -- stop reason JSON
+# None of this should ever land in git.
+.superpowers/
+
 # ── OS / Misc ────────────────────────────────────────────────────
 *.bak
 *.tmp
