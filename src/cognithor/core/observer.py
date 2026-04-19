@@ -228,7 +228,10 @@ class ObserverAudit:
             return None
 
         all_dims = ("hallucination", "sycophancy", "laziness", "tool_ignorance")
-        present = [d for d in all_dims if d in payload and isinstance(payload[d], dict)]
+        present = [
+            d for d in all_dims
+            if isinstance(payload.get(d), dict) and "passed" in payload[d]
+        ]
         if not present:
             log.warning("observer_schema_validation_failed", reason="no dimensions present")
             return None
@@ -239,7 +242,7 @@ class ObserverAudit:
             if isinstance(entry, dict) and "passed" in entry:
                 dims[name] = DimensionResult(
                     name=name,  # type: ignore[arg-type]
-                    passed=bool(entry.get("passed", True)),
+                    passed=bool(entry["passed"]),
                     reason=str(entry.get("reason", "")),
                     evidence=str(entry.get("evidence", "")),
                     fix_suggestion=str(entry.get("fix_suggestion", "")),

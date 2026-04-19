@@ -222,3 +222,18 @@ class TestParseResponse:
 
     def test_all_dimensions_missing_returns_none(self, observer):
         assert observer._parse_response("{}") is None
+
+    def test_dict_without_passed_key_treated_as_skipped(self, observer):
+        # LLM returns a dict entry but omits the 'passed' field — must be
+        # treated as skipped=passed, same as a missing dimension.
+        raw = (
+            '{"hallucination": {"reason": "claims unsupported"},'
+            ' "sycophancy": {"passed": true, "reason": "", "evidence": "",'
+            ' "fix_suggestion": ""}}'
+        )
+        dims = observer._parse_response(raw)
+        assert dims is not None
+        assert dims["hallucination"].passed is True
+        assert dims["hallucination"].reason == "skipped (missing from LLM response)"
+        # sycophancy still parses normally from the well-formed dict
+        assert dims["sycophancy"].passed is True
