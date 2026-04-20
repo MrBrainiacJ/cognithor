@@ -5,8 +5,6 @@ from __future__ import annotations
 import sqlite3
 from typing import TYPE_CHECKING
 
-import pytest
-
 from cognithor.core.observer import AuditResult, DimensionResult
 from cognithor.core.observer_store import AuditStore
 
