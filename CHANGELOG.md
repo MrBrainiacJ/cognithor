@@ -5,6 +5,28 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [unreleased]
+
+### Added
+- **Observer Audit Layer**. New LLM-based response quality check that runs
+  after the existing regex-based `ResponseValidator`. Audits every response
+  across four dimensions — Hallucination, Sycophancy, Laziness, Tool-Ignorance
+  — with per-dimension retry strategies:
+    - Hallucination failures trigger response-regeneration inside the Planner.
+    - Tool-Ignorance failures trigger a full PGE re-loop via the Gateway.
+    - Sycophancy and Laziness are advisory (logged, non-blocking).
+  Exhausted retries deliver the response with a `[Quality check flagged issues]`
+  prefix. Config: `observer.*` section + `models.observer`. See
+  `CONFIG_REFERENCE.md` for all options. Circuit breaker disables the Observer
+  after consecutive failures; audit records persist to
+  `~/.cognithor/db/observer_audits.db`.
+
+### Changed
+- **Breaking**: `Planner.formulate_response()` now returns `ResponseEnvelope`
+  (with optional `PGEReloopDirective`) instead of a plain `str`. All in-tree
+  callers updated. Downstream integrations must dereference
+  `envelope.content`.
+
 ## [0.91.0] -- 2026-04-12
 
 ### Fixed

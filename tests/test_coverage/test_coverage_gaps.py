@@ -15,6 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from cognithor.config import JarvisConfig, MemoryConfig
+from cognithor.core.observer import ResponseEnvelope
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -591,7 +592,9 @@ class TestGatewayIntegration:
         )
 
         gateway._planner.plan.return_value = ActionPlan(goal="test", steps=[action])
-        gateway._planner.formulate_response.return_value = "Datei gelesen: Inhalt XYZ"
+        gateway._planner.formulate_response.return_value = ResponseEnvelope(
+            content="Datei gelesen: Inhalt XYZ", directive=None
+        )
 
         gateway._gatekeeper.evaluate_plan.return_value = [
             GateDecision(
@@ -665,7 +668,9 @@ class TestGatewayIntegration:
 
         gateway._planner.plan.return_value = ActionPlan(goal="test", steps=[action])
         gateway._planner.replan.return_value = ActionPlan(goal="test", steps=[action])
-        gateway._planner.formulate_response.return_value = "Fehler nach Retries"
+        gateway._planner.formulate_response.return_value = ResponseEnvelope(
+            content="Fehler nach Retries", directive=None
+        )
 
         gateway._gatekeeper.evaluate_plan.return_value = [
             GateDecision(

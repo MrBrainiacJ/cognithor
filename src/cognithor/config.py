@@ -89,6 +89,16 @@ class ModelsConfig(BaseModel):
             speed="medium",
         )
     )
+    observer: ModelConfig = Field(
+        default_factory=lambda: ModelConfig(
+            name="qwen3:32b",
+            context_window=32768,
+            vram_gb=20.0,
+            strengths=["reasoning", "reflection", "auditing", "german"],
+            speed="medium",
+        ),
+        description="Model used by the Observer audit layer. Default matches planner.",
+    )
     executor: ModelConfig = Field(
         default_factory=lambda: ModelConfig(
             name="qwen3:8b",
@@ -136,6 +146,34 @@ class GatekeeperConfig(BaseModel):
     policies_dir: str = "policies"  # Relativ zu jarvis_home
     default_risk_level: Literal["green", "yellow", "orange", "red"] = "yellow"
     max_blocked_retries: int = Field(default=3, ge=1, le=10)
+
+
+class ObserverConfig(BaseModel):
+    """LLM-based response quality audit. [Observer Spec §2.1]"""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    max_retries: int = Field(default=2, ge=0, le=5)
+    check_hallucination: bool = True
+    check_sycophancy: bool = True
+    check_laziness: bool = True
+    check_tool_ignorance: bool = True
+    blocking_dimensions: list[str] = Field(
+        default_factory=lambda: ["hallucination", "tool_ignorance"]
+    )
+    warning_prefix: str = "[Quality check flagged issues]"
+    timeout_seconds: int = Field(default=30, ge=5, le=120)
+    circuit_breaker_threshold: int = Field(default=5, ge=1, le=20)
+
+    @field_validator("blocking_dimensions")
+    @classmethod
+    def _validate_blocking(cls, v: list[str]) -> list[str]:
+        valid = {"hallucination", "sycophancy", "laziness", "tool_ignorance"}
+        invalid = set(v) - valid
+        if invalid:
+            raise ValueError(f"Unknown dimensions in blocking_dimensions: {sorted(invalid)}")
+        return v
 
 
 class PlannerConfig(BaseModel):
@@ -949,20 +987,33 @@ class ModelOverrideConfig(BaseModel):
 # durch passende Modelle des jeweiligen Providers ersetzt -- aber nur, wenn
 # the user has not explicitly overridden the model names.
 
-_OLLAMA_DEFAULT_MODEL_NAMES = {
-    "qwen3:32b",
-    "qwen3:8b",
-    "qwen3-coder:30b",
-    "qwen2.5-coder:7b",
-    "nomic-embed-text",
-    "qwen3-embedding:0.6b",
-    "llava:13b",
-    "openbmb/minicpm-v4.5",
-    # Legacy detection for upgrades from older versions
-    "gpt-4o",
-    "gpt-4o-mini",
-    "claude-sonnet-4-20250514",
+# Role → default Ollama model name. Used by provider-switching logic to detect
+# when a user is still on the vanilla Ollama default for a given role, and by the
+# Observer audit layer to know which model to fall back to.
+_OLLAMA_DEFAULT_MODEL_NAMES: dict[str, str] = {
+    "planner": "qwen3:32b",
+    "observer": "qwen3:32b",
+    "executor": "qwen3:8b",
+    "coder": "qwen3-coder:30b",
+    "coder_fast": "qwen2.5-coder:7b",
+    "embedding": "qwen3-embedding:0.6b",
+    "vision": "openbmb/minicpm-v4.5",
 }
+
+# Legacy/default model names that should be treated as "still on a default" by
+# provider-switching logic. Includes current Ollama defaults plus historical
+# entries (older Ollama models, and defaults from prior provider switches).
+_DEFAULT_MODEL_NAME_VALUES: frozenset[str] = frozenset(
+    {
+        *_OLLAMA_DEFAULT_MODEL_NAMES.values(),
+        "nomic-embed-text",
+        "llava:13b",
+        # Legacy detection for upgrades from older versions
+        "gpt-4o",
+        "gpt-4o-mini",
+        "claude-sonnet-4-20250514",
+    }
+)
 
 _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
     "openai": {
@@ -971,6 +1022,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 400000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "gpt-5.2",
+            "context_window": 400000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -1014,6 +1072,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning", "planning", "reflection", "german"],
             "speed": "medium",
         },
+        "observer": {
+            "name": "claude-opus-4-6",
+            "context_window": 200000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
+            "speed": "medium",
+        },
         "executor": {
             "name": "claude-haiku-4-5-20251001",
             "context_window": 200000,
@@ -1053,6 +1118,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 1000000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "gemini-2.5-pro",
+            "context_window": 1000000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -1096,6 +1168,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning", "planning", "reflection", "german"],
             "speed": "medium",
         },
+        "observer": {
+            "name": "meta-llama/llama-4-maverick-17b-128e-instruct",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
+            "speed": "medium",
+        },
         "executor": {
             "name": "llama-3.1-8b-instant",
             "context_window": 128000,
@@ -1135,6 +1214,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 128000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "deepseek-chat",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -1179,6 +1265,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning", "planning", "reflection", "german"],
             "speed": "medium",
         },
+        "observer": {
+            "name": "mistral-large-latest",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
+            "speed": "medium",
+        },
         "executor": {
             "name": "mistral-small-latest",
             "context_window": 128000,
@@ -1218,6 +1311,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 128000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -1261,6 +1361,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning", "planning", "reflection", "german"],
             "speed": "medium",
         },
+        "observer": {
+            "name": "anthropic/claude-opus-4.6",
+            "context_window": 200000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
+            "speed": "medium",
+        },
         "executor": {
             "name": "google/gemini-2.5-flash",
             "context_window": 1000000,
@@ -1300,6 +1407,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 2000000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "grok-4-1-fast-reasoning",
+            "context_window": 2000000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -1343,6 +1457,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning", "planning", "reflection", "german"],
             "speed": "fast",
         },
+        "observer": {
+            "name": "gpt-oss-120b",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
+            "speed": "fast",
+        },
         "executor": {
             "name": "llama3.1-8b",
             "context_window": 128000,
@@ -1381,6 +1502,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 128000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "gpt-4.1",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -1424,6 +1552,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning", "planning", "reflection", "german"],
             "speed": "medium",
         },
+        "observer": {
+            "name": "us.anthropic.claude-opus-4-6-v1:0",
+            "context_window": 200000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
+            "speed": "medium",
+        },
         "executor": {
             "name": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
             "context_window": 200000,
@@ -1463,6 +1598,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 128000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "meta-llama/Llama-3.3-70B-Instruct",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -1505,6 +1647,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning", "planning", "reflection", "german"],
             "speed": "medium",
         },
+        "observer": {
+            "name": "kimi-k2.5",
+            "context_window": 128000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
+            "speed": "medium",
+        },
         "executor": {
             "name": "kimi-k2-turbo-preview",
             "context_window": 128000,
@@ -1545,6 +1694,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning"],
             "speed": "fast",
         },
+        "observer": {
+            "name": "default",
+            "context_window": 32768,
+            "vram_gb": 0,
+            "strengths": ["reasoning", "auditing"],
+            "speed": "fast",
+        },
         "executor": {
             "name": "default",
             "context_window": 32768,
@@ -1576,6 +1732,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "strengths": ["reasoning"],
             "speed": "medium",
         },
+        "observer": {
+            "name": "default",
+            "context_window": 32768,
+            "vram_gb": 0,
+            "strengths": ["reasoning", "auditing"],
+            "speed": "medium",
+        },
         "executor": {
             "name": "default",
             "context_window": 32768,
@@ -1605,6 +1768,13 @@ _PROVIDER_MODEL_DEFAULTS: dict[str, dict[str, dict[str, Any]]] = {
             "context_window": 1000000,
             "vram_gb": 0.0,
             "strengths": ["reasoning", "planning", "reflection", "german", "multi-agent"],
+            "speed": "medium",
+        },
+        "observer": {
+            "name": "opus",
+            "context_window": 1000000,
+            "vram_gb": 0.0,
+            "strengths": ["reasoning", "reflection", "auditing", "german"],
             "speed": "medium",
         },
         "executor": {
@@ -2449,6 +2619,7 @@ class JarvisConfig(BaseModel):
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
     models: ModelsConfig = Field(default_factory=ModelsConfig)
     gatekeeper: GatekeeperConfig = Field(default_factory=GatekeeperConfig)
+    observer: ObserverConfig = Field(default_factory=ObserverConfig)
     planner: PlannerConfig = Field(default_factory=PlannerConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     tactical_memory: TacticalMemoryConfig = Field(default_factory=TacticalMemoryConfig)
@@ -2677,9 +2848,9 @@ class JarvisConfig(BaseModel):
         provider_defaults = _PROVIDER_MODEL_DEFAULTS[backend]
 
         # Check each model role and adjust if necessary
-        for role in ("planner", "executor", "coder", "coder_fast", "embedding"):
+        for role in ("planner", "observer", "executor", "coder", "coder_fast", "embedding"):
             current_model: ModelConfig = getattr(self.models, role)
-            if current_model.name not in _OLLAMA_DEFAULT_MODEL_NAMES:
+            if current_model.name not in _DEFAULT_MODEL_NAME_VALUES:
                 # User has a custom model set — keep it, but log for clarity
                 expected = provider_defaults.get(role, {}).get("name", "")
                 if expected and current_model.name != expected:
@@ -2691,7 +2862,7 @@ class JarvisConfig(BaseModel):
                         backend,
                     )
                 continue
-            if current_model.name in _OLLAMA_DEFAULT_MODEL_NAMES:
+            if current_model.name in _DEFAULT_MODEL_NAME_VALUES:
                 role_defaults = provider_defaults.get(role)
                 if role_defaults:
                     new_model = ModelConfig(**role_defaults)
@@ -2706,13 +2877,13 @@ class JarvisConfig(BaseModel):
                         )
 
         # Heartbeat-Modell ebenfalls anpassen wenn noch auf Ollama-Default
-        if self.heartbeat.model in _OLLAMA_DEFAULT_MODEL_NAMES:
+        if self.heartbeat.model in _DEFAULT_MODEL_NAME_VALUES:
             executor_default = provider_defaults.get("executor", {})
             if executor_default:
                 object.__setattr__(self.heartbeat, "model", executor_default["name"])
 
         # Vision-Modell anpassen (einfacher String, kein ModelConfig)
-        if self.vision_model in _OLLAMA_DEFAULT_MODEL_NAMES:
+        if self.vision_model in _DEFAULT_MODEL_NAME_VALUES:
             vision_default = provider_defaults.get("vision", {})
             if vision_default:
                 object.__setattr__(self, "vision_model", vision_default["name"])

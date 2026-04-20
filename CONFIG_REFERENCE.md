@@ -115,6 +115,14 @@ Each model role has the same fields: `name`, `context_window`, `vram_gb`, `stren
 | `models.embedding.vram_gb` | float | `0.5` | VRAM usage estimate (GB). |
 | `models.embedding.embedding_dimensions` | int | `1024` | Embedding vector dimensions. |
 
+### Observer
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `models.observer.name` | string | `"qwen3:32b"` | Observer audit model (LLM-based response quality check). |
+| `models.observer.context_window` | int | `32768` | Context window size (tokens). |
+| `models.observer.vram_gb` | float | `20.0` | VRAM usage estimate (GB). |
+
 ### Provider-Specific Model Defaults
 
 When switching backends, Ollama model names are automatically replaced with provider-appropriate models. Supported providers and their default planner models:
@@ -179,6 +187,41 @@ Section key: `executor`
 | `media_extract_text_timeout` | int | `120` | 30--600 | Text extraction timeout (seconds). |
 | `media_tts_timeout` | int | `120` | 30--600 | Text-to-speech timeout (seconds). |
 | `run_python_timeout` | int | `120` | 30--600 | Python code execution timeout (seconds). |
+
+---
+
+## Observer
+
+Section key: `observer`
+
+LLM-based response quality audit that runs after the existing regex-based `ResponseValidator`. See `docs/superpowers/specs/2026-04-19-observer-audit-layer-design.md` for the full design.
+
+| Key | Type | Default | Range | Description |
+|-----|------|---------|-------|-------------|
+| `enabled` | bool | `true` | -- | Master switch. When false, the Observer is bypassed entirely and responses go to the user as soon as generated. |
+| `max_retries` | int | `2` | 0--5 | Maximum Observer-triggered retries per response. Exhausted retries deliver with a prefixed warning instead of hard rejection. |
+| `check_hallucination` | bool | `true` | -- | Enable the hallucination dimension (claims unsupported by tool results). |
+| `check_sycophancy` | bool | `true` | -- | Enable the sycophancy dimension (empty flattery, agreement-seeking). |
+| `check_laziness` | bool | `true` | -- | Enable the laziness dimension (placeholder text, vague responses). |
+| `check_tool_ignorance` | bool | `true` | -- | Enable the tool-ignorance dimension (question needed a tool that wasn't called). |
+| `blocking_dimensions` | list[str] | `["hallucination", "tool_ignorance"]` | -- | Dimensions whose failure triggers a retry. Non-blocking dimensions are advisory only. |
+| `warning_prefix` | string | `"[Quality check flagged issues]"` | -- | Prefix added to responses delivered after exhausted retries. |
+| `timeout_seconds` | int | `30` | 5--120 | Timeout for each Observer LLM call. On timeout the audit fails open. |
+| `circuit_breaker_threshold` | int | `5` | 1--20 | Consecutive Observer failures before the circuit opens and the Observer is disabled for the rest of the session. |
+
+### Retry strategies
+
+- `response_regen` (hallucination failure): Planner regenerates the response with Observer feedback injected as a system message.
+- `pge_reloop` (tool_ignorance failure): Gateway re-enters the full PGE loop (Planner→Gatekeeper→Executor) with the Observer's missing-data hint.
+- `deliver_with_warning` (max_retries exhausted): Response delivered to user with `warning_prefix` + failed-dimension list prepended.
+
+### Degraded mode
+
+If the observer model is not installed locally, the Observer auto-downgrades to the Planner model with an `observer_degraded_mode` warning (logged once per session). If neither model is available, the Observer returns a synthetic pass result (fail-open).
+
+### Audit log
+
+All audits persist to `~/.cognithor/db/observer_audits.db` (plain SQLite, content sha256-hashed before storage — not sensitive). Columns: session_id, timestamp, user_message_hash, response_hash, model, dimensions_json, overall_passed, retry_count, final_action, retry_strategy, duration_ms, degraded_mode, error_type.
 
 ---
 

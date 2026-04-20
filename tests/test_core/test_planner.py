@@ -276,7 +276,8 @@ class TestFormulateResponse:
             },
         }
         results = [ToolResult(tool_name="write_file", content="OK")]
-        response = await planner.formulate_response("Schreib die Datei", results, working_memory)
+        envelope = await planner.formulate_response("Schreib die Datei", results, working_memory)
+        response = envelope.content
         assert "erfolgreich" in response.lower()
 
     @pytest.mark.asyncio

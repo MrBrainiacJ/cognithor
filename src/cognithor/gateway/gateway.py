@@ -26,6 +26,11 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from cognithor.config import JarvisConfig, load_config
 from cognithor.core.agent_router import RouteDecision
 from cognithor.core.autonomous_orchestrator import AutonomousOrchestrator
+from cognithor.core.observer import (  # noqa: TC001
+    PGEReloopDirective,  # noqa: F401 — runtime import for Task 16 isinstance checks
+    ResponseEnvelope,
+)
+from cognithor.gateway.observer_directive import run_pge_with_observer_directive
 from cognithor.gateway.phases import (
     apply_phase,
     declare_advanced_attrs,
@@ -2942,12 +2947,14 @@ class Gateway:
         all_results: list[ToolResult],
         wm: WorkingMemory,
         stream_callback: Any | None = None,
-    ) -> str:
+    ) -> ResponseEnvelope:
         """Formulate response, optionally streaming tokens to the client.
 
-        If stream_callback is set and the planner supports streaming,
-        tokens are sent as stream_token events in real time.
-        Falls back to non-streaming formulate_response() otherwise.
+        Non-streaming path uses ``run_pge_with_observer_directive`` so Observer
+        ``pge_reloop`` directives trigger a Gateway-level re-entry.
+        Streaming path delegates to ``formulate_response_stream`` directly; the
+        Planner's internal observer loop still runs, but PGE-reloop directives
+        from the streaming path are not currently re-entered (limitation).
         """
         if stream_callback is not None and hasattr(self._planner, "formulate_response_stream"):
             try:
@@ -2960,10 +2967,13 @@ class Gateway:
             except Exception:
                 log.debug("streaming_formulate_failed_fallback", exc_info=True)
                 # Fall through to non-streaming
-        return await self._planner.formulate_response(
+        return await run_pge_with_observer_directive(
+            planner=self._planner,
             user_message=msg_text,
             results=all_results,
             working_memory=wm,
+            session_state=wm.session_state,
+            config=self._config,
         )
 
     @staticmethod
@@ -3358,12 +3368,13 @@ class Gateway:
                         )
                     )
                 await _status_cb("finishing", "Formuliere Antwort...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
 
             # JSON parse failed even after retry — recover gracefully
@@ -3378,12 +3389,13 @@ class Gateway:
                 # formulate a clean response from them (instead of giving up)
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                 else:
                     # No context -- sanitized fallback or error message
                     _raw = plan.direct_response or ""
@@ -3421,12 +3433,13 @@ class Gateway:
                     # Don't retry — immediately formulate a direct response.
                     if session.iteration_count == 1 and not all_results:
                         await _status_cb("finishing", "Composing response...")
-                        final_response = await self._formulate_response(
+                        _envelope = await self._formulate_response(
                             msg.text,
                             [],
                             wm,
                             stream_callback,
                         )
+                        final_response = _envelope.content
                         break
                     # Allow max 2 replan-text retries, then break
                     if (
@@ -3437,12 +3450,13 @@ class Gateway:
                     # Stuck — never send raw REPLAN text to the user
                     if all_results and any(r.success for r in all_results):
                         await _status_cb("finishing", "Composing response...")
-                        final_response = await self._formulate_response(
+                        _envelope = await self._formulate_response(
                             msg.text,
                             all_results,
                             wm,
                             stream_callback,
                         )
+                        final_response = _envelope.content
                     else:
                         final_response = (
                             "I'm stuck in a planning loop and can't make progress. "
@@ -3455,12 +3469,13 @@ class Gateway:
                 # returned text instead of JSON, formulate a proper response
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                     break
 
                 final_response = plan.direct_response
@@ -3470,12 +3485,13 @@ class Gateway:
                 # If there are prior successful results, summarize them
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                     break
                 final_response = (
                     "Ich konnte keinen Plan dafuer erstellen. Kannst du deine Frage umformulieren?"
@@ -3737,12 +3753,13 @@ class Gateway:
                     log.warning("pge_stuck_no_tools", iterations=session.iteration_count)
                     if all_results and any(r.success for r in all_results):
                         await _status_cb("finishing", "Composing response...")
-                        final_response = await self._formulate_response(
+                        _envelope = await self._formulate_response(
                             msg.text,
                             all_results,
                             wm,
                             stream_callback,
                         )
+                        final_response = _envelope.content
                     else:
                         final_response = (
                             "I'm stuck in a planning loop without making progress. "
@@ -3767,12 +3784,13 @@ class Gateway:
                 )
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                 else:
                     final_response = (
                         "The model has been unable to make progress for "
@@ -3804,12 +3822,13 @@ class Gateway:
             # Single-step non-coding tasks: respond immediately after success
             if has_success and not has_errors and not used_coding_tool and not _is_multi_step:
                 await _status_cb("finishing", "Composing response...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
 
             # Multi-step / coding tasks: let replan decide if more steps needed.
@@ -3830,12 +3849,13 @@ class Gateway:
                 )
             ):
                 await _status_cb("finishing", "Composing response...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
                 # Otherwise: continue to replan for more steps (normal)
 
@@ -3844,12 +3864,13 @@ class Gateway:
             _failure_threshold = max(5, int(session.max_iterations * 0.7))
             if not has_success and session.iteration_count >= _failure_threshold:
                 await _status_cb("finishing", "Composing response...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
 
         if session.iterations_exhausted and not final_response:
@@ -4629,11 +4650,12 @@ class Gateway:
 
         # Formulate result
         if any(r.success for r in results):
-            response = await self._planner.formulate_response(
+            _envelope = await self._planner.formulate_response(
                 user_message=task,
                 results=results,
                 working_memory=sub_wm,
             )
+            response = _envelope.content
             delegation.result = response
             delegation.success = True
         else:

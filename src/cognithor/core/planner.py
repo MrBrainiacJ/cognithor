@@ -24,6 +24,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from cognithor.core.model_router import ModelRouter, OllamaError
+from cognithor.core.observer import AuditResult, ResponseEnvelope
 from cognithor.i18n import t
 from cognithor.models import (
     ActionPlan,
@@ -40,6 +41,7 @@ if TYPE_CHECKING:
 
     from cognithor.audit import AuditLogger
     from cognithor.config import JarvisConfig
+    from cognithor.core.observer import ObserverAudit
 
     StreamCallback = Callable[[str, dict[str, Any]], Coroutine[Any, Any, None]]
 
@@ -518,6 +520,9 @@ class Planner:
         # Tool-Descriptions-Cache (#40 Optimierung)
         self._cached_tools_section: str | None = None
         self._cached_tools_hash: int = 0
+
+        # Observer lazy-init (enabled in config)
+        self._observer: ObserverAudit | None = None
 
         # Context-window for Ollama num_ctx (default from model config)
         try:
@@ -1028,63 +1033,77 @@ class Planner:
         user_message: str,
         results: list[ToolResult],
         working_memory: WorkingMemory,
-    ) -> str:
+    ) -> ResponseEnvelope:
         """Formuliert eine finale Antwort basierend auf Tool-Ergebnissen.
 
         Wird am Ende des Agent-Loops aufgerufen, wenn alle Tools
         ausgefuehrt wurden und eine zusammenfassende Antwort noetig ist.
+
+        Observer-Integration: Wenn observer.enabled, wird die generierte
+        Antwort durch den ObserverAudit geprueft. Bei Rejection wird bis zu
+        max_retries mal neu generiert (response_regen). tool_ignorance fuehrt
+        zu einem ResponseEnvelope mit PGEReloopDirective.
         """
         model = self._router.select_model("summarization", "medium")
         messages = self._build_formulate_messages(user_message, results, working_memory)
 
-        for _fmt_attempt in range(2):
-            try:
-                response = await self._ollama.chat(
-                    model=model, messages=messages, options=self._build_llm_options()
-                )
-                self._record_cost(response, model, session_id=working_memory.session_id)
-                content: str = response.get("message", {}).get("content", "")
+        observer_cfg = self._config.observer
+        retry_count = 0
+        max_retries = observer_cfg.max_retries if observer_cfg.enabled else 0
 
-                # Four Questions response validation (advisory, non-blocking)
-                try:
-                    from cognithor.core.response_validator import ResponseValidator
+        # Lazy-instantiate the Observer if enabled.
+        if observer_cfg.enabled and self._observer is None:
+            from cognithor.core.observer import ObserverAudit
+            from cognithor.core.observer_store import AuditStore
 
-                    _validator = ResponseValidator()
-                    _val_result = _validator.validate(content, user_message, results)
-                    if not _val_result.passed:
-                        log.info(
-                            "response_validation_warn",
-                            score=_val_result.score,
-                            issues=_val_result.issues,
-                            consistency=_val_result.consistency_score,
-                            coverage=_val_result.coverage_score,
-                            assumptions=_val_result.assumption_score,
-                            evidence=_val_result.evidence_score,
-                        )
-                    else:
-                        log.debug(
-                            "response_validation_ok",
-                            score=_val_result.score,
-                        )
-                except Exception:
-                    log.debug("response_validation_skipped", exc_info=True)
+            db_path = self._config.jarvis_home / "db" / "observer_audits.db"
+            self._observer = ObserverAudit(
+                config=self._config,
+                ollama_client=self._ollama,
+                audit_store=AuditStore(db_path=db_path),
+            )
 
-                return content
-            except OllamaError as exc:
-                log.warning(
-                    "formulate_response_llm_error", error=str(exc), attempt=_fmt_attempt + 1
-                )
-                if _fmt_attempt == 0:
-                    await asyncio.sleep(1.0)  # Retry nach kurzer Pause
-                    continue
-                # Second failure: return results directly as fallback
-                raw_results = "\n".join(
-                    f"[{r.tool_name}] {r.content[:300]}" for r in results if r.success
-                )
-                if raw_results:
-                    return t("planner.results_summary_failed", results=raw_results)
-                return t("planner.summarize_failed")
-        return ""  # Unreachable, aber fuer Type-Checker
+        while True:
+            content = await self._generate_draft_with_retry(
+                model=model,
+                messages=messages,
+                session_id=working_memory.session_id,
+            )
+            if content is None:
+                # Both LLM attempts failed — existing fallback behavior.
+                return self._formulate_response_fallback(results)
+
+            # Existing Four Questions validator (advisory only).
+            self._run_response_validator(content, user_message, results)
+
+            if not observer_cfg.enabled:
+                return ResponseEnvelope(content=content, directive=None)
+
+            audit_result = await self._observer.audit(
+                user_message=user_message,
+                response=content,
+                tool_results=results,
+                session_id=working_memory.session_id,
+                retry_count=retry_count,
+            )
+
+            if audit_result.overall_passed:
+                return ResponseEnvelope(content=content, directive=None)
+
+            if audit_result.retry_strategy == "pge_reloop":
+                directive = self._observer.build_pge_directive(audit_result)
+                return ResponseEnvelope(content=content, directive=directive)
+
+            if audit_result.retry_strategy == "deliver_with_warning":
+                return self._make_warning_envelope(audit_result, content)
+
+            # response_regen: inject feedback and loop back.
+            feedback_msg = self._observer.build_retry_feedback(audit_result)
+            messages.append(feedback_msg)
+            retry_count += 1
+            if retry_count > max_retries:
+                # Safety net (should've been caught by deliver_with_warning above).
+                return self._make_warning_envelope(audit_result, content)
 
     async def formulate_response_stream(
         self,
@@ -1092,7 +1111,7 @@ class Planner:
         results: list[ToolResult],
         working_memory: WorkingMemory,
         stream_callback: StreamCallback,
-    ) -> str:
+    ) -> ResponseEnvelope:
         """Streaming-Variante von formulate_response().
 
         Sendet Tokens via stream_callback an den Client, waehrend die
@@ -1105,7 +1124,8 @@ class Planner:
             stream_callback: Async callback fuer stream_token Events.
 
         Returns:
-            Vollstaendiger Antwort-Text.
+            ResponseEnvelope mit `content` (Volltext) und `directive` (optionales
+            PGE-Re-Loop-Signal, in diesem Task immer None).
         """
         # Pruefe ob chat_stream verfuegbar ist
         if not hasattr(self._ollama, "chat_stream"):
@@ -1155,7 +1175,7 @@ class Planner:
                 except Exception:
                     log.debug("personality_enhance_failed", exc_info=True)
 
-            return content
+            return ResponseEnvelope(content=content, directive=None)
 
         except OllamaError as exc:
             log.warning("formulate_stream_error", error=str(exc))
@@ -1233,6 +1253,82 @@ class Planner:
 
         messages.append({"role": "user", "content": prompt})
         return messages
+
+    async def _generate_draft_with_retry(
+        self,
+        *,
+        model: str,
+        messages: list[dict[str, Any]],
+        session_id: str,
+    ) -> str | None:
+        """Call ollama.chat with 2 attempts. Returns None if both fail (caller uses fallback)."""
+        for _fmt_attempt in range(2):
+            try:
+                response = await self._ollama.chat(
+                    model=model, messages=messages, options=self._build_llm_options()
+                )
+                self._record_cost(response, model, session_id=session_id)
+                return response.get("message", {}).get("content", "")
+            except OllamaError as exc:
+                log.warning(
+                    "formulate_response_llm_error", error=str(exc), attempt=_fmt_attempt + 1
+                )
+                if _fmt_attempt == 0:
+                    await asyncio.sleep(1.0)
+                    continue
+        return None
+
+    def _formulate_response_fallback(self, results: list[ToolResult]) -> ResponseEnvelope:
+        """Build a degraded-but-useful envelope when both LLM calls failed."""
+        raw_results = "\n".join(f"[{r.tool_name}] {r.content[:300]}" for r in results if r.success)
+        if raw_results:
+            return ResponseEnvelope(
+                content=t("planner.results_summary_failed", results=raw_results),
+                directive=None,
+            )
+        return ResponseEnvelope(content=t("planner.summarize_failed"), directive=None)
+
+    def _run_response_validator(
+        self,
+        content: str,
+        user_message: str,
+        results: list[ToolResult],
+    ) -> None:
+        """Existing Four Questions validator (advisory, non-blocking)."""
+        try:
+            from cognithor.core.response_validator import ResponseValidator
+
+            _validator = ResponseValidator()
+            _val_result = _validator.validate(content, user_message, results)
+            if not _val_result.passed:
+                log.info(
+                    "response_validation_warn",
+                    score=_val_result.score,
+                    issues=_val_result.issues,
+                    consistency=_val_result.consistency_score,
+                    coverage=_val_result.coverage_score,
+                    assumptions=_val_result.assumption_score,
+                    evidence=_val_result.evidence_score,
+                )
+            else:
+                log.debug("response_validation_ok", score=_val_result.score)
+        except Exception:
+            log.debug("response_validation_skipped", exc_info=True)
+
+    def _observer_warning_text(self, result: AuditResult) -> str:
+        """Produce a short warning prefix summarizing failed dimensions."""
+        failed = [name for name, d in result.dimensions.items() if not d.passed]
+        if not failed:
+            return "[unknown]"
+        return f"[{', '.join(failed)}]"
+
+    def _make_warning_envelope(self, audit_result: AuditResult, content: str) -> ResponseEnvelope:
+        """Construct a warning-prefixed envelope. Used by deliver_with_warning and safety-net."""
+        warning = self._observer_warning_text(audit_result)
+        return ResponseEnvelope(
+            content=f"{self._config.observer.warning_prefix} {warning}\n\n{content}",
+            directive=None,
+        )
 
     # =========================================================================
     # Private Methoden
