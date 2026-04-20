@@ -50,10 +50,20 @@ class TestAuditStoreSchema:
         with sqlite3.connect(db_path) as conn:
             cols = {row[1] for row in conn.execute("PRAGMA table_info(audits)").fetchall()}
         assert cols == {
-            "audit_id", "session_id", "timestamp", "user_message_hash",
-            "response_hash", "model", "dimensions_json", "overall_passed",
-            "retry_count", "final_action", "retry_strategy", "duration_ms",
-            "degraded_mode", "error_type",
+            "audit_id",
+            "session_id",
+            "timestamp",
+            "user_message_hash",
+            "response_hash",
+            "model",
+            "dimensions_json",
+            "overall_passed",
+            "retry_count",
+            "final_action",
+            "retry_strategy",
+            "duration_ms",
+            "degraded_mode",
+            "error_type",
         }
 
 
@@ -74,9 +84,7 @@ class TestAuditStoreRecord:
             result=_make_result(),
         )
         with sqlite3.connect(tmp_path / "a.db") as conn:
-            umh, rh = conn.execute(
-                "SELECT user_message_hash, response_hash FROM audits"
-            ).fetchone()
+            umh, rh = conn.execute("SELECT user_message_hash, response_hash FROM audits").fetchone()
         # 64-char sha256 hex, NOT the raw message.
         assert len(umh) == 64 and "sensitive" not in umh
         assert len(rh) == 64 and "sensitive" not in rh

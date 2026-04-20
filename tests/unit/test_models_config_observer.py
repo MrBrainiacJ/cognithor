@@ -18,6 +18,7 @@ class TestModelsConfigObserver:
 
     def test_observer_in_default_ollama_names_mapping(self):
         from cognithor.config import _OLLAMA_DEFAULT_MODEL_NAMES
+
         assert "observer" in _OLLAMA_DEFAULT_MODEL_NAMES
         assert _OLLAMA_DEFAULT_MODEL_NAMES["observer"] == "qwen3:32b"
 
@@ -28,6 +29,7 @@ class TestModelsConfigObserver:
     def test_all_providers_have_observer_entry(self):
         """Provider-switching must include observer so it tracks the planner across backends."""
         from cognithor.config import _PROVIDER_MODEL_DEFAULTS
+
         for provider in ("openai", "anthropic", "gemini"):
             assert "observer" in _PROVIDER_MODEL_DEFAULTS[provider], (
                 f"Provider {provider!r} missing observer entry — "
@@ -39,6 +41,7 @@ class TestModelsConfigObserver:
         import inspect
 
         from cognithor import config as _cfg_module
+
         src = inspect.getsource(_cfg_module)
         # Find the tuple that iterates roles for provider-switching.
         # (Kept intentionally loose — any tuple naming planner/observer/executor is fine.)
@@ -48,6 +51,7 @@ class TestModelsConfigObserver:
         # Stronger: the specific iteration must include observer
         # Look for a pattern like `for role in ("planner", "observer", ...):` in the module.
         import re
+
         pattern = re.compile(r'for\s+role\s+in\s+\([^)]*["\']observer["\'][^)]*\)')
         assert pattern.search(src), "Provider-switching for-loop does not iterate 'observer'"
 
@@ -57,9 +61,5 @@ class TestModelsConfigObserver:
         assert cfg.observer.vram_gb > 0, (
             "Observer factory understates VRAM — zero-cost models mislead schedulers"
         )
-        assert cfg.observer.strengths, (
-            "Observer factory has empty strengths — mirror the planner"
-        )
-        assert cfg.observer.context_window > 0, (
-            "Observer factory has zero context_window"
-        )
+        assert cfg.observer.strengths, "Observer factory has empty strengths — mirror the planner"
+        assert cfg.observer.context_window > 0, "Observer factory has zero context_window"

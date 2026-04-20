@@ -102,9 +102,7 @@ async def run_pge_with_observer_directive(
             results=results,
             working_memory=working_memory,
         )
-        session_state["pge_iteration_count"] = (
-            session_state.get("pge_iteration_count", 0) + 1
-        )
+        session_state["pge_iteration_count"] = session_state.get("pge_iteration_count", 0) + 1
 
         if envelope.directive is None:
             return envelope
@@ -119,9 +117,7 @@ async def run_pge_with_observer_directive(
             return ResponseEnvelope(content=envelope.content, directive=None)
 
         # reenter_pge: prepend the directive feedback into the next user message.
-        current_user_msg = (
-            f"{user_message}\n\n[Observer feedback]\n{decision.planner_feedback}"
-        )
+        current_user_msg = f"{user_message}\n\n[Observer feedback]\n{decision.planner_feedback}"
 
     # Safety: max iterations exhausted, return whatever the last envelope was
     # (directive stripped so the Gateway doesn't loop infinitely if the caller

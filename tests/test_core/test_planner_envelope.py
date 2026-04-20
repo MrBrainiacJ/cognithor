@@ -73,16 +73,18 @@ class TestFormulateResponseWithObserver:
             "}"
         )
 
-        planner_with_mocks._ollama.chat = AsyncMock(side_effect=[
-            # Draft 1 (hallucinates)
-            {"message": {"content": "TechCorp was founded in 2015 (MADE UP)."}},
-            # Observer audit 1 (fails hallucination)
-            {"message": {"content": hallucination_audit}},
-            # Draft 2 (after regen, clean)
-            {"message": {"content": "TechCorp's founding year is not in the search results."}},
-            # Observer audit 2 (passes)
-            {"message": {"content": pass_audit}},
-        ])
+        planner_with_mocks._ollama.chat = AsyncMock(
+            side_effect=[
+                # Draft 1 (hallucinates)
+                {"message": {"content": "TechCorp was founded in 2015 (MADE UP)."}},
+                # Observer audit 1 (fails hallucination)
+                {"message": {"content": hallucination_audit}},
+                # Draft 2 (after regen, clean)
+                {"message": {"content": "TechCorp's founding year is not in the search results."}},
+                # Observer audit 2 (passes)
+                {"message": {"content": pass_audit}},
+            ]
+        )
         # Observer also calls list_models before audit — stub it to say observer model is available
         planner_with_mocks._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
 

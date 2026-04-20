@@ -27,14 +27,18 @@ class TestPGEReloopDirectiveHandling:
 
         # First time seeing this directive: should allow re-entry.
         decision = handle_observer_directive(
-            directive=directive, session_state=session_state, config=cfg,
+            directive=directive,
+            session_state=session_state,
+            config=cfg,
         )
         assert decision.action == "reenter_pge"
         assert "weather data" in decision.planner_feedback
 
         # Second time same directive: dedupe kicks in.
         decision = handle_observer_directive(
-            directive=directive, session_state=session_state, config=cfg,
+            directive=directive,
+            session_state=session_state,
+            config=cfg,
         )
         assert decision.action == "downgrade_to_regen"
 
@@ -48,10 +52,14 @@ class TestPGEReloopDirectiveHandling:
             "pge_iteration_count": 3,  # already at cap
         }
         directive = PGEReloopDirective(
-            reason="tool_ignorance", missing_data="x", suggested_tools=[],
+            reason="tool_ignorance",
+            missing_data="x",
+            suggested_tools=[],
         )
         decision = handle_observer_directive(
-            directive=directive, session_state=session_state, config=cfg,
+            directive=directive,
+            session_state=session_state,
+            config=cfg,
         )
         assert decision.action == "downgrade_to_regen"
 
@@ -64,10 +72,14 @@ class TestPGEReloopDirectiveHandling:
             "pge_iteration_count": 0,
         }
         directive = PGEReloopDirective(
-            reason="tool_ignorance", missing_data="fresh", suggested_tools=[],
+            reason="tool_ignorance",
+            missing_data="fresh",
+            suggested_tools=[],
         )
         handle_observer_directive(
-            directive=directive, session_state=session_state, config=cfg,
+            directive=directive,
+            session_state=session_state,
+            config=cfg,
         )
         # After handling: new hash added, but set pruned to at most 51 items.
         assert len(session_state["seen_observer_feedback_hashes"]) <= 51
@@ -81,17 +93,19 @@ class TestGatewayObserverIntegration:
         planner = AsyncMock()
         # 1st formulate call: tool_ignorance fail, directive set.
         # 2nd formulate call (after re-enter): clean response.
-        planner.formulate_response = AsyncMock(side_effect=[
-            ResponseEnvelope(
-                content="I don't know",
-                directive=PGEReloopDirective(
-                    reason="tool_ignorance",
-                    missing_data="recent weather",
-                    suggested_tools=["web_search"],
+        planner.formulate_response = AsyncMock(
+            side_effect=[
+                ResponseEnvelope(
+                    content="I don't know",
+                    directive=PGEReloopDirective(
+                        reason="tool_ignorance",
+                        missing_data="recent weather",
+                        suggested_tools=["web_search"],
+                    ),
                 ),
-            ),
-            ResponseEnvelope(content="It's 12C in Berlin.", directive=None),
-        ])
+                ResponseEnvelope(content="It's 12C in Berlin.", directive=None),
+            ]
+        )
 
         cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
         session_state: dict = {

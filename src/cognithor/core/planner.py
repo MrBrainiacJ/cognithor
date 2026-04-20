@@ -1065,7 +1065,9 @@ class Planner:
 
         while True:
             content = await self._generate_draft_with_retry(
-                model=model, messages=messages, session_id=working_memory.session_id,
+                model=model,
+                messages=messages,
+                session_id=working_memory.session_id,
             )
             if content is None:
                 # Both LLM attempts failed — existing fallback behavior.
@@ -1278,9 +1280,7 @@ class Planner:
 
     def _formulate_response_fallback(self, results: list[ToolResult]) -> ResponseEnvelope:
         """Build a degraded-but-useful envelope when both LLM calls failed."""
-        raw_results = "\n".join(
-            f"[{r.tool_name}] {r.content[:300]}" for r in results if r.success
-        )
+        raw_results = "\n".join(f"[{r.tool_name}] {r.content[:300]}" for r in results if r.success)
         if raw_results:
             return ResponseEnvelope(
                 content=t("planner.results_summary_failed", results=raw_results),
@@ -1322,9 +1322,7 @@ class Planner:
             return "[unknown]"
         return f"[{', '.join(failed)}]"
 
-    def _make_warning_envelope(
-        self, audit_result: AuditResult, content: str
-    ) -> ResponseEnvelope:
+    def _make_warning_envelope(self, audit_result: AuditResult, content: str) -> ResponseEnvelope:
         """Construct a warning-prefixed envelope. Used by deliver_with_warning and safety-net."""
         warning = self._observer_warning_text(audit_result)
         return ResponseEnvelope(

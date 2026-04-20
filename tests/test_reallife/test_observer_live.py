@@ -57,9 +57,7 @@ class TestObserverLiveContracts:
                 tool_results=case.tool_results,
                 session_id="live_test",
             )
-            assert result.error_type != "parse_failed", (
-                f"JSON failed on: {case.user_message}"
-            )
+            assert result.error_type != "parse_failed", f"JSON failed on: {case.user_message}"
 
     async def test_latency_budget(self, live_observer):
         """10 calls, hard cap 30s per call (qwen3:32b local), warn threshold 10s.

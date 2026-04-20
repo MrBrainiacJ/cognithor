@@ -76,9 +76,7 @@ class TestDataclasses:
         assert e.directive is None
 
     def test_response_envelope_with_directive(self):
-        d = PGEReloopDirective(
-            reason="tool_ignorance", missing_data="...", suggested_tools=[]
-        )
+        d = PGEReloopDirective(reason="tool_ignorance", missing_data="...", suggested_tools=[])
         e = ResponseEnvelope(content="draft", directive=d)
         assert e.directive is not None
         assert e.directive.reason == "tool_ignorance"
@@ -127,9 +125,7 @@ class TestBuildPrompt:
             is_error=True,
             error_message="timeout",
         )
-        messages = observer._build_prompt(
-            user_message="Q", response="A", tool_results=[result]
-        )
+        messages = observer._build_prompt(user_message="Q", response="A", tool_results=[result])
         assert "ERROR: timeout" in messages[1]["content"]
 
     def test_renders_tool_error_without_message(self, observer):
@@ -139,9 +135,7 @@ class TestBuildPrompt:
             is_error=True,
             error_message=None,
         )
-        messages = observer._build_prompt(
-            user_message="Q", response="A", tool_results=[result]
-        )
+        messages = observer._build_prompt(user_message="Q", response="A", tool_results=[result])
         # Must NOT contain the literal string "None" — use a sentinel instead.
         assert "ERROR: None" not in messages[1]["content"]
         assert "ERROR: (no error message)" in messages[1]["content"]
@@ -154,9 +148,11 @@ class TestCallLlmAudit:
             ' "evidence": "", "fix_suggestion": ""}}'
         )
         observer._ollama = AsyncMock()
-        observer._ollama.chat = AsyncMock(return_value={
-            "message": {"content": _audit_json},
-        })
+        observer._ollama.chat = AsyncMock(
+            return_value={
+                "message": {"content": _audit_json},
+            }
+        )
         text = await observer._call_llm_audit(
             messages=[{"role": "system", "content": "x"}],
         )
@@ -252,9 +248,9 @@ def _dim(name: str, passed: bool) -> DimensionResult:
 class TestDecideRetryStrategy:
     def test_all_pass_returns_deliver(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", True),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", True),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": _dim("tool_ignorance", True),
         }
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
@@ -263,9 +259,9 @@ class TestDecideRetryStrategy:
 
     def test_only_advisory_fail_still_delivers(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", True),
-            "sycophancy":     _dim("sycophancy", False),
-            "laziness":       _dim("laziness", False),
+            "hallucination": _dim("hallucination", True),
+            "sycophancy": _dim("sycophancy", False),
+            "laziness": _dim("laziness", False),
             "tool_ignorance": _dim("tool_ignorance", True),
         }
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
@@ -274,9 +270,9 @@ class TestDecideRetryStrategy:
 
     def test_hallucination_fail_triggers_response_regen(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", False),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", False),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": _dim("tool_ignorance", True),
         }
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
@@ -285,9 +281,9 @@ class TestDecideRetryStrategy:
 
     def test_tool_ignorance_fail_triggers_pge_reloop(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", True),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", True),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": _dim("tool_ignorance", False),
         }
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
@@ -296,9 +292,9 @@ class TestDecideRetryStrategy:
 
     def test_both_blocking_fail_tool_ignorance_wins(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", False),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", False),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": _dim("tool_ignorance", False),
         }
         overall, strategy = observer._decide_retry_strategy(dims, retry_count=0)
@@ -309,9 +305,9 @@ class TestDecideRetryStrategy:
 
     def test_retries_exhausted_switches_to_warning(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", False),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", False),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": _dim("tool_ignorance", True),
         }
         # max_retries is 2 by default; retry_count=2 means we've already retried twice
@@ -337,9 +333,7 @@ class TestAuditMain:
     async def test_pass_path(self, observer):
         observer._ollama = AsyncMock()
         observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
-        observer._ollama.chat = AsyncMock(
-            return_value={"message": {"content": _all_pass_json()}}
-        )
+        observer._ollama.chat = AsyncMock(return_value={"message": {"content": _all_pass_json()}})
         result = await observer.audit(
             user_message="hi",
             response="hello",
@@ -370,12 +364,13 @@ class TestAuditMain:
         )
         observer._ollama = AsyncMock()
         observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
-        observer._ollama.chat = AsyncMock(
-            return_value={"message": {"content": audit_json}}
-        )
+        observer._ollama.chat = AsyncMock(return_value={"message": {"content": audit_json}})
         result = await observer.audit(
-            user_message="q", response="a", tool_results=[],
-            session_id="s2", retry_count=0,
+            user_message="q",
+            response="a",
+            tool_results=[],
+            session_id="s2",
+            retry_count=0,
         )
         assert result.overall_passed is False
         assert result.final_action == "rejected_with_retry"
@@ -396,8 +391,11 @@ class TestAuditMain:
         )
 
         result = await observer.audit(
-            user_message="q", response="a", tool_results=[],
-            session_id="s3", retry_count=0,
+            user_message="q",
+            response="a",
+            tool_results=[],
+            session_id="s3",
+            retry_count=0,
         )
         assert result.overall_passed is True  # fail-open
         assert result.error_type == "timeout"
@@ -405,14 +403,16 @@ class TestAuditMain:
     async def test_records_to_store(self, observer):
         observer._ollama = AsyncMock()
         observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
-        observer._ollama.chat = AsyncMock(
-            return_value={"message": {"content": _all_pass_json()}}
-        )
+        observer._ollama.chat = AsyncMock(return_value={"message": {"content": _all_pass_json()}})
         await observer.audit(
-            user_message="q", response="a", tool_results=[],
-            session_id="s4", retry_count=0,
+            user_message="q",
+            response="a",
+            tool_results=[],
+            session_id="s4",
+            retry_count=0,
         )
         import sqlite3
+
         with sqlite3.connect(observer._store._db_path) as conn:
             rows = conn.execute("SELECT session_id FROM audits").fetchall()
         assert rows == [("s4",)]
@@ -421,9 +421,9 @@ class TestAuditMain:
 class TestBuildRetryFeedback:
     def test_feedback_is_structured_json(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", False),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", False),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": _dim("tool_ignorance", True),
         }
         result = AuditResult(
@@ -441,6 +441,7 @@ class TestBuildRetryFeedback:
         assert fb["role"] == "system"
 
         import json as _json
+
         payload = _json.loads(fb["content"])
         assert "observer_rejection" in payload
         rejection = payload["observer_rejection"]
@@ -461,9 +462,9 @@ class TestBuildPgeDirective:
             fix_suggestion="Call web_search to get current data",
         )
         dims = {
-            "hallucination":  _dim("hallucination", True),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", True),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": dim,
         }
         result = AuditResult(
@@ -485,9 +486,9 @@ class TestBuildPgeDirective:
 
     def test_returns_none_when_no_tool_ignorance(self, observer):
         dims = {
-            "hallucination":  _dim("hallucination", False),
-            "sycophancy":     _dim("sycophancy", True),
-            "laziness":       _dim("laziness", True),
+            "hallucination": _dim("hallucination", False),
+            "sycophancy": _dim("sycophancy", True),
+            "laziness": _dim("laziness", True),
             "tool_ignorance": _dim("tool_ignorance", True),
         }
         result = AuditResult(
@@ -511,22 +512,32 @@ class TestDegradedMode:
         observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
         # Audit itself succeeds.
         _dim_json = '"passed": true, "reason": "", "evidence": "", "fix_suggestion": ""'
-        observer._ollama.chat = AsyncMock(return_value={"message": {"content": (
-            "{"
-            f'"hallucination":  {{{_dim_json}}},'
-            f'"sycophancy":     {{{_dim_json}}},'
-            f'"laziness":       {{{_dim_json}}},'
-            f'"tool_ignorance": {{{_dim_json}}}'
-            "}"
-        )}})
+        observer._ollama.chat = AsyncMock(
+            return_value={
+                "message": {
+                    "content": (
+                        "{"
+                        f'"hallucination":  {{{_dim_json}}},'
+                        f'"sycophancy":     {{{_dim_json}}},'
+                        f'"laziness":       {{{_dim_json}}},'
+                        f'"tool_ignorance": {{{_dim_json}}}'
+                        "}"
+                    )
+                }
+            }
+        )
         # Override observer model to an unavailable one.
         from cognithor.models import ModelConfig
+
         observer._config.models = observer._config.models.model_copy(
             update={"observer": ModelConfig(name="nonexistent-model:99b")}
         )
 
         result = await observer.audit(
-            user_message="q", response="a", tool_results=[], session_id="s1",
+            user_message="q",
+            response="a",
+            tool_results=[],
+            session_id="s1",
         )
         assert result.degraded_mode is True
         # Actual model used = planner model (qwen3:32b) since observer model was missing.
@@ -538,7 +549,10 @@ class TestDegradedMode:
         observer._ollama.list_models = AsyncMock(return_value=[])
 
         result = await observer.audit(
-            user_message="q", response="a", tool_results=[], session_id="s1",
+            user_message="q",
+            response="a",
+            tool_results=[],
+            session_id="s1",
         )
         assert result.overall_passed is True  # fail-open
         assert result.error_type == "model_unavailable"

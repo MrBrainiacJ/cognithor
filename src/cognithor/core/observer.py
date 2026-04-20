@@ -154,10 +154,9 @@ class ObserverAudit:
         tool_results: list[ToolResult],
     ) -> list[dict[str, str]]:
         """Compose system + user messages for the audit LLM call."""
-        tool_section = "\n".join(
-            _render_tool_line(r)
-            for r in tool_results
-        ) or "(no tool calls were made)"
+        tool_section = (
+            "\n".join(_render_tool_line(r) for r in tool_results) or "(no tool calls were made)"
+        )
         user_payload = (
             f"USER MESSAGE:\n{user_message}\n\n"
             f"DRAFT RESPONSE:\n{response}\n\n"
@@ -269,8 +268,7 @@ class ObserverAudit:
 
         all_dims = ("hallucination", "sycophancy", "laziness", "tool_ignorance")
         present = [
-            d for d in all_dims
-            if isinstance(payload.get(d), dict) and "passed" in payload[d]
+            d for d in all_dims if isinstance(payload.get(d), dict) and "passed" in payload[d]
         ]
         if not present:
             log.warning("observer_schema_validation_failed", reason="no dimensions present")
@@ -309,8 +307,7 @@ class ObserverAudit:
         """
         blocking = self._config.observer.blocking_dimensions
         blocking_failed = [
-            name for name in blocking
-            if name in dimensions and not dimensions[name].passed
+            name for name in blocking if name in dimensions and not dimensions[name].passed
         ]
         overall_passed = not blocking_failed
 
@@ -376,8 +373,10 @@ class ObserverAudit:
                 retry_count=retry_count,
             )
             self._persist(
-                session_id=session_id, user_message=user_message,
-                response=response, result=result,
+                session_id=session_id,
+                user_message=user_message,
+                response=response,
+                result=result,
             )
             return result
 
@@ -391,8 +390,10 @@ class ObserverAudit:
                 retry_count=retry_count,
             )
             self._persist(
-                session_id=session_id, user_message=user_message,
-                response=response, result=result,
+                session_id=session_id,
+                user_message=user_message,
+                response=response,
+                result=result,
             )
             return result
 
@@ -419,8 +420,10 @@ class ObserverAudit:
             error_type=None,
         )
         self._persist(
-            session_id=session_id, user_message=user_message,
-            response=response, result=result,
+            session_id=session_id,
+            user_message=user_message,
+            response=response,
+            result=result,
         )
         return result
 
@@ -433,6 +436,7 @@ class ObserverAudit:
         retry_count: int = 0,
     ) -> AuditResult:
         """Construct a pass result used when the observer itself couldn't run."""
+
         def _skipped(name: str) -> DimensionResult:
             return DimensionResult(
                 name=name,  # type: ignore[arg-type]
@@ -441,12 +445,13 @@ class ObserverAudit:
                 evidence="",
                 fix_suggestion="",
             )
+
         return AuditResult(
             overall_passed=True,
             dimensions={
-                "hallucination":  _skipped("hallucination"),
-                "sycophancy":     _skipped("sycophancy"),
-                "laziness":       _skipped("laziness"),
+                "hallucination": _skipped("hallucination"),
+                "sycophancy": _skipped("sycophancy"),
+                "laziness": _skipped("laziness"),
                 "tool_ignorance": _skipped("tool_ignorance"),
             },
             retry_count=retry_count,
@@ -495,8 +500,14 @@ class ObserverAudit:
         # Extract tool suggestions by scanning the fix_suggestion for known
         # tool name patterns. Conservative: if none match, leave empty.
         known_tools = (
-            "web_search", "web_fetch", "search_memory", "search_and_read",
-            "read_file", "list_directory", "api_call", "exec_command",
+            "web_search",
+            "web_fetch",
+            "search_memory",
+            "search_and_read",
+            "read_file",
+            "list_directory",
+            "api_call",
+            "exec_command",
         )
         suggested = [t for t in known_tools if t in ti.fix_suggestion]
         return PGEReloopDirective(

@@ -114,7 +114,10 @@ class AuditStore:
 
         log.debug(
             "observer.audit session=%s model=%s passed=%s",
-            session_id, result.model, result.overall_passed)
+            session_id,
+            result.model,
+            result.overall_passed,
+        )
         dims_serialized = json.dumps(
             {name: asdict(dim) for name, dim in result.dimensions.items()},
             ensure_ascii=False,
