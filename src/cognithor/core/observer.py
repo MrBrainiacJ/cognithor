@@ -167,10 +167,42 @@ class ObserverAudit:
             {"role": "user", "content": user_payload},
         ]
 
+    async def _resolve_model(self) -> tuple[str, bool]:
+        """Return (model_name, degraded_mode).
+
+        Falls back to planner model if observer model is missing.
+        """
+        observer_model = self._config.models.observer.name
+        planner_model = self._config.models.planner.name
+        try:
+            available = await self._ollama.list_models()
+            if not isinstance(available, list | tuple):
+                return observer_model, False
+        except Exception:
+            # Can't list — assume observer model exists, proceed.
+            return observer_model, False
+        if observer_model in available:
+            return observer_model, False
+        if planner_model in available:
+            log.warning(
+                "observer_degraded_mode",
+                actual_model=planner_model,
+                intended_model=observer_model,
+            )
+            return planner_model, True
+        # Both missing: observer cannot run
+        log.warning(
+            "observer_disabled_runtime",
+            observer_model=observer_model,
+            planner_model=planner_model,
+        )
+        return "", True
+
     async def _call_llm_audit(
         self,
         *,
         messages: list[dict[str, str]],
+        model_override: str | None = None,
     ) -> str | None:
         """Call the Observer LLM with JSON format + timeout. Returns None on any failure.
 
@@ -178,7 +210,9 @@ class ObserverAudit:
         ``{"message": {"content": "..."}}``. If a ``ChatResponse`` dataclass is
         wired in later (Task 18), adapt accordingly.
         """
-        model_name = self._config.models.observer.name
+        model_name = model_override or self._config.models.observer.name
+        if not model_name:
+            return None
         timeout = self._config.observer.timeout_seconds
         try:
             response = await asyncio.wait_for(
@@ -303,13 +337,22 @@ class ObserverAudit:
     ) -> AuditResult:
         """Run the four-dimension audit. Always returns an AuditResult — never raises."""
         start = time.monotonic()
-        model = self._config.models.observer.name
 
         if self._circuit_open or not self._config.observer.enabled:
             # Fail-open placeholder: treat as pass so Core is never blocked.
             return self._fail_open_result(
-                model=model,
+                model=self._config.models.observer.name,
                 reason="circuit_open" if self._circuit_open else "disabled",
+                duration_ms=int((time.monotonic() - start) * 1000),
+                retry_count=retry_count,
+            )
+
+        model, degraded = await self._resolve_model()
+        if not model:
+            # Both observer and planner models unavailable.
+            return self._fail_open_result(
+                model=self._config.models.observer.name,
+                reason="model_unavailable",
                 duration_ms=int((time.monotonic() - start) * 1000),
                 retry_count=retry_count,
             )
@@ -319,7 +362,7 @@ class ObserverAudit:
             response=response,
             tool_results=tool_results,
         )
-        raw = await self._call_llm_audit(messages=messages)
+        raw = await self._call_llm_audit(messages=messages, model_override=model)
 
         if raw is None:
             self._record_failure_for_circuit_breaker()
@@ -369,7 +412,7 @@ class ObserverAudit:
             retry_strategy=strategy,
             model=model,
             duration_ms=int((time.monotonic() - start) * 1000),
-            degraded_mode=False,
+            degraded_mode=degraded,
             error_type=None,
         )
         self._persist(

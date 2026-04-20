@@ -498,3 +498,32 @@ class TestBuildPgeDirective:
             error_type=None,
         )
         assert observer.build_pge_directive(result) is None
+
+
+class TestDegradedMode:
+    async def test_observer_model_missing_falls_back_to_planner(self, observer):
+        # OllamaClient.list_models() indicates observer model missing, planner available.
+        observer._ollama = AsyncMock()
+        observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
+        # Audit itself succeeds.
+        _dim_json = '"passed": true, "reason": "", "evidence": "", "fix_suggestion": ""'
+        observer._ollama.chat = AsyncMock(return_value={"message": {"content": (
+            "{"
+            f'"hallucination":  {{{_dim_json}}},'
+            f'"sycophancy":     {{{_dim_json}}},'
+            f'"laziness":       {{{_dim_json}}},'
+            f'"tool_ignorance": {{{_dim_json}}}'
+            "}"
+        )}})
+        # Override observer model to an unavailable one.
+        from cognithor.models import ModelConfig
+        observer._config.models = observer._config.models.model_copy(
+            update={"observer": ModelConfig(name="nonexistent-model:99b")}
+        )
+
+        result = await observer.audit(
+            user_message="q", response="a", tool_results=[], session_id="s1",
+        )
+        assert result.degraded_mode is True
+        # Actual model used = planner model (qwen3:32b) since observer model was missing.
+        assert result.model == "qwen3:32b"
