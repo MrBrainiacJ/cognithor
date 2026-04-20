@@ -45,7 +45,7 @@ def runtime_monitor() -> RuntimeMonitor:
 @pytest.fixture
 def mock_config() -> MagicMock:
     config = MagicMock()
-    config.jarvis_home = Path(tempfile.gettempdir()) / "jarvis_test"
+    config.cognithor_home = Path(tempfile.gettempdir()) / "jarvis_test"
     config.executor = None  # Defaults statt MagicMock-Attribute
     return config
 

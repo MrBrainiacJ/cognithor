@@ -69,7 +69,7 @@ def _make_config_manager() -> MagicMock:
     cm = MagicMock()
     cm.config.version = "1.0.0"
     cm.config.owner_name = "test"
-    cm.config.jarvis_home = MagicMock()
+    cm.config.cognithor_home = MagicMock()
     cm.config.heartbeat.enabled = False
     cm.config.channels = MagicMock()
     cm.config.models.planner.name = "test"

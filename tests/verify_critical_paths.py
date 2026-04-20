@@ -7,7 +7,7 @@ import json
 import tempfile
 from unittest.mock import AsyncMock, MagicMock
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 
 
 def _run(coro):
@@ -16,7 +16,7 @@ def _run(coro):
 
 def test_01_pipeline_callback_delivery():
     """Pipeline event reaches the channel with correct structure."""
-    JarvisConfig(jarvis_home=tempfile.mkdtemp())
+    CognithorConfig(cognithor_home=tempfile.mkdtemp())
     mock_channel = AsyncMock()
     mock_channel.send_pipeline_event = AsyncMock()
 
@@ -67,7 +67,7 @@ def test_02_non_webui_channel_noop():
 
 def test_03_verified_lookup_full_pipeline():
     """Verified Lookup returns answer with confidence from mocked sources."""
-    cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+    cfg = CognithorConfig(cognithor_home=tempfile.mkdtemp())
     from cognithor.mcp.verified_lookup import VerifiedWebLookup
 
     vl = VerifiedWebLookup(cfg)
@@ -118,7 +118,7 @@ def test_04_locked_enforcement():
 
 def test_05_auto_cross_check():
     """Executor injects cross_check=True for fact questions."""
-    cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+    cfg = CognithorConfig(cognithor_home=tempfile.mkdtemp())
     from cognithor.core.executor import Executor, _fact_question_var
     from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel
 
@@ -159,7 +159,7 @@ def test_06_sanitizer():
 
 def test_07_extract_plan_false_positives():
     """Braces alone dont trigger parse_failed, JSON keys do."""
-    cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+    cfg = CognithorConfig(cognithor_home=tempfile.mkdtemp())
     ensure_directory_structure(cfg)
     from cognithor.core.planner import Planner
 
@@ -201,7 +201,7 @@ def test_08_i18n_all_keys():
 
 def test_09_gatekeeper_green():
     """verified_web_lookup is classified as GREEN."""
-    cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+    cfg = CognithorConfig(cognithor_home=tempfile.mkdtemp())
     from cognithor.core.gatekeeper import Gatekeeper
     from cognithor.models import PlannedAction, RiskLevel
 

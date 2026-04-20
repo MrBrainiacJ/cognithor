@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 def gateway(tmp_path: Path) -> Gateway:
     """Minimal-Gateway für Session-Tests."""
     config = MagicMock()
-    config.jarvis_home = tmp_path
+    config.cognithor_home = tmp_path
     config.core_memory_path = tmp_path / "CORE.md"
     config.workspace_dir = tmp_path / "workspace"
     config.security.max_iterations = 10

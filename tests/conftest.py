@@ -1,5 +1,5 @@
 """
-Jarvis · Shared Test-Fixtures.
+Cognithor · Shared Test-Fixtures.
 
 Alle Tests nutzen ein temporäres Verzeichnis statt ~/.cognithor/.
 So sind Tests isoliert und reproduzierbar.
@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.i18n import set_locale
 
 if TYPE_CHECKING:
@@ -58,13 +58,13 @@ def tmp_jarvis_home(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def config(tmp_jarvis_home: Path) -> JarvisConfig:
-    """JarvisConfig mit temporärem Home-Verzeichnis."""
-    return JarvisConfig(jarvis_home=tmp_jarvis_home)
+def config(tmp_jarvis_home: Path) -> CognithorConfig:
+    """CognithorConfig mit temporärem Home-Verzeichnis."""
+    return CognithorConfig(cognithor_home=tmp_jarvis_home)
 
 
 @pytest.fixture
-def initialized_config(config: JarvisConfig) -> JarvisConfig:
-    """JarvisConfig mit erstellter Verzeichnisstruktur."""
+def initialized_config(config: CognithorConfig) -> CognithorConfig:
+    """CognithorConfig mit erstellter Verzeichnisstruktur."""
     ensure_directory_structure(config)
     return config

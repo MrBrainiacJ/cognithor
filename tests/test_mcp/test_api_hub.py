@@ -19,7 +19,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.api_hub import (
     API_TEMPLATES,
     APIHub,
@@ -41,9 +41,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(tmp_path)],
         ),
@@ -53,7 +53,7 @@ def config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def hub(config: JarvisConfig) -> APIHub:
+def hub(config: CognithorConfig) -> APIHub:
     return APIHub(config)
 
 
@@ -292,11 +292,11 @@ class TestRateLimiter:
 class TestIntegrationStorage:
     """Tests fuer _load_integrations / _save_integrations."""
 
-    def test_empty_load(self, config: JarvisConfig) -> None:
+    def test_empty_load(self, config: CognithorConfig) -> None:
         data = _load_integrations(config)
         assert data == {}
 
-    def test_save_and_load(self, config: JarvisConfig) -> None:
+    def test_save_and_load(self, config: CognithorConfig) -> None:
         test_data = {
             "github": {
                 "base_url": "https://api.github.com",
@@ -309,9 +309,9 @@ class TestIntegrationStorage:
         assert loaded["github"]["base_url"] == "https://api.github.com"
         assert loaded["github"]["auth_type"] == "bearer"
 
-    def test_save_creates_directory(self, config: JarvisConfig) -> None:
+    def test_save_creates_directory(self, config: CognithorConfig) -> None:
         # Remove the directory if it exists
-        path = config.jarvis_home / "integrations.json"
+        path = config.cognithor_home / "integrations.json"
         _save_integrations(config, {"test": {}})
         assert path.exists()
 
@@ -329,7 +329,7 @@ class TestApiList:
         assert "No integrations configured" in result
         assert "Available Templates" in result
 
-    async def test_list_with_integration(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_list_with_integration(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -354,7 +354,7 @@ class TestApiList:
 class TestApiConnect:
     """Tests fuer api_connect."""
 
-    async def test_connect_with_template(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_connect_with_template(self, hub: APIHub, config: CognithorConfig) -> None:
         with (
             patch.dict(os.environ, {"GITHUB_TOKEN": "ghp_test123"}),
             patch.object(hub, "_health_check", return_value=(True, "OK (HTTP 200)")),
@@ -407,7 +407,7 @@ class TestApiConnect:
         assert "Error" in result
         assert "base_url is required" in result
 
-    async def test_connect_persists(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_connect_persists(self, hub: APIHub, config: CognithorConfig) -> None:
         await hub.api_connect(
             name="test",
             base_url="https://api.example.com",
@@ -426,7 +426,7 @@ class TestApiCall:
         assert "Error" in result
         assert "not found" in result
 
-    async def test_call_invalid_method(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_call_invalid_method(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -441,7 +441,7 @@ class TestApiCall:
         assert "Error" in result
         assert "Invalid method" in result
 
-    async def test_call_no_credential(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_call_no_credential(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -460,7 +460,7 @@ class TestApiCall:
             assert "Error" in result
             assert "Credential not available" in result
 
-    async def test_call_success(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_call_success(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -479,7 +479,7 @@ class TestApiCall:
             assert "Status: 200" in result
             assert '"ok": true' in result
 
-    async def test_call_rate_limited(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_call_rate_limited(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -499,7 +499,7 @@ class TestApiCall:
             result = await hub.api_call(integration="test")
             assert "Rate limit" in result
 
-    async def test_call_with_body(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_call_with_body(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -524,7 +524,7 @@ class TestApiCall:
             _, kwargs = mock.call_args
             assert kwargs.get("body") == {"name": "test"}
 
-    async def test_call_api_key_auth_params(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_call_api_key_auth_params(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -551,7 +551,7 @@ class TestApiCall:
 class TestApiDisconnect:
     """Tests fuer api_disconnect."""
 
-    async def test_disconnect_existing(self, hub: APIHub, config: JarvisConfig) -> None:
+    async def test_disconnect_existing(self, hub: APIHub, config: CognithorConfig) -> None:
         _save_integrations(
             config,
             {
@@ -577,7 +577,7 @@ class TestApiDisconnect:
 class TestRegistration:
     """Tests fuer register_api_hub_tools."""
 
-    def test_registration(self, mock_mcp_client: MagicMock, config: JarvisConfig) -> None:
+    def test_registration(self, mock_mcp_client: MagicMock, config: CognithorConfig) -> None:
         result = register_api_hub_tools(mock_mcp_client, config)
         assert result is not None
         assert isinstance(result, APIHub)

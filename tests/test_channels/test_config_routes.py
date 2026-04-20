@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import yaml
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.config_manager import ConfigManager
 
 if TYPE_CHECKING:
@@ -66,12 +66,12 @@ def tmp_home(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def config(tmp_home: Path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_home)
+def config(tmp_home: Path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_home)
 
 
 @pytest.fixture
-def config_manager(config: JarvisConfig) -> ConfigManager:
+def config_manager(config: CognithorConfig) -> ConfigManager:
     return ConfigManager(config=config)
 
 
@@ -226,9 +226,9 @@ class TestSystemRoutes:
 
     @pytest.mark.asyncio
     async def test_list_agents_with_file(
-        self, registered_app: FakeApp, config: JarvisConfig
+        self, registered_app: FakeApp, config: CognithorConfig
     ) -> None:
-        agents_path = config.jarvis_home / "agents.yaml"
+        agents_path = config.cognithor_home / "agents.yaml"
         agents_path.parent.mkdir(parents=True, exist_ok=True)
         agents_path.write_text(
             yaml.dump({"agents": [{"name": "test-agent", "enabled": True}]}),
@@ -270,9 +270,9 @@ class TestSystemRoutes:
 
     @pytest.mark.asyncio
     async def test_list_bindings_with_file(
-        self, registered_app: FakeApp, config: JarvisConfig
+        self, registered_app: FakeApp, config: CognithorConfig
     ) -> None:
-        bindings_path = config.jarvis_home / "bindings.yaml"
+        bindings_path = config.cognithor_home / "bindings.yaml"
         bindings_path.parent.mkdir(parents=True, exist_ok=True)
         bindings_path.write_text(
             yaml.dump({"bindings": [{"name": "b1", "channel": "telegram"}]}),

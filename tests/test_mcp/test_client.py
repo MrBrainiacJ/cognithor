@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 import yaml
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.client import JarvisMCPClient, ToolCallResult
 
 if TYPE_CHECKING:
@@ -29,9 +29,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),
     )
     ensure_directory_structure(cfg)
@@ -39,7 +39,7 @@ def config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def client(config: JarvisConfig) -> JarvisMCPClient:
+def client(config: CognithorConfig) -> JarvisMCPClient:
     return JarvisMCPClient(config)
 
 
@@ -222,7 +222,7 @@ class TestServerConfigLoading:
         configs = client._load_server_configs()
         assert configs == {}
 
-    def test_load_valid_config(self, config: JarvisConfig) -> None:
+    def test_load_valid_config(self, config: CognithorConfig) -> None:
         """Gültige YAML-Config wird geladen."""
         mcp_config = {
             "servers": {
@@ -243,7 +243,7 @@ class TestServerConfigLoading:
         assert configs["my-server"].transport == "stdio"
         assert configs["my-server"].command == "python"
 
-    def test_load_disabled_server(self, config: JarvisConfig) -> None:
+    def test_load_disabled_server(self, config: CognithorConfig) -> None:
         """Deaktivierte Server werden geladen aber nicht verbunden."""
         mcp_config = {
             "servers": {
@@ -261,7 +261,7 @@ class TestServerConfigLoading:
         configs = client._load_server_configs()
         assert configs["disabled-server"].enabled is False
 
-    def test_load_invalid_server_entry(self, config: JarvisConfig) -> None:
+    def test_load_invalid_server_entry(self, config: CognithorConfig) -> None:
         """Ungültige Server-Einträge werden übersprungen."""
         mcp_config = {
             "servers": {
@@ -280,7 +280,7 @@ class TestServerConfigLoading:
         assert "good-server" in configs
         assert "bad-server" not in configs
 
-    def test_load_empty_yaml(self, config: JarvisConfig) -> None:
+    def test_load_empty_yaml(self, config: CognithorConfig) -> None:
         """Leere YAML-Datei gibt keine Server zurück."""
         config.mcp_config_file.parent.mkdir(parents=True, exist_ok=True)
         config.mcp_config_file.write_text("")
@@ -289,7 +289,7 @@ class TestServerConfigLoading:
         configs = client._load_server_configs()
         assert configs == {}
 
-    def test_load_yaml_without_servers_key(self, config: JarvisConfig) -> None:
+    def test_load_yaml_without_servers_key(self, config: CognithorConfig) -> None:
         """YAML ohne 'servers' Key gibt keine Server zurück."""
         config.mcp_config_file.parent.mkdir(parents=True, exist_ok=True)
         config.mcp_config_file.write_text(yaml.dump({"other_key": "value"}))
@@ -329,7 +329,7 @@ class TestDisconnect:
 
 class TestBuiltinIntegration:
     @pytest.mark.asyncio
-    async def test_filesystem_via_client(self, config: JarvisConfig) -> None:
+    async def test_filesystem_via_client(self, config: CognithorConfig) -> None:
         """FileSystem-Tools über den MCP-Client aufrufen."""
         from cognithor.mcp.filesystem import register_fs_tools
 
@@ -379,7 +379,7 @@ class TestBuiltinIntegration:
         assert "Jarvis Welt" in result.content
 
     @pytest.mark.asyncio
-    async def test_shell_via_client(self, config: JarvisConfig) -> None:
+    async def test_shell_via_client(self, config: CognithorConfig) -> None:
         """Shell-Tool über den MCP-Client aufrufen."""
         from cognithor.mcp.shell import register_shell_tools
 
@@ -391,7 +391,7 @@ class TestBuiltinIntegration:
         assert "Hallo von Shell" in result.content
 
     @pytest.mark.asyncio
-    async def test_all_tools_combined(self, config: JarvisConfig) -> None:
+    async def test_all_tools_combined(self, config: CognithorConfig) -> None:
         """Alle Tools zusammen registriert und nutzbar."""
         from cognithor.mcp.filesystem import register_fs_tools
         from cognithor.mcp.shell import register_shell_tools

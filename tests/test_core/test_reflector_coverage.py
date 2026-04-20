@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.core.reflector import Reflector, _safe_float, _sanitize_memory_text
 from cognithor.models import (
     ActionPlan,
@@ -19,8 +19,8 @@ from cognithor.models import (
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
@@ -80,17 +80,17 @@ def _make_agent_result(
 
 
 class TestShouldReflect:
-    def test_should_reflect_with_tools(self, config: JarvisConfig) -> None:
+    def test_should_reflect_with_tools(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         agent_result = _make_agent_result(iterations=2, has_actions=True)
         assert reflector.should_reflect(agent_result) is True
 
-    def test_should_not_reflect_zero_iterations(self, config: JarvisConfig) -> None:
+    def test_should_not_reflect_zero_iterations(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         agent_result = _make_agent_result(iterations=0, has_actions=True)
         assert reflector.should_reflect(agent_result) is False
 
-    def test_should_not_reflect_no_plans(self, config: JarvisConfig) -> None:
+    def test_should_not_reflect_no_plans(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         agent_result = AgentResult(
             response="Test",
@@ -102,7 +102,7 @@ class TestShouldReflect:
         )
         assert reflector.should_reflect(agent_result) is False
 
-    def test_should_not_reflect_no_tool_calls(self, config: JarvisConfig) -> None:
+    def test_should_not_reflect_no_tool_calls(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         agent_result = _make_agent_result(iterations=2, has_actions=False)
         assert reflector.should_reflect(agent_result) is False
@@ -114,7 +114,7 @@ class TestShouldReflect:
 
 
 class TestExtractKeywords:
-    def test_extract_keywords_basic(self, config: JarvisConfig) -> None:
+    def test_extract_keywords_basic(self, config: CognithorConfig) -> None:
         keywords = Reflector.extract_keywords(
             "Python ist eine Programmiersprache fuer Data Science"
         )
@@ -124,7 +124,7 @@ class TestExtractKeywords:
         assert "ist" not in keywords
         assert "eine" not in keywords
 
-    def test_extract_keywords_empty(self, config: JarvisConfig) -> None:
+    def test_extract_keywords_empty(self, config: CognithorConfig) -> None:
         keywords = Reflector.extract_keywords("")
         assert keywords == []
 
@@ -145,7 +145,7 @@ class TestExtractKeywords:
 
 class TestReflect:
     @pytest.mark.asyncio
-    async def test_reflect_returns_result(self, config: JarvisConfig) -> None:
+    async def test_reflect_returns_result(self, config: CognithorConfig) -> None:
         llm_response = (
             '{"evaluation":"Good session","success_score":0.8,'
             '"extracted_facts":[],"session_summary":{"goal":"test",'
@@ -165,7 +165,7 @@ class TestReflect:
         assert reflection is not None
 
     @pytest.mark.asyncio
-    async def test_reflect_llm_error_fallback(self, config: JarvisConfig) -> None:
+    async def test_reflect_llm_error_fallback(self, config: CognithorConfig) -> None:
         """LLM error should use fallback reflection."""
         from cognithor.core.model_router import OllamaError
 
@@ -186,7 +186,7 @@ class TestReflect:
         assert reflection is not None
 
     @pytest.mark.asyncio
-    async def test_reflect_with_audit_logger(self, config: JarvisConfig) -> None:
+    async def test_reflect_with_audit_logger(self, config: CognithorConfig) -> None:
         llm_response = '{"evaluation":"OK","success_score":0.5,"extracted_facts":[]}'
         mock_audit = MagicMock()
         mock_audit.log_tool_call = MagicMock()
@@ -211,14 +211,14 @@ class TestReflect:
 
 
 class TestMatchProcedures:
-    def test_match_procedures_no_keywords(self, config: JarvisConfig) -> None:
+    def test_match_procedures_no_keywords(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         mock_proc_mem = MagicMock()
         # No keywords => no matches
         results = reflector.match_procedures("ist die der", mock_proc_mem)
         assert results == []
 
-    def test_match_procedures_with_results(self, config: JarvisConfig) -> None:
+    def test_match_procedures_with_results(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         mock_proc_mem = MagicMock()
         mock_meta = MagicMock()
@@ -232,7 +232,7 @@ class TestMatchProcedures:
         assert len(results) == 1
         assert results[0] == "procedure body here"
 
-    def test_match_procedures_low_success_rate_skipped(self, config: JarvisConfig) -> None:
+    def test_match_procedures_low_success_rate_skipped(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         mock_proc_mem = MagicMock()
         mock_meta = MagicMock()
@@ -253,7 +253,7 @@ class TestMatchProcedures:
 
 class TestApply:
     @pytest.mark.asyncio
-    async def test_apply_empty_result(self, config: JarvisConfig) -> None:
+    async def test_apply_empty_result(self, config: CognithorConfig) -> None:
         reflector = Reflector(config, _mock_ollama(), _mock_router())
         from cognithor.models import ReflectionResult
 
@@ -308,7 +308,7 @@ class TestApplyExtended:
     """Erweiterte Tests fuer Reflector.apply() mit verschiedenen ReflectionResult-Varianten."""
 
     @pytest.mark.asyncio
-    async def test_apply_with_session_summary(self, config: JarvisConfig) -> None:
+    async def test_apply_with_session_summary(self, config: CognithorConfig) -> None:
         """ReflectionResult mit session_summary -> episodic count > 0."""
         from cognithor.models import ReflectionResult, SessionSummary
 
@@ -332,7 +332,7 @@ class TestApplyExtended:
         mock_mm.episodic.append_entry.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_apply_with_extracted_facts(self, config: JarvisConfig) -> None:
+    async def test_apply_with_extracted_facts(self, config: CognithorConfig) -> None:
         """ReflectionResult mit ExtractedFact-Entities -> semantic count > 0."""
         from cognithor.models import ExtractedFact, ReflectionResult
 
@@ -362,7 +362,7 @@ class TestApplyExtended:
         mock_indexer.upsert_entity.assert_called()
 
     @pytest.mark.asyncio
-    async def test_apply_with_procedure_candidate(self, config: JarvisConfig) -> None:
+    async def test_apply_with_procedure_candidate(self, config: CognithorConfig) -> None:
         """ReflectionResult mit ProcedureCandidate -> procedural count > 0."""
         from cognithor.models import ProcedureCandidate, ReflectionResult
 
@@ -390,7 +390,7 @@ class TestApplyExtended:
         mock_proc.record_usage.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_apply_with_all_types(self, config: JarvisConfig) -> None:
+    async def test_apply_with_all_types(self, config: CognithorConfig) -> None:
         """Alle drei Typen (episodic, semantic, procedural) vorhanden -> alle counts > 0."""
         from cognithor.models import (
             ExtractedFact,
@@ -446,7 +446,7 @@ class TestApplyExtended:
         assert counts["procedural"] > 0
 
     @pytest.mark.asyncio
-    async def test_apply_memory_manager_error(self, config: JarvisConfig) -> None:
+    async def test_apply_memory_manager_error(self, config: CognithorConfig) -> None:
         """memory_manager wirft Exception -> wird graceful abgefangen."""
         from cognithor.models import ReflectionResult, SessionSummary
 
@@ -479,7 +479,7 @@ class TestWriteSemantic:
     """Tests fuer Reflector._write_semantic -- Entitaeten, Relationen, Sanitization."""
 
     @pytest.mark.asyncio
-    async def test_write_semantic_entity(self, config: JarvisConfig) -> None:
+    async def test_write_semantic_entity(self, config: CognithorConfig) -> None:
         """ExtractedFact mit entity_name und attributes -> Entitaet wird angelegt."""
         from cognithor.models import ExtractedFact
 
@@ -507,7 +507,7 @@ class TestWriteSemantic:
         assert entity_arg.name == "Docker"
 
     @pytest.mark.asyncio
-    async def test_write_semantic_relation(self, config: JarvisConfig) -> None:
+    async def test_write_semantic_relation(self, config: CognithorConfig) -> None:
         """ExtractedFact mit relation_type und relation_target -> Relation wird erstellt."""
         from cognithor.models import ExtractedFact
 
@@ -534,7 +534,7 @@ class TestWriteSemantic:
         mock_indexer.upsert_relation.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_write_semantic_sanitizes_text(self, config: JarvisConfig) -> None:
+    async def test_write_semantic_sanitizes_text(self, config: CognithorConfig) -> None:
         """ExtractedFact mit Injection-Patterns -> Felder werden sanitized."""
         from cognithor.models import ExtractedFact
 
@@ -571,7 +571,7 @@ class TestReflectExtended:
     """Erweiterte Tests fuer Reflector.reflect() mit optionalen Stores."""
 
     @pytest.mark.asyncio
-    async def test_reflect_with_episodic_store(self, config: JarvisConfig) -> None:
+    async def test_reflect_with_episodic_store(self, config: CognithorConfig) -> None:
         """episodic_store vorhanden -> store_episode wird aufgerufen."""
         llm_response = (
             '{"evaluation":"OK","success_score":0.8,"extracted_facts":[],'
@@ -594,7 +594,7 @@ class TestReflectExtended:
         mock_episodic_store.store_episode.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_reflect_with_causal_analyzer(self, config: JarvisConfig) -> None:
+    async def test_reflect_with_causal_analyzer(self, config: CognithorConfig) -> None:
         """causal_analyzer vorhanden -> record_sequence wird aufgerufen."""
         llm_response = '{"evaluation":"OK","success_score":0.7,"extracted_facts":[]}'
         mock_causal = MagicMock()

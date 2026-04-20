@@ -652,11 +652,11 @@ class TestHttpRequest:
 
     def test_http_request_gatekeeper_orange(self, tmp_path) -> None:
         """_classify_risk() → ORANGE für http_request."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction, RiskLevel
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         gk = Gatekeeper(config)
         action = PlannedAction(tool="http_request", params={"url": "https://example.com"})
 
@@ -665,10 +665,10 @@ class TestHttpRequest:
 
     def test_http_request_config_values(self, tmp_path) -> None:
         """http_request nutzt Config-Werte für Limits."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             web={
                 "http_request_max_body_bytes": 2048,
                 "http_request_timeout_seconds": 60,
@@ -683,10 +683,10 @@ class TestHttpRequest:
     @pytest.mark.asyncio
     async def test_http_request_body_too_large_uses_config(self, tmp_path) -> None:
         """Body-Limit wird aus Config geladen."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             web={"http_request_max_body_bytes": 1024},
         )
         web = WebTools(config=config)

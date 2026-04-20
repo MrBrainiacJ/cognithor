@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.config_manager import ConfigManager
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 class TestConfigManagerRead:
     def test_read_returns_dict(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         result = mgr.read()
@@ -38,8 +38,8 @@ class TestConfigManagerRead:
         assert "channels" in result
 
     def test_read_masks_secrets(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             openai_api_key="sk-real-key-12345",
             anthropic_api_key="sk-ant-real-key",
         )
@@ -50,8 +50,8 @@ class TestConfigManagerRead:
         assert result["anthropic_api_key"] == "***"
 
     def test_read_includes_secrets_when_requested(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             openai_api_key="sk-real-key-12345",
         )
         mgr = ConfigManager(config=config)
@@ -60,7 +60,7 @@ class TestConfigManagerRead:
         assert result["openai_api_key"] == "sk-real-key-12345"
 
     def test_read_section(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         planner = mgr.read_section("planner")
@@ -69,18 +69,18 @@ class TestConfigManagerRead:
         assert "max_iterations" in planner
 
     def test_read_section_unknown(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         result = mgr.read_section("nonexistent")
         assert result is None
 
-    def test_jarvis_home_is_string(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+    def test_cognithor_home_is_string(self, tmp_path: Path) -> None:
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         result = mgr.read()
-        assert isinstance(result["jarvis_home"], str)
+        assert isinstance(result["cognithor_home"], str)
 
 
 # ===========================================================================
@@ -90,21 +90,21 @@ class TestConfigManagerRead:
 
 class TestConfigManagerUpdate:
     def test_update_section_planner(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         mgr.update_section("planner", {"temperature": 0.9})
         assert mgr.config.planner.temperature == 0.9
 
     def test_update_section_memory(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         mgr.update_section("memory", {"search_top_k": 12})
         assert mgr.config.memory.search_top_k == 12
 
     def test_update_section_channels(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         mgr.update_section("channels", {"telegram_enabled": True, "slack_enabled": True})
@@ -112,7 +112,7 @@ class TestConfigManagerUpdate:
         assert mgr.config.channels.slack_enabled is True
 
     def test_update_section_heartbeat(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         mgr.update_section("heartbeat", {"enabled": True, "interval_minutes": 15})
@@ -120,7 +120,7 @@ class TestConfigManagerUpdate:
         assert mgr.config.heartbeat.interval_minutes == 15
 
     def test_update_section_preserves_other_values(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         original_iterations = config.planner.max_iterations
@@ -130,14 +130,14 @@ class TestConfigManagerUpdate:
         assert mgr.config.planner.max_iterations == original_iterations
 
     def test_update_invalid_section_raises(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         with pytest.raises(ValueError, match="nicht editierbar"):
-            mgr.update_section("jarvis_home", {"value": "/tmp"})
+            mgr.update_section("cognithor_home", {"value": "/tmp"})
 
     def test_update_with_invalid_value_raises(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         # temperature muss zwischen 0.0 und 2.0 sein
@@ -145,21 +145,21 @@ class TestConfigManagerUpdate:
             mgr.update_section("planner", {"temperature": 99.0})
 
     def test_update_top_level_owner_name(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         mgr.update_top_level("owner_name", "Alexander")
         assert mgr.config.owner_name == "Alexander"
 
     def test_update_top_level_llm_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         mgr.update_top_level("llm_backend_type", "anthropic")
         assert mgr.config.llm_backend_type == "anthropic"
 
     def test_update_top_level_invalid_field(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         with pytest.raises(ValueError, match="nicht editierbar"):
@@ -173,7 +173,7 @@ class TestConfigManagerUpdate:
 
 class TestConfigManagerPersistence:
     def test_save_creates_file(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
 
         target = tmp_path / "test_config.yaml"
@@ -186,8 +186,8 @@ class TestConfigManagerPersistence:
         assert "memory" in content
 
     def test_save_does_not_store_masked_secrets(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             openai_api_key="sk-real-key",
         )
         mgr = ConfigManager(config=config)
@@ -200,9 +200,9 @@ class TestConfigManagerPersistence:
         assert "sk-real-key" in content
 
     def test_save_triggers_on_reload(self, tmp_path: Path) -> None:
-        reloaded: list[JarvisConfig] = []
+        reloaded: list[CognithorConfig] = []
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config, on_reload=reloaded.append)
 
         mgr.save(tmp_path / "test.yaml")
@@ -242,7 +242,7 @@ class TestConfigManagerMeta:
         assert "llm_backend_type" in fields
 
     def test_config_property(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
         assert mgr.config is config
 
@@ -257,7 +257,7 @@ class TestConfigRoutes:
 
     @pytest.fixture()
     def mgr(self, tmp_path: Path) -> ConfigManager:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         return ConfigManager(config=config)
 
     @pytest.fixture()

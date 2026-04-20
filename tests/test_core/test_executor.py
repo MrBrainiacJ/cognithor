@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.executor import Executor
 from cognithor.models import (
     GateDecision,
@@ -36,8 +36,8 @@ class MockToolResult:
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_path)
 
 
 @pytest.fixture()
@@ -49,7 +49,7 @@ def mock_mcp() -> AsyncMock:
 
 
 @pytest.fixture()
-def executor(config: JarvisConfig, mock_mcp: AsyncMock) -> Executor:
+def executor(config: CognithorConfig, mock_mcp: AsyncMock) -> Executor:
     return Executor(config, mock_mcp)
 
 
@@ -194,7 +194,7 @@ class TestErrorHandling:
         assert results[0].error_type == "RuntimeError"
 
     @pytest.mark.asyncio
-    async def test_no_mcp_client(self, config: JarvisConfig) -> None:
+    async def test_no_mcp_client(self, config: CognithorConfig) -> None:
         executor = Executor(config, mcp_client=None)
         action = PlannedAction(tool="test", params={})
         results = await executor.execute([action], [_allow_decision(action)])
@@ -436,18 +436,18 @@ class TestParallelExecution:
 class TestMaxParallelFromConfig:
     def test_max_parallel_from_config(self, tmp_path) -> None:
         """max_parallel_tools wird aus ExecutorConfig gelesen."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         config.executor.max_parallel_tools = 8
         executor = Executor(config, AsyncMock())
         assert executor._max_parallel == 8
 
     def test_max_parallel_default(self, tmp_path) -> None:
         """Default max_parallel_tools ist 4."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         executor = Executor(config, AsyncMock())
         assert executor._max_parallel == 4
 

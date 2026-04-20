@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.memory.manager import MemoryManager
 from cognithor.models import MemoryTier
 
@@ -15,17 +15,17 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def config(tmp_path: Path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+def config(tmp_path: Path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_path / ".cognithor")
 
 
 @pytest.fixture
-def manager(config: JarvisConfig) -> MemoryManager:
+def manager(config: CognithorConfig) -> MemoryManager:
     return MemoryManager(config)
 
 
 class TestMemoryManagerInit:
-    def test_initialize(self, manager: MemoryManager, config: JarvisConfig):
+    def test_initialize(self, manager: MemoryManager, config: CognithorConfig):
         stats = manager.initialize_sync()
         assert stats["initialized"]
         assert config.memory_dir.exists()
@@ -40,7 +40,7 @@ class TestMemoryManagerInit:
         content = manager.core.content
         assert "Identität" in content
 
-    def test_loads_existing_core(self, manager: MemoryManager, config: JarvisConfig):
+    def test_loads_existing_core(self, manager: MemoryManager, config: CognithorConfig):
         config.core_memory_path.parent.mkdir(parents=True, exist_ok=True)
         config.core_memory_path.write_text("# Custom\nMy custom core\n", encoding="utf-8")
         manager.initialize_sync()
@@ -57,7 +57,7 @@ class TestMemoryManagerInit:
 
 
 class TestMemoryManagerIndexing:
-    def test_index_file(self, manager: MemoryManager, config: JarvisConfig):
+    def test_index_file(self, manager: MemoryManager, config: CognithorConfig):
         manager.initialize_sync()
 
         # Erstelle eine Test-Datei
@@ -79,7 +79,7 @@ class TestMemoryManagerIndexing:
         )
         assert count >= 1
 
-    def test_reindex_all(self, manager: MemoryManager, config: JarvisConfig):
+    def test_reindex_all(self, manager: MemoryManager, config: CognithorConfig):
         manager.initialize_sync()
 
         # Erstelle Dateien in verschiedenen Tiers
@@ -95,7 +95,7 @@ class TestMemoryManagerIndexing:
         assert counts.get("episodic", 0) >= 0
         assert counts.get("semantic", 0) >= 0
 
-    def test_index_replaces_old(self, manager: MemoryManager, config: JarvisConfig):
+    def test_index_replaces_old(self, manager: MemoryManager, config: CognithorConfig):
         manager.initialize_sync()
 
         test_file = config.knowledge_dir / "test.md"
@@ -112,7 +112,7 @@ class TestMemoryManagerIndexing:
 
 
 class TestMemoryManagerSearch:
-    def test_sync_search(self, manager: MemoryManager, config: JarvisConfig):
+    def test_sync_search(self, manager: MemoryManager, config: CognithorConfig):
         manager.initialize_sync()
         manager.index_text(
             "Projektmanagement für Entwicklerteams",

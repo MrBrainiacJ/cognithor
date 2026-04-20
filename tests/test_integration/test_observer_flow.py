@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.observer import PGEReloopDirective, ResponseEnvelope
 
 
@@ -13,7 +13,7 @@ class TestPGEReloopDirectiveHandling:
         """A ResponseEnvelope with directive causes the PGE phase to re-enter planning."""
         from cognithor.gateway.observer_directive import handle_observer_directive
 
-        cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        cfg = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         session_state: dict = {
             "seen_observer_feedback_hashes": set(),
             "pge_iteration_count": 0,
@@ -45,7 +45,7 @@ class TestPGEReloopDirectiveHandling:
     async def test_pge_budget_exhausted_downgrades(self, tmp_path):
         from cognithor.gateway.observer_directive import handle_observer_directive
 
-        cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        cfg = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         cfg.security.max_iterations = 3
         session_state: dict = {
             "seen_observer_feedback_hashes": set(),
@@ -66,7 +66,7 @@ class TestPGEReloopDirectiveHandling:
     async def test_seen_hashes_set_is_pruned_when_over_100(self, tmp_path):
         from cognithor.gateway.observer_directive import handle_observer_directive
 
-        cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        cfg = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         session_state: dict = {
             "seen_observer_feedback_hashes": {f"hash_{i}" for i in range(100)},
             "pge_iteration_count": 0,
@@ -107,7 +107,7 @@ class TestGatewayObserverIntegration:
             ]
         )
 
-        cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        cfg = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         session_state: dict = {
             "seen_observer_feedback_hashes": set(),
             "pge_iteration_count": 0,
@@ -150,11 +150,11 @@ class TestGatewayEndToEnd:
         # own namespace — not only in the source module.
         monkeypatch.setattr(gw_module, "run_pge_with_observer_directive", _spy)
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.gateway.gateway import Gateway
         from cognithor.models import WorkingMemory
 
-        cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        cfg = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         cfg.observer.enabled = False  # no LLM needed for observer
 
         # Build a Gateway instance without calling initialize() — we only need

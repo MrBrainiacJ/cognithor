@@ -1,4 +1,4 @@
-"""Tests fuer SessionAnalyzer -- Feedback-Loop fuer Jarvis Self-Improvement."""
+"""Tests fuer SessionAnalyzer -- Feedback-Loop fuer Cognithor Self-Improvement."""
 
 from __future__ import annotations
 

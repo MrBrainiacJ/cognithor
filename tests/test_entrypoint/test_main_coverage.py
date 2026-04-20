@@ -6,12 +6,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
@@ -22,7 +22,7 @@ def config(tmp_path) -> JarvisConfig:
 
 
 class TestPrintBanner:
-    def test_banner_ollama(self, config: JarvisConfig, capsys) -> None:
+    def test_banner_ollama(self, config: CognithorConfig, capsys) -> None:
         from cognithor.__main__ import _print_banner
 
         _print_banner(config, api_host="127.0.0.1", api_port=8741)
@@ -31,7 +31,7 @@ class TestPrintBanner:
         assert "Agent OS" in captured.out
         assert "8741" in captured.out
 
-    def test_banner_lmstudio(self, config: JarvisConfig, capsys) -> None:
+    def test_banner_lmstudio(self, config: CognithorConfig, capsys) -> None:
         from cognithor.__main__ import _print_banner
 
         config.llm_backend_type = "lmstudio"
@@ -40,7 +40,7 @@ class TestPrintBanner:
         captured = capsys.readouterr()
         assert "LM Studio" in captured.out
 
-    def test_banner_other_backend(self, config: JarvisConfig, capsys) -> None:
+    def test_banner_other_backend(self, config: CognithorConfig, capsys) -> None:
         from cognithor.__main__ import _print_banner
 
         config.llm_backend_type = "openai"
@@ -48,7 +48,7 @@ class TestPrintBanner:
         captured = capsys.readouterr()
         assert "openai" in captured.out.lower() or "LLM" in captured.out
 
-    def test_banner_with_ssl(self, config: JarvisConfig, capsys) -> None:
+    def test_banner_with_ssl(self, config: CognithorConfig, capsys) -> None:
         from cognithor.__main__ import _print_banner
 
         config.security.ssl_certfile = "/path/to/cert.pem"
@@ -139,7 +139,7 @@ class TestMainInitOnly:
                 mock_parse.return_value = mock_args
 
                 with patch("cognithor.config.load_config") as mock_load:
-                    cfg = JarvisConfig(jarvis_home=tmp_path)
+                    cfg = CognithorConfig(cognithor_home=tmp_path)
                     ensure_directory_structure(cfg)
                     mock_load.return_value = cfg
 

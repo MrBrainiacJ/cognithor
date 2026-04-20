@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
@@ -22,7 +22,7 @@ def config(tmp_path) -> JarvisConfig:
 
 
 class TestCorePhase:
-    def test_declare_core_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_core_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.core import declare_core_attrs
 
         result = declare_core_attrs(config)
@@ -33,7 +33,7 @@ class TestCorePhase:
         assert all(v is None for v in result.values())
 
     @pytest.mark.asyncio
-    async def test_init_core_llm_available(self, config: JarvisConfig) -> None:
+    async def test_init_core_llm_available(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.core import init_core
 
         mock_llm = MagicMock()
@@ -57,7 +57,7 @@ class TestCorePhase:
             assert result["llm"] is mock_llm
 
     @pytest.mark.asyncio
-    async def test_init_core_llm_not_available_ollama(self, config: JarvisConfig) -> None:
+    async def test_init_core_llm_not_available_ollama(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.core import init_core
 
         mock_llm = MagicMock()
@@ -78,7 +78,7 @@ class TestCorePhase:
             assert result["__llm_ok"] is False
 
     @pytest.mark.asyncio
-    async def test_init_core_llm_not_available_lmstudio(self, config: JarvisConfig) -> None:
+    async def test_init_core_llm_not_available_lmstudio(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.core import init_core
 
         mock_llm = MagicMock()
@@ -99,7 +99,7 @@ class TestCorePhase:
             assert result["__llm_ok"] is False
 
     @pytest.mark.asyncio
-    async def test_init_core_llm_not_available_other(self, config: JarvisConfig) -> None:
+    async def test_init_core_llm_not_available_other(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.core import init_core
 
         mock_llm = MagicMock()
@@ -122,7 +122,7 @@ class TestCorePhase:
             assert result["__llm_ok"] is False
 
     @pytest.mark.asyncio
-    async def test_init_core_with_backend(self, config: JarvisConfig) -> None:
+    async def test_init_core_with_backend(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.core import init_core
 
         mock_llm = MagicMock()
@@ -152,7 +152,7 @@ class TestCorePhase:
 
 
 class TestSecurityPhase:
-    def test_declare_security_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_security_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.security import declare_security_attrs
 
         result = declare_security_attrs(config)
@@ -160,7 +160,7 @@ class TestSecurityPhase:
         assert "gatekeeper" in result
 
     @pytest.mark.asyncio
-    async def test_init_security(self, config: JarvisConfig) -> None:
+    async def test_init_security(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.security import init_security
 
         result = await init_security(config)
@@ -174,14 +174,14 @@ class TestSecurityPhase:
 
 
 class TestMemoryPhase:
-    def test_declare_memory_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_memory_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.memory import declare_memory_attrs
 
         result = declare_memory_attrs(config)
         assert "memory_manager" in result
 
     @pytest.mark.asyncio
-    async def test_init_memory(self, config: JarvisConfig) -> None:
+    async def test_init_memory(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.memory import init_memory
 
         mock_audit = MagicMock()
@@ -193,7 +193,7 @@ class TestMemoryPhase:
             assert "memory_manager" in result
 
     @pytest.mark.asyncio
-    async def test_init_memory_failure(self, config: JarvisConfig) -> None:
+    async def test_init_memory_failure(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.memory import init_memory
 
         mock_mm = MagicMock()
@@ -210,14 +210,14 @@ class TestMemoryPhase:
 
 
 class TestToolsPhase:
-    def test_declare_tools_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_tools_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.tools import declare_tools_attrs
 
         result = declare_tools_attrs(config)
         assert "mcp_client" in result
 
     @pytest.mark.asyncio
-    async def test_init_tools(self, config: JarvisConfig) -> None:
+    async def test_init_tools(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.tools import init_tools
 
         mock_mcp = MagicMock()
@@ -232,7 +232,7 @@ class TestToolsPhase:
 
 
 class TestPGEPhase:
-    def test_declare_pge_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_pge_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.pge import declare_pge_attrs
 
         result = declare_pge_attrs(config)
@@ -241,7 +241,7 @@ class TestPGEPhase:
         assert "reflector" in result
 
     @pytest.mark.asyncio
-    async def test_init_pge_with_llm(self, config: JarvisConfig) -> None:
+    async def test_init_pge_with_llm(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.pge import init_pge
 
         mock_llm = MagicMock()
@@ -261,7 +261,7 @@ class TestPGEPhase:
         assert result["executor"] is not None
 
     @pytest.mark.asyncio
-    async def test_init_pge_no_llm(self, config: JarvisConfig) -> None:
+    async def test_init_pge_no_llm(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.pge import init_pge
 
         result = await init_pge(
@@ -284,14 +284,14 @@ class TestPGEPhase:
 
 
 class TestAgentsPhase:
-    def test_declare_agents_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_agents_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.agents import declare_agents_attrs
 
         result = declare_agents_attrs(config)
         assert "agent_router" in result
 
     @pytest.mark.asyncio
-    async def test_init_agents(self, config: JarvisConfig) -> None:
+    async def test_init_agents(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.agents import init_agents
 
         result = await init_agents(
@@ -299,7 +299,7 @@ class TestAgentsPhase:
             memory_manager=MagicMock(),
             mcp_client=MagicMock(),
             audit_logger=MagicMock(),
-            jarvis_home=config.jarvis_home,
+            cognithor_home=config.cognithor_home,
         )
         assert "agent_router" in result
 
@@ -310,14 +310,14 @@ class TestAgentsPhase:
 
 
 class TestAdvancedPhase:
-    def test_declare_advanced_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_advanced_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.advanced import declare_advanced_attrs
 
         result = declare_advanced_attrs(config)
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
-    async def test_init_advanced(self, config: JarvisConfig) -> None:
+    async def test_init_advanced(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.advanced import init_advanced
 
         result = await init_advanced(config)
@@ -330,14 +330,14 @@ class TestAdvancedPhase:
 
 
 class TestCompliancePhase:
-    def test_declare_compliance_attrs(self, config: JarvisConfig) -> None:
+    def test_declare_compliance_attrs(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.compliance import declare_compliance_attrs
 
         result = declare_compliance_attrs(config)
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
-    async def test_init_compliance(self, config: JarvisConfig) -> None:
+    async def test_init_compliance(self, config: CognithorConfig) -> None:
         from cognithor.gateway.phases.compliance import init_compliance
 
         result = await init_compliance(config)

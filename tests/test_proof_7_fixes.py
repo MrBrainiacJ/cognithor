@@ -21,7 +21,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.models import (
     ActionPlan,
     GateDecision,
@@ -130,7 +130,7 @@ class TestProofFix2_BlockedInCompletedIds:
     async def test_dependent_runs_despite_blocked_parent(self, tmp_path) -> None:
         from cognithor.core.executor import Executor
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         mcp = AsyncMock()
         mcp.call_tool = AsyncMock(return_value=MockToolResult(content="executed"))
         executor = Executor(config, mcp)
@@ -207,7 +207,7 @@ class TestProofFix4_DepthGuard:
 
     def test_depth_field_exists_in_security_config(self, tmp_path) -> None:
         """SecurityConfig hat max_sub_agent_depth mit Default 3."""
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         assert hasattr(config.security, "max_sub_agent_depth")
         assert config.security.max_sub_agent_depth == 3
 
@@ -253,7 +253,7 @@ class TestProofFix5_LiveReload:
         """Executor.reload_config() aendert tatsaechlich runtime-Werte."""
         from cognithor.core.executor import Executor
 
-        config1 = JarvisConfig(jarvis_home=tmp_path)
+        config1 = CognithorConfig(cognithor_home=tmp_path)
         executor = Executor(config1, AsyncMock())
 
         # Capture BEFORE values
@@ -262,7 +262,7 @@ class TestProofFix5_LiveReload:
         before_retries = executor._max_retries
 
         # Create config with different values
-        config2 = JarvisConfig(jarvis_home=tmp_path)
+        config2 = CognithorConfig(cognithor_home=tmp_path)
         config2.executor.default_timeout_seconds = 99
         config2.executor.max_parallel_tools = 12
         config2.executor.max_retries = 1
@@ -282,14 +282,14 @@ class TestProofFix5_LiveReload:
         """WebTools.reload_config() aendert Domain-Listen und Limits."""
         from cognithor.mcp.web import WebTools
 
-        config1 = JarvisConfig(jarvis_home=tmp_path)
+        config1 = CognithorConfig(cognithor_home=tmp_path)
         web = WebTools(config=config1)
 
         assert web._domain_blocklist == []
         assert web._max_fetch_bytes == 500_000  # default
 
         # Reload with changed config
-        config2 = JarvisConfig(jarvis_home=tmp_path)
+        config2 = CognithorConfig(cognithor_home=tmp_path)
         config2.web.domain_blocklist = ["evil.com", "bad.org"]
         config2.web.max_fetch_bytes = 100_000
 
@@ -302,7 +302,7 @@ class TestProofFix5_LiveReload:
         """reload_components(config=True) ruft Executor.reload_config() auf."""
         from cognithor.core.executor import Executor
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         executor = Executor(config, AsyncMock())
         executor.reload_config = MagicMock()  # spy
 
@@ -423,7 +423,7 @@ class TestProofFix7_SecretMasking:
         """ConfigManager.read() maskiert google_cse_api_key mit '***'."""
         from cognithor.config_manager import ConfigManager
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         # Set a real API key
         config.web.google_cse_api_key = "AIzaSyD_REAL_KEY_12345"
         config.web.jina_api_key = "jina_REAL_KEY_67890"

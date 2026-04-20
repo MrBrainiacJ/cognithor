@@ -110,11 +110,11 @@ class TestGatekeeperCUClassification:
     """Verify security classification hasn't regressed."""
 
     def test_screenshot_green_actions_yellow(self):
-        from cognithor.config import JarvisConfig, ToolsConfig
+        from cognithor.config import CognithorConfig, ToolsConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction
 
-        config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=True))
+        config = CognithorConfig(tools=ToolsConfig(computer_use_enabled=True))
         gk = Gatekeeper(config)
 
         # Screenshot is GREEN (read-only)

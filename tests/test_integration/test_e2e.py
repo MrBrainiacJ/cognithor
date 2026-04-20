@@ -23,7 +23,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.core.executor import Executor
 from cognithor.core.gatekeeper import Gatekeeper
 from cognithor.core.planner import Planner
@@ -52,9 +52,9 @@ def sandbox(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def config(tmp_path: Path, sandbox: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path, sandbox: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(sandbox), str(tmp_path / ".cognithor")],
             max_iterations=5,
@@ -65,7 +65,7 @@ def config(tmp_path: Path, sandbox: Path) -> JarvisConfig:
 
 
 def _build_gateway_with_real_mcp(
-    config: JarvisConfig,
+    config: CognithorConfig,
     chat_side_effect,
 ) -> Gateway:
     """Baut einen Gateway mit echten MCP-Handlern und Mock-LLM.
@@ -171,7 +171,7 @@ class MockChannel:
 
 class TestE2EDirectResponse:
     @pytest.mark.asyncio
-    async def test_simple_question(self, config: JarvisConfig) -> None:
+    async def test_simple_question(self, config: CognithorConfig) -> None:
         """Einfache Frage → LLM antwortet direkt, kein Tool nötig."""
 
         async def mock_chat(**kwargs):
@@ -195,7 +195,7 @@ class TestE2EDirectResponse:
 
 class TestE2EFileRead:
     @pytest.mark.asyncio
-    async def test_read_file_e2e(self, config: JarvisConfig, sandbox: Path) -> None:
+    async def test_read_file_e2e(self, config: CognithorConfig, sandbox: Path) -> None:
         """User fragt nach Datei → Plan → read_file → Antwort mit Inhalt."""
         # Testdatei anlegen
         test_file = sandbox / "info.txt"
@@ -237,7 +237,7 @@ class TestE2EFileRead:
 
 class TestE2EShellExec:
     @pytest.mark.asyncio
-    async def test_shell_command_e2e(self, config: JarvisConfig) -> None:
+    async def test_shell_command_e2e(self, config: CognithorConfig) -> None:
         """User will Befehl ausführen → Plan → exec_command → Ergebnis."""
         call_count = 0
 
@@ -275,7 +275,7 @@ class TestE2EShellExec:
 
 class TestE2EApprovalGranted:
     @pytest.mark.asyncio
-    async def test_approval_accepted(self, config: JarvisConfig) -> None:
+    async def test_approval_accepted(self, config: CognithorConfig) -> None:
         """E-Mail senden erfordert Bestätigung → User sagt ja → wird ausgeführt."""
         call_count = 0
 
@@ -331,7 +331,7 @@ class TestE2EApprovalGranted:
 
 class TestE2EApprovalRejected:
     @pytest.mark.asyncio
-    async def test_approval_rejected(self, config: JarvisConfig) -> None:
+    async def test_approval_rejected(self, config: CognithorConfig) -> None:
         """E-Mail senden → User sagt nein → alles blockiert."""
         call_count = 0
 
@@ -381,7 +381,7 @@ class TestE2EApprovalRejected:
 
 class TestE2EDestructiveBlocked:
     @pytest.mark.asyncio
-    async def test_rm_rf_blocked(self, config: JarvisConfig) -> None:
+    async def test_rm_rf_blocked(self, config: CognithorConfig) -> None:
         """rm -rf / wird vom Gatekeeper sofort blockiert."""
         call_count = 0
 
@@ -423,7 +423,7 @@ class TestE2EDestructiveBlocked:
 
 class TestE2EMultiStep:
     @pytest.mark.asyncio
-    async def test_write_then_read(self, config: JarvisConfig, sandbox: Path) -> None:
+    async def test_write_then_read(self, config: CognithorConfig, sandbox: Path) -> None:
         """Plan mit 2 Schritten: Datei schreiben, dann lesen."""
         target_file = str(sandbox / "multi.txt")
         call_count = 0
@@ -476,7 +476,7 @@ class TestE2EMultiStep:
 
 class TestE2EIterationLimit:
     @pytest.mark.asyncio
-    async def test_iterations_exhausted(self, config: JarvisConfig) -> None:
+    async def test_iterations_exhausted(self, config: CognithorConfig) -> None:
         """Wenn der Agent in einer Schleife hängt, bricht er nach max_iterations ab."""
         # Config: max 3 Iterationen
         config.security.max_iterations = 3
@@ -512,7 +512,7 @@ class TestE2EIterationLimit:
 
 class TestE2ESandboxViolation:
     @pytest.mark.asyncio
-    async def test_read_outside_sandbox(self, config: JarvisConfig) -> None:
+    async def test_read_outside_sandbox(self, config: CognithorConfig) -> None:
         """read_file auf /etc/passwd wird vom FileSystem-Tool blockiert (nicht Gatekeeper)."""
         call_count = 0
 
@@ -552,7 +552,7 @@ class TestE2ESandboxViolation:
 
 class TestE2ESessionIsolation:
     @pytest.mark.asyncio
-    async def test_sessions_isolated(self, config: JarvisConfig) -> None:
+    async def test_sessions_isolated(self, config: CognithorConfig) -> None:
         """Zwei verschiedene User haben isolierte Sessions."""
 
         async def mock_chat(**kwargs):
@@ -579,7 +579,7 @@ class TestE2ESessionIsolation:
 
 class TestE2ECoreMemory:
     @pytest.mark.asyncio
-    async def test_core_memory_in_context(self, config: JarvisConfig) -> None:
+    async def test_core_memory_in_context(self, config: CognithorConfig) -> None:
         """Core Memory wird beim Planner-Aufruf im Kontext sein."""
         # CORE.md schreiben
         config.core_memory_file.write_text(
@@ -610,7 +610,7 @@ class TestE2ECoreMemory:
 
 class TestE2EShutdown:
     @pytest.mark.asyncio
-    async def test_clean_shutdown(self, config: JarvisConfig) -> None:
+    async def test_clean_shutdown(self, config: CognithorConfig) -> None:
         """Gateway fährt alle Subsysteme sauber herunter."""
 
         async def mock_chat(**kwargs):

@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.executor import Executor
 from cognithor.memory.enhanced_retrieval import EnhancedSearchPipeline, FrequencyTracker
 from cognithor.memory.graph_ranking import GraphRanking
@@ -40,8 +40,8 @@ class TestMemoryManagerEnhancedProperties:
         ):
             from cognithor.memory.manager import MemoryManager
 
-            config = JarvisConfig(
-                jarvis_home=tmp_path / ".cognithor",
+            config = CognithorConfig(
+                cognithor_home=tmp_path / ".cognithor",
             )
             mm = MemoryManager(config)
             return mm
@@ -184,8 +184,8 @@ class TestEnhancedSearchWithGraphBoost:
         ):
             from cognithor.memory.manager import MemoryManager
 
-            config = JarvisConfig(
-                jarvis_home=tmp_path / ".cognithor",
+            config = CognithorConfig(
+                cognithor_home=tmp_path / ".cognithor",
             )
             mm = MemoryManager(config)
 
@@ -253,8 +253,8 @@ class TestSearchMemorySignature:
         ):
             from cognithor.memory.manager import MemoryManager
 
-            config = JarvisConfig(
-                jarvis_home=tmp_path / ".cognithor",
+            config = CognithorConfig(
+                cognithor_home=tmp_path / ".cognithor",
             )
             return MemoryManager(config)
 

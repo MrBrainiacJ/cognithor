@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.models import (
     AuditEntry,
     GateStatus,
@@ -107,9 +107,9 @@ class FakeChannel:
 
 
 @pytest.fixture
-def security_config(tmp_path: Path) -> JarvisConfig:
+def security_config(tmp_path: Path) -> CognithorConfig:
     home = tmp_path / ".cognithor"
-    return JarvisConfig(jarvis_home=home)
+    return CognithorConfig(cognithor_home=home)
 
 
 @pytest.fixture

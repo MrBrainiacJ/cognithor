@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.core.llm_backend import (
     AnthropicBackend,
     ChatResponse,
@@ -22,8 +22,8 @@ from cognithor.core.llm_backend import (
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
@@ -71,13 +71,13 @@ class TestDataClasses:
 
 
 class TestCreateBackend:
-    def test_create_ollama_default(self, config: JarvisConfig) -> None:
+    def test_create_ollama_default(self, config: CognithorConfig) -> None:
         """Default backend type is ollama."""
         backend = create_backend(config)
         assert isinstance(backend, OllamaBackend)
         assert backend.backend_type == LLMBackendType.OLLAMA
 
-    def test_create_openai(self, config: JarvisConfig) -> None:
+    def test_create_openai(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "openai"
         config.openai_api_key = "sk-test"
         config.openai_base_url = "https://api.openai.com/v1"
@@ -85,32 +85,32 @@ class TestCreateBackend:
         assert isinstance(backend, OpenAIBackend)
         assert backend.backend_type == LLMBackendType.OPENAI
 
-    def test_create_anthropic(self, config: JarvisConfig) -> None:
+    def test_create_anthropic(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "anthropic"
         config.anthropic_api_key = "sk-ant-test"
         backend = create_backend(config)
         assert isinstance(backend, AnthropicBackend)
         assert backend.backend_type == LLMBackendType.ANTHROPIC
 
-    def test_create_gemini(self, config: JarvisConfig) -> None:
+    def test_create_gemini(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "gemini"
         config.gemini_api_key = "test-key"
         backend = create_backend(config)
         assert isinstance(backend, GeminiBackend)
         assert backend.backend_type == LLMBackendType.GEMINI
 
-    def test_create_lmstudio(self, config: JarvisConfig) -> None:
+    def test_create_lmstudio(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "lmstudio"
         backend = create_backend(config)
         assert isinstance(backend, OpenAIBackend)
 
-    def test_create_groq(self, config: JarvisConfig) -> None:
+    def test_create_groq(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "groq"
         config.groq_api_key = "gsk-test"
         backend = create_backend(config)
         assert isinstance(backend, OpenAIBackend)
 
-    def test_create_deepseek(self, config: JarvisConfig) -> None:
+    def test_create_deepseek(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "deepseek"
         config.deepseek_api_key = "sk-test"
         backend = create_backend(config)
@@ -992,12 +992,12 @@ class TestAnthropicBackendExtended:
 
 class TestCreateBackendExtended:
     @pytest.fixture()
-    def config(self, tmp_path) -> JarvisConfig:
-        cfg = JarvisConfig(jarvis_home=tmp_path)
+    def config(self, tmp_path) -> CognithorConfig:
+        cfg = CognithorConfig(cognithor_home=tmp_path)
         ensure_directory_structure(cfg)
         return cfg
 
-    def test_create_mistral(self, config: JarvisConfig) -> None:
+    def test_create_mistral(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "mistral"
         config.mistral_api_key = "sk-mistral-test"
         backend = create_backend(config)
@@ -1005,7 +1005,7 @@ class TestCreateBackendExtended:
         assert backend._base_url == "https://api.mistral.ai/v1"
         assert backend._api_key == "sk-mistral-test"
 
-    def test_create_together(self, config: JarvisConfig) -> None:
+    def test_create_together(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "together"
         config.together_api_key = "sk-together-test"
         backend = create_backend(config)
@@ -1013,7 +1013,7 @@ class TestCreateBackendExtended:
         assert backend._base_url == "https://api.together.xyz/v1"
         assert backend._api_key == "sk-together-test"
 
-    def test_create_openrouter(self, config: JarvisConfig) -> None:
+    def test_create_openrouter(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "openrouter"
         config.openrouter_api_key = "sk-or-test"
         backend = create_backend(config)
@@ -1021,7 +1021,7 @@ class TestCreateBackendExtended:
         assert backend._base_url == "https://openrouter.ai/api/v1"
         assert backend._api_key == "sk-or-test"
 
-    def test_create_xai(self, config: JarvisConfig) -> None:
+    def test_create_xai(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "xai"
         config.xai_api_key = "sk-xai-test"
         backend = create_backend(config)
@@ -1029,7 +1029,7 @@ class TestCreateBackendExtended:
         assert backend._base_url == "https://api.x.ai/v1"
         assert backend._api_key == "sk-xai-test"
 
-    def test_create_cerebras(self, config: JarvisConfig) -> None:
+    def test_create_cerebras(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "cerebras"
         config.cerebras_api_key = "sk-cerebras-test"
         backend = create_backend(config)

@@ -24,7 +24,7 @@ def mock_config(tmp_path: Path):
     skills_dir.mkdir()
 
     config = MagicMock()
-    config.jarvis_home = tmp_path
+    config.cognithor_home = tmp_path
     config.plugins.skills_dir = "skills"
 
     with patch("cognithor.skills.cli.load_config", return_value=config):

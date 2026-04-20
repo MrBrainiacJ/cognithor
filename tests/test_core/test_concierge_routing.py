@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.model_router import (
     CONCIERGE_PROFILES,
     ConciergeProfile,
@@ -25,17 +25,17 @@ from cognithor.core.model_router import (
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_path)
 
 
 @pytest.fixture()
-def client(config: JarvisConfig) -> OllamaClient:
+def client(config: CognithorConfig) -> OllamaClient:
     return OllamaClient(config)
 
 
 @pytest.fixture()
-def router(config: JarvisConfig, client: OllamaClient) -> ModelRouter:
+def router(config: CognithorConfig, client: OllamaClient) -> ModelRouter:
     return ModelRouter(config, client)
 
 
@@ -157,13 +157,13 @@ class TestUrgencyModelSelection:
             model = router.select_model(task)
             assert model == "qwen3:32b", f"Failed for task_type={task}"
 
-    def test_embedding_ignores_urgency(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_embedding_ignores_urgency(self, router: ModelRouter, config: CognithorConfig) -> None:
         router.set_urgency("no_hurry")
         model = router.select_model("embedding")
         assert model == config.models.embedding.name
 
     def test_no_urgency_uses_normal_routing(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         # No urgency set -- normal behavior
         model = router.select_model("planning")
@@ -177,7 +177,7 @@ class TestUrgencyModelSelection:
         router.clear_coding_override()
 
     def test_cleared_urgency_reverts_to_normal(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         router.set_urgency("asap")
         router.clear_urgency()
@@ -185,7 +185,7 @@ class TestUrgencyModelSelection:
         assert model == config.models.executor.name
 
     def test_urgency_fallback_when_model_unavailable(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         # Simulate available models that do NOT include the no_hurry model
         router._available_models = {config.models.planner.name, config.models.executor.name}

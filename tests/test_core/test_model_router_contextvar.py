@@ -12,7 +12,7 @@ import contextvars
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.model_router import (
     ModelRouter,
     OllamaClient,
@@ -21,17 +21,17 @@ from cognithor.core.model_router import (
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_path)
 
 
 @pytest.fixture()
-def client(config: JarvisConfig) -> OllamaClient:
+def client(config: CognithorConfig) -> OllamaClient:
     return OllamaClient(config)
 
 
 @pytest.fixture()
-def router(config: JarvisConfig, client: OllamaClient) -> ModelRouter:
+def router(config: CognithorConfig, client: OllamaClient) -> ModelRouter:
     return ModelRouter(config, client)
 
 
@@ -47,7 +47,7 @@ class TestContextVarIsolation:
     """Proves that set_coding_override is isolated per async task."""
 
     async def test_override_isolated_per_task(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         """Two concurrent async tasks: one sets override, the other must NOT see it.
 
@@ -100,7 +100,7 @@ class TestContextVarIsolation:
 class TestSetAndClear:
     """Tests that set/clear work correctly within the same context."""
 
-    async def test_set_and_clear(self, router: ModelRouter, config: JarvisConfig) -> None:
+    async def test_set_and_clear(self, router: ModelRouter, config: CognithorConfig) -> None:
         """Setting override changes select_model; clearing restores default."""
         coding_model = "codestral:22b"
 
@@ -128,7 +128,7 @@ class TestSetAndClear:
 class TestDefaultIsNone:
     """Tests that without any override, normal routing is used."""
 
-    async def test_default_is_none(self, router: ModelRouter, config: JarvisConfig) -> None:
+    async def test_default_is_none(self, router: ModelRouter, config: CognithorConfig) -> None:
         """Without override, select_model uses normal task-type routing."""
         assert _coding_override_var.get() is None
 
@@ -144,7 +144,7 @@ class TestOverrideAffectsSelectModel:
     """Tests that a set override is actually returned by select_model."""
 
     async def test_override_affects_select_model(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         """With override set, select_model returns the override for all non-embedding types."""
         override_model = "qwen3-coder:30b"

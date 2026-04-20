@@ -255,7 +255,7 @@ class TestFullWiringChain:
         assert stats["curated_skills"] == 1
 
     def test_config_overview_through_config_manager(self) -> None:
-        """Komplette Kette: JarvisConfig → ConfigManager → Overview."""
+        """Komplette Kette: CognithorConfig → ConfigManager → Overview."""
         from cognithor.gateway.config_api import AgentProfileDTO, BindingRuleDTO, ConfigManager
 
         config = MagicMock()

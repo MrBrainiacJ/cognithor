@@ -235,9 +235,9 @@ class TestEnsureDirectoryStructureErrors:
     """ensure_directory_structure must propagate the user-friendly errors."""
 
     def test_propagates_permission_error(self, tmp_path):
-        from cognithor.config import JarvisConfig, ensure_directory_structure
+        from cognithor.config import CognithorConfig, ensure_directory_structure
 
-        cfg = JarvisConfig(jarvis_home=tmp_path / "jarvis")
+        cfg = CognithorConfig(cognithor_home=tmp_path / "jarvis")
 
         # Patch _safe_mkdir to simulate permission error on first call
         with (
@@ -250,9 +250,9 @@ class TestEnsureDirectoryStructureErrors:
             ensure_directory_structure(cfg)
 
     def test_propagates_disk_full_error(self, tmp_path):
-        from cognithor.config import JarvisConfig, ensure_directory_structure
+        from cognithor.config import CognithorConfig, ensure_directory_structure
 
-        cfg = JarvisConfig(jarvis_home=tmp_path / "jarvis")
+        cfg = CognithorConfig(cognithor_home=tmp_path / "jarvis")
 
         with (
             patch(

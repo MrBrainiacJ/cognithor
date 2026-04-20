@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import httpx
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.model_router import OllamaClient
 from cognithor.core.observer import ObserverAudit
 from cognithor.core.observer_store import AuditStore
@@ -39,7 +39,7 @@ pytestmark = [
 
 @pytest.fixture
 def live_observer(tmp_path: Path):
-    cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+    cfg = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
     ollama = OllamaClient(cfg)
     store = AuditStore(db_path=tmp_path / "audits.db")
     return ObserverAudit(config=cfg, ollama_client=ollama, audit_store=store)

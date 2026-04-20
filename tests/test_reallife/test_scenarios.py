@@ -73,11 +73,11 @@ class TestFileOperations:
     @pytest.mark.asyncio
     async def test_file_tools_are_green(self):
         """File read tools must be GREEN (no approval needed)."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction, RiskLevel
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         gk = Gatekeeper(config)
 
         action = PlannedAction(
@@ -89,11 +89,11 @@ class TestFileOperations:
     @pytest.mark.asyncio
     async def test_write_file_is_green(self):
         """write_file should be GREEN for autonomous ops (inform, not block)."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction, RiskLevel
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         gk = Gatekeeper(config)
 
         action = PlannedAction(
@@ -116,11 +116,11 @@ class TestRemoteExecution:
     @pytest.mark.asyncio
     async def test_remote_exec_is_orange(self):
         """remote_exec must be ORANGE (requires user approval)."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction, RiskLevel
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         gk = Gatekeeper(config)
 
         action = PlannedAction(
@@ -149,9 +149,9 @@ class TestMemoryContext:
     @pytest.mark.asyncio
     async def test_session_config_exists(self):
         """SessionConfig must exist with proper defaults."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.session.inactivity_timeout_minutes == 30
         assert config.session.chat_history_limit == 100
 
@@ -167,11 +167,11 @@ class TestToolCoverage:
     @pytest.mark.asyncio
     async def test_search_tools_are_green(self):
         """Web search tools must be GREEN."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction, RiskLevel
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         gk = Gatekeeper(config)
 
         for tool in ["web_search", "web_fetch", "search_and_read"]:
@@ -182,11 +182,11 @@ class TestToolCoverage:
     @pytest.mark.asyncio
     async def test_exec_command_is_green(self):
         """exec_command should be GREEN for autonomous ops (not GREEN, not ORANGE)."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction, RiskLevel
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         gk = Gatekeeper(config)
 
         action = PlannedAction(tool="exec_command", params={"command": "ls"}, rationale="List")

@@ -32,7 +32,7 @@ def tmp_jarvis_home(tmp_path: Path) -> Path:
     (home / "policies").mkdir()
 
     # Create a minimal config.yaml
-    config_data = {"jarvis_home": str(home), "owner_name": "TestUser"}
+    config_data = {"cognithor_home": str(home), "owner_name": "TestUser"}
     config_file = home / "config.yaml"
     with open(config_file, "w", encoding="utf-8") as f:
         yaml.dump(config_data, f)
@@ -50,10 +50,10 @@ def tmp_jarvis_home(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def config(tmp_jarvis_home: Path):
-    """Load a JarvisConfig for the temp home."""
-    from cognithor.config import JarvisConfig
+    """Load a CognithorConfig for the temp home."""
+    from cognithor.config import CognithorConfig
 
-    return JarvisConfig(jarvis_home=tmp_jarvis_home)
+    return CognithorConfig(cognithor_home=tmp_jarvis_home)
 
 
 @pytest.fixture()

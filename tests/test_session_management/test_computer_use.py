@@ -20,12 +20,12 @@ def test_computer_use_gatekeeper_classification():
     (user-opted-in but still require approval gate).  All tools become RED
     when computer_use_enabled=False.
     """
-    from cognithor.config import JarvisConfig, ToolsConfig
+    from cognithor.config import CognithorConfig, ToolsConfig
     from cognithor.core.gatekeeper import Gatekeeper
     from cognithor.models import PlannedAction
 
-    gk_enabled = Gatekeeper(JarvisConfig(tools=ToolsConfig(computer_use_enabled=True)))
-    gk_disabled = Gatekeeper(JarvisConfig(tools=ToolsConfig(computer_use_enabled=False)))
+    gk_enabled = Gatekeeper(CognithorConfig(tools=ToolsConfig(computer_use_enabled=True)))
+    gk_disabled = Gatekeeper(CognithorConfig(tools=ToolsConfig(computer_use_enabled=False)))
 
     # Screenshot is read-only → GREEN
     ss_action = PlannedAction(tool="computer_screenshot", params={}, rationale="test")

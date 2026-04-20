@@ -100,9 +100,9 @@ class TestFix2ModelNotFound404:
 
     @pytest.fixture()
     def config(self, tmp_path: Path) -> Any:
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        return JarvisConfig(jarvis_home=tmp_path)
+        return CognithorConfig(cognithor_home=tmp_path)
 
     @pytest.fixture()
     def client(self, config: Any) -> Any:
@@ -265,9 +265,9 @@ class TestFix4LlmUnreachableWarning:
     @pytest.mark.asyncio
     async def test_warning_printed_when_llm_unavailable(self, tmp_path: Path) -> None:
         """When _llm.is_available() returns False, a visible warning must appear."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
 
         mock_gateway = MagicMock()
         mock_llm = AsyncMock()

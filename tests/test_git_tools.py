@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.mcp.git_tools import GitTools, GitToolsError, register_git_tools
 
 if TYPE_CHECKING:
@@ -22,16 +22,16 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def git_config(tmp_path: Path) -> JarvisConfig:
-    """JarvisConfig mit temporaerem Workspace."""
+def git_config(tmp_path: Path) -> CognithorConfig:
+    """CognithorConfig mit temporaerem Workspace."""
     home = tmp_path / ".cognithor"
-    config = JarvisConfig(jarvis_home=home)
+    config = CognithorConfig(cognithor_home=home)
     ensure_directory_structure(config)
     return config
 
 
 @pytest.fixture
-def git_tools(git_config: JarvisConfig) -> GitTools:
+def git_tools(git_config: CognithorConfig) -> GitTools:
     return GitTools(git_config)
 
 
@@ -50,13 +50,13 @@ def mock_mcp_client() -> MagicMock:
 
 class TestRegistration:
     def test_register_git_tools_registers_five_tools(
-        self, mock_mcp_client: MagicMock, git_config: JarvisConfig
+        self, mock_mcp_client: MagicMock, git_config: CognithorConfig
     ) -> None:
         register_git_tools(mock_mcp_client, git_config)
         assert mock_mcp_client.register_builtin_handler.call_count == 5
 
     def test_register_git_tools_tool_names(
-        self, mock_mcp_client: MagicMock, git_config: JarvisConfig
+        self, mock_mcp_client: MagicMock, git_config: CognithorConfig
     ) -> None:
         register_git_tools(mock_mcp_client, git_config)
         registered_names = [

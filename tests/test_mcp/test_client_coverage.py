@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 def config(tmp_path: Path) -> MagicMock:
     cfg = MagicMock()
     cfg.mcp_config_file = tmp_path / "mcp" / "config.yaml"
-    cfg.jarvis_home = tmp_path
+    cfg.cognithor_home = tmp_path
     return cfg
 
 

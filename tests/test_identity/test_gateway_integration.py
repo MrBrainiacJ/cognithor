@@ -4,14 +4,14 @@ from __future__ import annotations
 
 
 class TestIdentityConfig:
-    """Tests for IdentityConfig in JarvisConfig."""
+    """Tests for IdentityConfig in CognithorConfig."""
 
     def test_identity_config_exists(self) -> None:
         import tempfile
 
-        from cognithor.config import IdentityConfig, JarvisConfig
+        from cognithor.config import CognithorConfig, IdentityConfig
 
-        cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+        cfg = CognithorConfig(cognithor_home=tempfile.mkdtemp())
         assert hasattr(cfg, "identity")
         assert isinstance(cfg.identity, IdentityConfig)
 
@@ -59,11 +59,11 @@ class TestGatekeeperGenesisAnchors:
         """Identity tools should be classified as GREEN."""
         import tempfile
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction, RiskLevel
 
-        cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+        cfg = CognithorConfig(cognithor_home=tempfile.mkdtemp())
         gk = Gatekeeper(cfg)
 
         for tool in ["identity_recall", "identity_state", "identity_reflect", "identity_dream"]:
@@ -78,10 +78,10 @@ class TestIdentityPhaseInit:
         """declare_pge_attrs should include identity_layer."""
         import tempfile
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.gateway.phases.pge import declare_pge_attrs
 
-        cfg = JarvisConfig(jarvis_home=tempfile.mkdtemp())
+        cfg = CognithorConfig(cognithor_home=tempfile.mkdtemp())
         attrs = declare_pge_attrs(cfg)
         assert "identity_layer" in attrs
 

@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.observer import ObserverAudit
 from cognithor.core.observer_store import AuditStore
 
@@ -30,7 +30,7 @@ _ALL_PASS_JSON = (
 
 @pytest.fixture
 def observer(tmp_path: Path):
-    cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+    cfg = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
     store = AuditStore(db_path=tmp_path / "audits.db")
     ollama = AsyncMock()
     ollama.list_models = AsyncMock(return_value=["qwen3:32b"])

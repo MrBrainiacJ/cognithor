@@ -7,7 +7,7 @@ import tempfile
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.core.gatekeeper import Gatekeeper
 from cognithor.forensics.replay_engine import ReplayEngine
 from cognithor.models import (
@@ -25,8 +25,8 @@ from cognithor.models import (
 
 @pytest.fixture()
 def gk_config(tmp_path):
-    config = JarvisConfig(
-        jarvis_home=tmp_path,
+    config = CognithorConfig(
+        cognithor_home=tmp_path,
         security=SecurityConfig(
             allowed_paths=[str(tmp_path), os.path.join(tempfile.gettempdir(), "jarvis", "")]
         ),

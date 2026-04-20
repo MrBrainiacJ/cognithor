@@ -6,7 +6,7 @@ import pytest
 
 
 @pytest.fixture
-def jarvis_home(tmp_path):
+def cognithor_home(tmp_path):
     """Temporary Jarvis home directory."""
     home = tmp_path / ".cognithor"
     home.mkdir()

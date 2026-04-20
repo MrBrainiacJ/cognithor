@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.config_manager import ConfigManager
 from cognithor.core.workflows import (
     TemplateLibrary,
@@ -79,12 +79,12 @@ def tmp_home(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def config(tmp_home: Path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_home)
+def config(tmp_home: Path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_home)
 
 
 @pytest.fixture
-def config_manager(config: JarvisConfig) -> ConfigManager:
+def config_manager(config: CognithorConfig) -> ConfigManager:
     return ConfigManager(config=config)
 
 

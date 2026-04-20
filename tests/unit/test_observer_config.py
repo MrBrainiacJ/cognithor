@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cognithor.config import JarvisConfig, ObserverConfig
+from cognithor.config import CognithorConfig, ObserverConfig
 
 
 class TestObserverConfig:
@@ -37,6 +37,6 @@ class TestObserverConfig:
             ObserverConfig(unknown_field=True)
 
     def test_attached_to_jarvis_config(self):
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         assert isinstance(cfg.observer, ObserverConfig)
         assert cfg.observer.enabled is True

@@ -24,7 +24,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -33,10 +33,10 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def email_config(tmp_path: Path) -> JarvisConfig:
-    """JarvisConfig with email enabled and temporary paths."""
-    return JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def email_config(tmp_path: Path) -> CognithorConfig:
+    """CognithorConfig with email enabled and temporary paths."""
+    return CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         email={
             "enabled": True,
             "imap_host": "imap.example.com",
@@ -51,10 +51,10 @@ def email_config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture
-def email_config_disabled(tmp_path: Path) -> JarvisConfig:
-    """JarvisConfig with email disabled."""
-    return JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def email_config_disabled(tmp_path: Path) -> CognithorConfig:
+    """CognithorConfig with email disabled."""
+    return CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
     )
 
 
@@ -66,7 +66,7 @@ def mock_env_password():
 
 
 @pytest.fixture
-def email_tools(email_config: JarvisConfig, mock_env_password: Any):
+def email_tools(email_config: CognithorConfig, mock_env_password: Any):
     """EmailTools instance with mocked environment."""
     from cognithor.mcp.email_tools import EmailTools
 
@@ -204,7 +204,7 @@ class TestPasswordRetrieval:
     def test_password_found(self, email_tools: Any, mock_env_password: Any) -> None:
         assert email_tools._get_password() == "secret123"
 
-    def test_password_missing(self, email_config: JarvisConfig) -> None:
+    def test_password_missing(self, email_config: CognithorConfig) -> None:
         """Missing password env var raises error."""
         from cognithor.mcp.email_tools import EmailError, EmailTools
 
@@ -488,7 +488,9 @@ class TestEmailSend:
             )
         assert "1" in result  # 1 attachment
 
-    async def test_send_starttls(self, email_config: JarvisConfig, mock_env_password: Any) -> None:
+    async def test_send_starttls(
+        self, email_config: CognithorConfig, mock_env_password: Any
+    ) -> None:
         """STARTTLS port (587) uses SMTP instead of SMTP_SSL."""
         from cognithor.mcp.email_tools import EmailTools
 
@@ -567,7 +569,7 @@ class TestRegistration:
     """Tests for register_email_tools."""
 
     def test_register_when_enabled(
-        self, email_config: JarvisConfig, mock_env_password: Any
+        self, email_config: CognithorConfig, mock_env_password: Any
     ) -> None:
         from cognithor.mcp.email_tools import register_email_tools
 
@@ -576,7 +578,7 @@ class TestRegistration:
         assert result is not None
         assert mcp.register_builtin_handler.call_count == 4
 
-    def test_register_when_disabled(self, email_config_disabled: JarvisConfig) -> None:
+    def test_register_when_disabled(self, email_config_disabled: CognithorConfig) -> None:
         from cognithor.mcp.email_tools import register_email_tools
 
         mcp = MagicMock()
@@ -584,7 +586,7 @@ class TestRegistration:
         assert result is None
         assert mcp.register_builtin_handler.call_count == 0
 
-    def test_register_without_password(self, email_config: JarvisConfig) -> None:
+    def test_register_without_password(self, email_config: CognithorConfig) -> None:
         from cognithor.mcp.email_tools import register_email_tools
 
         with patch.dict(os.environ, {}, clear=True):
@@ -596,8 +598,8 @@ class TestRegistration:
     def test_register_without_host(self, tmp_path: Path, mock_env_password: Any) -> None:
         from cognithor.mcp.email_tools import register_email_tools
 
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             email={
                 "enabled": True,
                 "imap_host": "",
@@ -611,7 +613,7 @@ class TestRegistration:
         assert result is None
 
     def test_registered_tool_names(
-        self, email_config: JarvisConfig, mock_env_password: Any
+        self, email_config: CognithorConfig, mock_env_password: Any
     ) -> None:
         from cognithor.mcp.email_tools import register_email_tools
 

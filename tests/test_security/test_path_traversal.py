@@ -28,7 +28,7 @@ def vault(tmp_path: Path) -> VaultTools:
     config.vault.path = str(tmp_path / "vault")
     config.vault.auto_save_research = False
     config.vault.default_folders = {"allgemein": "allgemein"}
-    config.jarvis_home = tmp_path
+    config.cognithor_home = tmp_path
     vt = VaultTools(config=config)
     vt._vault_path = tmp_path / "vault"
     vt._vault_path.mkdir(parents=True, exist_ok=True)

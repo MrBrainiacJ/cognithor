@@ -29,7 +29,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.gateway.gateway import Gateway
 from cognithor.models import (
     ActionPlan,
@@ -50,13 +50,13 @@ class MockToolResult:
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
 
-def _make_initialized_gateway(config: JarvisConfig) -> Gateway:
+def _make_initialized_gateway(config: CognithorConfig) -> Gateway:
     """Erstellt einen Gateway mit minimalen Mocks fuer handle_message."""
     gw = Gateway(config)
     gw._planner = MagicMock()
@@ -87,18 +87,18 @@ def _make_initialized_gateway(config: JarvisConfig) -> Gateway:
 
 
 class TestGatewayInit:
-    def test_gateway_creates_with_config(self, config: JarvisConfig) -> None:
+    def test_gateway_creates_with_config(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         assert gw._config is config
         assert gw._running is False
         assert isinstance(gw._channels, dict)
 
-    def test_gateway_has_session_management(self, config: JarvisConfig) -> None:
+    def test_gateway_has_session_management(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         assert hasattr(gw, "_sessions")
         assert hasattr(gw, "_working_memories")
 
-    def test_gateway_default_attributes(self, config: JarvisConfig) -> None:
+    def test_gateway_default_attributes(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         assert gw._planner is None
         assert gw._executor is None
@@ -114,7 +114,7 @@ class TestGatewayInit:
 
 class TestGatewayInitialize:
     @pytest.mark.asyncio
-    async def test_initialize_calls_phases(self, config: JarvisConfig) -> None:
+    async def test_initialize_calls_phases(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         with (
             patch("cognithor.gateway.gateway.init_core", new_callable=AsyncMock) as mock_core,
@@ -178,7 +178,7 @@ class TestGatewayInitialize:
 
 
 class TestGatewayChannels:
-    def test_register_channel(self, config: JarvisConfig) -> None:
+    def test_register_channel(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         mock_channel = MagicMock()
         mock_channel.name = "test_channel"
@@ -186,7 +186,7 @@ class TestGatewayChannels:
         assert "test_channel" in gw._channels
         assert gw._channels["test_channel"] is mock_channel
 
-    def test_register_multiple_channels(self, config: JarvisConfig) -> None:
+    def test_register_multiple_channels(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         for name in ("cli", "telegram", "discord"):
             ch = MagicMock()
@@ -195,7 +195,7 @@ class TestGatewayChannels:
         assert len(gw._channels) == 3
 
     @pytest.mark.asyncio
-    async def test_shutdown_sets_not_running(self, config: JarvisConfig) -> None:
+    async def test_shutdown_sets_not_running(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         gw._running = True
         gw._mcp_client = AsyncMock()
@@ -211,7 +211,9 @@ class TestGatewayChannels:
 
 class TestHandleMessageEdgeCases:
     @pytest.mark.asyncio
-    async def test_handle_message_raises_when_not_initialized(self, config: JarvisConfig) -> None:
+    async def test_handle_message_raises_when_not_initialized(
+        self, config: CognithorConfig
+    ) -> None:
         """handle_message without initialize() should raise RuntimeError."""
         gw = Gateway(config)
         gw._running = True
@@ -220,7 +222,7 @@ class TestHandleMessageEdgeCases:
             await gw.handle_message(msg)
 
     @pytest.mark.asyncio
-    async def test_handle_message_direct_response(self, config: JarvisConfig) -> None:
+    async def test_handle_message_direct_response(self, config: CognithorConfig) -> None:
         gw = _make_initialized_gateway(config)
 
         msg = IncomingMessage(text="Hallo", channel="test", user_id="user1")
@@ -229,7 +231,9 @@ class TestHandleMessageEdgeCases:
         assert response.is_final
 
     @pytest.mark.asyncio
-    async def test_handle_message_planner_exception_propagates(self, config: JarvisConfig) -> None:
+    async def test_handle_message_planner_exception_propagates(
+        self, config: CognithorConfig
+    ) -> None:
         """Planner-Exceptions propagieren aus handle_message."""
         gw = _make_initialized_gateway(config)
         gw._planner.plan = AsyncMock(side_effect=Exception("LLM crashed"))
@@ -239,7 +243,7 @@ class TestHandleMessageEdgeCases:
             await gw.handle_message(msg)
 
     @pytest.mark.asyncio
-    async def test_handle_message_no_actions_fallback(self, config: JarvisConfig) -> None:
+    async def test_handle_message_no_actions_fallback(self, config: CognithorConfig) -> None:
         """If planner returns no actions and no direct_response, get fallback text."""
         gw = _make_initialized_gateway(config)
         gw._planner.plan = AsyncMock(
@@ -262,32 +266,32 @@ class TestHandleMessageEdgeCases:
 
 
 class TestSessionAndWorkingMemory:
-    def test_get_or_create_session_creates_new(self, config: JarvisConfig) -> None:
+    def test_get_or_create_session_creates_new(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         s = gw._get_or_create_session("test", "user1")
         assert s.channel == "test"
         assert s.user_id == "user1"
         assert s.session_id
 
-    def test_get_or_create_session_with_agent_name(self, config: JarvisConfig) -> None:
+    def test_get_or_create_session_with_agent_name(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         s = gw._get_or_create_session("test", "user1", agent_name="coder")
         assert s.session_id
 
-    def test_working_memory_creation(self, config: JarvisConfig) -> None:
+    def test_working_memory_creation(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         s = gw._get_or_create_session("cli", "user1")
         wm = gw._get_or_create_working_memory(s)
         assert wm.session_id == s.session_id
 
-    def test_working_memory_reused(self, config: JarvisConfig) -> None:
+    def test_working_memory_reused(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         s = gw._get_or_create_session("cli", "user1")
         wm1 = gw._get_or_create_working_memory(s)
         wm2 = gw._get_or_create_working_memory(s)
         assert wm1 is wm2
 
-    def test_session_reused_for_same_user(self, config: JarvisConfig) -> None:
+    def test_session_reused_for_same_user(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         s1 = gw._get_or_create_session("cli", "user1")
         s2 = gw._get_or_create_session("cli", "user1")
@@ -301,7 +305,7 @@ class TestSessionAndWorkingMemory:
 
 class TestCodingClassification:
     @pytest.mark.asyncio
-    async def test_classify_coding_no_llm(self, config: JarvisConfig) -> None:
+    async def test_classify_coding_no_llm(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         gw._model_router = None
         gw._llm = None
@@ -309,7 +313,7 @@ class TestCodingClassification:
         assert result == (False, "simple")
 
     @pytest.mark.asyncio
-    async def test_classify_coding_llm_returns_json(self, config: JarvisConfig) -> None:
+    async def test_classify_coding_llm_returns_json(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         mock_llm = AsyncMock()
         mock_llm.chat = AsyncMock(
@@ -324,7 +328,7 @@ class TestCodingClassification:
         assert complexity == "complex"
 
     @pytest.mark.asyncio
-    async def test_classify_coding_llm_exception(self, config: JarvisConfig) -> None:
+    async def test_classify_coding_llm_exception(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         mock_llm = AsyncMock()
         mock_llm.chat = AsyncMock(side_effect=Exception("timeout"))
@@ -337,7 +341,7 @@ class TestCodingClassification:
         assert complexity == "simple"
 
     @pytest.mark.asyncio
-    async def test_classify_coding_with_think_tags(self, config: JarvisConfig) -> None:
+    async def test_classify_coding_with_think_tags(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         mock_llm = AsyncMock()
         mock_llm.chat = AsyncMock(
@@ -362,7 +366,7 @@ class TestCodingClassification:
 
 class TestApprovalHandling:
     @pytest.mark.asyncio
-    async def test_approval_with_channel(self, config: JarvisConfig) -> None:
+    async def test_approval_with_channel(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         session = SessionContext()
 
@@ -385,7 +389,7 @@ class TestApprovalHandling:
         assert len(result) == 1
 
     @pytest.mark.asyncio
-    async def test_approval_no_channel(self, config: JarvisConfig) -> None:
+    async def test_approval_no_channel(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         session = SessionContext()
         steps = [PlannedAction(tool="exec_command", params={})]
@@ -408,11 +412,11 @@ class TestApprovalHandling:
 
 
 class TestResolveRelativeDates:
-    def test_resolve_heute(self, config: JarvisConfig) -> None:
+    def test_resolve_heute(self, config: CognithorConfig) -> None:
         result = Gateway._resolve_relative_dates("Was passierte heute?")
         assert "heute" not in result.lower() or "202" in result
 
-    def test_resolve_no_dates(self, config: JarvisConfig) -> None:
+    def test_resolve_no_dates(self, config: CognithorConfig) -> None:
         result = Gateway._resolve_relative_dates("Was ist Python?")
         assert "Python" in result
 
@@ -423,13 +427,13 @@ class TestResolveRelativeDates:
 
 
 class TestIsFactQuestion:
-    def test_fact_question_detected(self, config: JarvisConfig) -> None:
+    def test_fact_question_detected(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         # Some versions might have _is_fact_question as a method
         if hasattr(gw, "_is_fact_question"):
             assert isinstance(gw._is_fact_question("Wer ist der Bundeskanzler?"), bool)
 
-    def test_non_fact_question(self, config: JarvisConfig) -> None:
+    def test_non_fact_question(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         if hasattr(gw, "_is_fact_question"):
             result = gw._is_fact_question("schreibe ein Gedicht")
@@ -442,12 +446,12 @@ class TestIsFactQuestion:
 
 
 class TestRecordMetric:
-    def test_record_metric_no_op(self, config: JarvisConfig) -> None:
+    def test_record_metric_no_op(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         # Should not raise even without Prometheus
         gw._record_metric("test_counter", 1)
 
-    def test_record_metric_with_labels(self, config: JarvisConfig) -> None:
+    def test_record_metric_with_labels(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         gw._record_metric("requests_total", 1, channel="test", model="qwen")
 
@@ -458,12 +462,12 @@ class TestRecordMetric:
 
 
 class TestExtractAttachments:
-    def test_extract_no_results(self, config: JarvisConfig) -> None:
+    def test_extract_no_results(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         attachments = gw._extract_attachments([])
         assert attachments == [] or attachments is None or len(attachments) == 0
 
-    def test_extract_with_tool_results(self, config: JarvisConfig) -> None:
+    def test_extract_with_tool_results(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         tr = ToolResult(
             tool_name="document_export",
@@ -480,7 +484,7 @@ class TestExtractAttachments:
 
 
 class TestPersistKeyToolResults:
-    def test_persist_no_results(self, config: JarvisConfig) -> None:
+    def test_persist_no_results(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         session = gw._get_or_create_session("cli", "user1")
         wm = gw._get_or_create_working_memory(session)
@@ -494,14 +498,14 @@ class TestPersistKeyToolResults:
 
 
 class TestSessionIdHandling:
-    def test_session_from_message_same_channel_user(self, config: JarvisConfig) -> None:
+    def test_session_from_message_same_channel_user(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         session = gw._get_or_create_session("telegram", "user1")
         assert session.session_id
         assert session.channel == "telegram"
         assert session.user_id == "user1"
 
-    def test_different_agents_get_different_sessions(self, config: JarvisConfig) -> None:
+    def test_different_agents_get_different_sessions(self, config: CognithorConfig) -> None:
         gw = Gateway(config)
         s1 = gw._get_or_create_session("cli", "user1", "jarvis")
         s2 = gw._get_or_create_session("cli", "user1", "coder")

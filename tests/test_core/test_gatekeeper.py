@@ -20,7 +20,12 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 
-from cognithor.config import JarvisConfig, SecurityConfig, ToolsConfig, ensure_directory_structure
+from cognithor.config import (
+    CognithorConfig,
+    SecurityConfig,
+    ToolsConfig,
+    ensure_directory_structure,
+)
 from cognithor.core.gatekeeper import Gatekeeper
 from cognithor.models import (
     GateStatus,
@@ -34,10 +39,10 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def gk_config(tmp_path: Path) -> JarvisConfig:
-    """Config mit tmp_path als jarvis_home."""
-    config = JarvisConfig(
-        jarvis_home=tmp_path,
+def gk_config(tmp_path: Path) -> CognithorConfig:
+    """Config mit tmp_path als cognithor_home."""
+    config = CognithorConfig(
+        cognithor_home=tmp_path,
         security=SecurityConfig(
             allowed_paths=[str(tmp_path), os.path.join(tempfile.gettempdir(), "jarvis", "")],
         ),
@@ -51,7 +56,7 @@ def gk_config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def gatekeeper(gk_config: JarvisConfig) -> Gatekeeper:
+def gatekeeper(gk_config: CognithorConfig) -> Gatekeeper:
     """Initialisierter Gatekeeper."""
     gk = Gatekeeper(gk_config)
     gk.initialize()
@@ -297,7 +302,7 @@ class TestPathValidation:
     """Nur erlaubte Verzeichnisse dürfen zugegriffen werden."""
 
     def test_allowed_path_passes(
-        self, gatekeeper: Gatekeeper, session: SessionContext, gk_config: JarvisConfig
+        self, gatekeeper: Gatekeeper, session: SessionContext, gk_config: CognithorConfig
     ) -> None:
         # ~/.cognithor/workspace ist erlaubt
         safe_path = str(gk_config.workspace_dir / "test.txt")
@@ -333,7 +338,9 @@ class TestPolicyMatching:
     def test_default_policy_loads(self, gatekeeper: Gatekeeper) -> None:
         assert len(gatekeeper._policies) > 0
 
-    def test_custom_policy_override(self, gk_config: JarvisConfig, session: SessionContext) -> None:
+    def test_custom_policy_override(
+        self, gk_config: CognithorConfig, session: SessionContext
+    ) -> None:
         """Custom Policy die ein Tool explizit erlaubt."""
         custom_policy = {
             "rules": [
@@ -418,7 +425,7 @@ class TestEvaluatePlan:
     """Batch-Evaluation mehrerer Schritte."""
 
     def test_mixed_plan(
-        self, gatekeeper: Gatekeeper, session: SessionContext, gk_config: JarvisConfig
+        self, gatekeeper: Gatekeeper, session: SessionContext, gk_config: CognithorConfig
     ) -> None:
         ws_path = str(gk_config.workspace_dir / "x")
         steps = [

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.config_manager import (
     ConfigManager,
     _is_secret_field,
@@ -178,14 +178,14 @@ class TestStripMaskedSecrets:
 
 class TestUpdateTopLevelSecretField:
     def test_update_api_key_set_value(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
         mgr.update_top_level("openai_api_key", "sk-new-key")
         assert mgr.config.openai_api_key == "sk-new-key"
 
     def test_update_api_key_clear_warns(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             openai_api_key="sk-existing",
         )
         mgr = ConfigManager(config=config)
@@ -193,8 +193,8 @@ class TestUpdateTopLevelSecretField:
         mgr.update_top_level("openai_api_key", "")
 
     def test_update_api_key_masked_value_treated_as_no_value(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             openai_api_key="sk-real-key",
         )
         mgr = ConfigManager(config=config)
@@ -209,7 +209,7 @@ class TestUpdateTopLevelSecretField:
 
 class TestSaveAtomicFailure:
     def test_save_creates_parent_dirs(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config)
         target = tmp_path / "sub" / "dir" / "config.yaml"
         result = mgr.save(target)
@@ -217,7 +217,7 @@ class TestSaveAtomicFailure:
         assert target.exists()
 
     def test_save_without_callback(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         mgr = ConfigManager(config=config, on_reload=None)
         target = tmp_path / "no_callback.yaml"
         mgr.save(target)
@@ -235,7 +235,7 @@ class TestReloadCallback:
         config_path.parent.mkdir(parents=True, exist_ok=True)
         config_path.write_text("owner_name: TestReload\n")
 
-        reloaded: list[JarvisConfig] = []
+        reloaded: list[CognithorConfig] = []
         mgr = ConfigManager(config_path=config_path, on_reload=reloaded.append)
 
         mgr.reload()

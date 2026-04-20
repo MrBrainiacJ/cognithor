@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.mcp.search_tools import SearchTools, SearchToolsError, register_search_tools
 
 # ---------------------------------------------------------------------------
@@ -19,16 +19,16 @@ from cognithor.mcp.search_tools import SearchTools, SearchToolsError, register_s
 
 
 @pytest.fixture
-def search_config(tmp_path: Path) -> JarvisConfig:
-    """JarvisConfig mit temporaerem Workspace."""
+def search_config(tmp_path: Path) -> CognithorConfig:
+    """CognithorConfig mit temporaerem Workspace."""
     home = tmp_path / ".cognithor"
-    config = JarvisConfig(jarvis_home=home)
+    config = CognithorConfig(cognithor_home=home)
     ensure_directory_structure(config)
     return config
 
 
 @pytest.fixture
-def search_tools(search_config: JarvisConfig) -> SearchTools:
+def search_tools(search_config: CognithorConfig) -> SearchTools:
     return SearchTools(search_config)
 
 
@@ -40,7 +40,7 @@ def mock_mcp_client() -> MagicMock:
 
 
 @pytest.fixture
-def populated_workspace(search_config: JarvisConfig) -> Path:
+def populated_workspace(search_config: CognithorConfig) -> Path:
     """Workspace mit Test-Dateien befuellt."""
     ws = search_config.workspace_dir
     ws.mkdir(parents=True, exist_ok=True)
@@ -81,13 +81,13 @@ def populated_workspace(search_config: JarvisConfig) -> Path:
 
 class TestRegistration:
     def test_register_search_tools_registers_three_tools(
-        self, mock_mcp_client: MagicMock, search_config: JarvisConfig
+        self, mock_mcp_client: MagicMock, search_config: CognithorConfig
     ) -> None:
         register_search_tools(mock_mcp_client, search_config)
         assert mock_mcp_client.register_builtin_handler.call_count == 3
 
     def test_register_search_tools_tool_names(
-        self, mock_mcp_client: MagicMock, search_config: JarvisConfig
+        self, mock_mcp_client: MagicMock, search_config: CognithorConfig
     ) -> None:
         register_search_tools(mock_mcp_client, search_config)
         registered_names = [

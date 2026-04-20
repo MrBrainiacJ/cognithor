@@ -27,7 +27,7 @@ from cognithor.gateway.config_api import (
 
 @pytest.fixture
 def mock_config() -> MagicMock:
-    """Mock-JarvisConfig mit realistischen Defaults."""
+    """Mock-CognithorConfig mit realistischen Defaults."""
     config = MagicMock()
     config.version = "0.9.0"
     config.owner_name = "Alexander"

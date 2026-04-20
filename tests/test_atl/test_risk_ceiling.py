@@ -10,9 +10,9 @@ from cognithor.models import PlannedAction, RiskLevel, SessionContext
 
 @pytest.fixture
 def gk():
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
-    return Gatekeeper(JarvisConfig())
+    return Gatekeeper(CognithorConfig())
 
 
 @pytest.fixture

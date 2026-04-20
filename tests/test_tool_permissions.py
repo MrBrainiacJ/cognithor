@@ -31,8 +31,8 @@ class TestGatekeeperToolRegistryIntegration:
         from cognithor.core.gatekeeper import Gatekeeper
 
         config = MagicMock()
-        config.jarvis_home = MagicMock()
-        config.jarvis_home.__truediv__ = MagicMock(return_value=MagicMock())
+        config.cognithor_home = MagicMock()
+        config.cognithor_home.__truediv__ = MagicMock(return_value=MagicMock())
         config.logs_dir = MagicMock()
         config.logs_dir.__truediv__ = MagicMock(return_value=MagicMock())
         config.tools = None
