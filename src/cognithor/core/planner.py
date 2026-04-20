@@ -41,6 +41,7 @@ if TYPE_CHECKING:
 
     from cognithor.audit import AuditLogger
     from cognithor.config import JarvisConfig
+    from cognithor.core.observer import ObserverAudit
 
     StreamCallback = Callable[[str, dict[str, Any]], Coroutine[Any, Any, None]]
 
@@ -519,6 +520,9 @@ class Planner:
         # Tool-Descriptions-Cache (#40 Optimierung)
         self._cached_tools_section: str | None = None
         self._cached_tools_hash: int = 0
+
+        # Observer lazy-init (enabled in config)
+        self._observer: ObserverAudit | None = None
 
         # Context-window for Ollama num_ctx (default from model config)
         try:
@@ -1048,7 +1052,7 @@ class Planner:
         max_retries = observer_cfg.max_retries if observer_cfg.enabled else 0
 
         # Lazy-instantiate the Observer if enabled.
-        if observer_cfg.enabled and not hasattr(self, "_observer"):
+        if observer_cfg.enabled and self._observer is None:
             from cognithor.core.observer import ObserverAudit
             from cognithor.core.observer_store import AuditStore
 
@@ -1089,11 +1093,7 @@ class Planner:
                 return ResponseEnvelope(content=content, directive=directive)
 
             if audit_result.retry_strategy == "deliver_with_warning":
-                warning = self._observer_warning_text(audit_result)
-                return ResponseEnvelope(
-                    content=f"{observer_cfg.warning_prefix} {warning}\n\n{content}",
-                    directive=None,
-                )
+                return self._make_warning_envelope(audit_result, content)
 
             # response_regen: inject feedback and loop back.
             feedback_msg = self._observer.build_retry_feedback(audit_result)
@@ -1101,11 +1101,7 @@ class Planner:
             retry_count += 1
             if retry_count > max_retries:
                 # Safety net (should've been caught by deliver_with_warning above).
-                warning = self._observer_warning_text(audit_result)
-                return ResponseEnvelope(
-                    content=f"{observer_cfg.warning_prefix} {warning}\n\n{content}",
-                    directive=None,
-                )
+                return self._make_warning_envelope(audit_result, content)
 
     async def formulate_response_stream(
         self,
@@ -1322,7 +1318,19 @@ class Planner:
     def _observer_warning_text(self, result: AuditResult) -> str:
         """Produce a short warning prefix summarizing failed dimensions."""
         failed = [name for name, d in result.dimensions.items() if not d.passed]
+        if not failed:
+            return "[unknown]"
         return f"[{', '.join(failed)}]"
+
+    def _make_warning_envelope(
+        self, audit_result: AuditResult, content: str
+    ) -> ResponseEnvelope:
+        """Construct a warning-prefixed envelope. Used by deliver_with_warning and safety-net."""
+        warning = self._observer_warning_text(audit_result)
+        return ResponseEnvelope(
+            content=f"{self._config.observer.warning_prefix} {warning}\n\n{content}",
+            directive=None,
+        )
 
     # =========================================================================
     # Private Methoden
