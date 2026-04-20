@@ -284,7 +284,7 @@ function Main {
 
     # ── Step 9: Smoke test ────────────────────────────────────────────
     Write-Step "9/10" "Smoke-Test"
-    $smokeResult = & $venvPython -c "import jarvis; print(f'jarvis v{jarvis.__version__}')" 2>&1
+    $smokeResult = & $venvPython -c "import cognithor; print(f'cognithor v{cognithor.__version__}')" 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-OK "Import OK: $smokeResult"
     } else {
