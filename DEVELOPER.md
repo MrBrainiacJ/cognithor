@@ -347,7 +347,7 @@ preventing privilege escalation.
 Three-layer cascade (lowest to highest priority):
 
 ```
-Code defaults  →  ~/.jarvis/config.yaml  →  JARVIS_* env vars
+Code defaults  →  ~/.cognithor/config.yaml  →  COGNITHOR_* env vars (JARVIS_* still accepted as legacy alias)
 ```
 
 ### Key Config Sections
@@ -368,9 +368,9 @@ Code defaults  →  ~/.jarvis/config.yaml  →  JARVIS_* env vars
 Config keys map to env vars via prefix + underscore nesting:
 
 ```
-models.planner.name  →  JARVIS_MODELS_PLANNER_NAME
-web.searxng_url      →  JARVIS_WEB_SEARXNG_URL
-personality.warmth   →  JARVIS_PERSONALITY_WARMTH
+models.planner.name  →  COGNITHOR_MODELS_PLANNER_NAME
+web.searxng_url      →  COGNITHOR_WEB_SEARXNG_URL
+personality.warmth   →  COGNITHOR_PERSONALITY_WARMTH
 ```
 
 ### Sensitive Values
@@ -380,7 +380,7 @@ env var references:
 
 ```yaml
 email:
-  password_env: "JARVIS_EMAIL_PASSWORD"  # Name of env var, not the password
+  password_env: "COGNITHOR_EMAIL_PASSWORD"  # Name of env var, not the password
 ```
 
 ---

@@ -499,7 +499,7 @@ Data at rest:
   Credentials → Fernet (PBKDF2)
 
 Key chain:
-  JARVIS_DB_KEY env → OS Keyring → CredentialStore → none
+  COGNITHOR_DB_KEY env → OS Keyring → CredentialStore → none
 
 Vault backends:
   encrypt_files=false → VaultFileBackend (.md, Obsidian-compatible)

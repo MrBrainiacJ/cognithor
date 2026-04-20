@@ -7,7 +7,7 @@
       1. Auto-installs Python 3.12 if missing (via winget)
       2. Detects GPU and auto-selects Lite mode if needed
       3. Clones repo (if not already in one) or uses current directory
-      4. Creates venv in ~/.jarvis/venv/
+      4. Creates venv in ~/.cognithor/venv/
       5. Installs dependencies via pip (with visible progress)
       6. Auto-installs Ollama if missing (via winget)
       7. Pulls models based on GPU capacity
@@ -61,7 +61,7 @@ function Write-Step { param($Num, $Title)
 }
 
 # ── Configuration ─────────────────────────────────────────────────────────
-$JarvisHome = if ($env:JARVIS_HOME) { $env:JARVIS_HOME } else { Join-Path $env:USERPROFILE ".jarvis" }
+$JarvisHome = if ($env:COGNITHOR_HOME) { $env:COGNITHOR_HOME } elseif ($env:JARVIS_HOME) { $env:JARVIS_HOME } else { Join-Path $env:USERPROFILE ".cognithor" }
 $VenvDir = Join-Path $JarvisHome "venv"
 $RepoUrl = "https://github.com/Alex8791-cyber/cognithor.git"
 $ForceLite = $Lite.IsPresent
