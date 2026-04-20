@@ -70,6 +70,7 @@ from cognithor.utils.logging import get_logger, setup_logging
 if TYPE_CHECKING:
     from cognithor.channels.base import Channel
     from cognithor.core.message_queue import DurableMessageQueue
+    from cognithor.core.observer import ResponseEnvelope
     from cognithor.models import SubAgentConfig
 
 log = get_logger(__name__)
@@ -2942,7 +2943,7 @@ class Gateway:
         all_results: list[ToolResult],
         wm: WorkingMemory,
         stream_callback: Any | None = None,
-    ) -> str:
+    ) -> ResponseEnvelope:
         """Formulate response, optionally streaming tokens to the client.
 
         If stream_callback is set and the planner supports streaming,
@@ -3358,12 +3359,13 @@ class Gateway:
                         )
                     )
                 await _status_cb("finishing", "Formuliere Antwort...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
 
             # JSON parse failed even after retry — recover gracefully
@@ -3378,12 +3380,13 @@ class Gateway:
                 # formulate a clean response from them (instead of giving up)
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                 else:
                     # No context -- sanitized fallback or error message
                     _raw = plan.direct_response or ""
@@ -3421,12 +3424,13 @@ class Gateway:
                     # Don't retry — immediately formulate a direct response.
                     if session.iteration_count == 1 and not all_results:
                         await _status_cb("finishing", "Composing response...")
-                        final_response = await self._formulate_response(
+                        _envelope = await self._formulate_response(
                             msg.text,
                             [],
                             wm,
                             stream_callback,
                         )
+                        final_response = _envelope.content
                         break
                     # Allow max 2 replan-text retries, then break
                     if (
@@ -3437,12 +3441,13 @@ class Gateway:
                     # Stuck — never send raw REPLAN text to the user
                     if all_results and any(r.success for r in all_results):
                         await _status_cb("finishing", "Composing response...")
-                        final_response = await self._formulate_response(
+                        _envelope = await self._formulate_response(
                             msg.text,
                             all_results,
                             wm,
                             stream_callback,
                         )
+                        final_response = _envelope.content
                     else:
                         final_response = (
                             "I'm stuck in a planning loop and can't make progress. "
@@ -3455,12 +3460,13 @@ class Gateway:
                 # returned text instead of JSON, formulate a proper response
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                     break
 
                 final_response = plan.direct_response
@@ -3470,12 +3476,13 @@ class Gateway:
                 # If there are prior successful results, summarize them
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                     break
                 final_response = (
                     "Ich konnte keinen Plan dafuer erstellen. Kannst du deine Frage umformulieren?"
@@ -3737,12 +3744,13 @@ class Gateway:
                     log.warning("pge_stuck_no_tools", iterations=session.iteration_count)
                     if all_results and any(r.success for r in all_results):
                         await _status_cb("finishing", "Composing response...")
-                        final_response = await self._formulate_response(
+                        _envelope = await self._formulate_response(
                             msg.text,
                             all_results,
                             wm,
                             stream_callback,
                         )
+                        final_response = _envelope.content
                     else:
                         final_response = (
                             "I'm stuck in a planning loop without making progress. "
@@ -3767,12 +3775,13 @@ class Gateway:
                 )
                 if all_results and any(r.success for r in all_results):
                     await _status_cb("finishing", "Composing response...")
-                    final_response = await self._formulate_response(
+                    _envelope = await self._formulate_response(
                         msg.text,
                         all_results,
                         wm,
                         stream_callback,
                     )
+                    final_response = _envelope.content
                 else:
                     final_response = (
                         "The model has been unable to make progress for "
@@ -3804,12 +3813,13 @@ class Gateway:
             # Single-step non-coding tasks: respond immediately after success
             if has_success and not has_errors and not used_coding_tool and not _is_multi_step:
                 await _status_cb("finishing", "Composing response...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
 
             # Multi-step / coding tasks: let replan decide if more steps needed.
@@ -3830,12 +3840,13 @@ class Gateway:
                 )
             ):
                 await _status_cb("finishing", "Composing response...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
                 # Otherwise: continue to replan for more steps (normal)
 
@@ -3844,12 +3855,13 @@ class Gateway:
             _failure_threshold = max(5, int(session.max_iterations * 0.7))
             if not has_success and session.iteration_count >= _failure_threshold:
                 await _status_cb("finishing", "Composing response...")
-                final_response = await self._formulate_response(
+                _envelope = await self._formulate_response(
                     msg.text,
                     all_results,
                     wm,
                     stream_callback,
                 )
+                final_response = _envelope.content
                 break
 
         if session.iterations_exhausted and not final_response:
@@ -4629,11 +4641,12 @@ class Gateway:
 
         # Formulate result
         if any(r.success for r in results):
-            response = await self._planner.formulate_response(
+            _envelope = await self._planner.formulate_response(
                 user_message=task,
                 results=results,
                 working_memory=sub_wm,
             )
+            response = _envelope.content
             delegation.result = response
             delegation.success = True
         else:

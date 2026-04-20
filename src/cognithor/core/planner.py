@@ -24,6 +24,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from cognithor.core.model_router import ModelRouter, OllamaError
+from cognithor.core.observer import ResponseEnvelope
 from cognithor.i18n import t
 from cognithor.models import (
     ActionPlan,
@@ -1028,7 +1029,7 @@ class Planner:
         user_message: str,
         results: list[ToolResult],
         working_memory: WorkingMemory,
-    ) -> str:
+    ) -> ResponseEnvelope:
         """Formuliert eine finale Antwort basierend auf Tool-Ergebnissen.
 
         Wird am Ende des Agent-Loops aufgerufen, wenn alle Tools
@@ -1069,7 +1070,7 @@ class Planner:
                 except Exception:
                     log.debug("response_validation_skipped", exc_info=True)
 
-                return content
+                return ResponseEnvelope(content=content, directive=None)
             except OllamaError as exc:
                 log.warning(
                     "formulate_response_llm_error", error=str(exc), attempt=_fmt_attempt + 1
@@ -1082,9 +1083,15 @@ class Planner:
                     f"[{r.tool_name}] {r.content[:300]}" for r in results if r.success
                 )
                 if raw_results:
-                    return t("planner.results_summary_failed", results=raw_results)
-                return t("planner.summarize_failed")
-        return ""  # Unreachable, aber fuer Type-Checker
+                    return ResponseEnvelope(
+                        content=t("planner.results_summary_failed", results=raw_results),
+                        directive=None,
+                    )
+                return ResponseEnvelope(
+                    content=t("planner.summarize_failed"),
+                    directive=None,
+                )
+        return ResponseEnvelope(content="", directive=None)  # Unreachable, aber fuer Type-Checker
 
     async def formulate_response_stream(
         self,
@@ -1092,7 +1099,7 @@ class Planner:
         results: list[ToolResult],
         working_memory: WorkingMemory,
         stream_callback: StreamCallback,
-    ) -> str:
+    ) -> ResponseEnvelope:
         """Streaming-Variante von formulate_response().
 
         Sendet Tokens via stream_callback an den Client, waehrend die
@@ -1155,7 +1162,7 @@ class Planner:
                 except Exception:
                     log.debug("personality_enhance_failed", exc_info=True)
 
-            return content
+            return ResponseEnvelope(content=content, directive=None)
 
         except OllamaError as exc:
             log.warning("formulate_stream_error", error=str(exc))

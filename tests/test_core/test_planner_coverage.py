@@ -153,11 +153,12 @@ class TestFormulateResponse:
         results = [ToolResult(tool_name="web_search", content="Python ist toll", is_error=False)]
         wm = WorkingMemory(session_id="test")
 
-        response = await planner.formulate_response(
+        envelope = await planner.formulate_response(
             user_message="Was ist Python?",
             results=results,
             working_memory=wm,
         )
+        response = envelope.content
         assert isinstance(response, str)
         assert len(response) > 0
 
@@ -398,11 +399,12 @@ class TestFormulateResponseExtended:
             ),
         ]
 
-        response = await planner.formulate_response(
+        envelope = await planner.formulate_response(
             user_message="Was ist Python?",
             results=results,
             working_memory=wm,
         )
+        response = envelope.content
         assert isinstance(response, str)
         assert len(response) > 0
         # Verify the search-specific prompt path was used
@@ -430,11 +432,12 @@ class TestFormulateResponseExtended:
             ToolResult(tool_name="read_file", content="key=value", is_error=False),
         ]
 
-        response = await planner.formulate_response(
+        envelope = await planner.formulate_response(
             user_message="Was steht in der Datei?",
             results=results,
             working_memory=wm,
         )
+        response = envelope.content
         assert isinstance(response, str)
         # Verify the normal prompt path was used
         call_args = ollama.chat.call_args
@@ -459,11 +462,12 @@ class TestFormulateResponseExtended:
         wm = WorkingMemory(session_id="test")
         results = [ToolResult(tool_name="web_search", content="data", is_error=False)]
 
-        response = await planner.formulate_response(
+        envelope = await planner.formulate_response(
             user_message="test",
             results=results,
             working_memory=wm,
         )
+        response = envelope.content
         assert isinstance(response, str)
         # Nach Retry-Logik: Rohergebnisse als Fallback oder Fehlermeldung
         assert (
@@ -481,11 +485,12 @@ class TestFormulateResponseExtended:
         wm = WorkingMemory(session_id="test", core_memory_text="Du gehoerst Alexander.")
         results = [ToolResult(tool_name="read_file", content="content", is_error=False)]
 
-        response = await planner.formulate_response(
+        envelope = await planner.formulate_response(
             user_message="Wem gehoerst du?",
             results=results,
             working_memory=wm,
         )
+        response = envelope.content
         assert isinstance(response, str)
         # Verify core_memory_text was injected into messages
         call_args = ollama.chat.call_args
