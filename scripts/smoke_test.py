@@ -323,7 +323,13 @@ class SmokeTest:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Cognithor Smoke-Test")
-    parser.add_argument("--jarvis-home", default=str(Path.home() / ".cognithor"))
+    parser.add_argument(
+        "--cognithor-home",
+        "--jarvis-home",
+        dest="cognithor_home",
+        default=str(Path.home() / ".cognithor"),
+        help="Cognithor home directory (alias --jarvis-home kept for backward compat)",
+    )
     parser.add_argument("--ollama-url", default="http://localhost:11434")
     parser.add_argument("--venv", default="")
     args = parser.parse_args()

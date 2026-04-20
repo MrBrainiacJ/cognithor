@@ -1076,7 +1076,7 @@ run_smoke_test() {
 
     if [[ -f "$REPO_DIR/scripts/smoke_test.py" ]]; then
         "$VENV_DIR/bin/python" "$REPO_DIR/scripts/smoke_test.py" \
-            --jarvis-home "$COGNITHOR_HOME" \
+            --cognithor-home "$COGNITHOR_HOME" \
             --ollama-url "$OLLAMA_URL" \
             --venv "$VENV_DIR"
     else
