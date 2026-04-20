@@ -64,6 +64,33 @@ class TestEnvOverrides:
         cfg = load_config(tmp_path / "empty.yaml")
         assert cfg.language == "zh"
 
+    def test_jarvis_home_aliases_to_jarvis_home_field(self, monkeypatch, tmp_path):
+        """Regression: JARVIS_HOME must map to the `jarvis_home` field, not
+        a rejected `home` field (Pydantic extra='forbid'). Bug reported by
+        Reddit user 2026-04-20."""
+        target = tmp_path / "custom_home"
+        monkeypatch.setenv("JARVIS_HOME", str(target))
+        cfg = load_config(tmp_path / "empty.yaml")
+        assert str(cfg.jarvis_home) == str(target)
+
+    def test_cognithor_home_aliases_to_jarvis_home_field(self, monkeypatch, tmp_path):
+        """COGNITHOR_HOME should also resolve to `jarvis_home` (the internal
+        field name is kept for backward-compat)."""
+        target = tmp_path / "cognithor_home"
+        monkeypatch.setenv("COGNITHOR_HOME", str(target))
+        cfg = load_config(tmp_path / "empty.yaml")
+        assert str(cfg.jarvis_home) == str(target)
+
+    def test_unknown_single_part_env_var_silently_ignored(self, monkeypatch, tmp_path):
+        """Single-part env vars that don't match any field (and aren't in the
+        alias map) are silently ignored, not turned into unknown top-level
+        fields that Pydantic would reject."""
+        monkeypatch.setenv("JARVIS_NONEXISTENT", "value")
+        monkeypatch.setenv("COGNITHOR_ALSONOTREAL", "value")
+        # Must NOT raise ValidationError.
+        cfg = load_config(tmp_path / "empty.yaml")
+        assert cfg is not None
+
 
 class TestBackendAutoDetection:
     """Verify that explicit llm_backend_type is respected (#105)."""
