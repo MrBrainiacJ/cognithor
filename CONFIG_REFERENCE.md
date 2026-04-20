@@ -388,7 +388,7 @@ Section key: `email`
 | `smtp_host` | string | `""` | SMTP server hostname (e.g., `smtp.gmail.com`). |
 | `smtp_port` | int | `465` | SMTP server port (465 for SSL, 587 for STARTTLS). |
 | `username` | string | `""` | Email username (often the email address). |
-| `password_env` | string | `"JARVIS_EMAIL_PASSWORD"` | Name of environment variable containing the email password. |
+| `password_env` | string | `"COGNITHOR_EMAIL_PASSWORD"` | Name of environment variable containing the email password. |
 
 ---
 
@@ -402,7 +402,7 @@ Section key: `calendar`
 | `ics_path` | string | `""` | Path to local ICS file (default: `~/.jarvis/calendar.ics`). |
 | `caldav_url` | string | `""` | CalDAV server URL (optional). |
 | `username` | string | `""` | CalDAV username. |
-| `password_env` | string | `"JARVIS_CALENDAR_PASSWORD"` | Env var name for CalDAV password. |
+| `password_env` | string | `"COGNITHOR_CALENDAR_PASSWORD"` | Env var name for CalDAV password. |
 | `timezone` | string | `""` | Timezone (e.g., `Europe/Berlin`). Empty = system timezone. |
 
 ---

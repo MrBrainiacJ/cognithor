@@ -423,7 +423,7 @@ python -m cognithor                   # Same thing (always works, no PATH needed
 
 python -m cognithor --lite            # Lite mode: qwen3:8b only (6 GB VRAM)
 python -m cognithor --no-cli          # Headless mode (API only)
-JARVIS_HOME=~/my-cognithor cognithor  # Custom home directory
+COGNITHOR_HOME=~/my-cognithor cognithor  # Custom home directory
 ```
 
 > **Windows:** If `cognithor` is not recognized after `pip install`, use `python -m cognithor` instead — this always works regardless of PATH configuration. Alternatively, add Python's `Scripts` directory to your PATH (typically `%APPDATA%\Python\PythonXY\Scripts` or the `Scripts` folder inside your venv).
@@ -451,10 +451,10 @@ Channels start automatically when their tokens are found in `~/.cognithor/.env`:
 
 ```bash
 # ~/.cognithor/.env — just add your tokens, channels activate automatically
-JARVIS_TELEGRAM_TOKEN=your-bot-token
-JARVIS_TELEGRAM_ALLOWED_USERS=123456789
-JARVIS_DISCORD_TOKEN=your-discord-token
-JARVIS_SLACK_TOKEN=xoxb-your-slack-token
+COGNITHOR_TELEGRAM_TOKEN=your-bot-token
+COGNITHOR_TELEGRAM_ALLOWED_USERS=123456789
+COGNITHOR_DISCORD_TOKEN=your-discord-token
+COGNITHOR_SLACK_TOKEN=xoxb-your-slack-token
 ```
 
 No need to set `telegram_enabled: true` in the config — the presence of the token is sufficient.
@@ -519,7 +519,7 @@ Once Cognithor is running, you can use these slash commands in the chat:
 
 ## Configuration
 
-Cognithor is configured via `~/.cognithor/config.yaml`. All values can be overridden with environment variables using the `COGNITHOR_` prefix (or legacy `JARVIS_` prefix for backward compatibility).
+Cognithor is configured via `~/.cognithor/config.yaml`. All values can be overridden with environment variables using the `COGNITHOR_` prefix (`JARVIS_*` still accepted as legacy alias).
 
 ```yaml
 # Example: ~/.cognithor/config.yaml
@@ -693,7 +693,7 @@ docker compose --profile webui up -d         # + Web UI
 ### Docker (Production)
 
 ```bash
-cp .env.example .env   # Edit: set JARVIS_API_TOKEN, etc.
+cp .env.example .env   # Edit: set COGNITHOR_API_TOKEN, etc.
 docker compose -f docker-compose.prod.yml up -d
 
 # With optional services
@@ -763,7 +763,7 @@ print(t("error.timeout"))  # "The operation timed out..."
 
 1. **Flutter Command Center**: General → "Sprache / Language" dropdown, or click the language button in the header
 2. **Config file**: Set `language: en` in `~/.cognithor/config.yaml`
-3. **Environment variable**: `JARVIS_LANGUAGE=en`
+3. **Environment variable**: `COGNITHOR_LANGUAGE=en`
 
 | Area | i18n Status | Notes |
 |------|-------------|-------|

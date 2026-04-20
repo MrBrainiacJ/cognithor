@@ -3077,6 +3077,12 @@ def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
     # Build once per call: cheap (no runtime cost to import here).
     top_level_fields = set(JarvisConfig.model_fields.keys())
 
+    # Single-word env vars that must map to a prefixed field name.
+    # JARVIS_HOME and COGNITHOR_HOME both point at `jarvis_home`.
+    _SINGLE_PART_ALIASES: dict[str, str] = {
+        "home": "jarvis_home",
+    }
+
     for prefix in ("JARVIS_", "COGNITHOR_"):
         for key, value in os.environ.items():
             if not key.startswith(prefix):
@@ -3085,7 +3091,11 @@ def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
             if not parts:
                 continue
             if len(parts) == 1:
-                data[parts[0]] = value
+                field = _SINGLE_PART_ALIASES.get(parts[0], parts[0])
+                if field in top_level_fields:
+                    data[field] = value
+                # Unknown single-part env var → silently ignore (strict
+                # configs would reject it anyway with extra="forbid").
                 continue
 
             # 1. Recursive descent into existing dict sections.
