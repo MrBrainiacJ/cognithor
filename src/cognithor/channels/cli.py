@@ -239,7 +239,10 @@ class CliChannel(Channel):
                     config_path = getattr(self._config, "jarvis_home", None)
                     if config_path is not None:
                         config_path = config_path / "config.yaml"
-                _launch_config_tui(config_path)
+                # config_tui uses prompt_toolkit's sync API — running it in a
+                # separate thread avoids the "event loop already running" error
+                # from calling pt_prompt() inside this async handler.
+                await asyncio.to_thread(_launch_config_tui, config_path)
                 self._console.print(
                     f"[{COLOR_INFO}]Config geschlossen. Fortfahren mit Chat.[/{COLOR_INFO}]"
                 )

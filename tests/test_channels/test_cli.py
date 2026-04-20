@@ -125,6 +125,24 @@ class TestSlashCommands:
         assert "Unknown command" in call_args_str
 
     @pytest.mark.asyncio
+    async def test_config_runs_in_thread(self, cli_with_console: CliChannel) -> None:
+        """'/config' must offload the sync prompt_toolkit TUI to a worker thread.
+
+        Regression for Reddit feedback 2026-04-20: calling pt_prompt() inside
+        the active asyncio event loop raised `This is a blocking call, but
+        there is an async event loop running`. Fix wraps the call in
+        asyncio.to_thread().
+        """
+        with patch("cognithor.cli.config_tui.launch") as mock_launch:
+            mock_launch.return_value = None
+            result = await cli_with_console._handle_command("/config")
+        assert result is True
+        mock_launch.assert_called_once()
+        # Print acknowledgment uses "Config geschlossen"
+        printed = " ".join(str(c) for c in cli_with_console._console.print.call_args_list)
+        assert "Config geschlossen" in printed
+
+    @pytest.mark.asyncio
     async def test_case_insensitive(self, cli_with_console: CliChannel) -> None:
         """Commands sind case-insensitiv."""
         result = await cli_with_console._handle_command("/QUIT")
