@@ -492,6 +492,7 @@ class WorkingMemory(BaseModel):
     cag_prefix: str | None = None  # CAG KV-cache prefix (replaces core_memory_text when set)
     token_count: int = 0
     max_tokens: int = 32768  # Qwen3-32B Default
+    session_state: dict[str, Any] = Field(default_factory=dict)
 
     @property
     def usage_ratio(self) -> float:

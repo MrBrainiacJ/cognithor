@@ -30,6 +30,7 @@ from cognithor.core.observer import (  # noqa: TC001
     PGEReloopDirective,  # noqa: F401 — runtime import for Task 16 isinstance checks
     ResponseEnvelope,
 )
+from cognithor.gateway.observer_directive import run_pge_with_observer_directive
 from cognithor.gateway.phases import (
     apply_phase,
     declare_advanced_attrs,
@@ -2949,9 +2950,11 @@ class Gateway:
     ) -> ResponseEnvelope:
         """Formulate response, optionally streaming tokens to the client.
 
-        If stream_callback is set and the planner supports streaming,
-        tokens are sent as stream_token events in real time.
-        Falls back to non-streaming formulate_response() otherwise.
+        Non-streaming path uses ``run_pge_with_observer_directive`` so Observer
+        ``pge_reloop`` directives trigger a Gateway-level re-entry.
+        Streaming path delegates to ``formulate_response_stream`` directly; the
+        Planner's internal observer loop still runs, but PGE-reloop directives
+        from the streaming path are not currently re-entered (limitation).
         """
         if stream_callback is not None and hasattr(self._planner, "formulate_response_stream"):
             try:
@@ -2964,10 +2967,13 @@ class Gateway:
             except Exception:
                 log.debug("streaming_formulate_failed_fallback", exc_info=True)
                 # Fall through to non-streaming
-        return await self._planner.formulate_response(
+        return await run_pge_with_observer_directive(
+            planner=self._planner,
             user_message=msg_text,
             results=all_results,
             working_memory=wm,
+            session_state=wm.session_state,
+            config=self._config,
         )
 
     @staticmethod
