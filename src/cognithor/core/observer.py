@@ -144,6 +144,7 @@ class ObserverAudit:
         self._store = audit_store
         self._consecutive_failures = 0
         self._circuit_open = False
+        self._degraded_warned = False
 
     def _build_prompt(
         self,
@@ -176,26 +177,28 @@ class ObserverAudit:
         planner_model = self._config.models.planner.name
         try:
             available = await self._ollama.list_models()
-            if not isinstance(available, list | tuple):
-                return observer_model, False
         except Exception:
             # Can't list — assume observer model exists, proceed.
             return observer_model, False
         if observer_model in available:
             return observer_model, False
         if planner_model in available:
-            log.warning(
-                "observer_degraded_mode",
-                actual_model=planner_model,
-                intended_model=observer_model,
-            )
+            if not self._degraded_warned:
+                log.warning(
+                    "observer_degraded_mode",
+                    actual_model=planner_model,
+                    intended_model=observer_model,
+                )
+                self._degraded_warned = True
             return planner_model, True
         # Both missing: observer cannot run
-        log.warning(
-            "observer_disabled_runtime",
-            observer_model=observer_model,
-            planner_model=planner_model,
-        )
+        if not self._degraded_warned:
+            log.warning(
+                "observer_disabled_runtime",
+                observer_model=observer_model,
+                planner_model=planner_model,
+            )
+            self._degraded_warned = True
         return "", True
 
     async def _call_llm_audit(

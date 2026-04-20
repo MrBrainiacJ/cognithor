@@ -336,6 +336,7 @@ def _all_pass_json() -> str:
 class TestAuditMain:
     async def test_pass_path(self, observer):
         observer._ollama = AsyncMock()
+        observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
         observer._ollama.chat = AsyncMock(
             return_value={"message": {"content": _all_pass_json()}}
         )
@@ -368,6 +369,7 @@ class TestAuditMain:
             "}"
         )
         observer._ollama = AsyncMock()
+        observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
         observer._ollama.chat = AsyncMock(
             return_value={"message": {"content": audit_json}}
         )
@@ -387,6 +389,7 @@ class TestAuditMain:
             return {"message": {"content": "x"}}
 
         observer._ollama = AsyncMock()
+        observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
         observer._ollama.chat = _slow
         observer._config.observer = observer._config.observer.model_copy(
             update={"timeout_seconds": 1}
@@ -401,6 +404,7 @@ class TestAuditMain:
 
     async def test_records_to_store(self, observer):
         observer._ollama = AsyncMock()
+        observer._ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
         observer._ollama.chat = AsyncMock(
             return_value={"message": {"content": _all_pass_json()}}
         )
@@ -527,3 +531,14 @@ class TestDegradedMode:
         assert result.degraded_mode is True
         # Actual model used = planner model (qwen3:32b) since observer model was missing.
         assert result.model == "qwen3:32b"
+
+    async def test_both_models_missing_returns_model_unavailable(self, observer):
+        # list_models returns empty — neither observer nor planner available.
+        observer._ollama = AsyncMock()
+        observer._ollama.list_models = AsyncMock(return_value=[])
+
+        result = await observer.audit(
+            user_message="q", response="a", tool_results=[], session_id="s1",
+        )
+        assert result.overall_passed is True  # fail-open
+        assert result.error_type == "model_unavailable"
