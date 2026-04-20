@@ -1112,7 +1112,8 @@ class Planner:
             stream_callback: Async callback fuer stream_token Events.
 
         Returns:
-            Vollstaendiger Antwort-Text.
+            ResponseEnvelope mit `content` (Volltext) und `directive` (optionales
+            PGE-Re-Loop-Signal, in diesem Task immer None).
         """
         # Pruefe ob chat_stream verfuegbar ist
         if not hasattr(self._ollama, "chat_stream"):

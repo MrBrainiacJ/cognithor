@@ -26,6 +26,10 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from cognithor.config import JarvisConfig, load_config
 from cognithor.core.agent_router import RouteDecision
 from cognithor.core.autonomous_orchestrator import AutonomousOrchestrator
+from cognithor.core.observer import (  # noqa: TC001
+    PGEReloopDirective,  # noqa: F401 — runtime import for Task 16 isinstance checks
+    ResponseEnvelope,
+)
 from cognithor.gateway.phases import (
     apply_phase,
     declare_advanced_attrs,
@@ -70,7 +74,6 @@ from cognithor.utils.logging import get_logger, setup_logging
 if TYPE_CHECKING:
     from cognithor.channels.base import Channel
     from cognithor.core.message_queue import DurableMessageQueue
-    from cognithor.core.observer import ResponseEnvelope
     from cognithor.models import SubAgentConfig
 
 log = get_logger(__name__)
