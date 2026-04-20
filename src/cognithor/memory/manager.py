@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 import anyio
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.memory.chunker import chunk_file, chunk_text
 from cognithor.memory.core_memory import CoreMemory
 from cognithor.memory.embeddings import EmbeddingClient, create_embedding_provider
@@ -52,9 +52,11 @@ class MemoryManager:
     Initializes and coordinates all 5 tiers.
     """
 
-    def __init__(self, config: JarvisConfig | None = None, audit_logger: Any | None = None) -> None:
+    def __init__(
+        self, config: CognithorConfig | None = None, audit_logger: Any | None = None
+    ) -> None:
         """Initialisiert den MemoryManager und alle 5 Tiers."""
-        self._config = config or JarvisConfig()
+        self._config = config or CognithorConfig()
         self._mc = self._config.memory
         self._audit_logger = audit_logger
 
@@ -209,7 +211,7 @@ class MemoryManager:
                     if _tcfg
                     else "tactical_memory.db"
                 )
-                _db_path = self._config.jarvis_home / "db" / _db_name
+                _db_path = self._config.cognithor_home / "db" / _db_name
                 _db_path.parent.mkdir(parents=True, exist_ok=True)
                 self._tactical = TacticalMemory(
                     db_path=str(_db_path),

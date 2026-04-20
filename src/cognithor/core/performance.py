@@ -1,4 +1,4 @@
-"""Jarvis - Performance & Scalability.
+"""Cognithor - Performance & Scalability.
 
 Optimized infrastructure for low latency and high throughput:
 

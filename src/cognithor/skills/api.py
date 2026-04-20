@@ -33,7 +33,7 @@ def _get_store() -> Any:
             if db_path and hasattr(db_path, "db_path") and db_path.db_path:
                 store_path = Path(db_path.db_path)
             else:
-                store_path = cfg.jarvis_home / "marketplace.db"
+                store_path = cfg.cognithor_home / "marketplace.db"
         except Exception:
             store_path = Path.home() / ".cognithor" / "marketplace.db"
 
@@ -314,7 +314,7 @@ def _build_community_router() -> Any:
                 cfg = load_config()
                 cm = getattr(cfg, "community_marketplace", None)
                 registry_url = cm.registry_url if cm else ""
-                community_dir = cfg.jarvis_home / "skills" / "community"
+                community_dir = cfg.cognithor_home / "skills" / "community"
             except Exception:
                 registry_url = ""
                 community_dir = Path.home() / ".cognithor" / "skills" / "community"

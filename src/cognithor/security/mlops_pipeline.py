@@ -1,4 +1,4 @@
-"""Jarvis · MLOps Security Pipeline.
+"""Cognithor · MLOps Security Pipeline.
 
 Automated security tests on every update:
 

@@ -268,10 +268,10 @@ class TestPlannerPrompts:
         """Planner kann JSON aus ```json ... ``` Blöcken extrahieren."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.planner import Planner
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         planner = Planner(config, AsyncMock(), MagicMock())
 
         _tmpfile = str(Path(tempfile.gettempdir()) / "test.txt")
@@ -302,10 +302,10 @@ class TestPlannerPrompts:
         """Planner erkennt direkte Antwort (kein JSON)."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.planner import Planner
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         planner = Planner(config, AsyncMock(), MagicMock())
 
         text = "Berlin ist die Hauptstadt von Deutschland."
@@ -317,10 +317,10 @@ class TestPlannerPrompts:
         """Planner überlebt kaputtes JSON gracefully."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.planner import Planner
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         planner = Planner(config, AsyncMock(), MagicMock())
 
         text = '```json\n{"goal": "test", "steps": [KAPUTT]}\n```'

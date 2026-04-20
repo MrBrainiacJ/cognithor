@@ -68,7 +68,7 @@ class TestWebToolsConfigInit:
         web_cfg.ddg_cache_ttl_seconds = 7200
         web_cfg.search_and_read_max_chars = 3000
         config.web = web_cfg
-        config.jarvis_home = str(tmp_path)
+        config.cognithor_home = str(tmp_path)
 
         w = WebTools(config=config)
         assert w._searxng_url == "http://searx:8888"
@@ -88,7 +88,7 @@ class TestWebToolsConfigInit:
     def test_init_config_no_web_section(self) -> None:
         config = MagicMock()
         config.web = None
-        config.jarvis_home = None
+        config.cognithor_home = None
         w = WebTools(config=config)
         assert w._duckduckgo_enabled is True
 
@@ -113,7 +113,7 @@ class TestWebToolsConfigInit:
         web_cfg.ddg_cache_ttl_seconds = 3600
         web_cfg.search_and_read_max_chars = 5000
         config.web = web_cfg
-        config.jarvis_home = None
+        config.cognithor_home = None
 
         w = WebTools(config=config, searxng_url="http://explicit:9999")
         assert w._searxng_url == "http://explicit:9999"
@@ -1019,7 +1019,7 @@ class TestRegisterWebToolsConfig:
         web_cfg.http_request_timeout_seconds = 30
         web_cfg.http_request_rate_limit_seconds = 1.0
         config.web = web_cfg
-        config.jarvis_home = None
+        config.cognithor_home = None
 
         web = register_web_tools(mock_client, config=config)
         assert isinstance(web, WebTools)

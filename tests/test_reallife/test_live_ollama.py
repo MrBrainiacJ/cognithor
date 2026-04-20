@@ -62,11 +62,11 @@ class TestLiveCodeGeneration:
 
     def test_code_tools_are_green(self):
         """run_python should be GREEN for autonomous operation."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction
 
-        gk = Gatekeeper(JarvisConfig())
+        gk = Gatekeeper(CognithorConfig())
         action = PlannedAction(tool="run_python", params={}, rationale="test")
         risk = gk._classify_risk(action)
         assert risk.value == "green", f"run_python should be green for autonomous ops, got {risk}"
@@ -108,11 +108,11 @@ class TestLiveGatekeeperSafety:
     """Verify that safety classifications are correct for all tool types."""
 
     def test_all_search_tools_green(self):
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction
 
-        gk = Gatekeeper(JarvisConfig())
+        gk = Gatekeeper(CognithorConfig())
         green_tools = [
             "web_search",
             "search_and_read",
@@ -128,11 +128,11 @@ class TestLiveGatekeeperSafety:
             assert risk.value == "green", f"{tool} should be green, got {risk}"
 
     def test_dangerous_tools_orange(self):
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.gatekeeper import Gatekeeper
         from cognithor.models import PlannedAction
 
-        gk = Gatekeeper(JarvisConfig())
+        gk = Gatekeeper(CognithorConfig())
         orange_tools = ["remote_exec", "email_send", "db_execute"]
         for tool in orange_tools:
             action = PlannedAction(tool=tool, params={}, rationale="test")

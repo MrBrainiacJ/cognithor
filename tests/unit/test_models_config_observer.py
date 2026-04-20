@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cognithor.config import JarvisConfig, ModelsConfig
+from cognithor.config import CognithorConfig, ModelsConfig
 from cognithor.models import ModelConfig
 
 
@@ -23,7 +23,7 @@ class TestModelsConfigObserver:
         assert _OLLAMA_DEFAULT_MODEL_NAMES["observer"] == "qwen3:32b"
 
     def test_available_via_jarvis_config(self):
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         assert cfg.models.observer.name == "qwen3:32b"
 
     def test_all_providers_have_observer_entry(self):

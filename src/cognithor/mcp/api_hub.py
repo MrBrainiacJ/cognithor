@@ -1,4 +1,4 @@
-"""API Integration Hub for Jarvis -- Persistent API connections.
+"""API Integration Hub for Cognithor -- Persistent API connections.
 
 Enables the agent to configure and call external APIs:
   - api_list: List configured integrations
@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -151,17 +151,17 @@ class _RateLimiter:
 
 def _get_integrations_path(config: Any) -> Path:
     """Gibt den Pfad zur integrations.json zurueck."""
-    jarvis_home = getattr(config, "jarvis_home", None)
-    if jarvis_home:
-        return Path(jarvis_home) / "integrations.json"
+    cognithor_home = getattr(config, "cognithor_home", None)
+    if cognithor_home:
+        return Path(cognithor_home) / "integrations.json"
     return Path.home() / ".cognithor" / "integrations.json"
 
 
 def _get_fernet_key_path(config: Any) -> Path:
     """Gibt den Pfad zum Fernet-Key zurueck."""
-    jarvis_home = getattr(config, "jarvis_home", None)
-    if jarvis_home:
-        return Path(jarvis_home) / ".integrations.key"
+    cognithor_home = getattr(config, "cognithor_home", None)
+    if cognithor_home:
+        return Path(cognithor_home) / ".integrations.key"
     return Path.home() / ".cognithor" / ".integrations.key"
 
 
@@ -362,7 +362,7 @@ class APIHub:
     durch. Credentials werden NIE gespeichert, nur Env-Var-Namen.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._rate_limiters: dict[str, _RateLimiter] = {}
         log.info("api_hub_init")

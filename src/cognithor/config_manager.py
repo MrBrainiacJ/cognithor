@@ -1,7 +1,7 @@
-"""Jarvis · Configuration Manager.
+"""Cognithor · Configuration Manager.
 
 Provides a secure API for reading, modifying and saving the
-JarvisConfig. Supports:
+CognithorConfig. Supports:
 
   - Reading the entire configuration (without secrets)
   - Partial update of individual sections
@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 from pydantic import ValidationError
 
-from cognithor.config import JarvisConfig, load_config
+from cognithor.config import CognithorConfig, load_config
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -153,7 +153,7 @@ _EDITABLE_TOP_LEVEL = frozenset(
 
 
 class ConfigManager:
-    """Manages the Jarvis configuration with secure read/write.
+    """Manages the Cognithor configuration with secure read/write.
 
     Usage::
 
@@ -165,9 +165,9 @@ class ConfigManager:
 
     def __init__(
         self,
-        config: JarvisConfig | None = None,
+        config: CognithorConfig | None = None,
         config_path: Path | None = None,
-        on_reload: Callable[[JarvisConfig], None] | None = None,
+        on_reload: Callable[[CognithorConfig], None] | None = None,
     ) -> None:
         self._config_path = config_path
         self._on_reload = on_reload
@@ -178,7 +178,7 @@ class ConfigManager:
             self._config = load_config(config_path)
 
     @property
-    def config(self) -> JarvisConfig:
+    def config(self) -> CognithorConfig:
         """Current configuration (read-only access)."""
         return self._config
 
@@ -206,7 +206,7 @@ class ConfigManager:
             self._mask_secrets(data)
 
         # Path objects -> strings
-        for key in ("jarvis_home",):
+        for key in ("cognithor_home",):
             if key in data:
                 data[key] = str(data[key])
 
@@ -228,7 +228,7 @@ class ConfigManager:
     # Write
     # ------------------------------------------------------------------
 
-    def update_section(self, section: str, values: dict[str, Any]) -> JarvisConfig:
+    def update_section(self, section: str, values: dict[str, Any]) -> CognithorConfig:
         """Aktualisiert eine Konfigurations-Sektion.
 
         Validiert die Aenderungen ueber Pydantic, bevor sie angewendet werden.
@@ -239,7 +239,7 @@ class ConfigManager:
             values: Neue Werte (partielles Update).
 
         Returns:
-            Aktualisierte JarvisConfig.
+            Aktualisierte CognithorConfig.
 
         Raises:
             ValueError: Ungueltige Sektion oder Validierungsfehler.
@@ -266,7 +266,7 @@ class ConfigManager:
 
         # Ueber Pydantic validieren
         try:
-            new_config = JarvisConfig(**current)
+            new_config = CognithorConfig(**current)
         except ValidationError as exc:
             msg = f"Validierungsfehler: {exc}"
             raise ValueError(msg) from exc
@@ -275,7 +275,7 @@ class ConfigManager:
         log.info("config_section_updated", section=section, keys=list(values.keys()))
         return new_config
 
-    def update_top_level(self, key: str, value: Any) -> JarvisConfig:
+    def update_top_level(self, key: str, value: Any) -> CognithorConfig:
         """Aktualisiert ein Top-Level-Feld.
 
         Args:
@@ -283,7 +283,7 @@ class ConfigManager:
             value: Neuer Wert.
 
         Returns:
-            Aktualisierte JarvisConfig.
+            Aktualisierte CognithorConfig.
 
         Raises:
             ValueError: Feld nicht editierbar oder Validierungsfehler.
@@ -316,7 +316,7 @@ class ConfigManager:
                 )
 
         try:
-            new_config = JarvisConfig(**current)
+            new_config = CognithorConfig(**current)
         except ValidationError as exc:
             msg = f"Validierungsfehler: {exc}"
             raise ValueError(msg) from exc
@@ -353,7 +353,7 @@ class ConfigManager:
         try:
             revision_data = self._config.model_dump(mode="json")
             # Convert Path objects for JSON serialization
-            for k in ("jarvis_home",):
+            for k in ("cognithor_home",):
                 if k in revision_data:
                     revision_data[k] = str(revision_data[k])
             save_config_revision(revision_data, reason="pre-save snapshot")
@@ -364,7 +364,7 @@ class ConfigManager:
         data = self._config.model_dump(mode="json")
 
         # Serialize paths
-        for key in ("jarvis_home",):
+        for key in ("cognithor_home",):
             if key in data:
                 data[key] = str(data[key])
 
@@ -407,11 +407,11 @@ class ConfigManager:
 
         return target
 
-    def reload(self) -> JarvisConfig:
+    def reload(self) -> CognithorConfig:
         """Reloads the configuration from the file.
 
         Returns:
-            Newly loaded JarvisConfig.
+            Newly loaded CognithorConfig.
         """
         self._config = load_config(self._config_path)
         log.info("config_reloaded")

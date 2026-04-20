@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
 
     from cognithor.audit import AuditLogger
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.observer import ObserverAudit
 
     StreamCallback = Callable[[str, dict[str, Any]], Coroutine[Any, Any, None]]
@@ -481,7 +481,7 @@ class Planner:
 
     def __init__(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         ollama: Any,
         model_router: ModelRouter,
         audit_logger: AuditLogger | None = None,
@@ -566,7 +566,7 @@ class Planner:
         Prioritaet: Disk .md → Disk .txt → i18n Preset → Hardcoded Fallback.
         """
         try:
-            prompts_dir = self._config.jarvis_home / "prompts"
+            prompts_dir = self._config.cognithor_home / "prompts"
             path = prompts_dir / filename
             if path.exists():
                 content = path.read_text(encoding="utf-8").strip()
@@ -1056,7 +1056,7 @@ class Planner:
             from cognithor.core.observer import ObserverAudit
             from cognithor.core.observer_store import AuditStore
 
-            db_path = self._config.jarvis_home / "db" / "observer_audits.db"
+            db_path = self._config.cognithor_home / "db" / "observer_audits.db"
             self._observer = ObserverAudit(
                 config=self._config,
                 ollama_client=self._ollama,
@@ -1368,7 +1368,7 @@ class Planner:
                     try:
                         from cognithor.mcp.tool_registry_db import ToolRegistryDB
 
-                        db_path = self._config.jarvis_home / "tool_registry.db"
+                        db_path = self._config.cognithor_home / "tool_registry.db"
                         if db_path.exists():
                             registry_db = ToolRegistryDB(db_path)
                             language = getattr(self._config, "language", "de")
@@ -1537,7 +1537,7 @@ class Planner:
                     context_section=context_section,
                     current_datetime=current_datetime,
                     owner_name=self._config.owner_name,
-                    workspace_dir=str(self._config.jarvis_home / "workspace"),
+                    workspace_dir=str(self._config.cognithor_home / "workspace"),
                     os_platform=_os_platform(),
                     personality_section=personality_section,
                 )
@@ -1549,7 +1549,7 @@ class Planner:
             context_section=context_section,
             current_datetime=current_datetime,
             owner_name=self._config.owner_name,
-            workspace_dir=str(self._config.jarvis_home / "workspace"),
+            workspace_dir=str(self._config.cognithor_home / "workspace"),
             os_platform=_os_platform(),
             personality_section=personality_section,
         )

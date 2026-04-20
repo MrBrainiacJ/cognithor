@@ -1,4 +1,4 @@
-"""Instrumentation -- Auto-instrumentation for Jarvis modules (v19).
+"""Instrumentation -- Auto-instrumentation for Cognithor modules (v19).
 
 Automatically instruments:
   - Gateway:     Request spans, latency histograms, error counters

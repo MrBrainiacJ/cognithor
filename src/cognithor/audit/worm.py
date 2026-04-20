@@ -55,18 +55,18 @@ class WORMUploader:
 
     Usage::
 
-        uploader = WORMUploader(config.audit, config.jarvis_home)
+        uploader = WORMUploader(config.audit, config.cognithor_home)
         uploaded = uploader.upload_daily(audit_dir)
     """
 
-    def __init__(self, config: AuditConfig, jarvis_home: Path) -> None:
+    def __init__(self, config: AuditConfig, cognithor_home: Path) -> None:
         self._backend: str = config.worm_backend
         self._bucket: str = config.worm_bucket
         self._retention_days: int = config.worm_retention_days
-        self._jarvis_home = jarvis_home
+        self._jarvis_home = cognithor_home
 
         # State tracking DB
-        self._db_path = jarvis_home / "worm_state.db"
+        self._db_path = cognithor_home / "worm_state.db"
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 

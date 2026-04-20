@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.gatekeeper import Gatekeeper
 from cognithor.models import MCPToolInfo, PlannedAction
 from cognithor.packs.interface import PackContext, PackManifest
@@ -231,7 +231,7 @@ class TestCognithorToolDecorator:
 class TestGatekeeperUsesRegistry:
     def test_pack_tool_risk_honored(self):
         """After loader wires the registry, Gatekeeper must classify accordingly."""
-        gk = Gatekeeper(JarvisConfig())
+        gk = Gatekeeper(CognithorConfig())
         registry: dict[str, MCPToolInfo] = {
             "reddit_score_leads": MCPToolInfo(
                 name="reddit_score_leads",
@@ -247,7 +247,7 @@ class TestGatekeeperUsesRegistry:
         assert risk.value == "green"
 
     def test_unknown_tool_still_orange(self):
-        gk = Gatekeeper(JarvisConfig())
+        gk = Gatekeeper(CognithorConfig())
         gk.set_tool_registry({})
         risk = gk._classify_risk(PlannedAction(tool="new_unknown_tool", params={}, rationale=""))
         assert risk.value == "orange"

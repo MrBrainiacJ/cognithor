@@ -1,4 +1,4 @@
-"""User-friendly error messages for Jarvis channels.
+"""User-friendly error messages for Cognithor channels.
 
 Replaces generic error messages with contextual, empathetic error descriptions.
 Used across all channels. Uses the i18n language pack system for translations.

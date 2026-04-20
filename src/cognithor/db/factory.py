@@ -13,7 +13,7 @@ def create_backend(config: Any) -> Any:
     """Erstellt das passende Database-Backend basierend auf der Konfiguration.
 
     Args:
-        config: JarvisConfig oder DatabaseConfig Objekt.
+        config: CognithorConfig oder DatabaseConfig Objekt.
               Prueft config.database.backend (wenn vorhanden).
 
     Returns:

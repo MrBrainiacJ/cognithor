@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.core.gatekeeper import Gatekeeper
 from cognithor.models import (
     GateStatus,
@@ -34,10 +34,10 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def gk_config(tmp_path: Path) -> JarvisConfig:
-    """Config mit tmp_path als jarvis_home."""
-    config = JarvisConfig(
-        jarvis_home=tmp_path,
+def gk_config(tmp_path: Path) -> CognithorConfig:
+    """Config mit tmp_path als cognithor_home."""
+    config = CognithorConfig(
+        cognithor_home=tmp_path,
         security=SecurityConfig(
             allowed_paths=[str(tmp_path), os.path.join(tempfile.gettempdir(), "jarvis", "")],
         ),
@@ -47,7 +47,7 @@ def gk_config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def gatekeeper(gk_config: JarvisConfig) -> Gatekeeper:
+def gatekeeper(gk_config: CognithorConfig) -> Gatekeeper:
     """Initialisierter Gatekeeper."""
     gk = Gatekeeper(gk_config)
     gk.initialize()

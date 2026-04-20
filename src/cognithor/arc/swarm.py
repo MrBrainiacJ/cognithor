@@ -54,7 +54,7 @@ class ArcSwarmOrchestrator:
     Args:
         max_parallel: Maximum number of concurrent game sessions.
         use_llm: Whether to enable the LLM planner for each agent.
-        config: Optional JarvisConfig instance (reads arc sub-config).
+        config: Optional CognithorConfig instance (reads arc sub-config).
     """
 
     def __init__(

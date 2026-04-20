@@ -70,7 +70,7 @@ async def init_agents(
     memory_manager: Any,
     mcp_client: Any,
     audit_logger: Any,
-    jarvis_home: Any,
+    cognithor_home: Any,
     handle_message: Any = None,
     heartbeat_config: Any = None,
     heartbeat_scheduler_instance: Any = None,
@@ -78,11 +78,11 @@ async def init_agents(
     """Initialize agent subsystems: skills, router, ingest, heartbeat, cron.
 
     Args:
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
         memory_manager: MemoryManager instance.
         mcp_client: JarvisMCPClient instance.
         audit_logger: AuditLogger instance.
-        jarvis_home: Path to jarvis home directory.
+        cognithor_home: Path to jarvis home directory.
         handle_message: Gateway.handle_message callback (for cron engine).
         heartbeat_config: Heartbeat configuration (from config.heartbeat).
         heartbeat_scheduler_instance: Existing heartbeat scheduler (or None).
@@ -103,12 +103,12 @@ async def init_agents(
 
         skill_registry = SkillRegistry()
         skill_dirs = [
-            jarvis_home / "data" / "procedures",
-            jarvis_home / config.plugins.skills_dir,
+            cognithor_home / "data" / "procedures",
+            cognithor_home / config.plugins.skills_dir,
         ]
         # Ensure generated skills directory exists (loaded automatically
         # by SkillRegistry.load_generated_skills via the skills parent dir)
-        generated_dir = jarvis_home / "skills" / "generated"
+        generated_dir = cognithor_home / "skills" / "generated"
         generated_dir.mkdir(parents=True, exist_ok=True)
         # Also check repo data/procedures directory
         repo_procedures = Path(__file__).parent.parent.parent.parent.parent / "data" / "procedures"
@@ -134,7 +134,7 @@ async def init_agents(
     try:
         from cognithor.skills.lifecycle import SkillLifecycleManager
 
-        generated_dir = jarvis_home / "skills" / "generated"
+        generated_dir = cognithor_home / "skills" / "generated"
         skill_lifecycle = SkillLifecycleManager(
             registry=skill_registry,
             generated_dir=generated_dir,
@@ -145,7 +145,7 @@ async def init_agents(
     result["skill_lifecycle"] = skill_lifecycle
 
     # Agent Router (multi-agent routing + audit)
-    agents_config = jarvis_home / "config" / "agents.yaml"
+    agents_config = cognithor_home / "config" / "agents.yaml"
     if agents_config.exists():
         agent_router = AgentRouter.from_yaml(
             agents_config,
@@ -163,9 +163,9 @@ async def init_agents(
         from cognithor.memory.ingest import IngestConfig, IngestPipeline
 
         ingest_config = IngestConfig(
-            watch_dir=jarvis_home / "ingest",
-            processed_dir=jarvis_home / "ingest" / "processed",
-            failed_dir=jarvis_home / "ingest" / "failed",
+            watch_dir=cognithor_home / "ingest",
+            processed_dir=cognithor_home / "ingest" / "processed",
+            failed_dir=cognithor_home / "ingest" / "failed",
         )
         ingest_pipeline = IngestPipeline(ingest_config, memory_manager)
         ingest_stats = ingest_pipeline.stats()
@@ -195,7 +195,7 @@ async def init_agents(
             jobs_path=config.cron_config_file,
             handler=handle_message,
             heartbeat_config=config.heartbeat,
-            jarvis_home=jarvis_home,
+            cognithor_home=cognithor_home,
             heartbeat_scheduler=heartbeat_scheduler,
         )
     except Exception:

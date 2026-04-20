@@ -1,5 +1,5 @@
 """
-Jarvis · Configuration system.
+Cognithor · Configuration system.
 
 Loads configuration from:
   1. Defaults (defined here)
@@ -2500,8 +2500,8 @@ class SocialConfig(BaseModel):
 # ============================================================================
 
 
-class JarvisConfig(BaseModel):
-    """Complete Jarvis configuration. [B§12, §4.9]
+class CognithorConfig(BaseModel):
+    """Complete Cognithor configuration. [B§12, §4.9]
 
     Loaded once at startup and then used throughout the entire system.
     """
@@ -2613,7 +2613,7 @@ class JarvisConfig(BaseModel):
     )
 
     # Basis-Pfade
-    jarvis_home: Path = Field(default_factory=lambda: Path.home() / ".cognithor")
+    cognithor_home: Path = Field(default_factory=lambda: Path.home() / ".cognithor")
 
     # Subsystem-Konfigurationen
     ollama: OllamaConfig = Field(default_factory=OllamaConfig)
@@ -2954,18 +2954,18 @@ class JarvisConfig(BaseModel):
 
     @property
     def config_file(self) -> Path:
-        """Pfad zur Jarvis-Konfigurationsdatei."""
-        return self.jarvis_home / "config.yaml"
+        """Pfad zur Cognithor-Konfigurationsdatei."""
+        return self.cognithor_home / "config.yaml"
 
     @property
     def policies_dir(self) -> Path:
         """Directory for security policies."""
-        return self.jarvis_home / self.gatekeeper.policies_dir
+        return self.cognithor_home / self.gatekeeper.policies_dir
 
     @property
     def memory_dir(self) -> Path:
         """Wurzelverzeichnis des Memory-Systems."""
-        return self.jarvis_home / "memory"
+        return self.cognithor_home / "memory"
 
     @property
     def core_memory_file(self) -> Path:
@@ -2995,7 +2995,7 @@ class JarvisConfig(BaseModel):
     @property
     def index_dir(self) -> Path:
         """Directory for BM25/FTS index files."""
-        return self.jarvis_home / "index"
+        return self.cognithor_home / "index"
 
     @property
     def db_path(self) -> Path:
@@ -3010,22 +3010,29 @@ class JarvisConfig(BaseModel):
     @property
     def workspace_dir(self) -> Path:
         """Working directory for temporary files."""
-        return self.jarvis_home / "workspace"
+        return self.cognithor_home / "workspace"
 
     @property
     def logs_dir(self) -> Path:
         """Directory for log files."""
-        return self.jarvis_home / "logs"
+        return self.cognithor_home / "logs"
 
     @property
     def mcp_config_file(self) -> Path:
         """Pfad zur MCP-Server-Konfiguration."""
-        return self.jarvis_home / "mcp" / "config.yaml"
+        return self.cognithor_home / "mcp" / "config.yaml"
 
     @property
     def cron_config_file(self) -> Path:
         """Pfad zur Cron-Konfiguration."""
-        return self.jarvis_home / "cron" / "jobs.yaml"
+        return self.cognithor_home / "cron" / "jobs.yaml"
+
+    # ---- Backward-compat alias ----
+
+    @property
+    def jarvis_home(self) -> Path:
+        """Deprecated alias for cognithor_home. Remove in v1.0."""
+        return self.cognithor_home
 
     # ---- Verzeichnisstruktur-Management ----
 
@@ -3063,7 +3070,7 @@ def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
       1. Wenn ``parts`` eine existierende Dict-Sektion in ``data`` trifft,
          descend rekursiv und setze den Rest als Leaf-Key.
       2. Sonst: Wenn der volle joined Name (``"_".join(parts)``) ein
-         deklariertes JarvisConfig-Top-Level-Feld ist -> Flat-Key
+         deklariertes CognithorConfig-Top-Level-Feld ist -> Flat-Key
          (z. B. ``LLM_BACKEND_TYPE`` -> ``llm_backend_type``).
       3. Sonst: Wenn ``parts[0]`` eine deklarierte Sub-Config ist
          (z. B. ``ollama``, ``models``, ``planner``, ...) -> Sektion
@@ -3075,12 +3082,12 @@ def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
     COGNITHOR_* überschreibt.
     """
     # Build once per call: cheap (no runtime cost to import here).
-    top_level_fields = set(JarvisConfig.model_fields.keys())
+    top_level_fields = set(CognithorConfig.model_fields.keys())
 
     # Single-word env vars that must map to a prefixed field name.
-    # JARVIS_HOME and COGNITHOR_HOME both point at `jarvis_home`.
+    # JARVIS_HOME and COGNITHOR_HOME both point at `cognithor_home`.
     _SINGLE_PART_ALIASES: dict[str, str] = {
-        "home": "jarvis_home",
+        "home": "cognithor_home",
     }
 
     for prefix in ("JARVIS_", "COGNITHOR_"):
@@ -3135,7 +3142,7 @@ def _apply_env_overrides(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def load_config(config_path: Path | None = None) -> JarvisConfig:
+def load_config(config_path: Path | None = None) -> CognithorConfig:
     """Loads the configuration.
 
     Order (later overrides earlier):
@@ -3147,7 +3154,7 @@ def load_config(config_path: Path | None = None) -> JarvisConfig:
         config_path: Expliziter Pfad zur config.yaml. Wenn None: ~/.cognithor/config.yaml
 
     Returns:
-        Fully validated JarvisConfig.
+        Fully validated CognithorConfig.
     """
     data: dict[str, Any] = {}
 
@@ -3169,13 +3176,18 @@ def load_config(config_path: Path | None = None) -> JarvisConfig:
                 exc,
             )
 
-    # 2. Umgebungsvariablen anwenden
+    # 2. Migrate pre-v1 YAML keys: jarvis_home -> cognithor_home.
+    #    User config files written before the rename still contain the old key.
+    if "jarvis_home" in data and "cognithor_home" not in data:
+        data["cognithor_home"] = data.pop("jarvis_home")
+
+    # 3. Umgebungsvariablen anwenden
     data = _apply_env_overrides(data)
 
-    # 3. Version aus YAML ignorieren — immer aus dem Package nehmen
+    # 4. Version aus YAML ignorieren — immer aus dem Package nehmen
     data.pop("version", None)
 
-    # 4. Model-Strings aus Env-Vars in ModelConfig-Dicts konvertieren
+    # 5. Model-Strings aus Env-Vars in ModelConfig-Dicts konvertieren
     #    COGNITHOR_MODELS_PLANNER=qwen3.5:9b → {"name": "qwen3.5:9b"}
     _MODEL_ROLES = {"planner", "executor", "coder", "coder_fast", "embedding"}
     if "models" in data and isinstance(data["models"], dict):
@@ -3184,23 +3196,23 @@ def load_config(config_path: Path | None = None) -> JarvisConfig:
             if isinstance(val, str):
                 data["models"][role] = {"name": val}
 
-    # 5. Pydantic validates and fills defaults
-    cfg = JarvisConfig(**data)
+    # 6. Pydantic validates and fills defaults
+    cfg = CognithorConfig(**data)
 
-    # 6. Keyring fallback: fill empty API-key fields from OS Keyring
+    # 7. Keyring fallback: fill empty API-key fields from OS Keyring
     _resolve_secrets(cfg)
 
     return cfg
 
 
-def _resolve_secrets(config: JarvisConfig) -> None:
+def _resolve_secrets(config: CognithorConfig) -> None:
     """Replace empty API-key fields with values retrieved from OS Keyring.
 
     Called by :func:`load_config` after the config object is built.
     Completely non-throwing: if keyring is unavailable the config is
     returned unchanged.
 
-    This is the counterpart to :class:`jarvis.security.secret_store.SecretStore`
+    This is the counterpart to :class:`cognithor.security.secret_store.SecretStore`
     which migrates secrets *out of* config.yaml *into* the keyring.
     """
     _SECRET_FIELDS = (
@@ -3310,7 +3322,7 @@ werden.
 """
 
 _DEFAULT_POLICY = """\
-# Jarvis · Default policies
+# Cognithor · Default policies
 # Architektur-Bibel §3.2
 
 rules:
@@ -3357,7 +3369,7 @@ rules:
 """
 
 _DEFAULT_CONFIG = """\
-# Jarvis · Main configuration
+# Cognithor · Main configuration
 # Generated on first start. Customize as needed.
 
 # Name of the user -- used in prompts and greetings.
@@ -3446,7 +3458,7 @@ logging:
 """
 
 _DEFAULT_CRON_JOBS = """\
-# Jarvis · Geplante Aufgaben
+# Cognithor · Geplante Aufgaben
 # Architektur-Bibel §10.1
 
 jobs:
@@ -3475,7 +3487,7 @@ jobs:
 """
 
 _DEFAULT_MCP_CONFIG = """\
-# Jarvis · MCP-Server Konfiguration
+# Cognithor · MCP-Server Konfiguration
 #
 # Builtin tools (automatically active, no configuration needed):
 #   Filesystem: read_file, write_file, edit_file, list_directory, delete_file
@@ -3570,7 +3582,7 @@ Wenn keine relevanten Punkte gefunden werden, antwortet Jarvis mit
 """
 
 
-def ensure_directory_structure(config: JarvisConfig) -> list[str]:
+def ensure_directory_structure(config: CognithorConfig) -> list[str]:
     """Creates the complete ~/.cognithor/ directory structure. [B§4.9]
 
     Idempotent -- kann beliebig oft aufgerufen werden.
@@ -3590,7 +3602,7 @@ def ensure_directory_structure(config: JarvisConfig) -> list[str]:
 
     # Verzeichnisse
     dirs = [
-        config.jarvis_home,
+        config.cognithor_home,
         config.policies_dir,
         config.memory_dir,
         config.episodes_dir,
@@ -3604,12 +3616,12 @@ def ensure_directory_structure(config: JarvisConfig) -> list[str]:
         config.workspace_dir,
         config.workspace_dir / "tmp",
         config.logs_dir,
-        config.jarvis_home / "mcp",
-        config.jarvis_home / "mcp" / "servers",
-        config.jarvis_home / "cron",
-        config.jarvis_home / "locks",
+        config.cognithor_home / "mcp",
+        config.cognithor_home / "mcp" / "servers",
+        config.cognithor_home / "cron",
+        config.cognithor_home / "locks",
         # Directory for plugins/skills
-        config.jarvis_home / config.plugins.skills_dir,
+        config.cognithor_home / config.plugins.skills_dir,
     ]
 
     for d in dirs:
@@ -3625,7 +3637,7 @@ def ensure_directory_structure(config: JarvisConfig) -> list[str]:
         (config.cron_config_file, _DEFAULT_CRON_JOBS),
         (config.mcp_config_file, _DEFAULT_MCP_CONFIG),
         # Heartbeat-Checkliste
-        (config.jarvis_home / config.heartbeat.checklist_file, _DEFAULT_HEARTBEAT_MD),
+        (config.cognithor_home / config.heartbeat.checklist_file, _DEFAULT_HEARTBEAT_MD),
     ]
 
     for path, content in default_files:
@@ -3716,3 +3728,8 @@ def _install_starter_procedures(procedures_dir: Path, created: list[str]) -> Non
                 created.append(str(target))
     except Exception:
         log.debug("starter_procedures_copy_skipped", exc_info=True)
+
+
+# Backward-compat alias for code written against the pre-v1 name.
+# Remove in v1.0 (no external downstream users identified; this is a safety net).
+JarvisConfig = CognithorConfig

@@ -1,4 +1,4 @@
-"""Base class for all Jarvis skills.
+"""Base class for all Cognithor skills.
 
 Every skill inherits from ``BaseSkill`` and implements ``execute()``.
 The SkillScaffolder (``jarvis.tools.skill_cli``) automatically generates
@@ -30,7 +30,7 @@ class SkillError(Exception):
 
 
 class BaseSkill(ABC):
-    """Abstract base class for all Jarvis skills.
+    """Abstract base class for all Cognithor skills.
 
     Class attributes:
         NAME:              Unique skill identifier (slug).

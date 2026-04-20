@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.shell import ShellTools, register_shell_tools
 
 if TYPE_CHECKING:
@@ -60,9 +60,9 @@ def _path_in_result(expected_path: Path, result: str) -> bool:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(tmp_path)],
         ),
@@ -72,7 +72,7 @@ def config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def shell(config: JarvisConfig) -> ShellTools:
+def shell(config: CognithorConfig) -> ShellTools:
     return ShellTools(config)
 
 
@@ -89,20 +89,20 @@ class TestBasicCommands:
         assert "Hello Jarvis" in result
 
     @pytest.mark.asyncio
-    async def test_pwd(self, shell: ShellTools, config: JarvisConfig) -> None:
+    async def test_pwd(self, shell: ShellTools, config: CognithorConfig) -> None:
         """pwd gibt das Arbeitsverzeichnis zurück."""
         result = await shell.exec_command("pwd")
         assert _path_in_result(config.workspace_dir, result)
 
     @pytest.mark.asyncio
-    async def test_ls(self, shell: ShellTools, config: JarvisConfig) -> None:
+    async def test_ls(self, shell: ShellTools, config: CognithorConfig) -> None:
         """ls in einem Verzeichnis mit Dateien funktioniert."""
         (config.workspace_dir / "test.txt").write_text("x")
         result = await shell.exec_command("ls")
         assert "test.txt" in result
 
     @pytest.mark.asyncio
-    async def test_cat_file(self, shell: ShellTools, config: JarvisConfig) -> None:
+    async def test_cat_file(self, shell: ShellTools, config: CognithorConfig) -> None:
         """cat liest Dateiinhalt."""
         (config.workspace_dir / "read_me.txt").write_text("Hallo Welt")
         result = await shell.exec_command("cat read_me.txt")
@@ -128,7 +128,7 @@ class TestBasicCommands:
 
 class TestWorkingDirectory:
     @pytest.mark.asyncio
-    async def test_custom_working_dir(self, shell: ShellTools, config: JarvisConfig) -> None:
+    async def test_custom_working_dir(self, shell: ShellTools, config: CognithorConfig) -> None:
         """Benutzerdefiniertes Working Directory wird verwendet (inside workspace)."""
         custom_dir = config.workspace_dir / "custom_wd"
         custom_dir.mkdir()
@@ -137,7 +137,7 @@ class TestWorkingDirectory:
 
     @pytest.mark.asyncio
     async def test_working_dir_created_if_missing(
-        self, shell: ShellTools, config: JarvisConfig
+        self, shell: ShellTools, config: CognithorConfig
     ) -> None:
         """Fehlendes Working Directory wird automatisch erstellt (inside workspace)."""
         new_dir = config.workspace_dir / "auto_created"
@@ -156,7 +156,7 @@ class TestWorkingDirectory:
         assert "Zugriff verweigert" in result
 
     @pytest.mark.asyncio
-    async def test_default_working_dir(self, shell: ShellTools, config: JarvisConfig) -> None:
+    async def test_default_working_dir(self, shell: ShellTools, config: CognithorConfig) -> None:
         """Default Working Directory ist ~/.cognithor/workspace."""
         result = await shell.exec_command("pwd")
         assert _path_in_result(config.workspace_dir, result)
@@ -260,7 +260,7 @@ class TestOutputDecoding:
 
 
 class TestRegisterShellTools:
-    def test_registers_exec_command(self, config: JarvisConfig) -> None:
+    def test_registers_exec_command(self, config: CognithorConfig) -> None:
         from cognithor.mcp.client import JarvisMCPClient
 
         client = JarvisMCPClient(config)
@@ -271,7 +271,7 @@ class TestRegisterShellTools:
         assert "exec_command" in tools
         assert len(tools) == 1
 
-    def test_schema_contains_command_param(self, config: JarvisConfig) -> None:
+    def test_schema_contains_command_param(self, config: CognithorConfig) -> None:
         from cognithor.mcp.client import JarvisMCPClient
 
         client = JarvisMCPClient(config)

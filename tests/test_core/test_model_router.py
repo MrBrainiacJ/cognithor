@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.model_router import (
     ModelRouter,
     OllamaClient,
@@ -25,17 +25,17 @@ from cognithor.models import Message, MessageRole
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_path)
 
 
 @pytest.fixture()
-def client(config: JarvisConfig) -> OllamaClient:
+def client(config: CognithorConfig) -> OllamaClient:
     return OllamaClient(config)
 
 
 @pytest.fixture()
-def router(config: JarvisConfig, client: OllamaClient) -> ModelRouter:
+def router(config: CognithorConfig, client: OllamaClient) -> ModelRouter:
     return ModelRouter(config, client)
 
 
@@ -47,41 +47,45 @@ def router(config: JarvisConfig, client: OllamaClient) -> ModelRouter:
 class TestModelSelection:
     """Testet select_model() für verschiedene Aufgabentypen."""
 
-    def test_planning_uses_planner_model(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_planning_uses_planner_model(
+        self, router: ModelRouter, config: CognithorConfig
+    ) -> None:
         model = router.select_model("planning", "high")
         assert model == config.models.planner.name
 
-    def test_reflection_uses_planner_model(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_reflection_uses_planner_model(
+        self, router: ModelRouter, config: CognithorConfig
+    ) -> None:
         model = router.select_model("reflection")
         assert model == config.models.planner.name
 
     def test_code_uses_coder_fast_by_default(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         model = router.select_model("code")
         assert model == config.models.coder_fast.name
 
     def test_code_high_complexity_uses_coder(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         model = router.select_model("code", "high")
         assert model == config.models.coder.name
 
-    def test_simple_uses_executor_model(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_simple_uses_executor_model(self, router: ModelRouter, config: CognithorConfig) -> None:
         model = router.select_model("simple_tool_call")
         assert model == config.models.executor.name
 
     def test_embedding_uses_embedding_model(
-        self, router: ModelRouter, config: JarvisConfig
+        self, router: ModelRouter, config: CognithorConfig
     ) -> None:
         model = router.select_model("embedding")
         assert model == config.models.embedding.name
 
-    def test_general_high_uses_planner(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_general_high_uses_planner(self, router: ModelRouter, config: CognithorConfig) -> None:
         model = router.select_model("general", "high")
         assert model == config.models.planner.name
 
-    def test_general_low_uses_executor(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_general_low_uses_executor(self, router: ModelRouter, config: CognithorConfig) -> None:
         model = router.select_model("general", "low")
         assert model == config.models.executor.name
 
@@ -89,7 +93,9 @@ class TestModelSelection:
 class TestModelFallback:
     """Testet Fallback wenn Modell nicht verfügbar."""
 
-    def test_fallback_to_available_model(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_fallback_to_available_model(
+        self, router: ModelRouter, config: CognithorConfig
+    ) -> None:
         # Simuliere dass nur das executor model verfügbar ist
         router._available_models = {config.models.executor.name}
         model = router.select_model("planning", "high")
@@ -101,7 +107,7 @@ class TestModelFallback:
         model = router.select_model("planning")
         assert model  # Gibt das angeforderte Modell zurück
 
-    def test_get_model_config_known(self, router: ModelRouter, config: JarvisConfig) -> None:
+    def test_get_model_config_known(self, router: ModelRouter, config: CognithorConfig) -> None:
         cfg = router.get_model_config(config.models.planner.name)
         assert "temperature" in cfg
         assert "context_window" in cfg

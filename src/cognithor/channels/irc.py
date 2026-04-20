@@ -34,7 +34,7 @@ _MAX_MSG_LENGTH = 450  # IRC max per line
 
 
 class IRCChannel(Channel):
-    """IRC Integration fuer Jarvis.
+    """IRC Integration fuer Cognithor.
 
     Verbindet sich zu einem IRC-Server, joint Channels und
     verarbeitet eingehende Nachrichten. Sendet Antworten mit

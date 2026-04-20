@@ -1,4 +1,4 @@
-"""Voice-WebSocket-Bridge: Audio-Streaming zwischen Browser und Jarvis.
+"""Voice-WebSocket-Bridge: Audio-Streaming zwischen Browser und Cognithor.
 
 Erweitert die WebUI um bidirektionales Audio-Streaming:
   - Browser → Jarvis: Sprachnachricht (WebM/Opus) → Whisper → Text → Agent

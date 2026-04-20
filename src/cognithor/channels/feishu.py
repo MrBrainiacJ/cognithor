@@ -34,7 +34,7 @@ _FEISHU_API_BASE = "https://open.feishu.cn/open-apis"
 
 
 class FeishuChannel(Channel):
-    """Feishu/Lark Integration fuer Jarvis.
+    """Feishu/Lark Integration fuer Cognithor.
 
     Empfaengt Nachrichten via Event Subscription (Webhook),
     sendet via REST API. Nutzt Tenant Access Token fuer Auth.

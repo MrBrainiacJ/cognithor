@@ -1,4 +1,4 @@
-"""Desktop Tools: Clipboard & Screenshot for Jarvis.
+"""Desktop Tools: Clipboard & Screenshot for Cognithor.
 
 MCP-Tools for interacting with the desktop environment.
 
@@ -368,7 +368,7 @@ def register_desktop_tools(
 
     Args:
         mcp_client: JarvisMCPClient instance.
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
 
     Returns:
         DesktopTools instance.

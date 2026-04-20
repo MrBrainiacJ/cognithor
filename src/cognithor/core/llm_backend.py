@@ -24,7 +24,7 @@ from cognithor.utils.logging import get_logger
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -1353,7 +1353,7 @@ class ClaudeCodeBackend(LLMBackend):
 # ============================================================================
 
 
-def create_backend(config: JarvisConfig) -> LLMBackend:
+def create_backend(config: CognithorConfig) -> LLMBackend:
     """Erstellt das konfigurierte LLM-Backend.
 
     Liest `config.llm_backend` und gibt die passende Implementierung zurueck.

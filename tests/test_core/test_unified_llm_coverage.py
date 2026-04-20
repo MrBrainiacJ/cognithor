@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.core.unified_llm import UnifiedLLMClient
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
@@ -24,7 +24,7 @@ def config(tmp_path) -> JarvisConfig:
 
 class TestUnifiedLLMOllamaMode:
     @pytest.mark.asyncio
-    async def test_chat_stream(self, config: JarvisConfig) -> None:
+    async def test_chat_stream(self, config: CognithorConfig) -> None:
         """Test streaming mode via Ollama."""
         mock_ollama = AsyncMock()
 
@@ -48,7 +48,7 @@ class TestUnifiedLLMOllamaMode:
         assert chunks[-1]["done"] is True
 
     @pytest.mark.asyncio
-    async def test_embed_ollama(self, config: JarvisConfig) -> None:
+    async def test_embed_ollama(self, config: CognithorConfig) -> None:
         """Embed via Ollama returns a flat list which gets wrapped in dict."""
         mock_ollama = AsyncMock()
         mock_ollama.embed = AsyncMock(return_value=[0.1, 0.2, 0.3])
@@ -60,7 +60,7 @@ class TestUnifiedLLMOllamaMode:
         assert result["embedding"] == [0.1, 0.2, 0.3]
 
     @pytest.mark.asyncio
-    async def test_list_models(self, config: JarvisConfig) -> None:
+    async def test_list_models(self, config: CognithorConfig) -> None:
         mock_ollama = AsyncMock()
         mock_ollama.list_models = AsyncMock(return_value=["qwen3:32b"])
 
@@ -70,7 +70,7 @@ class TestUnifiedLLMOllamaMode:
         assert "qwen3:32b" in models
 
     @pytest.mark.asyncio
-    async def test_close(self, config: JarvisConfig) -> None:
+    async def test_close(self, config: CognithorConfig) -> None:
         mock_ollama = AsyncMock()
         mock_ollama.close = AsyncMock()
 
@@ -316,14 +316,14 @@ class TestUnifiedLLMBackendMode:
 
 
 class TestUnifiedLLMFactory:
-    def test_create_ollama(self, config: JarvisConfig) -> None:
+    def test_create_ollama(self, config: CognithorConfig) -> None:
         with patch("cognithor.core.unified_llm.OllamaClient") as MockOllama:
             MockOllama.return_value = MagicMock()
             client = UnifiedLLMClient.create(config)
             assert isinstance(client, UnifiedLLMClient)
             assert client.backend_type == "ollama"
 
-    def test_create_with_backend_type(self, config: JarvisConfig) -> None:
+    def test_create_with_backend_type(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "openai"
         with patch("cognithor.core.unified_llm.OllamaClient") as MockOllama:
             MockOllama.return_value = MagicMock()
@@ -334,7 +334,7 @@ class TestUnifiedLLMFactory:
                 client = UnifiedLLMClient.create(config)
                 assert isinstance(client, UnifiedLLMClient)
 
-    def test_create_backend_failure_raises(self, config: JarvisConfig) -> None:
+    def test_create_backend_failure_raises(self, config: CognithorConfig) -> None:
         """If backend creation fails, raise OllamaError (no silent fallback)."""
         from cognithor.core.model_router import OllamaError
 

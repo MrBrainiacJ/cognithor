@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from cognithor.config import (
-    JarvisConfig,
+    CognithorConfig,
     SecurityConfig,
     ensure_directory_structure,
 )
@@ -65,11 +65,11 @@ class TestMemoryPipeline:
     @pytest.fixture()
     def memory_env(self, tmp_path: Path):
         """Komplette Memory-Umgebung mit allen Tiers."""
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         ensure_directory_structure(config)
         return config
 
-    def test_core_memory_roundtrip(self, memory_env: JarvisConfig):
+    def test_core_memory_roundtrip(self, memory_env: CognithorConfig):
         """Core Memory schreiben → über Manager laden → verifizieren."""
         core_path = memory_env.core_memory_path
         core_content = (
@@ -93,7 +93,7 @@ class TestMemoryPipeline:
         assert manager.core.content
         assert "KI-Assistent" in manager.core.content
 
-    def test_episodic_write_index_search(self, memory_env: JarvisConfig):
+    def test_episodic_write_index_search(self, memory_env: CognithorConfig):
         """Episodic Memory: Eintrag → Index → BM25-Suche."""
         manager = MemoryManager(memory_env)
         manager.initialize_sync()
@@ -121,7 +121,7 @@ class TestMemoryPipeline:
         found_texts = " ".join(r.chunk.text for r in results)
         assert "Müller" in found_texts
 
-    def test_semantic_entity_roundtrip(self, memory_env: JarvisConfig):
+    def test_semantic_entity_roundtrip(self, memory_env: CognithorConfig):
         """Semantic Memory: Entity anlegen → Relation → Graph-Suche."""
         manager = MemoryManager(memory_env)
         manager.initialize_sync()
@@ -163,7 +163,7 @@ class TestMemoryPipeline:
         assert len(relations) >= 1
         assert relations[0].relation_type == "hat_police"
 
-    def test_procedural_memory_lifecycle(self, memory_env: JarvisConfig):
+    def test_procedural_memory_lifecycle(self, memory_env: CognithorConfig):
         """Procedural Memory: Prozedur erstellen → matchen → aktualisieren."""
         manager = MemoryManager(memory_env)
         manager.initialize_sync()
@@ -201,7 +201,7 @@ class TestMemoryPipeline:
         assert updated.total_uses == 1
         assert updated.success_rate > 0
 
-    def test_chunker_indexer_search_pipeline(self, memory_env: JarvisConfig):
+    def test_chunker_indexer_search_pipeline(self, memory_env: CognithorConfig):
         """Chunker → Indexer → BM25 Suche · Komplette Pipeline."""
         manager = MemoryManager(memory_env)
         manager.initialize_sync()
@@ -238,7 +238,7 @@ class TestMemoryPipeline:
         results2 = manager.search_memory_sync("Monatsbeitrag 79€")
         assert len(results2) > 0
 
-    def test_multi_tier_search_ranking(self, memory_env: JarvisConfig):
+    def test_multi_tier_search_ranking(self, memory_env: CognithorConfig):
         """Suche über mehrere Tiers mit korrektem Ranking."""
         manager = MemoryManager(memory_env)
         manager.initialize_sync()
@@ -279,8 +279,8 @@ class TestSecurityChain:
 
     @pytest.fixture()
     def sec_env(self, tmp_path: Path):
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             security=SecurityConfig(
                 allowed_paths=[str(tmp_path)],
                 max_iterations=5,
@@ -471,9 +471,9 @@ class TestGatewayLifecycle:
     """Gateway Init → Message-Handling → Working Memory · End-to-End."""
 
     @pytest.fixture()
-    def gateway_config(self, tmp_path: Path) -> JarvisConfig:
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+    def gateway_config(self, tmp_path: Path) -> CognithorConfig:
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             security=SecurityConfig(
                 allowed_paths=[str(tmp_path)],
                 max_iterations=3,
@@ -594,8 +594,8 @@ class TestPGEToolExecution:
     def pge_env(self, tmp_path: Path):
         sandbox = tmp_path / "sandbox"
         sandbox.mkdir()
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             security=SecurityConfig(
                 allowed_paths=[str(sandbox), str(tmp_path / ".cognithor")],
                 max_iterations=5,
@@ -722,8 +722,8 @@ class TestMemoryGatewayIntegration:
 
     @pytest.fixture()
     def mem_gw_env(self, tmp_path: Path):
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             security=SecurityConfig(allowed_paths=[str(tmp_path)]),
         )
         ensure_directory_structure(config)
@@ -733,7 +733,7 @@ class TestMemoryGatewayIntegration:
         )
         return config
 
-    def test_memory_manager_full_initialization(self, mem_gw_env: JarvisConfig):
+    def test_memory_manager_full_initialization(self, mem_gw_env: CognithorConfig):
         """MemoryManager initialisiert alle 5 Tiers korrekt."""
         manager = MemoryManager(mem_gw_env)
         stats = manager.initialize_sync()
@@ -743,7 +743,7 @@ class TestMemoryGatewayIntegration:
         assert "entities" in stats
         assert stats["initialized"] is True
 
-    def test_working_memory_loads_core(self, mem_gw_env: JarvisConfig):
+    def test_working_memory_loads_core(self, mem_gw_env: CognithorConfig):
         """Working Memory lädt Core Memory beim Erstellen."""
         wm = WorkingMemory(session_id="test-123", max_tokens=4096)
         core_text = mem_gw_env.core_memory_path.read_text(encoding="utf-8")
@@ -752,7 +752,7 @@ class TestMemoryGatewayIntegration:
         assert "Jarvis" in wm.core_memory_text
         assert wm.session_id == "test-123"
 
-    def test_session_lifecycle_in_memory(self, mem_gw_env: JarvisConfig):
+    def test_session_lifecycle_in_memory(self, mem_gw_env: CognithorConfig):
         """Session starten → Daten schreiben → Session beenden."""
         manager = MemoryManager(mem_gw_env)
         manager.initialize_sync()
@@ -779,8 +779,8 @@ class TestSanitizerGatekeeperScenarios:
 
     @pytest.fixture()
     def env(self, tmp_path: Path):
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             security=SecurityConfig(allowed_paths=[str(tmp_path)]),
         )
         ensure_directory_structure(config)
@@ -932,15 +932,15 @@ class TestCrossModuleErrorHandling:
 
     @pytest.fixture()
     def env(self, tmp_path: Path):
-        config = JarvisConfig(
-            jarvis_home=tmp_path / ".cognithor",
+        config = CognithorConfig(
+            cognithor_home=tmp_path / ".cognithor",
             security=SecurityConfig(allowed_paths=[str(tmp_path)]),
         )
         ensure_directory_structure(config)
         return config
 
     @pytest.mark.asyncio
-    async def test_executor_handles_missing_tool(self, env: JarvisConfig):
+    async def test_executor_handles_missing_tool(self, env: CognithorConfig):
         """Executor gibt Fehler zurück wenn Tool nicht registriert."""
         mcp = JarvisMCPClient(env)
         executor = Executor(env, mcp)
@@ -951,7 +951,7 @@ class TestCrossModuleErrorHandling:
         results = await executor.execute([action], [decision])
         assert results[0].is_error
 
-    def test_memory_search_on_empty_index(self, env: JarvisConfig):
+    def test_memory_search_on_empty_index(self, env: CognithorConfig):
         """Memory-Suche auf leerem Index gibt leere Liste zurück."""
         manager = MemoryManager(env)
         manager.initialize_sync()
@@ -960,7 +960,7 @@ class TestCrossModuleErrorHandling:
         assert isinstance(results, list)
         assert len(results) == 0
 
-    def test_gatekeeper_handles_unknown_tool(self, env: JarvisConfig):
+    def test_gatekeeper_handles_unknown_tool(self, env: CognithorConfig):
         """Gatekeeper gibt sinnvolle Entscheidung für unbekanntes Tool."""
         gatekeeper = Gatekeeper(env)
         gatekeeper.initialize()

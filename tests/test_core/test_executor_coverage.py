@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.executor import ExecutionError, Executor
 from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel
 
@@ -21,8 +21,8 @@ class MockToolResult:
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_path)
 
 
 @pytest.fixture()
@@ -33,7 +33,7 @@ def mock_mcp() -> AsyncMock:
 
 
 @pytest.fixture()
-def executor(config: JarvisConfig, mock_mcp: AsyncMock) -> Executor:
+def executor(config: CognithorConfig, mock_mcp: AsyncMock) -> Executor:
     return Executor(config, mock_mcp)
 
 
@@ -208,7 +208,7 @@ class TestAgentContext:
         )
         executor.clear_agent_context()
 
-    def test_set_mcp_client(self, config: JarvisConfig) -> None:
+    def test_set_mcp_client(self, config: CognithorConfig) -> None:
         executor = Executor(config)
         mock_mcp = AsyncMock()
         executor.set_mcp_client(mock_mcp)
@@ -431,7 +431,7 @@ class TestInformStatus:
 
 class TestNoMCPClient:
     @pytest.mark.asyncio
-    async def test_no_mcp_client_error(self, config: JarvisConfig) -> None:
+    async def test_no_mcp_client_error(self, config: CognithorConfig) -> None:
         """Executor without mcp_client should return an error result."""
         exec_no_mcp = Executor(config, mcp_client=None)
         action = PlannedAction(tool="any_tool", params={})
@@ -451,7 +451,7 @@ class TestRuntimeMonitorBlock:
     @pytest.mark.asyncio
     async def test_runtime_monitor_blocks(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         mock_mcp: AsyncMock,
     ) -> None:
         """RuntimeMonitor blocking a tool should produce a SecurityBlock error."""
@@ -486,7 +486,7 @@ class TestAuditLogger:
     @pytest.mark.asyncio
     async def test_audit_logger_called_on_success(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         mock_mcp: AsyncMock,
     ) -> None:
         """On successful tool execution, audit_logger.log_tool_call is called with success=True."""
@@ -508,7 +508,7 @@ class TestAuditLogger:
     @pytest.mark.asyncio
     async def test_audit_logger_called_on_failure(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         mock_mcp: AsyncMock,
     ) -> None:
         """On failed tool execution, audit_logger.log_tool_call is called with success=False."""
@@ -538,7 +538,7 @@ class TestGapDetector:
     @pytest.mark.asyncio
     async def test_gap_detector_unknown_tool(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         mock_mcp: AsyncMock,
     ) -> None:
         """Non-retryable error -> gap_detector.report_unknown_tool is called."""
@@ -560,7 +560,7 @@ class TestGapDetector:
     @pytest.mark.asyncio
     async def test_gap_detector_repeated_failure(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         mock_mcp: AsyncMock,
     ) -> None:
         """All retries exhausted -> gap_detector.report_repeated_failure is called."""
@@ -594,7 +594,7 @@ class TestWorkspaceInjection:
     @pytest.mark.asyncio
     async def test_workspace_tool_gets_working_dir(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         mock_mcp: AsyncMock,
     ) -> None:
         """exec_command with agent workspace context -> working_dir injected."""

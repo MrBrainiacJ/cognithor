@@ -113,7 +113,7 @@ class WebUIChannel(Channel):
         self._ssl_keyfile = ssl_keyfile
         self._static_dir = static_dir
         self._config_manager = config_manager
-        self._config = config  # JarvisConfig (optional, für ConfigManager)
+        self._config = config  # CognithorConfig (optional, für ConfigManager)
         # Locate Flutter Web build — try multiple paths for robustness
         if self._static_dir is None:
             candidates = []
@@ -123,8 +123,8 @@ class WebUIChannel(Channel):
             # 2. Relative to CWD (works when started from repo root)
             candidates.append(Path.cwd() / "flutter_app" / "build" / "web")
             # 3. COGNITHOR_HOME (works in any install mode)
-            jarvis_home = Path(os.environ.get("COGNITHOR_HOME", Path.home() / ".cognithor"))
-            candidates.append(jarvis_home / "flutter_web")
+            cognithor_home = Path(os.environ.get("COGNITHOR_HOME", Path.home() / ".cognithor"))
+            candidates.append(cognithor_home / "flutter_web")
             # 4. Fallback: built-in webchat widget
             candidates.append(Path(__file__).parent / "webchat")
 

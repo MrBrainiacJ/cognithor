@@ -57,7 +57,7 @@ class IdentityLayer:
             data_dir: Persistence directory. Defaults to ~/.cognithor/identity/{identity_id}/.
             llm_fn: Cognithor's UnifiedLLMClient instance (adapted via LLMBridge).
             llm_model: Model name for LLM calls.
-            config: JarvisConfig or identity sub-config.
+            config: CognithorConfig or identity sub-config.
         """
         self._identity_id = identity_id
         self._config = config

@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, MemoryConfig
+from cognithor.config import CognithorConfig, MemoryConfig
 from cognithor.core.observer import ResponseEnvelope
 
 if TYPE_CHECKING:
@@ -469,7 +469,7 @@ class TestGatewayIntegration:
 
     @pytest.fixture()
     def gateway_config(self, tmp_path: Path):
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
         return config
 
@@ -802,7 +802,7 @@ class TestModelRouter:
 
     @pytest.fixture()
     def config(self, tmp_path: Path):
-        return JarvisConfig(jarvis_home=tmp_path)
+        return CognithorConfig(cognithor_home=tmp_path)
 
     @pytest.fixture()
     def router(self, config):
@@ -883,7 +883,7 @@ class TestModelRouter:
         """OllamaClient prüft Verfügbarkeit via /api/tags."""
         from cognithor.core.model_router import OllamaClient
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         client = OllamaClient(config)
 
         mock_resp = MagicMock()
@@ -905,7 +905,7 @@ class TestModelRouter:
 
         from cognithor.core.model_router import OllamaClient
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         client = OllamaClient(config)
 
         mock_http = AsyncMock()
@@ -922,7 +922,7 @@ class TestModelRouter:
         """OllamaClient listet Modelle."""
         from cognithor.core.model_router import OllamaClient
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         client = OllamaClient(config)
 
         mock_resp = MagicMock()
@@ -947,7 +947,7 @@ class TestModelRouter:
         """list_models gibt leere Liste bei Fehler."""
         from cognithor.core.model_router import OllamaClient
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         client = OllamaClient(config)
 
         mock_http = AsyncMock()
@@ -972,7 +972,7 @@ class TestMCPClient:
     def mcp(self, tmp_path: Path):
         from cognithor.mcp.client import JarvisMCPClient
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         return JarvisMCPClient(config)
 
     def test_register_builtin_handler(self, mcp):

@@ -20,7 +20,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.docker_tools import (
     DockerTools,
     _is_blocked_mount,
@@ -39,9 +39,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(tmp_path)],
         ),
@@ -51,7 +51,7 @@ def config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def docker(config: JarvisConfig) -> DockerTools:
+def docker(config: CognithorConfig) -> DockerTools:
     return DockerTools(config)
 
 
@@ -441,7 +441,7 @@ class TestRegistration:
     """Tests fuer register_docker_tools."""
 
     def test_registration_when_docker_available(
-        self, mock_mcp_client: MagicMock, config: JarvisConfig
+        self, mock_mcp_client: MagicMock, config: CognithorConfig
     ) -> None:
         with patch("cognithor.mcp.docker_tools._docker_available", return_value=True):
             result = register_docker_tools(mock_mcp_client, config)
@@ -462,7 +462,7 @@ class TestRegistration:
     def test_registration_skipped_when_docker_unavailable(
         self,
         mock_mcp_client: MagicMock,
-        config: JarvisConfig,
+        config: CognithorConfig,
     ) -> None:
         with patch("cognithor.mcp.docker_tools._docker_available", return_value=False):
             result = register_docker_tools(mock_mcp_client, config)

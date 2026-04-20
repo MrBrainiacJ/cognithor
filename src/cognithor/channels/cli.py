@@ -236,7 +236,7 @@ class CliChannel(Channel):
 
                 config_path = None
                 if self._config is not None:
-                    config_path = getattr(self._config, "jarvis_home", None)
+                    config_path = getattr(self._config, "cognithor_home", None)
                     if config_path is not None:
                         config_path = config_path / "config.yaml"
                 # config_tui uses prompt_toolkit's sync API — running it in a

@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.model_router import ModelRouter, OllamaClient, OllamaError
 from cognithor.core.reflector import Reflector
 from cognithor.models import (
@@ -43,8 +43,8 @@ from cognithor.models import (
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    return JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    return CognithorConfig(cognithor_home=tmp_path)
 
 
 @pytest.fixture()
@@ -53,7 +53,7 @@ def mock_ollama() -> AsyncMock:
 
 
 @pytest.fixture()
-def mock_router(config: JarvisConfig) -> MagicMock:
+def mock_router(config: CognithorConfig) -> MagicMock:
     router = MagicMock(spec=ModelRouter)
     router.select_model.return_value = "qwen3:32b"
     router.get_model_config.return_value = {
@@ -65,7 +65,7 @@ def mock_router(config: JarvisConfig) -> MagicMock:
 
 
 @pytest.fixture()
-def reflector(config: JarvisConfig, mock_ollama: AsyncMock, mock_router: MagicMock) -> Reflector:
+def reflector(config: CognithorConfig, mock_ollama: AsyncMock, mock_router: MagicMock) -> Reflector:
     return Reflector(config, mock_ollama, mock_router)
 
 

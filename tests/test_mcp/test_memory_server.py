@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.mcp.memory_server import MemoryTools, register_memory_tools
 from cognithor.memory.manager import MemoryManager
 from cognithor.models import Entity, MemoryTier, Relation
@@ -28,13 +28,13 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def config(tmp_path: Path) -> JarvisConfig:
+def config(tmp_path: Path) -> CognithorConfig:
     """Config mit temporärem Home-Verzeichnis."""
-    return JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+    return CognithorConfig(cognithor_home=tmp_path / ".cognithor")
 
 
 @pytest.fixture
-def manager(config: JarvisConfig) -> MemoryManager:
+def manager(config: CognithorConfig) -> MemoryManager:
     """Initialisierter MemoryManager."""
     mm = MemoryManager(config)
     mm.initialize_sync()
@@ -48,7 +48,7 @@ def tools(manager: MemoryManager) -> MemoryTools:
 
 
 @pytest.fixture
-def manager_with_data(manager: MemoryManager, config: JarvisConfig) -> MemoryManager:
+def manager_with_data(manager: MemoryManager, config: CognithorConfig) -> MemoryManager:
     """MemoryManager mit vorindexierten Testdaten."""
     # Semantic data
     knowledge_dir = config.knowledge_dir

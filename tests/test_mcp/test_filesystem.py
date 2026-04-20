@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.filesystem import FileSystemError, FileSystemTools
 
 if TYPE_CHECKING:
@@ -36,10 +36,10 @@ def sandbox(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def config(tmp_path: Path, sandbox: Path) -> JarvisConfig:
+def config(tmp_path: Path, sandbox: Path) -> CognithorConfig:
     """Config deren allowed_paths auf die Sandbox zeigt."""
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[str(sandbox), str(tmp_path / ".cognithor")],
         ),
@@ -49,7 +49,7 @@ def config(tmp_path: Path, sandbox: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def fs(config: JarvisConfig) -> FileSystemTools:
+def fs(config: CognithorConfig) -> FileSystemTools:
     return FileSystemTools(config)
 
 
@@ -315,7 +315,7 @@ class TestListDirectory:
 
 
 class TestRegisterFsTools:
-    def test_registers_all_tools(self, config: JarvisConfig) -> None:
+    def test_registers_all_tools(self, config: CognithorConfig) -> None:
         """Alle 4 Tools werden beim MCP-Client registriert."""
         from cognithor.mcp.client import JarvisMCPClient
         from cognithor.mcp.filesystem import register_fs_tools
@@ -332,7 +332,7 @@ class TestRegisterFsTools:
         assert "list_directory" in tools
         assert len(tools) == 5
 
-    def test_schemas_contain_descriptions(self, config: JarvisConfig) -> None:
+    def test_schemas_contain_descriptions(self, config: CognithorConfig) -> None:
         """Tool-Schemas enthalten Beschreibungen."""
         from cognithor.mcp.client import JarvisMCPClient
         from cognithor.mcp.filesystem import register_fs_tools

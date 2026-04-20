@@ -1,4 +1,4 @@
-"""Jarvis · Encrypted Agent Vaults & Isolated Session Stores.
+"""Cognithor · Encrypted Agent Vaults & Isolated Session Stores.
 
 Complete encapsulation per agent:
 

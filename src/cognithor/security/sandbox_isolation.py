@@ -1,4 +1,4 @@
-"""Jarvis · Strict sandbox isolation & multi-tenant.
+"""Cognithor · Strict sandbox isolation & multi-tenant.
 
 Treats every agent as untrusted code:
 

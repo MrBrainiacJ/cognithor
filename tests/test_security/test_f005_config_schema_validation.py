@@ -42,7 +42,7 @@ def _setup_app(agents_data: dict | None = None, bindings_data: dict | None = Non
 
     app = FakeApp()
     config_manager = MagicMock()
-    config_manager.config.jarvis_home = Path(tmpdir)
+    config_manager.config.cognithor_home = Path(tmpdir)
     config_manager.config.mcp_config_file = Path(tmpdir) / "mcp.yaml"
     config_manager.config.cron_config_file = Path(tmpdir) / "cron.yaml"
     config_manager.config.core_memory_file = Path(tmpdir) / "core.md"
@@ -241,7 +241,7 @@ class TestAlreadySecureEndpoints:
         app = FakeApp()
         config_manager = MagicMock()
         config_manager.config.mcp_config_file = mcp_path
-        config_manager.config.jarvis_home = mcp_path.parent
+        config_manager.config.cognithor_home = mcp_path.parent
         hb = MagicMock()
         hb.checklist_file = "heartbeat.md"
         config_manager.config.heartbeat = hb

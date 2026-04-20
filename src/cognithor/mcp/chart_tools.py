@@ -1,4 +1,4 @@
-"""Chart- und Visualisierungs-Tools fuer Jarvis -- Diagramme als MCP-Tools.
+"""Chart- und Visualisierungs-Tools fuer Cognithor -- Diagramme als MCP-Tools.
 
 Tools:
   - create_chart: Erstellt ein Diagramm aus Daten (bar/line/pie/scatter/hbar)
@@ -23,7 +23,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -168,7 +168,7 @@ class ChartTools:
     Primaer matplotlib; ASCII-Fallback wenn nicht verfuegbar.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._workspace: Path = config.workspace_dir
         self._charts_dir: Path = self._workspace / "charts"
@@ -583,7 +583,7 @@ class ChartTools:
 
 def register_chart_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> ChartTools:
     """Registriert Chart-Tools beim MCP-Client.
 

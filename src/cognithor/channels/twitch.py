@@ -35,7 +35,7 @@ _MIN_MSG_INTERVAL = 1.5  # Twitch Rate Limit
 
 
 class TwitchChannel(Channel):
-    """Twitch Chat Integration fuer Jarvis.
+    """Twitch Chat Integration fuer Cognithor.
 
     Verbindet sich zu Twitch IRC (TMI), liest Chat-Nachrichten
     und antwortet. Unterstuetzt User-Whitelist fuer Sicherheit.

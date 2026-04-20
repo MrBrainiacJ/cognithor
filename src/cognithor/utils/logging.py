@@ -1,5 +1,5 @@
 """
-Jarvis · Structured Logging Setup.
+Cognithor · Structured Logging Setup.
 
 Zwei Renderer:
 - Entwicklung: Farbige Konsole (Rich-kompatibel)
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import logging
 
 """
-Fallback logging utilities for Jarvis.
+Fallback logging utilities for Cognithor.
 
 This module attempts to import and configure the `structlog` library for
 structured logging. In environments where `structlog` is unavailable

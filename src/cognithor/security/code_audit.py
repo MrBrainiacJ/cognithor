@@ -1,4 +1,4 @@
-"""Jarvis · Automated code analysis for skills.
+"""Cognithor · Automated code analysis for skills.
 
 Static analysis for detecting security risks in skills:
 

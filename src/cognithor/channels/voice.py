@@ -476,7 +476,7 @@ class VADDetector:
 
 
 class VoiceChannel(Channel):
-    """Voice Channel: Sprachein-/ausgabe fuer Jarvis. [B§9.3]
+    """Voice Channel: Sprachein-/ausgabe fuer Cognithor. [B§9.3]
 
     Nutzt Whisper fuer STT, Piper fuer TTS und optional
     Silero fuer Voice Activity Detection.

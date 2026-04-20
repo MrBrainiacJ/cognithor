@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 import httpx
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 logger = logging.getLogger("cognithor.memory.embeddings")
 
@@ -269,7 +269,7 @@ _NO_EMBEDDING_BACKENDS = {
 }
 
 
-def _get_api_key_and_url(config: JarvisConfig, backend: str) -> tuple[str, str]:
+def _get_api_key_and_url(config: CognithorConfig, backend: str) -> tuple[str, str]:
     """Return (api_key, base_url) for a backend type."""
     from cognithor.config import _PROVIDER_BASE_URLS
 
@@ -298,7 +298,7 @@ def _get_api_key_and_url(config: JarvisConfig, backend: str) -> tuple[str, str]:
     return api_key, base_url
 
 
-def create_embedding_provider(config: JarvisConfig) -> EmbeddingProvider:
+def create_embedding_provider(config: CognithorConfig) -> EmbeddingProvider:
     """Factory: Create the appropriate EmbeddingProvider based on the config.
 
     Returns:

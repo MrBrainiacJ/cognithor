@@ -1,4 +1,4 @@
-"""Abstract base class for all Jarvis channels.
+"""Abstract base class for all Cognithor channels.
 
 A channel is a communication link between the user and the gateway.
 Every channel must implement this interface.

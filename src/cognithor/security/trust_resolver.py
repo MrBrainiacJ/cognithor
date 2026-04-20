@@ -54,7 +54,7 @@ class TrustResolver:
 
     @classmethod
     def from_jarvis_config(cls, config: Any) -> TrustResolver:
-        """Erstellt TrustResolver aus JarvisConfig."""
+        """Erstellt TrustResolver aus CognithorConfig."""
         trust_cfg = getattr(config, "trust", None)
         if trust_cfg is None:
             return cls()

@@ -1,4 +1,4 @@
-"""E-Mail-Tools fuer Jarvis: IMAP-Lesezugriff und SMTP-Versand.
+"""E-Mail-Tools fuer Cognithor: IMAP-Lesezugriff und SMTP-Versand.
 
 Ermoeglicht dem Agenten E-Mail-Verwaltung ueber IMAP und SMTP.
 
@@ -40,7 +40,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -152,7 +152,7 @@ class EmailTools:
         _smtp_host: SMTP-Server Hostname.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         """Initialisiert EmailTools mit Konfiguration.
 
         Args:
@@ -674,7 +674,7 @@ def _format_email_list(emails: list[dict[str, Any]], folder: str, unread_only: b
 
 def register_email_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> EmailTools | None:
     """Registriert E-Mail-Tools beim MCP-Client.
 
@@ -682,7 +682,7 @@ def register_email_tools(
 
     Args:
         mcp_client: JarvisMCPClient-Instanz.
-        config: JarvisConfig mit email-Sektion.
+        config: CognithorConfig mit email-Sektion.
 
     Returns:
         EmailTools-Instanz oder None wenn deaktiviert.

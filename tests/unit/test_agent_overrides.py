@@ -10,11 +10,11 @@ class TestPlannerAgentOverrides:
 
     @pytest.fixture
     def mock_planner(self):
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.model_router import ModelRouter
         from cognithor.core.planner import Planner
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         mock_ollama = MagicMock()
         mock_ollama.chat = AsyncMock(
             return_value={

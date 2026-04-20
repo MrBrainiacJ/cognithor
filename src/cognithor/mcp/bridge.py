@@ -36,7 +36,7 @@ from cognithor.mcp.server import (
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.mcp.client import JarvisMCPClient
     from cognithor.memory.manager import MemoryManager
 
@@ -184,7 +184,7 @@ class MCPBridge:
         await bridge.start()  # Startet MCP-Server falls konfiguriert
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._server: JarvisMCPServer | None = None
         self._resource_provider: JarvisResourceProvider | None = None

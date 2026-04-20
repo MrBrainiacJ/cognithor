@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.database_tools import (
     DatabaseError,
     DatabaseTools,
@@ -38,9 +38,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),
     )
     ensure_directory_structure(cfg)
@@ -48,7 +48,7 @@ def config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def db_tools(config: JarvisConfig) -> DatabaseTools:
+def db_tools(config: CognithorConfig) -> DatabaseTools:
     return DatabaseTools(config)
 
 
@@ -105,7 +105,7 @@ class MockMCPClient:
 
 
 class TestRegistration:
-    def test_all_tools_registered(self, config: JarvisConfig) -> None:
+    def test_all_tools_registered(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         tools = register_database_tools(client, config)
 
@@ -113,21 +113,21 @@ class TestRegistration:
         expected = {"db_query", "db_schema", "db_execute", "db_connect"}
         assert set(client.registered.keys()) == expected
 
-    def test_handlers_are_callable(self, config: JarvisConfig) -> None:
+    def test_handlers_are_callable(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         register_database_tools(client, config)
 
         for name, entry in client.registered.items():
             assert callable(entry["handler"]), f"Handler fuer '{name}' nicht aufrufbar"
 
-    def test_descriptions_non_empty(self, config: JarvisConfig) -> None:
+    def test_descriptions_non_empty(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         register_database_tools(client, config)
 
         for name, entry in client.registered.items():
             assert entry["description"], f"Description fuer '{name}' ist leer"
 
-    def test_schemas_present(self, config: JarvisConfig) -> None:
+    def test_schemas_present(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         register_database_tools(client, config)
 

@@ -181,7 +181,7 @@ def ensure_mtls_certs(config: Any = None) -> Path | None:
     """Ensures mTLS certificates exist. Generates them if needed.
 
     Args:
-        config: JarvisConfig instance. Checks config.security.mtls.enabled.
+        config: CognithorConfig instance. Checks config.security.mtls.enabled.
 
     Returns:
         Path to the certs directory, or None if mTLS is disabled.
@@ -197,8 +197,8 @@ def ensure_mtls_certs(config: Any = None) -> Path | None:
     if certs_dir_str:
         certs_dir = Path(certs_dir_str).expanduser().resolve()
     else:
-        jarvis_home = getattr(config, "jarvis_home", Path.home() / ".cognithor")
-        certs_dir = Path(jarvis_home) / "certs"
+        cognithor_home = getattr(config, "cognithor_home", Path.home() / ".cognithor")
+        certs_dir = Path(cognithor_home) / "certs"
 
     certs_dir.mkdir(parents=True, exist_ok=True)
 

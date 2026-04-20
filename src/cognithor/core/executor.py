@@ -31,7 +31,7 @@ from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
     from cognithor.audit import AuditLogger
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.mcp.client import JarvisMCPClient
     from cognithor.security.monitor import RuntimeMonitor
     from cognithor.skills.generator import GapDetector
@@ -95,7 +95,7 @@ class Executor:
 
     def __init__(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         mcp_client: JarvisMCPClient | None = None,
         gap_detector: GapDetector | None = None,
         runtime_monitor: RuntimeMonitor | None = None,
@@ -186,7 +186,7 @@ class Executor:
         except Exception:
             pass  # Hooks optional
 
-    def reload_config(self, config: JarvisConfig) -> None:
+    def reload_config(self, config: CognithorConfig) -> None:
         """Update executor limits from new config (live reload).
 
         Called by the gateway when the user changes settings in the UI.

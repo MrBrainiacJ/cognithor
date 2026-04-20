@@ -1,4 +1,4 @@
-"""Config-API: REST-Endpoints fuer Jarvis-Konfiguration.
+"""Config-API: REST-Endpoints fuer Cognithor-Konfiguration.
 
 Stellt CRUD-Endpoints bereit fuer:
   - Heartbeat-Konfiguration
@@ -229,7 +229,7 @@ class ConfigManager:
         """Initialisiert den ConfigManager.
 
         Args:
-            config: JarvisConfig-Instanz (oder kompatibles Objekt).
+            config: CognithorConfig-Instanz (oder kompatibles Objekt).
         """
         self._config = config
         self._agents: dict[str, dict[str, Any]] = {}

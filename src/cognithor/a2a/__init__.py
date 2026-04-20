@@ -1,4 +1,4 @@
-"""Jarvis · A2A Protocol -- RC v1.0 (Linux Foundation).
+"""Cognithor · A2A Protocol -- RC v1.0 (Linux Foundation).
 
 Agent-to-agent communication following open standard.
 Replaces proprietary JAIP protocol with Linux Foundation-compliant A2A.

@@ -32,7 +32,7 @@ _CHAT_API_BASE = "https://chat.googleapis.com/v1"
 
 
 class GoogleChatChannel(Channel):
-    """Google Chat Integration fuer Jarvis.
+    """Google Chat Integration fuer Cognithor.
 
     Empfaengt Nachrichten via Webhook/Pub/Sub, sendet via REST API.
     Unterstuetzt Spaces, DMs und interaktive Cards.

@@ -7,9 +7,9 @@ from datetime import UTC, datetime, timedelta
 
 def test_session_config_defaults():
     """SessionConfig has correct defaults."""
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
-    config = JarvisConfig()
+    config = CognithorConfig()
     assert hasattr(config, "session")
     assert config.session.inactivity_timeout_minutes == 30
     assert config.session.chat_history_limit == 100
@@ -81,7 +81,7 @@ def test_should_create_new_session_no_sessions(tmp_path):
 
 def test_chat_history_limit_default():
     """Chat history limit defaults to 100."""
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
-    config = JarvisConfig()
+    config = CognithorConfig()
     assert config.session.chat_history_limit == 100

@@ -90,7 +90,7 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
     # To activate any of them, move the import block back here and
     # wire the key methods into handle_message() or a background task.
 
-    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".cognithor")
+    cognithor_home = getattr(config, "cognithor_home", Path.home() / ".cognithor")
 
     # --- All subsystems via _safe_call (failures logged + tracked) ---
 
@@ -142,14 +142,14 @@ def declare_advanced_attrs(config: Any) -> PhaseResult:
     def _init_strategy_memory():
         from cognithor.learning.strategy_memory import StrategyMemory
 
-        return StrategyMemory(db_path=Path(jarvis_home) / "index" / "strategy_memory.db")
+        return StrategyMemory(db_path=Path(cognithor_home) / "index" / "strategy_memory.db")
 
     _init_subsystem("strategy_memory", result, _init_strategy_memory)
 
     def _init_reflexion():
         from cognithor.learning.reflexion import ReflexionMemory
 
-        return ReflexionMemory(data_dir=Path(jarvis_home) / "memory")
+        return ReflexionMemory(data_dir=Path(cognithor_home) / "memory")
 
     _init_subsystem("reflexion_memory", result, _init_reflexion)
 
@@ -182,7 +182,7 @@ async def init_advanced(
     """Initialize advanced subsystems that depend on earlier phases.
 
     Args:
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
         task_telemetry: TaskTelemetryCollector (from PGE phase).
         error_clusterer: ErrorClusterer (from PGE phase).
         task_profiler: TaskProfiler (from PGE phase).
@@ -190,7 +190,7 @@ async def init_advanced(
         run_recorder: RunRecorder (from declare_advanced_attrs).
     """
     result: PhaseResult = {}
-    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".cognithor")
+    cognithor_home = getattr(config, "cognithor_home", Path.home() / ".cognithor")
 
     # --- All subsystems via _safe_call (failures logged + tracked) ---
 
@@ -235,7 +235,7 @@ async def init_advanced(
     def _init_session_analyzer():
         from cognithor.learning.session_analyzer import SessionAnalyzer
 
-        return SessionAnalyzer(data_dir=Path(jarvis_home) / "memory")
+        return SessionAnalyzer(data_dir=Path(cognithor_home) / "memory")
 
     _init_subsystem("session_analyzer", result, _init_session_analyzer)
 
@@ -273,7 +273,7 @@ async def init_advanced(
     def _init_knowledge_qa():
         from cognithor.learning.knowledge_qa import KnowledgeQAStore
 
-        return KnowledgeQAStore(db_path=Path(jarvis_home) / "memory" / "knowledge_qa.db")
+        return KnowledgeQAStore(db_path=Path(cognithor_home) / "memory" / "knowledge_qa.db")
 
     _init_subsystem("knowledge_qa", result, _init_knowledge_qa)
 
@@ -281,7 +281,7 @@ async def init_advanced(
         from cognithor.learning.lineage import KnowledgeLineageTracker
 
         return KnowledgeLineageTracker(
-            db_path=Path(jarvis_home) / "memory" / "knowledge_lineage.db"
+            db_path=Path(cognithor_home) / "memory" / "knowledge_lineage.db"
         )
 
     _init_subsystem("knowledge_lineage", result, _init_knowledge_lineage)
@@ -301,7 +301,7 @@ async def init_advanced(
         from cognithor.leads.service import LeadService
         from cognithor.leads.store import LeadStore
 
-        _db_path = str(Path(jarvis_home) / "leads.db")
+        _db_path = str(Path(cognithor_home) / "leads.db")
         _store = LeadStore(_db_path)
         result["leads_store"] = _store
         return LeadService(store=_store)
@@ -341,7 +341,7 @@ async def init_advanced(
         hl_cfg = HLConfig.from_dict(hl_dict)
         if not hl_cfg.enabled:
             return None
-        return HashlineGuard.create(config=hl_cfg, data_dir=Path(jarvis_home))
+        return HashlineGuard.create(config=hl_cfg, data_dir=Path(cognithor_home))
 
     _init_subsystem("hashline_guard", result, _init_hashline)
 

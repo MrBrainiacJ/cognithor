@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 
 _SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "cognithor"
 
@@ -34,31 +34,31 @@ class TestC13_MaxTokensBounds:
     """anthropic_max_tokens muss zwischen 1 und 1_000_000 liegen."""
 
     def test_default_value_valid(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         assert config.anthropic_max_tokens == 4096
 
     def test_valid_value(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=8192)
+        config = CognithorConfig(cognithor_home=tmp_path, anthropic_max_tokens=8192)
         assert config.anthropic_max_tokens == 8192
 
     def test_zero_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(Exception, match="max_tokens|anthropic"):
-            JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=0)
+            CognithorConfig(cognithor_home=tmp_path, anthropic_max_tokens=0)
 
     def test_negative_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(Exception, match="max_tokens|anthropic"):
-            JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=-1)
+            CognithorConfig(cognithor_home=tmp_path, anthropic_max_tokens=-1)
 
     def test_too_large_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(Exception, match="max_tokens|anthropic"):
-            JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=2_000_000)
+            CognithorConfig(cognithor_home=tmp_path, anthropic_max_tokens=2_000_000)
 
     def test_boundary_min(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=1)
+        config = CognithorConfig(cognithor_home=tmp_path, anthropic_max_tokens=1)
         assert config.anthropic_max_tokens == 1
 
     def test_boundary_max(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, anthropic_max_tokens=1_000_000)
+        config = CognithorConfig(cognithor_home=tmp_path, anthropic_max_tokens=1_000_000)
         assert config.anthropic_max_tokens == 1_000_000
 
 
@@ -71,24 +71,24 @@ class TestC14_RedisUrlPattern:
     """redis_url muss mit redis:// oder rediss:// beginnen."""
 
     def test_default_valid(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         assert config.redis_url.startswith("redis://")
 
     def test_redis_url(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, redis_url="redis://myhost:6379/1")
+        config = CognithorConfig(cognithor_home=tmp_path, redis_url="redis://myhost:6379/1")
         assert config.redis_url == "redis://myhost:6379/1"
 
     def test_rediss_url(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, redis_url="rediss://secure:6380/0")
+        config = CognithorConfig(cognithor_home=tmp_path, redis_url="rediss://secure:6380/0")
         assert config.redis_url == "rediss://secure:6380/0"
 
     def test_http_url_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(Exception, match="redis"):
-            JarvisConfig(jarvis_home=tmp_path, redis_url="http://wrong:6379")
+            CognithorConfig(cognithor_home=tmp_path, redis_url="http://wrong:6379")
 
     def test_empty_string_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(Exception, match="redis"):
-            JarvisConfig(jarvis_home=tmp_path, redis_url="")
+            CognithorConfig(cognithor_home=tmp_path, redis_url="")
 
 
 # ============================================================================
@@ -100,24 +100,24 @@ class TestC15_ApiKeyLength:
     """API Keys muessen mind. 8 Zeichen haben wenn gesetzt."""
 
     def test_empty_string_accepted(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, openai_api_key="")
+        config = CognithorConfig(cognithor_home=tmp_path, openai_api_key="")
         assert config.openai_api_key == ""
 
     def test_short_key_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(Exception, match="zu kurz"):
-            JarvisConfig(jarvis_home=tmp_path, openai_api_key="short")
+            CognithorConfig(cognithor_home=tmp_path, openai_api_key="short")
 
     def test_7_char_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(Exception, match="zu kurz"):
-            JarvisConfig(jarvis_home=tmp_path, anthropic_api_key="1234567")
+            CognithorConfig(cognithor_home=tmp_path, anthropic_api_key="1234567")
 
     def test_8_char_accepted(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, openai_api_key="12345678")
+        config = CognithorConfig(cognithor_home=tmp_path, openai_api_key="12345678")
         assert config.openai_api_key == "12345678"
 
     def test_mask_placeholder_accepted(self, tmp_path: Path) -> None:
         """'***' Masken-Platzhalter darf durchgehen (UI-Roundtrip)."""
-        config = JarvisConfig(jarvis_home=tmp_path, openai_api_key="***")
+        config = CognithorConfig(cognithor_home=tmp_path, openai_api_key="***")
         assert config.openai_api_key == "***"
 
     def test_all_key_fields_validated(self, tmp_path: Path) -> None:
@@ -140,7 +140,7 @@ class TestC15_ApiKeyLength:
         ]
         for field_name in key_fields:
             with pytest.raises(Exception, match="zu kurz"):
-                JarvisConfig(jarvis_home=tmp_path, **{field_name: "abc"})
+                CognithorConfig(cognithor_home=tmp_path, **{field_name: "abc"})
 
 
 # ============================================================================

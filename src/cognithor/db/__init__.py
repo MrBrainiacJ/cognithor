@@ -1,4 +1,4 @@
-"""Jarvis · Database Abstraction Layer.
+"""Cognithor · Database Abstraction Layer.
 
 Unterstuetzt SQLite (Default) und PostgreSQL (Optional).
 Optional: SQLCipher-Verschluesselung mit OS-Keyring.

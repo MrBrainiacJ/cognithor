@@ -237,9 +237,9 @@ class TestConfigCrossPlatform:
         assert config.max_concurrent_tests == 1
 
     def test_jarvis_config_includes_new_fields(self):
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert hasattr(config, "improvement")
         assert hasattr(config, "prompt_evolution")
         assert isinstance(config.improvement, ImprovementGovernanceConfig)

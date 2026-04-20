@@ -1,4 +1,4 @@
-"""Docker-Tools fuer Jarvis -- Container-Management via CLI.
+"""Docker-Tools fuer Cognithor -- Container-Management via CLI.
 
 Ermoeglicht dem Agenten Docker-Container zu verwalten:
   - docker_ps: Container auflisten
@@ -26,7 +26,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -211,7 +211,7 @@ class DockerTools:
     fuer non-blocking I/O. Kein docker-py erforderlich.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._workspace_dir = str(config.workspace_dir)
         log.info("docker_tools_init", workspace=self._workspace_dir)

@@ -1,4 +1,4 @@
-"""Such-Tools fuer Jarvis -- Dateisuche und Inhaltssuche als MCP-Tools.
+"""Such-Tools fuer Cognithor -- Dateisuche und Inhaltssuche als MCP-Tools.
 
 Drei Tools:
   - search_files: Dateien nach Name/Glob-Pattern finden
@@ -23,7 +23,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -68,7 +68,7 @@ class SearchTools:
     Binary-Dateien werden automatisch uebersprungen.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._workspace = config.workspace_dir
 
@@ -497,7 +497,7 @@ class SearchTools:
 
 def register_search_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> None:
     """Registriert Such-Tools beim MCP-Client."""
     tools = SearchTools(config)

@@ -1,4 +1,4 @@
-"""P2P Skill Distribution: Distributed network for Jarvis skills.
+"""P2P Skill Distribution: Distributed network for Cognithor skills.
 
 Ermoeglicht die dezentrale Verteilung von Skill-Paketen ohne
 zentralen Server. Jede Jarvis-Instanz kann Skills publizieren,

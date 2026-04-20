@@ -32,9 +32,9 @@ from cognithor.mcp.verified_lookup import (
 
 @pytest.fixture()
 def config(tmp_path):
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
-    return JarvisConfig(jarvis_home=tmp_path)
+    return CognithorConfig(cognithor_home=tmp_path)
 
 
 @pytest.fixture()

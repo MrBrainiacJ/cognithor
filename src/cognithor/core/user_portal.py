@@ -1,4 +1,4 @@
-"""Jarvis · Endnutzer-Portal.
+"""Cognithor · Endnutzer-Portal.
 
 Nicht-technisches Dashboard fuer Endanwender:
 

@@ -27,7 +27,7 @@ pytestmark = pytest.mark.skipif(
 def app_and_gateway(tmp_path):
     """Create a minimal FastAPI app with prompt-evolution routes."""
     from cognithor.channels.config_routes import create_config_routes
-    from cognithor.config import JarvisConfig, PromptEvolutionConfig
+    from cognithor.config import CognithorConfig, PromptEvolutionConfig
     from cognithor.config_manager import ConfigManager
     from cognithor.learning.prompt_evolution import PromptEvolutionEngine
 
@@ -35,8 +35,8 @@ def app_and_gateway(tmp_path):
 
     # Minimal config — ensure index dir exists for db_path property
     (tmp_path / "index").mkdir(parents=True, exist_ok=True)
-    config = JarvisConfig(
-        jarvis_home=tmp_path,
+    config = CognithorConfig(
+        cognithor_home=tmp_path,
         prompt_evolution=PromptEvolutionConfig(enabled=True),
     )
 

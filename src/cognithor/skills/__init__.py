@@ -4,7 +4,7 @@ This package contains utility functions for managing additional
 procedures ("Skills"). Skills are Markdown files with
 frontmatter that define trigger keywords, prerequisites, and step-by-step
 instructions. They are stored in the ``skills`` directory
-within the Jarvis home and automatically loaded at startup.
+within the Cognithor home and automatically loaded at startup.
 
 The CLI module ``jarvis.skills.cli`` can be used to list,
 create, or install skills.

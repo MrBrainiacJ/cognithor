@@ -1,4 +1,4 @@
-"""Jarvis · Memory integrity & extended explainability.
+"""Cognithor · Memory integrity & extended explainability.
 
 Prueft die Integritaet des Knowledge-Speichers:
 

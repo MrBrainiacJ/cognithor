@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.gateway.gateway import Gateway
 from cognithor.models import IncomingMessage
 
@@ -33,8 +33,8 @@ class MockToolResult:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
@@ -61,7 +61,7 @@ class TestFullPGECycle:
     """Ende-zu-Ende Tests für den Agent-Loop."""
 
     @pytest.mark.asyncio
-    async def test_direct_response_no_tools(self, config: JarvisConfig) -> None:
+    async def test_direct_response_no_tools(self, config: CognithorConfig) -> None:
         """Einfache Frage → direkte Antwort ohne Tool-Calls."""
         gateway = Gateway(config)
 
@@ -106,7 +106,7 @@ class TestFullPGECycle:
             assert response.is_final
 
     @pytest.mark.asyncio
-    async def test_tool_execution_cycle(self, config: JarvisConfig) -> None:
+    async def test_tool_execution_cycle(self, config: CognithorConfig) -> None:
         """User will Datei lesen → Planner plant → Gatekeeper prüft → Executor führt aus."""
         gateway = Gateway(config)
 
@@ -174,7 +174,7 @@ class TestFullPGECycle:
 
 class TestSessionManagement:
     @pytest.mark.asyncio
-    async def test_session_created(self, config: JarvisConfig) -> None:
+    async def test_session_created(self, config: CognithorConfig) -> None:
         gateway = Gateway(config)
         session = gateway._get_or_create_session("cli", "alex")
         assert session.channel == "cli"
@@ -182,14 +182,14 @@ class TestSessionManagement:
         assert session.session_id
 
     @pytest.mark.asyncio
-    async def test_session_reused(self, config: JarvisConfig) -> None:
+    async def test_session_reused(self, config: CognithorConfig) -> None:
         gateway = Gateway(config)
         s1 = gateway._get_or_create_session("cli", "alex")
         s2 = gateway._get_or_create_session("cli", "alex")
         assert s1.session_id == s2.session_id
 
     @pytest.mark.asyncio
-    async def test_different_channels_different_sessions(self, config: JarvisConfig) -> None:
+    async def test_different_channels_different_sessions(self, config: CognithorConfig) -> None:
         gateway = Gateway(config)
         s1 = gateway._get_or_create_session("cli", "alex")
         s2 = gateway._get_or_create_session("telegram", "alex")
@@ -203,14 +203,14 @@ class TestSessionManagement:
 
 class TestWorkingMemory:
     @pytest.mark.asyncio
-    async def test_working_memory_created(self, config: JarvisConfig) -> None:
+    async def test_working_memory_created(self, config: CognithorConfig) -> None:
         gateway = Gateway(config)
         session = gateway._get_or_create_session("cli", "alex")
         wm = gateway._get_or_create_working_memory(session)
         assert wm.session_id == session.session_id
 
     @pytest.mark.asyncio
-    async def test_core_memory_loaded(self, config: JarvisConfig) -> None:
+    async def test_core_memory_loaded(self, config: CognithorConfig) -> None:
         """Core Memory wird aus CORE.md geladen."""
         # Schreibe CORE.md
         config.core_memory_file.write_text("Ich bin Jarvis.", encoding="utf-8")
@@ -266,7 +266,7 @@ class TestSessionContextFeatures:
 
 class TestApprovalHandling:
     @pytest.mark.asyncio
-    async def test_no_channel_returns_original_decisions(self, config: JarvisConfig) -> None:
+    async def test_no_channel_returns_original_decisions(self, config: CognithorConfig) -> None:
         from cognithor.models import (
             GateDecision,
             GateStatus,

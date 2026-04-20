@@ -175,7 +175,7 @@ class TestCreateLock:
     def test_with_config_local(self) -> None:
         class FakeConfig:
             lock_backend = "local"
-            jarvis_home = "/tmp"
+            cognithor_home = "/tmp"
 
         lock = create_lock(FakeConfig())
         assert isinstance(lock, LocalLockBackend)
@@ -183,7 +183,7 @@ class TestCreateLock:
     def test_with_config_file(self, tmp_path) -> None:
         class FakeConfig:
             lock_backend = "file"
-            jarvis_home = str(tmp_path)
+            cognithor_home = str(tmp_path)
 
         lock = create_lock(FakeConfig())
         assert isinstance(lock, FileLockBackend)
@@ -192,7 +192,7 @@ class TestCreateLock:
         class FakeConfig:
             lock_backend = "redis"
             redis_url = "redis://localhost:6379/0"
-            jarvis_home = "/tmp"
+            cognithor_home = "/tmp"
 
         lock = create_lock(FakeConfig())
         assert isinstance(lock, RedisLockBackend)

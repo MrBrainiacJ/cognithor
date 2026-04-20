@@ -789,10 +789,10 @@ class TestMCPBridge:
     """Tests für die MCPBridge mit Mock-Objekten."""
 
     def _make_mock_config(self) -> MagicMock:
-        """Erstellt einen Mock JarvisConfig."""
+        """Erstellt einen Mock CognithorConfig."""
         config = MagicMock()
-        config.jarvis_home = MagicMock()
-        config.jarvis_home.__truediv__ = MagicMock(return_value=MagicMock())
+        config.cognithor_home = MagicMock()
+        config.cognithor_home.__truediv__ = MagicMock(return_value=MagicMock())
         config.mcp_config_file = MagicMock()
         config.mcp_config_file.exists.return_value = False
         config.owner_name = "test"

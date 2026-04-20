@@ -760,7 +760,7 @@ class TestA2AServerLifecycle:
 
 class TestA2AAdapter:
     def _make_config(self, a2a_enabled=True, tmp_path=None):
-        """Create a mock JarvisConfig."""
+        """Create a mock CognithorConfig."""
 
         config = MagicMock()
         mcp_path = MagicMock()

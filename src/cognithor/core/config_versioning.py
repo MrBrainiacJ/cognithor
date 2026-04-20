@@ -1,4 +1,4 @@
-"""Jarvis · Config Versioning with Rollback.
+"""Cognithor · Config Versioning with Rollback.
 
 Saves configuration revisions before changes and allows rollback
 to any previous revision.

@@ -1044,7 +1044,7 @@ class TestCronEngine:
             jobs_path=str(jobs_yaml),
             handler=handler,
             heartbeat_config=hb_config,
-            jarvis_home=tmp_path,
+            cognithor_home=tmp_path,
         )
         await engine.start()
         assert "heartbeat" in engine._active_jobs

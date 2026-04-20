@@ -1,4 +1,4 @@
-"""Skill Package: Official package format for Jarvis skills.
+"""Skill Package: Official package format for Cognithor skills.
 
 Definiert das standardisierte Format fuer Skill-Pakete, die ueber
 P2P-Netzwerke oder lokale Verzeichnisse verteilt werden koennen.

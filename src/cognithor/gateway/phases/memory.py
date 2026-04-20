@@ -52,7 +52,7 @@ async def init_memory(config: Any, audit_logger: Any) -> PhaseResult:
     """Initialize memory manager.
 
     Args:
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
         audit_logger: AuditLogger for memory auditing.
 
     Returns:

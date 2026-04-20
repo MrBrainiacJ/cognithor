@@ -85,7 +85,7 @@ class TestGatekeeperAuditBuffer:
         config.security.blocked_commands = []
         config.security.credential_patterns = []
         config.security.allowed_paths = []
-        config.jarvis_home = Path(tempfile.gettempdir())
+        config.cognithor_home = Path(tempfile.gettempdir())
 
         gk = Gatekeeper(config)
         assert hasattr(gk, "_audit_buffer")
@@ -101,7 +101,7 @@ class TestGatekeeperAuditBuffer:
         config.security.blocked_commands = []
         config.security.credential_patterns = []
         config.security.allowed_paths = []
-        config.jarvis_home = tmp_path
+        config.cognithor_home = tmp_path
 
         gk = Gatekeeper(config)
         gk._audit_buffer = ["entry1\n", "entry2\n", "entry3\n"]
@@ -123,7 +123,7 @@ class TestGatekeeperAuditBuffer:
         config.security.blocked_commands = []
         config.security.credential_patterns = []
         config.security.allowed_paths = []
-        config.jarvis_home = tmp_path
+        config.cognithor_home = tmp_path
 
         gk = Gatekeeper(config)
         gk._flush_audit_buffer()  # Kein Crash bei leerem Buffer

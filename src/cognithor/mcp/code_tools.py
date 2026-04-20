@@ -1,4 +1,4 @@
-"""Code-Tools fuer Jarvis -- Python-REPL und Code-Analyse als MCP-Tools.
+"""Code-Tools fuer Cognithor -- Python-REPL und Code-Analyse als MCP-Tools.
 
 Zwei Tools:
   - run_python: Fuehrt Python-Code in der Sandbox aus (temp-Datei + SandboxExecutor)
@@ -27,7 +27,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -54,7 +54,7 @@ class CodeTools:
       - Workspace-Confinement: Alle temp-Dateien im Workspace
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
 
         # Limits aus Config lesen (mit sicheren Defaults)
@@ -357,7 +357,7 @@ class CodeTools:
 
 def register_code_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> CodeTools:
     """Registriert Code-Tools beim MCP-Client.
 

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cognithor.config import (
-    JarvisConfig,
+    CognithorConfig,
     ensure_directory_structure,
     load_config,
 )
@@ -29,46 +29,46 @@ class TestJarvisConfigDefaults:
     """Config mit reinen Defaults (kein YAML, keine Env-Vars)."""
 
     def test_default_home(self) -> None:
-        config = JarvisConfig()
-        assert config.jarvis_home == Path.home() / ".cognithor"
+        config = CognithorConfig()
+        assert config.cognithor_home == Path.home() / ".cognithor"
 
     def test_custom_home(self, tmp_jarvis_home: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_jarvis_home)
-        assert config.jarvis_home == tmp_jarvis_home
+        config = CognithorConfig(cognithor_home=tmp_jarvis_home)
+        assert config.cognithor_home == tmp_jarvis_home
 
     def test_ollama_defaults(self) -> None:
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.ollama.base_url == "http://localhost:11434"
         assert config.ollama.timeout_seconds == 360
 
     def test_model_defaults(self) -> None:
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.models.planner.name == "qwen3:32b"
         assert config.models.executor.name == "qwen3:8b"
         assert config.models.embedding.name == "qwen3-embedding:0.6b"
 
     def test_planner_defaults(self) -> None:
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.planner.max_iterations == 25
         assert config.planner.escalation_after == 3
         assert config.planner.temperature == 0.7
 
     def test_memory_defaults(self) -> None:
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.memory.chunk_size_tokens == 400
         assert config.memory.weight_vector == 0.50
         assert config.memory.compaction_threshold == 0.80
 
     def test_gatekeeper_defaults(self) -> None:
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.gatekeeper.max_blocked_retries == 3
 
 
 class TestConfigPaths:
     """Alle abgeleiteten Pfade sind korrekt."""
 
-    def test_paths_relative_to_home(self, config: JarvisConfig) -> None:
-        home = config.jarvis_home
+    def test_paths_relative_to_home(self, config: CognithorConfig) -> None:
+        home = config.cognithor_home
         assert config.config_file == home / "config.yaml"
         assert config.memory_dir == home / "memory"
         assert config.core_memory_file == home / "memory" / "CORE.md"
@@ -133,7 +133,7 @@ logging:
 class TestDirectoryStructure:
     """Verzeichnisstruktur-Erstellung."""
 
-    def test_creates_all_directories(self, config: JarvisConfig) -> None:
+    def test_creates_all_directories(self, config: CognithorConfig) -> None:
         created = ensure_directory_structure(config)
         assert len(created) > 0
 
@@ -148,7 +148,7 @@ class TestDirectoryStructure:
         assert config.logs_dir.is_dir()
         assert config.policies_dir.is_dir()
 
-    def test_creates_default_files(self, config: JarvisConfig) -> None:
+    def test_creates_default_files(self, config: CognithorConfig) -> None:
         ensure_directory_structure(config)
 
         # CORE.md existiert
@@ -166,7 +166,7 @@ class TestDirectoryStructure:
         # Config-Datei existiert
         assert config.config_file.exists()
 
-    def test_idempotent(self, config: JarvisConfig) -> None:
+    def test_idempotent(self, config: CognithorConfig) -> None:
         """Doppeltes Aufrufen ist sicher und überschreibt nichts."""
         created_1 = ensure_directory_structure(config)
         assert len(created_1) > 0
@@ -175,7 +175,7 @@ class TestDirectoryStructure:
         created_2 = ensure_directory_structure(config)
         assert len(created_2) == 0
 
-    def test_does_not_overwrite_existing_files(self, config: JarvisConfig) -> None:
+    def test_does_not_overwrite_existing_files(self, config: CognithorConfig) -> None:
         ensure_directory_structure(config)
 
         # User ändert CORE.md
@@ -188,7 +188,7 @@ class TestDirectoryStructure:
         # Datei wurde NICHT überschrieben
         assert config.core_memory_file.read_text() == custom_content
 
-    def test_knowledge_subdirectories(self, config: JarvisConfig) -> None:
+    def test_knowledge_subdirectories(self, config: CognithorConfig) -> None:
         ensure_directory_structure(config)
         assert (config.knowledge_dir / "kunden").is_dir()
         assert (config.knowledge_dir / "produkte").is_dir()
@@ -198,10 +198,10 @@ class TestDirectoryStructure:
 class TestConfigSerialization:
     """Config lässt sich serialisieren und wiederherstellen."""
 
-    def test_json_round_trip(self, config: JarvisConfig) -> None:
+    def test_json_round_trip(self, config: CognithorConfig) -> None:
         data = config.model_dump_json()
-        restored = JarvisConfig.model_validate_json(data)
-        assert str(restored.jarvis_home) == str(config.jarvis_home)
+        restored = CognithorConfig.model_validate_json(data)
+        assert str(restored.cognithor_home) == str(config.cognithor_home)
         assert restored.ollama.base_url == config.ollama.base_url
         assert restored.models.planner.name == config.models.planner.name
 
@@ -214,43 +214,43 @@ class TestConfigSerialization:
 class TestSecurityConfig:
     """Tests für SecurityConfig."""
 
-    def test_defaults(self, config: JarvisConfig) -> None:
+    def test_defaults(self, config: CognithorConfig) -> None:
         assert config.security.max_iterations == 25
         assert len(config.security.allowed_paths) >= 2
         assert len(config.security.blocked_commands) >= 6
         assert len(config.security.credential_patterns) >= 3
 
     def test_custom_max_iterations(self, tmp_path: Path) -> None:
-        cfg = JarvisConfig(jarvis_home=tmp_path, security={"max_iterations": 20})
+        cfg = CognithorConfig(cognithor_home=tmp_path, security={"max_iterations": 20})
         assert cfg.security.max_iterations == 20
 
 
 # ============================================================================
-# Neue JarvisConfig Properties
+# Neue CognithorConfig Properties
 # ============================================================================
 
 
 class TestJarvisConfigExtended:
-    """Tests für erweiterte JarvisConfig Properties und Methoden."""
+    """Tests für erweiterte CognithorConfig Properties und Methoden."""
 
-    def test_version(self, config: JarvisConfig) -> None:
+    def test_version(self, config: CognithorConfig) -> None:
         from cognithor import __version__
 
         assert config.version == __version__
 
-    def test_log_level(self, config: JarvisConfig) -> None:
+    def test_log_level(self, config: CognithorConfig) -> None:
         assert config.log_level == "INFO"
 
-    def test_core_memory_path(self, config: JarvisConfig) -> None:
+    def test_core_memory_path(self, config: CognithorConfig) -> None:
         assert config.core_memory_path == config.core_memory_file
 
-    def test_ensure_directories_method(self, config: JarvisConfig) -> None:
+    def test_ensure_directories_method(self, config: CognithorConfig) -> None:
         config.ensure_directories()
         assert config.workspace_dir.is_dir()
         assert config.logs_dir.is_dir()
         assert config.policies_dir.is_dir()
 
-    def test_ensure_default_files_method(self, config: JarvisConfig) -> None:
+    def test_ensure_default_files_method(self, config: CognithorConfig) -> None:
         config.ensure_default_files()
         assert config.core_memory_file.exists()
         assert (config.policies_dir / "default.yaml").exists()
@@ -266,15 +266,15 @@ class TestModelAutoAdaptation:
 
     def test_ollama_defaults_unchanged(self) -> None:
         """Ohne API-Key bleiben Ollama-Defaults bestehen."""
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.llm_backend_type == "ollama"
         assert config.models.planner.name == "qwen3:32b"
         assert config.models.executor.name == "qwen3:8b"
 
     def test_openai_backend_adapts_models(self, tmp_path: Path) -> None:
         """Bei llm_backend_type='openai' werden Modelle automatisch angepasst."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="openai",
             openai_api_key="sk-test-key",
         )
@@ -287,8 +287,8 @@ class TestModelAutoAdaptation:
 
     def test_anthropic_backend_adapts_models(self, tmp_path: Path) -> None:
         """Bei llm_backend_type='anthropic' werden Modelle automatisch angepasst."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="anthropic",
             anthropic_api_key="sk-ant-test-key",
         )
@@ -301,8 +301,8 @@ class TestModelAutoAdaptation:
 
     def test_api_key_auto_detects_backend(self, tmp_path: Path) -> None:
         """Nur API-Key gesetzt (ohne expliziten Backend-Typ) → Backend wird erkannt."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             openai_api_key="sk-test-key",
         )
         assert config.llm_backend_type == "openai"
@@ -310,8 +310,8 @@ class TestModelAutoAdaptation:
 
     def test_anthropic_key_auto_detects_backend(self, tmp_path: Path) -> None:
         """Anthropic API-Key → Backend wird automatisch auf 'anthropic' gesetzt."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             anthropic_api_key="sk-ant-test-key",
         )
         assert config.llm_backend_type == "anthropic"
@@ -321,8 +321,8 @@ class TestModelAutoAdaptation:
         """Explizit gesetzte Modellnamen werden NICHT überschrieben."""
         from cognithor.models import ModelConfig
 
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="openai",
             openai_api_key="sk-test-key",
             models={
@@ -336,8 +336,8 @@ class TestModelAutoAdaptation:
 
     def test_heartbeat_model_adapts(self, tmp_path: Path) -> None:
         """Heartbeat-Modell wird ebenfalls angepasst."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="openai",
             openai_api_key="sk-test-key",
         )
@@ -345,8 +345,8 @@ class TestModelAutoAdaptation:
 
     def test_anthropic_prioritized_over_openai(self, tmp_path: Path) -> None:
         """Wenn beide API-Keys vorhanden: Anthropic hat Priorität."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             anthropic_api_key="sk-ant-test",
             openai_api_key="sk-test-key",
         )
@@ -359,30 +359,30 @@ class TestVisionModelAutoAdaptation:
 
     def test_vision_model_default_minicpm(self) -> None:
         """Default Vision-Model ist openbmb/minicpm-v4.5 (Ollama)."""
-        config = JarvisConfig()
+        config = CognithorConfig()
         assert config.vision_model == "openbmb/minicpm-v4.5"
         assert config.vision_model_detail == "qwen3-vl:32b"
 
     def test_vision_model_auto_openai(self, tmp_path: Path) -> None:
         """OpenAI-Key → vision_model wird gpt-5.2."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             openai_api_key="sk-test-key",
         )
         assert config.vision_model == "gpt-5.2"
 
     def test_vision_model_auto_anthropic(self, tmp_path: Path) -> None:
         """Anthropic-Key → vision_model wird claude-sonnet-4-6."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             anthropic_api_key="sk-ant-test-key",
         )
         assert config.vision_model == "claude-sonnet-4-6"
 
     def test_vision_model_explicit_not_overridden(self, tmp_path: Path) -> None:
         """Explizit gesetztes Vision-Model wird NICHT überschrieben."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             openai_api_key="sk-test-key",
             vision_model="my-custom-vision-model",
         )
@@ -399,8 +399,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_gemini_key_auto_detects_backend(self, tmp_path: Path) -> None:
         """Gemini API-Key → Backend wird automatisch auf 'gemini' gesetzt."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             gemini_api_key="AIza-test-key",
         )
         assert config.llm_backend_type == "gemini"
@@ -408,8 +408,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_groq_key_auto_detects_backend(self, tmp_path: Path) -> None:
         """Groq API-Key → Backend wird automatisch auf 'groq' gesetzt."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             groq_api_key="gsk_test-key",
         )
         assert config.llm_backend_type == "groq"
@@ -417,8 +417,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_deepseek_key_auto_detects_backend(self, tmp_path: Path) -> None:
         """DeepSeek API-Key → Backend wird automatisch auf 'deepseek' gesetzt."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             deepseek_api_key="sk-deepseek-test",
         )
         assert config.llm_backend_type == "deepseek"
@@ -426,8 +426,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_mistral_key_auto_detects_backend(self, tmp_path: Path) -> None:
         """Mistral API-Key → Backend wird automatisch auf 'mistral' gesetzt."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             mistral_api_key="mistral-test-key",
         )
         assert config.llm_backend_type == "mistral"
@@ -435,8 +435,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_together_key_auto_detects_backend(self, tmp_path: Path) -> None:
         """Together API-Key → Backend wird automatisch auf 'together' gesetzt."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             together_api_key="together-test-key",
         )
         assert config.llm_backend_type == "together"
@@ -444,8 +444,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_gemini_model_defaults(self, tmp_path: Path) -> None:
         """Gemini-Backend setzt korrekte Modellnamen."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="gemini",
             gemini_api_key="AIza-test",
         )
@@ -458,8 +458,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_groq_model_defaults(self, tmp_path: Path) -> None:
         """Groq-Backend setzt korrekte Modellnamen."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="groq",
             groq_api_key="gsk_test",
         )
@@ -471,8 +471,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_deepseek_model_defaults(self, tmp_path: Path) -> None:
         """DeepSeek-Backend setzt korrekte Modellnamen."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="deepseek",
             deepseek_api_key="sk-ds-test",
         )
@@ -482,8 +482,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_mistral_model_defaults(self, tmp_path: Path) -> None:
         """Mistral-Backend setzt korrekte Modellnamen."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="mistral",
             mistral_api_key="mistral-test",
         )
@@ -495,8 +495,8 @@ class TestMultiProviderAutoAdaptation:
 
     def test_together_model_defaults(self, tmp_path: Path) -> None:
         """Together-Backend setzt korrekte Modellnamen."""
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             llm_backend_type="together",
             together_api_key="together-test",
         )
@@ -505,92 +505,94 @@ class TestMultiProviderAutoAdaptation:
         assert config.models.coder.name == "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"
 
     def test_openrouter_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, openrouter_api_key="sk-or-test")
+        config = CognithorConfig(cognithor_home=tmp_path, openrouter_api_key="sk-or-test")
         assert config.llm_backend_type == "openrouter"
         assert config.models.planner.name == "anthropic/claude-opus-4.6"
 
     def test_xai_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, xai_api_key="xai-test")
+        config = CognithorConfig(cognithor_home=tmp_path, xai_api_key="xai-test")
         assert config.llm_backend_type == "xai"
         assert config.models.planner.name == "grok-4-1-fast-reasoning"
 
     def test_cerebras_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, cerebras_api_key="csk-test")
+        config = CognithorConfig(cognithor_home=tmp_path, cerebras_api_key="csk-test")
         assert config.llm_backend_type == "cerebras"
         assert config.models.planner.name == "gpt-oss-120b"
 
     def test_github_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, github_api_key="ghp_test")
+        config = CognithorConfig(cognithor_home=tmp_path, github_api_key="ghp_test")
         assert config.llm_backend_type == "github"
         assert config.models.planner.name == "gpt-4.1"
 
     def test_bedrock_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, bedrock_api_key="bedrock-test")
+        config = CognithorConfig(cognithor_home=tmp_path, bedrock_api_key="bedrock-test")
         assert config.llm_backend_type == "bedrock"
         assert config.models.planner.name == "us.anthropic.claude-opus-4-6-v1:0"
 
     def test_huggingface_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, huggingface_api_key="hf_test1")
+        config = CognithorConfig(cognithor_home=tmp_path, huggingface_api_key="hf_test1")
         assert config.llm_backend_type == "huggingface"
         assert config.models.planner.name == "meta-llama/Llama-3.3-70B-Instruct"
 
     def test_moonshot_key_auto_detects_backend(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, moonshot_api_key="sk-moon-test")
+        config = CognithorConfig(cognithor_home=tmp_path, moonshot_api_key="sk-moon-test")
         assert config.llm_backend_type == "moonshot"
         assert config.models.planner.name == "kimi-k2.5"
 
     def test_openrouter_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path, llm_backend_type="openrouter", openrouter_api_key="sk-or-test"
+        config = CognithorConfig(
+            cognithor_home=tmp_path, llm_backend_type="openrouter", openrouter_api_key="sk-or-test"
         )
         assert config.models.planner.name == "anthropic/claude-opus-4.6"
         assert config.models.executor.name == "google/gemini-2.5-flash"
         assert config.vision_model == "anthropic/claude-sonnet-4.6"
 
     def test_xai_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="xai", xai_api_key="xai-test")
+        config = CognithorConfig(
+            cognithor_home=tmp_path, llm_backend_type="xai", xai_api_key="xai-test"
+        )
         assert config.models.planner.name == "grok-4-1-fast-reasoning"
         assert config.models.executor.name == "grok-4-1-fast-non-reasoning"
         assert config.vision_model == "grok-4-1-fast-reasoning"
 
     def test_cerebras_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path, llm_backend_type="cerebras", cerebras_api_key="csk-test"
+        config = CognithorConfig(
+            cognithor_home=tmp_path, llm_backend_type="cerebras", cerebras_api_key="csk-test"
         )
         assert config.models.planner.name == "gpt-oss-120b"
         assert config.models.executor.name == "llama3.1-8b"
 
     def test_github_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path, llm_backend_type="github", github_api_key="ghp_test"
+        config = CognithorConfig(
+            cognithor_home=tmp_path, llm_backend_type="github", github_api_key="ghp_test"
         )
         assert config.models.planner.name == "gpt-4.1"
         assert config.models.embedding.name == "text-embedding-3-large"
 
     def test_bedrock_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path, llm_backend_type="bedrock", bedrock_api_key="test-bedrock"
+        config = CognithorConfig(
+            cognithor_home=tmp_path, llm_backend_type="bedrock", bedrock_api_key="test-bedrock"
         )
         assert config.models.planner.name == "us.anthropic.claude-opus-4-6-v1:0"
         assert config.models.embedding.name == "amazon.titan-embed-text-v2:0"
 
     def test_moonshot_model_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path, llm_backend_type="moonshot", moonshot_api_key="test-moon"
+        config = CognithorConfig(
+            cognithor_home=tmp_path, llm_backend_type="moonshot", moonshot_api_key="test-moon"
         )
         assert config.models.planner.name == "kimi-k2.5"
         assert config.models.executor.name == "kimi-k2-turbo-preview"
 
     def test_lmstudio_explicit_backend_keeps_model_names(self, tmp_path: Path) -> None:
         """LM Studio ändert Modellnamen nicht (kein Provider-Default)."""
-        config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="lmstudio")
+        config = CognithorConfig(cognithor_home=tmp_path, llm_backend_type="lmstudio")
         assert config.llm_backend_type == "lmstudio"
         # Modellnamen bleiben Ollama-Defaults (kein Auto-Replace)
         assert config.models.planner.name == "qwen3:32b"
 
     def test_lmstudio_does_not_set_online_mode(self, tmp_path: Path) -> None:
         """LM Studio ist lokal → operation_mode bleibt OFFLINE."""
-        config = JarvisConfig(jarvis_home=tmp_path, llm_backend_type="lmstudio")
+        config = CognithorConfig(cognithor_home=tmp_path, llm_backend_type="lmstudio")
         from cognithor.models import OperationMode
 
         assert config.resolved_operation_mode == OperationMode.OFFLINE
@@ -605,12 +607,12 @@ class TestExecutorConfig:
     """Tests für ExecutorConfig Felder."""
 
     def test_max_parallel_tools_default(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         assert config.executor.max_parallel_tools == 4
 
     def test_max_parallel_tools_custom(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             executor={"max_parallel_tools": 8},
         )
         assert config.executor.max_parallel_tools == 8
@@ -619,9 +621,9 @@ class TestExecutorConfig:
         import pydantic
 
         with __import__("pytest").raises(pydantic.ValidationError):
-            JarvisConfig(jarvis_home=tmp_path, executor={"max_parallel_tools": 0})
+            CognithorConfig(cognithor_home=tmp_path, executor={"max_parallel_tools": 0})
         with __import__("pytest").raises(pydantic.ValidationError):
-            JarvisConfig(jarvis_home=tmp_path, executor={"max_parallel_tools": 20})
+            CognithorConfig(cognithor_home=tmp_path, executor={"max_parallel_tools": 20})
 
 
 # ============================================================================
@@ -633,14 +635,14 @@ class TestWebConfigHttpRequest:
     """Tests für WebConfig HTTP-Request Felder."""
 
     def test_http_request_defaults(self, tmp_path: Path) -> None:
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         assert config.web.http_request_max_body_bytes == 1_048_576
         assert config.web.http_request_timeout_seconds == 30
         assert config.web.http_request_rate_limit_seconds == 1.0
 
     def test_http_request_custom(self, tmp_path: Path) -> None:
-        config = JarvisConfig(
-            jarvis_home=tmp_path,
+        config = CognithorConfig(
+            cognithor_home=tmp_path,
             web={
                 "http_request_max_body_bytes": 2_000_000,
                 "http_request_timeout_seconds": 60,
@@ -685,13 +687,13 @@ class TestLiveReload:
 
         from cognithor.core.executor import Executor
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         executor = Executor(config, AsyncMock())
         assert executor._max_parallel == 4
         assert executor._default_timeout == 30
 
         # Neue Config mit geänderten Werten
-        config2 = JarvisConfig(jarvis_home=tmp_path)
+        config2 = CognithorConfig(cognithor_home=tmp_path)
         config2.executor.max_parallel_tools = 8
         config2.executor.default_timeout_seconds = 60
 
@@ -701,12 +703,12 @@ class TestLiveReload:
 
     def test_max_sub_agent_depth_default(self, tmp_path) -> None:
         """SecurityConfig.max_sub_agent_depth hat Default 3."""
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         assert config.security.max_sub_agent_depth == 3
 
     def test_max_sub_agent_depth_configurable(self, tmp_path) -> None:
         """max_sub_agent_depth ist konfigurierbar."""
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         config.security.max_sub_agent_depth = 5
         assert config.security.max_sub_agent_depth == 5
 

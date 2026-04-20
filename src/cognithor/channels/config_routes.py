@@ -1,4 +1,4 @@
-"""Jarvis · Konfigurations-API Routes.
+"""Cognithor · Konfigurations-API Routes.
 
 REST-Endpoints fuer die Konfigurationsverwaltung via WebUI:
 
@@ -203,7 +203,7 @@ def _register_system_routes(
     async def list_agents() -> dict[str, Any]:
         """Listet alle registrierten Agent-Profile aus agents.yaml."""
         try:
-            agents_path = config_manager.config.jarvis_home / "agents.yaml"
+            agents_path = config_manager.config.cognithor_home / "agents.yaml"
             if agents_path.exists():
                 raw = yaml.safe_load(agents_path.read_text(encoding="utf-8")) or {}
                 agents = raw.get("agents", [])
@@ -235,7 +235,7 @@ def _register_system_routes(
     async def get_agent(agent_name: str) -> dict[str, Any]:
         """Get a single agent by name."""
         # Try agents.yaml first
-        agents_path = config_manager.config.jarvis_home / "agents.yaml"
+        agents_path = config_manager.config.cognithor_home / "agents.yaml"
         if agents_path.exists():
             raw = yaml.safe_load(agents_path.read_text(encoding="utf-8")) or {}
             for a in raw.get("agents", []):
@@ -295,7 +295,7 @@ def _register_system_routes(
         if not name:
             raise HTTPException(400, "Name is required")
 
-        agents_path = config_manager.config.jarvis_home / "agents.yaml"
+        agents_path = config_manager.config.cognithor_home / "agents.yaml"
         raw = {}
         if agents_path.exists():
             raw = yaml.safe_load(agents_path.read_text(encoding="utf-8")) or {}
@@ -337,7 +337,7 @@ def _register_system_routes(
     async def update_agent(agent_name: str, request: Request) -> dict[str, Any]:
         """Update an existing agent profile."""
         body = await request.json()
-        agents_path = config_manager.config.jarvis_home / "agents.yaml"
+        agents_path = config_manager.config.cognithor_home / "agents.yaml"
         if not agents_path.exists():
             raise HTTPException(404, f"Agent '{agent_name}' not found")
 
@@ -389,7 +389,7 @@ def _register_system_routes(
         if agent_name == "jarvis":
             raise HTTPException(403, "Cannot delete the default agent")
 
-        agents_path = config_manager.config.jarvis_home / "agents.yaml"
+        agents_path = config_manager.config.cognithor_home / "agents.yaml"
         if not agents_path.exists():
             raise HTTPException(404, f"Agent '{agent_name}' not found")
 
@@ -470,7 +470,7 @@ def _register_system_routes(
     async def list_bindings() -> dict[str, Any]:
         """Listet alle Binding-Regeln aus bindings.yaml."""
         try:
-            bindings_path = config_manager.config.jarvis_home / "bindings.yaml"
+            bindings_path = config_manager.config.cognithor_home / "bindings.yaml"
             if bindings_path.exists():
                 raw = yaml.safe_load(bindings_path.read_text(encoding="utf-8")) or {}
                 bindings = raw.get("bindings", [])
@@ -766,10 +766,10 @@ def _register_config_routes(
     @app.post("/api/v1/config/factory-reset", dependencies=deps)
     async def factory_reset_config() -> dict[str, Any]:
         """Reset configuration to defaults."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
         try:
-            config_manager._config = JarvisConfig()
+            config_manager._config = CognithorConfig()
             config_manager.save()
             if gateway is not None and hasattr(gateway, "reload_components"):
                 gateway.reload_components(config=True)
@@ -1028,10 +1028,10 @@ def _register_config_routes(
         # Apply the historic config via Pydantic validation
         from pydantic import ValidationError
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
         try:
-            new_cfg = JarvisConfig(**historic_config)
+            new_cfg = CognithorConfig(**historic_config)
         except ValidationError as exc:
             raise HTTPException(
                 status_code=400,
@@ -2162,7 +2162,7 @@ def _register_monitoring_routes(
         if config_manager is None:
             raise HTTPException(500, "Config manager not available")
         _cfg = config_manager.config
-        gk_log = _cfg.jarvis_home / "logs" / "gatekeeper.jsonl"
+        gk_log = _cfg.cognithor_home / "logs" / "gatekeeper.jsonl"
         if not gk_log.exists():
             return {"status": "no_log", "message": "No gatekeeper audit log found."}
 
@@ -2212,7 +2212,7 @@ def _register_monitoring_routes(
             if config_manager is None:
                 raise HTTPException(500, "Config manager not available")
             _cfg = config_manager.config
-            tsa_dir = _cfg.jarvis_home / "tsa"
+            tsa_dir = _cfg.cognithor_home / "tsa"
             client = TSAClient(storage_dir=tsa_dir)
             timestamps = client.list_timestamps()
             return {
@@ -3717,9 +3717,9 @@ def _register_ui_routes(
     cron-jobs, MCP servers, and A2A configuration.
     """
 
-    jarvis_home = config_manager.config.jarvis_home
-    agents_path = jarvis_home / "agents.yaml"
-    bindings_path = jarvis_home / "bindings.yaml"
+    cognithor_home = config_manager.config.cognithor_home
+    agents_path = cognithor_home / "agents.yaml"
+    bindings_path = cognithor_home / "bindings.yaml"
 
     def _load_yaml(path: Path) -> Any:
         if not path.exists():
@@ -3790,7 +3790,7 @@ def _register_ui_routes(
 
             detector = SystemDetector()
             profile = detector.run_full_scan()
-            cache = config_manager.config.jarvis_home / "system_profile.json"
+            cache = config_manager.config.cognithor_home / "system_profile.json"
             profile.save(cache)
             if gateway:
                 gateway._system_profile = profile
@@ -4081,7 +4081,7 @@ def _register_ui_routes(
             cutoff = datetime.now(UTC) - timedelta(days=days)
 
             # Source 1: Evolution vault entries
-            vault_dir = _P(config_manager.config.jarvis_home) / "vault" / "wissen"
+            vault_dir = _P(config_manager.config.cognithor_home) / "vault" / "wissen"
             if vault_dir.exists():
                 for f in sorted(
                     vault_dir.glob("*.md"), key=lambda x: x.stat().st_mtime, reverse=True
@@ -4294,7 +4294,7 @@ def _register_ui_routes(
     async def ui_get_prompts() -> dict[str, Any]:
         """Reads prompt/policy files for the Prompts & Policies page."""
         cfg = config_manager.config
-        prompts_dir = jarvis_home / "prompts"
+        prompts_dir = cognithor_home / "prompts"
         result: dict[str, str] = {}
 
         # coreMd
@@ -4365,7 +4365,7 @@ def _register_ui_routes(
 
         # heartbeatMd
         try:
-            hb_path = jarvis_home / cfg.heartbeat.checklist_file
+            hb_path = cognithor_home / cfg.heartbeat.checklist_file
             result["heartbeatMd"] = hb_path.read_text(encoding="utf-8") if hb_path.exists() else ""
         except Exception:
             result["heartbeatMd"] = ""
@@ -4378,7 +4378,7 @@ def _register_ui_routes(
         try:
             body = await request.json()
             cfg = config_manager.config
-            prompts_dir = jarvis_home / "prompts"
+            prompts_dir = cognithor_home / "prompts"
             prompts_dir.mkdir(parents=True, exist_ok=True)
             written: list[str] = []
 
@@ -4411,7 +4411,7 @@ def _register_ui_routes(
                 written.append("policyYaml")
 
             if "heartbeatMd" in body:
-                hb_path = jarvis_home / cfg.heartbeat.checklist_file
+                hb_path = cognithor_home / cfg.heartbeat.checklist_file
                 hb_path.parent.mkdir(parents=True, exist_ok=True)
                 hb_path.write_text(body["heartbeatMd"], encoding="utf-8")
                 written.append("heartbeatMd")
@@ -5589,8 +5589,8 @@ def _register_skill_registry_routes(
 
         # Determine save directory
         config = getattr(gateway, "_config", None)
-        jarvis_home = Path(getattr(config, "jarvis_home", Path.home() / ".cognithor"))
-        skills_dir = jarvis_home / "skills"
+        cognithor_home = Path(getattr(config, "cognithor_home", Path.home() / ".cognithor"))
+        skills_dir = cognithor_home / "skills"
         skills_dir.mkdir(parents=True, exist_ok=True)
         file_path = skills_dir / f"{slug}.md"
 
@@ -5651,8 +5651,8 @@ def _register_skill_registry_routes(
 
         # Reload registry from the skill's parent directory
         config = getattr(gateway, "_config", None)
-        jarvis_home = Path(getattr(config, "jarvis_home", Path.home() / ".cognithor"))
-        reg.load_from_directories([jarvis_home / "skills", Path("data/procedures")])
+        cognithor_home = Path(getattr(config, "cognithor_home", Path.home() / ".cognithor"))
+        reg.load_from_directories([cognithor_home / "skills", Path("data/procedures")])
 
         return {"status": "updated", "slug": slug}
 
@@ -5677,8 +5677,8 @@ def _register_skill_registry_routes(
 
         # Reload registry
         config = getattr(gateway, "_config", None)
-        jarvis_home = Path(getattr(config, "jarvis_home", Path.home() / ".cognithor"))
-        reg.load_from_directories([jarvis_home / "skills", Path("data/procedures")])
+        cognithor_home = Path(getattr(config, "cognithor_home", Path.home() / ".cognithor"))
+        reg.load_from_directories([cognithor_home / "skills", Path("data/procedures")])
 
         return {"status": "deleted", "slug": slug}
 
@@ -6114,9 +6114,9 @@ def _register_backend_routes(
         # Derive valid backends from the config Literal type (single source of truth)
         from typing import get_args, get_type_hints
 
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        _hints = get_type_hints(JarvisConfig, include_extras=True)
+        _hints = get_type_hints(CognithorConfig, include_extras=True)
         valid = list(get_args(_hints["llm_backend_type"]))
         if new_backend not in valid:
             raise HTTPException(400, f"Invalid backend: {new_backend}. Valid: {valid}")

@@ -64,22 +64,22 @@ class TestEnvOverrides:
         cfg = load_config(tmp_path / "empty.yaml")
         assert cfg.language == "zh"
 
-    def test_jarvis_home_aliases_to_jarvis_home_field(self, monkeypatch, tmp_path):
-        """Regression: JARVIS_HOME must map to the `jarvis_home` field, not
+    def test_jarvis_home_env_maps_to_cognithor_home_field(self, monkeypatch, tmp_path):
+        """Regression: JARVIS_HOME must map to the `cognithor_home` field, not
         a rejected `home` field (Pydantic extra='forbid'). Bug reported by
         Reddit user 2026-04-20."""
         target = tmp_path / "custom_home"
         monkeypatch.setenv("JARVIS_HOME", str(target))
         cfg = load_config(tmp_path / "empty.yaml")
-        assert str(cfg.jarvis_home) == str(target)
+        assert str(cfg.cognithor_home) == str(target)
 
     def test_cognithor_home_aliases_to_jarvis_home_field(self, monkeypatch, tmp_path):
-        """COGNITHOR_HOME should also resolve to `jarvis_home` (the internal
+        """COGNITHOR_HOME should also resolve to `cognithor_home` (the internal
         field name is kept for backward-compat)."""
         target = tmp_path / "cognithor_home"
         monkeypatch.setenv("COGNITHOR_HOME", str(target))
         cfg = load_config(tmp_path / "empty.yaml")
-        assert str(cfg.jarvis_home) == str(target)
+        assert str(cfg.cognithor_home) == str(target)
 
     def test_unknown_single_part_env_var_silently_ignored(self, monkeypatch, tmp_path):
         """Single-part env vars that don't match any field (and aren't in the

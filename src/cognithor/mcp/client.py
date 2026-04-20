@@ -23,7 +23,7 @@ from cognithor.models import MCPServerConfig, MCPToolInfo
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -78,7 +78,7 @@ class JarvisMCPClient:
     sammelt deren Tool-Schemas, und dispatcht Tool-Calls.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         """Initialisiert den MCP-Client mit leerer Server- und Tool-Registry."""
         self._config = config
         self._servers: dict[str, ServerConnection] = {}

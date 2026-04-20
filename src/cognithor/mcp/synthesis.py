@@ -30,7 +30,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -55,7 +55,7 @@ class KnowledgeSynthesizer:
       - WebTools: async web_search(), search_and_read()
     """
 
-    def __init__(self, config: JarvisConfig | None = None) -> None:
+    def __init__(self, config: CognithorConfig | None = None) -> None:
         self._llm_fn: Any = None
         self._llm_model: str = ""
         self._memory_tools: Any = None
@@ -833,7 +833,7 @@ def register_synthesis_tools(
 
     Args:
         mcp_client: JarvisMCPClient-Instanz.
-        config: JarvisConfig (optional).
+        config: CognithorConfig (optional).
 
     Returns:
         KnowledgeSynthesizer-Instanz (Abhaengigkeiten werden spaeter injiziert).

@@ -1,4 +1,4 @@
-"""Dateisystem-Tools fuer Jarvis.
+"""Dateisystem-Tools fuer Cognithor.
 
 Implementiert als eingebaute Handler (Phase 1) und als FastMCP-Server (spaeter).
 Alle Operationen pruefen Pfade gegen die Sandbox-Konfiguration.
@@ -24,7 +24,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -56,7 +56,7 @@ class FileSystemError(Exception):
 class FileSystemTools:
     """Dateisystem-Operationen mit Sandbox-Validierung. [B§5.3]"""
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         """Initialisiert FileSystemTools mit Sandbox-Pfaden aus der Konfiguration."""
         self._config = config
         self._allowed_roots: list[Path] = [
@@ -80,7 +80,7 @@ class FileSystemTools:
                 if hl_cfg.enabled:
                     self._hashline_guard = HashlineGuard.create(
                         config=hl_cfg,
-                        data_dir=getattr(config, "jarvis_home", None),
+                        data_dir=getattr(config, "cognithor_home", None),
                     )
                     log.info("hashline_guard_enabled_for_fs")
         except Exception:
@@ -365,7 +365,7 @@ class FileSystemTools:
 
 def register_fs_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> FileSystemTools:
     """Registriert Dateisystem-Tools beim MCP-Client.
 

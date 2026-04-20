@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.chart_tools import (
     ChartError,
     ChartTools,
@@ -38,9 +38,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),
     )
     ensure_directory_structure(cfg)
@@ -48,7 +48,7 @@ def config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def chart_tools(config: JarvisConfig) -> ChartTools:
+def chart_tools(config: CognithorConfig) -> ChartTools:
     return ChartTools(config)
 
 
@@ -104,7 +104,7 @@ class MockMCPClient:
 
 
 class TestRegistration:
-    def test_all_tools_registered(self, config: JarvisConfig) -> None:
+    def test_all_tools_registered(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         tools = register_chart_tools(client, config)
 
@@ -112,21 +112,21 @@ class TestRegistration:
         expected = {"create_chart", "create_table_image", "chart_from_csv"}
         assert set(client.registered.keys()) == expected
 
-    def test_handlers_are_callable(self, config: JarvisConfig) -> None:
+    def test_handlers_are_callable(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         register_chart_tools(client, config)
 
         for name, entry in client.registered.items():
             assert callable(entry["handler"]), f"Handler fuer '{name}' nicht aufrufbar"
 
-    def test_descriptions_non_empty(self, config: JarvisConfig) -> None:
+    def test_descriptions_non_empty(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         register_chart_tools(client, config)
 
         for name, entry in client.registered.items():
             assert entry["description"], f"Description fuer '{name}' ist leer"
 
-    def test_schemas_present(self, config: JarvisConfig) -> None:
+    def test_schemas_present(self, config: CognithorConfig) -> None:
         client = MockMCPClient()
         register_chart_tools(client, config)
 

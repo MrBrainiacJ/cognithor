@@ -1,4 +1,4 @@
-"""Jarvis · EU AI Act Compliance & Audit Reports.
+"""Cognithor · EU AI Act Compliance & Audit Reports.
 
 Standardized compliance documentation:
 
@@ -628,7 +628,7 @@ class EUAIActGovernor:
         return self._training
 
     def classify_jarvis(self) -> RiskAssessment:
-        """Classifies the Jarvis system itself."""
+        """Classifies the Cognithor system itself."""
         return self._classifier.classify(
             "Jarvis AI Agent",
             SystemCategory.INSURANCE_ADVISORY,

@@ -47,7 +47,7 @@ async def init_pge(
     """Initialize the PGE trinity (Planner, Executor, Reflector).
 
     Args:
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
         llm: UnifiedLLMClient instance.
         model_router: ModelRouter instance.
         mcp_client: JarvisMCPClient instance.
@@ -124,7 +124,7 @@ async def init_pge(
     try:
         from cognithor.skills.generator import SkillGenerator
 
-        skills_dir = config.jarvis_home / "skills" / "generated"
+        skills_dir = config.cognithor_home / "skills" / "generated"
         skills_dir.mkdir(parents=True, exist_ok=True)
 
         # LLM wrapper: SkillGenerator expects async (prompt: str) -> str
@@ -201,7 +201,7 @@ async def init_pge(
             from cognithor.identity import IdentityLayer
 
             _id_name = getattr(getattr(config, "agents", None), "default_identity", "jarvis")
-            _id_data_dir = config.jarvis_home / "identity" / _id_name
+            _id_data_dir = config.cognithor_home / "identity" / _id_name
             _id_llm = None
             _id_model = ""
             if llm is not None:

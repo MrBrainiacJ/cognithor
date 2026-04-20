@@ -305,8 +305,8 @@ def _migrate_jarvis_home() -> None:
     """
     import shutil
 
-    cognithor_home = Path.home() / ".cognithor"
     jarvis_home = Path.home() / ".jarvis"
+    cognithor_home = Path.home() / ".cognithor"
     marker = cognithor_home / ".migrated_from_jarvis"
 
     if marker.exists() or not jarvis_home.is_dir():
@@ -341,7 +341,7 @@ def _migrate_jarvis_home() -> None:
 
 
 def main() -> None:
-    """Main entry point for Jarvis."""
+    """Main entry point for Cognithor."""
     _check_python_version()
 
     # Windows: switch stdout/stderr to UTF-8 so that umlauts in cmd.exe
@@ -472,7 +472,7 @@ def main() -> None:
 
     from cognithor.utils.logging import get_logger
 
-    log = get_logger("jarvis")
+    log = get_logger("cognithor")
 
     # 3.5 Init-only: create directory structure only, then exit immediately.
     # IMPORTANT: Must come BEFORE the StartupChecker, as it triggers model pulls
@@ -485,7 +485,7 @@ def main() -> None:
         log.info(
             "init_summary",
             version=__version__,
-            home=str(config.jarvis_home),
+            home=str(config.cognithor_home),
             config_file=str(config.config_file),
             paths_created=len(created),
         )
@@ -530,7 +530,7 @@ def main() -> None:
     log.debug(
         "jarvis_starting",
         version=__version__,
-        home=str(config.jarvis_home),
+        home=str(config.cognithor_home),
         log_level=log_level,
     )
 
@@ -1543,7 +1543,7 @@ def main() -> None:
                 @api_app.get("/api/v1/tts/voices", dependencies=[_Depends(_verify_cc_token)])
                 async def _cc_tts_voices() -> dict[str, Any]:
                     """Listet verfuegbare Piper-Stimmen und die aktuell konfigurierte."""
-                    voices_dir = Path(config.jarvis_home) / "voices"
+                    voices_dir = Path(config.cognithor_home) / "voices"
                     installed: list[str] = []
                     if voices_dir.exists():
                         installed = [f.stem for f in voices_dir.glob("*.onnx")]
@@ -1613,7 +1613,7 @@ def main() -> None:
                         raise ValueError(f"Ungueltiger Stimmenname: {voice!r}")
 
                     # Voice-Modell-Pfad ermitteln
-                    voices_dir = Path(config.jarvis_home) / "voices"
+                    voices_dir = Path(config.cognithor_home) / "voices"
                     voices_dir.mkdir(exist_ok=True)
 
                     # Defense-in-depth: normalize and validate path stays in voices_dir
@@ -1899,7 +1899,7 @@ def main() -> None:
                         return {"error": "Token fehlt", "code": "MISSING_FIELD"}
 
                     # Save registration in DB
-                    push_db = Path(config.jarvis_home) / "push_subscriptions.json"
+                    push_db = Path(config.cognithor_home) / "push_subscriptions.json"
                     import json as _pj
 
                     subs: list[dict[str, str]] = []
@@ -2350,7 +2350,7 @@ def _print_banner(
     print(f"\n{BANNER_ASCII}")
     print(f"\n{'=' * 60}")
     print(f"  COGNITHOR · Agent OS v{__version__}{lite_tag}")
-    print(f"  Home:   {config.jarvis_home}")
+    print(f"  Home:   {config.cognithor_home}")
     print(f"  API:    {scheme}://{api_host}:{api_port}")
     _backend_label = {
         "ollama": f"Ollama ({config.ollama.mode})",

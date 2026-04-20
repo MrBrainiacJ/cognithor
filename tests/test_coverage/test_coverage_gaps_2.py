@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -31,7 +31,7 @@ class TestOllamaClientChat:
     def client(self):
         from cognithor.core.model_router import OllamaClient
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         c = OllamaClient(config)
         # Pre-inject mock http client
         mock_http = AsyncMock()
@@ -151,7 +151,7 @@ class TestOllamaClientEmbed:
     def client(self):
         from cognithor.core.model_router import OllamaClient
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         c = OllamaClient(config)
         mock_http = AsyncMock()
         mock_http.is_closed = False
@@ -285,7 +285,7 @@ class TestModelRouterExtended:
 
     @pytest.fixture()
     def config(self, tmp_path: Path):
-        return JarvisConfig(jarvis_home=tmp_path)
+        return CognithorConfig(cognithor_home=tmp_path)
 
     @pytest.fixture()
     def router(self, config):
@@ -370,7 +370,7 @@ class TestMCPClientServerPaths:
     def mcp(self, tmp_path: Path):
         from cognithor.mcp.client import JarvisMCPClient
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         config.ensure_directories()
         return JarvisMCPClient(config)
 
@@ -525,7 +525,7 @@ class TestMCPClientConfigLoading:
     def mcp_with_config(self, tmp_path: Path):
         from cognithor.mcp.client import JarvisMCPClient
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         config.ensure_directories()
 
         # Write MCP config
@@ -562,7 +562,7 @@ servers:
         """Fehlende Config-Datei gibt leeres Dict."""
         from cognithor.mcp.client import JarvisMCPClient
 
-        config = JarvisConfig(jarvis_home=tmp_path / "nonexistent")
+        config = CognithorConfig(cognithor_home=tmp_path / "nonexistent")
         mcp = JarvisMCPClient(config)
         configs = mcp._load_server_configs()
         assert configs == {}
@@ -571,7 +571,7 @@ servers:
         """Ungültige Config gibt leeres Dict."""
         from cognithor.mcp.client import JarvisMCPClient
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         config.ensure_directories()
         config.mcp_config_file.parent.mkdir(parents=True, exist_ok=True)
         config.mcp_config_file.write_text("not: valid: yaml: [", encoding="utf-8")
@@ -584,7 +584,7 @@ servers:
         """Config ohne 'servers' Key gibt leeres Dict."""
         from cognithor.mcp.client import JarvisMCPClient
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         config.ensure_directories()
         config.mcp_config_file.parent.mkdir(parents=True, exist_ok=True)
         config.mcp_config_file.write_text("other_key: value", encoding="utf-8")
@@ -629,7 +629,7 @@ class TestMCPClientDisconnect:
         from cognithor.mcp.client import JarvisMCPClient, ServerConnection
         from cognithor.models import MCPServerConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         mcp = JarvisMCPClient(config)
 
         # Mock-Prozess der noch läuft
@@ -676,7 +676,7 @@ class TestMCPClientDisconnect:
         from cognithor.mcp.client import JarvisMCPClient, ServerConnection
         from cognithor.models import MCPServerConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         mcp = JarvisMCPClient(config)
 
         mock_proc = MagicMock()
@@ -699,7 +699,7 @@ class TestMCPClientDisconnect:
         from cognithor.mcp.client import JarvisMCPClient, ServerConnection
         from cognithor.models import MCPServerConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         mcp = JarvisMCPClient(config)
 
         mcp._servers["no_proc"] = ServerConnection(

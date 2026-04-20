@@ -1,4 +1,4 @@
-"""Jarvis · Compliance & Audit-Report Framework.
+"""Cognithor · Compliance & Audit-Report Framework.
 
 EU AI Act compliant audit reports with:
 

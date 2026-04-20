@@ -27,9 +27,9 @@ from cognithor.core.startup_check import (
 
 @pytest.fixture()
 def mock_config() -> MagicMock:
-    """Minimal mock of JarvisConfig with models + ollama sub-configs."""
+    """Minimal mock of CognithorConfig with models + ollama sub-configs."""
     config = MagicMock()
-    config.jarvis_home = Path(tempfile.gettempdir()) / "test_jarvis_home"
+    config.cognithor_home = Path(tempfile.gettempdir()) / "test_jarvis_home"
     config.llm_backend_type = "ollama"
     config.ollama.base_url = "http://localhost:11434"
 
@@ -454,7 +454,7 @@ class TestCheckDirectories:
     """Tests for StartupChecker.check_directories()."""
 
     def test_creates_missing_dirs(self, checker: StartupChecker, tmp_path: Path) -> None:
-        checker._config.jarvis_home = tmp_path / "jarvis_test"
+        checker._config.cognithor_home = tmp_path / "jarvis_test"
         report = checker.check_directories()
         assert len(report.fixes_applied) > 0
         assert (tmp_path / "jarvis_test" / "memory").is_dir()
@@ -478,7 +478,7 @@ class TestCheckDirectories:
             "skills",
         ]:
             (home / sub).mkdir(parents=True, exist_ok=True)
-        checker._config.jarvis_home = home
+        checker._config.cognithor_home = home
         report = checker.check_directories()
         assert len(report.fixes_applied) == 0
         assert len(report.checks_passed) == 12

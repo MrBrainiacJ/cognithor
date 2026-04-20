@@ -1,4 +1,4 @@
-"""Jarvis · EU AI Act Compliance Export.
+"""Cognithor · EU AI Act Compliance Export.
 
 Standardized export functions for legal requirements:
 

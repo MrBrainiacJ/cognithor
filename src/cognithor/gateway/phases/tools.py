@@ -125,7 +125,7 @@ async def init_tools(
     """Initialize MCP tools, browser, graph engine, telemetry, HITL, A2A.
 
     Args:
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
         mcp_client: Already-created JarvisMCPClient (tools are registered on it).
         memory_manager: MemoryManager for memory tools and MCP bridge.
         interop: InteropProtocol instance (optional, for A2A).

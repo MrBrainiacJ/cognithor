@@ -1,4 +1,4 @@
-"""Shell-Tool fuer Jarvis -- mit echter Sandbox-Isolation.
+"""Shell-Tool fuer Cognithor -- mit echter Sandbox-Isolation.
 
 Fuehrt Shell-Befehle in einer isolierten Umgebung aus:
   - bubblewrap (bwrap): Linux-Namespaces, staerkste Isolation
@@ -30,7 +30,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -83,7 +83,7 @@ class ShellTools:
       Layer 3: Resource-Limits -- Timeout, Memory, Disk, Processes
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         """Initialisiert ShellTools mit Sandbox.
 
         Erkennt automatisch das beste verfuegbare Sandbox-Level.
@@ -100,7 +100,7 @@ class ShellTools:
             _shell_cfg, "max_redacted_log_prefix", MAX_REDACTED_LOG_PREFIX
         )
 
-        # Sandbox-Konfiguration aus JarvisConfig ableiten
+        # Sandbox-Konfiguration aus CognithorConfig ableiten
         # Wire UI SandboxConfig (models.py) → execution SandboxConfig (core/sandbox.py)
         _ui_sandbox = getattr(config, "sandbox", None)
         sandbox_config = SandboxConfig(
@@ -335,7 +335,7 @@ class ShellTools:
 
 def register_shell_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> ShellTools:
     """Registriert Shell-Tools beim MCP-Client.
 

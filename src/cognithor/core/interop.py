@@ -1,4 +1,4 @@
-"""Jarvis - Cross-Agent Interoperability Protocol (JAIP).
+"""Cognithor - Cross-Agent Interoperability Protocol (JAIP).
 
 Standardized communication protocol for multiple Jarvis instances:
 

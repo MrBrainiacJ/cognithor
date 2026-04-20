@@ -49,9 +49,9 @@ class TestGatekeeperAuditIntegration:
 
     def test_gatekeeper_block_logged(self, audit_logger: AuditLogger, tmp_path: Path) -> None:
         """Blockierte Aktionen werden im zentralen AuditLogger protokolliert."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
         from cognithor.core.gatekeeper import Gatekeeper
@@ -73,9 +73,9 @@ class TestGatekeeperAuditIntegration:
 
     def test_gatekeeper_allow_logged(self, audit_logger: AuditLogger, tmp_path: Path) -> None:
         """Erlaubte/genehmigte Aktionen werden ebenfalls auditiert."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
         from cognithor.core.gatekeeper import Gatekeeper
@@ -101,9 +101,9 @@ class TestGatekeeperAuditIntegration:
         tmp_path: Path,
     ) -> None:
         """Credential-Maskierung wird auditiert."""
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
         from cognithor.core.gatekeeper import Gatekeeper

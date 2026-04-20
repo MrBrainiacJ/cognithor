@@ -35,9 +35,9 @@ _OLLAMA_MODEL_OPTIONS = [
 def _get_backend_info() -> tuple[str, dict[str, dict[str, Any]]]:
     """Liefert (backend_type, provider_defaults) aus Config."""
     try:
-        from cognithor.config import _PROVIDER_MODEL_DEFAULTS, JarvisConfig
+        from cognithor.config import _PROVIDER_MODEL_DEFAULTS, CognithorConfig
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         backend = config.llm_backend_type
         defaults = _PROVIDER_MODEL_DEFAULTS.get(backend, {})
         return backend, defaults

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.core.observer import ResponseEnvelope
 
 
@@ -15,7 +15,7 @@ def planner_with_mocks():
     from cognithor.core.model_router import ModelRouter
     from cognithor.core.planner import Planner
 
-    cfg = JarvisConfig()
+    cfg = CognithorConfig()
     cfg.observer.enabled = False  # isolate this test from observer integration (Task 15)
     ollama = AsyncMock()
     ollama.chat = AsyncMock(return_value={"message": {"content": "hello"}})

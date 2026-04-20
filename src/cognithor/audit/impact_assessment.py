@@ -1,4 +1,4 @@
-"""Jarvis · AI Impact Assessment & Participatory Governance.
+"""Cognithor · AI Impact Assessment & Participatory Governance.
 
 Data protection impact assessment (DPIA) for AI systems:
 
@@ -578,7 +578,7 @@ class ImpactAssessor:
         return assessment
 
     def assess_jarvis_insurance(self) -> ImpactAssessment:
-        """Predefined impact assessment for Jarvis in the insurance context."""
+        """Predefined impact assessment for Cognithor in the insurance context."""
         scores = [
             DimensionScore(
                 ImpactDimension.FUNDAMENTAL_RIGHTS,

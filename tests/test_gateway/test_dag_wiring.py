@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.models import IncomingMessage
 
 
@@ -20,7 +20,7 @@ class TestDAGWorkflowEngineAttr:
         """'dag_workflow_engine' ist in declare_advanced_attrs() enthalten."""
         from cognithor.gateway.phases.advanced import declare_advanced_attrs
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         result = declare_advanced_attrs(config)
         assert "dag_workflow_engine" in result
 
@@ -30,7 +30,7 @@ class TestDAGEngineInitialized:
         """DAG-Engine wird erstellt wenn WorkflowEngine importierbar ist."""
         from cognithor.gateway.phases.advanced import declare_advanced_attrs
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         result = declare_advanced_attrs(config)
 
         # WorkflowEngine may or may not be importable depending on project state,
@@ -77,7 +77,7 @@ class TestDepthGuard:
 
     def test_max_sub_agent_depth_config(self, tmp_path) -> None:
         """max_sub_agent_depth ist in SecurityConfig konfigurierbar."""
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         assert config.security.max_sub_agent_depth == 3  # default
 
         config.security.max_sub_agent_depth = 5

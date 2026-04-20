@@ -405,7 +405,7 @@ class TestCreateLock:
         cfg = MagicMock()
         cfg.lock_backend = "local"
         cfg.redis_url = "redis://localhost:6379/0"
-        cfg.jarvis_home = None
+        cfg.cognithor_home = None
         lock = create_lock(cfg)
         assert isinstance(lock, LocalLockBackend)
 
@@ -413,7 +413,7 @@ class TestCreateLock:
         cfg = MagicMock()
         cfg.lock_backend = "file"
         cfg.redis_url = "redis://localhost:6379/0"
-        cfg.jarvis_home = str(tmp_path)
+        cfg.cognithor_home = str(tmp_path)
         lock = create_lock(cfg)
         assert isinstance(lock, FileLockBackend)
 
@@ -421,7 +421,7 @@ class TestCreateLock:
         cfg = MagicMock()
         cfg.lock_backend = "redis"
         cfg.redis_url = "redis://localhost:6379/1"
-        cfg.jarvis_home = None
+        cfg.cognithor_home = None
         lock = create_lock(cfg)
         assert isinstance(lock, RedisLockBackend)
 
@@ -429,7 +429,7 @@ class TestCreateLock:
         cfg = MagicMock()
         cfg.lock_backend = "file"
         cfg.redis_url = "redis://localhost:6379/0"
-        cfg.jarvis_home = str(tmp_path / "custom_home")
+        cfg.cognithor_home = str(tmp_path / "custom_home")
         lock = create_lock(cfg)
         assert isinstance(lock, FileLockBackend)
         expected_dir = tmp_path / "custom_home" / "locks"
@@ -443,34 +443,34 @@ class TestCreateLock:
 
 class TestConfigIntegration:
     def test_config_has_lock_backend(self) -> None:
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         assert cfg.lock_backend == "local"
 
     def test_config_has_redis_url(self) -> None:
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         assert cfg.redis_url == "redis://localhost:6379/0"
 
     def test_config_lock_backend_values(self) -> None:
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
         for value in ("local", "file", "redis"):
-            cfg = JarvisConfig(lock_backend=value)
+            cfg = CognithorConfig(lock_backend=value)
             assert cfg.lock_backend == value
 
     def test_create_lock_from_real_config(self) -> None:
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         lock = create_lock(cfg)
         assert isinstance(lock, LocalLockBackend)
 
     def test_create_lock_file_from_config(self, tmp_path: Path) -> None:
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
 
-        cfg = JarvisConfig(lock_backend="file", jarvis_home=tmp_path / ".cognithor")
+        cfg = CognithorConfig(lock_backend="file", cognithor_home=tmp_path / ".cognithor")
         lock = create_lock(cfg)
         assert isinstance(lock, FileLockBackend)

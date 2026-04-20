@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.core.startup_check import (
     StartupChecker,
     StartupReport,
@@ -16,8 +16,8 @@ from cognithor.core.startup_check import (
 
 
 @pytest.fixture()
-def config(tmp_path) -> JarvisConfig:
-    cfg = JarvisConfig(jarvis_home=tmp_path)
+def config(tmp_path) -> CognithorConfig:
+    cfg = CognithorConfig(cognithor_home=tmp_path)
     ensure_directory_structure(cfg)
     return cfg
 
@@ -81,7 +81,7 @@ class TestHelpers:
 
 
 class TestCheckAndFixAll:
-    def test_basic_run(self, config: JarvisConfig) -> None:
+    def test_basic_run(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config)
         with patch.object(checker, "check_python_packages", return_value=StartupReport()):
             with patch.object(checker, "check_ollama", return_value=StartupReport()):
@@ -94,7 +94,7 @@ class TestCheckAndFixAll:
         assert isinstance(report.warnings, list)
         assert isinstance(report.errors, list)
 
-    def test_check_and_fix_all_handles_exceptions(self, config: JarvisConfig) -> None:
+    def test_check_and_fix_all_handles_exceptions(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config)
         with patch.object(checker, "check_python_packages", side_effect=Exception("boom")):
             with patch.object(checker, "check_ollama", return_value=StartupReport()):
@@ -111,7 +111,7 @@ class TestCheckAndFixAll:
 
 
 class TestCheckPythonPackages:
-    def test_all_installed(self, config: JarvisConfig) -> None:
+    def test_all_installed(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config)
         with patch("cognithor.core.startup_check._can_import", return_value=True):
             report = checker.check_python_packages()
@@ -119,7 +119,7 @@ class TestCheckPythonPackages:
         assert len(report.checks_passed) > 0
         assert len(report.warnings) == 0
 
-    def test_missing_packages_installed(self, config: JarvisConfig) -> None:
+    def test_missing_packages_installed(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config, auto_install=True)
         # First call: can't import; after install: can import
         with patch("cognithor.core.startup_check._can_import", return_value=False):
@@ -127,7 +127,7 @@ class TestCheckPythonPackages:
                 report = checker.check_python_packages()
         assert len(report.fixes_applied) > 0
 
-    def test_missing_packages_install_fails(self, config: JarvisConfig) -> None:
+    def test_missing_packages_install_fails(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config, auto_install=True)
         with patch("cognithor.core.startup_check._can_import", return_value=False):
             with patch("cognithor.core.startup_check._pip_install", return_value=(False, "error")):
@@ -141,7 +141,7 @@ class TestCheckPythonPackages:
 
 
 class TestCheckDirectories:
-    def test_directories_exist(self, config: JarvisConfig) -> None:
+    def test_directories_exist(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config)
         report = checker.check_directories()
         assert isinstance(report, StartupReport)
@@ -158,28 +158,28 @@ class TestCheckDirectories:
 
 
 class TestCheckOllama:
-    def test_check_ollama_running(self, config: JarvisConfig) -> None:
+    def test_check_ollama_running(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config)
         with patch.object(checker, "_ollama_is_running", return_value=True):
             report = checker.check_ollama()
         assert "Ollama running" in report.checks_passed
 
     def test_check_ollama_not_running_warns_without_auto_install(
-        self, config: JarvisConfig
+        self, config: CognithorConfig
     ) -> None:
         checker = StartupChecker(config)
         with patch.object(checker, "_ollama_is_running", return_value=False):
             report = checker.check_ollama()
         assert any("not running" in w.lower() for w in report.warnings)
 
-    def test_check_ollama_not_running_not_found(self, config: JarvisConfig) -> None:
+    def test_check_ollama_not_running_not_found(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config, auto_install=True)
         with patch.object(checker, "_ollama_is_running", return_value=False):
             with patch.object(checker, "_find_ollama", return_value=None):
                 report = checker.check_ollama()
         assert any("not found" in w.lower() for w in report.warnings)
 
-    def test_check_ollama_not_running_autostart_ok(self, config: JarvisConfig) -> None:
+    def test_check_ollama_not_running_autostart_ok(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config, auto_install=True)
         with patch.object(checker, "_ollama_is_running", return_value=False):
             with patch.object(checker, "_find_ollama", return_value="/usr/bin/ollama"):
@@ -187,7 +187,7 @@ class TestCheckOllama:
                     report = checker.check_ollama()
         assert any("auto-started" in f for f in report.fixes_applied)
 
-    def test_check_ollama_not_running_autostart_fail(self, config: JarvisConfig) -> None:
+    def test_check_ollama_not_running_autostart_fail(self, config: CognithorConfig) -> None:
         checker = StartupChecker(config, auto_install=True)
         with patch.object(checker, "_ollama_is_running", return_value=False):
             with patch.object(checker, "_find_ollama", return_value="/usr/bin/ollama"):
@@ -195,7 +195,7 @@ class TestCheckOllama:
                     report = checker.check_ollama()
         assert any("could not be started" in w for w in report.warnings)
 
-    def test_check_ollama_cloud_backend_skipped(self, config: JarvisConfig) -> None:
+    def test_check_ollama_cloud_backend_skipped(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "openai"
         checker = StartupChecker(config)
         report = checker.check_ollama()
@@ -213,7 +213,7 @@ class TestCheckModels:
         report = checker.check_models()
         assert any("No config" in w for w in report.warnings)
 
-    def test_check_models_cloud_backend_skipped(self, config: JarvisConfig) -> None:
+    def test_check_models_cloud_backend_skipped(self, config: CognithorConfig) -> None:
         config.llm_backend_type = "openai"
         checker = StartupChecker(config)
         report = checker.check_models()

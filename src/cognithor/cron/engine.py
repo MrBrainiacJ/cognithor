@@ -83,7 +83,7 @@ class CronEngine:
         jobs_path: Path | str | None = None,
         handler: CronHandler | None = None,
         heartbeat_config: Any | None = None,
-        jarvis_home: Path | None = None,
+        cognithor_home: Path | None = None,
         heartbeat_scheduler: HeartbeatScheduler | None = None,
     ) -> None:
         """Initialisiert die CronEngine.
@@ -96,7 +96,7 @@ class CronEngine:
             heartbeat_config: Optionale HeartbeatConfig. Wenn ``None``
                 oder ``enabled`` auf ``False`` gesetzt ist, wird
                 kein Heartbeat geplant.
-            jarvis_home: Basisverzeichnis von Jarvis. Wird benoetigt,
+            cognithor_home: Basisverzeichnis von Jarvis. Wird benoetigt,
                 um den vollstaendigen Pfad der Heartbeat-Checkliste
                 zu bestimmen, falls ``heartbeat_config.checklist_file``
                 ein relativer Pfad ist. Wenn ``None``, wird versucht,
@@ -119,10 +119,10 @@ class CronEngine:
         self._heartbeat_config = heartbeat_config
         # Basisverzeichnis bestimmen
         base_dir: Path | None = None
-        if jarvis_home is not None:
-            base_dir = Path(jarvis_home)
+        if cognithor_home is not None:
+            base_dir = Path(cognithor_home)
         elif jobs_path is not None:
-            # jobs.yaml liegt in <jarvis_home>/cron/jobs.yaml → jarvis_home = parents[1]
+            # jobs.yaml liegt in <cognithor_home>/cron/jobs.yaml → cognithor_home = parents[1]
             p = Path(jobs_path)
             if p.parent.parent.exists():
                 base_dir = p.parent.parent
@@ -131,7 +131,7 @@ class CronEngine:
         if heartbeat_config is not None and getattr(heartbeat_config, "checklist_file", None):
             checklist = Path(heartbeat_config.checklist_file)
             if not checklist.is_absolute():
-                # relativer Pfad → an jarvis_home anhaengen
+                # relativer Pfad → an cognithor_home anhaengen
                 if base_dir is not None:
                     self._heartbeat_file = base_dir / checklist
                 else:

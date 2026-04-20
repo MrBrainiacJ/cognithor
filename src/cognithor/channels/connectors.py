@@ -1,4 +1,4 @@
-"""Jarvis · Enterprise-Konnektoren.
+"""Cognithor · Enterprise-Konnektoren.
 
 Interoperabilitaet mit Unternehmenssystemen:
 

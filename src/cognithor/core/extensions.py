@@ -1,4 +1,4 @@
-"""Jarvis - Model Extension Registry & Multi-Language UI.
+"""Cognithor - Model Extension Registry & Multi-Language UI.
 
 Point 4: Extended ML models and language support
 
@@ -352,7 +352,7 @@ _BUNDLE_ES = TranslationBundle(
 
 
 class I18nManager:
-    """Multi-language manager for the Jarvis UI.
+    """Multi-language manager for the Cognithor UI.
 
     Manages language packs and provides translations
     based on the selected locale.

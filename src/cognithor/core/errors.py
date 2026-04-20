@@ -1,4 +1,4 @@
-"""Jarvis · Unified Error Hierarchy.
+"""Cognithor · Unified Error Hierarchy.
 
 Provides a structured exception hierarchy for the entire Jarvis Agent OS.
 All custom exceptions inherit from JarvisError, which carries an error_code
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 
 class JarvisError(Exception):
-    """Base exception for all Jarvis errors."""
+    """Base exception for all Cognithor errors."""
 
     def __init__(
         self,

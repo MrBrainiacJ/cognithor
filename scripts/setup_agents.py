@@ -11,7 +11,7 @@ BASE = "http://localhost:8741/api/v1"
 
 
 def api(method: str, path: str, data: dict | None = None) -> dict:
-    """Make an API call to the Jarvis backend."""
+    """Make an API call to the Cognithor backend."""
     url = f"{BASE}/{path}"
     body = json.dumps(data).encode() if data else None
     req = urllib.request.Request(url, data=body, method=method)

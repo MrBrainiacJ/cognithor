@@ -20,7 +20,7 @@ def provider() -> JarvisResourceProvider:
 @pytest.fixture
 def provider_with_deps(tmp_path: Path) -> JarvisResourceProvider:
     config = MagicMock()
-    config.jarvis_home = tmp_path
+    config.cognithor_home = tmp_path
     memory = MagicMock()
     return JarvisResourceProvider(config=config, memory=memory)
 
@@ -155,7 +155,7 @@ class TestReadStatus:
         assert result["config_loaded"] is False
 
     def test_with_config(self, provider_with_deps: JarvisResourceProvider) -> None:
-        provider_with_deps._config.jarvis_home = Path("/test")
+        provider_with_deps._config.cognithor_home = Path("/test")
         provider_with_deps._config.default_model = "qwen3:32b"
         result = json.loads(provider_with_deps._read_status())
         assert result["config_loaded"] is True
@@ -196,7 +196,7 @@ class TestReadWorkspaceFiles:
     def test_no_workspace_dir(
         self, provider_with_deps: JarvisResourceProvider, tmp_path: Path
     ) -> None:
-        provider_with_deps._config.jarvis_home = tmp_path
+        provider_with_deps._config.cognithor_home = tmp_path
         # workspace dir does not exist
         result = json.loads(provider_with_deps._read_workspace_files())
         assert result["files"] == []
@@ -209,7 +209,7 @@ class TestReadWorkspaceFiles:
         sub.mkdir()
         (sub / "file2.md").write_text("world", encoding="utf-8")
 
-        provider_with_deps._config.jarvis_home = tmp_path
+        provider_with_deps._config.cognithor_home = tmp_path
         result = json.loads(provider_with_deps._read_workspace_files())
         assert result["count"] >= 2
 

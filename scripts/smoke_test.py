@@ -51,8 +51,8 @@ def header(msg: str) -> None:
 
 
 class SmokeTest:
-    def __init__(self, jarvis_home: str, ollama_url: str, venv: str) -> None:
-        self.jarvis_home = Path(jarvis_home)
+    def __init__(self, cognithor_home: str, ollama_url: str, venv: str) -> None:
+        self.cognithor_home = Path(cognithor_home)
         self.ollama_url = ollama_url
         self.venv = Path(venv) if venv else None
         self.passed = 0
@@ -114,10 +114,10 @@ class SmokeTest:
 
     def test_directories(self) -> None:
         header("2. Verzeichnisstruktur")
-        if not self.jarvis_home.exists():
-            self._warn(f"{self.jarvis_home} fehlt – wird beim Start erstellt")
+        if not self.cognithor_home.exists():
+            self._warn(f"{self.cognithor_home} fehlt – wird beim Start erstellt")
             return
-        self._pass(f"JARVIS_HOME: {self.jarvis_home}")
+        self._pass(f"JARVIS_HOME: {self.cognithor_home}")
         for d in [
             "memory",
             "memory/episodes",
@@ -126,11 +126,11 @@ class SmokeTest:
             "index",
             "logs",
         ]:
-            if (self.jarvis_home / d).exists():
+            if (self.cognithor_home / d).exists():
                 self._pass(f"  {d}/")
             else:
                 self._warn(f"  {d}/ fehlt")
-        if (self.jarvis_home / "config.yaml").exists():
+        if (self.cognithor_home / "config.yaml").exists():
             self._pass("config.yaml vorhanden")
         else:
             self._warn("config.yaml fehlt – Defaults werden verwendet")
@@ -140,7 +140,7 @@ class SmokeTest:
         try:
             from cognithor.config import load_config
 
-            config = load_config(self.jarvis_home / "config.yaml")
+            config = load_config(self.cognithor_home / "config.yaml")
             self._pass(f"Config geladen (v{config.version})")
             self._pass(f"Ollama: {config.ollama.base_url}")
             self._pass(f"Planner: {config.models.planner.name}")
@@ -179,10 +179,10 @@ class SmokeTest:
     def test_memory(self) -> None:
         header("5. Memory-System")
         try:
-            from cognithor.config import JarvisConfig, ensure_directory_structure
+            from cognithor.config import CognithorConfig, ensure_directory_structure
             from cognithor.memory.manager import MemoryManager
 
-            config = JarvisConfig(jarvis_home=self.jarvis_home)
+            config = CognithorConfig(cognithor_home=self.cognithor_home)
             ensure_directory_structure(config)
             manager = MemoryManager(config)
             stats = manager.initialize_sync()
@@ -197,11 +197,11 @@ class SmokeTest:
     def test_gatekeeper(self) -> None:
         header("6. Gatekeeper")
         try:
-            from cognithor.config import JarvisConfig
+            from cognithor.config import CognithorConfig
             from cognithor.core.gatekeeper import Gatekeeper
             from cognithor.models import GateStatus, PlannedAction, SessionContext
 
-            config = JarvisConfig(jarvis_home=self.jarvis_home)
+            config = CognithorConfig(cognithor_home=self.cognithor_home)
             gk = Gatekeeper(config)
             gk.initialize()
             self._pass("Gatekeeper initialisiert")
@@ -221,13 +221,13 @@ class SmokeTest:
     def test_mcp_tools(self) -> None:
         header("7. MCP-Tools")
         try:
-            from cognithor.config import JarvisConfig
+            from cognithor.config import CognithorConfig
             from cognithor.mcp.client import JarvisMCPClient
             from cognithor.mcp.filesystem import register_fs_tools
             from cognithor.mcp.shell import register_shell_tools
             from cognithor.mcp.web import register_web_tools
 
-            config = JarvisConfig(jarvis_home=self.jarvis_home)
+            config = CognithorConfig(cognithor_home=self.cognithor_home)
             mcp = JarvisMCPClient(config)
             register_fs_tools(mcp, config)
             register_shell_tools(mcp, config)
@@ -291,10 +291,10 @@ class SmokeTest:
     def test_gateway(self) -> None:
         header("10. Gateway")
         try:
-            from cognithor.config import JarvisConfig
+            from cognithor.config import CognithorConfig
             from cognithor.gateway.gateway import Gateway
 
-            config = JarvisConfig(jarvis_home=self.jarvis_home)
+            config = CognithorConfig(cognithor_home=self.cognithor_home)
             Gateway(config)
             self._pass("Gateway instanziiert")
         except Exception as exc:
@@ -323,13 +323,19 @@ class SmokeTest:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Cognithor Smoke-Test")
-    parser.add_argument("--jarvis-home", default=str(Path.home() / ".cognithor"))
+    parser.add_argument(
+        "--cognithor-home",
+        "--jarvis-home",
+        dest="cognithor_home",
+        default=str(Path.home() / ".cognithor"),
+        help="Cognithor home directory (alias --jarvis-home kept for backward compat)",
+    )
     parser.add_argument("--ollama-url", default="http://localhost:11434")
     parser.add_argument("--venv", default="")
     args = parser.parse_args()
 
     print(f"\n{BOLD}{CYAN}Cognithor - Smoke-Test{RESET}\n{'=' * 50}")
-    st = SmokeTest(args.jarvis_home, args.ollama_url, args.venv)
+    st = SmokeTest(args.cognithor_home, args.ollama_url, args.venv)
     start = time.monotonic()
     st.test_python_imports()
     st.test_directories()

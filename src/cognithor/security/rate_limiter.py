@@ -1,4 +1,4 @@
-"""Jarvis · Rate-Limiter Middleware.
+"""Cognithor · Rate-Limiter Middleware.
 
 Simple token-bucket algorithm for API endpoints.
 """

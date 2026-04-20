@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 from cognithor.models import (
     AuditEntry,
     GateStatus,
@@ -42,7 +42,7 @@ class TestGatekeeperParamMatching:
     def gatekeeper(self, tmp_path: Path):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -170,7 +170,7 @@ class TestGatekeeperCommandCheck:
     def gatekeeper(self, tmp_path: Path):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -210,7 +210,7 @@ class TestGatekeeperCredentialScan:
     def gatekeeper(self, tmp_path: Path):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -236,7 +236,7 @@ class TestGatekeeperPolicyLoading:
     def gatekeeper_with_policy(self, tmp_path: Path):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
         # Custom Policy YAML erstellen
@@ -296,7 +296,7 @@ rules:
         """Ungültige YAML wird übersprungen."""
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
 
         policy_dir = config.policies_dir
@@ -315,7 +315,7 @@ class TestGatekeeperEvaluate:
     def gatekeeper(self, tmp_path: Path):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        config = CognithorConfig(cognithor_home=tmp_path / ".cognithor")
         config.ensure_directories()
         gk = Gatekeeper(config)
         gk.initialize()
@@ -663,7 +663,7 @@ class TestMCPClientConnections:
     def mcp(self, tmp_path: Path):
         from cognithor.mcp.client import JarvisMCPClient
 
-        config = JarvisConfig(jarvis_home=tmp_path)
+        config = CognithorConfig(cognithor_home=tmp_path)
         return JarvisMCPClient(config)
 
     @pytest.mark.asyncio()

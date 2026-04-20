@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig, SecurityConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, SecurityConfig, ensure_directory_structure
 from cognithor.mcp.code_tools import MAX_CODE_SIZE, CodeTools, register_code_tools
 
 if TYPE_CHECKING:
@@ -27,9 +27,9 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture()
-def config(tmp_path: Path) -> JarvisConfig:
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def config(tmp_path: Path) -> CognithorConfig:
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(allowed_paths=[str(tmp_path)]),
     )
     ensure_directory_structure(cfg)
@@ -37,7 +37,7 @@ def config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture()
-def code_tools(config: JarvisConfig) -> CodeTools:
+def code_tools(config: CognithorConfig) -> CodeTools:
     return CodeTools(config)
 
 
@@ -90,7 +90,7 @@ class TestRunPython:
         assert "Zugriff verweigert" in result
 
     @pytest.mark.asyncio()
-    async def test_temp_file_cleanup(self, code_tools: CodeTools, config: JarvisConfig) -> None:
+    async def test_temp_file_cleanup(self, code_tools: CodeTools, config: CognithorConfig) -> None:
         """Temp-Datei wird nach Ausführung gelöscht."""
         import os
 
@@ -140,14 +140,14 @@ class TestAnalyzeCode:
         assert "Fehler" in result or "error" in result.lower()
 
     @pytest.mark.asyncio()
-    async def test_file_not_found(self, code_tools: CodeTools, config: JarvisConfig) -> None:
+    async def test_file_not_found(self, code_tools: CodeTools, config: CognithorConfig) -> None:
         """Nicht existierende Datei gibt Fehler."""
         fake_path = str(config.workspace_dir / "nonexistent" / "file.py")
         result = await code_tools.analyze_code(file_path=fake_path)
         assert "not_found" in result or "nicht gefunden" in result
 
     @pytest.mark.asyncio()
-    async def test_non_python_file(self, code_tools: CodeTools, config: JarvisConfig) -> None:
+    async def test_non_python_file(self, code_tools: CodeTools, config: CognithorConfig) -> None:
         """Nicht-Python-Datei wird abgelehnt."""
         fake_path = str(config.workspace_dir / "file.txt")
         result = await code_tools.analyze_code(file_path=fake_path)
@@ -157,7 +157,7 @@ class TestAnalyzeCode:
     async def test_file_analysis(
         self,
         code_tools: CodeTools,
-        config: JarvisConfig,
+        config: CognithorConfig,
     ) -> None:
         """Datei-basierte Analyse funktioniert."""
         test_file = config.workspace_dir / "test_analyze.py"
@@ -180,7 +180,7 @@ class TestAnalyzeCode:
 class TestRegistration:
     """Tests für register_code_tools."""
 
-    def test_registers_two_tools(self, config: JarvisConfig) -> None:
+    def test_registers_two_tools(self, config: CognithorConfig) -> None:
         """Registriert genau 2 Tools (run_python, analyze_code)."""
         mock_client = MagicMock()
         register_code_tools(mock_client, config)
@@ -193,7 +193,7 @@ class TestRegistration:
         assert "run_python" in registered_names
         assert "analyze_code" in registered_names
 
-    def test_returns_code_tools_instance(self, config: JarvisConfig) -> None:
+    def test_returns_code_tools_instance(self, config: CognithorConfig) -> None:
         """Gibt eine CodeTools-Instanz zurück."""
         mock_client = MagicMock()
         result = register_code_tools(mock_client, config)

@@ -19,7 +19,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -28,11 +28,11 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def calendar_config(tmp_path: Path) -> JarvisConfig:
-    """JarvisConfig with calendar enabled."""
+def calendar_config(tmp_path: Path) -> CognithorConfig:
+    """CognithorConfig with calendar enabled."""
     ics_path = tmp_path / "test_calendar.ics"
-    return JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+    return CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         calendar={
             "enabled": True,
             "ics_path": str(ics_path),
@@ -42,15 +42,15 @@ def calendar_config(tmp_path: Path) -> JarvisConfig:
 
 
 @pytest.fixture
-def calendar_config_disabled(tmp_path: Path) -> JarvisConfig:
-    """JarvisConfig with calendar disabled."""
-    return JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+def calendar_config_disabled(tmp_path: Path) -> CognithorConfig:
+    """CognithorConfig with calendar disabled."""
+    return CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
     )
 
 
 @pytest.fixture
-def calendar_tools(calendar_config: JarvisConfig):
+def calendar_tools(calendar_config: CognithorConfig):
     """CalendarTools instance."""
     from cognithor.mcp.calendar_tools import CalendarTools
 
@@ -627,7 +627,7 @@ class TestCalendarAvailability:
 class TestIcsFileManagement:
     """Tests for ICS file creation and management."""
 
-    def test_ics_file_created_on_init(self, calendar_config: JarvisConfig) -> None:
+    def test_ics_file_created_on_init(self, calendar_config: CognithorConfig) -> None:
         from cognithor.mcp.calendar_tools import CalendarTools
 
         tools = CalendarTools(calendar_config)
@@ -778,7 +778,7 @@ class TestTimezoneHandling:
 class TestRegistration:
     """Tests for register_calendar_tools."""
 
-    def test_register_when_enabled(self, calendar_config: JarvisConfig) -> None:
+    def test_register_when_enabled(self, calendar_config: CognithorConfig) -> None:
         from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()
@@ -786,7 +786,7 @@ class TestRegistration:
         assert result is not None
         assert mcp.register_builtin_handler.call_count == 4
 
-    def test_register_when_disabled(self, calendar_config_disabled: JarvisConfig) -> None:
+    def test_register_when_disabled(self, calendar_config_disabled: CognithorConfig) -> None:
         from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()
@@ -794,7 +794,7 @@ class TestRegistration:
         assert result is None
         assert mcp.register_builtin_handler.call_count == 0
 
-    def test_registered_tool_names(self, calendar_config: JarvisConfig) -> None:
+    def test_registered_tool_names(self, calendar_config: CognithorConfig) -> None:
         from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()
@@ -806,7 +806,7 @@ class TestRegistration:
         assert "calendar_create_event" in registered_names
         assert "calendar_check_availability" in registered_names
 
-    def test_register_creates_ics_file(self, calendar_config: JarvisConfig) -> None:
+    def test_register_creates_ics_file(self, calendar_config: CognithorConfig) -> None:
         from cognithor.mcp.calendar_tools import register_calendar_tools
 
         mcp = MagicMock()

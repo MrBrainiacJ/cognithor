@@ -1,4 +1,4 @@
-"""Security modules for Jarvis Agent OS. [B§11]"""
+"""Security modules for Cognithor Agent OS. [B§11]"""
 
 from cognithor.security.agent_vault import (
     AgentVaultManager,

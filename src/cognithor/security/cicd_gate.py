@@ -1,4 +1,4 @@
-"""Jarvis · CI/CD Security Gate & Continuous Red-Team.
+"""Cognithor · CI/CD Security Gate & Continuous Red-Team.
 
 End-to-end CI/CD integration with security gates:
 

@@ -19,11 +19,11 @@ from cognithor.models import ToolResult
 @pytest.fixture
 def observer(tmp_path):
     """ObserverAudit with default config and tmp_path audit store."""
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.observer import ObserverAudit
     from cognithor.core.observer_store import AuditStore
 
-    config = JarvisConfig()
+    config = CognithorConfig()
     store = AuditStore(db_path=tmp_path / "audits.db")
     return ObserverAudit(config=config, ollama_client=None, audit_store=store)
 

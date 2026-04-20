@@ -86,7 +86,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _load_config(config_path: str) -> Any:
-    """Load Jarvis config, optionally from a custom path."""
+    """Load Cognithor config, optionally from a custom path."""
     try:
         from cognithor.config import load_config
 

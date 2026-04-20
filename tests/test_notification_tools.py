@@ -42,7 +42,7 @@ def mock_mcp_client() -> MagicMock:
 @pytest.fixture
 def mock_config(tmp_path: Path) -> MagicMock:
     cfg = MagicMock()
-    cfg.jarvis_home = tmp_path / ".cognithor"
+    cfg.cognithor_home = tmp_path / ".cognithor"
     return cfg
 
 

@@ -1,4 +1,4 @@
-"""Jarvis · Workflow-Templates & Ecosystem Security Policy.
+"""Cognithor · Workflow-Templates & Ecosystem Security Policy.
 
 Punkt 6: Beispiel-Workflows fuer Endanwender
   - WorkflowTemplate:  Vordefinierte Ablaeufe (Team-Onboarding, Sales-Pipeline, etc.)

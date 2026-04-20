@@ -40,7 +40,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from cognithor.config import JarvisConfig, ensure_directory_structure
+from cognithor.config import CognithorConfig, ensure_directory_structure
 from cognithor.core.executor import Executor
 from cognithor.core.gatekeeper import Gatekeeper
 from cognithor.core.planner import Planner
@@ -98,8 +98,8 @@ def gateway_with_mocks(tmp_path):
     sandbox = tmp_path / "sandbox"
     sandbox.mkdir()
 
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[
                 str(tmp_path / ".cognithor"),
@@ -171,8 +171,8 @@ def gateway_extended_tools(tmp_path):
     sandbox = tmp_path / "sandbox"
     sandbox.mkdir()
 
-    cfg = JarvisConfig(
-        jarvis_home=tmp_path / ".cognithor",
+    cfg = CognithorConfig(
+        cognithor_home=tmp_path / ".cognithor",
         security=SecurityConfig(
             allowed_paths=[
                 str(tmp_path / ".cognithor"),
@@ -407,7 +407,7 @@ class TestFileOperation:
         """User asks to see a file -- plan uses read_file, response includes content."""
         gw, mock_ollama, mock_mcp, _sandbox = gateway_with_mocks
 
-        # Use a relative path -- Gatekeeper resolves it to workspace under jarvis_home
+        # Use a relative path -- Gatekeeper resolves it to workspace under cognithor_home
         call_count = 0
 
         async def mock_chat(**kwargs):

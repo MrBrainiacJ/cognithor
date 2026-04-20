@@ -1,8 +1,8 @@
-"""Tests for ToolsConfig and its integration into JarvisConfig."""
+"""Tests for ToolsConfig and its integration into CognithorConfig."""
 
 from __future__ import annotations
 
-from cognithor.config import JarvisConfig, ToolsConfig
+from cognithor.config import CognithorConfig, ToolsConfig
 
 
 class TestToolsConfig:
@@ -25,20 +25,20 @@ class TestToolsConfig:
 
 
 class TestJarvisConfigToolsIntegration:
-    """Integration tests: ToolsConfig wired into JarvisConfig."""
+    """Integration tests: ToolsConfig wired into CognithorConfig."""
 
     def test_tools_section_exists(self) -> None:
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         assert hasattr(cfg, "tools")
         assert isinstance(cfg.tools, ToolsConfig)
 
     def test_tools_defaults_in_jarvis_config(self) -> None:
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         assert cfg.tools.computer_use_enabled is False
         assert cfg.tools.desktop_tools_enabled is False
 
     def test_tools_serialization(self) -> None:
-        cfg = JarvisConfig()
+        cfg = CognithorConfig()
         data = cfg.model_dump()
         assert "tools" in data
         assert data["tools"]["computer_use_enabled"] is False
@@ -66,7 +66,7 @@ class TestGatekeeperBlocksDisabledTools:
     def test_computer_use_blocked_when_disabled(self):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=False))
+        config = CognithorConfig(tools=ToolsConfig(computer_use_enabled=False))
         gk = Gatekeeper(config)
         for tool in self.COMPUTER_USE_TOOLS:
             assert gk.is_tool_disabled(tool), f"{tool} should be disabled"
@@ -74,7 +74,7 @@ class TestGatekeeperBlocksDisabledTools:
     def test_computer_use_allowed_when_enabled(self):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(tools=ToolsConfig(computer_use_enabled=True))
+        config = CognithorConfig(tools=ToolsConfig(computer_use_enabled=True))
         gk = Gatekeeper(config)
         for tool in self.COMPUTER_USE_TOOLS:
             assert not gk.is_tool_disabled(tool), f"{tool} should be enabled"
@@ -82,7 +82,7 @@ class TestGatekeeperBlocksDisabledTools:
     def test_desktop_tools_blocked_when_disabled(self):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(tools=ToolsConfig(desktop_tools_enabled=False))
+        config = CognithorConfig(tools=ToolsConfig(desktop_tools_enabled=False))
         gk = Gatekeeper(config)
         for tool in self.DESKTOP_TOOLS:
             assert gk.is_tool_disabled(tool), f"{tool} should be disabled"
@@ -90,7 +90,7 @@ class TestGatekeeperBlocksDisabledTools:
     def test_desktop_tools_allowed_when_enabled(self):
         from cognithor.core.gatekeeper import Gatekeeper
 
-        config = JarvisConfig(tools=ToolsConfig(desktop_tools_enabled=True))
+        config = CognithorConfig(tools=ToolsConfig(desktop_tools_enabled=True))
         gk = Gatekeeper(config)
         for tool in self.DESKTOP_TOOLS:
             assert not gk.is_tool_disabled(tool), f"{tool} should be enabled"

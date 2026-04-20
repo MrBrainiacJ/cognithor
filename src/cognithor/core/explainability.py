@@ -1,4 +1,4 @@
-"""Jarvis - Explainability Layer.
+"""Cognithor - Explainability Layer.
 
 Transparent decision path for business-critical tasks:
 

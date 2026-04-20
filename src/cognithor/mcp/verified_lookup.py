@@ -24,7 +24,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.mcp.browser import BrowserTool
     from cognithor.mcp.client import JarvisMCPClient
     from cognithor.mcp.web import WebTools
@@ -139,7 +139,7 @@ class VerifiedWebLookup:
         }
     )
 
-    def __init__(self, config: JarvisConfig | None = None) -> None:
+    def __init__(self, config: CognithorConfig | None = None) -> None:
         self._config = config
         self._web_tools: WebTools | None = None
         self._browser_tool: BrowserTool | None = None
@@ -715,7 +715,7 @@ class VerifiedWebLookup:
 
 def register_verified_lookup_tools(
     mcp_client: JarvisMCPClient,
-    config: JarvisConfig | None = None,
+    config: CognithorConfig | None = None,
 ) -> VerifiedWebLookup:
     """Registriert das verified_web_lookup Tool.
 
