@@ -191,7 +191,7 @@ class SessionAnalyzer:
         Args:
             data_dir: Verzeichnis fuer die SQLite-Datenbank.
             memory_manager: Optionaler MemoryManager fuer Prozedur-Zugriff.
-            config: Optionale JarvisConfig.
+            config: Optionale CognithorConfig.
         """
         self._data_dir = Path(data_dir)
         self._memory_manager = memory_manager

@@ -30,7 +30,7 @@ from cognithor.mcp.vault_backend import slugify as _ext_slugify
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -72,7 +72,7 @@ class VaultTools:
     Auto-migration runs on mode change.
     """
 
-    def __init__(self, config: JarvisConfig | None = None) -> None:
+    def __init__(self, config: CognithorConfig | None = None) -> None:
         vault_cfg = getattr(config, "vault", None)
 
         if vault_cfg and getattr(vault_cfg, "path", ""):
@@ -537,7 +537,7 @@ def register_vault_tools(
 
     Args:
         mcp_client: JarvisMCPClient-Instanz.
-        config: JarvisConfig (optional).
+        config: CognithorConfig (optional).
 
     Returns:
         VaultTools-Instanz.

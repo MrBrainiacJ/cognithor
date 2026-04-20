@@ -1,5 +1,5 @@
 """
-Jarvis · Central data models.
+Cognithor · Central data models.
 
 All Pydantic models used across modules.
 Architecture Bible: §3.1, §3.2, §3.3, §4, §5, §6, §8, §9, §10

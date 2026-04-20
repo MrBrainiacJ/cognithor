@@ -1,4 +1,4 @@
-"""Datenbank-Tools fuer Jarvis -- SQL-Zugriff als MCP-Tools.
+"""Datenbank-Tools fuer Cognithor -- SQL-Zugriff als MCP-Tools.
 
 Tools:
   - db_query: SELECT-Abfragen ausfuehren (Read-Only)
@@ -31,7 +31,7 @@ from cognithor.utils.logging import get_logger
 if TYPE_CHECKING:
     import sqlite3
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -135,14 +135,14 @@ class DatabaseTools:
     Unterstuetzt SQLite (stdlib) und PostgreSQL (asyncpg/psycopg2, optional).
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._workspace: Path = config.workspace_dir
-        self._jarvis_home: Path = config.jarvis_home
+        self._jarvis_home: Path = config.cognithor_home
         self._allowed_roots: list[Path] = [
             Path(p).expanduser().resolve() for p in config.security.allowed_paths
         ]
-        # Also allow workspace and jarvis_home explicitly
+        # Also allow workspace and cognithor_home explicitly
         for extra in (self._workspace, self._jarvis_home):
             resolved = extra.expanduser().resolve()
             if resolved not in self._allowed_roots:
@@ -822,7 +822,7 @@ class DatabaseTools:
 
 def register_database_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> DatabaseTools:
     """Registriert Datenbank-Tools beim MCP-Client.
 

@@ -70,11 +70,11 @@ except ImportError:
 # 2. Config schema
 # ----------------------------------------------------------------------
 print("\n=== 2. Config Schema ===")
-from cognithor.config import JarvisConfig
+from cognithor.config import CognithorConfig
 
-cfg = JarvisConfig()
-for f in ["jarvis_home", "language", "ollama", "gatekeeper", "planner", "memory", "security"]:
-    check(f"JarvisConfig.{f}", hasattr(cfg, f))
+cfg = CognithorConfig()
+for f in ["cognithor_home", "language", "ollama", "gatekeeper", "planner", "memory", "security"]:
+    check(f"CognithorConfig.{f}", hasattr(cfg, f))
 
 # ----------------------------------------------------------------------
 # 3. Gateway wiring (pack loader + lead service)

@@ -139,12 +139,12 @@ class MediaPipeline:
         if not path.exists():
             return None
         # Workspace confinement: path must be inside workspace or home/.jarvis
-        jarvis_home = Path.home() / ".cognithor"
+        cognithor_home = Path.home() / ".cognithor"
         try:
             path.relative_to(self._workspace)
         except ValueError:
             try:
-                path.relative_to(jarvis_home)
+                path.relative_to(cognithor_home)
             except ValueError:
                 log.warning(
                     "media_path_outside_workspace", path=str(path), workspace=str(self._workspace)
@@ -1988,11 +1988,11 @@ class MediaPipeline:
         if output_path:
             try:
                 out = Path(output_path).expanduser().resolve()
-                jarvis_home = Path.home() / ".cognithor"
+                cognithor_home = Path.home() / ".cognithor"
                 try:
                     out.relative_to(self._workspace)
                 except ValueError:
-                    out.relative_to(jarvis_home)
+                    out.relative_to(cognithor_home)
             except (ValueError, OSError):
                 return MediaResult(
                     success=False,
@@ -2509,7 +2509,7 @@ def register_media_tools(mcp_client: Any, config: Any = None) -> MediaPipeline:
 
     Args:
         mcp_client: JarvisMCPClient-Instanz.
-        config: JarvisConfig-Instanz (optional, fuer Vision-Modell-Auswahl).
+        config: CognithorConfig-Instanz (optional, fuer Vision-Modell-Auswahl).
 
     Returns:
         MediaPipeline-Instanz.

@@ -1,4 +1,4 @@
-"""Jarvis · AI Agent Security Framework.
+"""Cognithor · AI Agent Security Framework.
 
 Enterprise security metrics and team role distribution:
 

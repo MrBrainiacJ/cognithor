@@ -1,4 +1,4 @@
-"""Jarvis · Security hardening & CI/CD integration.
+"""Cognithor · Security hardening & CI/CD integration.
 
 End-to-end CI/CD security gates and container isolation:
 

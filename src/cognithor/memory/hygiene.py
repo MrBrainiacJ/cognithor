@@ -1,4 +1,4 @@
-"""Jarvis · Memory hygiene framework.
+"""Cognithor · Memory hygiene framework.
 
 Schutz des RAG-Gedaechtnisses vor Manipulation:
 

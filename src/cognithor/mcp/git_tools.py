@@ -1,4 +1,4 @@
-"""Git-Tools fuer Jarvis -- Versionskontrolle als MCP-Tools.
+"""Git-Tools fuer Cognithor -- Versionskontrolle als MCP-Tools.
 
 Fuenf Tools:
   - git_status: Working-Tree-Status anzeigen
@@ -23,7 +23,7 @@ from cognithor.i18n import t
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -51,7 +51,7 @@ class GitTools:
     Git-Befehle werden via asyncio.create_subprocess_exec ausgefuehrt.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._workspace = config.workspace_dir
 
@@ -473,7 +473,7 @@ class GitTools:
 
 def register_git_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> None:
     """Registriert Git-Tools beim MCP-Client."""
     tools = GitTools(config)

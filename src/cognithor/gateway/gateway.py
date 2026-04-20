@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from cognithor.config import JarvisConfig, load_config
+from cognithor.config import CognithorConfig, load_config
 from cognithor.core.agent_router import RouteDecision
 from cognithor.core.autonomous_orchestrator import AutonomousOrchestrator
 from cognithor.core.observer import (  # noqa: TC001
@@ -158,14 +158,14 @@ def _sanitize_broken_llm_output(text: str) -> str:
 
 
 class Gateway:
-    """Central entry point. Connects all Jarvis subsystems. [B§9.1]"""
+    """Central entry point. Connects all Cognithor subsystems. [B§9.1]"""
 
     # Session TTL: sessions older than 24 hours are considered stale
     _SESSION_TTL_SECONDS: float = 24 * 60 * 60  # 24h
     # Minimum interval between stale-session cleanup sweeps
     _CLEANUP_INTERVAL_SECONDS: float = 60 * 60  # 1h
 
-    def __init__(self, config: JarvisConfig | None = None) -> None:
+    def __init__(self, config: CognithorConfig | None = None) -> None:
         """Initialisiert das Gateway mit PGE-Trinitaet, MCP-Client und Memory."""
         self._config = config or load_config()
         self._channels: dict[str, Channel] = {}
@@ -268,7 +268,7 @@ class Gateway:
             try:
                 from cognithor.core.message_queue import DurableMessageQueue as _Dmq
 
-                queue_path = self._config.jarvis_home / "memory" / "message_queue.db"
+                queue_path = self._config.cognithor_home / "memory" / "message_queue.db"
                 self._message_queue = _Dmq(
                     queue_path,
                     max_size=self._config.queue.max_size,
@@ -297,7 +297,7 @@ class Gateway:
             memory_manager=self._memory_manager,
             mcp_client=self._mcp_client,
             audit_logger=self._audit_logger,
-            jarvis_home=self._config.jarvis_home,
+            cognithor_home=self._config.cognithor_home,
             handle_message=self.handle_message,
             heartbeat_config=self._config.heartbeat,
         )
@@ -376,7 +376,7 @@ class Gateway:
         # Fix A1+A2: Re-wire memory for systems created with config (not gateway)
         # ExplorationExecutor and KnowledgeIngestService were instantiated with
         # getattr(config, "_memory_manager", None) which is always None because
-        # config is JarvisConfig, not the gateway. Fix by assigning the real
+        # config is CognithorConfig, not the gateway. Fix by assigning the real
         # MemoryManager now that it exists on self.
         if getattr(self, "_exploration_executor", None) and self._memory_manager:
             self._exploration_executor._memory = self._memory_manager
@@ -511,7 +511,7 @@ class Gateway:
         # GDPR: ConsentManager + ComplianceEngine
         try:
             self._consent_manager = ConsentManager(
-                db_path=str(Path(self._config.jarvis_home) / "index" / "consent.db")
+                db_path=str(Path(self._config.cognithor_home) / "index" / "consent.db")
             )
             policy_ver = getattr(
                 getattr(self._config, "compliance", None),
@@ -723,7 +723,9 @@ class Gateway:
         try:
             from cognithor.core.feedback import FeedbackStore
 
-            self._feedback_store = FeedbackStore(db_path=self._config.jarvis_home / "feedback.db")
+            self._feedback_store = FeedbackStore(
+                db_path=self._config.cognithor_home / "feedback.db"
+            )
             log.info("feedback_store_initialized")
         except Exception:
             log.debug("feedback_store_init_failed", exc_info=True)
@@ -737,7 +739,7 @@ class Gateway:
             if hasattr(self._config, "recovery"):
                 _proactive = getattr(self._config.recovery, "correction_proactive_threshold", 3)
             self._correction_memory = CorrectionMemory(
-                db_path=self._config.jarvis_home / "corrections.db",
+                db_path=self._config.cognithor_home / "corrections.db",
                 proactive_threshold=_proactive,
             )
             log.info("correction_memory_initialized")
@@ -754,7 +756,7 @@ class Gateway:
             from cognithor.core.conversation_tree import ConversationTree
 
             self._conversation_tree = ConversationTree(
-                db_path=self._config.jarvis_home / "conversations.db"
+                db_path=self._config.cognithor_home / "conversations.db"
             )
             log.info("conversation_tree_initialized")
         except Exception:
@@ -766,7 +768,7 @@ class Gateway:
             from cognithor.system.detector import SystemDetector
 
             _detector = SystemDetector()
-            _cache = self._config.jarvis_home / "system_profile.json"
+            _cache = self._config.cognithor_home / "system_profile.json"
             self._system_profile = _detector.run_quick_scan(cache_path=_cache)
             self._system_profile.save(_cache)
             log.info(
@@ -794,7 +796,7 @@ class Gateway:
         try:
             from cognithor.core.checkpointing import CheckpointStore
 
-            self._checkpoint_store = CheckpointStore(self._config.jarvis_home / "checkpoints")
+            self._checkpoint_store = CheckpointStore(self._config.cognithor_home / "checkpoints")
             log.info("checkpoint_store_initialized")
         except Exception:
             log.debug("checkpoint_store_init_skipped", exc_info=True)
@@ -862,7 +864,7 @@ class Gateway:
 
                     self._deep_learner = DeepLearner(
                         llm_fn=getattr(self, "_llm_call", None),
-                        plans_dir=self._config.jarvis_home / "evolution" / "plans",
+                        plans_dir=self._config.cognithor_home / "evolution" / "plans",
                         mcp_client=getattr(self, "_mcp_client", None),
                         memory_manager=getattr(self, "_memory_manager", None),
                         skill_registry=getattr(self, "_skill_registry", None),
@@ -907,7 +909,7 @@ class Gateway:
                         from cognithor.evolution.cycle_controller import CycleController
 
                         _cycle_ctrl = CycleController(
-                            plans_dir=self._config.jarvis_home / "evolution" / "plans"
+                            plans_dir=self._config.cognithor_home / "evolution" / "plans"
                         )
                         self._deep_learner._cycle_controller = _cycle_ctrl
                         log.info("cycle_controller_initialized")
@@ -935,8 +937,8 @@ class Gateway:
                     from cognithor.evolution.atl_journal import ATLJournal
                     from cognithor.evolution.goal_manager import GoalManager
 
-                    goals_path = self._config.jarvis_home / "evolution" / "goals.yaml"
-                    journal_dir = self._config.jarvis_home / "evolution" / "journal"
+                    goals_path = self._config.cognithor_home / "evolution" / "goals.yaml"
+                    journal_dir = self._config.cognithor_home / "evolution" / "journal"
 
                     gm = GoalManager(goals_path=goals_path)
 
@@ -979,7 +981,7 @@ class Gateway:
                 from cognithor.kanban.store import KanbanStore
                 from cognithor.mcp.kanban_tools import register_kanban_tools
 
-                _kanban_db = self._config.jarvis_home / "db" / "kanban.db"
+                _kanban_db = self._config.cognithor_home / "db" / "kanban.db"
                 _kanban_store = KanbanStore(str(_kanban_db))
                 self._kanban_engine = KanbanEngine(
                     _kanban_store,
@@ -1046,7 +1048,7 @@ class Gateway:
                 deduplicate_procedures,
             )
 
-            db_path = self._config.jarvis_home / "tool_registry.db"
+            db_path = self._config.cognithor_home / "tool_registry.db"
             registry_db = ToolRegistryDB(db_path)
 
             # Tools aus MCP-Client synchronisieren
@@ -1280,8 +1282,8 @@ class Gateway:
                 self._active_learner._memory = getattr(self, "_memory_manager", None)
                 # D3: Default watch_dirs if empty — scan vault + memory for new files
                 if not self._active_learner._watch_dirs:
-                    vault_dir = self._config.jarvis_home / "vault"
-                    wissen_dir = self._config.jarvis_home / "vault" / "wissen"
+                    vault_dir = self._config.cognithor_home / "vault"
+                    wissen_dir = self._config.cognithor_home / "vault" / "wissen"
                     for d in [vault_dir, wissen_dir]:
                         if d.exists():
                             self._active_learner._watch_dirs.append(str(d))
@@ -1386,7 +1388,7 @@ class Gateway:
                                 tsa_url = getattr(
                                     self._config.audit, "tsa_url", "https://freetsa.org/tsr"
                                 )
-                                tsa_dir = self._config.jarvis_home / "tsa"
+                                tsa_dir = self._config.cognithor_home / "tsa"
                                 tsa_client = TSAClient(tsa_url=tsa_url, storage_dir=tsa_dir)
                                 tsr_path = tsa_client.request_timestamp(anchor["hash"], date_str)
                                 if tsr_path:
@@ -1409,8 +1411,8 @@ class Gateway:
                         try:
                             from cognithor.audit.worm import WORMUploader
 
-                            worm_audit_dir = self._config.jarvis_home / "data" / "audit"
-                            uploader = WORMUploader(self._config.audit, self._config.jarvis_home)
+                            worm_audit_dir = self._config.cognithor_home / "data" / "audit"
+                            uploader = WORMUploader(self._config.audit, self._config.cognithor_home)
                             uploaded = uploader.upload_daily(worm_audit_dir)
                             if uploaded:
                                 log.info(
@@ -1495,7 +1497,7 @@ class Gateway:
             try:
                 from cognithor.audit.breach_detector import BreachDetector
 
-                _breach_state = self._config.jarvis_home / "breach_state.json"
+                _breach_state = self._config.cognithor_home / "breach_state.json"
                 _cooldown = getattr(self._config.audit, "breach_cooldown_hours", 1)
                 self._breach_detector = BreachDetector(
                     state_path=_breach_state,
@@ -1542,7 +1544,7 @@ class Gateway:
             if skill_registry and (sl_cfg is None or sl_cfg.enabled):
                 from cognithor.skills.lifecycle import SkillLifecycleManager
 
-                generated_dir = self._config.jarvis_home / "skills" / "generated"
+                generated_dir = self._config.cognithor_home / "skills" / "generated"
                 self._skill_lifecycle = SkillLifecycleManager(skill_registry, generated_dir)
                 report = self._skill_lifecycle.get_report()
                 log.info("skill_lifecycle_audit", report=report[:200])
@@ -1590,7 +1592,7 @@ class Gateway:
                     while True:
                         try:
                             compressor = self._memory_manager.compressor
-                            ep_dir = self._config.jarvis_home / "memory" / "episodes"
+                            ep_dir = self._config.cognithor_home / "memory" / "episodes"
                             if ep_dir.exists():
                                 dates = []
                                 for f in ep_dir.glob("*.md"):
@@ -1663,7 +1665,7 @@ class Gateway:
                 from cognithor.skills.community.sync import RegistrySync
 
                 sync = RegistrySync(
-                    community_dir=self._config.jarvis_home / "skills" / "community",
+                    community_dir=self._config.cognithor_home / "skills" / "community",
                     skill_registry=self._skill_registry
                     if hasattr(self, "_skill_registry")
                     else None,
@@ -1911,8 +1913,8 @@ class Gateway:
         if skills and self._skill_registry:
             try:
                 skill_dirs = [
-                    self._config.jarvis_home / "data" / "procedures",
-                    self._config.jarvis_home / self._config.plugins.skills_dir,
+                    self._config.cognithor_home / "data" / "procedures",
+                    self._config.cognithor_home / self._config.plugins.skills_dir,
                 ]
                 self._skill_registry.load_from_directories(skill_dirs)
                 reloaded.append("skills")

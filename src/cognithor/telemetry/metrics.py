@@ -1,6 +1,6 @@
 """Metrics Provider -- Counter, Histogram, Gauge (v19).
 
-OTLP-compatible metrics for Jarvis:
+OTLP-compatible metrics for Cognithor:
   - Counter:   Monotonically increasing counters (requests, errors, tokens)
   - Histogram: Distributions (latency, token counts)
   - Gauge:     Current values (active connections, queue size)

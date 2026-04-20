@@ -77,7 +77,7 @@ class ResponseEnvelope:
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.observer_store import AuditStore
     from cognithor.models import ToolResult
 
@@ -135,7 +135,7 @@ class ObserverAudit:
     def __init__(
         self,
         *,
-        config: JarvisConfig,
+        config: CognithorConfig,
         ollama_client: Any,
         audit_store: AuditStore,
     ) -> None:

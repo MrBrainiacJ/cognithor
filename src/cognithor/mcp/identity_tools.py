@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 from cognithor.i18n import t
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.identity import IdentityLayer
     from cognithor.mcp.client import JarvisMCPClient
 
@@ -25,7 +25,7 @@ log = logging.getLogger("cognithor.mcp.identity_tools")
 def register_identity_tools(
     mcp_client: JarvisMCPClient,
     identity_layer: IdentityLayer,
-    config: JarvisConfig | None = None,
+    config: CognithorConfig | None = None,
 ) -> None:
     """Register identity MCP tools.
 

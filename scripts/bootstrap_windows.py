@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
-def resolve_install_language(jarvis_home: Path) -> tuple[str, str]:
+def resolve_install_language(cognithor_home: Path) -> tuple[str, str]:
     """Resolve the UI language for a fresh install.
 
     Priority (Issue #114):
@@ -37,7 +37,7 @@ def resolve_install_language(jarvis_home: Path) -> tuple[str, str]:
     ``"locale"``. The marker file is consumed (deleted) on read so later runs
     fall through to the locale path.
     """
-    marker = jarvis_home / "install_language.txt"
+    marker = cognithor_home / "install_language.txt"
     if marker.exists():
         try:
             raw = marker.read_text(encoding="utf-8").strip().lower()[:2]
@@ -58,7 +58,7 @@ def resolve_install_language(jarvis_home: Path) -> tuple[str, str]:
     return ("de" if lang_code == "de" else "en"), "locale"
 
 
-def _copy_bundled_packs(jarvis_home: Path) -> None:
+def _copy_bundled_packs(cognithor_home: Path) -> None:
     """Copy bundled free packs into ~/.cognithor/packs/ on first run.
 
     Idempotent — skips packs whose target directory already exists.
@@ -71,7 +71,7 @@ def _copy_bundled_packs(jarvis_home: Path) -> None:
         bundled_root = Path(cognithor.__file__).parent / "_bundled_packs"
         if not bundled_root.exists():
             return
-        target_root = jarvis_home / "packs"
+        target_root = cognithor_home / "packs"
         target_root.mkdir(parents=True, exist_ok=True)
         for ns_dir in bundled_root.iterdir():
             if not ns_dir.is_dir():

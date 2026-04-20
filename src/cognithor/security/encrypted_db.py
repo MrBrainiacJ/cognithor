@@ -105,7 +105,7 @@ _encryption_enabled_cache: bool | None = None
 def _check_encryption_enabled() -> bool:
     """Check whether database encryption is enabled in config.yaml.
 
-    Reads the YAML file directly (no dependency on JarvisConfig) and caches
+    Reads the YAML file directly (no dependency on CognithorConfig) and caches
     the result for the lifetime of the process.  Falls back to False if the
     config cannot be read.
     """

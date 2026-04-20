@@ -189,7 +189,7 @@ class StartupChecker:
     """Comprehensive startup dependency checker.
 
     Parameters:
-        config: The loaded JarvisConfig object.  May be ``None`` for
+        config: The loaded CognithorConfig object.  May be ``None`` for
                 unit-testing individual methods.
     """
 
@@ -503,7 +503,7 @@ class StartupChecker:
     def check_directories(self) -> StartupReport:
         """Verify the directory structure exists; create if missing.
 
-        Uses config.jarvis_home as the base path and ensures standard
+        Uses config.cognithor_home as the base path and ensures standard
         subdirectories are present.
         """
         report = StartupReport()
@@ -512,12 +512,12 @@ class StartupChecker:
             report.warnings.append("No config -- directory check skipped")
             return report
 
-        jarvis_home = getattr(self._config, "jarvis_home", None)
-        if jarvis_home is None:
-            report.warnings.append("jarvis_home not set -- directory check skipped")
+        cognithor_home = getattr(self._config, "cognithor_home", None)
+        if cognithor_home is None:
+            report.warnings.append("cognithor_home not set -- directory check skipped")
             return report
 
-        base = Path(str(jarvis_home))
+        base = Path(str(cognithor_home))
         subdirs = [
             "memory",
             "memory/episodes",

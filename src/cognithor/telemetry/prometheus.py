@@ -1,4 +1,4 @@
-"""Prometheus-compatible metrics export for Jarvis.
+"""Prometheus-compatible metrics export for Cognithor.
 
 Exports metrics in Prometheus Text Exposition Format
 without external dependencies (no prometheus_client needed).

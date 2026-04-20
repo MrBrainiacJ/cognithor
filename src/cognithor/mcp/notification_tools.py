@@ -1,4 +1,4 @@
-"""Notification & Reminder Tools for Jarvis.
+"""Notification & Reminder Tools for Cognithor.
 
 MCP-Tools for scheduling reminders and sending desktop notifications.
 
@@ -364,13 +364,13 @@ def register_notification_tools(
 
     Args:
         mcp_client: JarvisMCPClient instance.
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
 
     Returns:
         NotificationTools instance (needed for restore_pending_reminders).
     """
-    jarvis_home = getattr(config, "jarvis_home", Path.home() / ".cognithor")
-    db_path = Path(jarvis_home) / "reminders.db"
+    cognithor_home = getattr(config, "cognithor_home", Path.home() / ".cognithor")
+    db_path = Path(cognithor_home) / "reminders.db"
     tools = NotificationTools(db_path)
 
     # -- set_reminder -------------------------------------------------------

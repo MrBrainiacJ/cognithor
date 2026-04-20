@@ -71,7 +71,7 @@ def _split_discord_message(text: str, limit: int = _DISCORD_MAX_LENGTH) -> list[
 
 
 class DiscordChannel(Channel):
-    """Bidirektionale Discord-Integration fuer Jarvis.
+    """Bidirektionale Discord-Integration fuer Cognithor.
 
     Empfaengt Nachrichten via Gateway WebSocket, sendet via REST-API,
     und unterstuetzt interaktive Approvals ueber Reactions (✅/❌).

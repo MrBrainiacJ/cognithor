@@ -52,7 +52,7 @@ class CheckpointStore:
     """Manages persistent checkpoints on disk.
 
     Checkpoints are stored as JSON files under:
-      ``{jarvis_home}/checkpoints/{session_id}/{checkpoint_id}.json``
+      ``{cognithor_home}/checkpoints/{session_id}/{checkpoint_id}.json``
     """
 
     def __init__(self, checkpoints_dir: Path) -> None:

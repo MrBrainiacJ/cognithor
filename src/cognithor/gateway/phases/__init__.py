@@ -1,4 +1,4 @@
-"""Gateway Phase Modules: Modular initialization for the Jarvis Gateway.
+"""Gateway Phase Modules: Modular initialization for the Cognithor Gateway.
 
 Each phase module provides:
   - declare_*_attrs(config) -> PhaseResult: synchronous, returns attr defaults

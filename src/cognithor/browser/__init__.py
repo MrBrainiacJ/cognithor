@@ -1,4 +1,4 @@
-"""Jarvis Browser-Use v17 -- Autonomous browser automation.
+"""Cognithor Browser-Use v17 -- Autonomous browser automation.
 
 Enables the agent to autonomously navigate, read and interact with
 web pages. Headless Chromium via Playwright.

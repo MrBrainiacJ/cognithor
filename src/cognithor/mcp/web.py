@@ -1,4 +1,4 @@
-"""Web-Tools fuer Jarvis: Suche und URL-Fetch.
+"""Web-Tools fuer Cognithor: Suche und URL-Fetch.
 
 Ermoeglicht dem Agenten Webrecherche und Seiteninhalt-Extraktion.
 
@@ -36,7 +36,7 @@ from cognithor.utils.logging import get_logger
 from cognithor.utils.ttl_dict import TTLDict
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -110,7 +110,7 @@ class WebTools:
 
     def __init__(
         self,
-        config: JarvisConfig | None = None,
+        config: CognithorConfig | None = None,
         searxng_url: str | None = None,
         brave_api_key: str | None = None,
     ) -> None:
@@ -203,9 +203,9 @@ class WebTools:
                 )
 
             # Cache directory: ~/.cognithor/cache/web_search/
-            jarvis_home = getattr(config, "jarvis_home", None)
-            if jarvis_home:
-                self._ddg_cache_dir = Path(jarvis_home) / "cache" / "web_search"
+            cognithor_home = getattr(config, "cognithor_home", None)
+            if cognithor_home:
+                self._ddg_cache_dir = Path(cognithor_home) / "cache" / "web_search"
 
         if self._ddg_cache_dir is None:
             self._ddg_cache_dir = Path.home() / ".cognithor" / "cache" / "web_search"
@@ -220,7 +220,7 @@ class WebTools:
             cleanup_interval=60,
         )
 
-    def reload_config(self, config: JarvisConfig) -> None:
+    def reload_config(self, config: CognithorConfig) -> None:
         """Aktualisiert WebTools-Parameter aus neuer Config (Live-Reload).
 
         Wird vom Gateway aufgerufen wenn der User Einstellungen im UI aendert.
@@ -1531,7 +1531,7 @@ def register_web_tools(
 
     Args:
         mcp_client: JarvisMCPClient-Instanz.
-        config: JarvisConfig (optional).
+        config: CognithorConfig (optional).
         searxng_url: SearXNG Base-URL (optional, ueberschreibt Config).
         brave_api_key: Brave Search API Key (optional, ueberschreibt Config).
 

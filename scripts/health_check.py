@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Jarvis · Health-Check – Laufzeit-Prüfung.
+"""Cognithor · Health-Check – Laufzeit-Prüfung.
 
 Für systemd Watchdog, Monitoring und Cron-Jobs.
 Prüft ob alle Subsysteme funktionsfähig sind.
@@ -45,9 +45,9 @@ def check_ollama(url: str = "http://localhost:11434") -> dict:
         return {"status": "error", "message": str(exc)}
 
 
-def check_disk(jarvis_home: str = "~/.jarvis") -> dict:
+def check_disk(cognithor_home: str = "~/.jarvis") -> dict:
     """Prüft Speicherplatz und Verzeichnisse."""
-    home = Path(jarvis_home).expanduser()
+    home = Path(cognithor_home).expanduser()
     result = {"status": "ok", "path": str(home)}
 
     if not home.exists():
@@ -93,14 +93,14 @@ def check_disk(jarvis_home: str = "~/.jarvis") -> dict:
     return result
 
 
-def check_memory(jarvis_home: str = "~/.jarvis") -> dict:
+def check_memory(cognithor_home: str = "~/.jarvis") -> dict:
     """Prüft Memory-System Integrität."""
     try:
-        from cognithor.config import JarvisConfig, ensure_directory_structure
+        from cognithor.config import CognithorConfig, ensure_directory_structure
         from cognithor.memory.manager import MemoryManager
 
-        home = Path(jarvis_home).expanduser()
-        config = JarvisConfig(jarvis_home=home)
+        home = Path(cognithor_home).expanduser()
+        config = CognithorConfig(cognithor_home=home)
         ensure_directory_structure(config)
         manager = MemoryManager(config)
         stats = manager.initialize()
@@ -117,12 +117,12 @@ def check_memory(jarvis_home: str = "~/.jarvis") -> dict:
         return {"status": "error", "message": str(exc)}
 
 
-def check_audit(jarvis_home: str = "~/.jarvis") -> dict:
+def check_audit(cognithor_home: str = "~/.jarvis") -> dict:
     """Prüft Audit-Trail Integrität."""
     try:
         from cognithor.security.audit import AuditTrail
 
-        home = Path(jarvis_home).expanduser()
+        home = Path(cognithor_home).expanduser()
         logs_dir = home / "logs"
         if not logs_dir.exists():
             return {"status": "warning", "message": "Kein Audit-Log vorhanden"}
@@ -144,7 +144,7 @@ def check_audit(jarvis_home: str = "~/.jarvis") -> dict:
         return {"status": "error", "message": str(exc)}
 
 
-def run_health_check(jarvis_home: str, ollama_url: str, quick: bool = False) -> dict:
+def run_health_check(cognithor_home: str, ollama_url: str, quick: bool = False) -> dict:
     """Führt alle Health-Checks aus."""
     start = time.monotonic()
 
@@ -155,11 +155,11 @@ def run_health_check(jarvis_home: str, ollama_url: str, quick: bool = False) -> 
 
     # Immer prüfen
     results["checks"]["ollama"] = check_ollama(ollama_url)
-    results["checks"]["disk"] = check_disk(jarvis_home)
+    results["checks"]["disk"] = check_disk(cognithor_home)
 
     if not quick:
-        results["checks"]["memory"] = check_memory(jarvis_home)
-        results["checks"]["audit"] = check_audit(jarvis_home)
+        results["checks"]["memory"] = check_memory(cognithor_home)
+        results["checks"]["audit"] = check_audit(cognithor_home)
 
     # Gesamtstatus
     statuses = [c["status"] for c in results["checks"].values()]
@@ -182,7 +182,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON-Ausgabe")
     args = parser.parse_args()
 
-    results = run_health_check(args.jarvis_home, args.ollama_url, args.quick)
+    results = run_health_check(args.cognithor_home, args.ollama_url, args.quick)
 
     if args.json:
         print(json.dumps(results, indent=2, ensure_ascii=False))

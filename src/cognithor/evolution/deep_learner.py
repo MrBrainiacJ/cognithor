@@ -79,11 +79,11 @@ class DeepLearner:
         try:
             from cognithor.evolution.knowledge_validator import KnowledgeValidator
 
-            jarvis_home = getattr(config, "jarvis_home", None) if config else None
-            if not jarvis_home and plans_dir:
-                jarvis_home = Path(plans_dir).parent.parent
-            if jarvis_home:
-                db_path = Path(jarvis_home) / "index" / "knowledge_claims.db"
+            cognithor_home = getattr(config, "cognithor_home", None) if config else None
+            if not cognithor_home and plans_dir:
+                cognithor_home = Path(plans_dir).parent.parent
+            if cognithor_home:
+                db_path = Path(cognithor_home) / "index" / "knowledge_claims.db"
                 db_path.parent.mkdir(parents=True, exist_ok=True)
                 self._knowledge_validator = KnowledgeValidator(
                     db_path=db_path,

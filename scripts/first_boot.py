@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Jarvis · First Boot — Erster Start mit echtem Ollama.
+"""Cognithor · First Boot — Erster Start mit echtem Ollama.
 
 Dieses Skript validiert den kompletten Jarvis-Stack auf deiner Maschine:
   1. System-Check (Python, Ollama, VRAM)
@@ -357,12 +357,12 @@ def check_memory_init(result: BootResult) -> None:
     """Prüft ob Verzeichnisse, CORE.md und Prozeduren korrekt erstellt werden."""
     header("5. Memory-Initialisierung")
 
-    from cognithor.config import JarvisConfig, ensure_directory_structure
+    from cognithor.config import CognithorConfig, ensure_directory_structure
 
     # Temporäres Home für Test (oder echtes wenn gewünscht)
-    jarvis_home = Path.home() / ".jarvis"
+    cognithor_home = Path.home() / ".jarvis"
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     created = ensure_directory_structure(config)
 
     if created:
@@ -676,7 +676,7 @@ def print_summary(result: BootResult) -> None:
 
 
 async def main() -> int:
-    parser = argparse.ArgumentParser(description="Jarvis · First Boot Validierung")
+    parser = argparse.ArgumentParser(description="Cognithor · First Boot Validierung")
     parser.add_argument(
         "--quick",
         action="store_true",
@@ -690,7 +690,7 @@ async def main() -> int:
     args = parser.parse_args()
 
     print(f"\n{BOLD}╔══════════════════════════════════════════════╗{RESET}")
-    print(f"{BOLD}║         Jarvis · First Boot                  ║{RESET}")
+    print(f"{BOLD}║         Cognithor · First Boot                  ║{RESET}")
     print(f"{BOLD}║         Erster Start mit echtem Ollama        ║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════════════╝{RESET}")
 

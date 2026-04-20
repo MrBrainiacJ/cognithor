@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class MattermostChannel(Channel):
-    """Bidirektionale Mattermost-Integration fuer Jarvis.
+    """Bidirektionale Mattermost-Integration fuer Cognithor.
 
     Empfaengt Nachrichten via WebSocket, sendet via REST API v4.
     """

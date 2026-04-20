@@ -1,4 +1,4 @@
-"""Kalender-Tools fuer Jarvis: ICS-basiert mit optionalem CalDAV.
+"""Kalender-Tools fuer Cognithor: ICS-basiert mit optionalem CalDAV.
 
 Ermoeglicht dem Agenten Kalender-Verwaltung ueber lokale ICS-Dateien
 und optional ueber CalDAV-Server.
@@ -33,7 +33,7 @@ from cognithor.utils.logging import get_logger
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -449,7 +449,7 @@ class CalendarTools:
         _tz: Konfigurierte Zeitzone.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         """Initialisiert CalendarTools.
 
         Args:
@@ -462,7 +462,7 @@ class CalendarTools:
         if ics_path_str:
             self._ics_path = Path(ics_path_str).expanduser().resolve()
         else:
-            self._ics_path = Path(config.jarvis_home) / "calendar.ics"
+            self._ics_path = Path(config.cognithor_home) / "calendar.ics"
 
         self._tz = _get_configured_timezone(cal_cfg.timezone)
 
@@ -825,7 +825,7 @@ def _format_events(events: list[_VEvent], title: str) -> str:
 
 def register_calendar_tools(
     mcp_client: Any,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> CalendarTools | None:
     """Registriert Kalender-Tools beim MCP-Client.
 
@@ -834,7 +834,7 @@ def register_calendar_tools(
 
     Args:
         mcp_client: JarvisMCPClient-Instanz.
-        config: JarvisConfig mit calendar-Sektion.
+        config: CognithorConfig mit calendar-Sektion.
 
     Returns:
         CalendarTools-Instanz oder None wenn deaktiviert.

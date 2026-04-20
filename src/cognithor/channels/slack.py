@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 class SlackChannel(Channel):
-    """Bidirektionale Slack-Integration fuer Jarvis.
+    """Bidirektionale Slack-Integration fuer Cognithor.
 
     Empfaengt Nachrichten via Socket Mode, sendet via Web-API,
     und unterstuetzt interaktive Approvals ueber Block Kit Buttons.

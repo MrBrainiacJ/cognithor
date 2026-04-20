@@ -44,7 +44,7 @@ from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
     from cognithor.audit import AuditLogger
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.skills.registry import Skill
 
 log = get_logger(__name__)
@@ -100,7 +100,7 @@ class Gatekeeper:
 
     def __init__(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         audit_logger: AuditLogger | None = None,
         operation_mode: OperationMode | None = None,
     ) -> None:
@@ -230,7 +230,7 @@ class Gatekeeper:
 
         # Projekt-Verzeichnis automatisch hinzufuegen (allow_project_dir)
         if getattr(self._config.security, "allow_project_dir", False):
-            project_dir = self._config.jarvis_home.parent
+            project_dir = self._config.cognithor_home.parent
             resolved = project_dir.resolve()
             if resolved not in self._allowed_paths:
                 self._allowed_paths.append(resolved)
@@ -905,7 +905,7 @@ class Gatekeeper:
             # Resolve relative paths against workspace (not CWD).
             # This way "erstelle test.txt" works without an absolute path.
             if not expanded.is_absolute():
-                workspace = self._config.jarvis_home / "workspace"
+                workspace = self._config.cognithor_home / "workspace"
                 target = (workspace / expanded).resolve()
                 # Params fuer nachfolgende Executor-Aufrufe korrigieren
                 action.params["path"] = str(target)

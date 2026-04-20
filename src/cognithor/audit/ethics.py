@@ -1,4 +1,4 @@
-"""Jarvis · Ethics and economic governance.
+"""Cognithor · Ethics and economic governance.
 
 Budget limits, bias checks, and fairness audits:
 

@@ -1,4 +1,4 @@
-"""Jarvis · Multi-Tenant, Trust-Negotiation & Emergency-Updates.
+"""Cognithor · Multi-Tenant, Trust-Negotiation & Emergency-Updates.
 
 Enterprise-Ready Features:
 

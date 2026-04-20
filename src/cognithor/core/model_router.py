@@ -30,7 +30,7 @@ from cognithor.utils.logging import get_logger
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -97,7 +97,7 @@ class OllamaClient:
     tool calling, and embeddings.
     """
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         """Initialisiert den Ollama API-Client."""
         self._base_url = config.ollama.base_url.rstrip("/")
         self._timeout = config.ollama.timeout_seconds
@@ -386,7 +386,7 @@ class ModelRouter:
       2. New:    ModelRouter.from_backend(config, LLMBackend) -- multi-provider
     """
 
-    def __init__(self, config: JarvisConfig, client: OllamaClient) -> None:
+    def __init__(self, config: CognithorConfig, client: OllamaClient) -> None:
         """Initialisiert den Model-Router mit Ollama-Client und Modell-Zuordnung."""
         self._config = config
         self._client = client
@@ -395,7 +395,7 @@ class ModelRouter:
         self._coding_override: str | None = None
 
     @classmethod
-    def from_backend(cls, config: JarvisConfig, backend: Any) -> ModelRouter:
+    def from_backend(cls, config: CognithorConfig, backend: Any) -> ModelRouter:
         """Erstellt einen ModelRouter mit einem LLMBackend statt OllamaClient.
 
         Args:

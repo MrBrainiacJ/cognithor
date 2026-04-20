@@ -1,4 +1,4 @@
-"""A2A Adapter: Bridge between Jarvis Interop (JAIP) and A2A RC v1.0.
+"""A2A Adapter: Bridge between Cognithor Interop (JAIP) and A2A RC v1.0.
 
 Connects InteropProtocol with the standardized A2A protocol.
 Responsible for:
@@ -34,7 +34,7 @@ from cognithor.a2a.types import (
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.interop import AgentCapability, InteropProtocol
 
 log = get_logger(__name__)
@@ -93,7 +93,7 @@ def capabilities_to_skills(capabilities: list[AgentCapability]) -> list[A2ASkill
 class A2AAdapter:
     """Central bridge between JAIP and A2A RC v1.0."""
 
-    def __init__(self, config: JarvisConfig) -> None:
+    def __init__(self, config: CognithorConfig) -> None:
         self._config = config
         self._server: A2AServer | None = None
         self._client: A2AClient | None = None

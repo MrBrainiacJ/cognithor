@@ -1,4 +1,4 @@
-"""Jarvis · Marketplace governance.
+"""Cognithor · Marketplace governance.
 
 Strengeres Bewertungs-/Reputationssystem fuer das Skill-Ecosystem:
 

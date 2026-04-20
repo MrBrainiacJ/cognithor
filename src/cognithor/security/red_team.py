@@ -1,4 +1,4 @@
-"""Jarvis · Red-Team-Testing Framework (consolidated).
+"""Cognithor · Red-Team-Testing Framework (consolidated).
 
 Structured security tests for LLM-based agents:
 

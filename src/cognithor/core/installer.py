@@ -1,4 +1,4 @@
-"""Jarvis - Installation Assistant & Initial Setup.
+"""Cognithor - Installation Assistant & Initial Setup.
 
 Graphical setup assistant for new installations:
 

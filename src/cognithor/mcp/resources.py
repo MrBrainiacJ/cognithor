@@ -33,7 +33,7 @@ from cognithor.mcp.server import (
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.memory.manager import MemoryManager
 
 log = get_logger(__name__)
@@ -48,7 +48,7 @@ class JarvisResourceProvider:
 
     def __init__(
         self,
-        config: JarvisConfig | None = None,
+        config: CognithorConfig | None = None,
         memory: MemoryManager | None = None,
     ) -> None:
         self._config = config
@@ -239,7 +239,7 @@ class JarvisResourceProvider:
         }
 
         if self._config:
-            status["jarvis_home"] = str(self._config.jarvis_home)
+            status["cognithor_home"] = str(self._config.cognithor_home)
             status["model"] = getattr(self._config, "default_model", "unknown")
 
         return json.dumps(status, ensure_ascii=False, default=str)
@@ -291,7 +291,7 @@ class JarvisResourceProvider:
 
         import os
 
-        workspace = self._config.jarvis_home / "workspace"
+        workspace = self._config.cognithor_home / "workspace"
         if not workspace.exists():
             return json.dumps({"files": [], "workspace": str(workspace)})
 

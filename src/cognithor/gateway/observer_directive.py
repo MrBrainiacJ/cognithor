@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from cognithor.core.observer import ResponseEnvelope
 
 if TYPE_CHECKING:
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.observer import PGEReloopDirective
 
 
@@ -37,7 +37,7 @@ def handle_observer_directive(
     *,
     directive: PGEReloopDirective,
     session_state: dict,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> ObserverDirectiveDecision:
     """Decide how to act on an Observer-issued PGE directive.
 
@@ -78,7 +78,7 @@ async def run_pge_with_observer_directive(
     results: list,
     working_memory: Any,
     session_state: dict,
-    config: JarvisConfig,
+    config: CognithorConfig,
 ) -> ResponseEnvelope:
     """Drive the PGE loop with Observer-directive handling.
 

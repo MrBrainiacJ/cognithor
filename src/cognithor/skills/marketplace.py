@@ -1,4 +1,4 @@
-"""Skill marketplace: Curated marketplace for Jarvis skills.
+"""Skill marketplace: Curated marketplace for Cognithor skills.
 
 Erweitert das P2P-Oekosystem um:
   - SkillMarketplace: Zentrale Anlaufstelle fuer Suche, Browse, Install

@@ -25,7 +25,7 @@ from cognithor.utils.logging import get_logger
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -43,7 +43,7 @@ class UnifiedLLMClient:
         self,
         ollama_client: OllamaClient | None,
         backend: Any | None = None,
-        config: JarvisConfig | None = None,
+        config: CognithorConfig | None = None,
     ) -> None:
         """Erstellt den unified Client.
 
@@ -51,7 +51,7 @@ class UnifiedLLMClient:
             ollama_client: Optionaler OllamaClient (nur bei Ollama-Modus oder Fallback).
             backend: Optionales LLMBackend aus llm_backend.py.
                      Wenn None und ollama_client vorhanden, wird direkt OllamaClient genutzt.
-            config: JarvisConfig for on-demand per-task backend creation.
+            config: CognithorConfig for on-demand per-task backend creation.
         """
         self._ollama = ollama_client
         self._backend = backend
@@ -65,7 +65,7 @@ class UnifiedLLMClient:
                 self._backend_type = self._backend_type.value
 
     @classmethod
-    def create(cls, config: JarvisConfig) -> UnifiedLLMClient:
+    def create(cls, config: CognithorConfig) -> UnifiedLLMClient:
         """Factory: Erstellt den passenden Client basierend auf der Config.
 
         Args:

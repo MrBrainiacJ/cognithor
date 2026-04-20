@@ -1,4 +1,4 @@
-"""Jarvis · Ecosystem control & security training.
+"""Cognithor · Ecosystem control & security training.
 
 Strenge Kuration und Notfall-Updates fuer das Skill-Oekosystem:
 

@@ -79,7 +79,7 @@ def main(argv: list[str] | None = None) -> None:
 
     # Load configuration to determine the skills directory
     config = load_config()
-    skills_path = config.jarvis_home / config.plugins.skills_dir
+    skills_path = config.cognithor_home / config.plugins.skills_dir
 
     if args.command == "list":
         skills = list_skills(skills_path)

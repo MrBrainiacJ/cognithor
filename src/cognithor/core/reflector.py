@@ -33,7 +33,7 @@ from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
     from cognithor.audit import AuditLogger
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
 
@@ -111,7 +111,7 @@ class Reflector:
 
     def __init__(
         self,
-        config: JarvisConfig,
+        config: CognithorConfig,
         ollama: Any,
         model_router: ModelRouter,
         audit_logger: AuditLogger | None = None,

@@ -1,4 +1,4 @@
-"""Jarvis - Central Curation Board & Extended Governance.
+"""Cognithor - Central Curation Board & Extended Governance.
 
 Stricter ecosystem control and extended transparency:
 

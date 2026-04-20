@@ -1,4 +1,4 @@
-"""Skill-Management-Tools fuer Jarvis.
+"""Skill-Management-Tools fuer Cognithor.
 
 Ermoeglicht das Erstellen und Auflisten von Skills via MCP-Tools.
 Skills werden als Markdown-Dateien mit YAML-Frontmatter geschrieben
@@ -41,7 +41,7 @@ def _slugify(name: str) -> str:
 
 
 class SkillTools:
-    """Skill-Management-Operationen fuer Jarvis. [B§6.2]"""
+    """Skill-Management-Operationen fuer Cognithor. [B§6.2]"""
 
     def __init__(
         self,

@@ -1,4 +1,4 @@
-"""Jarvis channels module.
+"""Cognithor channels module.
 
 Alle Kommunikationskanaele zwischen User und Gateway.
 Bibel-Referenz: §9 (Gateway & Channels)

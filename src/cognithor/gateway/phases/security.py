@@ -153,7 +153,7 @@ async def init_security(config: Any, llm_backend: Any = None) -> PhaseResult:
     """Initialize runtime security subsystems (audit logger, monitor, gatekeeper).
 
     Args:
-        config: JarvisConfig instance.
+        config: CognithorConfig instance.
         llm_backend: Not currently used, reserved for future LLM-based security.
 
     Returns:
@@ -166,7 +166,7 @@ async def init_security(config: Any, llm_backend: Any = None) -> PhaseResult:
     result: PhaseResult = {}
 
     # Audit Logger
-    audit_log_dir = config.jarvis_home / "data" / "audit"
+    audit_log_dir = config.cognithor_home / "data" / "audit"
     audit_logger = AuditLogger(log_dir=audit_log_dir, retention_days=90)
     result["audit_logger"] = audit_logger
 
@@ -178,7 +178,7 @@ async def init_security(config: Any, llm_backend: Any = None) -> PhaseResult:
 
         _hmac_key = None
         if getattr(config, "audit", None) and config.audit.hmac_enabled:
-            key_file = config.audit.hmac_key_file or str(config.jarvis_home / "audit_key")
+            key_file = config.audit.hmac_key_file or str(config.cognithor_home / "audit_key")
             key_path = _Path(key_file)
             if not key_path.exists():
                 import secrets
@@ -195,7 +195,7 @@ async def init_security(config: Any, llm_backend: Any = None) -> PhaseResult:
         _ed25519_key = None
         if getattr(config, "audit", None) and config.audit.ed25519_enabled:
             key_file = config.audit.ed25519_key_file or str(
-                config.jarvis_home / "audit_ed25519.key"
+                config.cognithor_home / "audit_ed25519.key"
             )
             key_path = _Path(key_file)
             if not key_path.exists():

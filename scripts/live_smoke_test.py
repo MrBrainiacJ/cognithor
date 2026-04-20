@@ -77,10 +77,10 @@ async def test_ollama_connection(base_url: str) -> bool:
     print_step("🔌", "Test 1: Ollama-Verbindung")
 
     try:
-        from cognithor.config import JarvisConfig
+        from cognithor.config import CognithorConfig
         from cognithor.core.model_router import OllamaClient
 
-        config = JarvisConfig()
+        config = CognithorConfig()
         client = OllamaClient(config)
 
         available = await client.is_available()
@@ -100,13 +100,13 @@ async def test_ollama_connection(base_url: str) -> bool:
         return False
 
 
-async def test_directory_structure(jarvis_home: Path) -> bool:
+async def test_directory_structure(cognithor_home: Path) -> bool:
     """Test 2: Verzeichnisstruktur und Default-Dateien."""
     print_step("📁", "Test 2: Verzeichnisstruktur")
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     created = config.ensure_directories()
 
     if created:
@@ -142,13 +142,13 @@ async def test_directory_structure(jarvis_home: Path) -> bool:
     return all_ok
 
 
-async def test_core_memory(jarvis_home: Path) -> bool:
+async def test_core_memory(cognithor_home: Path) -> bool:
     """Test 3: CORE.md laden und prüfen."""
     print_step("🧠", "Test 3: Core Memory")
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     core_path = config.core_memory_file
 
     if not core_path.exists():
@@ -175,17 +175,17 @@ async def test_core_memory(jarvis_home: Path) -> bool:
     return all_ok
 
 
-async def test_gatekeeper(jarvis_home: Path) -> bool:
+async def test_gatekeeper(cognithor_home: Path) -> bool:
     """Test 4: Gatekeeper mit Default-Policies."""
     print_step("🛡️", "Test 4: Gatekeeper + Policies")
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.gatekeeper import Gatekeeper
     from cognithor.models import GateStatus, PlannedAction, SessionContext
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     # Smoke-Test-Verzeichnis als erlaubten Pfad hinzufügen
-    config.security.allowed_paths.append(str(jarvis_home))
+    config.security.allowed_paths.append(str(cognithor_home))
     gk = Gatekeeper(config)
     gk.initialize()
 
@@ -194,7 +194,7 @@ async def test_gatekeeper(jarvis_home: Path) -> bool:
     # Safe action → ALLOW
     safe = PlannedAction(
         tool="read_file",
-        params={"path": str(jarvis_home / "memory" / "CORE.md")},
+        params={"path": str(cognithor_home / "memory" / "CORE.md")},
         rationale="Core Memory lesen",
     )
     safe_decision = gk.evaluate(safe, ctx)
@@ -234,15 +234,15 @@ async def test_gatekeeper(jarvis_home: Path) -> bool:
     )
 
 
-async def test_memory_index(jarvis_home: Path) -> bool:
+async def test_memory_index(cognithor_home: Path) -> bool:
     """Test 5: Memory-Indexer (SQLite + FTS5)."""
     print_step("💾", "Test 5: Memory-Index")
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.memory.indexer import MemoryIndex
     from cognithor.models import Chunk, Entity, MemoryTier
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     db_path = config.index_dir / "jarvis.db"
 
     index = MemoryIndex(db_path)
@@ -279,14 +279,14 @@ async def test_memory_index(jarvis_home: Path) -> bool:
     return len(results) > 0
 
 
-async def test_llm_direct_response(jarvis_home: Path, model: str, verbose: bool) -> bool:
+async def test_llm_direct_response(cognithor_home: Path, model: str, verbose: bool) -> bool:
     """Test 6: LLM direkte Antwort (keine Tools)."""
     print_step("🤖", f"Test 6: LLM Direkte Antwort ({model})")
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.model_router import OllamaClient
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     client = OllamaClient(config)
 
     if not await client.is_available():
@@ -350,15 +350,15 @@ async def test_llm_direct_response(jarvis_home: Path, model: str, verbose: bool)
         return False
 
 
-async def test_llm_tool_plan(jarvis_home: Path, model: str, verbose: bool) -> bool:
+async def test_llm_tool_plan(cognithor_home: Path, model: str, verbose: bool) -> bool:
     """Test 7: LLM erstellt einen Tool-Plan."""
     print_step("📋", f"Test 7: LLM Tool-Plan ({model})")
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.core.model_router import OllamaClient
     from cognithor.core.planner import SYSTEM_PROMPT
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     client = OllamaClient(config)
 
     if not await client.is_available():
@@ -411,15 +411,15 @@ async def test_llm_tool_plan(jarvis_home: Path, model: str, verbose: bool) -> bo
         return False
 
 
-async def test_full_gateway(jarvis_home: Path, model: str, verbose: bool) -> bool:
+async def test_full_gateway(cognithor_home: Path, model: str, verbose: bool) -> bool:
     """Test 8: Kompletter Gateway Agent-Loop."""
     print_step("🚀", "Test 8: Gateway Agent-Loop (End-to-End)")
 
-    from cognithor.config import JarvisConfig
+    from cognithor.config import CognithorConfig
     from cognithor.gateway.gateway import Gateway
     from cognithor.models import IncomingMessage
 
-    config = JarvisConfig(jarvis_home=jarvis_home)
+    config = CognithorConfig(cognithor_home=cognithor_home)
     gw = Gateway(config)
 
     try:
@@ -478,13 +478,13 @@ async def main() -> int:
     parser.add_argument("--skip-llm", action="store_true", help="LLM-Tests überspringen")
     args = parser.parse_args()
 
-    jarvis_home = (
+    cognithor_home = (
         Path(args.home) if args.home else Path(tempfile.gettempdir()) / "jarvis-smoke-test"
     )
 
     print("=" * 60)
     print("  🏠 Cognithor - Live Smoke-Test")
-    print(f"  📁 Home: {jarvis_home}")
+    print(f"  📁 Home: {cognithor_home}")
     print(f"  🤖 Modell: {args.model}")
     print("=" * 60)
 
@@ -493,18 +493,18 @@ async def main() -> int:
 
     # Phase 1: Infrastruktur (ohne Ollama)
     results["Ollama-Verbindung"] = await test_ollama_connection("http://localhost:11434")
-    results["Verzeichnisstruktur"] = await test_directory_structure(jarvis_home)
-    results["Core Memory"] = await test_core_memory(jarvis_home)
-    results["Gatekeeper"] = await test_gatekeeper(jarvis_home)
-    results["Memory-Index"] = await test_memory_index(jarvis_home)
+    results["Verzeichnisstruktur"] = await test_directory_structure(cognithor_home)
+    results["Core Memory"] = await test_core_memory(cognithor_home)
+    results["Gatekeeper"] = await test_gatekeeper(cognithor_home)
+    results["Memory-Index"] = await test_memory_index(cognithor_home)
 
     # Phase 2: LLM-Tests (braucht Ollama)
     if not args.skip_llm and results.get("Ollama-Verbindung"):
         results["LLM Direkte Antwort"] = await test_llm_direct_response(
-            jarvis_home, args.model, args.verbose
+            cognithor_home, args.model, args.verbose
         )
-        results["LLM Tool-Plan"] = await test_llm_tool_plan(jarvis_home, args.model, args.verbose)
-        results["Gateway E2E"] = await test_full_gateway(jarvis_home, args.model, args.verbose)
+        results["LLM Tool-Plan"] = await test_llm_tool_plan(cognithor_home, args.model, args.verbose)
+        results["Gateway E2E"] = await test_full_gateway(cognithor_home, args.model, args.verbose)
     elif args.skip_llm:
         print_step("⏭️", "LLM-Tests übersprungen (--skip-llm)")
     else:

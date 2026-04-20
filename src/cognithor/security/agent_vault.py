@@ -1,4 +1,4 @@
-"""Jarvis · Per-Agent Vault & Session-Isolation.
+"""Cognithor · Per-Agent Vault & Session-Isolation.
 
 Complete data and session separation per agent:
 

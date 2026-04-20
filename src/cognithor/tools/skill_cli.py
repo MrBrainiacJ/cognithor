@@ -1,4 +1,4 @@
-"""Jarvis · Skill-Entwickler-CLI.
+"""Cognithor · Skill-Entwickler-CLI.
 
 Werkzeuge fuer Skill-Entwicklung, -Test und -Veroeffentlichung:
 

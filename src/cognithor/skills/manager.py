@@ -1,7 +1,7 @@
 """Management for external skills (procedures).
 
 Skills are defined as Markdown files with frontmatter and stored in the
-``skills`` directory within the Jarvis home. This manager provides
+``skills`` directory within the Cognithor home. This manager provides
 functions for listing existing skills and creating new templates.
 Automatic installation from remote sources can be added later.
 """

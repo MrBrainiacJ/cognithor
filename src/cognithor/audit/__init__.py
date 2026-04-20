@@ -1,4 +1,4 @@
-"""Audit logger: Complete logging of all Jarvis actions.
+"""Audit logger: Complete logging of all Cognithor actions.
 
 Every action is logged:
   - Tool calls (name, parameters, result, duration)
@@ -165,7 +165,7 @@ class AuditSummary:
 
 
 class AuditLogger:
-    """Complete logging of all Jarvis actions.
+    """Complete logging of all Cognithor actions.
 
     Usage:
         audit = AuditLogger(log_dir=Path("~/.cognithor/audit"))

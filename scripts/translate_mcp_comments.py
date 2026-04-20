@@ -194,7 +194,7 @@ TRANSLATIONS: list[tuple[str, str]] = [
     ("# MCPToolDef erstellen", "# Create MCPToolDef"),
     (
         '"""Lädt die MCP-Server-Konfiguration.\n\n        Prüft zuerst die Jarvis-Config, dann die MCP-Config-YAML.\n        Default: DISABLED.\n        """',  # noqa: E501
-        '"""Load the MCP server configuration.\n\n        Checks the Jarvis config first, then the MCP config YAML.\n        Default: DISABLED.\n        """',  # noqa: E501
+        '"""Load the MCP server configuration.\n\n        Checks the Cognithor config first, then the MCP config YAML.\n        Default: DISABLED.\n        """',  # noqa: E501
     ),
     ("# Aus MCP-Config-YAML laden", "# Load from MCP config YAML"),
     (

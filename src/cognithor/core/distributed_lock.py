@@ -1,5 +1,5 @@
 """
-Jarvis · Distributed Locking.
+Cognithor · Distributed Locking.
 
 Provides a lock abstraction with multiple backends for multi-instance support:
   - LOCAL: asyncio.Lock (single-process, default)
@@ -384,7 +384,7 @@ def create_lock(config: object | None = None) -> DistributedLock:
     """Create the appropriate lock backend based on configuration.
 
     Args:
-        config: A :class:`~jarvis.config.JarvisConfig` instance (or ``None``
+        config: A :class:`~jarvis.config.CognithorConfig` instance (or ``None``
                 for defaults).
 
     Returns:
@@ -397,9 +397,9 @@ def create_lock(config: object | None = None) -> DistributedLock:
     if config is not None:
         backend = getattr(config, "lock_backend", "local")
         redis_url = getattr(config, "redis_url", redis_url)
-        jarvis_home = getattr(config, "jarvis_home", None)
-        if jarvis_home is not None:
-            lock_dir = Path(jarvis_home) / "locks"
+        cognithor_home = getattr(config, "cognithor_home", None)
+        if cognithor_home is not None:
+            lock_dir = Path(cognithor_home) / "locks"
 
     if backend == LockBackend.REDIS:
         log.info("Using Redis lock backend (%s)", redis_url)
