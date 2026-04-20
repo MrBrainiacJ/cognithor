@@ -223,7 +223,7 @@ class ObserverAudit:
                     model=model_name,
                     messages=messages,
                     options={"temperature": 0.1},
-                    format="json",
+                    format_json=True,
                 ),
                 timeout=timeout,
             )
