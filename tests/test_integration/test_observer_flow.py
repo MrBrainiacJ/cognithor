@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock
+
 from cognithor.config import JarvisConfig
-from cognithor.core.observer import PGEReloopDirective
+from cognithor.core.observer import PGEReloopDirective, ResponseEnvelope
 
 
 class TestPGEReloopDirectiveHandling:
@@ -69,3 +71,42 @@ class TestPGEReloopDirectiveHandling:
         )
         # After handling: new hash added, but set pruned to at most 51 items.
         assert len(session_state["seen_observer_feedback_hashes"]) <= 51
+
+
+class TestGatewayObserverIntegration:
+    async def test_tool_ignorance_triggers_new_pge_iteration(self, tmp_path):
+        """Envelope with directive causes Gateway PGE loop to iterate once more."""
+        from cognithor.gateway.observer_directive import run_pge_with_observer_directive
+
+        planner = AsyncMock()
+        # 1st formulate call: tool_ignorance fail, directive set.
+        # 2nd formulate call (after re-enter): clean response.
+        planner.formulate_response = AsyncMock(side_effect=[
+            ResponseEnvelope(
+                content="I don't know",
+                directive=PGEReloopDirective(
+                    reason="tool_ignorance",
+                    missing_data="recent weather",
+                    suggested_tools=["web_search"],
+                ),
+            ),
+            ResponseEnvelope(content="It's 12C in Berlin.", directive=None),
+        ])
+
+        cfg = JarvisConfig(jarvis_home=tmp_path / ".cognithor")
+        session_state: dict = {
+            "seen_observer_feedback_hashes": set(),
+            "pge_iteration_count": 0,
+        }
+
+        final = await run_pge_with_observer_directive(
+            planner=planner,
+            user_message="What's the weather?",
+            results=[],
+            working_memory=MagicMock(session_id="s1"),
+            session_state=session_state,
+            config=cfg,
+        )
+        assert final.content == "It's 12C in Berlin."
+        assert final.directive is None
+        assert planner.formulate_response.call_count == 2

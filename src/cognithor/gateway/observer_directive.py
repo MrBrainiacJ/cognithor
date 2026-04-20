@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+from cognithor.core.observer import ResponseEnvelope
 
 if TYPE_CHECKING:
     from cognithor.config import JarvisConfig
@@ -67,3 +69,65 @@ def handle_observer_directive(
         "Re-plan the task and call the appropriate tools."
     )
     return ObserverDirectiveDecision(action="reenter_pge", planner_feedback=feedback)
+
+
+async def run_pge_with_observer_directive(
+    *,
+    planner: Any,
+    user_message: str,
+    results: list,
+    working_memory: Any,
+    session_state: dict,
+    config: JarvisConfig,
+) -> ResponseEnvelope:
+    """Drive the PGE loop with Observer-directive handling.
+
+    Loops up to ``config.security.max_iterations`` times. Each iteration calls
+    ``planner.formulate_response(...)``; if the returned envelope has a
+    directive, the handler decides whether to re-enter PGE with feedback or
+    downgrade (strip the directive and return the draft as-is).
+
+    In this minimal wrapper, re-entry is simulated by prepending the Observer
+    feedback to ``user_message`` and calling the Planner again. A real
+    integration (Task 18) would also call ``Planner.plan()`` + Executor to
+    refresh ``results``, but for now we delegate that to the Planner's own
+    regen loop inside ``formulate_response``.
+    """
+    current_user_msg = user_message
+    envelope: ResponseEnvelope | None = None
+
+    for _ in range(config.security.max_iterations):
+        envelope = await planner.formulate_response(
+            user_message=current_user_msg,
+            results=results,
+            working_memory=working_memory,
+        )
+        session_state["pge_iteration_count"] = (
+            session_state.get("pge_iteration_count", 0) + 1
+        )
+
+        if envelope.directive is None:
+            return envelope
+
+        decision = handle_observer_directive(
+            directive=envelope.directive,
+            session_state=session_state,
+            config=config,
+        )
+        if decision.action == "downgrade_to_regen":
+            # Strip the directive and deliver the envelope content as-is.
+            return ResponseEnvelope(content=envelope.content, directive=None)
+
+        # reenter_pge: prepend the directive feedback into the next user message.
+        current_user_msg = (
+            f"{user_message}\n\n[Observer feedback]\n{decision.planner_feedback}"
+        )
+
+    # Safety: max iterations exhausted, return whatever the last envelope was
+    # (directive stripped so the Gateway doesn't loop infinitely if the caller
+    # decides to retry).
+    if envelope is None:
+        # This is unreachable when max_iterations >= 1 (Pydantic ge=1 guard),
+        # but mypy needs the guard.
+        return ResponseEnvelope(content="", directive=None)
+    return ResponseEnvelope(content=envelope.content, directive=None)
