@@ -542,3 +542,24 @@ class TestDegradedMode:
         )
         assert result.overall_passed is True  # fail-open
         assert result.error_type == "model_unavailable"
+
+
+class TestFixtureLibrary:
+    def test_case_library_has_required_coverage(self):
+        from tests.fixtures.observer_cases import ALL_CASES
+
+        by_category = {
+            "hallucination": 0,
+            "sycophancy": 0,
+            "laziness": 0,
+            "tool_ignorance": 0,
+            "clean": 0,
+        }
+        for case in ALL_CASES:
+            by_category[case.category] += 1
+        # Minimum counts per spec §Testing 5.4
+        assert by_category["hallucination"] >= 20
+        assert by_category["sycophancy"] >= 15
+        assert by_category["laziness"] >= 15
+        assert by_category["tool_ignorance"] >= 15
+        assert by_category["clean"] >= 20
