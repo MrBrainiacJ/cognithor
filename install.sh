@@ -736,7 +736,7 @@ install_cognithor() {
     fi
 
     # Install identity extras if missing
-    if ! python3 -c "import jarvis.identity" 2>/dev/null; then
+    if ! python3 -c "import cognithor.identity" 2>/dev/null; then
         echo "  [INFO] Installing identity module..."
         retry "pip install -e '.[identity]' --quiet 2>/dev/null" || echo "  [WARNING] Identity install failed"
     fi
@@ -754,7 +754,7 @@ install_cognithor() {
     fi
 
     # Verify installation
-    if python3 -c "import jarvis; print(f'Cognithor v{jarvis.__version__}')" 2>/dev/null; then
+    if python3 -c "import cognithor; print(f'Cognithor v{cognithor.__version__}')" 2>/dev/null; then
         success "Cognithor installed successfully"
     else
         fatal "Installation failed -- pip install encountered errors"
@@ -995,7 +995,7 @@ BindsTo=cognithor.service
 
 [Service]
 Type=simple
-ExecStart=${VENV_DIR}/bin/python -m uvicorn jarvis.channels.webui:create_app --host 127.0.0.1 --port 8080 --factory
+ExecStart=${VENV_DIR}/bin/python -m uvicorn cognithor.channels.webui:create_app --host 127.0.0.1 --port 8080 --factory
 WorkingDirectory=${COGNITHOR_HOME}
 EnvironmentFile=-${COGNITHOR_HOME}/.env
 Restart=on-failure

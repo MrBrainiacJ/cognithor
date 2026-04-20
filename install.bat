@@ -618,7 +618,7 @@ echo.
 :: ============================================================
 call :log_section "8/10  Smoke-Test"
 
-"%VENV_DIR%\Scripts\python.exe" -c "import sys; import jarvis; print(f'  [OK] jarvis v{jarvis.__version__}'); sys.exit(0)"
+"%VENV_DIR%\Scripts\python.exe" -c "import sys; import cognithor; print(f'  [OK] cognithor v{cognithor.__version__}'); sys.exit(0)"
 if errorlevel 1 (
     call :log_msg "[FAIL] Import test failed!"
     echo   Try: pip install -e "%REPO_ROOT%[all]"
