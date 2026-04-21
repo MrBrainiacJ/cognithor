@@ -3,6 +3,16 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  # Manual trigger so we can publish after a tag push, because GitHub Actions
+  # does not cascade the `release: published` event when the release is created
+  # by another workflow via GITHUB_TOKEN (loop-prevention). Use this when the
+  # release workflow succeeded but publish.yml did not auto-trigger.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. v0.92.3). Defaults to latest.'
+        required: false
+        default: ''
 
 permissions:
   contents: read
