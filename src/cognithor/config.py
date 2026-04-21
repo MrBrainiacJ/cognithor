@@ -3721,5 +3721,3 @@ def _install_starter_procedures(procedures_dir: Path, created: list[str]) -> Non
                 created.append(str(target))
     except Exception:
         log.debug("starter_procedures_copy_skipped", exc_info=True)
-
-
