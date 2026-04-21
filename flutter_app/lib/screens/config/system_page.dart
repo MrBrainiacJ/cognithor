@@ -7,8 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
-import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
+import 'package:cognithor_ui/widgets/cognithor_toast.dart';
 
 class SystemConfigPage extends StatelessWidget {
   const SystemConfigPage({super.key});
@@ -51,7 +51,7 @@ class SystemConfigPage extends StatelessWidget {
                 if (confirmed == true) {
                   await api.shutdownServer();
                   if (context.mounted) {
-                    JarvisToast.show(
+                    CognithorToast.show(
                       context,
                       l.backendStopped,
                       type: ToastType.warning,
@@ -81,7 +81,7 @@ class SystemConfigPage extends StatelessWidget {
                   await Clipboard.setData(ClipboardData(text: json));
                 }
                 if (context.mounted) {
-                  JarvisToast.show(
+                  CognithorToast.show(
                     context,
                     launched
                         ? l.exportConfig
@@ -108,7 +108,7 @@ class SystemConfigPage extends StatelessWidget {
                   final content = utf8.decode(result.files.single.bytes!);
                   await cfg.importJson(content);
                   if (context.mounted) {
-                    JarvisToast.show(
+                    CognithorToast.show(
                       context,
                       l.configImported,
                       type: ToastType.success,
@@ -149,7 +149,7 @@ class SystemConfigPage extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+                borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
                 border: Border.all(color: theme.dividerColor),
               ),
               child: Column(
@@ -205,16 +205,16 @@ class _ActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = isDanger ? JarvisTheme.red : JarvisTheme.accent;
+    final color = isDanger ? CognithorTheme.red : CognithorTheme.accent;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+        borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
         border: Border.all(
           color: isDanger
-              ? JarvisTheme.red.withValues(alpha: 0.3)
+              ? CognithorTheme.red.withValues(alpha: 0.3)
               : Theme.of(context).dividerColor,
         ),
       ),
@@ -238,7 +238,7 @@ class _ActionCard extends StatelessWidget {
             onPressed: onPressed,
             style: isDanger
                 ? ElevatedButton.styleFrom(
-                    backgroundColor: JarvisTheme.red,
+                    backgroundColor: CognithorTheme.red,
                     foregroundColor: Colors.white,
                   )
                 : null,

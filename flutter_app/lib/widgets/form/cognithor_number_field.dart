@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisNumberField extends StatefulWidget {
-  const JarvisNumberField({
+class CognithorNumberField extends StatefulWidget {
+  const CognithorNumberField({
     super.key,
     required this.label,
     required this.value,
@@ -27,10 +27,10 @@ class JarvisNumberField extends StatefulWidget {
   final String? error;
 
   @override
-  State<JarvisNumberField> createState() => _JarvisNumberFieldState();
+  State<CognithorNumberField> createState() => _CognithorNumberFieldState();
 }
 
-class _JarvisNumberFieldState extends State<JarvisNumberField> {
+class _CognithorNumberFieldState extends State<CognithorNumberField> {
   late final TextEditingController _ctrl;
   String? _localError;
 
@@ -41,7 +41,7 @@ class _JarvisNumberFieldState extends State<JarvisNumberField> {
   }
 
   @override
-  void didUpdateWidget(JarvisNumberField old) {
+  void didUpdateWidget(CognithorNumberField old) {
     super.didUpdateWidget(old);
     final formatted = _format(widget.value);
     if (old.value != widget.value && _ctrl.text != formatted) {
@@ -89,7 +89,7 @@ class _JarvisNumberFieldState extends State<JarvisNumberField> {
             const SizedBox(height: 2),
             Text(widget.description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           TextField(

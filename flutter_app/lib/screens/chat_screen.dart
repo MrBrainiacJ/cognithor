@@ -9,14 +9,14 @@ import 'package:cognithor_ui/providers/pip_provider.dart';
 import 'package:cognithor_ui/providers/sessions_provider.dart';
 import 'package:cognithor_ui/providers/tree_provider.dart';
 import 'package:cognithor_ui/providers/voice_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/approval_dialog.dart';
 import 'package:cognithor_ui/widgets/canvas_panel.dart';
 import 'package:cognithor_ui/widgets/chat_bubble.dart';
 import 'package:cognithor_ui/widgets/chat_input.dart';
 import 'package:cognithor_ui/widgets/chat/context_panel.dart';
 import 'package:cognithor_ui/widgets/chat/hacker_chat_view.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
 import 'package:cognithor_ui/widgets/message_actions.dart';
 import 'package:cognithor_ui/widgets/chat/chat_history_drawer.dart';
 import 'package:cognithor_ui/widgets/chat/pre_flight_card.dart';
@@ -66,7 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // Initialize sessions provider once
     if (!_sessionsInitialized) {
       final conn = context.read<ConnectionProvider>();
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         final sessions = context.read<SessionsProvider>();
         sessions.setApi(conn.api);
         sessions.loadSessions();
@@ -244,7 +244,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         }
 
                         if (chat.messages.isEmpty && !chat.isStreaming) {
-                          return JarvisEmptyState(
+                          return CognithorEmptyState(
                             icon: Icons.chat_bubble_outline,
                             title: l.startConversation,
                             subtitle: l.typeMessage,
@@ -260,8 +260,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         return ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: JarvisTheme.spacing,
-                            vertical: JarvisTheme.spacingSm,
+                            horizontal: CognithorTheme.spacing,
+                            vertical: CognithorTheme.spacingSm,
                           ),
                           itemCount: itemCount,
                           itemBuilder: (context, index) {
@@ -553,7 +553,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (history != null) {
       chat.loadFromHistory(history);
     }
-    if (conn.state == JarvisConnectionState.connected) {
+    if (conn.state == CognithorConnectionState.connected) {
       await conn.ws.switchSession(sessionId);
       chat.attach(conn.ws);
     }
@@ -567,7 +567,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final sessionId = await sessions.createNewSession();
     if (sessionId != null) {
       chat.clearForNewSession();
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         await conn.ws.switchSession(sessionId);
         chat.attach(conn.ws);
       }
@@ -584,7 +584,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final sessionId = await sessions.createNewSession();
     if (sessionId != null) {
       chat.clearForNewSession();
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         await conn.ws.switchSession(sessionId);
         chat.attach(conn.ws);
       }
@@ -600,7 +600,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final sessionId = await sessions.createIncognitoSession();
     if (sessionId != null) {
       chat.clearForNewSession();
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         await conn.ws.switchSession(sessionId);
         chat.attach(conn.ws);
       }
@@ -623,7 +623,7 @@ class _ChatScreenState extends State<ChatScreen> {
   PreferredSizeWidget _buildAppBar(AppLocalizations l) {
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.history, color: JarvisTheme.sectionChat),
+        icon: const Icon(Icons.history, color: CognithorTheme.sectionChat),
         tooltip: l.chatHistory,
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
@@ -676,7 +676,7 @@ class _ChatScreenState extends State<ChatScreen> {
           return IconButton(
             icon: Icon(
               voice.isActive ? Icons.mic : Icons.mic_none,
-              color: voice.isActive ? JarvisTheme.green : null,
+              color: voice.isActive ? CognithorTheme.green : null,
             ),
             tooltip: l.voiceMode,
             onPressed: () => voice.toggle(),
@@ -717,7 +717,7 @@ class _ChatScreenState extends State<ChatScreen> {
       IconButton(
         icon: Icon(
           Icons.analytics_outlined,
-          color: _showObserve ? JarvisTheme.accent : null,
+          color: _showObserve ? CognithorTheme.accent : null,
         ),
         tooltip: l.observe,
         onPressed: () => setState(() => _showObserve = !_showObserve),
@@ -728,7 +728,7 @@ class _ChatScreenState extends State<ChatScreen> {
         icon: Icon(
           Icons.account_tree,
           size: 20,
-          color: _showTreeSidebar ? JarvisTheme.accent : null,
+          color: _showTreeSidebar ? CognithorTheme.accent : null,
         ),
         tooltip: 'Conversation Tree',
         onPressed: () => setState(() => _showTreeSidebar = !_showTreeSidebar),
@@ -739,7 +739,7 @@ class _ChatScreenState extends State<ChatScreen> {
         builder: (context, chat, _) {
           if (chat.canvasHtml == null) return const SizedBox.shrink();
           return IconButton(
-            icon: Icon(Icons.web_asset, color: JarvisTheme.accent),
+            icon: Icon(Icons.web_asset, color: CognithorTheme.accent),
             tooltip: l.canvasLabel,
             onPressed: () {},
           );
@@ -793,9 +793,9 @@ class _FeedbackFollowupBannerState extends State<_FeedbackFollowupBanner> {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: JarvisTheme.orange.withValues(alpha: 0.10),
+        color: CognithorTheme.orange.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: JarvisTheme.orange.withValues(alpha: 0.30)),
+        border: Border.all(color: CognithorTheme.orange.withValues(alpha: 0.30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -805,7 +805,7 @@ class _FeedbackFollowupBannerState extends State<_FeedbackFollowupBanner> {
             widget.question,
             style: TextStyle(
               fontSize: 13,
-              color: JarvisTheme.textSecondary,
+              color: CognithorTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -814,13 +814,13 @@ class _FeedbackFollowupBannerState extends State<_FeedbackFollowupBanner> {
             maxLines: 2,
             decoration: InputDecoration(
               hintText: 'Was war nicht ideal?',
-              hintStyle: TextStyle(color: JarvisTheme.textTertiary),
+              hintStyle: TextStyle(color: CognithorTheme.textTertiary),
               filled: true,
               fillColor: Theme.of(context).scaffoldBackgroundColor,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                    color: JarvisTheme.orange.withValues(alpha: 0.30)),
+                    color: CognithorTheme.orange.withValues(alpha: 0.30)),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -835,7 +835,7 @@ class _FeedbackFollowupBannerState extends State<_FeedbackFollowupBanner> {
                 onPressed: widget.onDismiss,
                 child: Text(
                   'Ueberspringen',
-                  style: TextStyle(color: JarvisTheme.textTertiary),
+                  style: TextStyle(color: CognithorTheme.textTertiary),
                 ),
               ),
               const SizedBox(width: 8),
@@ -849,7 +849,7 @@ class _FeedbackFollowupBannerState extends State<_FeedbackFollowupBanner> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: JarvisTheme.orange,
+                  backgroundColor: CognithorTheme.orange,
                   foregroundColor: Colors.white,
                 ),
                 child: Text(l.send),

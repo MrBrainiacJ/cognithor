@@ -6,9 +6,9 @@ import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
 import 'package:cognithor_ui/providers/sources_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
 import 'package:cognithor_ui/widgets/leads/lead_card.dart';
 import 'package:cognithor_ui/widgets/leads/lead_detail_sheet.dart';
 import 'package:cognithor_ui/widgets/leads/lead_wizard.dart';
@@ -41,7 +41,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
     if (!_initialized) {
       _initialized = true;
       final conn = context.read<ConnectionProvider>();
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         context.read<RedditLeadsProvider>().init(conn.api);
       }
     }
@@ -240,7 +240,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                           children: [
                             _buildUpsellSection(sources),
                             if (provider.leads.isEmpty)
-                              JarvisEmptyState(
+                              CognithorEmptyState(
                                 icon: Icons.track_changes,
                                 title: l.noLeadsFound,
                                 subtitle: l.noLeadsHint,
@@ -270,7 +270,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                   )
                 : const Icon(Icons.radar),
             label: Text(provider.scanning ? l.scanning : l.scanNow),
-            backgroundColor: JarvisTheme.accent,
+            backgroundColor: CognithorTheme.accent,
           ),
         );
       },
@@ -330,30 +330,30 @@ class _StatsBar extends StatelessWidget {
         spacing: 12,
         runSpacing: 8,
         children: [
-          JarvisStat(
+          CognithorStat(
             label: 'New',
             value: '${provider.newCount}',
             icon: Icons.fiber_new,
-            color: JarvisTheme.accent,
+            color: CognithorTheme.accent,
           ),
-          JarvisStat(
+          CognithorStat(
             label: 'Reviewed',
             value: '${provider.reviewedCount}',
             icon: Icons.check_circle_outline,
             color: Colors.orange,
           ),
-          JarvisStat(
+          CognithorStat(
             label: 'Replied',
             value: '${provider.repliedCount}',
             icon: Icons.reply,
-            color: JarvisTheme.green,
+            color: CognithorTheme.green,
           ),
           if (provider.newCount > 0 && onProcessQueue != null)
             ElevatedButton.icon(
               onPressed: onProcessQueue,
               icon: const Icon(Icons.playlist_play, size: 18),
               label: Text(l.processQueue),
-              style: ElevatedButton.styleFrom(backgroundColor: JarvisTheme.accent),
+              style: ElevatedButton.styleFrom(backgroundColor: CognithorTheme.accent),
             ),
         ],
       ),

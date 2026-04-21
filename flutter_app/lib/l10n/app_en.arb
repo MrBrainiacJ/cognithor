@@ -50,7 +50,7 @@
     }
   },
   "connectionError": "Cannot reach backend",
-  "connectionErrorDetail": "Check that the Jarvis backend is running at {url}",
+  "connectionErrorDetail": "Check that the Cognithor backend is running at {url}",
   "@connectionErrorDetail": {
     "placeholders": {
       "url": {
@@ -1071,9 +1071,9 @@
   "@remove": {},
   "stopBackend": "Stop Backend",
   "@stopBackend": {},
-  "stopBackendDescription": "Stop the Jarvis backend. You will need to restart it manually.",
+  "stopBackendDescription": "Stop the Cognithor backend. You will need to restart it manually.",
   "@stopBackendDescription": {},
-  "stopBackendConfirmBody": "This will stop the Jarvis backend process. You will need to restart it manually from the command line.",
+  "stopBackendConfirmBody": "This will stop the Cognithor backend process. You will need to restart it manually from the command line.",
   "@stopBackendConfirmBody": {},
   "backendStopped": "Backend stopped. Please restart manually.",
   "@backendStopped": {},
@@ -1083,7 +1083,7 @@
   "@loadConfigDesc": {},
   "resetAllDesc": "Reset all settings to defaults. This cannot be undone.",
   "@resetAllDesc": {},
-  "factoryResetNotImpl": "Factory reset is not yet implemented on the backend. To reset manually, delete your config.yaml and restart Jarvis.",
+  "factoryResetNotImpl": "Factory reset is not yet implemented on the backend. To reset manually, delete your config.yaml and restart Cognithor.",
   "@factoryResetNotImpl": {},
   "ok": "OK",
   "@ok": {},
@@ -1334,7 +1334,7 @@
   "@installClaude": {},
   "toolsComputerUseLabel": "Computer Use",
   "@toolsComputerUseLabel": {},
-  "toolsComputerUseDesc": "Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.",
+  "toolsComputerUseDesc": "Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Cognithor to interact with any application visually.",
   "@toolsComputerUseDesc": {},
   "toolsDesktopLabel": "Desktop Tools",
   "@toolsDesktopLabel": {},
@@ -1342,7 +1342,7 @@
   "@toolsDesktopDesc": {},
   "toolsSectionDesktop": "Desktop & Automation",
   "@toolsSectionDesktop": {},
-  "toolsWarning": "These tools give Jarvis access to your desktop. Enable only when needed.",
+  "toolsWarning": "These tools give Cognithor access to your desktop. Enable only when needed.",
   "@toolsWarning": {},
   "configPageSystemProfile": "Hardware",
   "@configPageSystemProfile": {},

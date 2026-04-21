@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/glass_panel.dart';
 
 /// A side panel that shows context about the currently active tool.
@@ -24,7 +24,7 @@ class ContextPanel extends StatelessWidget {
     return SizedBox(
       width: 350,
       child: GlassPanel(
-        tint: JarvisTheme.sectionChat,
+        tint: CognithorTheme.sectionChat,
         borderRadius: 16,
         padding: EdgeInsets.zero,
         child: Column(
@@ -38,14 +38,14 @@ class ContextPanel extends StatelessWidget {
                   Icon(
                     _iconForTool(activeTool!),
                     size: 18,
-                    color: JarvisTheme.sectionChat,
+                    color: CognithorTheme.sectionChat,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _titleForTool(activeTool!),
                       style: const TextStyle(
-                        color: JarvisTheme.sectionChat,
+                        color: CognithorTheme.sectionChat,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -56,7 +56,7 @@ class ContextPanel extends StatelessWidget {
                       icon: Icon(
                         Icons.close,
                         size: 16,
-                        color: JarvisTheme.textSecondary,
+                        color: CognithorTheme.textSecondary,
                       ),
                       onPressed: onClose,
                       padding: EdgeInsets.zero,
@@ -72,7 +72,7 @@ class ContextPanel extends StatelessWidget {
             // Divider
             Container(
               height: 1,
-              color: JarvisTheme.sectionChat.withValues(alpha: 0.12),
+              color: CognithorTheme.sectionChat.withValues(alpha: 0.12),
             ),
 
             // Content area
@@ -168,7 +168,7 @@ class _SearchContentState extends State<_SearchContent>
             return Text(
               'Searching$dots',
               style: const TextStyle(
-                color: JarvisTheme.sectionChat,
+                color: CognithorTheme.sectionChat,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -186,9 +186,9 @@ class _SearchContentState extends State<_SearchContent>
               return LinearProgressIndicator(
                 value: null,
                 backgroundColor:
-                    JarvisTheme.sectionChat.withValues(alpha: 0.08),
+                    CognithorTheme.sectionChat.withValues(alpha: 0.08),
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  JarvisTheme.sectionChat.withValues(alpha: 0.6),
+                  CognithorTheme.sectionChat.withValues(alpha: 0.6),
                 ),
                 minHeight: 3,
               );
@@ -202,7 +202,7 @@ class _SearchContentState extends State<_SearchContent>
           Text(
             widget.statusText,
             style: TextStyle(
-              color: JarvisTheme.textSecondary,
+              color: CognithorTheme.textSecondary,
               fontSize: 12,
               height: 1.5,
             ),
@@ -227,7 +227,7 @@ class _CodeContent extends StatelessWidget {
         const Text(
           'Executing code...',
           style: TextStyle(
-            color: JarvisTheme.sectionChat,
+            color: CognithorTheme.sectionChat,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -240,10 +240,10 @@ class _CodeContent extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: JarvisTheme.codeBlockBg,
+              color: CognithorTheme.codeBlockBg,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: JarvisTheme.sectionChat.withValues(alpha: 0.15),
+                color: CognithorTheme.sectionChat.withValues(alpha: 0.15),
               ),
             ),
             child: SingleChildScrollView(
@@ -252,7 +252,7 @@ class _CodeContent extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'JetBrains Mono',
                   fontSize: 11,
-                  color: JarvisTheme.matrix,
+                  color: CognithorTheme.matrix,
                   height: 1.6,
                 ),
               ),
@@ -284,10 +284,10 @@ class _GenericContent extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: JarvisTheme.sectionChat.withValues(alpha: 0.10),
+            color: CognithorTheme.sectionChat.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: JarvisTheme.sectionChat.withValues(alpha: 0.20),
+              color: CognithorTheme.sectionChat.withValues(alpha: 0.20),
             ),
           ),
           child: Text(
@@ -295,7 +295,7 @@ class _GenericContent extends StatelessWidget {
             style: const TextStyle(
               fontFamily: 'JetBrains Mono',
               fontSize: 11,
-              color: JarvisTheme.sectionChat,
+              color: CognithorTheme.sectionChat,
             ),
           ),
         ),
@@ -309,7 +309,7 @@ class _GenericContent extends StatelessWidget {
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
               valueColor: AlwaysStoppedAnimation<Color>(
-                JarvisTheme.sectionChat.withValues(alpha: 0.6),
+                CognithorTheme.sectionChat.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -321,7 +321,7 @@ class _GenericContent extends StatelessWidget {
           Text(
             statusText,
             style: TextStyle(
-              color: JarvisTheme.textSecondary,
+              color: CognithorTheme.textSecondary,
               fontSize: 12,
               height: 1.5,
             ),

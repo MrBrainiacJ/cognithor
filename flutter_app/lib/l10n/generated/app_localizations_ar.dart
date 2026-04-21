@@ -1993,11 +1993,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get stopBackendDescription =>
-      'إيقاف خادم Jarvis. ستحتاج إلى إعادة تشغيله يدويًا.';
+      'إيقاف خادم Cognithor. ستحتاج إلى إعادة تشغيله يدويًا.';
 
   @override
   String get stopBackendConfirmBody =>
-      'سيؤدي هذا إلى إيقاف عملية خادم Jarvis. ستحتاج إلى إعادة تشغيلها يدويًا من سطر الأوامر.';
+      'سيؤدي هذا إلى إيقاف عملية خادم Cognithor. ستحتاج إلى إعادة تشغيلها يدويًا من سطر الأوامر.';
 
   @override
   String get backendStopped => 'تم إيقاف الخادم. يرجى إعادة التشغيل يدويًا.';
@@ -2014,7 +2014,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get factoryResetNotImpl =>
-      'لم يتم تنفيذ إعادة ضبط المصنع بعد في الخادم. لإعادة التعيين يدويًا، احذف config.yaml وأعد تشغيل Jarvis.';
+      'لم يتم تنفيذ إعادة ضبط المصنع بعد في الخادم. لإعادة التعيين يدويًا، احذف config.yaml وأعد تشغيل Cognithor.';
 
   @override
   String get ok => 'موافق';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/services/voice_service.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class VoiceIndicator extends StatefulWidget {
   const VoiceIndicator({super.key, required this.state});
@@ -52,11 +52,11 @@ class _VoiceIndicatorState extends State<VoiceIndicator>
   }
 
   Color get _color => switch (widget.state) {
-        VoiceState.off => JarvisTheme.textSecondary,
-        VoiceState.listening => JarvisTheme.orange,
-        VoiceState.conversation => JarvisTheme.green,
-        VoiceState.processing => JarvisTheme.accent,
-        VoiceState.speaking => JarvisTheme.accent,
+        VoiceState.off => CognithorTheme.textSecondary,
+        VoiceState.listening => CognithorTheme.orange,
+        VoiceState.conversation => CognithorTheme.green,
+        VoiceState.processing => CognithorTheme.accent,
+        VoiceState.speaking => CognithorTheme.accent,
       };
 
   String get _label => switch (widget.state) {

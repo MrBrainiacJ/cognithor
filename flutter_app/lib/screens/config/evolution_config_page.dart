@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class EvolutionConfigPage extends StatelessWidget {
   const EvolutionConfigPage({super.key});
@@ -23,7 +23,7 @@ class EvolutionConfigPage extends StatelessWidget {
               title: const Text('Evolution Engine'),
               subtitle: const Text('Enable autonomous learning during idle time'),
               value: enabled,
-              activeThumbColor: JarvisTheme.accent,
+              activeThumbColor: CognithorTheme.accent,
               onChanged: (v) => cfg.set('evolution.enabled', v),
             ),
             const Divider(height: 24),
@@ -80,7 +80,7 @@ class EvolutionConfigPage extends StatelessWidget {
               title: const Text('Deep Learning Plans'),
               subtitle: const Text('Auto-promote complex goals to structured learning plans'),
               value: deepLearning,
-              activeThumbColor: JarvisTheme.accent,
+              activeThumbColor: CognithorTheme.accent,
               onChanged: (v) => cfg.set('evolution.deep_learning_enabled', v),
             ),
           ],

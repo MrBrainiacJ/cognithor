@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/glass_panel.dart';
 
 /// Holographic waveform typing indicator shown when the assistant is thinking.
@@ -37,7 +37,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
     return Align(
       alignment: Alignment.centerLeft,
       child: GlassPanel(
-        tint: JarvisTheme.sectionChat,
+        tint: CognithorTheme.sectionChat,
         borderRadius: 16,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
@@ -52,7 +52,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
                   return CustomPaint(
                     painter: WaveformPainter(
                       time: _controller.value * 2 * pi,
-                      color: JarvisTheme.sectionChat,
+                      color: CognithorTheme.sectionChat,
                     ),
                   );
                 },
@@ -62,7 +62,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
             Text(
               l.thinking,
               style: const TextStyle(
-                color: JarvisTheme.sectionChat,
+                color: CognithorTheme.sectionChat,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),

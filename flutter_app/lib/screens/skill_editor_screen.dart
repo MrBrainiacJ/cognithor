@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/skills_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/widgets/cognithor_toast.dart';
 
 /// Full-screen skill editor for creating and editing skills.
 class SkillEditorScreen extends StatefulWidget {
@@ -185,14 +185,14 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
 
     if (success) {
       _isDirty = false;
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         _isEditing ? l.skillSaved : l.skillCreated,
         type: ToastType.success,
       );
       Navigator.of(context).pop(true);
     } else {
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         provider.error ?? 'Error',
         type: ToastType.error,
@@ -215,7 +215,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: JarvisTheme.red,
+              backgroundColor: CognithorTheme.red,
             ),
             child: Text(l.delete),
           ),
@@ -232,10 +232,10 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
 
     if (success) {
       _isDirty = false;
-      JarvisToast.show(context, l.skillDeleted, type: ToastType.success);
+      CognithorToast.show(context, l.skillDeleted, type: ToastType.success);
       Navigator.of(context).pop(true);
     } else {
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         provider.error ?? 'Error',
         type: ToastType.error,
@@ -252,9 +252,9 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
     if (md != null) {
       await Clipboard.setData(ClipboardData(text: md));
       if (!mounted) return;
-      JarvisToast.show(context, l.skillExported, type: ToastType.success);
+      CognithorToast.show(context, l.skillExported, type: ToastType.success);
     } else {
-      JarvisToast.show(context, 'Export failed', type: ToastType.error);
+      CognithorToast.show(context, 'Export failed', type: ToastType.error);
     }
   }
 
@@ -343,16 +343,16 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
           // Built-in notice
           if (_isBuiltIn) ...[
             NeonCard(
-              tint: JarvisTheme.orange,
+              tint: CognithorTheme.orange,
               child: Row(
                 children: [
-                  Icon(Icons.lock_outline, color: JarvisTheme.orange, size: 20),
+                  Icon(Icons.lock_outline, color: CognithorTheme.orange, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l.builtInSkill,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: JarvisTheme.orange,
+                        color: CognithorTheme.orange,
                       ),
                     ),
                   ),
@@ -366,7 +366,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
           _SectionHeader(title: l.metadata, icon: Icons.info_outline),
           const SizedBox(height: 8),
           NeonCard(
-            tint: JarvisTheme.sectionSkills,
+            tint: CognithorTheme.sectionSkills,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -434,7 +434,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
                   const SizedBox(height: 8),
                   _ChipsPreview(
                     values: _commaStringToList(_keywordsCtrl.text),
-                    color: JarvisTheme.sectionSkills,
+                    color: CognithorTheme.sectionSkills,
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -453,7 +453,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
                   const SizedBox(height: 8),
                   _ChipsPreview(
                     values: _commaStringToList(_toolsCtrl.text),
-                    color: JarvisTheme.accent,
+                    color: CognithorTheme.accent,
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -503,7 +503,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
                 SwitchListTile(
                   title: Text(l.enabled),
                   value: _enabled,
-                  activeThumbColor: JarvisTheme.sectionSkills,
+                  activeThumbColor: CognithorTheme.sectionSkills,
                   contentPadding: EdgeInsets.zero,
                   onChanged: _isBuiltIn
                       ? null
@@ -524,7 +524,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
           _SectionHeader(title: l.skillBody, icon: Icons.code),
           const SizedBox(height: 8),
           NeonCard(
-            tint: JarvisTheme.sectionSkills,
+            tint: CognithorTheme.sectionSkills,
             child: TextFormField(
               controller: _bodyCtrl,
               decoration: InputDecoration(
@@ -536,7 +536,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
               readOnly: _isBuiltIn,
               maxLines: null,
               minLines: 15,
-              style: JarvisTheme.monoTextTheme.bodyMedium?.copyWith(
+              style: CognithorTheme.monoTextTheme.bodyMedium?.copyWith(
                 fontSize: 13,
                 height: 1.6,
               ),
@@ -549,7 +549,7 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
             _SectionHeader(title: l.statistics, icon: Icons.analytics_outlined),
             const SizedBox(height: 8),
             NeonCard(
-              tint: JarvisTheme.sectionSkills,
+              tint: CognithorTheme.sectionSkills,
               child: Row(
                 children: [
                   _StatTile(
@@ -580,11 +580,11 @@ class _SkillEditorScreenState extends State<SkillEditorScreen> {
             Center(
               child: OutlinedButton.icon(
                 onPressed: _delete,
-                icon: Icon(Icons.delete_outline, color: JarvisTheme.red),
+                icon: Icon(Icons.delete_outline, color: CognithorTheme.red),
                 label: Text(l.deleteSkill),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: JarvisTheme.red,
-                  side: BorderSide(color: JarvisTheme.red.withValues(alpha: 0.5)),
+                  foregroundColor: CognithorTheme.red,
+                  side: BorderSide(color: CognithorTheme.red.withValues(alpha: 0.5)),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
@@ -625,12 +625,12 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: JarvisTheme.sectionSkills),
+        Icon(icon, size: 18, color: CognithorTheme.sectionSkills),
         const SizedBox(width: 8),
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: JarvisTheme.sectionSkills,
+                color: CognithorTheme.sectionSkills,
                 fontWeight: FontWeight.w600,
               ),
         ),
@@ -684,7 +684,7 @@ class _StatTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: JarvisTheme.textSecondary),
+              Icon(icon, size: 14, color: CognithorTheme.textSecondary),
               const SizedBox(width: 4),
               Text(
                 label,

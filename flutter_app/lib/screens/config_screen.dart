@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/glass_panel.dart';
-import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/widgets/cognithor_toast.dart';
 
 import 'package:cognithor_ui/screens/config/general_page.dart';
 import 'package:cognithor_ui/screens/config/language_page.dart';
@@ -210,14 +210,14 @@ class _ConfigScreenState extends State<ConfigScreen>
       final details = cfg.sectionErrors.entries
           .map((e) => '${e.key}: ${e.value}')
           .join('\n');
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         l.savedWithErrors(details),
         type: ToastType.warning,
         duration: const Duration(seconds: 6),
       );
     } else {
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         ok ? l.configurationSaved : l.saveFailed,
         type: ok ? ToastType.success : ToastType.error,
@@ -284,17 +284,17 @@ class _ConfigScreenState extends State<ConfigScreen>
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
-                      color: JarvisTheme.red.withValues(alpha: 0.15),
+                      color: CognithorTheme.red.withValues(alpha: 0.15),
                       child: Row(
                         children: [
                           Icon(Icons.warning_amber,
-                              size: 16, color: JarvisTheme.orange),
+                              size: 16, color: CognithorTheme.orange),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               cfg.error!,
                               style: TextStyle(
-                                  color: JarvisTheme.orange, fontSize: 12),
+                                  color: CognithorTheme.orange, fontSize: 12),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -340,7 +340,7 @@ class _ConfigScreenState extends State<ConfigScreen>
   }
 
   Widget _buildCategoryTabs(BuildContext context) {
-    const tint = JarvisTheme.sectionAdmin;
+    const tint = CognithorTheme.sectionAdmin;
 
     return GlassPanel(
       tint: tint,
@@ -359,7 +359,7 @@ class _ConfigScreenState extends State<ConfigScreen>
           borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
         ),
         labelColor: tint,
-        unselectedLabelColor: JarvisTheme.textSecondary,
+        unselectedLabelColor: CognithorTheme.textSecondary,
         labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         unselectedLabelStyle:
             const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
@@ -404,7 +404,7 @@ class _ConfigScreenState extends State<ConfigScreen>
 
   Widget _buildSubPageSidebar(BuildContext context, AppLocalizations l) {
     final keys = _currentPageKeys;
-    const tint = JarvisTheme.sectionAdmin;
+    const tint = CognithorTheme.sectionAdmin;
 
     return SizedBox(
       width: 220,
@@ -435,7 +435,7 @@ class _ConfigScreenState extends State<ConfigScreen>
                 visualDensity: VisualDensity.compact,
                 leading: Icon(def.icon,
                     size: 18,
-                    color: selected ? tint : JarvisTheme.textSecondary),
+                    color: selected ? tint : CognithorTheme.textSecondary),
                 title: Text(
                   def.labelKey(l),
                   style: TextStyle(
@@ -454,7 +454,7 @@ class _ConfigScreenState extends State<ConfigScreen>
                         shortcutLabel,
                         style: TextStyle(
                           fontSize: 10,
-                          color: JarvisTheme.textTertiary,
+                          color: CognithorTheme.textTertiary,
                           fontFamily: 'monospace',
                         ),
                       )
@@ -475,7 +475,7 @@ class _ConfigScreenState extends State<ConfigScreen>
       BuildContext context, ConfigProvider cfg, AppLocalizations l) {
     if (!cfg.hasChanges && !cfg.saving) return const SizedBox.shrink();
 
-    const tint = JarvisTheme.sectionAdmin;
+    const tint = CognithorTheme.sectionAdmin;
 
     return _NeonPulseWrapper(
       active: cfg.hasChanges,
@@ -487,7 +487,7 @@ class _ConfigScreenState extends State<ConfigScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
-            Icon(Icons.edit, size: 16, color: JarvisTheme.orange),
+            Icon(Icons.edit, size: 16, color: CognithorTheme.orange),
             const SizedBox(width: 8),
             Text(l.unsavedChanges),
             const Spacer(),

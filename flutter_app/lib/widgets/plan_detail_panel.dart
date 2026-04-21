@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
-import 'package:cognithor_ui/widgets/jarvis_chip.dart';
-import 'package:cognithor_ui/widgets/jarvis_progress_bar.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
+import 'package:cognithor_ui/widgets/cognithor_chip.dart';
+import 'package:cognithor_ui/widgets/cognithor_progress_bar.dart';
 
 /// Shows plan details when plan_detail WS message arrives.
 class PlanDetailPanel extends StatelessWidget {
@@ -21,14 +21,14 @@ class PlanDetailPanel extends StatelessWidget {
     final confidence = (plan['confidence'] as num?)?.toDouble() ?? 0.0;
     final steps = (plan['steps'] as List?) ?? [];
     final iteration = plan['iteration'] ?? 1;
-    final confColor = confidence > 0.7 ? JarvisTheme.success : JarvisTheme.warning;
+    final confColor = confidence > 0.7 ? CognithorTheme.success : CognithorTheme.warning;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: JarvisTheme.accent.withAlpha(15),
+        color: CognithorTheme.accent.withAlpha(15),
         border: Border(
-          top: BorderSide(color: JarvisTheme.accent.withAlpha(50)),
+          top: BorderSide(color: CognithorTheme.accent.withAlpha(50)),
         ),
       ),
       child: Column(
@@ -37,7 +37,7 @@ class PlanDetailPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.route, color: JarvisTheme.accent, size: 18),
+              Icon(Icons.route, color: CognithorTheme.accent, size: 18),
               const SizedBox(width: 8),
               Text(
                 'Plan #$iteration',
@@ -47,7 +47,7 @@ class PlanDetailPanel extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              JarvisChip(
+              CognithorChip(
                 label: '${(confidence * 100).toStringAsFixed(0)}%',
                 color: confColor,
               ),
@@ -63,7 +63,7 @@ class PlanDetailPanel extends StatelessWidget {
             Text(
               goal,
               style: TextStyle(
-                color: JarvisTheme.textPrimary,
+                color: CognithorTheme.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -74,7 +74,7 @@ class PlanDetailPanel extends StatelessWidget {
             Text(
               reasoning,
               style: TextStyle(
-                color: JarvisTheme.textSecondary,
+                color: CognithorTheme.textSecondary,
                 fontSize: 12,
               ),
             ),
@@ -91,7 +91,7 @@ class PlanDetailPanel extends StatelessWidget {
                     Text(
                       '${e.key + 1}. ',
                       style: TextStyle(
-                        color: JarvisTheme.accent,
+                        color: CognithorTheme.accent,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -100,7 +100,7 @@ class PlanDetailPanel extends StatelessWidget {
                       child: Text(
                         step,
                         style: TextStyle(
-                          color: JarvisTheme.textPrimary,
+                          color: CognithorTheme.textPrimary,
                           fontSize: 12,
                         ),
                       ),
@@ -111,7 +111,7 @@ class PlanDetailPanel extends StatelessWidget {
             }),
           ],
           const SizedBox(height: 6),
-          JarvisProgressBar(
+          CognithorProgressBar(
             value: confidence,
             color: confColor,
             height: 4,

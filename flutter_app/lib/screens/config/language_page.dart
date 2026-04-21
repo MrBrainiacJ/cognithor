@@ -5,7 +5,7 @@ import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/locale_provider.dart';
 import 'package:cognithor_ui/widgets/form/form_widgets.dart';
-import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/widgets/cognithor_toast.dart';
 
 class LanguagePage extends StatefulWidget {
   const LanguagePage({super.key});
@@ -43,7 +43,7 @@ class _LanguagePageState extends State<LanguagePage> {
     if (prompts.isEmpty) {
       setState(() => _translating = false);
       if (mounted) {
-        JarvisToast.show(context, 'No prompts to translate', type: ToastType.warning);
+        CognithorToast.show(context, 'No prompts to translate', type: ToastType.warning);
       }
       return;
     }
@@ -59,7 +59,7 @@ class _LanguagePageState extends State<LanguagePage> {
 
     final l = AppLocalizations.of(context);
     if (res.containsKey('error')) {
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         res['error'].toString(),
         type: ToastType.error,
@@ -72,7 +72,7 @@ class _LanguagePageState extends State<LanguagePage> {
         cfg.prompts[entry.key] = entry.value.toString();
       }
       cfg.notify();
-      JarvisToast.show(context, l.promptsTranslated, type: ToastType.success);
+      CognithorToast.show(context, l.promptsTranslated, type: ToastType.success);
     }
   }
 
@@ -88,7 +88,7 @@ class _LanguagePageState extends State<LanguagePage> {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisSelectField(
+            CognithorSelectField(
               label: l.configPageLanguage,
               value: effectiveLang,
               options: [

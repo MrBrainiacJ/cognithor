@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/form/form_widgets.dart';
 
 class ChannelsPage extends StatelessWidget {
@@ -64,7 +64,7 @@ class ChannelsPage extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium),
             ),
             _channelCard(cfg, ch, 'webui', 'Web UI', Icons.web, extra: [
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Port',
                 value: (ch['webui_port'] as num?) ?? 8741,
                 onChanged: (v) => cfg.set('channels.webui_port', v),
@@ -74,7 +74,7 @@ class ChannelsPage extends StatelessWidget {
             ]),
             _channelCard(cfg, ch, 'telegram', 'Telegram', Icons.telegram,
                 extra: [
-              JarvisListField(
+              CognithorListField(
                 label: 'Whitelist',
                 value: _toStringList(ch['telegram_whitelist']),
                 onChanged: (v) => cfg.set('channels.telegram_whitelist', v),
@@ -82,7 +82,7 @@ class ChannelsPage extends StatelessWidget {
               ),
             ]),
             _channelCard(cfg, ch, 'slack', 'Slack', Icons.tag, extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Default Channel',
                 value: (ch['slack_default_channel'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.slack_default_channel', v),
@@ -90,7 +90,7 @@ class ChannelsPage extends StatelessWidget {
             ]),
             _channelCard(cfg, ch, 'discord', 'Discord', Icons.discord,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Channel ID',
                 value: (ch['discord_channel_id'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.discord_channel_id', v),
@@ -99,33 +99,33 @@ class ChannelsPage extends StatelessWidget {
             ]),
             _channelCard(cfg, ch, 'whatsapp', 'WhatsApp', Icons.chat,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Default Chat',
                 value: (ch['whatsapp_default_chat'] ?? '').toString(),
                 onChanged: (v) =>
                     cfg.set('channels.whatsapp_default_chat', v),
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Phone Number ID',
                 value: (ch['whatsapp_phone_number_id'] ?? '').toString(),
                 onChanged: (v) =>
                     cfg.set('channels.whatsapp_phone_number_id', v),
               ),
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Webhook Port',
                 value: (ch['whatsapp_webhook_port'] as num?) ?? 8742,
                 onChanged: (v) =>
                     cfg.set('channels.whatsapp_webhook_port', v),
                 min: 1024,
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Verify Token',
                 value: (ch['whatsapp_verify_token'] ?? '').toString(),
                 onChanged: (v) =>
                     cfg.set('channels.whatsapp_verify_token', v),
                 isPassword: true,
               ),
-              JarvisListField(
+              CognithorListField(
                 label: 'Allowed Numbers',
                 value: _toStringList(ch['whatsapp_allowed_numbers']),
                 onChanged: (v) =>
@@ -133,7 +133,7 @@ class ChannelsPage extends StatelessWidget {
               ),
             ]),
             _channelCard(cfg, ch, 'signal', 'Signal', Icons.lock, extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Default User',
                 value: (ch['signal_default_user'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.signal_default_user', v),
@@ -141,19 +141,19 @@ class ChannelsPage extends StatelessWidget {
             ]),
             _channelCard(cfg, ch, 'matrix', 'Matrix', Icons.grid_view,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Homeserver',
                 value: (ch['matrix_homeserver'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.matrix_homeserver', v),
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'User ID',
                 value: (ch['matrix_user_id'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.matrix_user_id', v),
               ),
             ]),
             _channelCard(cfg, ch, 'teams', 'Teams', Icons.groups, extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Default Channel',
                 value: (ch['teams_default_channel'] ?? '').toString(),
                 onChanged: (v) =>
@@ -162,7 +162,7 @@ class ChannelsPage extends StatelessWidget {
             ]),
             _channelCard(cfg, ch, 'imessage', 'iMessage', Icons.message,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Device ID',
                 value: (ch['imessage_device_id'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.imessage_device_id', v),
@@ -171,13 +171,13 @@ class ChannelsPage extends StatelessWidget {
             _channelCard(
                 cfg, ch, 'google_chat', 'Google Chat', Icons.chat_bubble,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Credentials Path',
                 value: (ch['google_chat_credentials_path'] ?? '').toString(),
                 onChanged: (v) =>
                     cfg.set('channels.google_chat_credentials_path', v),
               ),
-              JarvisListField(
+              CognithorListField(
                 label: 'Allowed Spaces',
                 value: _toStringList(ch['google_chat_allowed_spaces']),
                 onChanged: (v) =>
@@ -187,18 +187,18 @@ class ChannelsPage extends StatelessWidget {
             _channelCard(
                 cfg, ch, 'mattermost', 'Mattermost', Icons.forum,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'URL',
                 value: (ch['mattermost_url'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.mattermost_url', v),
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Token',
                 value: (ch['mattermost_token'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.mattermost_token', v),
                 isPassword: true,
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Channel',
                 value: (ch['mattermost_channel'] ?? '').toString(),
                 onChanged: (v) =>
@@ -207,12 +207,12 @@ class ChannelsPage extends StatelessWidget {
             ]),
             _channelCard(cfg, ch, 'feishu', 'Feishu', Icons.business,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'App ID',
                 value: (ch['feishu_app_id'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.feishu_app_id', v),
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'App Secret',
                 value: (ch['feishu_app_secret'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.feishu_app_secret', v),
@@ -220,22 +220,22 @@ class ChannelsPage extends StatelessWidget {
               ),
             ]),
             _channelCard(cfg, ch, 'irc', 'IRC', Icons.tag, extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Server',
                 value: (ch['irc_server'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.irc_server', v),
               ),
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Port',
                 value: (ch['irc_port'] as num?) ?? 6667,
                 onChanged: (v) => cfg.set('channels.irc_port', v),
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Nick',
                 value: (ch['irc_nick'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.irc_nick', v),
               ),
-              JarvisListField(
+              CognithorListField(
                 label: 'Channels',
                 value: _toStringList(ch['irc_channels']),
                 onChanged: (v) => cfg.set('channels.irc_channels', v),
@@ -243,18 +243,18 @@ class ChannelsPage extends StatelessWidget {
             ]),
             _channelCard(cfg, ch, 'twitch', 'Twitch', Icons.live_tv,
                 extra: [
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Token',
                 value: (ch['twitch_token'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.twitch_token', v),
                 isPassword: true,
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Channel',
                 value: (ch['twitch_channel'] ?? '').toString(),
                 onChanged: (v) => cfg.set('channels.twitch_channel', v),
               ),
-              JarvisListField(
+              CognithorListField(
                 label: 'Allowed Users',
                 value: _toStringList(ch['twitch_allowed_users']),
                 onChanged: (v) =>
@@ -263,11 +263,11 @@ class ChannelsPage extends StatelessWidget {
             ]),
             const Divider(height: 32),
             // Voice config
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Voice',
               icon: Icons.mic,
               children: [
-                JarvisToggleField(
+                CognithorToggleField(
                   label: 'Voice Enabled',
                   value: ch['voice_enabled'] == true,
                   onChanged: (v) => cfg.set('channels.voice_enabled', v),
@@ -285,12 +285,12 @@ class ChannelsPage extends StatelessWidget {
       String key, String label, IconData icon,
       {List<Widget> extra = const []}) {
     final enabledKey = '${key}_enabled';
-    return JarvisCollapsibleCard(
+    return CognithorCollapsibleCard(
       title: label,
       icon: icon,
       badge: ch[enabledKey] == true ? 'ON' : null,
       children: [
-        JarvisToggleField(
+        CognithorToggleField(
           label: 'Enabled',
           value: ch[enabledKey] == true,
           onChanged: (v) => cfg.set('channels.$enabledKey', v),
@@ -304,18 +304,18 @@ class ChannelsPage extends StatelessWidget {
       ConfigProvider cfg, Map<String, dynamic> ch) {
     final vc = ch['voice_config'] as Map<String, dynamic>? ?? {};
     return [
-      JarvisSelectField.fromStrings(
+      CognithorSelectField.fromStrings(
         label: 'TTS Backend',
         value: (vc['tts_backend'] ?? 'piper').toString(),
         options: const ['piper', 'espeak', 'elevenlabs'],
         onChanged: (v) => cfg.set('channels.voice_config.tts_backend', v),
       ),
-      JarvisTextField(
+      CognithorTextField(
         label: 'Piper Voice',
         value: (vc['piper_voice'] ?? 'de_DE-pavoque-low').toString(),
         onChanged: (v) => cfg.set('channels.voice_config.piper_voice', v),
       ),
-      JarvisSliderField(
+      CognithorSliderField(
         label: 'Piper Length Scale',
         value: (vc['piper_length_scale'] as num?)?.toDouble() ?? 1.0,
         onChanged: (v) =>
@@ -324,7 +324,7 @@ class ChannelsPage extends StatelessWidget {
         max: 2.0,
         step: 0.1,
       ),
-      JarvisTextField(
+      CognithorTextField(
         label: 'ElevenLabs API Key',
         value: (vc['elevenlabs_api_key'] ?? '').toString(),
         onChanged: (v) =>
@@ -332,37 +332,37 @@ class ChannelsPage extends StatelessWidget {
         isPassword: true,
         isSecret: true,
       ),
-      JarvisTextField(
+      CognithorTextField(
         label: 'ElevenLabs Voice ID',
         value: (vc['elevenlabs_voice_id'] ?? '').toString(),
         onChanged: (v) =>
             cfg.set('channels.voice_config.elevenlabs_voice_id', v),
       ),
-      JarvisToggleField(
+      CognithorToggleField(
         label: 'Wake Word Enabled',
         value: vc['wake_word_enabled'] == true,
         onChanged: (v) =>
             cfg.set('channels.voice_config.wake_word_enabled', v),
       ),
-      JarvisTextField(
+      CognithorTextField(
         label: 'Wake Word',
         value: (vc['wake_word'] ?? 'jarvis').toString(),
         onChanged: (v) => cfg.set('channels.voice_config.wake_word', v),
       ),
-      JarvisSelectField.fromStrings(
+      CognithorSelectField.fromStrings(
         label: 'Wake Word Backend',
         value: (vc['wake_word_backend'] ?? 'browser').toString(),
         options: const ['browser', 'vosk', 'porcupine'],
         onChanged: (v) =>
             cfg.set('channels.voice_config.wake_word_backend', v),
       ),
-      JarvisToggleField(
+      CognithorToggleField(
         label: 'Talk Mode',
         value: vc['talk_mode_enabled'] == true,
         onChanged: (v) =>
             cfg.set('channels.voice_config.talk_mode_enabled', v),
       ),
-      JarvisToggleField(
+      CognithorToggleField(
         label: 'Auto-Listen',
         value: vc['talk_mode_auto_listen'] == true,
         onChanged: (v) =>
@@ -396,20 +396,20 @@ class _CompactChannelToggle extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final accentColor = enabled
-        ? JarvisTheme.accent
-        : (isDark ? JarvisTheme.textSecondary : const Color(0xFF9999AA));
+        ? CognithorTheme.accent
+        : (isDark ? CognithorTheme.textSecondary : const Color(0xFF9999AA));
 
     return Container(
       width: 180,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: enabled
-            ? JarvisTheme.accent.withValues(alpha: isDark ? 0.12 : 0.06)
+            ? CognithorTheme.accent.withValues(alpha: isDark ? 0.12 : 0.06)
             : theme.cardColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: enabled
-              ? JarvisTheme.accent.withValues(alpha: 0.3)
+              ? CognithorTheme.accent.withValues(alpha: 0.3)
               : theme.dividerColor,
           width: 1.0,
         ),
@@ -425,8 +425,8 @@ class _CompactChannelToggle extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: enabled ? FontWeight.w600 : FontWeight.normal,
                 color: enabled
-                    ? (isDark ? JarvisTheme.textPrimary : const Color(0xFF1A1A2E))
-                    : (isDark ? JarvisTheme.textSecondary : const Color(0xFF6B6B80)),
+                    ? (isDark ? CognithorTheme.textPrimary : const Color(0xFF1A1A2E))
+                    : (isDark ? CognithorTheme.textSecondary : const Color(0xFF6B6B80)),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -438,7 +438,7 @@ class _CompactChannelToggle extends StatelessWidget {
               child: Switch.adaptive(
                 value: enabled,
                 onChanged: onChanged,
-                activeTrackColor: JarvisTheme.accent,
+                activeTrackColor: CognithorTheme.accent,
                 activeThumbColor: Colors.white,
               ),
             ),

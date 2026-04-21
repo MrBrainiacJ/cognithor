@@ -3,15 +3,15 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_confirmation_dialog.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_list_tile.dart';
-import 'package:cognithor_ui/widgets/jarvis_loading_skeleton.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
-import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
+import 'package:cognithor_ui/widgets/cognithor_confirmation_dialog.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_list_tile.dart';
+import 'package:cognithor_ui/widgets/cognithor_loading_skeleton.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_status_badge.dart';
 
 class SystemScreen extends StatefulWidget {
   const SystemScreen({super.key});
@@ -82,11 +82,11 @@ class _SystemScreenState extends State<SystemScreen> {
       appBar: AppBar(title: Text(l.systemStatus)),
       body: _isLoading
           ? const Padding(
-              padding: EdgeInsets.all(JarvisTheme.spacing),
-              child: JarvisLoadingSkeleton(count: 6, height: 24),
+              padding: EdgeInsets.all(CognithorTheme.spacing),
+              child: CognithorLoadingSkeleton(count: 6, height: 24),
             )
           : _error != null
-              ? JarvisEmptyState(
+              ? CognithorEmptyState(
                   icon: Icons.error_outline,
                   title: l.errorLabel,
                   subtitle: _error,
@@ -99,16 +99,16 @@ class _SystemScreenState extends State<SystemScreen> {
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
-                    padding: const EdgeInsets.all(JarvisTheme.spacing),
+                    padding: const EdgeInsets.all(CognithorTheme.spacing),
                     children: [
                       _buildSystemInfo(l),
-                      const SizedBox(height: JarvisTheme.spacing),
+                      const SizedBox(height: CognithorTheme.spacing),
                       _buildChannels(l),
-                      const SizedBox(height: JarvisTheme.spacing),
+                      const SizedBox(height: CognithorTheme.spacing),
                       _buildCommands(l),
-                      const SizedBox(height: JarvisTheme.spacing),
+                      const SizedBox(height: CognithorTheme.spacing),
                       _buildConnectors(l),
-                      const SizedBox(height: JarvisTheme.spacingLg),
+                      const SizedBox(height: CognithorTheme.spacingLg),
                       _buildDangerZone(l),
                     ],
                   ),
@@ -127,37 +127,37 @@ class _SystemScreenState extends State<SystemScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        JarvisSection(title: l.systemOverview),
-        const SizedBox(height: JarvisTheme.spacingSm),
+        CognithorSection(title: l.systemOverview),
+        const SizedBox(height: CognithorTheme.spacingSm),
         Wrap(
-          spacing: JarvisTheme.spacingSm,
-          runSpacing: JarvisTheme.spacingSm,
+          spacing: CognithorTheme.spacingSm,
+          runSpacing: CognithorTheme.spacingSm,
           children: [
-            JarvisStat(label: l.uptime, value: _formatUptime(uptime)),
-            JarvisStat(
+            CognithorStat(label: l.uptime, value: _formatUptime(uptime)),
+            CognithorStat(
               label: l.backendVersion,
               value: version,
-              color: JarvisTheme.accent,
+              color: CognithorTheme.accent,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.owner,
               value: owner,
-              color: JarvisTheme.success,
+              color: CognithorTheme.success,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.llmBackend,
               value: backend,
-              color: JarvisTheme.info,
+              color: CognithorTheme.info,
             ),
           ],
         ),
-        const SizedBox(height: JarvisTheme.spacingSm),
+        const SizedBox(height: CognithorTheme.spacingSm),
         NeonCard(
-          tint: JarvisTheme.sectionAdmin,
+          tint: CognithorTheme.sectionAdmin,
           child: Row(
             children: [
-              const Icon(Icons.settings, size: JarvisTheme.iconSizeSm),
-              const SizedBox(width: JarvisTheme.spacingSm),
+              const Icon(Icons.settings, size: CognithorTheme.iconSizeSm),
+              const SizedBox(width: CognithorTheme.spacingSm),
               Text('Config: $configVersion',
                   style: Theme.of(context).textTheme.bodyMedium),
             ],
@@ -171,7 +171,7 @@ class _SystemScreenState extends State<SystemScreen> {
     final channels =
         (_status?['active_channels'] as List?) ?? [];
     if (channels.isEmpty) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.podcasts,
         title: l.channels,
         subtitle: l.noData,
@@ -180,16 +180,16 @@ class _SystemScreenState extends State<SystemScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        JarvisSection(title: l.channels),
-        const SizedBox(height: JarvisTheme.spacingSm),
+        CognithorSection(title: l.channels),
+        const SizedBox(height: CognithorTheme.spacingSm),
         ...channels.map((ch) {
           final name = ch.toString();
-          return JarvisListTile(
+          return CognithorListTile(
             title: name,
-            leading: const Icon(Icons.podcasts, size: JarvisTheme.iconSizeMd),
-            trailing: JarvisStatusBadge(
+            leading: const Icon(Icons.podcasts, size: CognithorTheme.iconSizeMd),
+            trailing: CognithorStatusBadge(
               label: l.enabled,
-              color: JarvisTheme.success,
+              color: CognithorTheme.success,
             ),
           );
         }),
@@ -201,10 +201,10 @@ class _SystemScreenState extends State<SystemScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        JarvisSection(title: l.commandsTitle),
-        const SizedBox(height: JarvisTheme.spacingSm),
+        CognithorSection(title: l.commandsTitle),
+        const SizedBox(height: CognithorTheme.spacingSm),
         if (_commands.isEmpty)
-          JarvisEmptyState(
+          CognithorEmptyState(
             icon: Icons.terminal,
             title: l.commandsTitle,
             subtitle: l.noData,
@@ -212,10 +212,10 @@ class _SystemScreenState extends State<SystemScreen> {
         else
           ..._commands.map((cmd) {
             final name = (cmd is Map ? cmd['name'] : cmd).toString();
-            return JarvisListTile(
+            return CognithorListTile(
               title: name,
               leading:
-                  const Icon(Icons.terminal, size: JarvisTheme.iconSizeMd),
+                  const Icon(Icons.terminal, size: CognithorTheme.iconSizeMd),
             );
           }),
       ],
@@ -226,10 +226,10 @@ class _SystemScreenState extends State<SystemScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        JarvisSection(title: l.connectorsTitle),
-        const SizedBox(height: JarvisTheme.spacingSm),
+        CognithorSection(title: l.connectorsTitle),
+        const SizedBox(height: CognithorTheme.spacingSm),
         if (_connectors.isEmpty)
-          JarvisEmptyState(
+          CognithorEmptyState(
             icon: Icons.cable,
             title: l.connectorsTitle,
             subtitle: l.noData,
@@ -238,17 +238,17 @@ class _SystemScreenState extends State<SystemScreen> {
           ..._connectors.map((con) {
             final name = (con is Map ? con['name'] : con).toString();
             final status = con is Map ? con['status']?.toString() : null;
-            return JarvisListTile(
+            return CognithorListTile(
               title: name,
               trailing: status != null
-                  ? JarvisStatusBadge(
+                  ? CognithorStatusBadge(
                       label: status,
                       color: status == 'active'
-                          ? JarvisTheme.success
-                          : JarvisTheme.warning,
+                          ? CognithorTheme.success
+                          : CognithorTheme.warning,
                     )
                   : null,
-              leading: const Icon(Icons.cable, size: JarvisTheme.iconSizeMd),
+              leading: const Icon(Icons.cable, size: CognithorTheme.iconSizeMd),
             );
           }),
       ],
@@ -257,24 +257,24 @@ class _SystemScreenState extends State<SystemScreen> {
 
   Widget _buildDangerZone(AppLocalizations l) {
     return NeonCard(
-      tint: JarvisTheme.red,
+      tint: CognithorTheme.red,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber, color: JarvisTheme.error),
-              const SizedBox(width: JarvisTheme.spacingSm),
+              Icon(Icons.warning_amber, color: CognithorTheme.error),
+              const SizedBox(width: CognithorTheme.spacingSm),
               Text(
                 l.dangerZone,
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
-                    ?.copyWith(color: JarvisTheme.error),
+                    ?.copyWith(color: CognithorTheme.error),
               ),
             ],
           ),
-          const SizedBox(height: JarvisTheme.spacing),
+          const SizedBox(height: CognithorTheme.spacing),
           Row(
             children: [
               Expanded(
@@ -292,18 +292,18 @@ class _SystemScreenState extends State<SystemScreen> {
                   label: Text(l.reload),
                 ),
               ),
-              const SizedBox(width: JarvisTheme.spacingSm),
+              const SizedBox(width: CognithorTheme.spacingSm),
               Expanded(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: JarvisTheme.error,
+                    backgroundColor: CognithorTheme.error,
                   ),
                   onPressed: () async {
-                    final confirmed = await JarvisConfirmationDialog.show(
+                    final confirmed = await CognithorConfirmationDialog.show(
                       context,
                       title: l.shutdownServer,
                       message: l.shutdownConfirm,
-                      confirmColor: JarvisTheme.error,
+                      confirmColor: CognithorTheme.error,
                       icon: Icons.power_settings_new,
                     );
                     if (confirmed && mounted) {

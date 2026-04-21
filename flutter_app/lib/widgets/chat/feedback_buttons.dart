@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Thumbs up/down feedback buttons shown below assistant messages.
 class FeedbackButtons extends StatefulWidget {
@@ -28,12 +28,12 @@ class _FeedbackButtonsState extends State<FeedbackButtons> {
           Icon(
             _rating == 1 ? Icons.thumb_up : Icons.thumb_down,
             size: 14,
-            color: _rating == 1 ? JarvisTheme.green : JarvisTheme.orange,
+            color: _rating == 1 ? CognithorTheme.green : CognithorTheme.orange,
           ),
           const SizedBox(width: 4),
           Text(
             _rating == 1 ? 'Danke!' : 'Feedback gesendet',
-            style: TextStyle(fontSize: 11, color: JarvisTheme.textSecondary),
+            style: TextStyle(fontSize: 11, color: CognithorTheme.textSecondary),
           ),
         ],
       );
@@ -84,7 +84,7 @@ class _FeedbackIcon extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(4),
-          child: Icon(icon, size: 16, color: JarvisTheme.textTertiary),
+          child: Icon(icon, size: 16, color: CognithorTheme.textTertiary),
         ),
       ),
     );

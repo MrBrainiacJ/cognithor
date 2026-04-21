@@ -6,9 +6,9 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
 
 class NetworkSettingsScreen extends StatefulWidget {
   const NetworkSettingsScreen({super.key});
@@ -144,7 +144,7 @@ class _NetworkSettingsScreenState extends State<NetworkSettingsScreen> {
       case 'loopback':
         return Colors.grey;
       default:
-        return JarvisTheme.accent;
+        return CognithorTheme.accent;
     }
   }
 
@@ -193,7 +193,7 @@ class _NetworkSettingsScreenState extends State<NetworkSettingsScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: NeonCard(
-              tint: JarvisTheme.accent,
+              tint: CognithorTheme.accent,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -238,13 +238,13 @@ class _NetworkSettingsScreenState extends State<NetworkSettingsScreen> {
         Text(
           l.detectedInterfaces,
           style: theme.textTheme.titleSmall?.copyWith(
-            color: JarvisTheme.textSecondary,
+            color: CognithorTheme.textSecondary,
           ),
         ),
         const SizedBox(height: 8),
 
         if (_interfaces.isEmpty)
-          JarvisEmptyState(
+          CognithorEmptyState(
             icon: Icons.wifi_off,
             title: l.noInterfacesDetected,
           )
@@ -323,7 +323,7 @@ class _NetworkSettingsScreenState extends State<NetworkSettingsScreen> {
                           Text(
                             name,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: JarvisTheme.textSecondary,
+                              color: CognithorTheme.textSecondary,
                             ),
                           ),
                         ],

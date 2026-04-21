@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/navigation_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/glass_panel.dart';
 
 class CommandBar extends StatelessWidget {
@@ -53,11 +53,11 @@ class CommandBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.search,
-                          size: 14, color: JarvisTheme.textSecondary),
+                          size: 14, color: CognithorTheme.textSecondary),
                       const SizedBox(width: 6),
                       Text(AppLocalizations.of(context).globalSearch,
                           style: TextStyle(
-                              color: JarvisTheme.textSecondary, fontSize: 12)),
+                              color: CognithorTheme.textSecondary, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -68,11 +68,11 @@ class CommandBar extends StatelessWidget {
               width: 8,
               height: 8,
               decoration: BoxDecoration(
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                      color: JarvisTheme.green.withValues(alpha: 0.6),
+                      color: CognithorTheme.green.withValues(alpha: 0.6),
                       blurRadius: 10),
                 ],
               ),
@@ -80,7 +80,7 @@ class CommandBar extends StatelessWidget {
             const SizedBox(width: 8),
             Text(AppLocalizations.of(context).running,
                 style: TextStyle(
-                    color: JarvisTheme.textSecondary, fontSize: 11)),
+                    color: CognithorTheme.textSecondary, fontSize: 11)),
           ],
         ),
       ),

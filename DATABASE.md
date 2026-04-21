@@ -8,25 +8,25 @@ Cognithor uses SQLite (WAL mode) for all local storage. Optional PostgreSQL is a
 
 | Database | Location | Purpose |
 |----------|----------|---------|
-| `memory.db` | `~/.jarvis/index/` | Main memory index (chunks, embeddings, knowledge graph) |
-| `sessions.db` | `~/.jarvis/memory/sessions/` | Session state and chat history |
-| `memory_episodic.db` | `~/.jarvis/index/` | Episodic memory (daily logs, summaries) |
-| `memory_traces.db` | `~/.jarvis/index/` | GEPA execution traces |
-| `memory_proposals.db` | `~/.jarvis/index/` | GEPA optimization proposals |
-| `memory_runs.db` | `~/.jarvis/index/` | Forensic run recordings |
-| `memory_governance.db` | `~/.jarvis/index/` | Self-improvement governance proposals |
-| `memory_prompt_evolution.db` | `~/.jarvis/index/` | Prompt A/B testing data |
-| `memory_weights.db` | `~/.jarvis/index/` | Hybrid search weight optimization |
-| `memory_costs.db` | `~/.jarvis/index/` | LLM cost tracking |
-| `marketplace.db` | `~/.jarvis/` | Skill Marketplace listings, reviews, reputation |
-| `tool_registry.db` | `~/.jarvis/` | Persistent tool registry |
-| `consent.db` | `~/.jarvis/` | User consent records (data portal) |
-| `reminders.db` | `~/.jarvis/` | Scheduled reminders |
-| `message_queue.db` | `~/.jarvis/memory/` | Durable message queue |
-| `working_memory.db` | `~/.jarvis/identity/` | Identity working memory (Cognitio engine) |
-| `session_analysis.db` | `~/.jarvis/learning/` | Session failure clusters, feedback, metrics |
-| `knowledge_qa.db` | `~/.jarvis/memory/` | Knowledge QA pairs |
-| `knowledge_lineage.db` | `~/.jarvis/memory/` | Knowledge provenance/lineage tracking |
+| `memory.db` | `~/.cognithor/index/` | Main memory index (chunks, embeddings, knowledge graph) |
+| `sessions.db` | `~/.cognithor/memory/sessions/` | Session state and chat history |
+| `memory_episodic.db` | `~/.cognithor/index/` | Episodic memory (daily logs, summaries) |
+| `memory_traces.db` | `~/.cognithor/index/` | GEPA execution traces |
+| `memory_proposals.db` | `~/.cognithor/index/` | GEPA optimization proposals |
+| `memory_runs.db` | `~/.cognithor/index/` | Forensic run recordings |
+| `memory_governance.db` | `~/.cognithor/index/` | Self-improvement governance proposals |
+| `memory_prompt_evolution.db` | `~/.cognithor/index/` | Prompt A/B testing data |
+| `memory_weights.db` | `~/.cognithor/index/` | Hybrid search weight optimization |
+| `memory_costs.db` | `~/.cognithor/index/` | LLM cost tracking |
+| `marketplace.db` | `~/.cognithor/` | Skill Marketplace listings, reviews, reputation |
+| `tool_registry.db` | `~/.cognithor/` | Persistent tool registry |
+| `consent.db` | `~/.cognithor/` | User consent records (data portal) |
+| `reminders.db` | `~/.cognithor/` | Scheduled reminders |
+| `message_queue.db` | `~/.cognithor/memory/` | Durable message queue |
+| `working_memory.db` | `~/.cognithor/identity/` | Identity working memory (Cognitio engine) |
+| `session_analysis.db` | `~/.cognithor/learning/` | Session failure clusters, feedback, metrics |
+| `knowledge_qa.db` | `~/.cognithor/memory/` | Knowledge QA pairs |
+| `knowledge_lineage.db` | `~/.cognithor/memory/` | Knowledge provenance/lineage tracking |
 
 ---
 
@@ -485,7 +485,7 @@ pending_memories (
 
 ### Profiler Databases
 
-Located at `~/.jarvis/index/`:
+Located at `~/.cognithor/index/`:
 
 ```sql
 -- Tool call profiling
@@ -571,17 +571,17 @@ task_telemetry (
 
 ```bash
 # Backup all databases (Linux/macOS)
-cp -r ~/.jarvis/index/ ~/backup/cognithor-index/
-cp -r ~/.jarvis/memory/ ~/backup/cognithor-memory/
-cp ~/.jarvis/marketplace.db ~/backup/
-cp ~/.jarvis/tool_registry.db ~/backup/
-cp ~/.jarvis/consent.db ~/backup/
-cp ~/.jarvis/reminders.db ~/backup/
+cp -r ~/.cognithor/index/ ~/backup/cognithor-index/
+cp -r ~/.cognithor/memory/ ~/backup/cognithor-memory/
+cp ~/.cognithor/marketplace.db ~/backup/
+cp ~/.cognithor/tool_registry.db ~/backup/
+cp ~/.cognithor/consent.db ~/backup/
+cp ~/.cognithor/reminders.db ~/backup/
 
 # Backup all databases (Windows PowerShell)
-Copy-Item -Recurse "$HOME\.jarvis\index" "$HOME\backup\cognithor-index"
-Copy-Item -Recurse "$HOME\.jarvis\memory" "$HOME\backup\cognithor-memory"
-Copy-Item "$HOME\.jarvis\marketplace.db" "$HOME\backup\"
+Copy-Item -Recurse "$HOME\.cognithor\index" "$HOME\backup\cognithor-index"
+Copy-Item -Recurse "$HOME\.cognithor\memory" "$HOME\backup\cognithor-memory"
+Copy-Item "$HOME\.cognithor\marketplace.db" "$HOME\backup\"
 ```
 
 ---
@@ -598,7 +598,7 @@ database:
 
 Install the encryption extra: `pip install cognithor[encryption]`
 
-The encryption key is stored in the OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service). See `src/jarvis/db/encryption.py` for details.
+The encryption key is stored in the OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service). See `src/cognithor/db/encryption.py` for details.
 
 ---
 
@@ -611,14 +611,14 @@ database:
   backend: postgresql
   pg_host: localhost
   pg_port: 5432
-  pg_dbname: jarvis
-  pg_user: jarvis
+  pg_dbname: cognithor
+  pg_user: cognithor
   pg_password: your-secure-password
   pg_pool_min: 2
   pg_pool_max: 10
 ```
 
-The PostgreSQL schema is defined in `src/jarvis/db/pg_schema.sql` and includes equivalent tables for chunks, embeddings, entities, relations, sessions, and chat_history.
+The PostgreSQL schema is defined in `src/cognithor/db/pg_schema.sql` and includes equivalent tables for chunks, embeddings, entities, relations, sessions, and chat_history.
 
 ---
 

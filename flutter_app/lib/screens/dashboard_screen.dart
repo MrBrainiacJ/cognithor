@@ -8,9 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/pip_provider.dart';
 import 'package:cognithor_ui/providers/robot_office_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/glass_panel.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
 import 'package:cognithor_ui/widgets/radial_gauge.dart';
 import 'package:cognithor_ui/widgets/robot_office/robot_office_widget.dart';
 import 'package:cognithor_ui/widgets/robot_office/glass_reflection_painter.dart';
@@ -60,7 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final api = conn.api;
 
       // Initialize RobotOfficeProvider once we have a live connection.
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         final roProvider = context.read<RobotOfficeProvider>();
         if (roProvider.isUninitialized) {
           roProvider.init(conn.api, conn.ws);
@@ -135,9 +135,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: JarvisTheme.sectionDashboard,
+      color: CognithorTheme.sectionDashboard,
       child: ListView(
-        padding: const EdgeInsets.all(JarvisTheme.spacing),
+        padding: const EdgeInsets.all(CognithorTheme.spacing),
         children: [
           // ── 1. Robot Office Hero (50% viewport height) ──────────
           Consumer<PipProvider>(
@@ -150,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               return SizedBox(
                 height: MediaQuery.of(context).size.height * 0.5,
                 child: GlassPanel(
-                  tint: JarvisTheme.sectionDashboard,
+                  tint: CognithorTheme.sectionDashboard,
                   padding: EdgeInsets.zero,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
@@ -217,48 +217,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             },
           ),
-          const SizedBox(height: JarvisTheme.spacingLg),
+          const SizedBox(height: CognithorTheme.spacingLg),
 
           // ── 2. Radial Gauge Row ─────────────────────────────────
           GlassPanel(
-            tint: JarvisTheme.sectionDashboard,
+            tint: CognithorTheme.sectionDashboard,
             child: Wrap(
-              spacing: JarvisTheme.spacing,
-              runSpacing: JarvisTheme.spacing,
+              spacing: CognithorTheme.spacing,
+              runSpacing: CognithorTheme.spacing,
               alignment: WrapAlignment.spaceEvenly,
               children: [
                 RadialGauge(
                   value: cpuNorm,
                   label: l.cpuUsage,
-                  color: JarvisTheme.sectionDashboard,
+                  color: CognithorTheme.sectionDashboard,
                   valueText: cpuValue == 0 ? l.idle : '${cpuValue.round()}%',
                 ),
                 RadialGauge(
                   value: memNorm,
                   label: l.memoryUsage,
-                  color: JarvisTheme.orange,
+                  color: CognithorTheme.orange,
                   valueText: memValue == 0 ? l.idle : '${memValue.round()}%',
                 ),
                 RadialGauge(
                   value: tokenNorm,
                   label: l.toolExecutions,
-                  color: JarvisTheme.accent,
+                  color: CognithorTheme.accent,
                   valueText: tokenValue == 0 ? l.idle : '${tokenValue.round()}',
                 ),
                 RadialGauge(
                   value: rtNorm,
                   label: l.responseTime,
-                  color: JarvisTheme.info,
+                  color: CognithorTheme.info,
                   valueText: rtValue == 0 ? l.idle : '${rtValue.round()}ms',
                 ),
               ],
             ),
           ),
-          const SizedBox(height: JarvisTheme.spacingLg),
+          const SizedBox(height: CognithorTheme.spacingLg),
 
           // ── 3. Event Ticker ─────────────────────────────────────
           GlassPanel(
-            tint: JarvisTheme.sectionDashboard,
+            tint: CognithorTheme.sectionDashboard,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: _EventTicker(events: _events),
           ),
@@ -279,14 +279,14 @@ class _DashboardLoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.all(JarvisTheme.spacing),
+      padding: EdgeInsets.all(CognithorTheme.spacing),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ShimmerLoading(count: 1, height: 200),
-          SizedBox(height: JarvisTheme.spacingLg),
+          SizedBox(height: CognithorTheme.spacingLg),
           ShimmerLoading(count: 1, height: 140),
-          SizedBox(height: JarvisTheme.spacingLg),
+          SizedBox(height: CognithorTheme.spacingLg),
           ShimmerLoading(count: 1, height: 50),
         ],
       ),
@@ -310,7 +310,7 @@ class _DashboardErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return JarvisEmptyState(
+    return CognithorEmptyState(
       icon: Icons.dashboard_outlined,
       title: l.noData,
       subtitle: error,
@@ -334,10 +334,10 @@ class _EventTicker extends StatelessWidget {
 
   Color _severityColor(String severity) {
     return switch (severity.toUpperCase()) {
-      'ERROR' || 'CRITICAL' => JarvisTheme.red,
-      'WARNING' || 'WARN' => JarvisTheme.orange,
-      'INFO' => JarvisTheme.accent,
-      _ => JarvisTheme.green,
+      'ERROR' || 'CRITICAL' => CognithorTheme.red,
+      'WARNING' || 'WARN' => CognithorTheme.orange,
+      'INFO' => CognithorTheme.accent,
+      _ => CognithorTheme.green,
     };
   }
 
@@ -349,7 +349,7 @@ class _EventTicker extends StatelessWidget {
     if (events == null || events!.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(JarvisTheme.spacingSm),
+          padding: const EdgeInsets.all(CognithorTheme.spacingSm),
           child: Text(
             l.noEvents,
             style: theme.textTheme.bodySmall,
@@ -374,7 +374,7 @@ class _EventTicker extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(JarvisTheme.chipRadius),
+              borderRadius: BorderRadius.circular(CognithorTheme.chipRadius),
               border: Border.all(
                 color: color.withValues(alpha: 0.40),
               ),
@@ -454,7 +454,7 @@ class _RobotStatusOverlay extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: JarvisTheme.sectionDashboard,
+                  color: CognithorTheme.sectionDashboard,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -473,7 +473,7 @@ class _RobotStatusOverlay extends StatelessWidget {
               Text(
                 AppLocalizations.of(context).taskCount(taskCount),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: JarvisTheme.sectionDashboard,
+                  color: CognithorTheme.sectionDashboard,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -500,9 +500,9 @@ class _RobotOfficePipNotice extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return GlassPanel(
-      tint: JarvisTheme.sectionDashboard,
+      tint: CognithorTheme.sectionDashboard,
       padding: const EdgeInsets.symmetric(
-        horizontal: JarvisTheme.spacing,
+        horizontal: CognithorTheme.spacing,
         vertical: 14,
       ),
       child: Row(
@@ -510,7 +510,7 @@ class _RobotOfficePipNotice extends StatelessWidget {
           const Icon(
             Icons.picture_in_picture_alt,
             size: 20,
-            color: JarvisTheme.sectionDashboard,
+            color: CognithorTheme.sectionDashboard,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -526,7 +526,7 @@ class _RobotOfficePipNotice extends StatelessWidget {
             icon: const Icon(Icons.fullscreen, size: 18),
             label: Text(AppLocalizations.of(context).fullscreen),
             style: TextButton.styleFrom(
-              foregroundColor: JarvisTheme.sectionDashboard,
+              foregroundColor: CognithorTheme.sectionDashboard,
               visualDensity: VisualDensity.compact,
             ),
           ),

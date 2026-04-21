@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisTextField extends StatefulWidget {
-  const JarvisTextField({
+class CognithorTextField extends StatefulWidget {
+  const CognithorTextField({
     super.key,
     required this.label,
     required this.value,
@@ -29,10 +29,10 @@ class JarvisTextField extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<JarvisTextField> createState() => _JarvisTextFieldState();
+  State<CognithorTextField> createState() => _CognithorTextFieldState();
 }
 
-class _JarvisTextFieldState extends State<JarvisTextField> {
+class _CognithorTextFieldState extends State<CognithorTextField> {
   static const _maskedDisplay = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'; // 24 bullets
 
   late final TextEditingController _ctrl;
@@ -52,7 +52,7 @@ class _JarvisTextFieldState extends State<JarvisTextField> {
   }
 
   @override
-  void didUpdateWidget(JarvisTextField old) {
+  void didUpdateWidget(CognithorTextField old) {
     super.didUpdateWidget(old);
     // Only sync if the value changed externally (not from user typing)
     final effective = (widget.isSecret && widget.value == '***')
@@ -91,12 +91,12 @@ class _JarvisTextFieldState extends State<JarvisTextField> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: JarvisTheme.green.withValues(alpha: 0.15),
+                    color: CognithorTheme.green.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(AppLocalizations.of(context).saved,
                       style: theme.textTheme.bodySmall
-                          ?.copyWith(color: JarvisTheme.green, fontSize: 10)),
+                          ?.copyWith(color: CognithorTheme.green, fontSize: 10)),
                 ),
               ],
             ],
@@ -105,7 +105,7 @@ class _JarvisTextFieldState extends State<JarvisTextField> {
             const SizedBox(height: 2),
             Text(widget.description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           TextField(

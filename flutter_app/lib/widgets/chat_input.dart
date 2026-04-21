@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/voice_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:provider/provider.dart';
 
 class ChatInput extends StatefulWidget {
@@ -132,7 +132,7 @@ class _ChatInputState extends State<ChatInput> {
                     onPressed: widget.isProcessing ? null : _pickFile,
                     icon: Icon(
                       Icons.attach_file,
-                      color: JarvisTheme.textSecondary,
+                      color: CognithorTheme.textSecondary,
                     ),
                     tooltip: l.attachFile,
                     iconSize: 22,
@@ -178,8 +178,8 @@ class _ChatInputState extends State<ChatInput> {
                 icon: Icon(
                   voice.isActive ? Icons.mic : Icons.mic_none,
                   color: voice.isActive
-                      ? JarvisTheme.sectionChat
-                      : JarvisTheme.textSecondary,
+                      ? CognithorTheme.sectionChat
+                      : CognithorTheme.textSecondary,
                 ),
                 tooltip: l.voiceMode,
                 iconSize: 22,
@@ -191,13 +191,13 @@ class _ChatInputState extends State<ChatInput> {
           if (widget.isProcessing)
             IconButton(
               onPressed: widget.onCancel,
-              icon: Icon(Icons.stop_circle, color: JarvisTheme.red),
+              icon: Icon(Icons.stop_circle, color: CognithorTheme.red),
               tooltip: l.cancel,
             )
           else
             IconButton(
               onPressed: _submit,
-              icon: Icon(Icons.send, color: JarvisTheme.accent),
+              icon: Icon(Icons.send, color: CognithorTheme.accent),
               tooltip: l.send,
             ),
         ],

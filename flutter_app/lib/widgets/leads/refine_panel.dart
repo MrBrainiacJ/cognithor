@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class RefinePanel extends StatefulWidget {
   const RefinePanel({
@@ -101,14 +101,14 @@ class _RefinePanelState extends State<RefinePanel> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: JarvisTheme.green.withValues(alpha: 0.08),
+              color: CognithorTheme.green.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: JarvisTheme.green.withValues(alpha: 0.2)),
+              border: Border.all(color: CognithorTheme.green.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Improved:', style: theme.textTheme.labelSmall?.copyWith(color: JarvisTheme.green)),
+                Text('Improved:', style: theme.textTheme.labelSmall?.copyWith(color: CognithorTheme.green)),
                 const SizedBox(height: 4),
                 Text(_refinedText!, style: theme.textTheme.bodySmall),
                 const SizedBox(height: 8),
@@ -118,7 +118,7 @@ class _RefinePanelState extends State<RefinePanel> {
                     onPressed: () => widget.onAccept(_refinedText!),
                     icon: const Icon(Icons.check, size: 16),
                     label: const Text('Accept'),
-                    style: ElevatedButton.styleFrom(backgroundColor: JarvisTheme.green),
+                    style: ElevatedButton.styleFrom(backgroundColor: CognithorTheme.green),
                   ),
                 ),
               ],
@@ -138,10 +138,10 @@ class _RefinePanelState extends State<RefinePanel> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isSelected ? JarvisTheme.accent.withValues(alpha: 0.1) : null,
+                  color: isSelected ? CognithorTheme.accent.withValues(alpha: 0.1) : null,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSelected ? JarvisTheme.accent : JarvisTheme.textSecondary.withValues(alpha: 0.2),
+                    color: isSelected ? CognithorTheme.accent : CognithorTheme.textSecondary.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Column(
@@ -149,7 +149,7 @@ class _RefinePanelState extends State<RefinePanel> {
                   children: [
                     Text(
                       v['style']?.toString().toUpperCase() ?? '',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: JarvisTheme.accent),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: CognithorTheme.accent),
                     ),
                     const SizedBox(height: 4),
                     Text(v['text']?.toString() ?? '', style: theme.textTheme.bodySmall),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class KanbanPanel extends StatelessWidget {
   const KanbanPanel({super.key, required this.entries});
@@ -29,10 +29,10 @@ class KanbanPanel extends StatelessWidget {
     }
 
     final columnColors = {
-      'To Do': JarvisTheme.textSecondary,
-      'In Progress': JarvisTheme.accent,
-      'Verifying': JarvisTheme.orange,
-      'Done': JarvisTheme.green,
+      'To Do': CognithorTheme.textSecondary,
+      'In Progress': CognithorTheme.accent,
+      'Verifying': CognithorTheme.orange,
+      'Done': CognithorTheme.green,
     };
 
     return SingleChildScrollView(
@@ -41,7 +41,7 @@ class KanbanPanel extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: columns.entries.map((col) {
-          final color = columnColors[col.key] ?? JarvisTheme.textSecondary;
+          final color = columnColors[col.key] ?? CognithorTheme.textSecondary;
           final count = col.value.length;
           return Container(
             width: 160,
@@ -110,7 +110,7 @@ class KanbanPanel extends StatelessWidget {
                           Text(tool,
                               style: TextStyle(
                                   fontSize: 10,
-                                  color: JarvisTheme.textSecondary)),
+                                  color: CognithorTheme.textSecondary)),
                       ],
                     ),
                   );

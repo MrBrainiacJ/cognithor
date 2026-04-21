@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class SelectOption {
   const SelectOption({required this.value, required this.label});
@@ -7,8 +7,8 @@ class SelectOption {
   final String label;
 }
 
-class JarvisSelectField extends StatelessWidget {
-  const JarvisSelectField({
+class CognithorSelectField extends StatelessWidget {
+  const CognithorSelectField({
     super.key,
     required this.label,
     required this.value,
@@ -24,7 +24,7 @@ class JarvisSelectField extends StatelessWidget {
   final String? description;
 
   /// Convenience: create from a simple list of strings.
-  factory JarvisSelectField.fromStrings({
+  factory CognithorSelectField.fromStrings({
     Key? key,
     required String label,
     required String value,
@@ -32,7 +32,7 @@ class JarvisSelectField extends StatelessWidget {
     required ValueChanged<String> onChanged,
     String? description,
   }) {
-    return JarvisSelectField(
+    return CognithorSelectField(
       key: key,
       label: label,
       value: value,
@@ -55,7 +55,7 @@ class JarvisSelectField extends StatelessWidget {
             const SizedBox(height: 2),
             Text(description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           InputDecorator(

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 
-class JarvisMetricCard extends StatelessWidget {
-  const JarvisMetricCard({
+class CognithorMetricCard extends StatelessWidget {
+  const CognithorMetricCard({
     super.key,
     required this.title,
     required this.value,
@@ -23,7 +23,7 @@ class JarvisMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveColor = color ?? JarvisTheme.accent;
+    final effectiveColor = color ?? CognithorTheme.accent;
 
     return NeonCard(
       tint: effectiveColor,
@@ -35,8 +35,8 @@ class JarvisMetricCard extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: JarvisTheme.iconSizeMd, color: effectiveColor),
-                const SizedBox(width: JarvisTheme.spacingSm),
+                Icon(icon, size: CognithorTheme.iconSizeMd, color: effectiveColor),
+                const SizedBox(width: CognithorTheme.spacingSm),
               ],
               Expanded(
                 child: Text(
@@ -47,7 +47,7 @@ class JarvisMetricCard extends StatelessWidget {
               if (trend != null) _buildTrend(),
             ],
           ),
-          const SizedBox(height: JarvisTheme.spacingSm),
+          const SizedBox(height: CognithorTheme.spacingSm),
           Text(
             value,
             style: theme.textTheme.titleLarge?.copyWith(
@@ -68,13 +68,13 @@ class JarvisMetricCard extends StatelessWidget {
 
   Widget _buildTrend() {
     final isPositive = trend! >= 0;
-    final trendColor = isPositive ? JarvisTheme.green : JarvisTheme.red;
+    final trendColor = isPositive ? CognithorTheme.green : CognithorTheme.red;
     final arrow = isPositive ? Icons.arrow_upward : Icons.arrow_downward;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(arrow, size: JarvisTheme.iconSizeSm, color: trendColor),
+        Icon(arrow, size: CognithorTheme.iconSizeSm, color: trendColor),
         const SizedBox(width: 2),
         Text(
           '${trend!.abs().toStringAsFixed(1)}%',

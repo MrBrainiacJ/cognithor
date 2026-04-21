@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisCollapsibleCard extends StatefulWidget {
-  const JarvisCollapsibleCard({
+class CognithorCollapsibleCard extends StatefulWidget {
+  const CognithorCollapsibleCard({
     super.key,
     required this.title,
     required this.children,
@@ -20,10 +20,10 @@ class JarvisCollapsibleCard extends StatefulWidget {
   final IconData? icon;
 
   @override
-  State<JarvisCollapsibleCard> createState() => _JarvisCollapsibleCardState();
+  State<CognithorCollapsibleCard> createState() => _CognithorCollapsibleCardState();
 }
 
-class _JarvisCollapsibleCardState extends State<JarvisCollapsibleCard> {
+class _CognithorCollapsibleCardState extends State<CognithorCollapsibleCard> {
   late bool _expanded;
 
   @override
@@ -33,7 +33,7 @@ class _JarvisCollapsibleCardState extends State<JarvisCollapsibleCard> {
   }
 
   @override
-  void didUpdateWidget(JarvisCollapsibleCard old) {
+  void didUpdateWidget(CognithorCollapsibleCard old) {
     super.didUpdateWidget(old);
     if (widget.forceOpen && !_expanded) _expanded = true;
   }
@@ -47,18 +47,18 @@ class _JarvisCollapsibleCardState extends State<JarvisCollapsibleCard> {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+        borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
         border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: [
           InkWell(
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(JarvisTheme.cardRadius),
-              topRight: const Radius.circular(JarvisTheme.cardRadius),
-              bottomLeft: Radius.circular(isOpen ? 0 : JarvisTheme.cardRadius),
+              topLeft: const Radius.circular(CognithorTheme.cardRadius),
+              topRight: const Radius.circular(CognithorTheme.cardRadius),
+              bottomLeft: Radius.circular(isOpen ? 0 : CognithorTheme.cardRadius),
               bottomRight:
-                  Radius.circular(isOpen ? 0 : JarvisTheme.cardRadius),
+                  Radius.circular(isOpen ? 0 : CognithorTheme.cardRadius),
             ),
             onTap: widget.forceOpen
                 ? null
@@ -68,7 +68,7 @@ class _JarvisCollapsibleCardState extends State<JarvisCollapsibleCard> {
               child: Row(
                 children: [
                   if (widget.icon != null) ...[
-                    Icon(widget.icon, size: 18, color: JarvisTheme.accent),
+                    Icon(widget.icon, size: 18, color: CognithorTheme.accent),
                     const SizedBox(width: 8),
                   ],
                   Expanded(
@@ -81,12 +81,12 @@ class _JarvisCollapsibleCardState extends State<JarvisCollapsibleCard> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: JarvisTheme.accent.withValues(alpha: 0.15),
+                        color: CognithorTheme.accent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(widget.badge!,
                           style: theme.textTheme.bodySmall
-                              ?.copyWith(color: JarvisTheme.accent)),
+                              ?.copyWith(color: CognithorTheme.accent)),
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -95,7 +95,7 @@ class _JarvisCollapsibleCardState extends State<JarvisCollapsibleCard> {
                       isOpen ? Icons.expand_less : Icons.expand_more,
                       size: 20,
                       color: theme.brightness == Brightness.dark
-                          ? JarvisTheme.textSecondary
+                          ? CognithorTheme.textSecondary
                           : const Color(0xFF6B6B80),
                     ),
                 ],

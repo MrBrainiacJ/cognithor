@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 enum DagNodeStatus { pending, running, complete, error }
 
@@ -117,7 +117,7 @@ class DagGraphPainter extends CustomPainter {
     // Draw edges
     final nodeMap = {for (final n in nodes) n.id: n};
     final edgePaint = Paint()
-      ..color = JarvisTheme.textSecondary.withValues(alpha: 0.5)
+      ..color = CognithorTheme.textSecondary.withValues(alpha: 0.5)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -203,10 +203,10 @@ class DagGraphPainter extends CustomPainter {
 
   void _drawNode(Canvas canvas, DagNode node) {
     final color = switch (node.status) {
-      DagNodeStatus.running => JarvisTheme.accent,
-      DagNodeStatus.complete => JarvisTheme.green,
-      DagNodeStatus.error => JarvisTheme.red,
-      DagNodeStatus.pending => JarvisTheme.textSecondary,
+      DagNodeStatus.running => CognithorTheme.accent,
+      DagNodeStatus.complete => CognithorTheme.green,
+      DagNodeStatus.error => CognithorTheme.red,
+      DagNodeStatus.pending => CognithorTheme.textSecondary,
     };
 
     final isSelected = node.id == selectedNodeId;
@@ -260,7 +260,7 @@ class DagGraphPainter extends CustomPainter {
       text: TextSpan(
         text: node.label,
         style: TextStyle(
-          color: brightness == Brightness.dark ? JarvisTheme.textPrimary : const Color(0xFF1A1A2E),
+          color: brightness == Brightness.dark ? CognithorTheme.textPrimary : const Color(0xFF1A1A2E),
           fontSize: 10,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),

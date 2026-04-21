@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:shimmer/shimmer.dart';
 
-class JarvisLoadingSkeleton extends StatelessWidget {
-  const JarvisLoadingSkeleton({
+class CognithorLoadingSkeleton extends StatelessWidget {
+  const CognithorLoadingSkeleton({
     super.key,
     this.width,
     this.height = 16,
@@ -26,7 +26,7 @@ class JarvisLoadingSkeleton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: List.generate(count, (i) {
           return Padding(
-            padding: EdgeInsets.only(top: i > 0 ? JarvisTheme.spacingSm : 0),
+            padding: EdgeInsets.only(top: i > 0 ? CognithorTheme.spacingSm : 0),
             child: Container(
               width: width,
               height: height,

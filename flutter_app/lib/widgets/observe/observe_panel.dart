@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/observe/agent_log_panel.dart';
 import 'package:cognithor_ui/widgets/observe/kanban_panel.dart';
 import 'package:cognithor_ui/widgets/observe/live_dag_panel.dart';
@@ -50,18 +50,18 @@ class _ObservePanelState extends State<ObservePanel>
         final phase = (entry['phase'] ?? '').toString();
         final tool = (entry['tool'] ?? '').toString();
         if (phase == 'execute' && tool.isNotEmpty) {
-          return _PipelineStatus('Executing $tool...', JarvisTheme.green);
+          return _PipelineStatus('Executing $tool...', CognithorTheme.green);
         }
         if (phase == 'plan') {
-          return _PipelineStatus('Planning...', JarvisTheme.accent);
+          return _PipelineStatus('Planning...', CognithorTheme.accent);
         }
         if (phase == 'gate') {
-          return _PipelineStatus('Gatekeeper review...', JarvisTheme.orange);
+          return _PipelineStatus('Gatekeeper review...', CognithorTheme.orange);
         }
         if (phase == 'replan') {
-          return _PipelineStatus('Re-planning...', JarvisTheme.warning);
+          return _PipelineStatus('Re-planning...', CognithorTheme.warning);
         }
-        return _PipelineStatus('Processing...', JarvisTheme.accent);
+        return _PipelineStatus('Processing...', CognithorTheme.accent);
       }
     }
 
@@ -71,7 +71,7 @@ class _ObservePanelState extends State<ObservePanel>
       return s == 'complete' || s == 'done';
     });
     if (hasDone && widget.pipelineState.isNotEmpty) {
-      return _PipelineStatus('Complete', JarvisTheme.green);
+      return _PipelineStatus('Complete', CognithorTheme.green);
     }
 
     // Fallback: derive from latest log entry.
@@ -79,24 +79,24 @@ class _ObservePanelState extends State<ObservePanel>
       final last = widget.agentLog.last;
       final phase = (last['phase'] ?? '').toString();
       if (phase == 'plan') {
-        return _PipelineStatus('Planning...', JarvisTheme.accent);
+        return _PipelineStatus('Planning...', CognithorTheme.accent);
       }
       if (phase == 'execute') {
         final tool = (last['tool'] ?? '').toString();
         return _PipelineStatus(
           tool.isNotEmpty ? 'Executing $tool...' : 'Executing...',
-          JarvisTheme.green,
+          CognithorTheme.green,
         );
       }
       if (phase == 'gate') {
-        return _PipelineStatus('Gatekeeper review...', JarvisTheme.orange);
+        return _PipelineStatus('Gatekeeper review...', CognithorTheme.orange);
       }
       if (phase == 'replan') {
-        return _PipelineStatus('Re-planning...', JarvisTheme.warning);
+        return _PipelineStatus('Re-planning...', CognithorTheme.warning);
       }
     }
 
-    return _PipelineStatus('Idle', JarvisTheme.textSecondary);
+    return _PipelineStatus('Idle', CognithorTheme.textSecondary);
   }
 
   @override
@@ -182,8 +182,8 @@ class _ObservePanelState extends State<ObservePanel>
             controller: _tabCtrl,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
-            labelColor: JarvisTheme.accent,
-            indicatorColor: JarvisTheme.accent,
+            labelColor: CognithorTheme.accent,
+            indicatorColor: CognithorTheme.accent,
             tabs: [
               Tab(
                 child: Row(
@@ -250,13 +250,13 @@ class _CountBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: JarvisTheme.accent.withValues(alpha: 0.15),
+        color: CognithorTheme.accent.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         '$count',
         style: TextStyle(
-          color: JarvisTheme.accent,
+          color: CognithorTheme.accent,
           fontSize: 10,
           fontWeight: FontWeight.w600,
         ),

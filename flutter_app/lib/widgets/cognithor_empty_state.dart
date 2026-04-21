@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisEmptyState extends StatefulWidget {
-  const JarvisEmptyState({
+class CognithorEmptyState extends StatefulWidget {
+  const CognithorEmptyState({
     super.key,
     required this.icon,
     required this.title,
@@ -16,10 +16,10 @@ class JarvisEmptyState extends StatefulWidget {
   final Widget? action;
 
   @override
-  State<JarvisEmptyState> createState() => _JarvisEmptyStateState();
+  State<CognithorEmptyState> createState() => _CognithorEmptyStateState();
 }
 
-class _JarvisEmptyStateState extends State<JarvisEmptyState>
+class _CognithorEmptyStateState extends State<CognithorEmptyState>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
@@ -48,7 +48,7 @@ class _JarvisEmptyStateState extends State<JarvisEmptyState>
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(JarvisTheme.spacingXl),
+        padding: const EdgeInsets.all(CognithorTheme.spacingXl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -62,19 +62,19 @@ class _JarvisEmptyStateState extends State<JarvisEmptyState>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      JarvisTheme.accent.withAlpha(30),
-                      JarvisTheme.accent.withAlpha(5),
+                      CognithorTheme.accent.withAlpha(30),
+                      CognithorTheme.accent.withAlpha(5),
                     ],
                   ),
                 ),
                 child: Icon(
                   widget.icon,
                   size: 48,
-                  color: JarvisTheme.accent.withAlpha(180),
+                  color: CognithorTheme.accent.withAlpha(180),
                 ),
               ),
             ),
-            const SizedBox(height: JarvisTheme.spacingLg),
+            const SizedBox(height: CognithorTheme.spacingLg),
             Text(
               widget.title,
               style: theme.textTheme.titleLarge?.copyWith(
@@ -84,7 +84,7 @@ class _JarvisEmptyStateState extends State<JarvisEmptyState>
               textAlign: TextAlign.center,
             ),
             if (widget.subtitle != null) ...[
-              const SizedBox(height: JarvisTheme.spacingSm),
+              const SizedBox(height: CognithorTheme.spacingSm),
               Text(
                 widget.subtitle!,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -95,7 +95,7 @@ class _JarvisEmptyStateState extends State<JarvisEmptyState>
               ),
             ],
             if (widget.action != null) ...[
-              const SizedBox(height: JarvisTheme.spacingLg),
+              const SizedBox(height: CognithorTheme.spacingLg),
               widget.action!,
             ],
           ],

@@ -29,15 +29,15 @@ import 'package:cognithor_ui/providers/sources_provider.dart';
 import 'package:cognithor_ui/providers/packs_provider.dart';
 import 'package:cognithor_ui/providers/research_provider.dart';
 import 'package:cognithor_ui/screens/splash_screen.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const JarvisApp());
+  runApp(const CognithorApp());
 }
 
-class JarvisApp extends StatelessWidget {
-  const JarvisApp({super.key});
+class CognithorApp extends StatelessWidget {
+  const CognithorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +74,8 @@ class JarvisApp extends StatelessWidget {
           return MaterialApp(
             title: 'Cognithor',
             debugShowCheckedModeBanner: false,
-            theme: JarvisTheme.light,
-            darkTheme: JarvisTheme.dark,
+            theme: CognithorTheme.light,
+            darkTheme: CognithorTheme.dark,
             themeMode: themeProvider.mode,
             locale: localeProvider.locale,
             localizationsDelegates: const [

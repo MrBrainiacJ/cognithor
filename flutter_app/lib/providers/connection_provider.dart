@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cognithor_ui/services/api_client.dart';
 import 'package:cognithor_ui/services/websocket_service.dart';
 
-enum JarvisConnectionState { disconnected, connecting, connected, error }
+enum CognithorConnectionState { disconnected, connecting, connected, error }
 
 /// Frontend version — must match backend `__version__` (major.minor).
 /// See issue #111: version mismatch between Flutter and Python backend
@@ -42,13 +42,13 @@ class ConnectionProvider extends ChangeNotifier {
     return 'http://localhost:8741';
   }
 
-  JarvisConnectionState state = JarvisConnectionState.disconnected;
+  CognithorConnectionState state = CognithorConnectionState.disconnected;
   String serverUrl = _defaultUrl;
   String? errorMessage;
   String? backendVersion;
 
   /// True when backend major.minor does not match [kFrontendVersion] major.minor.
-  /// When true, [state] is forced to [JarvisConnectionState.error] and the
+  /// When true, [state] is forced to [CognithorConnectionState.error] and the
   /// app refuses to enter the main shell (see SplashScreen / ConnectionGuard).
   bool versionMismatch = false;
 
@@ -88,7 +88,7 @@ class ConnectionProvider extends ChangeNotifier {
 
   /// Connect to the backend (health check + bootstrap).
   Future<void> connect() async {
-    state = JarvisConnectionState.connecting;
+    state = CognithorConnectionState.connecting;
     errorMessage = null;
     versionMismatch = false;
     notifyListeners();
@@ -114,7 +114,7 @@ class ConnectionProvider extends ChangeNotifier {
       final beMM = _majorMinor(backendVersion);
       if (beMM != null && feMM != null && beMM != feMM) {
         versionMismatch = true;
-        state = JarvisConnectionState.error;
+        state = CognithorConnectionState.error;
         errorMessage =
             'Version mismatch: Frontend v$kFrontendVersion, Backend v$backendVersion. '
             'Please update one side.';
@@ -135,14 +135,14 @@ class ConnectionProvider extends ChangeNotifier {
           .replaceFirst('http://', 'ws://');
       _ws = WebSocketService(apiClient: _api!, wsBaseUrl: wsUrl);
 
-      state = JarvisConnectionState.connected;
+      state = CognithorConnectionState.connected;
       _wasConnected = true;
       _startHealthPolling();
     } on TimeoutException catch (e) {
-      state = JarvisConnectionState.error;
+      state = CognithorConnectionState.error;
       errorMessage = e.message ?? 'Backend nicht erreichbar ($serverUrl)';
     } catch (e) {
-      state = JarvisConnectionState.error;
+      state = CognithorConnectionState.error;
       errorMessage = 'Backend nicht erreichbar ($serverUrl)';
     }
     notifyListeners();
@@ -165,20 +165,20 @@ class ConnectionProvider extends ChangeNotifier {
             const Duration(seconds: 5),
           );
       if (resp['status'] != 'ok' &&
-          state == JarvisConnectionState.connected) {
-        state = JarvisConnectionState.error;
+          state == CognithorConnectionState.connected) {
+        state = CognithorConnectionState.error;
         errorMessage = 'Backend health check failed';
         notifyListeners();
         _scheduleReconnect();
       } else if (resp['status'] == 'ok' &&
-          state != JarvisConnectionState.connected) {
-        state = JarvisConnectionState.connected;
+          state != CognithorConnectionState.connected) {
+        state = CognithorConnectionState.connected;
         errorMessage = null;
         notifyListeners();
       }
     } catch (_) {
-      if (state == JarvisConnectionState.connected) {
-        state = JarvisConnectionState.error;
+      if (state == CognithorConnectionState.connected) {
+        state = CognithorConnectionState.error;
         errorMessage = 'Backend nicht erreichbar';
         notifyListeners();
         _scheduleReconnect();
@@ -189,7 +189,7 @@ class ConnectionProvider extends ChangeNotifier {
   /// Schedules a reconnection attempt after 5 seconds.
   void _scheduleReconnect() {
     Future.delayed(const Duration(seconds: 5), () {
-      if (state != JarvisConnectionState.connected) {
+      if (state != CognithorConnectionState.connected) {
         connect();
       }
     });

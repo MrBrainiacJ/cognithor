@@ -16,55 +16,55 @@ class DatabasePage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisSelectField.fromStrings(
+            CognithorSelectField.fromStrings(
               label: 'Backend',
               value: backend,
               options: const ['sqlite', 'postgresql'],
               onChanged: (v) => cfg.set('database.backend', v),
             ),
-            JarvisToggleField(
+            CognithorToggleField(
               label: 'Encryption',
               value: db['encryption_enabled'] == true,
               onChanged: (v) => cfg.set('database.encryption_enabled', v),
             ),
             if (backend == 'postgresql') ...[
               const Divider(height: 24),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Host',
                 value: (db['pg_host'] ?? 'localhost').toString(),
                 onChanged: (v) => cfg.set('database.pg_host', v),
               ),
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Port',
                 value: (db['pg_port'] as num?) ?? 5432,
                 onChanged: (v) => cfg.set('database.pg_port', v),
                 min: 1,
                 max: 65535,
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Database Name',
                 value: (db['pg_dbname'] ?? 'jarvis').toString(),
                 onChanged: (v) => cfg.set('database.pg_dbname', v),
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'User',
                 value: (db['pg_user'] ?? '').toString(),
                 onChanged: (v) => cfg.set('database.pg_user', v),
               ),
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Password',
                 value: (db['pg_password'] ?? '').toString(),
                 onChanged: (v) => cfg.set('database.pg_password', v),
                 isPassword: true,
                 isSecret: true,
               ),
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Pool Min',
                 value: (db['pg_pool_min'] as num?) ?? 2,
                 onChanged: (v) => cfg.set('database.pg_pool_min', v),
                 min: 1,
               ),
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Pool Max',
                 value: (db['pg_pool_max'] as num?) ?? 10,
                 onChanged: (v) => cfg.set('database.pg_pool_max', v),

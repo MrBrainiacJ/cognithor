@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisTextAreaField extends StatefulWidget {
-  const JarvisTextAreaField({
+class CognithorTextAreaField extends StatefulWidget {
+  const CognithorTextAreaField({
     super.key,
     required this.label,
     required this.value,
@@ -26,10 +26,10 @@ class JarvisTextAreaField extends StatefulWidget {
   final String? resetLabel;
 
   @override
-  State<JarvisTextAreaField> createState() => _JarvisTextAreaFieldState();
+  State<CognithorTextAreaField> createState() => _CognithorTextAreaFieldState();
 }
 
-class _JarvisTextAreaFieldState extends State<JarvisTextAreaField> {
+class _CognithorTextAreaFieldState extends State<CognithorTextAreaField> {
   late final TextEditingController _ctrl;
 
   @override
@@ -39,7 +39,7 @@ class _JarvisTextAreaFieldState extends State<JarvisTextAreaField> {
   }
 
   @override
-  void didUpdateWidget(JarvisTextAreaField old) {
+  void didUpdateWidget(CognithorTextAreaField old) {
     super.didUpdateWidget(old);
     if (old.value != widget.value && _ctrl.text != widget.value) {
       _ctrl.text = widget.value;
@@ -78,7 +78,7 @@ class _JarvisTextAreaFieldState extends State<JarvisTextAreaField> {
             const SizedBox(height: 2),
             Text(widget.description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           TextField(

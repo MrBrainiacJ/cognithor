@@ -55,31 +55,31 @@ class SocialPage extends StatelessWidget {
                           ],
                         ),
                       ),
-                    JarvisToggleField(
+                    CognithorToggleField(
                       label: l.autoScan,
                       value: social['reddit_scan_enabled'] == true,
                       onChanged: (v) => cfg.set('social.reddit_scan_enabled', v),
                     ),
-                    JarvisTextField(
+                    CognithorTextField(
                       label: l.productName,
                       value: (social['reddit_product_name'] ?? '').toString(),
                       placeholder: 'e.g. Cognithor',
                       onChanged: (v) => cfg.set('social.reddit_product_name', v),
                     ),
-                    JarvisTextField(
+                    CognithorTextField(
                       label: l.productDescription,
                       value: (social['reddit_product_description'] ?? '').toString(),
                       placeholder: 'One-sentence description for AI scoring',
                       onChanged: (v) =>
                           cfg.set('social.reddit_product_description', v),
                     ),
-                    JarvisTextField(
+                    CognithorTextField(
                       label: l.replyTone,
                       value: (social['reddit_reply_tone'] ?? '').toString(),
                       placeholder: 'helpful, technically credible, no sales pitch',
                       onChanged: (v) => cfg.set('social.reddit_reply_tone', v),
                     ),
-                    JarvisTextField(
+                    CognithorTextField(
                       label: l.subreddits,
                       value: (social['reddit_subreddits'] as List<dynamic>?)
                               ?.join(', ') ??
@@ -95,14 +95,14 @@ class SocialPage extends StatelessWidget {
                             .toList(),
                       ),
                     ),
-                    JarvisNumberField(
+                    CognithorNumberField(
                       label: l.minIntentScore,
                       value: (social['reddit_min_score'] as num?) ?? 60,
                       min: 0,
                       max: 100,
                       onChanged: (v) => cfg.set('social.reddit_min_score', v),
                     ),
-                    JarvisNumberField(
+                    CognithorNumberField(
                       label: l.scanInterval,
                       value: (social['reddit_scan_interval_minutes'] as num?) ?? 30,
                       min: 5,
@@ -110,13 +110,13 @@ class SocialPage extends StatelessWidget {
                       onChanged: (v) =>
                           cfg.set('social.reddit_scan_interval_minutes', v),
                     ),
-                    JarvisToggleField(
+                    CognithorToggleField(
                       label: l.autoPost,
                       value: social['reddit_auto_post'] == true,
                       description: l.autoPostHint,
                       onChanged: (v) => cfg.set('social.reddit_auto_post', v),
                     ),
-                    JarvisTextField(
+                    CognithorTextField(
                       label: 'Auto-Post Whitelist',
                       value: (social['reddit_auto_post_whitelist'] as List<dynamic>?)
                               ?.join(', ') ??
@@ -135,7 +135,7 @@ class SocialPage extends StatelessWidget {
                             .toList(),
                       ),
                     ),
-                    JarvisNumberField(
+                    CognithorNumberField(
                       label: 'Min Auto-Post Score',
                       value: (social['reddit_min_auto_score'] as num?) ?? 85,
                       min: 0,
@@ -167,12 +167,12 @@ class SocialPage extends StatelessWidget {
             const Divider(height: 32),
             Text('Hacker News', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            JarvisToggleField(
+            CognithorToggleField(
               label: 'HN Scanning',
               value: social['hn_enabled'] == true,
               onChanged: (v) => cfg.set('social.hn_enabled', v),
             ),
-            JarvisTextField(
+            CognithorTextField(
               label: 'HN Categories',
               value: (social['hn_categories'] as List<dynamic>?)?.join(', ') ?? 'top, new',
               placeholder: 'top, new, best, ask, show',
@@ -181,14 +181,14 @@ class SocialPage extends StatelessWidget {
                 v.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
               ),
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'HN Min Score',
               value: (social['hn_min_score'] as num?) ?? 60,
               min: 0,
               max: 100,
               onChanged: (v) => cfg.set('social.hn_min_score', v),
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'HN Scan Interval (min)',
               value: (social['hn_scan_interval_minutes'] as num?) ?? 60,
               min: 10,
@@ -200,13 +200,13 @@ class SocialPage extends StatelessWidget {
             const Divider(height: 32),
             Text('Discord', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            JarvisToggleField(
+            CognithorToggleField(
               label: 'Discord Scanning',
               value: social['discord_scanner_enabled'] == true,
               description: 'Requires COGNITHOR_DISCORD_TOKEN env var',
               onChanged: (v) => cfg.set('social.discord_scanner_enabled', v),
             ),
-            JarvisTextField(
+            CognithorTextField(
               label: 'Discord Channel IDs',
               value: (social['discord_scan_channels'] as List<dynamic>?)?.join(', ') ?? '',
               placeholder: '123456789, 987654321',
@@ -216,14 +216,14 @@ class SocialPage extends StatelessWidget {
                 v.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
               ),
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Discord Min Score',
               value: (social['discord_min_score'] as num?) ?? 60,
               min: 0,
               max: 100,
               onChanged: (v) => cfg.set('social.discord_min_score', v),
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Discord Scan Interval (min)',
               value: (social['discord_scan_interval_minutes'] as num?) ?? 30,
               min: 5,
@@ -235,14 +235,14 @@ class SocialPage extends StatelessWidget {
             const Divider(height: 32),
             Text('RSS / Atom Feeds', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            JarvisToggleField(
+            CognithorToggleField(
               label: 'RSS Scanning',
               value: social['rss_enabled'] == true,
               description:
                   'Scan any RSS or Atom feed (news sites, blogs, forums) for leads',
               onChanged: (v) => cfg.set('social.rss_enabled', v),
             ),
-            JarvisTextField(
+            CognithorTextField(
               label: 'RSS Feed URLs',
               value: (social['rss_feeds'] as List<dynamic>?)?.join(', ') ?? '',
               placeholder: 'https://example.com/feed.xml, https://blog.example.com/rss',
@@ -253,14 +253,14 @@ class SocialPage extends StatelessWidget {
                 v.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
               ),
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'RSS Min Score',
               value: (social['rss_min_score'] as num?) ?? 60,
               min: 0,
               max: 100,
               onChanged: (v) => cfg.set('social.rss_min_score', v),
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'RSS Scan Interval (min)',
               value: (social['rss_scan_interval_minutes'] as num?) ?? 60,
               min: 5,

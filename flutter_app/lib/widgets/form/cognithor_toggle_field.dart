@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisToggleField extends StatelessWidget {
-  const JarvisToggleField({
+class CognithorToggleField extends StatelessWidget {
+  const CognithorToggleField({
     super.key,
     required this.label,
     required this.value,
@@ -36,7 +36,7 @@ class JarvisToggleField extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(description!,
                           style: theme.textTheme.bodySmall
-                              ?.copyWith(color: JarvisTheme.textSecondary)),
+                              ?.copyWith(color: CognithorTheme.textSecondary)),
                     ],
                   ],
                 ),
@@ -44,7 +44,7 @@ class JarvisToggleField extends StatelessWidget {
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeThumbColor: JarvisTheme.accent,
+                activeThumbColor: CognithorTheme.accent,
               ),
             ],
           ),

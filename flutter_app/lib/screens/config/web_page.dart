@@ -20,88 +20,88 @@ class WebPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Search Backends',
               icon: Icons.search,
               initiallyExpanded: true,
               children: [
-                JarvisTextField(
+                CognithorTextField(
                   label: 'SearXNG URL',
                   value: (web['searxng_url'] ?? '').toString(),
                   onChanged: (v) => cfg.set('web.searxng_url', v),
                 ),
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Brave API Key',
                   value: (web['brave_api_key'] ?? '').toString(),
                   onChanged: (v) => cfg.set('web.brave_api_key', v),
                   isPassword: true,
                   isSecret: true,
                 ),
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Google CSE API Key',
                   value: (web['google_cse_api_key'] ?? '').toString(),
                   onChanged: (v) => cfg.set('web.google_cse_api_key', v),
                   isPassword: true,
                   isSecret: true,
                 ),
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Google CSE CX',
                   value: (web['google_cse_cx'] ?? '').toString(),
                   onChanged: (v) => cfg.set('web.google_cse_cx', v),
                 ),
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Jina API Key',
                   value: (web['jina_api_key'] ?? '').toString(),
                   onChanged: (v) => cfg.set('web.jina_api_key', v),
                   isPassword: true,
                   isSecret: true,
                 ),
-                JarvisToggleField(
+                CognithorToggleField(
                   label: 'DuckDuckGo Enabled',
                   value: web['duckduckgo_enabled'] != false,
                   onChanged: (v) => cfg.set('web.duckduckgo_enabled', v),
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Domain Filters',
               icon: Icons.filter_list,
               children: [
-                JarvisDomainListField(
+                CognithorDomainListField(
                   label: 'Blocklist',
                   value: _toStringList(web['domain_blocklist']),
                   onChanged: (v) => cfg.set('web.domain_blocklist', v),
                 ),
-                JarvisDomainListField(
+                CognithorDomainListField(
                   label: 'Allowlist',
                   value: _toStringList(web['domain_allowlist']),
                   onChanged: (v) => cfg.set('web.domain_allowlist', v),
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Fetch Limits',
               icon: Icons.speed,
               children: [
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max Fetch Bytes',
                   value: (web['max_fetch_bytes'] as num?) ?? 500000,
                   onChanged: (v) => cfg.set('web.max_fetch_bytes', v),
                   min: 10000,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max Text Chars',
                   value: (web['max_text_chars'] as num?) ?? 20000,
                   onChanged: (v) => cfg.set('web.max_text_chars', v),
                   min: 1000,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Fetch Timeout (s)',
                   value: (web['fetch_timeout_seconds'] as num?) ?? 15,
                   onChanged: (v) => cfg.set('web.fetch_timeout_seconds', v),
                   min: 5,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Search and Read Max Chars',
                   value: (web['search_and_read_max_chars'] as num?) ?? 5000,
                   onChanged: (v) => cfg.set('web.search_and_read_max_chars', v),
@@ -109,17 +109,17 @@ class WebPage extends StatelessWidget {
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Search Limits',
               icon: Icons.manage_search,
               children: [
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Search Timeout (s)',
                   value: (web['search_timeout_seconds'] as num?) ?? 10,
                   onChanged: (v) => cfg.set('web.search_timeout_seconds', v),
                   min: 5,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max Search Results',
                   value: (web['max_search_results'] as num?) ?? 10,
                   onChanged: (v) => cfg.set('web.max_search_results', v),
@@ -128,25 +128,25 @@ class WebPage extends StatelessWidget {
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'DuckDuckGo Rate Limiting',
               icon: Icons.timer,
               children: [
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Min Delay (s)',
                   value: (web['ddg_min_delay_seconds'] as num?) ?? 2,
                   onChanged: (v) => cfg.set('web.ddg_min_delay_seconds', v),
                   min: 0,
                   decimal: true,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Rate Limit Wait (s)',
                   value: (web['ddg_ratelimit_wait_seconds'] as num?) ?? 30,
                   onChanged: (v) => cfg.set('web.ddg_ratelimit_wait_seconds', v),
                   min: 0,
                   decimal: true,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Cache TTL (s)',
                   value: (web['ddg_cache_ttl_seconds'] as num?) ?? 3600,
                   onChanged: (v) => cfg.set('web.ddg_cache_ttl_seconds', v),
@@ -154,23 +154,23 @@ class WebPage extends StatelessWidget {
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'HTTP Request Limits',
               icon: Icons.http,
               children: [
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max Body Bytes',
                   value: (web['http_request_max_body_bytes'] as num?) ?? 1048576,
                   onChanged: (v) => cfg.set('web.http_request_max_body_bytes', v),
                   min: 1000,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Timeout (s)',
                   value: (web['http_request_timeout_seconds'] as num?) ?? 30,
                   onChanged: (v) => cfg.set('web.http_request_timeout_seconds', v),
                   min: 1,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Rate Limit (s)',
                   value: (web['http_request_rate_limit_seconds'] as num?) ?? 1,
                   onChanged: (v) => cfg.set('web.http_request_rate_limit_seconds', v),

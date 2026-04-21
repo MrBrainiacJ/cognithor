@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class PerformanceBadge extends StatelessWidget {
   const PerformanceBadge({super.key, required this.score, this.compact = false});
@@ -8,10 +8,10 @@ class PerformanceBadge extends StatelessWidget {
   final bool compact;
 
   Color get _color {
-    if (score >= 70) return JarvisTheme.green;
+    if (score >= 70) return CognithorTheme.green;
     if (score >= 40) return Colors.orange;
-    if (score > 0) return JarvisTheme.red;
-    return JarvisTheme.textSecondary;
+    if (score > 0) return CognithorTheme.red;
+    return CognithorTheme.textSecondary;
   }
 
   @override

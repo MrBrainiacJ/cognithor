@@ -25,7 +25,7 @@ class _ResearchScreenState extends State<ResearchScreen> {
     if (!_initialized) {
       _initialized = true;
       final conn = context.read<ConnectionProvider>();
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         final provider = context.read<ResearchProvider>();
         provider.setApi(conn.api);
         provider.loadHistory();

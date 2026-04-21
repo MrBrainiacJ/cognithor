@@ -24,7 +24,7 @@ class PromptsPage extends StatelessWidget {
           children: [
             ..._promptKeys.map((entry) {
               final (key, label) = entry;
-              return JarvisTextAreaField(
+              return CognithorTextAreaField(
                 label: label,
                 value: (cfg.prompts[key] ?? '').toString(),
                 onChanged: (v) {
@@ -40,7 +40,7 @@ class PromptsPage extends StatelessWidget {
                 resetLabel: 'Reset to Default',
               );
             }),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Prompt Evolution',
               icon: Icons.auto_fix_high,
               children: [

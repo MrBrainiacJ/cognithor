@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -121,7 +121,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Icon(Icons.qr_code_2, size: 80, color: JarvisTheme.accent),
+          Icon(Icons.qr_code_2, size: 80, color: CognithorTheme.accent),
           const SizedBox(height: 16),
           Text(l.pairingQrTitle, style: theme.textTheme.titleLarge),
           const SizedBox(height: 8),
@@ -134,7 +134,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
           // QR payload card
           NeonCard(
-            tint: JarvisTheme.accent,
+            tint: CognithorTheme.accent,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -210,9 +210,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         children: [
           CircleAvatar(
             radius: 12,
-            backgroundColor: JarvisTheme.accent.withValues(alpha: 0.2),
+            backgroundColor: CognithorTheme.accent.withValues(alpha: 0.2),
             child: Text(num,
-                style: TextStyle(fontSize: 11, color: JarvisTheme.accent)),
+                style: TextStyle(fontSize: 11, color: CognithorTheme.accent)),
           ),
           const SizedBox(width: 10),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),

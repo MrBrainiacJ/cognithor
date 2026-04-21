@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/form/form_widgets.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 
@@ -142,7 +142,7 @@ class _CurrentBackendCardState extends State<_CurrentBackendCard> {
     }
 
     return NeonCard(
-      tint: isConnected ? JarvisTheme.green : JarvisTheme.accent,
+      tint: isConnected ? CognithorTheme.green : CognithorTheme.accent,
       glowOnHover: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +150,7 @@ class _CurrentBackendCardState extends State<_CurrentBackendCard> {
           Row(
             children: [
               Icon(icon,
-                  color: isConnected ? JarvisTheme.green : JarvisTheme.accent,
+                  color: isConnected ? CognithorTheme.green : CognithorTheme.accent,
                   size: 28),
               const SizedBox(width: 12),
               Expanded(
@@ -167,8 +167,8 @@ class _CurrentBackendCardState extends State<_CurrentBackendCard> {
                           isConnected ? Icons.check_circle : Icons.cancel,
                           size: 14,
                           color: isConnected
-                              ? JarvisTheme.green
-                              : JarvisTheme.red,
+                              ? CognithorTheme.green
+                              : CognithorTheme.red,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -179,8 +179,8 @@ class _CurrentBackendCardState extends State<_CurrentBackendCard> {
                                   : l.notInstalled,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: isConnected
-                                ? JarvisTheme.green
-                                : JarvisTheme.red,
+                                ? CognithorTheme.green
+                                : CognithorTheme.red,
                           ),
                         ),
                       ],
@@ -193,9 +193,9 @@ class _CurrentBackendCardState extends State<_CurrentBackendCard> {
                 icon: const Icon(Icons.swap_horiz, size: 18),
                 label: Text(l.switchBackend),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: JarvisTheme.accent,
+                  foregroundColor: CognithorTheme.accent,
                   side: BorderSide(
-                      color: JarvisTheme.accent.withValues(alpha: 0.4)),
+                      color: CognithorTheme.accent.withValues(alpha: 0.4)),
                 ),
               ),
             ],
@@ -282,7 +282,7 @@ class _BackendSwitchDialogState extends State<_BackendSwitchDialog> {
 
     // Build options from the full provider list
     final options = ProvidersPage._providers
-        .map((p) => (p.$1, p.$2, p.$3, JarvisTheme.accent))
+        .map((p) => (p.$1, p.$2, p.$3, CognithorTheme.accent))
         .toList();
 
     return AlertDialog(
@@ -310,7 +310,7 @@ class _BackendSwitchDialogState extends State<_BackendSwitchDialog> {
                       child: Row(
                         children: [
                           Icon(icon,
-                              color: isSel ? tint : JarvisTheme.textSecondary,
+                              color: isSel ? tint : CognithorTheme.textSecondary,
                               size: 22),
                           const SizedBox(width: 10),
                           Expanded(
@@ -323,8 +323,8 @@ class _BackendSwitchDialogState extends State<_BackendSwitchDialog> {
                             auth ? Icons.check_circle : Icons.cancel,
                             size: 16,
                             color: auth
-                                ? JarvisTheme.green
-                                : JarvisTheme.red,
+                                ? CognithorTheme.green
+                                : CognithorTheme.red,
                           ),
                           if (isSel)
                             Padding(
@@ -378,7 +378,7 @@ class _ProviderCard extends StatelessWidget {
 
     return Opacity(
       opacity: isActive ? 1.0 : 0.55,
-      child: JarvisCollapsibleCard(
+      child: CognithorCollapsibleCard(
         title: label,
         icon: icon,
         badge: isActive ? 'ACTIVE PROVIDER' : null,
@@ -393,18 +393,18 @@ class _ProviderCard extends StatelessWidget {
     if (key == 'ollama') {
       final ollama = cfg.cfg['ollama'] as Map<String, dynamic>? ?? {};
       return [
-        JarvisTextField(
+        CognithorTextField(
           label: 'Base URL',
           value: (ollama['base_url'] ?? 'http://localhost:11434').toString(),
           onChanged: (v) => cfg.set('ollama.base_url', v),
         ),
-        JarvisNumberField(
+        CognithorNumberField(
           label: 'Timeout (seconds)',
           value: (ollama['timeout_seconds'] as num?) ?? 120,
           onChanged: (v) => cfg.set('ollama.timeout_seconds', v),
           min: 10,
         ),
-        JarvisTextField(
+        CognithorTextField(
           label: 'Keep Alive',
           value: (ollama['keep_alive'] ?? '5m').toString(),
           onChanged: (v) => cfg.set('ollama.keep_alive', v),
@@ -429,7 +429,7 @@ class _ProviderCard extends StatelessWidget {
     final baseUrl = '${key}_base_url';
 
     return [
-      JarvisTextField(
+      CognithorTextField(
         label: 'API Key',
         value: (cfg.cfg[apiKey] ?? '').toString(),
         onChanged: (v) => cfg.set(apiKey, v),
@@ -437,7 +437,7 @@ class _ProviderCard extends StatelessWidget {
         isSecret: true,
       ),
       if (key == 'openai' || key == 'lmstudio')
-        JarvisTextField(
+        CognithorTextField(
           label: 'Base URL (optional)',
           value: (cfg.cfg[baseUrl] ?? '').toString(),
           onChanged: (v) => cfg.set(baseUrl, v),
@@ -446,7 +446,7 @@ class _ProviderCard extends StatelessWidget {
               : 'https://api.openai.com/v1',
         ),
       if (key == 'anthropic')
-        JarvisNumberField(
+        CognithorNumberField(
           label: 'Max Tokens',
           value: (cfg.cfg['anthropic_max_tokens'] as num?) ?? 4096,
           onChanged: (v) => cfg.set('anthropic_max_tokens', v),

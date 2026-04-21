@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Non-blocking plan preview card with auto-execute countdown.
 class PreFlightCard extends StatefulWidget {
@@ -56,11 +56,11 @@ class _PreFlightCardState extends State<PreFlightCard> {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Icon(Icons.play_arrow, size: 14, color: JarvisTheme.green),
+            Icon(Icons.play_arrow, size: 14, color: CognithorTheme.green),
             const SizedBox(width: 6),
             Text(
               'Plan gestartet: ${widget.goal}',
-              style: TextStyle(fontSize: 12, color: JarvisTheme.textSecondary),
+              style: TextStyle(fontSize: 12, color: CognithorTheme.textSecondary),
             ),
           ],
         ),
@@ -75,21 +75,21 @@ class _PreFlightCardState extends State<PreFlightCard> {
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: JarvisTheme.accent.withValues(alpha: 0.08),
+        color: CognithorTheme.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: JarvisTheme.accent.withValues(alpha: 0.25)),
+        border: Border.all(color: CognithorTheme.accent.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.route, size: 16, color: JarvisTheme.accent),
+              Icon(Icons.route, size: 16, color: CognithorTheme.accent),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   '${widget.steps.length} Schritte: $stepsSummary',
-                  style: TextStyle(fontSize: 12, color: JarvisTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: CognithorTheme.textSecondary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -98,7 +98,7 @@ class _PreFlightCardState extends State<PreFlightCard> {
                 '${_remaining}s',
                 style: TextStyle(
                   fontSize: 11,
-                  color: JarvisTheme.accent,
+                  color: CognithorTheme.accent,
                   fontFamily: 'monospace',
                 ),
               ),
@@ -110,7 +110,7 @@ class _PreFlightCardState extends State<PreFlightCard> {
               padding: const EdgeInsets.only(left: 22, bottom: 2),
               child: Text(
                 '${s['tool']}: ${s['rationale'] ?? ''}',
-                style: TextStyle(fontSize: 11, color: JarvisTheme.textTertiary),
+                style: TextStyle(fontSize: 11, color: CognithorTheme.textTertiary),
               ),
             )),
           ],
@@ -121,7 +121,7 @@ class _PreFlightCardState extends State<PreFlightCard> {
                 onTap: () => setState(() => _expanded = !_expanded),
                 child: Text(
                   _expanded ? 'Weniger' : 'Details',
-                  style: TextStyle(fontSize: 11, color: JarvisTheme.accent),
+                  style: TextStyle(fontSize: 11, color: CognithorTheme.accent),
                 ),
               ),
               const Spacer(),
@@ -135,7 +135,7 @@ class _PreFlightCardState extends State<PreFlightCard> {
                   minimumSize: Size.zero,
                 ),
                 child: Text('Abbrechen',
-                    style: TextStyle(fontSize: 11, color: JarvisTheme.red)),
+                    style: TextStyle(fontSize: 11, color: CognithorTheme.red)),
               ),
             ],
           ),

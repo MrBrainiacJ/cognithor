@@ -4,15 +4,15 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/workflow_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/dag_graph_painter.dart';
 import 'package:cognithor_ui/widgets/dag_node_detail.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 import 'package:cognithor_ui/widgets/neon_glow.dart';
-import 'package:cognithor_ui/widgets/jarvis_chip.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_loading_skeleton.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_chip.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_loading_skeleton.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
 
 class WorkflowsScreen extends StatefulWidget {
   const WorkflowsScreen({super.key});
@@ -129,8 +129,8 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
         title: Text(l.workflowsTitle),
         bottom: TabBar(
           controller: _tabCtrl,
-          labelColor: JarvisTheme.accent,
-          indicatorColor: JarvisTheme.accent,
+          labelColor: CognithorTheme.accent,
+          indicatorColor: CognithorTheme.accent,
           tabs: [
             Tab(text: l.templates),
             Tab(text: l.instances),
@@ -154,13 +154,13 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
       builder: (context, provider, _) {
         if (provider.isLoading && provider.categories.isEmpty) {
           return const Padding(
-            padding: EdgeInsets.all(JarvisTheme.spacing),
-            child: JarvisLoadingSkeleton(count: 5, height: 20),
+            padding: EdgeInsets.all(CognithorTheme.spacing),
+            child: CognithorLoadingSkeleton(count: 5, height: 20),
           );
         }
 
         if (provider.error != null && provider.categories.isEmpty) {
-          return JarvisEmptyState(
+          return CognithorEmptyState(
             icon: Icons.error_outline,
             title: l.errorLabel,
             subtitle: provider.error,
@@ -173,7 +173,7 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
         }
 
         if (provider.categories.isEmpty) {
-          return JarvisEmptyState(
+          return CognithorEmptyState(
             icon: Icons.account_tree,
             title: l.noWorkflows,
             subtitle: l.comingSoon,
@@ -183,10 +183,10 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
         return RefreshIndicator(
           onRefresh: () => provider.loadCategories(),
           child: ListView(
-            padding: const EdgeInsets.all(JarvisTheme.spacing),
+            padding: const EdgeInsets.all(CognithorTheme.spacing),
             children: [
-              JarvisSection(title: l.categories),
-              const SizedBox(height: JarvisTheme.spacingSm),
+              CognithorSection(title: l.categories),
+              const SizedBox(height: CognithorTheme.spacingSm),
               ...provider.categories.map(_buildCategoryCard),
             ],
           ),
@@ -207,14 +207,14 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: NeonCard(
-        tint: JarvisTheme.sectionAdmin,
+        tint: CognithorTheme.sectionAdmin,
         glowOnHover: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.category, size: 18, color: JarvisTheme.sectionAdmin),
+                const Icon(Icons.category, size: 18, color: CognithorTheme.sectionAdmin),
                 const SizedBox(width: 8),
                 Expanded(child: Text(name, style: Theme.of(context).textTheme.titleMedium)),
               ],
@@ -231,16 +231,16 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
             const SizedBox(height: 8),
             Row(
               children: [
-                JarvisChip(
+                CognithorChip(
                   label: '$templates ${l.templates}',
                   icon: Icons.description,
-                  color: JarvisTheme.accent,
+                  color: CognithorTheme.accent,
                 ),
                 const Spacer(),
                 if (category is Map &&
                     (category['templates'] as List?)?.isNotEmpty == true)
                   NeonGlow(
-                    color: JarvisTheme.sectionAdmin,
+                    color: CognithorTheme.sectionAdmin,
                     intensity: 0.2,
                     blurRadius: 8,
                     child: ElevatedButton.icon(
@@ -274,7 +274,7 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.6,
-              child: JarvisEmptyState(
+              child: CognithorEmptyState(
                 icon: Icons.cloud_off,
                 title: l.notAvailable,
                 subtitle: _instancesError,
@@ -291,7 +291,7 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.6,
-              child: JarvisEmptyState(
+              child: CognithorEmptyState(
                 icon: Icons.history,
                 title: l.noInstances,
                 subtitle: l.startWorkflow,
@@ -316,14 +316,14 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: NeonCard(
-              tint: JarvisTheme.sectionAdmin,
+              tint: CognithorTheme.sectionAdmin,
               glowOnHover: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.play_circle_outline, size: 18, color: JarvisTheme.sectionAdmin),
+                      const Icon(Icons.play_circle_outline, size: 18, color: CognithorTheme.sectionAdmin),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -331,20 +331,20 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
-                      JarvisChip(
+                      CognithorChip(
                         label: status,
                         color: status == 'running'
-                            ? JarvisTheme.accent
+                            ? CognithorTheme.accent
                             : status == 'complete'
-                                ? JarvisTheme.green
-                                : JarvisTheme.orange,
+                                ? CognithorTheme.green
+                                : CognithorTheme.orange,
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
                       value: progress,
-                      color: JarvisTheme.accent,
+                      color: CognithorTheme.accent,
                       backgroundColor: Theme.of(context).dividerColor),
                   const SizedBox(height: 4),
                   if (duration.isNotEmpty)
@@ -371,7 +371,7 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.6,
-              child: JarvisEmptyState(
+              child: CognithorEmptyState(
                 icon: Icons.cloud_off,
                 title: l.notAvailable,
                 subtitle: _dagError,
@@ -388,7 +388,7 @@ class _WorkflowsScreenState extends State<WorkflowsScreen>
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.6,
-              child: JarvisEmptyState(
+              child: CognithorEmptyState(
                 icon: Icons.account_tree,
                 title: l.noDagRuns,
                 subtitle: l.comingSoon,

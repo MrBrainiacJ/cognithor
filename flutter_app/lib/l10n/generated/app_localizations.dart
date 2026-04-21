@@ -279,7 +279,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionErrorDetail.
   ///
   /// In en, this message translates to:
-  /// **'Check that the Jarvis backend is running at {url}'**
+  /// **'Check that the Cognithor backend is running at {url}'**
   String connectionErrorDetail(String url);
 
   /// No description provided for @authFailed.
@@ -4017,13 +4017,13 @@ abstract class AppLocalizations {
   /// No description provided for @stopBackendDescription.
   ///
   /// In en, this message translates to:
-  /// **'Stop the Jarvis backend. You will need to restart it manually.'**
+  /// **'Stop the Cognithor backend. You will need to restart it manually.'**
   String get stopBackendDescription;
 
   /// No description provided for @stopBackendConfirmBody.
   ///
   /// In en, this message translates to:
-  /// **'This will stop the Jarvis backend process. You will need to restart it manually from the command line.'**
+  /// **'This will stop the Cognithor backend process. You will need to restart it manually from the command line.'**
   String get stopBackendConfirmBody;
 
   /// No description provided for @backendStopped.
@@ -4053,7 +4053,7 @@ abstract class AppLocalizations {
   /// No description provided for @factoryResetNotImpl.
   ///
   /// In en, this message translates to:
-  /// **'Factory reset is not yet implemented on the backend. To reset manually, delete your config.yaml and restart Jarvis.'**
+  /// **'Factory reset is not yet implemented on the backend. To reset manually, delete your config.yaml and restart Cognithor.'**
   String get factoryResetNotImpl;
 
   /// No description provided for @ok.
@@ -4581,7 +4581,7 @@ abstract class AppLocalizations {
   /// No description provided for @toolsComputerUseDesc.
   ///
   /// In en, this message translates to:
-  /// **'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.'**
+  /// **'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Cognithor to interact with any application visually.'**
   String get toolsComputerUseDesc;
 
   /// No description provided for @toolsDesktopLabel.
@@ -4605,7 +4605,7 @@ abstract class AppLocalizations {
   /// No description provided for @toolsWarning.
   ///
   /// In en, this message translates to:
-  /// **'These tools give Jarvis access to your desktop. Enable only when needed.'**
+  /// **'These tools give Cognithor access to your desktop. Enable only when needed.'**
   String get toolsWarning;
 
   /// No description provided for @configPageSystemProfile.

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
-import 'package:cognithor_ui/widgets/jarvis_confirmation_dialog.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
+import 'package:cognithor_ui/widgets/cognithor_confirmation_dialog.dart';
 
 /// Sidebar drawer showing past chat sessions grouped by folder.
 class ChatHistoryDrawer extends StatefulWidget {
@@ -101,15 +101,15 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
                 children: [
                   const Icon(
                     Icons.history,
-                    color: JarvisTheme.sectionChat,
-                    size: JarvisTheme.iconSizeMd,
+                    color: CognithorTheme.sectionChat,
+                    size: CognithorTheme.iconSizeMd,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l.chatHistory,
                       style: theme.textTheme.titleLarge?.copyWith(
-                        color: JarvisTheme.sectionChat,
+                        color: CognithorTheme.sectionChat,
                       ),
                     ),
                   ),
@@ -131,13 +131,13 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
                     label: Text(l.newChat),
                     style: FilledButton.styleFrom(
                       backgroundColor:
-                          JarvisTheme.sectionChat.withValues(alpha: 0.15),
-                      foregroundColor: JarvisTheme.sectionChat,
+                          CognithorTheme.sectionChat.withValues(alpha: 0.15),
+                      foregroundColor: CognithorTheme.sectionChat,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       shape: RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius.circular(JarvisTheme.buttonRadius),
+                            BorderRadius.circular(CognithorTheme.buttonRadius),
                       ),
                     ),
                   ),
@@ -309,11 +309,11 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.delete_outline, size: 18, color: JarvisTheme.red),
-              title: Text(l.delete, style: TextStyle(color: JarvisTheme.red)),
+              leading: Icon(Icons.delete_outline, size: 18, color: CognithorTheme.red),
+              title: Text(l.delete, style: TextStyle(color: CognithorTheme.red)),
               onTap: () async {
                 Navigator.of(ctx).pop();
-                final confirmed = await JarvisConfirmationDialog.show(
+                final confirmed = await CognithorConfirmationDialog.show(
                   context,
                   title: l.deleteChat,
                   message: l.confirmDeleteChat,
@@ -345,11 +345,11 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+          borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
           side: BorderSide(color: Theme.of(context).dividerColor),
         ),
-        icon: const Icon(Icons.edit, color: JarvisTheme.sectionChat,
-            size: JarvisTheme.iconSizeLg),
+        icon: const Icon(Icons.edit, color: CognithorTheme.sectionChat,
+            size: CognithorTheme.iconSizeLg),
         title: Text(l.editTitle),
         content: TextField(
           controller: controller,
@@ -368,10 +368,10 @@ class _ChatHistoryDrawerState extends State<ChatHistoryDrawer> {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
             style: ElevatedButton.styleFrom(
-              backgroundColor: JarvisTheme.sectionChat,
+              backgroundColor: CognithorTheme.sectionChat,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(JarvisTheme.buttonRadius),
+                borderRadius: BorderRadius.circular(CognithorTheme.buttonRadius),
               ),
             ),
             child: Text(l.save),
@@ -435,11 +435,11 @@ class _MoveToFolderDialogState extends State<_MoveToFolderDialog> {
     return AlertDialog(
       backgroundColor: theme.cardColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+        borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
         side: BorderSide(color: theme.dividerColor),
       ),
-      icon: const Icon(Icons.folder_outlined, color: JarvisTheme.sectionChat,
-          size: JarvisTheme.iconSizeLg),
+      icon: const Icon(Icons.folder_outlined, color: CognithorTheme.sectionChat,
+          size: CognithorTheme.iconSizeLg),
       title: Text(l.moveToFolder),
       content: SizedBox(
         width: 280,
@@ -494,9 +494,9 @@ class _MoveToFolderDialogState extends State<_MoveToFolderDialog> {
             else
               ListTile(
                 leading: const Icon(Icons.create_new_folder,
-                    size: 20, color: JarvisTheme.sectionChat),
+                    size: 20, color: CognithorTheme.sectionChat),
                 title: Text(l.newFolder,
-                    style: const TextStyle(color: JarvisTheme.sectionChat)),
+                    style: const TextStyle(color: CognithorTheme.sectionChat)),
                 dense: true,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),

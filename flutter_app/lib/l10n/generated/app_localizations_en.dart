@@ -103,7 +103,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String connectionErrorDetail(String url) {
-    return 'Check that the Jarvis backend is running at $url';
+    return 'Check that the Cognithor backend is running at $url';
   }
 
   @override
@@ -1994,11 +1994,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stopBackendDescription =>
-      'Stop the Jarvis backend. You will need to restart it manually.';
+      'Stop the Cognithor backend. You will need to restart it manually.';
 
   @override
   String get stopBackendConfirmBody =>
-      'This will stop the Jarvis backend process. You will need to restart it manually from the command line.';
+      'This will stop the Cognithor backend process. You will need to restart it manually from the command line.';
 
   @override
   String get backendStopped => 'Backend stopped. Please restart manually.';
@@ -2015,7 +2015,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get factoryResetNotImpl =>
-      'Factory reset is not yet implemented on the backend. To reset manually, delete your config.yaml and restart Jarvis.';
+      'Factory reset is not yet implemented on the backend. To reset manually, delete your config.yaml and restart Cognithor.';
 
   @override
   String get ok => 'OK';
@@ -2311,7 +2311,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolsComputerUseDesc =>
-      'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Jarvis to interact with any application visually.';
+      'Desktop automation via screenshots and coordinate clicking (pyautogui). Allows Cognithor to interact with any application visually.';
 
   @override
   String get toolsDesktopLabel => 'Desktop Tools';
@@ -2325,7 +2325,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolsWarning =>
-      'These tools give Jarvis access to your desktop. Enable only when needed.';
+      'These tools give Cognithor access to your desktop. Enable only when needed.';
 
   @override
   String get configPageSystemProfile => 'Hardware';

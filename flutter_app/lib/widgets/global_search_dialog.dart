@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Indexed terms for all config pages.
 /// Each entry: (display label, page key, search terms).
@@ -72,7 +72,7 @@ class _GlobalSearchDialogState extends State<GlobalSearchDialog> {
     return Dialog(
       backgroundColor: theme.cardColor,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(JarvisTheme.cardRadius)),
+          borderRadius: BorderRadius.circular(CognithorTheme.cardRadius)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 400),
         child: Column(

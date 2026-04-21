@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class SystemProfilePage extends StatefulWidget {
   const SystemProfilePage({super.key});
@@ -69,20 +69,20 @@ class _SystemProfilePageState extends State<SystemProfilePage> {
 
   Color _tierColor(String tier) {
     return switch (tier.toLowerCase()) {
-      'minimal' => JarvisTheme.red,
-      'standard' => JarvisTheme.orange,
-      'power' => JarvisTheme.green,
-      'enterprise' => JarvisTheme.accent,
-      _ => JarvisTheme.textSecondary,
+      'minimal' => CognithorTheme.red,
+      'standard' => CognithorTheme.orange,
+      'power' => CognithorTheme.green,
+      'enterprise' => CognithorTheme.accent,
+      _ => CognithorTheme.textSecondary,
     };
   }
 
   Color _statusColor(String status) {
     return switch (status.toLowerCase()) {
-      'ok' => JarvisTheme.green,
-      'warn' => JarvisTheme.orange,
-      'fail' => JarvisTheme.red,
-      _ => JarvisTheme.textSecondary,
+      'ok' => CognithorTheme.green,
+      'warn' => CognithorTheme.orange,
+      'fail' => CognithorTheme.red,
+      _ => CognithorTheme.textSecondary,
     };
   }
 
@@ -122,9 +122,9 @@ class _SystemProfilePageState extends State<SystemProfilePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: JarvisTheme.red),
+            Icon(Icons.error_outline, size: 48, color: CognithorTheme.red),
             const SizedBox(height: 16),
-            Text(_error!, style: TextStyle(color: JarvisTheme.textSecondary)),
+            Text(_error!, style: TextStyle(color: CognithorTheme.textSecondary)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _load,
@@ -189,7 +189,7 @@ class _SystemProfilePageState extends State<SystemProfilePage> {
                     l.systemTier,
                     style: TextStyle(
                       fontSize: 12,
-                      color: JarvisTheme.textSecondary,
+                      color: CognithorTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -224,7 +224,7 @@ class _SystemProfilePageState extends State<SystemProfilePage> {
                     l.systemRecommendedMode,
                     style: TextStyle(
                       fontSize: 12,
-                      color: JarvisTheme.textSecondary,
+                      color: CognithorTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -271,7 +271,7 @@ class _SystemProfilePageState extends State<SystemProfilePage> {
                 value,
                 style: TextStyle(
                   fontSize: 13,
-                  color: JarvisTheme.textSecondary,
+                  color: CognithorTheme.textSecondary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -286,7 +286,7 @@ class _SystemProfilePageState extends State<SystemProfilePage> {
                   child: Text(
                     'No raw data',
                     style: TextStyle(
-                      color: JarvisTheme.textTertiary,
+                      color: CognithorTheme.textTertiary,
                       fontSize: 12,
                     ),
                   ),
@@ -300,7 +300,7 @@ class _SystemProfilePageState extends State<SystemProfilePage> {
                         e.key,
                         style: TextStyle(
                           fontSize: 12,
-                          color: JarvisTheme.textSecondary,
+                          color: CognithorTheme.textSecondary,
                           fontFamily: 'monospace',
                         ),
                       ),

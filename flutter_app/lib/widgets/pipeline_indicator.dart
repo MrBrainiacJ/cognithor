@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class PipelineIndicator extends StatelessWidget {
   const PipelineIndicator({super.key, required this.phases});
@@ -10,10 +10,10 @@ class PipelineIndicator extends StatelessWidget {
   static const _phaseOrder = ['plan', 'gate', 'execute', 'replan', 'complete'];
 
   Color _phaseColor(String status) => switch (status) {
-        'start' => JarvisTheme.accent,
-        'done' => JarvisTheme.green,
-        'error' => JarvisTheme.red,
-        _ => JarvisTheme.textTertiary,
+        'start' => CognithorTheme.accent,
+        'done' => CognithorTheme.green,
+        'error' => CognithorTheme.red,
+        _ => CognithorTheme.textTertiary,
       };
 
   IconData _phaseIcon(String phase) => switch (phase) {
@@ -77,7 +77,7 @@ class _PhaseConnector extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: completed
-                ? JarvisTheme.green.withAlpha(150)
+                ? CognithorTheme.green.withAlpha(150)
                 : Theme.of(context).dividerColor,
             borderRadius: BorderRadius.circular(1),
           ),

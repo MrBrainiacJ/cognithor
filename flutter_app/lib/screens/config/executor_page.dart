@@ -16,28 +16,28 @@ class ExecutorPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Default Timeout (seconds)',
               value: (ex['default_timeout_seconds'] as num?) ?? 30,
               onChanged: (v) => cfg.set('executor.default_timeout_seconds', v),
               min: 5,
               max: 3600,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Max Output Chars',
               value: (ex['max_output_chars'] as num?) ?? 10000,
               onChanged: (v) => cfg.set('executor.max_output_chars', v),
               min: 1000,
               max: 500000,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Max Retries',
               value: (ex['max_retries'] as num?) ?? 3,
               onChanged: (v) => cfg.set('executor.max_retries', v),
               min: 0,
               max: 10,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Backoff Base Delay (seconds)',
               value: (ex['backoff_base_delay_seconds'] as num?) ?? 1,
               onChanged: (v) =>
@@ -45,7 +45,7 @@ class ExecutorPage extends StatelessWidget {
               min: 0,
               decimal: true,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Max Parallel Tools',
               value: (ex['max_parallel_tools'] as num?) ?? 4,
               onChanged: (v) => cfg.set('executor.max_parallel_tools', v),
@@ -56,34 +56,34 @@ class ExecutorPage extends StatelessWidget {
             Text(AppLocalizations.of(context).toolSpecificTimeouts,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16)),
             const SizedBox(height: 12),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Image Analysis Timeout',
               value: (ex['media_analyze_image_timeout'] as num?) ?? 180,
               onChanged: (v) =>
                   cfg.set('executor.media_analyze_image_timeout', v),
               min: 5,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Audio Transcription Timeout',
               value: (ex['media_transcribe_audio_timeout'] as num?) ?? 120,
               onChanged: (v) =>
                   cfg.set('executor.media_transcribe_audio_timeout', v),
               min: 5,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Text Extraction Timeout',
               value: (ex['media_extract_text_timeout'] as num?) ?? 120,
               onChanged: (v) =>
                   cfg.set('executor.media_extract_text_timeout', v),
               min: 5,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'TTS Timeout',
               value: (ex['media_tts_timeout'] as num?) ?? 120,
               onChanged: (v) => cfg.set('executor.media_tts_timeout', v),
               min: 5,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Run Python Timeout',
               value: (ex['run_python_timeout'] as num?) ?? 120,
               onChanged: (v) => cfg.set('executor.run_python_timeout', v),

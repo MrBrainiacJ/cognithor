@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 // ──────────────────────────────────────────────────────────────────────
 // Robot Office – Animated CustomPainter (centerpiece visualization)
@@ -254,7 +254,7 @@ class OfficePainter extends CustomPainter {
   Color _floorAlt() => _isDark ? const Color(0xFF343448) : const Color(0xFFE0D8D0);
   Color _furnitureDark() => _isDark ? const Color(0xFF2c2c44) : const Color(0xFFb8b8c8);
   Color _furnitureLight() => _isDark ? const Color(0xFF3a3a56) : const Color(0xFFcacad8);
-  Color _textCol() => _isDark ? JarvisTheme.textPrimary : const Color(0xFF1A1A2E);
+  Color _textCol() => _isDark ? CognithorTheme.textPrimary : const Color(0xFF1A1A2E);
 
   double _osc(double speed, [double phase = 0]) => sin(time * speed + phase);
 
@@ -620,7 +620,7 @@ class OfficePainter extends CustomPainter {
         Rect.fromLTWH(bx, by, bw, headerH),
         const Radius.circular(3),
       ),
-      Paint()..color = JarvisTheme.accent.withValues(alpha: 0.25),
+      Paint()..color = CognithorTheme.accent.withValues(alpha: 0.25),
     );
     final headerTp = TextPainter(
       text: TextSpan(
@@ -641,7 +641,7 @@ class OfficePainter extends CustomPainter {
     final colHeaderY = by + headerH;
     final colHeaderH = bh * 0.10;
     final headers = ['To Do', 'WIP', 'Done'];
-    final headerColors = [JarvisTheme.orange, JarvisTheme.accent, JarvisTheme.green];
+    final headerColors = [CognithorTheme.orange, CognithorTheme.accent, CognithorTheme.green];
     // Map activePhase (0-4) to kanban columns: 0-1 = To Do, 2-3 = WIP, 4 = Done
     final highlightCol = activePhase <= 1 ? 0 : (activePhase <= 3 ? 1 : 2);
     for (int c = 0; c < 3; c++) {
@@ -1078,7 +1078,7 @@ class OfficePainter extends CustomPainter {
     // Animated screen content — colored code lines / UI mockup
     final lineRng = Random(index * 7 + 13);
     final codeColors = [
-      JarvisTheme.accent,
+      CognithorTheme.accent,
       const Color(0xFFFF80AB), // pink
       const Color(0xFFB388FF), // purple
       const Color(0xFF80CBC4), // teal
@@ -1126,7 +1126,7 @@ class OfficePainter extends CustomPainter {
         const Radius.circular(1),
       ),
       Paint()
-        ..color = JarvisTheme.accent.withValues(
+        ..color = CognithorTheme.accent.withValues(
             alpha: 0.03 + nightBoost + 0.02 * _osc(2, index.toDouble()))
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5 + nightBoost * 25),
     );
@@ -1208,14 +1208,14 @@ class OfficePainter extends CustomPainter {
         Offset(dx - dw * 0.33, dy + 2),
         Offset(dx - dw * 0.30, dy - 4),
         Paint()
-          ..color = JarvisTheme.red
+          ..color = CognithorTheme.red
           ..strokeWidth = 1,
       );
       canvas.drawLine(
         Offset(dx - dw * 0.31, dy + 2),
         Offset(dx - dw * 0.29, dy - 3),
         Paint()
-          ..color = JarvisTheme.accent
+          ..color = CognithorTheme.accent
           ..strokeWidth = 1,
       );
     }
@@ -1259,8 +1259,8 @@ class OfficePainter extends CustomPainter {
       final blinkSpeed = 3.0 + cpuUsage * 8.0; // faster blink when CPU is high
       for (int led = 0; led < 3; led++) {
         final baseColors = memoryUsage > 0.8
-            ? [JarvisTheme.orange, JarvisTheme.red, JarvisTheme.red]
-            : [JarvisTheme.green, JarvisTheme.orange, JarvisTheme.red];
+            ? [CognithorTheme.orange, CognithorTheme.red, CognithorTheme.red]
+            : [CognithorTheme.green, CognithorTheme.orange, CognithorTheme.red];
         final blink = sin(time * (blinkSpeed + led) + i * 1.5 + led * 2.1);
         final on = blink > (led == 2 ? 0.7 : 0.0); // red blinks less
         canvas.drawCircle(
@@ -1366,7 +1366,7 @@ class OfficePainter extends CustomPainter {
     canvas.drawCircle(
       Offset(cx + cw / 2 - 4, cy - ch * 0.1),
       2,
-      Paint()..color = JarvisTheme.green.withValues(alpha: 0.6 + 0.4 * _osc(2)),
+      Paint()..color = CognithorTheme.green.withValues(alpha: 0.6 + 0.4 * _osc(2)),
     );
 
     // Steam particles
@@ -2105,7 +2105,7 @@ class OfficePainter extends CustomPainter {
       text: TextSpan(
         text: 'SYSTEM',
         style: TextStyle(
-          color: JarvisTheme.sectionDashboard.withValues(alpha: 0.7),
+          color: CognithorTheme.sectionDashboard.withValues(alpha: 0.7),
           fontSize: mh * 0.10,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.5,
@@ -2131,25 +2131,25 @@ class OfficePainter extends CustomPainter {
     // CPU
     _drawMonitorLabel(canvas, 'CPU', Offset(barX, firstBarY), mh * 0.07);
     _drawMonitorBar(canvas, barX, firstBarY + mh * 0.07, barW, barH, cpuUsage,
-        cpuUsage > 0.8 ? JarvisTheme.red : cpuUsage > 0.5 ? JarvisTheme.orange : JarvisTheme.sectionDashboard);
+        cpuUsage > 0.8 ? CognithorTheme.red : cpuUsage > 0.5 ? CognithorTheme.orange : CognithorTheme.sectionDashboard);
 
     // GPU
     final gpuBarY = firstBarY + barSpacing;
     _drawMonitorLabel(canvas, 'GPU', Offset(barX, gpuBarY), mh * 0.07);
     _drawMonitorBar(canvas, barX, gpuBarY + mh * 0.07, barW, barH, gpuUsage,
-        gpuUsage > 0.8 ? JarvisTheme.red : gpuUsage > 0.5 ? JarvisTheme.orange : JarvisTheme.accent);
+        gpuUsage > 0.8 ? CognithorTheme.red : gpuUsage > 0.5 ? CognithorTheme.orange : CognithorTheme.accent);
 
     // RAM
     final ramBarY = gpuBarY + barSpacing;
     _drawMonitorLabel(canvas, 'RAM', Offset(barX, ramBarY), mh * 0.07);
     _drawMonitorBar(canvas, barX, ramBarY + mh * 0.07, barW, barH, memoryUsage,
-        memoryUsage > 0.8 ? JarvisTheme.red : memoryUsage > 0.5 ? JarvisTheme.orange : JarvisTheme.blue);
+        memoryUsage > 0.8 ? CognithorTheme.red : memoryUsage > 0.5 ? CognithorTheme.orange : CognithorTheme.blue);
 
     // LOAD
     final loadBarY = ramBarY + barSpacing;
     _drawMonitorLabel(canvas, 'LOAD', Offset(barX, loadBarY), mh * 0.07);
     _drawMonitorBar(canvas, barX, loadBarY + mh * 0.07, barW, barH, systemLoad,
-        systemLoad > 0.8 ? JarvisTheme.red : systemLoad > 0.5 ? JarvisTheme.orange : JarvisTheme.gold);
+        systemLoad > 0.8 ? CognithorTheme.red : systemLoad > 0.5 ? CognithorTheme.orange : CognithorTheme.gold);
 
     // Monitor stand (small trapezoid below the monitor)
     final standW = mw * 0.25;

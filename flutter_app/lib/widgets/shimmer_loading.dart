@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// A premium shimmer/skeleton loading effect.
 ///
@@ -67,7 +67,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
           children: List.generate(widget.count, (i) {
             return Padding(
               padding: EdgeInsets.only(
-                top: i > 0 ? JarvisTheme.spacingSm : 0,
+                top: i > 0 ? CognithorTheme.spacingSm : 0,
               ),
               child: _ShimmerRect(
                 height: widget.height,

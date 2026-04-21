@@ -1,11 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Glassmorphism panel — frosted glass effect with neon-tinted border.
 ///
 /// Use this as the primary card/container widget throughout the app.
-/// Replaces JarvisCard for the new Sci-Fi aesthetic.
+/// Replaces CognithorCard for the new Sci-Fi aesthetic.
 class GlassPanel extends StatefulWidget {
   const GlassPanel({
     super.key,
@@ -35,7 +35,7 @@ class _GlassPanelState extends State<GlassPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.tint ?? JarvisTheme.accent;
+    final color = widget.tint ?? CognithorTheme.accent;
     final isHovered = _hovered && widget.glowOnHover;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -53,8 +53,8 @@ class _GlassPanelState extends State<GlassPanel> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: JarvisTheme.animDuration,
-          curve: JarvisTheme.animCurve,
+          duration: CognithorTheme.animDuration,
+          curve: CognithorTheme.animCurve,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius),
             border: Border.all(

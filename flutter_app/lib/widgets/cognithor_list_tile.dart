@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisListTile extends StatelessWidget {
-  const JarvisListTile({
+class CognithorListTile extends StatelessWidget {
+  const CognithorListTile({
     super.key,
     required this.title,
     this.subtitle,
@@ -22,21 +22,21 @@ class JarvisListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final verticalPad = dense ? JarvisTheme.spacingSm : 12.0;
+    final verticalPad = dense ? CognithorTheme.spacingSm : 12.0;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+      borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: JarvisTheme.spacing,
+          horizontal: CognithorTheme.spacing,
           vertical: verticalPad,
         ),
         child: Row(
           children: [
             if (leading != null) ...[
               leading!,
-              const SizedBox(width: JarvisTheme.spacingSm),
+              const SizedBox(width: CognithorTheme.spacingSm),
             ],
             Expanded(
               child: Column(
@@ -59,7 +59,7 @@ class JarvisListTile extends StatelessWidget {
               ),
             ),
             if (trailing != null) ...[
-              const SizedBox(width: JarvisTheme.spacingSm),
+              const SizedBox(width: CognithorTheme.spacingSm),
               trailing!,
             ],
           ],

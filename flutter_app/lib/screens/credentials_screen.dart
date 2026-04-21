@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 // Inline confirmation dialog used for delete
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
 
 class CredentialsScreen extends StatefulWidget {
   const CredentialsScreen({super.key});
@@ -80,7 +80,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: JarvisTheme.red,
+              backgroundColor: CognithorTheme.red,
               foregroundColor: Colors.white,
             ),
             child: Text(l.delete),
@@ -104,7 +104,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
         title: Text(l.credentialsTitle),
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: JarvisTheme.accent),
+            icon: Icon(Icons.add, color: CognithorTheme.accent),
             onPressed: _add,
           ),
         ],
@@ -112,7 +112,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? JarvisEmptyState(
+              ? CognithorEmptyState(
                   icon: Icons.error_outline,
                   title: l.errorLabel,
                   subtitle: _error,
@@ -120,7 +120,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                       onPressed: _load, child: Text(l.retry)),
                 )
               : _credentials.isEmpty
-                  ? JarvisEmptyState(
+                  ? CognithorEmptyState(
                       icon: Icons.vpn_key_off,
                       title: l.noCredentials,
                       subtitle: l.addCredential,
@@ -136,11 +136,11 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: NeonCard(
-                            tint: JarvisTheme.sectionAdmin,
+                            tint: CognithorTheme.sectionAdmin,
                             glowOnHover: true,
                             child: Row(
                               children: [
-                                const Icon(Icons.vpn_key, size: 18, color: JarvisTheme.sectionAdmin),
+                                const Icon(Icons.vpn_key, size: 18, color: CognithorTheme.sectionAdmin),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
@@ -158,7 +158,7 @@ class _CredentialsScreenState extends State<CredentialsScreen> {
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete,
-                                      size: 18, color: JarvisTheme.red),
+                                      size: 18, color: CognithorTheme.red),
                                   onPressed: () => _delete(service, key),
                                 ),
                               ],

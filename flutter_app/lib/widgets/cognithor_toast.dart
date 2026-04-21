@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 enum ToastType { success, error, warning, info }
 
-class JarvisToast {
+class CognithorToast {
   static void show(
     BuildContext context,
     String message, {
@@ -82,10 +82,10 @@ class _ToastWidgetState extends State<_ToastWidget>
 
   Color get _borderColor {
     return switch (widget.type) {
-      ToastType.success => JarvisTheme.green,
-      ToastType.error => JarvisTheme.red,
-      ToastType.warning => JarvisTheme.orange,
-      ToastType.info => JarvisTheme.blue,
+      ToastType.success => CognithorTheme.green,
+      ToastType.error => CognithorTheme.red,
+      ToastType.warning => CognithorTheme.orange,
+      ToastType.info => CognithorTheme.blue,
     };
   }
 
@@ -118,7 +118,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+                    borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
                     border: Border.all(color: Theme.of(context).dividerColor),
                     boxShadow: [
                       BoxShadow(
@@ -145,7 +145,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                         child: Text(
                           widget.message,
                           style: TextStyle(
-                            color: JarvisTheme.textPrimary,
+                            color: CognithorTheme.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -159,7 +159,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                         child: Icon(
                           Icons.close,
                           size: 16,
-                          color: JarvisTheme.textTertiary,
+                          color: CognithorTheme.textTertiary,
                         ),
                       ),
                     ],

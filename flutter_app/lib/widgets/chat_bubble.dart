@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/glass_panel.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -45,7 +45,7 @@ class ChatBubble extends StatelessWidget {
 
   // ── User Bubble ──────────────────────────────────────────────────────
   Widget _buildUserBubble(BuildContext context) {
-    const baseColor = JarvisTheme.sectionChat;
+    const baseColor = CognithorTheme.sectionChat;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -87,7 +87,7 @@ class ChatBubble extends StatelessWidget {
               height: 8,
               child: CircularProgressIndicator(
                 strokeWidth: 1.5,
-                color: JarvisTheme.sectionChat,
+                color: CognithorTheme.sectionChat,
               ),
             ),
           ],
@@ -105,7 +105,7 @@ class ChatBubble extends StatelessWidget {
 
   // ── Assistant Bubble ─────────────────────────────────────────────────
   Widget _buildAssistantBubble(BuildContext context) {
-    const tint = JarvisTheme.sectionChat;
+    const tint = CognithorTheme.sectionChat;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final theme = Theme.of(context);
 
@@ -120,7 +120,7 @@ class ChatBubble extends StatelessWidget {
                 agentName!,
                 style: const TextStyle(fontSize: 11, color: Colors.white),
               ),
-              backgroundColor: JarvisTheme.purple.withValues(alpha: 0.7),
+              backgroundColor: CognithorTheme.purple.withValues(alpha: 0.7),
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -195,7 +195,7 @@ class ChatBubble extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4, left: 6),
             child: DefaultTextStyle(
               style: theme.textTheme.labelSmall?.copyWith(
-                color: JarvisTheme.textSecondary.withValues(alpha: 0.6),
+                color: CognithorTheme.textSecondary.withValues(alpha: 0.6),
                 fontSize: 10,
               ) ?? const TextStyle(fontSize: 10),
               child: Wrap(
@@ -224,7 +224,7 @@ class ChatBubble extends StatelessWidget {
   // ── System Bubble ────────────────────────────────────────────────────
   Widget _buildSystemBubble(BuildContext context) {
     return GlassPanel(
-      tint: JarvisTheme.red,
+      tint: CognithorTheme.red,
       borderRadius: 16,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -235,7 +235,7 @@ class ChatBubble extends StatelessWidget {
             child: SelectableText(
               text,
               style: TextStyle(
-                color: JarvisTheme.red,
+                color: CognithorTheme.red,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -266,18 +266,18 @@ class ChatBubble extends StatelessWidget {
         code: TextStyle(
           fontFamily: 'monospace',
           fontSize: 13,
-          color: JarvisTheme.sectionChat,
-          backgroundColor: JarvisTheme.codeBlockBg,
+          color: CognithorTheme.sectionChat,
+          backgroundColor: CognithorTheme.codeBlockBg,
         ),
         codeblockDecoration: BoxDecoration(
-          color: JarvisTheme.codeBlockBg,
-          borderRadius: BorderRadius.circular(JarvisTheme.spacingSm),
+          color: CognithorTheme.codeBlockBg,
+          borderRadius: BorderRadius.circular(CognithorTheme.spacingSm),
           border: Border.all(
-            color: JarvisTheme.sectionChat.withValues(alpha: 0.15),
+            color: CognithorTheme.sectionChat.withValues(alpha: 0.15),
           ),
           boxShadow: [
             BoxShadow(
-              color: JarvisTheme.sectionChat.withValues(alpha: 0.08),
+              color: CognithorTheme.sectionChat.withValues(alpha: 0.08),
               blurRadius: 8,
               spreadRadius: -1,
             ),
@@ -285,28 +285,28 @@ class ChatBubble extends StatelessWidget {
         ),
         codeblockPadding: const EdgeInsets.all(14),
         h1: TextStyle(
-          color: JarvisTheme.textPrimary,
+          color: CognithorTheme.textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
         h2: TextStyle(
-          color: JarvisTheme.textPrimary,
+          color: CognithorTheme.textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
         h3: TextStyle(
-          color: JarvisTheme.textPrimary,
+          color: CognithorTheme.textPrimary,
           fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
         blockquoteDecoration: const BoxDecoration(
           border: Border(
-            left: BorderSide(color: JarvisTheme.sectionChat, width: 3),
+            left: BorderSide(color: CognithorTheme.sectionChat, width: 3),
           ),
         ),
         blockquotePadding: const EdgeInsets.only(left: 12),
-        listBullet: const TextStyle(color: JarvisTheme.sectionChat),
-        a: const TextStyle(color: JarvisTheme.sectionChat),
+        listBullet: const TextStyle(color: CognithorTheme.sectionChat),
+        a: const TextStyle(color: CognithorTheme.sectionChat),
         strong: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.bold,
@@ -316,7 +316,7 @@ class ChatBubble extends StatelessWidget {
           fontStyle: FontStyle.italic,
         ),
         tableHead: TextStyle(
-          color: JarvisTheme.textPrimary,
+          color: CognithorTheme.textPrimary,
           fontWeight: FontWeight.bold,
         ),
         tableBorder: TableBorder.all(color: Theme.of(context).dividerColor),
@@ -358,14 +358,14 @@ class _CodeBlockWithCopyState extends State<CodeBlockWithCopy> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: JarvisTheme.codeBlockBg,
-        borderRadius: BorderRadius.circular(JarvisTheme.spacingSm),
+        color: CognithorTheme.codeBlockBg,
+        borderRadius: BorderRadius.circular(CognithorTheme.spacingSm),
         border: Border.all(
-          color: JarvisTheme.sectionChat.withValues(alpha: 0.15),
+          color: CognithorTheme.sectionChat.withValues(alpha: 0.15),
         ),
         boxShadow: [
           BoxShadow(
-            color: JarvisTheme.sectionChat.withValues(alpha: 0.08),
+            color: CognithorTheme.sectionChat.withValues(alpha: 0.08),
             blurRadius: 8,
             spreadRadius: -1,
           ),
@@ -380,7 +380,7 @@ class _CodeBlockWithCopyState extends State<CodeBlockWithCopy> {
             decoration: BoxDecoration(
               color: Theme.of(context).dividerColor.withAlpha(80),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(JarvisTheme.spacingSm),
+                top: Radius.circular(CognithorTheme.spacingSm),
               ),
             ),
             child: Row(
@@ -390,7 +390,7 @@ class _CodeBlockWithCopyState extends State<CodeBlockWithCopy> {
                     widget.language!,
                     style: TextStyle(
                       fontSize: 11,
-                      color: JarvisTheme.textTertiary,
+                      color: CognithorTheme.textTertiary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -407,8 +407,8 @@ class _CodeBlockWithCopyState extends State<CodeBlockWithCopy> {
                           _copied ? Icons.check : Icons.copy,
                           size: 14,
                           color: _copied
-                              ? JarvisTheme.green
-                              : JarvisTheme.textSecondary,
+                              ? CognithorTheme.green
+                              : CognithorTheme.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -416,8 +416,8 @@ class _CodeBlockWithCopyState extends State<CodeBlockWithCopy> {
                           style: TextStyle(
                             fontSize: 11,
                             color: _copied
-                                ? JarvisTheme.green
-                                : JarvisTheme.textSecondary,
+                                ? CognithorTheme.green
+                                : CognithorTheme.textSecondary,
                           ),
                         ),
                       ],
@@ -435,7 +435,7 @@ class _CodeBlockWithCopyState extends State<CodeBlockWithCopy> {
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 13,
-                color: JarvisTheme.textPrimary,
+                color: CognithorTheme.textPrimary,
                 height: 1.5,
               ),
             ),

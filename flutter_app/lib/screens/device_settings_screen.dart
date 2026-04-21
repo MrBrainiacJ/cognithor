@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/device_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class DeviceSettingsScreen extends StatefulWidget {
   const DeviceSettingsScreen({super.key});
@@ -71,31 +71,31 @@ class _DeviceSettingsScreenState extends State<DeviceSettingsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l.deviceSettings)),
       body: ListView(
-        padding: const EdgeInsets.all(JarvisTheme.spacing),
+        padding: const EdgeInsets.all(CognithorTheme.spacing),
         children: [
           // ----- Connection Status -----
           const _SectionHeader(title: 'Server Connection'),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(JarvisTheme.spacing),
+              padding: const EdgeInsets.all(CognithorTheme.spacing),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Icon(
-                        conn.state == JarvisConnectionState.connected
+                        conn.state == CognithorConnectionState.connected
                             ? Icons.cloud_done
                             : Icons.cloud_off,
-                        color: conn.state == JarvisConnectionState.connected
+                        color: conn.state == CognithorConnectionState.connected
                             ? Colors.green
                             : Colors.red,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        conn.state == JarvisConnectionState.connected
+                        conn.state == CognithorConnectionState.connected
                             ? 'Connected'
-                            : conn.state == JarvisConnectionState.connecting
+                            : conn.state == CognithorConnectionState.connecting
                                 ? 'Connecting...'
                                 : 'Disconnected',
                         style: theme.textTheme.bodyLarge,
@@ -203,7 +203,7 @@ class _DeviceSettingsScreenState extends State<DeviceSettingsScreen> {
             const _SectionHeader(title: 'Sensor Data'),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(JarvisTheme.spacing),
+                padding: const EdgeInsets.all(CognithorTheme.spacing),
                 child: Column(
                   children: [
                     _InfoRow(

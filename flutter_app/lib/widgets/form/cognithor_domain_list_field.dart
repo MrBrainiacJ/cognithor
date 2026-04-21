@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisListField extends StatefulWidget {
-  const JarvisListField({
+class CognithorDomainListField extends StatefulWidget {
+  const CognithorDomainListField({
     super.key,
     required this.label,
     required this.value,
@@ -19,15 +18,35 @@ class JarvisListField extends StatefulWidget {
   final String? placeholder;
 
   @override
-  State<JarvisListField> createState() => _JarvisListFieldState();
+  State<CognithorDomainListField> createState() => _CognithorDomainListFieldState();
 }
 
-class _JarvisListFieldState extends State<JarvisListField> {
+class _CognithorDomainListFieldState extends State<CognithorDomainListField> {
   final _ctrl = TextEditingController();
+  String? _error;
+
+  static final _domainRegex =
+      RegExp(r'^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$');
+
+  String? _validate(String text) {
+    if (text.startsWith('http://') || text.startsWith('https://')) {
+      return 'No scheme (http://) allowed';
+    }
+    if (text.contains('/')) return 'No paths allowed';
+    if (text.contains('*')) return 'No wildcards allowed';
+    if (!_domainRegex.hasMatch(text)) return 'Invalid domain format';
+    return null;
+  }
 
   void _add() {
     final text = _ctrl.text.trim();
     if (text.isEmpty) return;
+    final err = _validate(text);
+    if (err != null) {
+      setState(() => _error = err);
+      return;
+    }
+    setState(() => _error = null);
     widget.onChanged([...widget.value, text]);
     _ctrl.clear();
   }
@@ -57,7 +76,7 @@ class _JarvisListFieldState extends State<JarvisListField> {
             const SizedBox(height: 2),
             Text(widget.description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           Row(
@@ -66,19 +85,22 @@ class _JarvisListFieldState extends State<JarvisListField> {
                 child: TextField(
                   controller: _ctrl,
                   decoration: InputDecoration(
-                    hintText: widget.placeholder ?? 'Add item...',
+                    hintText: widget.placeholder ?? 'example.com',
+                    errorText: _error,
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
                   ),
                   onSubmitted: (_) => _add(),
+                  onChanged: (_) {
+                    if (_error != null) setState(() => _error = null);
+                  },
                 ),
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: Icon(Icons.add, color: JarvisTheme.accent),
+                icon: Icon(Icons.add, color: CognithorTheme.accent),
                 onPressed: _add,
-                tooltip: AppLocalizations.of(context).addItem,
               ),
             ],
           ),
@@ -104,7 +126,7 @@ class _JarvisListFieldState extends State<JarvisListField> {
                     InkWell(
                       onTap: () => _remove(i),
                       child: Icon(Icons.close,
-                          size: 16, color: JarvisTheme.textSecondary),
+                          size: 16, color: CognithorTheme.textSecondary),
                     ),
                   ],
                 ),

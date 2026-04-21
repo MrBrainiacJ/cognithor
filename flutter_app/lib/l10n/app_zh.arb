@@ -50,7 +50,7 @@
     }
   },
   "connectionError": "无法连接到后端",
-  "connectionErrorDetail": "请确认 Jarvis 后端正在 {url} 运行",
+  "connectionErrorDetail": "请确认 Cognithor 后端正在 {url} 运行",
   "@connectionErrorDetail": {
     "placeholders": {
       "url": {
@@ -1053,9 +1053,9 @@
   "@remove": {},
   "stopBackend": "停止后端",
   "@stopBackend": {},
-  "stopBackendDescription": "停止 Jarvis 后端。你需要手动重新启动。",
+  "stopBackendDescription": "停止 Cognithor 后端。你需要手动重新启动。",
   "@stopBackendDescription": {},
-  "stopBackendConfirmBody": "这将停止 Jarvis 后端进程。你需要通过命令行手动重新启动。",
+  "stopBackendConfirmBody": "这将停止 Cognithor 后端进程。你需要通过命令行手动重新启动。",
   "@stopBackendConfirmBody": {},
   "backendStopped": "后端已停止。请手动重新启动。",
   "@backendStopped": {},
@@ -1065,7 +1065,7 @@
   "@loadConfigDesc": {},
   "resetAllDesc": "将所有设置恢复为默认值。此操作不可撤销。",
   "@resetAllDesc": {},
-  "factoryResetNotImpl": "后端尚未实现恢复出厂设置功能。要手动重置，请删除 config.yaml 并重新启动 Jarvis。",
+  "factoryResetNotImpl": "后端尚未实现恢复出厂设置功能。要手动重置，请删除 config.yaml 并重新启动 Cognithor。",
   "@factoryResetNotImpl": {},
   "ok": "确定",
   "@ok": {},

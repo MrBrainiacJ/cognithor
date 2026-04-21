@@ -5,16 +5,16 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/skills_provider.dart';
 import 'package:cognithor_ui/screens/skill_editor_screen.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 import 'package:cognithor_ui/widgets/neon_glow.dart';
-import 'package:cognithor_ui/widgets/jarvis_chip.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_search_bar.dart';
+import 'package:cognithor_ui/widgets/cognithor_chip.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_search_bar.dart';
 import 'package:cognithor_ui/widgets/shimmer_loading.dart';
 import 'package:cognithor_ui/widgets/staggered_list.dart';
-import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
-import 'package:cognithor_ui/widgets/jarvis_tab_bar.dart';
+import 'package:cognithor_ui/widgets/cognithor_status_badge.dart';
+import 'package:cognithor_ui/widgets/cognithor_tab_bar.dart';
 
 class SkillsScreen extends StatefulWidget {
   const SkillsScreen({super.key});
@@ -73,7 +73,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: JarvisSearchBar(
+                  child: CognithorSearchBar(
                     hintText: l.searchSkills,
                     onChanged: _onSearch,
                     onClear: _onClearSearch,
@@ -81,7 +81,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: JarvisTabBar(
+                  child: CognithorTabBar(
                     tabs: [l.featured, l.trending, l.installed],
                     icons: const [
                       Icons.star_outline,
@@ -105,7 +105,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
                 bottom: 16,
                 child: FloatingActionButton.extended(
                   onPressed: _openNewSkill,
-                  backgroundColor: JarvisTheme.sectionSkills,
+                  backgroundColor: CognithorTheme.sectionSkills,
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: Text(
                     l.newSkill,
@@ -130,7 +130,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
     }
 
     if (provider.error != null) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.error_outline,
         title: l.noSkills,
         subtitle: provider.error,
@@ -178,7 +178,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
     required bool isInstalled,
   }) {
     if (skills.isEmpty) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.extension_outlined,
         title: l.noSkills,
         subtitle: l.browseMarketplace,
@@ -194,7 +194,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
           await provider.loadTrending();
         }
       },
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -218,7 +218,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
 
   Widget _buildInstalledList(List<dynamic> skills, AppLocalizations l) {
     if (skills.isEmpty) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.extension_off_outlined,
         title: l.noSkills,
         subtitle: l.browseMarketplace,
@@ -227,7 +227,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
 
     return RefreshIndicator(
       onRefresh: () => context.read<SkillsProvider>().loadInstalled(),
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -301,7 +301,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: JarvisTheme.red,
+              backgroundColor: CognithorTheme.red,
             ),
             child: Text(l.uninstallSkill),
           ),
@@ -345,7 +345,7 @@ class _SkillCard extends StatelessWidget {
     final isEnabled = skill['enabled'] as bool? ?? true;
 
     return NeonCard(
-      tint: JarvisTheme.sectionSkills,
+      tint: CognithorTheme.sectionSkills,
       glowOnHover: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +370,7 @@ class _SkillCard extends StatelessWidget {
                   child: Switch(
                     value: isEnabled,
                     onChanged: (_) => onToggle?.call(),
-                    activeThumbColor: JarvisTheme.sectionSkills,
+                    activeThumbColor: CognithorTheme.sectionSkills,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
@@ -384,14 +384,14 @@ class _SkillCard extends StatelessWidget {
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     padding: EdgeInsets.zero,
                     tooltip: l.editSkill,
-                    color: JarvisTheme.sectionSkills,
+                    color: CognithorTheme.sectionSkills,
                   ),
                 ),
               ],
               if (isVerified)
-                JarvisStatusBadge(
+                CognithorStatusBadge(
                   label: l.verified,
-                  color: JarvisTheme.green,
+                  color: CognithorTheme.green,
                   icon: Icons.verified,
                 ),
             ],
@@ -422,11 +422,11 @@ class _SkillCard extends StatelessWidget {
           Row(
             children: [
               if (category.isNotEmpty) ...[
-                JarvisChip(label: category),
+                CognithorChip(label: category),
                 const SizedBox(width: 8),
               ],
               if (rating > 0) ...[
-                Icon(Icons.star, size: 14, color: JarvisTheme.orange),
+                Icon(Icons.star, size: 14, color: CognithorTheme.orange),
                 const SizedBox(width: 2),
                 Text(
                   rating.toStringAsFixed(1),
@@ -434,7 +434,7 @@ class _SkillCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
               ],
-              Icon(Icons.download, size: 14, color: JarvisTheme.textSecondary),
+              Icon(Icons.download, size: 14, color: CognithorTheme.textSecondary),
               const SizedBox(width: 2),
               Text(downloadCount, style: theme.textTheme.bodySmall),
               const Spacer(),
@@ -444,8 +444,8 @@ class _SkillCard extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: onUninstall,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: JarvisTheme.red,
-                      side: BorderSide(color: JarvisTheme.red),
+                      foregroundColor: CognithorTheme.red,
+                      side: BorderSide(color: CognithorTheme.red),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       textStyle: const TextStyle(fontSize: 12),
                     ),
@@ -454,7 +454,7 @@ class _SkillCard extends StatelessWidget {
                 )
               else
                 NeonGlow(
-                  color: JarvisTheme.sectionSkills,
+                  color: CognithorTheme.sectionSkills,
                   intensity: 0.2,
                   blurRadius: 8,
                   child: SizedBox(

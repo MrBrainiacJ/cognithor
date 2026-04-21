@@ -19,8 +19,8 @@ class ConnectionGuard extends StatelessWidget {
         // Always block on version mismatch, even before first connect.
         final showOverlay = conn.versionMismatch ||
             (conn.wasConnected &&
-                (conn.state == JarvisConnectionState.error ||
-                    conn.state == JarvisConnectionState.disconnected));
+                (conn.state == CognithorConnectionState.error ||
+                    conn.state == CognithorConnectionState.disconnected));
         return Stack(
           children: [
             child,
@@ -41,7 +41,7 @@ class ConnectionGuard extends StatelessWidget {
 }
 
 class _ConnectionLostOverlay extends StatelessWidget {
-  final JarvisConnectionState state;
+  final CognithorConnectionState state;
   final String? errorMessage;
   final VoidCallback onRetry;
   final bool versionMismatch;
