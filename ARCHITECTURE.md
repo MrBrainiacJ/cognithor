@@ -120,6 +120,10 @@ Sandbox levels (selected automatically by platform):
 | `jobobject` | Windows | Job Objects with resource limits |
 | `bare` | Any (fallback) | Timeout + output limit only |
 
+### Observer Audit Layer (`core/observer.py` — PR #118)
+
+The Observer runs after the Executor produces a response, before it is delivered to the user. It is an LLM-based quality audit that evaluates every response across 4 dimensions: hallucination, sycophancy, laziness, and tool-ignorance. A hallucination finding routes control back to the Planner for response regeneration; a tool-ignorance finding triggers a full PGE re-loop via the Gateway so the Planner can pick the correct tools. The Observer is designed to fail open: if the audit itself raises an exception, the original response is passed through unchanged and the failure is logged. Configurable via the `observer.*` section in `config.yaml`; see `CONFIG_REFERENCE.md`.
+
 ---
 
 ## Message Flow
@@ -457,7 +461,7 @@ HIMReporter: Markdown/JSON/Quick + SHA-256 signature
 vault_save(report)
 ```
 
-Located at `src/jarvis/osint/`. Exposed as 3 MCP tools: `investigate_person`, `investigate_project`, `investigate_org`.
+Located at `src/cognithor/osint/`. Exposed as 3 MCP tools: `investigate_person`, `investigate_project`, `investigate_org`.
 
 ---
 
@@ -517,7 +521,7 @@ Key components:
 
 ## ARC-AGI-3 Benchmark Module
 
-The `src/jarvis/arc/` module enables Cognithor to compete in the ARC Prize 2026 interactive reasoning benchmark.
+The `src/cognithor/arc/` module enables Cognithor to compete in the ARC Prize 2026 interactive reasoning benchmark.
 
 ### Architecture
 
@@ -550,9 +554,9 @@ User/CLI → CognithorArcAgent
 ### CLI
 
 ```bash
-python -m jarvis.arc --game ls20              # Single game
-python -m jarvis.arc --mode benchmark         # All games sequential
-python -m jarvis.arc --mode swarm --parallel 4 # Parallel execution
+python -m cognithor.arc --game ls20              # Single game
+python -m cognithor.arc --mode benchmark         # All games sequential
+python -m cognithor.arc --mode swarm --parallel 4 # Parallel execution
 ```
 
 ---
@@ -577,7 +581,7 @@ document creation and template-based generation:
 
 ### Template System
 
-Templates are Typst `.typ` files stored in `~/.jarvis/templates/documents/`.
+Templates are Typst `.typ` files stored in `~/.cognithor/templates/documents/`.
 Each template declares metadata in a frontmatter comment block and uses
 `{{variable}}` placeholders that the LLM fills before compilation.
 

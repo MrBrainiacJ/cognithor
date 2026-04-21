@@ -52,7 +52,7 @@ ollama serve
 
 ### Alternative: LM Studio Instead of Ollama
 
-If you prefer LM Studio, download your models in the LM Studio GUI and set in `~/.jarvis/config.yaml`:
+If you prefer LM Studio, download your models in the LM Studio GUI and set in `~/.cognithor/config.yaml`:
 
 ```yaml
 llm_backend_type: "lmstudio"
@@ -102,7 +102,7 @@ The batch file starts the Control Center UI, which automatically manages the Pyt
 ### Option B: CLI
 
 ```bash
-python -m jarvis
+python -m cognithor
 ```
 
 You will see the CLI REPL:
@@ -157,13 +157,13 @@ Cognithor loads yesterday's episodes, open tasks, and creates a daily overview.
 
 ```bash
 # Main configuration
-nano ~/.jarvis/config.yaml
+nano ~/.cognithor/config.yaml
 
 # Identity & rules
-nano ~/.jarvis/memory/CORE.md
+nano ~/.cognithor/memory/CORE.md
 
 # Edit/add procedures
-ls ~/.jarvis/memory/procedures/
+ls ~/.cognithor/memory/procedures/
 ```
 
 Important config options:
@@ -179,7 +179,7 @@ models:
 
 security:
   allowed_paths:                        # File access restricted to these paths
-    - ~/.jarvis
+    - ~/.cognithor
     - ~/Documents
 
 personality:
@@ -198,7 +198,7 @@ make test         # Run 10,800+ tests
 
 Logs:
 ```bash
-tail -f ~/.jarvis/logs/jarvis.log
+tail -f ~/.cognithor/logs/cognithor.log
 ```
 
 ## 9. Server Deployment (optional)
@@ -225,9 +225,9 @@ See [`deploy/README.md`](deploy/README.md) for complete deployment documentation
 
 ## Next Steps
 
-- **Telegram bot** -- Set token in `~/.jarvis/.env`: `JARVIS_TELEGRAM_TOKEN=...`
+- **Telegram bot** -- Set token in `~/.cognithor/.env`: `COGNITHOR_TELEGRAM_TOKEN=...`
 - **Cron jobs** -- Enable morning briefing, weekly review
-- **Custom procedures** -- Create workflows in `~/.jarvis/memory/procedures/`
+- **Custom procedures** -- Create workflows in `~/.cognithor/memory/procedures/`
 - **CORE.md** -- Add your own rules and preferences
 - **Server deployment** -- See `deploy/README.md` for Docker, bare-metal, TLS
 

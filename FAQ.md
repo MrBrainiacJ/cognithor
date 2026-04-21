@@ -60,14 +60,14 @@ python scripts/first_boot.py --quick    # Verify everything works
 
 ### 7. How do I switch from Ollama to a cloud backend?
 
-Set your API key in `~/.jarvis/config.yaml` or as an environment variable. Cognithor auto-detects the backend:
+Set your API key in `~/.cognithor/config.yaml` or as an environment variable. Cognithor auto-detects the backend:
 
 ```yaml
 # Option A: In config.yaml
 anthropic_api_key: "sk-ant-..."
 
 # Option B: Environment variable
-# export JARVIS_ANTHROPIC_API_KEY=sk-ant-...
+# export COGNITHOR_ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 Model names are automatically adapted to the new provider.
@@ -83,7 +83,7 @@ ollama pull qwen3-coder:30b      # Coder (optional, 20 GB VRAM)
 
 ### 9. Can I use different models than the defaults?
 
-Yes, change them in `~/.jarvis/config.yaml`:
+Yes, change them in `~/.cognithor/config.yaml`:
 
 ```yaml
 models:
@@ -114,21 +114,21 @@ If using a remote Ollama instance, set the URL: `export OLLAMA_HOST=http://remot
 
 ### 11. Where is the configuration file?
 
-`~/.jarvis/config.yaml`. It is auto-created on first start. See `CONFIG_REFERENCE.md` for all available options.
+`~/.cognithor/config.yaml`. It is auto-created on first start. See `CONFIG_REFERENCE.md` for all available options.
 
 ### 12. How do I set the language?
 
 ```yaml
 language: "en"   # en, de, zh, ar
 ```
-Or via environment variable: `export JARVIS_LANGUAGE=en`
+Or via environment variable: `export COGNITHOR_LANGUAGE=en`
 
 ### 13. How do I restrict file access?
 
 ```yaml
 security:
   allowed_paths:
-    - "~/.jarvis/"
+    - "~/.cognithor/"
     - "~/Documents/"
     - "/path/to/project/"
 ```
@@ -137,11 +137,11 @@ The gatekeeper blocks file operations outside these paths.
 
 ### 14. Can I use environment variables instead of config.yaml?
 
-Yes. All config keys can be overridden with `JARVIS_` prefixed variables:
+Yes. All config keys can be overridden with `COGNITHOR_` prefixed variables:
 ```bash
-export JARVIS_LANGUAGE=en
-export JARVIS_PLANNER_MAX_ITERATIONS=15
-export JARVIS_OLLAMA_TIMEOUT_SECONDS=180
+export COGNITHOR_LANGUAGE=en
+export COGNITHOR_PLANNER_MAX_ITERATIONS=15
+export COGNITHOR_OLLAMA_TIMEOUT_SECONDS=180
 ```
 
 ---
@@ -151,7 +151,7 @@ export JARVIS_OLLAMA_TIMEOUT_SECONDS=180
 ### 15. How do I set up the Telegram bot?
 
 1. Create a bot with [@BotFather](https://t.me/BotFather) on Telegram
-2. Set the token in `~/.jarvis/.env`: `JARVIS_TELEGRAM_TOKEN=123456:ABC...`
+2. Set the token in `~/.cognithor/.env`: `COGNITHOR_TELEGRAM_TOKEN=123456:ABC...`
 3. Enable in config: `channels.telegram_enabled: true`
 4. Optionally restrict to your user ID: `channels.telegram_whitelist: ["your_user_id"]`
 
@@ -173,7 +173,7 @@ Yes. Enable each channel in the config and provide the required tokens/credentia
 
 ### 19. Is my data sent to external servers?
 
-By default, no. Cognithor uses Ollama (local LLM) and stores all data in `~/.jarvis/`. If you configure a cloud LLM backend (OpenAI, Anthropic, etc.), your prompts are sent to that provider's API. Web search tools access the internet when invoked.
+By default, no. Cognithor uses Ollama (local LLM) and stores all data in `~/.cognithor/`. If you configure a cloud LLM backend (OpenAI, Anthropic, etc.), your prompts are sent to that provider's API. Web search tools access the internet when invoked.
 
 ### 20. How does the Gatekeeper work?
 
@@ -216,7 +216,7 @@ The production build goes to `flutter_app/build/web/` and is automatically serve
 The backend is not running or not reachable. Check:
 1. Is the backend running on port 8741? (`curl http://localhost:8741/api/v1/health`)
 2. Is a firewall blocking the connection?
-3. Check logs at `~/.jarvis/logs/jarvis.log`
+3. Check logs at `~/.cognithor/logs/cognithor.log`
 
 ---
 
@@ -241,7 +241,7 @@ ollama run qwen3:32b "Hello" --keepalive 30m
 python scripts/first_boot.py --quick    # System validation
 make smoke                              # 26 installation checks
 make health                             # Runtime check (Ollama, disk, memory)
-tail -f ~/.jarvis/logs/jarvis.log       # Live logs
+tail -f ~/.cognithor/logs/cognithor.log       # Live logs
 ```
 
 ---
@@ -257,13 +257,13 @@ Cognithor has three memory layers:
 
 ### 29. How do I import existing knowledge?
 
-Place documents (Markdown, PDF, DOCX, TXT) in `~/.jarvis/memory/knowledge/`. They are automatically indexed on next startup.
+Place documents (Markdown, PDF, DOCX, TXT) in `~/.cognithor/memory/knowledge/`. They are automatically indexed on next startup.
 
 ### 30. How do I back up my data?
 
 ```bash
-# All data lives in ~/.jarvis/
-cp -r ~/.jarvis/ ~/backup/cognithor-backup/
+# All data lives in ~/.cognithor/
+cp -r ~/.cognithor/ ~/backup/cognithor-backup/
 ```
 
 See `DATABASE.md` for a complete list of database files and their locations.
@@ -272,7 +272,7 @@ See `DATABASE.md` for a complete list of database files and their locations.
 
 ## Troubleshooting
 
-### 31. "No module named 'jarvis'" error
+### 31. "No module named 'cognithor'" error
 
 Make sure the virtual environment is activated and the package is installed:
 ```bash
@@ -292,7 +292,7 @@ database:
 ### 33. The planner always answers directly instead of using tools
 
 Check:
-1. Are MCP tools registered? Check `~/.jarvis/logs/jarvis.log` for tool registration messages.
+1. Are MCP tools registered? Check `~/.cognithor/logs/cognithor.log` for tool registration messages.
 2. Is the system prompt too long? Reduce `memory.search_top_k`.
 3. Try increasing temperature: `planner.temperature: 0.7`
 4. Run `python scripts/first_boot.py` to validate the full agent loop.
@@ -308,8 +308,16 @@ DuckDuckGo may rate-limit. Options:
 
 ```bash
 # Remove all Cognithor data (CAUTION: this deletes all memories!)
-rm -rf ~/.jarvis/
+rm -rf ~/.cognithor/
 
 # Reinitialize
 python scripts/first_boot.py
 ```
+
+---
+
+## Agent Quality
+
+### 36. What is the Observer?
+
+The Observer Audit Layer (PR #118) is an LLM-based quality check that runs after every response. It evaluates the response across 4 dimensions: hallucinations, sycophancy, laziness, and tool-ignorance. A hallucination finding triggers response regeneration inside the Planner; a tool-ignorance finding triggers a full PGE re-loop via the Gateway. The Observer always fails open — if the audit itself errors, the response is delivered unchanged. Configure it via the `observer.*` section in `config.yaml`; see `CONFIG_REFERENCE.md` for all options.
