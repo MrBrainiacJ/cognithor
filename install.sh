@@ -746,11 +746,21 @@ install_cognithor() {
         success "pysqlcipher3 available (GDPR encryption)"
     else
         echo "  [INFO] Installing pysqlcipher3 for GDPR encryption at rest..."
-        # System library required first
-        install_system_deps libsqlcipher-dev 2>/dev/null || true
+        # System sqlcipher dev headers — package name differs per platform.
+        # Passing a single name to a generic helper makes brew fuzzy-match
+        # to unrelated formulae (e.g. libserdes on macOS). Resolve per-PM here.
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y libsqlcipher-dev 2>/dev/null || true
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install -y sqlcipher-devel 2>/dev/null || true
+        elif command -v pacman &>/dev/null; then
+            sudo pacman -S --noconfirm sqlcipher 2>/dev/null || true
+        elif command -v brew &>/dev/null; then
+            brew install sqlcipher 2>/dev/null || true
+        fi
         retry "pip install pysqlcipher3 --quiet 2>/dev/null" && \
             success "pysqlcipher3 installed" || \
-            warn "pysqlcipher3 install failed -- database encryption unavailable. Install libsqlcipher-dev (Ubuntu) or sqlcipher (macOS) and retry."
+            warn "pysqlcipher3 install failed -- database encryption unavailable. Install libsqlcipher-dev (Debian/Ubuntu), sqlcipher-devel (Fedora), or sqlcipher (macOS/Arch) and retry."
     fi
 
     # Verify installation
