@@ -143,7 +143,7 @@ class GatekeeperConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    policies_dir: str = "policies"  # Relativ zu jarvis_home
+    policies_dir: str = "policies"  # Relativ zu cognithor_home
     default_risk_level: Literal["green", "yellow", "orange", "red"] = "yellow"
     max_blocked_retries: int = Field(default=3, ge=1, le=10)
 
@@ -797,7 +797,7 @@ class HeartbeatConfig(BaseModel):
     zwischen 1 und 1440 Minuten (24 Stunden)."""
 
     checklist_file: str = "HEARTBEAT.md"
-    """Dateiname der Checklist im ``jarvis_home``. Diese Datei enthaelt
+    """Dateiname der Checklist im ``cognithor_home``. Diese Datei enthaelt
     Text oder Bullet-Points, die beim Heartbeat an den Agenten
     uebermittelt werden. Falls die Datei nicht existiert, wird eine
     leere Nachricht gesendet."""
@@ -826,7 +826,7 @@ class PluginsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     skills_dir: str = "skills"
-    """Relativer Name des Verzeichnisses im ``jarvis_home``, in dem
+    """Relativer Name des Verzeichnisses im ``cognithor_home``, in dem
     zusaetzliche Skills installiert werden. Der Standardwert ist
     ``skills``. Dies fuehrt dazu, dass externe Prozeduren in
     ``~/.cognithor/skills`` abgelegt werden."""
@@ -1977,7 +1977,7 @@ class SecurityConfig(BaseModel):
             str(Path(tempfile.gettempdir()) / "jarvis") + os.sep,
         ]
     )
-    # Wenn True, wird das Projektverzeichnis (jarvis_home Parent) automatisch
+    # Wenn True, wird das Projektverzeichnis (cognithor_home Parent) automatisch
     # zu allowed_paths hinzugefuegt, damit Cognithor in seine eigene Codebase
     # schreiben kann (z.B. Skripte erstellen, Code integrieren).
     allow_project_dir: bool = True
@@ -3027,13 +3027,6 @@ class CognithorConfig(BaseModel):
         """Pfad zur Cron-Konfiguration."""
         return self.cognithor_home / "cron" / "jobs.yaml"
 
-    # ---- Backward-compat alias ----
-
-    @property
-    def jarvis_home(self) -> Path:
-        """Deprecated alias for cognithor_home. Remove in v1.0."""
-        return self.cognithor_home
-
     # ---- Verzeichnisstruktur-Management ----
 
     def ensure_directories(self) -> list[str]:
@@ -3728,8 +3721,3 @@ def _install_starter_procedures(procedures_dir: Path, created: list[str]) -> Non
                 created.append(str(target))
     except Exception:
         log.debug("starter_procedures_copy_skipped", exc_info=True)
-
-
-# Backward-compat alias for code written against the pre-v1 name.
-# Remove in v1.0 (no external downstream users identified; this is a safety net).
-JarvisConfig = CognithorConfig
