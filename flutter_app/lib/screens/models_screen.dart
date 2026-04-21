@@ -5,11 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/admin_provider.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
 
 /// Safely convert a model config value to Map.
 /// API may return either a Map or a plain String (just the model name).
@@ -69,7 +69,7 @@ class _ModelsScreenState extends State<ModelsScreen> {
     }
 
     if (admin.error != null && admin.models == null) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.model_training,
         title: l.modelsTitle,
         subtitle: admin.error,
@@ -109,12 +109,12 @@ class _ModelsScreenState extends State<ModelsScreen> {
         final a = context.read<AdminProvider>();
         await Future.wait([a.loadModels(), a.loadModelStats()]);
       },
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Configured models
-          JarvisSection(title: l.configured),
+          CognithorSection(title: l.configured),
           _ConfiguredModelCard(
             label: l.plannerModel,
             icon: Icons.architecture,
@@ -146,9 +146,9 @@ class _ModelsScreenState extends State<ModelsScreen> {
 
           // Available models
           const SizedBox(height: 8),
-          JarvisSection(title: l.availableModels),
+          CognithorSection(title: l.availableModels),
           if (available.isEmpty)
-            JarvisEmptyState(
+            CognithorEmptyState(
               icon: Icons.model_training,
               title: l.noModels,
             ),
@@ -159,11 +159,11 @@ class _ModelsScreenState extends State<ModelsScreen> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: NeonCard(
-                tint: JarvisTheme.sectionAdmin,
+                tint: CognithorTheme.sectionAdmin,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.model_training, size: 16, color: JarvisTheme.sectionAdmin),
+                    const Icon(Icons.model_training, size: 16, color: CognithorTheme.sectionAdmin),
                     const SizedBox(width: 10),
                     Expanded(child: Text(name, style: Theme.of(context).textTheme.bodyMedium)),
                   ],
@@ -176,34 +176,34 @@ class _ModelsScreenState extends State<ModelsScreen> {
             const SizedBox(height: 8),
             Text(
               '${available.length} models available from ${cfg.cfg['llm_backend_type'] ?? 'backend'}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: JarvisTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: CognithorTheme.textSecondary),
             ),
           ],
 
           // Stats
           const SizedBox(height: 8),
-          JarvisSection(title: l.modelStats),
+          CognithorSection(title: l.modelStats),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
-              JarvisStat(
+              CognithorStat(
                 label: l.total,
                 value: totalModels,
                 icon: Icons.model_training,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.providers,
                 value: providerCount,
                 icon: Icons.cloud,
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.capabilities,
                 value: capCount,
                 icon: Icons.star,
-                color: JarvisTheme.orange,
+                color: CognithorTheme.orange,
               ),
             ],
           ),
@@ -211,20 +211,20 @@ class _ModelsScreenState extends State<ModelsScreen> {
           // Warnings (from model stats)
           if (stats['warnings'] is List && (stats['warnings'] as List).isNotEmpty) ...[
             const SizedBox(height: 16),
-            JarvisSection(title: l.modelWarnings),
+            CognithorSection(title: l.modelWarnings),
             ...(stats['warnings'] as List).map<Widget>((w) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: NeonCard(
-                  tint: JarvisTheme.orange,
+                  tint: CognithorTheme.orange,
                   child: Row(
                     children: [
-                      Icon(Icons.warning_amber, color: JarvisTheme.orange, size: 20),
+                      Icon(Icons.warning_amber, color: CognithorTheme.orange, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           w.toString(),
-                          style: TextStyle(color: JarvisTheme.orange, fontSize: 13),
+                          style: TextStyle(color: CognithorTheme.orange, fontSize: 13),
                         ),
                       ),
                     ],
@@ -297,11 +297,11 @@ class _ConfiguredModelCard extends StatelessWidget {
                           return ListTile(
                             dense: true,
                             selected: isSelected,
-                            selectedColor: JarvisTheme.sectionAdmin,
+                            selectedColor: CognithorTheme.sectionAdmin,
                             leading: Icon(
                               isSelected ? Icons.check_circle : Icons.circle_outlined,
                               size: 18,
-                              color: isSelected ? JarvisTheme.sectionAdmin : null,
+                              color: isSelected ? CognithorTheme.sectionAdmin : null,
                             ),
                             title: Text(name, style: const TextStyle(fontSize: 13)),
                             onTap: () => Navigator.pop(ctx, name),
@@ -339,7 +339,7 @@ class _ConfiguredModelCard extends StatelessWidget {
             content: Text(ok
                 ? '$label: $modelName'
                 : AppLocalizations.of(context).saveFailed),
-            backgroundColor: ok ? JarvisTheme.green : JarvisTheme.red,
+            backgroundColor: ok ? CognithorTheme.green : CognithorTheme.red,
           ),
         );
       }
@@ -354,12 +354,12 @@ class _ConfiguredModelCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: NeonCard(
-        tint: JarvisTheme.sectionAdmin,
+        tint: CognithorTheme.sectionAdmin,
         glowOnHover: true,
         onTap: availableModels.isNotEmpty ? () => _showModelPicker(context) : null,
         child: Row(
           children: [
-            Icon(icon, size: 18, color: JarvisTheme.sectionAdmin),
+            Icon(icon, size: 18, color: CognithorTheme.sectionAdmin),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -368,12 +368,12 @@ class _ConfiguredModelCard extends StatelessWidget {
                   Text(label, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 2),
                   Text(name, style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: JarvisTheme.textSecondary,
+                    color: CognithorTheme.textSecondary,
                   )),
                 ],
               ),
             ),
-            Icon(Icons.swap_horiz, size: 20, color: JarvisTheme.textSecondary),
+            Icon(Icons.swap_horiz, size: 20, color: CognithorTheme.textSecondary),
           ],
         ),
       ),

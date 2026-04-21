@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Inline action icons (copy, edit) shown beneath a chat message bubble.
 ///
@@ -111,7 +111,7 @@ class _ActionIcon extends StatelessWidget {
           child: Icon(
             icon,
             size: 15,
-            color: highlight ? JarvisTheme.green : JarvisTheme.textTertiary,
+            color: highlight ? CognithorTheme.green : CognithorTheme.textTertiary,
           ),
         ),
       ),

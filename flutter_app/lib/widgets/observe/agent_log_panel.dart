@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class AgentLogPanel extends StatefulWidget {
   const AgentLogPanel({super.key, required this.entries});
@@ -38,11 +38,11 @@ class _AgentLogPanelState extends State<AgentLogPanel> {
 
   Color _phaseColor(String phase) {
     return switch (phase) {
-      'plan' => JarvisTheme.accent,
-      'gate' => JarvisTheme.orange,
-      'execute' => JarvisTheme.green,
-      'replan' => JarvisTheme.warning,
-      _ => JarvisTheme.textSecondary,
+      'plan' => CognithorTheme.accent,
+      'gate' => CognithorTheme.orange,
+      'execute' => CognithorTheme.green,
+      'replan' => CognithorTheme.warning,
+      _ => CognithorTheme.textSecondary,
     };
   }
 
@@ -125,7 +125,7 @@ class _AgentLogPanelState extends State<AgentLogPanel> {
                 const SizedBox(width: 4),
                 Text(tool,
                     style: theme.textTheme.bodySmall?.copyWith(
-                        color: JarvisTheme.accent, fontSize: 11)),
+                        color: CognithorTheme.accent, fontSize: 11)),
               ],
               const SizedBox(width: 6),
               Expanded(
@@ -141,7 +141,7 @@ class _AgentLogPanelState extends State<AgentLogPanel> {
                   elapsed,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 9,
-                    color: JarvisTheme.textSecondary,
+                    color: CognithorTheme.textSecondary,
                     fontFamily: 'monospace',
                   ),
                 ),

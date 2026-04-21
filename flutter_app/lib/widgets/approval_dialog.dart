@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class ApprovalDialog extends StatefulWidget {
   const ApprovalDialog({
@@ -84,9 +84,9 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: JarvisTheme.orange.withValues(alpha: 0.08),
+        color: CognithorTheme.orange.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: JarvisTheme.orange.withValues(alpha: 0.4)),
+        border: Border.all(color: CognithorTheme.orange.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,12 +94,12 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
         children: [
           Row(
             children: [
-              Icon(Icons.shield, color: JarvisTheme.orange, size: 20),
+              Icon(Icons.shield, color: CognithorTheme.orange, size: 20),
               const SizedBox(width: 8),
               Text(
                 l.approvalTitle,
                 style: TextStyle(
-                  color: JarvisTheme.orange,
+                  color: CognithorTheme.orange,
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
                 ),
@@ -139,7 +139,7 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
             Text(
               _lastClickStatus!,
               style: TextStyle(
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -150,7 +150,7 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
             Text(
               _localError!,
               style: TextStyle(
-                color: JarvisTheme.red,
+                color: CognithorTheme.red,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -163,8 +163,8 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
               OutlinedButton(
                 onPressed: _busy ? null : () => _handle(false),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: JarvisTheme.red,
-                  side: BorderSide(color: JarvisTheme.red),
+                  foregroundColor: CognithorTheme.red,
+                  side: BorderSide(color: CognithorTheme.red),
                 ),
                 child: Text(l.reject),
               ),
@@ -172,7 +172,7 @@ class _ApprovalDialogState extends State<ApprovalDialog> {
               ElevatedButton(
                 onPressed: _busy ? null : () => _handle(true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: JarvisTheme.green,
+                  backgroundColor: CognithorTheme.green,
                 ),
                 child: Text(l.approve),
               ),

@@ -5,12 +5,12 @@ import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
-import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_status_badge.dart';
 import 'package:cognithor_ui/widgets/monitoring/live_logs_tab.dart';
 
 class MonitoringScreen extends StatefulWidget {
@@ -97,7 +97,7 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
     }
 
     if (_error != null && _dashboard == null) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.monitor_heart_outlined,
         title: l.noData,
         subtitle: _error,
@@ -116,9 +116,9 @@ class _MonitoringScreenState extends State<MonitoringScreen> {
           Material(
             color: Colors.transparent,
             child: TabBar(
-              indicatorColor: JarvisTheme.accent,
-              labelColor: JarvisTheme.accent,
-              unselectedLabelColor: JarvisTheme.textSecondary,
+              indicatorColor: CognithorTheme.accent,
+              labelColor: CognithorTheme.accent,
+              unselectedLabelColor: CognithorTheme.textSecondary,
               tabs: const [
                 Tab(
                   icon: Icon(Icons.dashboard_outlined),
@@ -176,7 +176,7 @@ class _DashboardTab extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -184,23 +184,23 @@ class _DashboardTab extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              JarvisStat(
+              CognithorStat(
                 label: l.uptime,
                 value: uptime,
                 icon: Icons.timer,
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.activeSessions,
                 value: activeSessions,
                 icon: Icons.people,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.totalRequests,
                 value: totalRequests,
                 icon: Icons.trending_up,
-                color: JarvisTheme.orange,
+                color: CognithorTheme.orange,
               ),
             ],
           ),
@@ -223,10 +223,10 @@ class _EventsTab extends StatelessWidget {
 
   Color _severityColor(String severity) {
     return switch (severity.toUpperCase()) {
-      'ERROR' || 'CRITICAL' => JarvisTheme.red,
-      'WARNING' || 'WARN' => JarvisTheme.orange,
-      'INFO' => JarvisTheme.accent,
-      _ => JarvisTheme.green,
+      'ERROR' || 'CRITICAL' => CognithorTheme.red,
+      'WARNING' || 'WARN' => CognithorTheme.orange,
+      'INFO' => CognithorTheme.accent,
+      _ => CognithorTheme.green,
     };
   }
 
@@ -236,11 +236,11 @@ class _EventsTab extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          JarvisSection(
+          CognithorSection(
             title: l.events,
             trailing: Text(
               l.refreshing,
@@ -249,7 +249,7 @@ class _EventsTab extends StatelessWidget {
           ),
           if (events == null || events!.isEmpty)
             NeonCard(
-              tint: JarvisTheme.sectionAdmin,
+              tint: CognithorTheme.sectionAdmin,
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -268,7 +268,7 @@ class _EventsTab extends StatelessWidget {
               final timestamp = e['timestamp']?.toString() ?? '';
 
               return NeonCard(
-                tint: JarvisTheme.sectionAdmin,
+                tint: CognithorTheme.sectionAdmin,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 10,
@@ -276,7 +276,7 @@ class _EventsTab extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    JarvisStatusBadge(
+                    CognithorStatusBadge(
                       label: severity,
                       color: _severityColor(severity),
                     ),

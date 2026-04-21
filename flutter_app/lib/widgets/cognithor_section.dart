@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class JarvisSection extends StatelessWidget {
-  const JarvisSection({
+class CognithorSection extends StatelessWidget {
+  const CognithorSection({
     super.key,
     required this.title,
     this.trailing,

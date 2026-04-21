@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// A drop-in replacement for [IndexedStack] that cross-fades and subtly slides
 /// between children when the [index] changes.
@@ -8,8 +8,8 @@ class AnimatedIndexedStack extends StatefulWidget {
     super.key,
     required this.index,
     required this.children,
-    this.duration = JarvisTheme.animDuration,
-    this.curve = JarvisTheme.animCurve,
+    this.duration = CognithorTheme.animDuration,
+    this.curve = CognithorTheme.animCurve,
     this.slideOffset = 50.0,
   });
 

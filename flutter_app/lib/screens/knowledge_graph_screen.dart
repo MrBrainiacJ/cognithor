@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 
 
@@ -189,7 +189,7 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
     return list;
   }
 
-  static const _typeColors = JarvisTheme.entityColors;
+  static const _typeColors = CognithorTheme.entityColors;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +205,7 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(_error!, style: TextStyle(color: JarvisTheme.red)),
+                      Text(_error!, style: TextStyle(color: CognithorTheme.red)),
                       const SizedBox(height: 12),
                       ElevatedButton(
                           onPressed: _loadGraph, child: Text(l.retry)),
@@ -319,7 +319,7 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
                       SizedBox(
                         width: 280,
                         child: NeonCard(
-                          tint: JarvisTheme.sectionAdmin,
+                          tint: CognithorTheme.sectionAdmin,
                           borderRadius: 0,
                           child: _buildDetailPanel(theme),
                         ),
@@ -446,7 +446,7 @@ class _ForceGraphPainter extends CustomPainter {
 
     // Draw edges
     final edgePaint = Paint()
-      ..color = (brightness == Brightness.dark ? JarvisTheme.textPrimary : JarvisTheme.textTertiary)
+      ..color = (brightness == Brightness.dark ? CognithorTheme.textPrimary : CognithorTheme.textTertiary)
           .withValues(alpha: 0.1)
       ..strokeWidth = 1;
 
@@ -464,7 +464,7 @@ class _ForceGraphPainter extends CustomPainter {
       final pos = positions[id];
       if (pos == null) continue;
       final type = (e['type'] ?? 'unknown').toString();
-      final color = typeColors[type] ?? JarvisTheme.entityColors['unknown']!;
+      final color = typeColors[type] ?? CognithorTheme.entityColors['unknown']!;
       final name = (e['name'] ?? e['label'] ?? '').toString();
 
       // Node circle
@@ -482,7 +482,7 @@ class _ForceGraphPainter extends CustomPainter {
         text: TextSpan(
           text: name.length > 12 ? '${name.substring(0, 12)}...' : name,
           style: TextStyle(
-            color: brightness == Brightness.dark ? JarvisTheme.textSecondary : JarvisTheme.textTertiary,
+            color: brightness == Brightness.dark ? CognithorTheme.textSecondary : CognithorTheme.textTertiary,
             fontSize: 9,
           ),
         ),

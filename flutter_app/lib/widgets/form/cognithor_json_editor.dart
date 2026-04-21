@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisJsonEditor extends StatefulWidget {
-  const JarvisJsonEditor({
+class CognithorJsonEditor extends StatefulWidget {
+  const CognithorJsonEditor({
     super.key,
     required this.label,
     required this.value,
@@ -19,10 +19,10 @@ class JarvisJsonEditor extends StatefulWidget {
   final int rows;
 
   @override
-  State<JarvisJsonEditor> createState() => _JarvisJsonEditorState();
+  State<CognithorJsonEditor> createState() => _CognithorJsonEditorState();
 }
 
-class _JarvisJsonEditorState extends State<JarvisJsonEditor> {
+class _CognithorJsonEditorState extends State<CognithorJsonEditor> {
   late final TextEditingController _ctrl;
   late final FocusNode _focusNode;
   String? _error;
@@ -41,7 +41,7 @@ class _JarvisJsonEditorState extends State<JarvisJsonEditor> {
   }
 
   @override
-  void didUpdateWidget(JarvisJsonEditor old) {
+  void didUpdateWidget(CognithorJsonEditor old) {
     super.didUpdateWidget(old);
     // Do not update controller text while the user is actively editing
     // to prevent cursor jumps.
@@ -92,7 +92,7 @@ class _JarvisJsonEditorState extends State<JarvisJsonEditor> {
             const SizedBox(height: 2),
             Text(widget.description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           TextField(
@@ -109,7 +109,7 @@ class _JarvisJsonEditorState extends State<JarvisJsonEditor> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: _error != null ? JarvisTheme.red : theme.dividerColor,
+                  color: _error != null ? CognithorTheme.red : theme.dividerColor,
                 ),
               ),
             ),

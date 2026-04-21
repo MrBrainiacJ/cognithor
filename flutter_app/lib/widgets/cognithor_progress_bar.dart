@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisProgressBar extends StatelessWidget {
-  const JarvisProgressBar({
+class CognithorProgressBar extends StatelessWidget {
+  const CognithorProgressBar({
     super.key,
     required this.value,
     this.label,
@@ -18,7 +18,7 @@ class JarvisProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final barColor = color ?? JarvisTheme.accent;
+    final barColor = color ?? CognithorTheme.accent;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

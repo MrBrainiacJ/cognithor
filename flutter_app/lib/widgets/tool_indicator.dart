@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class ToolIndicator extends StatelessWidget {
   const ToolIndicator({
@@ -27,7 +27,7 @@ class ToolIndicator extends StatelessWidget {
             height: 14,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: JarvisTheme.accent,
+              color: CognithorTheme.accent,
             ),
           ),
           const SizedBox(width: 10),
@@ -35,13 +35,13 @@ class ToolIndicator extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: JarvisTheme.accent.withValues(alpha: 0.12),
+                color: CognithorTheme.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 tool!,
                 style: TextStyle(
-                  color: JarvisTheme.accent,
+                  color: CognithorTheme.accent,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'monospace',

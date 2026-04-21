@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class TemplatePicker extends StatefulWidget {
   const TemplatePicker({super.key, required this.subreddit});
@@ -62,7 +62,7 @@ class _TemplatePickerState extends State<TemplatePicker> {
                           ),
                           trailing: Text(
                             '${t['use_count'] ?? 0}x',
-                            style: TextStyle(color: JarvisTheme.textSecondary, fontSize: 11),
+                            style: TextStyle(color: CognithorTheme.textSecondary, fontSize: 11),
                           ),
                           onTap: () => Navigator.of(context).pop(t['template_text']?.toString() ?? ''),
                         );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/staggered_list.dart';
 
 import 'package:cognithor_ui/screens/agents_screen.dart';
@@ -144,7 +144,7 @@ class _AdminHubScreenState extends State<AdminHubScreen> {
       return ListTile(
         leading: Icon(
           section.icon,
-          color: selected ? colorScheme.primary : JarvisTheme.textSecondary,
+          color: selected ? colorScheme.primary : CognithorTheme.textSecondary,
         ),
         title: Text(
           section.title,
@@ -164,7 +164,7 @@ class _AdminHubScreenState extends State<AdminHubScreen> {
         selected: selected,
         selectedTileColor: colorScheme.primary.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(JarvisTheme.buttonRadius),
+          borderRadius: BorderRadius.circular(CognithorTheme.buttonRadius),
         ),
         onTap: () {
           if (isWide) {
@@ -179,7 +179,7 @@ class _AdminHubScreenState extends State<AdminHubScreen> {
     });
 
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: JarvisTheme.spacingSm),
+      padding: const EdgeInsets.symmetric(vertical: CognithorTheme.spacingSm),
       children: [
         StaggeredList(children: tiles),
       ],

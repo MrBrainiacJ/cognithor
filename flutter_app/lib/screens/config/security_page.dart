@@ -20,33 +20,33 @@ class SecurityPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Max Iterations',
               value: (sec['max_iterations'] as num?) ?? 10,
               onChanged: (v) => cfg.set('security.max_iterations', v),
               min: 1,
               max: 50,
             ),
-            JarvisNumberField(
+            CognithorNumberField(
               label: 'Max Sub-Agent Depth',
               value: (sec['max_sub_agent_depth'] as num?) ?? 3,
               onChanged: (v) => cfg.set('security.max_sub_agent_depth', v),
               min: 1,
               max: 10,
             ),
-            JarvisListField(
+            CognithorListField(
               label: 'Allowed Paths',
               value: _toStringList(sec['allowed_paths']),
               onChanged: (v) => cfg.set('security.allowed_paths', v),
               placeholder: '/path/to/directory',
             ),
-            JarvisListField(
+            CognithorListField(
               label: 'Blocked Commands',
               value: _toStringList(sec['blocked_commands']),
               onChanged: (v) => cfg.set('security.blocked_commands', v),
               placeholder: 'rm -rf',
             ),
-            JarvisListField(
+            CognithorListField(
               label: 'Credential Patterns',
               value: _toStringList(sec['credential_patterns']),
               onChanged: (v) => cfg.set('security.credential_patterns', v),

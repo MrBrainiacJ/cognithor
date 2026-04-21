@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/leads/refine_panel.dart';
 import 'package:cognithor_ui/widgets/leads/template_picker.dart';
-import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/widgets/cognithor_toast.dart';
 
 class LeadWizard extends StatefulWidget {
   const LeadWizard({super.key, required this.leads});
@@ -79,7 +79,7 @@ class _LeadWizardState extends State<LeadWizard> {
     setState(() => _posting = false);
     if (ok) {
       _repliedCount++;
-      if (mounted) JarvisToast.show(context, 'Reply posted', type: ToastType.success);
+      if (mounted) CognithorToast.show(context, 'Reply posted', type: ToastType.success);
       _advance();
     }
   }
@@ -124,7 +124,7 @@ class _LeadWizardState extends State<LeadWizard> {
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(value: _progress, color: JarvisTheme.accent),
+          child: LinearProgressIndicator(value: _progress, color: CognithorTheme.accent),
         ),
       ),
       body: KeyboardListener(
@@ -154,11 +154,11 @@ class _LeadWizardState extends State<LeadWizard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: JarvisTheme.accent.withValues(alpha: 0.2),
+                    color: CognithorTheme.accent.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('${lead.intentScore}/100',
-                      style: TextStyle(color: JarvisTheme.accent, fontWeight: FontWeight.w800, fontSize: 18)),
+                      style: TextStyle(color: CognithorTheme.accent, fontWeight: FontWeight.w800, fontSize: 18)),
                 ),
                 const SizedBox(width: 12),
                 Text('r/${lead.subreddit}', style: theme.textTheme.titleSmall),
@@ -177,7 +177,7 @@ class _LeadWizardState extends State<LeadWizard> {
             const SizedBox(height: 8),
             if (lead.scoreReason.isNotEmpty)
               Text('Reason: ${lead.scoreReason}',
-                  style: theme.textTheme.bodySmall?.copyWith(color: JarvisTheme.textSecondary)),
+                  style: theme.textTheme.bodySmall?.copyWith(color: CognithorTheme.textSecondary)),
             const Divider(height: 24),
 
             // Reply editor
@@ -243,8 +243,8 @@ class _LeadWizardState extends State<LeadWizard> {
                     children: [
                       TextButton.icon(
                         onPressed: _archive,
-                        icon: Icon(Icons.archive, size: 16, color: JarvisTheme.textSecondary),
-                        label: Text(l.archiveLead, style: TextStyle(color: JarvisTheme.textSecondary)),
+                        icon: Icon(Icons.archive, size: 16, color: CognithorTheme.textSecondary),
+                        label: Text(l.archiveLead, style: TextStyle(color: CognithorTheme.textSecondary)),
                       ),
                       const Spacer(),
                       OutlinedButton.icon(
@@ -264,7 +264,7 @@ class _LeadWizardState extends State<LeadWizard> {
                   ),
                   const SizedBox(height: 4),
                   Text('Shortcuts: A=Archive  S=Skip  I=Improve  R=Reply',
-                      style: theme.textTheme.bodySmall?.copyWith(color: JarvisTheme.textSecondary, fontSize: 10)),
+                      style: theme.textTheme.bodySmall?.copyWith(color: CognithorTheme.textSecondary, fontSize: 10)),
                 ],
               ),
             ),

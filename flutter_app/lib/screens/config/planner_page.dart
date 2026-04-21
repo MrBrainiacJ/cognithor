@@ -20,25 +20,25 @@ class PlannerPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Planner (PGE)',
               icon: Icons.architecture,
               initiallyExpanded: true,
               children: [
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max Iterations',
                   value: (planner['max_iterations'] as num?) ?? 25,
                   onChanged: (v) => cfg.set('planner.max_iterations', v),
                   min: 1,
                   max: 50,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Escalation After',
                   value: (planner['escalation_after'] as num?) ?? 3,
                   onChanged: (v) => cfg.set('planner.escalation_after', v),
                   min: 1,
                 ),
-                JarvisSliderField(
+                CognithorSliderField(
                   label: 'Temperature',
                   value:
                       (planner['temperature'] as num?)?.toDouble() ?? 0.7,
@@ -46,7 +46,7 @@ class PlannerPage extends StatelessWidget {
                   max: 2.0,
                   step: 0.05,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Response Token Budget',
                   value:
                       (planner['response_token_budget'] as num?) ?? 4000,
@@ -57,23 +57,23 @@ class PlannerPage extends StatelessWidget {
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Gatekeeper',
               icon: Icons.shield,
               children: [
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Policies Directory',
                   value: (gk['policies_dir'] ?? '').toString(),
                   onChanged: (v) => cfg.set('gatekeeper.policies_dir', v),
                 ),
-                JarvisSelectField.fromStrings(
+                CognithorSelectField.fromStrings(
                   label: 'Default Risk Level',
                   value: (gk['default_risk_level'] ?? 'orange').toString(),
                   options: const ['green', 'yellow', 'orange', 'red'],
                   onChanged: (v) =>
                       cfg.set('gatekeeper.default_risk_level', v),
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max Blocked Retries',
                   value: (gk['max_blocked_retries'] as num?) ?? 3,
                   onChanged: (v) =>
@@ -82,11 +82,11 @@ class PlannerPage extends StatelessWidget {
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Sandbox',
               icon: Icons.security,
               children: [
-                JarvisSelectField.fromStrings(
+                CognithorSelectField.fromStrings(
                   label: 'Level',
                   value: (sb['level'] ?? 'process').toString(),
                   options: const [
@@ -94,35 +94,35 @@ class PlannerPage extends StatelessWidget {
                   ],
                   onChanged: (v) => cfg.set('sandbox.level', v),
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Timeout (seconds)',
                   value: (sb['timeout_seconds'] as num?) ?? 30,
                   onChanged: (v) => cfg.set('sandbox.timeout_seconds', v),
                   min: 1,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max Memory (MB)',
                   value: (sb['max_memory_mb'] as num?) ?? 512,
                   onChanged: (v) => cfg.set('sandbox.max_memory_mb', v),
                   min: 64,
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Max CPU Seconds',
                   value: (sb['max_cpu_seconds'] as num?) ?? 30,
                   onChanged: (v) => cfg.set('sandbox.max_cpu_seconds', v),
                   min: 1,
                 ),
-                JarvisListField(
+                CognithorListField(
                   label: 'Allowed Paths',
                   value: _toStringList(sb['allowed_paths']),
                   onChanged: (v) => cfg.set('sandbox.allowed_paths', v),
                 ),
-                JarvisToggleField(
+                CognithorToggleField(
                   label: 'Network Access',
                   value: sb['network_access'] == true,
                   onChanged: (v) => cfg.set('sandbox.network_access', v),
                 ),
-                JarvisJsonEditor(
+                CognithorJsonEditor(
                   label: 'Environment Variables',
                   value: sb['env_vars'] ?? {},
                   onChanged: (v) => cfg.set('sandbox.env_vars', v),

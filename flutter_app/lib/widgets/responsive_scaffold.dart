@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/navigation_provider.dart';
 import 'package:cognithor_ui/providers/pip_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/animated_indexed_stack.dart';
 import 'package:cognithor_ui/widgets/command_bar.dart';
 
@@ -124,7 +124,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                 ...List.generate(widget.navItems.length, (i) {
                   final item = widget.navItems[i];
                   final selected = i == widget.currentIndex;
-                  final sectionColor = JarvisTheme.sectionColorFor(i);
+                  final sectionColor = CognithorTheme.sectionColorFor(i);
                   return Expanded(
                     child: InkWell(
                       onTap: () => widget.onIndexChanged(i),
@@ -165,7 +165,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                                 item.shortcut!,
                                 style: TextStyle(
                                   fontSize: 8,
-                                  color: JarvisTheme.textTertiary,
+                                  color: CognithorTheme.textTertiary,
                                   fontFamily: 'monospace',
                                 ),
                               ),
@@ -194,9 +194,9 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
     // On desktop, sidebar width morphs based on the active section
     final railWidth = expanded ? nav.sidebarWidth : 64.0;
 
-    final railBg = isDark ? JarvisTheme.surface : const Color(0xFFF8F8FC);
+    final railBg = isDark ? CognithorTheme.surface : const Color(0xFFF8F8FC);
     final borderColor =
-        isDark ? JarvisTheme.border : const Color(0xFFE0E0E8);
+        isDark ? CognithorTheme.border : const Color(0xFFE0E0E8);
 
     return Scaffold(
       body: Row(
@@ -265,7 +265,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                           icon: isDark ? Icons.light_mode : Icons.dark_mode,
                           label: isDark ? l.lightMode : l.darkMode,
                           expanded: expanded && nav.sidebarWidth > 80,
-                          glowColor: JarvisTheme.orange,
+                          glowColor: CognithorTheme.orange,
                           onTap: widget.onThemeToggle ?? () {},
                         ),
                         const SizedBox(height: 4),
@@ -277,7 +277,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                                   ? l.hideRobotOffice
                                   : l.robotOffice,
                               expanded: expanded && nav.sidebarWidth > 80,
-                              glowColor: JarvisTheme.purple,
+                              glowColor: CognithorTheme.purple,
                               onTap: () => pip.toggle(),
                             );
                           },
@@ -381,14 +381,14 @@ class _BreathingLogoState extends State<_BreathingLogo>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        JarvisTheme.accent,
-                        JarvisTheme.accent.withValues(alpha: 0.7),
+                        CognithorTheme.accent,
+                        CognithorTheme.accent.withValues(alpha: 0.7),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: JarvisTheme.accent.withValues(alpha: 0.3),
+                        color: CognithorTheme.accent.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -410,7 +410,7 @@ class _BreathingLogoState extends State<_BreathingLogo>
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: isDark
-                      ? JarvisTheme.textPrimary
+                      ? CognithorTheme.textPrimary
                       : const Color(0xFF1A1A2E),
                   letterSpacing: -0.3,
                 ),
@@ -451,7 +451,7 @@ class _RailNavItemState extends State<_RailNavItem> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sectionColor = JarvisTheme.sectionColorFor(widget.tabIndex);
+    final sectionColor = CognithorTheme.sectionColorFor(widget.tabIndex);
     final selected = widget.selected;
 
     // Active: Neon pill at 20% opacity
@@ -463,11 +463,11 @@ class _RailNavItemState extends State<_RailNavItem> {
 
     final iconColor = selected
         ? sectionColor
-        : (isDark ? JarvisTheme.textSecondary : const Color(0xFF6B6B80));
+        : (isDark ? CognithorTheme.textSecondary : const Color(0xFF6B6B80));
 
     final labelColor = selected
         ? sectionColor
-        : (isDark ? JarvisTheme.textPrimary : const Color(0xFF1A1A2E));
+        : (isDark ? CognithorTheme.textPrimary : const Color(0xFF1A1A2E));
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -478,10 +478,10 @@ class _RailNavItemState extends State<_RailNavItem> {
           onTap: widget.onTap,
           child: AnimatedScale(
             scale: _hovered && !selected ? 1.05 : 1.0,
-            duration: JarvisTheme.animDurationFast,
+            duration: CognithorTheme.animDurationFast,
             child: AnimatedContainer(
-              duration: JarvisTheme.animDurationFast,
-              curve: JarvisTheme.animCurve,
+              duration: CognithorTheme.animDurationFast,
+              curve: CognithorTheme.animCurve,
               padding: EdgeInsets.symmetric(
                 horizontal: widget.expanded ? 12 : 0,
                 vertical: 10,
@@ -546,7 +546,7 @@ class _RailNavItemState extends State<_RailNavItem> {
                         widget.item.shortcut!,
                         style: TextStyle(
                           fontSize: 10,
-                          color: JarvisTheme.textTertiary,
+                          color: CognithorTheme.textTertiary,
                           fontFamily: 'monospace',
                         ),
                       ),
@@ -588,11 +588,11 @@ class _RailActionButtonState extends State<_RailActionButton> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final glow = widget.glowColor ?? JarvisTheme.accent;
+    final glow = widget.glowColor ?? CognithorTheme.accent;
     final hoverBg = glow.withValues(alpha: 0.10);
     final iconColor = _hovered
         ? glow
-        : (isDark ? JarvisTheme.textSecondary : const Color(0xFF6B6B80));
+        : (isDark ? CognithorTheme.textSecondary : const Color(0xFF6B6B80));
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -600,8 +600,8 @@ class _RailActionButtonState extends State<_RailActionButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: JarvisTheme.animDurationFast,
-          curve: JarvisTheme.animCurve,
+          duration: CognithorTheme.animDurationFast,
+          curve: CognithorTheme.animCurve,
           padding: EdgeInsets.symmetric(
             horizontal: widget.expanded ? 12 : 0,
             vertical: 8,

@@ -4,16 +4,16 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/memory_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 import 'package:cognithor_ui/widgets/neon_glow.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_list_tile.dart';
-import 'package:cognithor_ui/widgets/jarvis_loading_skeleton.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
-import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
-import 'package:cognithor_ui/widgets/jarvis_tab_bar.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_list_tile.dart';
+import 'package:cognithor_ui/widgets/cognithor_loading_skeleton.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_status_badge.dart';
+import 'package:cognithor_ui/widgets/cognithor_tab_bar.dart';
 
 class MemoryScreen extends StatefulWidget {
   const MemoryScreen({super.key});
@@ -58,7 +58,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: JarvisTabBar(
+              child: CognithorTabBar(
                 tabs: [l.knowledgeGraph, l.hygiene, l.explainability],
                 icons: const [
                   Icons.hub_outlined,
@@ -84,13 +84,13 @@ class _MemoryScreenState extends State<MemoryScreen> {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32),
-          child: JarvisLoadingSkeleton(count: 5, height: 80),
+          child: CognithorLoadingSkeleton(count: 5, height: 80),
         ),
       );
     }
 
     if (provider.error != null) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.error_outline,
         title: l.noData,
         subtitle: provider.error,
@@ -121,7 +121,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
         await provider.loadGraphStats();
         await provider.loadEntities();
       },
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -130,32 +130,32 @@ class _MemoryScreenState extends State<MemoryScreen> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              JarvisStat(
+              CognithorStat(
                 label: l.entities,
                 value: entityCount,
                 icon: Icons.circle,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.relations,
                 value: relationCount,
                 icon: Icons.link,
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.entityTypes,
                 value: entityTypes,
                 icon: Icons.category,
-                color: JarvisTheme.orange,
+                color: CognithorTheme.orange,
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          JarvisSection(title: l.entities),
+          CognithorSection(title: l.entities),
 
           if (provider.entities.isEmpty)
-            JarvisEmptyState(
+            CognithorEmptyState(
               icon: Icons.hub_outlined,
               title: l.noEntities,
             )
@@ -169,17 +169,17 @@ class _MemoryScreenState extends State<MemoryScreen> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: NeonCard(
-                tint: JarvisTheme.sectionAdmin,
+                tint: CognithorTheme.sectionAdmin,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
-                child: JarvisListTile(
+                child: CognithorListTile(
                   title: name,
                   subtitle: '$relations ${l.relations}',
-                  leading: JarvisStatusBadge(
+                  leading: CognithorStatusBadge(
                     label: type,
-                    color: JarvisTheme.accent,
+                    color: CognithorTheme.accent,
                   ),
                   dense: true,
                 ),
@@ -203,7 +203,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
         await provider.loadHygieneStats();
         await provider.loadQuarantine();
       },
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -212,29 +212,29 @@ class _MemoryScreenState extends State<MemoryScreen> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              JarvisStat(
+              CognithorStat(
                 label: l.totalScans,
                 value: totalScans,
                 icon: Icons.search,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.threats,
                 value: threats,
                 icon: Icons.warning_amber,
-                color: JarvisTheme.red,
+                color: CognithorTheme.red,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.threatRate,
                 value: threatRate,
                 icon: Icons.percent,
-                color: JarvisTheme.orange,
+                color: CognithorTheme.orange,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.quarantine,
                 value: quarantinedCount,
                 icon: Icons.shield,
-                color: JarvisTheme.orange,
+                color: CognithorTheme.orange,
               ),
             ],
           ),
@@ -243,7 +243,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
           // Scan button
           Center(
             child: NeonGlow(
-              color: JarvisTheme.sectionAdmin,
+              color: CognithorTheme.sectionAdmin,
               intensity: 0.25,
               blurRadius: 10,
               child: ElevatedButton.icon(
@@ -256,10 +256,10 @@ class _MemoryScreenState extends State<MemoryScreen> {
           const SizedBox(height: 24),
 
           // Quarantine list
-          JarvisSection(title: l.quarantine),
+          CognithorSection(title: l.quarantine),
 
           if (provider.quarantined.isEmpty)
-            JarvisEmptyState(
+            CognithorEmptyState(
               icon: Icons.shield_outlined,
               title: l.noQuarantine,
             )
@@ -273,17 +273,17 @@ class _MemoryScreenState extends State<MemoryScreen> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: NeonCard(
-                tint: JarvisTheme.sectionAdmin,
+                tint: CognithorTheme.sectionAdmin,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
-                child: JarvisListTile(
+                child: CognithorListTile(
                   title: name,
                   subtitle: '$reason\n$timestamp',
                   leading: Icon(
                     Icons.warning_amber,
-                    color: JarvisTheme.red,
+                    color: CognithorTheme.red,
                     size: 20,
                   ),
                   dense: true,
@@ -305,7 +305,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(l.scanComplete),
-          backgroundColor: JarvisTheme.green,
+          backgroundColor: CognithorTheme.green,
         ),
       );
       // Reload hygiene stats and quarantine after successful scan
@@ -330,7 +330,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
         await provider.loadTrails();
         await provider.loadLowTrustTrails();
       },
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -339,39 +339,39 @@ class _MemoryScreenState extends State<MemoryScreen> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              JarvisStat(
+              CognithorStat(
                 label: l.totalRequests,
                 value: totalRequests,
                 icon: Icons.analytics,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.activeTrails,
                 value: activeTrails,
                 icon: Icons.route,
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.completedTrails,
                 value: completed,
                 icon: Icons.check_circle,
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.confidence,
                 value: avgConfidence,
                 icon: Icons.speed,
-                color: JarvisTheme.orange,
+                color: CognithorTheme.orange,
               ),
             ],
           ),
           const SizedBox(height: 24),
 
           // Decision trails
-          JarvisSection(title: l.decisionTrails),
+          CognithorSection(title: l.decisionTrails),
 
           if (provider.trails.isEmpty)
-            JarvisEmptyState(
+            CognithorEmptyState(
               icon: Icons.account_tree_outlined,
               title: l.noTrails,
             )
@@ -386,15 +386,15 @@ class _MemoryScreenState extends State<MemoryScreen> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: NeonCard(
-                tint: JarvisTheme.sectionAdmin,
+                tint: CognithorTheme.sectionAdmin,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
-                child: JarvisListTile(
+                child: CognithorListTile(
                   title: id,
                   subtitle: status,
-                  trailing: JarvisStatusBadge(
+                  trailing: CognithorStatusBadge(
                     label: '${(confidence * 100).toStringAsFixed(0)}%',
                     color: _confidenceColor(confidence),
                     icon: Icons.speed,
@@ -408,7 +408,7 @@ class _MemoryScreenState extends State<MemoryScreen> {
           // Low trust section
           if (provider.lowTrustTrails.isNotEmpty) ...[
             const SizedBox(height: 24),
-            JarvisSection(title: l.lowTrust),
+            CognithorSection(title: l.lowTrust),
             ...provider.lowTrustTrails.map<Widget>((trail) {
               final t = trail as Map<String, dynamic>;
               final id = t['id']?.toString() ?? '';
@@ -419,17 +419,17 @@ class _MemoryScreenState extends State<MemoryScreen> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: NeonCard(
-                tint: JarvisTheme.sectionAdmin,
+                tint: CognithorTheme.sectionAdmin,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
-                child: JarvisListTile(
+                child: CognithorListTile(
                   title: id,
                   subtitle: status,
-                  trailing: JarvisStatusBadge(
+                  trailing: CognithorStatusBadge(
                     label: '${(confidence * 100).toStringAsFixed(0)}%',
-                    color: JarvisTheme.red,
+                    color: CognithorTheme.red,
                     icon: Icons.warning_amber,
                   ),
                   dense: true,
@@ -444,8 +444,8 @@ class _MemoryScreenState extends State<MemoryScreen> {
   }
 
   Color _confidenceColor(double confidence) {
-    if (confidence >= 0.8) return JarvisTheme.green;
-    if (confidence >= 0.5) return JarvisTheme.orange;
-    return JarvisTheme.red;
+    if (confidence >= 0.8) return CognithorTheme.green;
+    if (confidence >= 0.5) return CognithorTheme.orange;
+    return CognithorTheme.red;
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/cron_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class ScheduledPanel extends StatelessWidget {
   const ScheduledPanel({super.key});
@@ -116,7 +116,7 @@ class _CronJobCard extends StatelessWidget {
                 Icon(
                   _iconForAction(job.name),
                   size: 20,
-                  color: job.enabled ? JarvisTheme.accent : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  color: job.enabled ? CognithorTheme.accent : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -132,7 +132,7 @@ class _CronJobCard extends StatelessWidget {
                 Switch(
                   value: job.enabled,
                   onChanged: (_) => context.read<CronProvider>().toggleJob(job.name),
-                  activeThumbColor: JarvisTheme.accent,
+                  activeThumbColor: CognithorTheme.accent,
                 ),
               ],
             ),

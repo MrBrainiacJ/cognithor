@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisStat extends StatelessWidget {
-  const JarvisStat({
+class CognithorStat extends StatelessWidget {
+  const CognithorStat({
     super.key,
     required this.label,
     required this.value,
@@ -18,7 +18,7 @@ class JarvisStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveColor = color ?? JarvisTheme.accent;
+    final effectiveColor = color ?? CognithorTheme.accent;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

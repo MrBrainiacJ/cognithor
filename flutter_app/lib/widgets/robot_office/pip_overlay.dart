@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/pip_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/robot_office/glass_reflection_painter.dart';
 import 'package:cognithor_ui/widgets/robot_office/robot_office_widget.dart';
 
@@ -188,12 +188,12 @@ class _RobotOfficePipState extends State<RobotOfficePip>
               shape: BoxShape.circle,
               color: const Color(0xFF0c1220),
               border: Border.all(
-                color: JarvisTheme.accent.withValues(alpha: 0.7),
+                color: CognithorTheme.accent.withValues(alpha: 0.7),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: JarvisTheme.accent.withValues(alpha: 0.3),
+                  color: CognithorTheme.accent.withValues(alpha: 0.3),
                   blurRadius: 12,
                   spreadRadius: 2,
                 ),
@@ -205,7 +205,7 @@ class _RobotOfficePipState extends State<RobotOfficePip>
             ),
             child: const Icon(
               Icons.smart_toy,
-              color: JarvisTheme.info,
+              color: CognithorTheme.info,
               size: 24,
             ),
           ),
@@ -224,8 +224,8 @@ class _RobotOfficePipState extends State<RobotOfficePip>
         onPanUpdate: _onPanUpdate,
         onPanEnd: _onPanEnd,
         child: AnimatedContainer(
-          duration: JarvisTheme.animDuration,
-          curve: JarvisTheme.animCurve,
+          duration: CognithorTheme.animDuration,
+          curve: CognithorTheme.animCurve,
           width: _width,
           height: _height,
           decoration: BoxDecoration(
@@ -242,7 +242,7 @@ class _RobotOfficePipState extends State<RobotOfficePip>
                 offset: const Offset(0, 8),
               ),
               BoxShadow(
-                color: JarvisTheme.accent.withValues(alpha: 0.08),
+                color: CognithorTheme.accent.withValues(alpha: 0.08),
                 blurRadius: 40,
               ),
             ],
@@ -384,7 +384,7 @@ class _PipControlBar extends StatelessWidget {
                 icon: Icons.close,
                 tooltip: l.close,
                 onTap: onClose,
-                color: JarvisTheme.red,
+                color: CognithorTheme.red,
               ),
             ],
           );

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Live-streaming log viewer that polls monitoring events.
 class LiveLogsTab extends StatefulWidget {
@@ -60,7 +60,7 @@ class _LiveLogsTabState extends State<LiveLogsTab> {
 
   Future<void> _fetchEvents(int count, {bool initial = false}) async {
     final conn = context.read<ConnectionProvider>();
-    if (conn.state != JarvisConnectionState.connected) return;
+    if (conn.state != CognithorConnectionState.connected) return;
 
     try {
       final result = await conn.api.getMonitoringEvents(n: count);
@@ -158,10 +158,10 @@ class _LiveLogsTabState extends State<LiveLogsTab> {
 
   Color _severityColor(String severity) {
     return switch (severity.toUpperCase()) {
-      'ERROR' || 'CRITICAL' => JarvisTheme.red,
-      'WARNING' || 'WARN' => JarvisTheme.orange,
-      'INFO' => JarvisTheme.blue,
-      _ => JarvisTheme.green,
+      'ERROR' || 'CRITICAL' => CognithorTheme.red,
+      'WARNING' || 'WARN' => CognithorTheme.orange,
+      'INFO' => CognithorTheme.blue,
+      _ => CognithorTheme.green,
     };
   }
 
@@ -182,17 +182,17 @@ class _LiveLogsTabState extends State<LiveLogsTab> {
             children: [
               _FilterChip(label: 'All', active: _filter == 'ALL', onTap: () => setState(() => _filter = 'ALL')),
               const SizedBox(width: 8),
-              _FilterChip(label: 'Info', active: _filter == 'INFO', color: JarvisTheme.blue, onTap: () => setState(() => _filter = 'INFO')),
+              _FilterChip(label: 'Info', active: _filter == 'INFO', color: CognithorTheme.blue, onTap: () => setState(() => _filter = 'INFO')),
               const SizedBox(width: 8),
-              _FilterChip(label: 'Warning', active: _filter == 'WARNING', color: JarvisTheme.orange, onTap: () => setState(() => _filter = 'WARNING')),
+              _FilterChip(label: 'Warning', active: _filter == 'WARNING', color: CognithorTheme.orange, onTap: () => setState(() => _filter = 'WARNING')),
               const SizedBox(width: 8),
-              _FilterChip(label: 'Error', active: _filter == 'ERROR', color: JarvisTheme.red, onTap: () => setState(() => _filter = 'ERROR')),
+              _FilterChip(label: 'Error', active: _filter == 'ERROR', color: CognithorTheme.red, onTap: () => setState(() => _filter = 'ERROR')),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.delete_outline, size: 20),
                 tooltip: 'Clear',
                 onPressed: _clearLogs,
-                style: IconButton.styleFrom(foregroundColor: JarvisTheme.textSecondary),
+                style: IconButton.styleFrom(foregroundColor: CognithorTheme.textSecondary),
               ),
             ],
           ),
@@ -209,7 +209,7 @@ class _LiveLogsTabState extends State<LiveLogsTab> {
                         style: Theme.of(context)
                             .textTheme
                             .bodySmall
-                            ?.copyWith(color: JarvisTheme.textSecondary),
+                            ?.copyWith(color: CognithorTheme.textSecondary),
                       ),
                     )
                   : ListView.builder(
@@ -286,7 +286,7 @@ class _LiveLogsTabState extends State<LiveLogsTab> {
                                         text: message,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: JarvisTheme.textSecondary,
+                                          color: CognithorTheme.textSecondary,
                                         ),
                                       ),
                                     ],
@@ -313,7 +313,7 @@ class _LiveLogsTabState extends State<LiveLogsTab> {
                       icon: const Icon(Icons.arrow_downward, size: 16),
                       label: Text('Neue Events ($_newEventCount)'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: JarvisTheme.accent,
+                        backgroundColor: CognithorTheme.accent,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
@@ -358,7 +358,7 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = color ?? JarvisTheme.accent;
+    final chipColor = color ?? CognithorTheme.accent;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -367,7 +367,7 @@ class _FilterChip extends StatelessWidget {
           color: active ? chipColor.withValues(alpha: 0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: active ? chipColor : JarvisTheme.textSecondary.withValues(alpha: 0.3),
+            color: active ? chipColor : CognithorTheme.textSecondary.withValues(alpha: 0.3),
           ),
         ),
         child: Text(
@@ -375,7 +375,7 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-            color: active ? chipColor : JarvisTheme.textSecondary,
+            color: active ? chipColor : CognithorTheme.textSecondary,
           ),
         ),
       ),

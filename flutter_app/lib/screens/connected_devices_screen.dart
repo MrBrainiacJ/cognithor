@@ -7,9 +7,9 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
 import 'package:cognithor_ui/screens/qr_scanner_screen.dart';
 
 class ConnectedDevicesScreen extends StatefulWidget {
@@ -183,7 +183,7 @@ class _ConnectedDevicesScreenState extends State<ConnectedDevicesScreen> {
         // Device list
         Expanded(
           child: _devices.isEmpty
-              ? JarvisEmptyState(
+              ? CognithorEmptyState(
                   icon: Icons.devices_other,
                   title: l.noDevicesPaired,
                   subtitle: l.noDevicesHint,
@@ -204,7 +204,7 @@ class _ConnectedDevicesScreenState extends State<ConnectedDevicesScreen> {
     return Container(
       margin: const EdgeInsets.all(16),
       child: NeonCard(
-        tint: JarvisTheme.accent,
+        tint: CognithorTheme.accent,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -314,7 +314,7 @@ class _ConnectedDevicesScreenState extends State<ConnectedDevicesScreen> {
                     Text(
                       '${l.pairedAt}: $pairedAt  •  ${l.expiresAt}: $expiresAt',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: JarvisTheme.textSecondary,
+                        color: CognithorTheme.textSecondary,
                       ),
                     ),
                   ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Lightweight alternative to GlassPanel for use in list items and screens.
 /// Uses solid semi-transparent backgrounds instead of BackdropFilter,
@@ -31,7 +31,7 @@ class _NeonCardState extends State<NeonCard> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.tint ?? JarvisTheme.accent;
+    final color = widget.tint ?? CognithorTheme.accent;
     final isHovered = _hovered && widget.glowOnHover;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -56,8 +56,8 @@ class _NeonCardState extends State<NeonCard> {
           borderRadius: BorderRadius.circular(widget.borderRadius),
           clipBehavior: Clip.antiAlias,
           child: AnimatedContainer(
-            duration: JarvisTheme.animDuration,
-            curve: JarvisTheme.animCurve,
+            duration: CognithorTheme.animDuration,
+            curve: CognithorTheme.animCurve,
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(widget.borderRadius),

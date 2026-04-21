@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Slide-up panel that renders HTML content from canvas_push messages.
 class CanvasPanel extends StatelessWidget {
@@ -20,7 +20,7 @@ class CanvasPanel extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(top: BorderSide(color: JarvisTheme.accent, width: 2)),
+        border: Border(top: BorderSide(color: CognithorTheme.accent, width: 2)),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       constraints: BoxConstraints(
@@ -32,11 +32,11 @@ class CanvasPanel extends StatelessWidget {
           _buildHeader(context),
           Flexible(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(JarvisTheme.spacing),
+              padding: const EdgeInsets.all(CognithorTheme.spacing),
               child: HtmlWidget(
                 html,
                 textStyle: TextStyle(
-                  color: JarvisTheme.textPrimary,
+                  color: CognithorTheme.textPrimary,
                   fontSize: 14,
                 ),
               ),
@@ -55,7 +55,7 @@ class CanvasPanel extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.web_asset, color: JarvisTheme.accent, size: 20),
+          Icon(Icons.web_asset, color: CognithorTheme.accent, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

@@ -1,4 +1,4 @@
-/// Jarvis REST API client.
+/// Cognithor REST API client.
 ///
 /// Reads the auth token from the HTML <meta name="cognithor-token"> tag
 /// (injected by the backend at page-serve time). Falls back to

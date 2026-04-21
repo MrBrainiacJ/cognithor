@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/chat/matrix_rain_painter.dart';
 
 /// Terminal-style chat view for hacker mode.
@@ -120,7 +120,7 @@ class _HackerChatViewState extends State<HackerChatView>
     final color = switch (msg.role) {
       MessageRole.user => Colors.white,
       MessageRole.assistant => matrixGreen,
-      MessageRole.system => JarvisTheme.red,
+      MessageRole.system => CognithorTheme.red,
     };
 
     return _buildTerminalLine(
@@ -136,7 +136,7 @@ class _HackerChatViewState extends State<HackerChatView>
       timestamp: DateTime.now(),
       prefix: 'TOOL',
       text: tool,
-      color: JarvisTheme.sectionChat,
+      color: CognithorTheme.sectionChat,
     );
   }
 
@@ -148,7 +148,7 @@ class _HackerChatViewState extends State<HackerChatView>
     bool showCursor = false,
   }) {
     final ts = '${_pad(timestamp.hour)}:${_pad(timestamp.minute)}:${_pad(timestamp.second)}';
-    final mono = JarvisTheme.monoTextTheme;
+    final mono = CognithorTheme.monoTextTheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),

@@ -21,14 +21,14 @@ class VaultPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisToggleField(
+            CognithorToggleField(
               label: l.vaultActive,
               value: vault['enabled'] == true,
               onChanged: (v) => cfg.set('vault.enabled', v),
               description: l.vaultActiveDesc,
             ),
             const SizedBox(height: 12),
-            JarvisToggleField(
+            CognithorToggleField(
               label: l.vaultEncryption,
               value: vault['encrypt_files'] == true,
               onChanged: (v) => cfg.set('vault.encrypt_files', v),
@@ -108,7 +108,7 @@ class VaultPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            JarvisToggleField(
+            CognithorToggleField(
               label: l.vaultAutoSave,
               value: vault['auto_save_research'] == true,
               onChanged: (v) => cfg.set('vault.auto_save_research', v),

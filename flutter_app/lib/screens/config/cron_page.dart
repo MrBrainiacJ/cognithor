@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/config_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/form/form_widgets.dart';
 
 class CronPage extends StatelessWidget {
@@ -18,49 +18,49 @@ class CronPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Heartbeat',
               icon: Icons.favorite,
               initiallyExpanded: true,
               children: [
-                JarvisToggleField(
+                CognithorToggleField(
                   label: 'Enabled',
                   value: hb['enabled'] == true,
                   onChanged: (v) => cfg.set('heartbeat.enabled', v),
                 ),
-                JarvisNumberField(
+                CognithorNumberField(
                   label: 'Interval (minutes)',
                   value: (hb['interval_minutes'] as num?) ?? 60,
                   onChanged: (v) => cfg.set('heartbeat.interval_minutes', v),
                   min: 1,
                 ),
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Checklist File',
                   value: (hb['checklist_file'] ?? '').toString(),
                   onChanged: (v) => cfg.set('heartbeat.checklist_file', v),
                 ),
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Channel',
                   value: (hb['channel'] ?? '').toString(),
                   onChanged: (v) => cfg.set('heartbeat.channel', v),
                 ),
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Model',
                   value: (hb['model'] ?? '').toString(),
                   onChanged: (v) => cfg.set('heartbeat.model', v),
                 ),
               ],
             ),
-            JarvisCollapsibleCard(
+            CognithorCollapsibleCard(
               title: 'Plugins',
               icon: Icons.extension,
               children: [
-                JarvisTextField(
+                CognithorTextField(
                   label: 'Skills Directory',
                   value: (plugins['skills_dir'] ?? '').toString(),
                   onChanged: (v) => cfg.set('plugins.skills_dir', v),
                 ),
-                JarvisToggleField(
+                CognithorToggleField(
                   label: 'Auto Update',
                   value: plugins['auto_update'] == true,
                   onChanged: (v) => cfg.set('plugins.auto_update', v),
@@ -77,7 +77,7 @@ class CronPage extends StatelessWidget {
                         ?.copyWith(fontSize: 16)),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.add, color: JarvisTheme.accent),
+                  icon: Icon(Icons.add, color: CognithorTheme.accent),
                   onPressed: () => cfg.addCronJob({
                     'name': 'new-job',
                     'schedule': '0 * * * *',
@@ -90,31 +90,31 @@ class CronPage extends StatelessWidget {
             const SizedBox(height: 8),
             ...List.generate(cfg.cronJobs.length, (i) {
               final job = cfg.cronJobs[i];
-              return JarvisCollapsibleCard(
+              return CognithorCollapsibleCard(
                 title: (job['name'] ?? 'Job $i').toString(),
                 icon: Icons.schedule,
                 badge: _humanCron(job['schedule']?.toString() ?? ''),
                 children: [
-                  JarvisTextField(
+                  CognithorTextField(
                     label: 'Name',
                     value: (job['name'] ?? '').toString(),
                     onChanged: (v) => cfg.updateCronJob(
                         i, {...job, 'name': v}),
                   ),
-                  JarvisTextField(
+                  CognithorTextField(
                     label: 'Schedule (cron)',
                     value: (job['schedule'] ?? '').toString(),
                     onChanged: (v) => cfg.updateCronJob(
                         i, {...job, 'schedule': v}),
                     mono: true,
                   ),
-                  JarvisTextField(
+                  CognithorTextField(
                     label: 'Command',
                     value: (job['command'] ?? '').toString(),
                     onChanged: (v) => cfg.updateCronJob(
                         i, {...job, 'command': v}),
                   ),
-                  JarvisToggleField(
+                  CognithorToggleField(
                     label: 'Enabled',
                     value: job['enabled'] == true,
                     onChanged: (v) => cfg.updateCronJob(
@@ -125,9 +125,9 @@ class CronPage extends StatelessWidget {
                     child: TextButton.icon(
                       onPressed: () => cfg.removeCronJob(i),
                       icon: Icon(Icons.delete,
-                          size: 16, color: JarvisTheme.red),
+                          size: 16, color: CognithorTheme.red),
                       label: Text(AppLocalizations.of(context).remove,
-                          style: TextStyle(color: JarvisTheme.red)),
+                          style: TextStyle(color: CognithorTheme.red)),
                     ),
                   ),
                 ],

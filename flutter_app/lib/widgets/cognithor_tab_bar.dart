@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisTabBar extends StatelessWidget {
-  const JarvisTabBar({
+class CognithorTabBar extends StatelessWidget {
+  const CognithorTabBar({
     super.key,
     required this.tabs,
     required this.selectedIndex,
@@ -31,7 +31,7 @@ class JarvisTabBar extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: isSelected ? JarvisTheme.accent : Colors.transparent,
+                    color: isSelected ? CognithorTheme.accent : Colors.transparent,
                     width: 2,
                   ),
                 ),
@@ -42,15 +42,15 @@ class JarvisTabBar extends StatelessWidget {
                   if (icons != null && i < icons!.length) ...[
                     Icon(
                       icons![i],
-                      size: JarvisTheme.iconSizeSm,
-                      color: isSelected ? JarvisTheme.accent : JarvisTheme.textSecondary,
+                      size: CognithorTheme.iconSizeSm,
+                      color: isSelected ? CognithorTheme.accent : CognithorTheme.textSecondary,
                     ),
                     const SizedBox(width: 6),
                   ],
                   Text(
                     tabs[i],
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isSelected ? JarvisTheme.accent : JarvisTheme.textSecondary,
+                      color: isSelected ? CognithorTheme.accent : CognithorTheme.textSecondary,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),

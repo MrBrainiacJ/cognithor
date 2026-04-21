@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/glass_panel.dart';
 import 'package:cognithor_ui/widgets/gradient_background.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
@@ -227,10 +227,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: JarvisTheme.dark,
+      data: CognithorTheme.dark,
       child: Scaffold(
         body: GradientBackground(
-          particleColor: JarvisTheme.accent,
+          particleColor: CognithorTheme.accent,
           child: SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -244,7 +244,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       const SizedBox(height: 32),
                       Expanded(
                         child: AnimatedSwitcher(
-                          duration: JarvisTheme.animDuration,
+                          duration: CognithorTheme.animDuration,
                           child: switch (_step) {
                             0 => _buildStep1(),
                             1 => _buildStep2(),
@@ -278,7 +278,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontSize: 40,
                 fontWeight: FontWeight.w700,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
                 letterSpacing: 6,
               ),
         ),
@@ -288,7 +288,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           style: Theme.of(context)
               .textTheme
               .bodyMedium
-              ?.copyWith(color: JarvisTheme.textSecondary),
+              ?.copyWith(color: CognithorTheme.textSecondary),
         ),
         const SizedBox(height: 24),
         Text(l.chooseBackend,
@@ -310,7 +310,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     icon: Icons.psychology,
                     title: l.claudeSubscription,
                     subtitle: l.claudeSubscriptionDesc,
-                    tint: JarvisTheme.sectionChat,
+                    tint: CognithorTheme.sectionChat,
                     selected: _selectedBackend == 'claude-code',
                     status: _isAuthenticated('claude-code')
                         ? l.connected
@@ -327,7 +327,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     icon: Icons.computer,
                     title: l.ollamaLocal,
                     subtitle: l.ollamaLocalDesc,
-                    tint: JarvisTheme.matrix,
+                    tint: CognithorTheme.matrix,
                     selected: _selectedBackend == 'ollama',
                     status: _isAuthenticated('ollama')
                         ? '${_modelsFor('ollama').length} models'
@@ -343,7 +343,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     icon: Icons.auto_awesome,
                     title: l.openaiApi,
                     subtitle: 'GPT-5, o3 -- pay-per-use with API key',
-                    tint: JarvisTheme.sectionChat,
+                    tint: CognithorTheme.sectionChat,
                     selected: _selectedBackend == 'openai',
                     status: _isAuthenticated('openai')
                         ? l.keyConfigured
@@ -430,11 +430,11 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         if (_selectedBackend == 'claude-code') ...[
           if (_isAuthenticated('claude-code')) ...[
             GlassPanel(
-              tint: JarvisTheme.green,
+              tint: CognithorTheme.green,
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: JarvisTheme.green, size: 20),
+                  Icon(Icons.check_circle, color: CognithorTheme.green, size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -450,14 +450,14 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 style: Theme.of(context).textTheme.bodyMedium),
           ] else ...[
             GlassPanel(
-              tint: JarvisTheme.red,
+              tint: CognithorTheme.red,
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.error, color: JarvisTheme.red, size: 20),
+                      Icon(Icons.error, color: CognithorTheme.red, size: 20),
                       const SizedBox(width: 10),
                       Text(l.notInstalled,
                           style: Theme.of(context).textTheme.bodySmall),
@@ -528,9 +528,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           if (_isAuthenticated(_selectedBackend!))
             Row(
               children: [
-                Icon(Icons.check_circle_outline, color: JarvisTheme.green, size: 18),
+                Icon(Icons.check_circle_outline, color: CognithorTheme.green, size: 18),
                 const SizedBox(width: 8),
-                Text('API key saved', style: TextStyle(color: JarvisTheme.green)),
+                Text('API key saved', style: TextStyle(color: CognithorTheme.green)),
                 const SizedBox(width: 8),
                 TextButton(
                   onPressed: () => setState(() {}),
@@ -575,8 +575,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                   : l.testConnection,
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: JarvisTheme.accent,
-              side: BorderSide(color: JarvisTheme.accent),
+              foregroundColor: CognithorTheme.accent,
+              side: BorderSide(color: CognithorTheme.accent),
             ),
           ),
         ),
@@ -586,8 +586,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           const SizedBox(height: 16),
           GlassPanel(
             tint: _testState == _TestState.success
-                ? JarvisTheme.green
-                : JarvisTheme.red,
+                ? CognithorTheme.green
+                : CognithorTheme.red,
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
@@ -596,8 +596,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       ? Icons.check_circle
                       : Icons.error,
                   color: _testState == _TestState.success
-                      ? JarvisTheme.green
-                      : JarvisTheme.red,
+                      ? CognithorTheme.green
+                      : CognithorTheme.red,
                   size: 20,
                 ),
                 const SizedBox(width: 10),
@@ -663,7 +663,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       key: const ValueKey('step3'),
       children: [
         const Spacer(),
-        Icon(Icons.rocket_launch, size: 72, color: JarvisTheme.accent),
+        Icon(Icons.rocket_launch, size: 72, color: CognithorTheme.accent),
         const SizedBox(height: 24),
         Text(
           l.youreAllSet,
@@ -679,17 +679,17 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           style: Theme.of(context)
               .textTheme
               .bodyMedium
-              ?.copyWith(color: JarvisTheme.textSecondary),
+              ?.copyWith(color: CognithorTheme.textSecondary),
         ),
         const SizedBox(height: 8),
         if (_selectedBackend != 'claude-code')
           GlassPanel(
-            tint: JarvisTheme.accent,
+            tint: CognithorTheme.accent,
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Icon(Icons.info_outline,
-                    color: JarvisTheme.accent, size: 18),
+                    color: CognithorTheme.accent, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(l.restartRequired,
@@ -768,13 +768,13 @@ class _BackendCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: (selected ? tint : JarvisTheme.textTertiary)
+              color: (selected ? tint : CognithorTheme.textTertiary)
                   .withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
-              color: selected ? tint : JarvisTheme.textSecondary,
+              color: selected ? tint : CognithorTheme.textSecondary,
             ),
           ),
           const SizedBox(width: 14),
@@ -823,14 +823,14 @@ class _BackendCard extends StatelessWidget {
                     Icon(
                       statusOk ? Icons.check_circle_outline : Icons.radio_button_unchecked,
                       size: 14,
-                      color: statusOk ? JarvisTheme.green : JarvisTheme.textTertiary,
+                      color: statusOk ? CognithorTheme.green : CognithorTheme.textTertiary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       status,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color:
-                                statusOk ? JarvisTheme.green : JarvisTheme.textTertiary,
+                                statusOk ? CognithorTheme.green : CognithorTheme.textTertiary,
                           ),
                     ),
                   ],
@@ -861,13 +861,13 @@ class _NeonButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     return AnimatedContainer(
-      duration: JarvisTheme.animDuration,
+      duration: CognithorTheme.animDuration,
       decoration: glow && enabled
           ? BoxDecoration(
-              borderRadius: BorderRadius.circular(JarvisTheme.buttonRadius),
+              borderRadius: BorderRadius.circular(CognithorTheme.buttonRadius),
               boxShadow: [
                 BoxShadow(
-                  color: JarvisTheme.accent.withValues(alpha: 0.35),
+                  color: CognithorTheme.accent.withValues(alpha: 0.35),
                   blurRadius: 18,
                   spreadRadius: -2,
                 ),
@@ -878,11 +878,11 @@ class _NeonButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor:
-              enabled ? JarvisTheme.accent : JarvisTheme.surface,
+              enabled ? CognithorTheme.accent : CognithorTheme.surface,
           foregroundColor:
-              enabled ? JarvisTheme.bg : JarvisTheme.textTertiary,
+              enabled ? CognithorTheme.bg : CognithorTheme.textTertiary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(JarvisTheme.buttonRadius),
+            borderRadius: BorderRadius.circular(CognithorTheme.buttonRadius),
           ),
         ),
         child: Text(
@@ -907,14 +907,14 @@ class _StepIndicator extends StatelessWidget {
       children: List.generate(3, (i) {
         final active = i <= current;
         return AnimatedContainer(
-          duration: JarvisTheme.animDuration,
+          duration: CognithorTheme.animDuration,
           margin: const EdgeInsets.symmetric(horizontal: 4),
           width: i == current ? 28 : 10,
           height: 10,
           decoration: BoxDecoration(
             color: active
-                ? JarvisTheme.accent
-                : JarvisTheme.accent.withValues(alpha: 0.18),
+                ? CognithorTheme.accent
+                : CognithorTheme.accent.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(5),
           ),
         );

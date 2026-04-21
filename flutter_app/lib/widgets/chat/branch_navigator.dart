@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Inline branch navigator shown at fork points: < 1/3 >
 class BranchNavigator extends StatelessWidget {
@@ -22,9 +22,9 @@ class BranchNavigator extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: JarvisTheme.accent.withValues(alpha: 0.08),
+        color: CognithorTheme.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: JarvisTheme.accent.withValues(alpha: 0.2)),
+        border: Border.all(color: CognithorTheme.accent.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -40,7 +40,7 @@ class BranchNavigator extends StatelessWidget {
               '${currentIndex + 1} / $totalBranches',
               style: TextStyle(
                 fontSize: 11,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
                 fontFamily: 'monospace',
                 fontWeight: FontWeight.w600,
               ),
@@ -71,7 +71,7 @@ class _NavBtn extends StatelessWidget {
       child: Icon(
         icon,
         size: 18,
-        color: enabled ? JarvisTheme.accent : JarvisTheme.textTertiary,
+        color: enabled ? CognithorTheme.accent : CognithorTheme.textTertiary,
       ),
     );
   }

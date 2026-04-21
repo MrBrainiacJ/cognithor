@@ -31,7 +31,7 @@ class _KanbanScreenState extends State<KanbanScreen> {
       final conn = context.read<ConnectionProvider>();
       final kanban = context.read<KanbanProvider>();
       final cron = context.read<CronProvider>();
-      if (conn.state == JarvisConnectionState.connected) {
+      if (conn.state == CognithorConnectionState.connected) {
         kanban.setApiClient(conn.api);
         cron.setApiClient(conn.api);
       }

@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
-import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
+import 'package:cognithor_ui/widgets/cognithor_toast.dart';
 import 'package:cognithor_ui/widgets/leads/performance_badge.dart';
 import 'package:cognithor_ui/widgets/leads/feedback_dialog.dart';
 import 'package:cognithor_ui/widgets/leads/refine_panel.dart';
@@ -38,7 +38,7 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
     await Clipboard.setData(ClipboardData(text: _replyCtrl.text));
     if (mounted) {
       final l = AppLocalizations.of(context);
-      JarvisToast.show(context, l.copyReply, type: ToastType.success);
+      CognithorToast.show(context, l.copyReply, type: ToastType.success);
     }
   }
 
@@ -58,7 +58,7 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
     setState(() => _posting = false);
     if (ok && mounted) {
       final l = AppLocalizations.of(context);
-      JarvisToast.show(context, l.postReply, type: ToastType.success);
+      CognithorToast.show(context, l.postReply, type: ToastType.success);
       Navigator.of(context).pop();
     }
   }
@@ -102,7 +102,7 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                   width: 40, height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: JarvisTheme.textSecondary.withValues(alpha: 0.3),
+                    color: CognithorTheme.textSecondary.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -114,13 +114,13 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: JarvisTheme.accent.withValues(alpha: 0.2),
+                      color: CognithorTheme.accent.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${lead.intentScore}/100',
                       style: TextStyle(
-                        color: JarvisTheme.accent,
+                        color: CognithorTheme.accent,
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
                       ),
@@ -128,7 +128,7 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                   ),
                   const SizedBox(width: 12),
                   Text('r/${lead.subreddit}',
-                      style: theme.textTheme.titleSmall?.copyWith(color: JarvisTheme.textSecondary)),
+                      style: theme.textTheme.titleSmall?.copyWith(color: CognithorTheme.textSecondary)),
                   const Spacer(),
                   Text('u/${lead.author}', style: theme.textTheme.bodySmall),
                 ],
@@ -150,14 +150,14 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: JarvisTheme.accent.withValues(alpha: 0.08),
+                    color: CognithorTheme.accent.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(l.scoreReason,
-                          style: theme.textTheme.labelSmall?.copyWith(color: JarvisTheme.accent)),
+                          style: theme.textTheme.labelSmall?.copyWith(color: CognithorTheme.accent)),
                       const SizedBox(height: 4),
                       Text(lead.scoreReason, style: theme.textTheme.bodySmall),
                     ],
@@ -189,7 +189,7 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
               const SizedBox(height: 16),
               DefaultTextStyle(
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: JarvisTheme.textSecondary.withValues(alpha: 0.6),
+                  color: CognithorTheme.textSecondary.withValues(alpha: 0.6),
                   fontSize: 10,
                 ) ?? const TextStyle(fontSize: 10),
                 child: Column(
@@ -230,7 +230,7 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                           await provider.setFeedback(lead.id, tag: tag);
                           if (!mounted) return;
                           // ignore: use_build_context_synchronously
-                          JarvisToast.show(context, 'Feedback saved', type: ToastType.success);
+                          CognithorToast.show(context, 'Feedback saved', type: ToastType.success);
                         }
                       },
                       icon: const Icon(Icons.feedback, size: 16),
@@ -282,9 +282,9 @@ class _LeadDetailSheetState extends State<LeadDetailSheet> {
                     if (lead.status != 'archived')
                       TextButton.icon(
                         onPressed: _archive,
-                        icon: Icon(Icons.archive, size: 18, color: JarvisTheme.textSecondary),
+                        icon: Icon(Icons.archive, size: 18, color: CognithorTheme.textSecondary),
                         label: Text(l.archiveLead,
-                            style: TextStyle(color: JarvisTheme.textSecondary)),
+                            style: TextStyle(color: CognithorTheme.textSecondary)),
                       ),
                   ],
                 ),

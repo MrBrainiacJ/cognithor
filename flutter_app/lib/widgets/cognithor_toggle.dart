@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisToggle extends StatelessWidget {
-  const JarvisToggle({
+class CognithorToggle extends StatelessWidget {
+  const CognithorToggle({
     super.key,
     required this.label,
     required this.value,
@@ -40,8 +40,8 @@ class JarvisToggle extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeTrackColor: JarvisTheme.accent.withAlpha(128),
-          activeThumbColor: JarvisTheme.accent,
+          activeTrackColor: CognithorTheme.accent.withAlpha(128),
+          activeThumbColor: CognithorTheme.accent,
         ),
       ],
     );

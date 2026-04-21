@@ -15,7 +15,7 @@ class LoggingPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            JarvisSelectField.fromStrings(
+            CognithorSelectField.fromStrings(
               label: 'Log Level',
               value: (log['level'] ?? 'INFO').toString(),
               options: const [
@@ -23,13 +23,13 @@ class LoggingPage extends StatelessWidget {
               ],
               onChanged: (v) => cfg.set('logging.level', v),
             ),
-            JarvisToggleField(
+            CognithorToggleField(
               label: 'JSON Logs',
               value: log['json_logs'] == true,
               onChanged: (v) => cfg.set('logging.json_logs', v),
               description: 'Structured JSON output for log aggregation',
             ),
-            JarvisToggleField(
+            CognithorToggleField(
               label: 'Console Output',
               value: log['console'] != false,
               onChanged: (v) => cfg.set('logging.console', v),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisSliderField extends StatefulWidget {
-  const JarvisSliderField({
+class CognithorSliderField extends StatefulWidget {
+  const CognithorSliderField({
     super.key,
     required this.label,
     required this.value,
@@ -22,10 +22,10 @@ class JarvisSliderField extends StatefulWidget {
   final String? description;
 
   @override
-  State<JarvisSliderField> createState() => _JarvisSliderFieldState();
+  State<CognithorSliderField> createState() => _CognithorSliderFieldState();
 }
 
-class _JarvisSliderFieldState extends State<JarvisSliderField> {
+class _CognithorSliderFieldState extends State<CognithorSliderField> {
   bool _editing = false;
   late TextEditingController _ctrl;
 
@@ -109,7 +109,7 @@ class _JarvisSliderFieldState extends State<JarvisSliderField> {
             const SizedBox(height: 2),
             Text(widget.description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           Slider(
             value: clamped,

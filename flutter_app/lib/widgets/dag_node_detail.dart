@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Detail panel shown when a DAG node is tapped.
 class DagNodeDetail extends StatelessWidget {
@@ -24,9 +24,9 @@ class DagNodeDetail extends StatelessWidget {
       width: 320,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: JarvisTheme.surface,
+        color: CognithorTheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: JarvisTheme.border),
+        border: Border.all(color: CognithorTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,14 +85,14 @@ class DagNodeDetail extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: JarvisTheme.red.withValues(alpha: 0.1),
+                color: CognithorTheme.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
                 border:
-                    Border.all(color: JarvisTheme.red.withValues(alpha: 0.3)),
+                    Border.all(color: CognithorTheme.red.withValues(alpha: 0.3)),
               ),
               child: Text(
                 error,
-                style: TextStyle(color: JarvisTheme.red, fontSize: 11),
+                style: TextStyle(color: CognithorTheme.red, fontSize: 11),
               ),
             ),
           ],
@@ -110,7 +110,7 @@ class DagNodeDetail extends StatelessWidget {
             width: 70,
             child: Text(label,
                 style:
-                    TextStyle(fontSize: 11, color: JarvisTheme.textSecondary)),
+                    TextStyle(fontSize: 11, color: CognithorTheme.textSecondary)),
           ),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 11))),
         ],
@@ -120,11 +120,11 @@ class DagNodeDetail extends StatelessWidget {
 
   Widget _statusIcon(String status) {
     final (IconData icon, Color color) = switch (status.toLowerCase()) {
-      'running' => (Icons.play_circle, JarvisTheme.accent),
-      'complete' || 'done' || 'success' => (Icons.check_circle, JarvisTheme.green),
-      'error' || 'failure' => (Icons.error, JarvisTheme.red),
-      'skipped' => (Icons.skip_next, JarvisTheme.textSecondary),
-      _ => (Icons.pending, JarvisTheme.textTertiary),
+      'running' => (Icons.play_circle, CognithorTheme.accent),
+      'complete' || 'done' || 'success' => (Icons.check_circle, CognithorTheme.green),
+      'error' || 'failure' => (Icons.error, CognithorTheme.red),
+      'skipped' => (Icons.skip_next, CognithorTheme.textSecondary),
+      _ => (Icons.pending, CognithorTheme.textTertiary),
     };
     return Icon(icon, size: 18, color: color);
   }

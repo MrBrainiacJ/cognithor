@@ -4,13 +4,13 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/providers/admin_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_list_tile.dart';
-import 'package:cognithor_ui/widgets/jarvis_loading_skeleton.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_list_tile.dart';
+import 'package:cognithor_ui/widgets/cognithor_loading_skeleton.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
 
 class VaultScreen extends StatefulWidget {
   const VaultScreen({super.key});
@@ -57,7 +57,7 @@ class _VaultScreenState extends State<VaultScreen> {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(32),
-              child: JarvisLoadingSkeleton(count: 4, height: 60),
+              child: CognithorLoadingSkeleton(count: 4, height: 60),
             ),
           );
         }
@@ -65,7 +65,7 @@ class _VaultScreenState extends State<VaultScreen> {
         if (provider.error != null &&
             provider.vaultStats == null &&
             provider.vaultAgents.isEmpty) {
-          return JarvisEmptyState(
+          return CognithorEmptyState(
             icon: Icons.lock_outline,
             title: l.noData,
             subtitle: provider.error,
@@ -84,37 +84,37 @@ class _VaultScreenState extends State<VaultScreen> {
 
         return RefreshIndicator(
           onRefresh: _refresh,
-          color: JarvisTheme.accent,
+          color: CognithorTheme.accent,
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               // Stats
-              JarvisSection(title: l.vaultStats),
+              CognithorSection(title: l.vaultStats),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  JarvisStat(
+                  CognithorStat(
                     label: l.totalVaults,
                     value: totalVaults,
                     icon: Icons.lock,
-                    color: JarvisTheme.accent,
+                    color: CognithorTheme.accent,
                   ),
-                  JarvisStat(
+                  CognithorStat(
                     label: l.totalEntries,
                     value: totalEntries,
                     icon: Icons.key,
-                    color: JarvisTheme.green,
+                    color: CognithorTheme.green,
                   ),
                 ],
               ),
               const SizedBox(height: 24),
 
               // Agent vaults
-              JarvisSection(title: l.agentVaults),
+              CognithorSection(title: l.agentVaults),
 
               if (provider.vaultAgents.isEmpty)
-                JarvisEmptyState(
+                CognithorEmptyState(
                   icon: Icons.lock_outlined,
                   title: l.noVaults,
                 )
@@ -132,19 +132,19 @@ class _VaultScreenState extends State<VaultScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: NeonCard(
-                    tint: JarvisTheme.sectionAdmin,
+                    tint: CognithorTheme.sectionAdmin,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    child: JarvisListTile(
+                    child: CognithorListTile(
                       title: name,
                       subtitle: lastAccessed.isNotEmpty
                           ? '${l.totalEntries}: $entries  |  ${l.lastAccessed}: $lastAccessed'
                           : '${l.totalEntries}: $entries',
                       leading: Icon(
                         Icons.person_outline,
-                        color: JarvisTheme.accent,
+                        color: CognithorTheme.accent,
                         size: 20,
                       ),
                     ),

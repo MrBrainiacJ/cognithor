@@ -4,14 +4,14 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
-import 'package:cognithor_ui/widgets/form/jarvis_toggle_field.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
+import 'package:cognithor_ui/widgets/form/cognithor_toggle_field.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 import 'package:cognithor_ui/widgets/neon_glow.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
-import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
-import 'package:cognithor_ui/widgets/jarvis_tab_bar.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_status_badge.dart';
+import 'package:cognithor_ui/widgets/cognithor_tab_bar.dart';
 
 class LearningScreen extends StatefulWidget {
   const LearningScreen({super.key});
@@ -166,7 +166,7 @@ class _LearningScreenState extends State<LearningScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(_error!,
-                          style: TextStyle(color: JarvisTheme.red)),
+                          style: TextStyle(color: CognithorTheme.red)),
                       const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: _loadAll,
@@ -177,7 +177,7 @@ class _LearningScreenState extends State<LearningScreen> {
                 )
               : Column(
                   children: [
-                    JarvisTabBar(
+                    CognithorTabBar(
                       tabs: [
                         l.dashboard,
                         l.knowledgeGaps,
@@ -218,50 +218,50 @@ class _LearningScreenState extends State<LearningScreen> {
     final theme = Theme.of(context);
 
     return ListView(
-      padding: const EdgeInsets.all(JarvisTheme.spacing),
+      padding: const EdgeInsets.all(CognithorTheme.spacing),
       children: [
         // Stats row
         Wrap(
-          spacing: JarvisTheme.spacingSm,
-          runSpacing: JarvisTheme.spacingSm,
+          spacing: CognithorTheme.spacingSm,
+          runSpacing: CognithorTheme.spacingSm,
           children: [
-            JarvisStat(
+            CognithorStat(
               label: l.filesProcessed,
               value: '${_stats?['files_processed'] ?? 0}',
               icon: Icons.insert_drive_file,
-              color: JarvisTheme.accent,
+              color: CognithorTheme.accent,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.entitiesCreated,
               value: '${_stats?['entities_created'] ?? 0}',
               icon: Icons.bubble_chart,
-              color: JarvisTheme.green,
+              color: CognithorTheme.green,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.confidenceUpdates,
               value: '${_stats?['confidence_updates'] ?? 0}',
               icon: Icons.trending_up,
-              color: JarvisTheme.orange,
+              color: CognithorTheme.orange,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.openGaps,
               value: '${_stats?['open_gaps'] ?? _gaps.length}',
               icon: Icons.help_outline,
-              color: JarvisTheme.red,
+              color: CognithorTheme.red,
             ),
           ],
         ),
-        const SizedBox(height: JarvisTheme.spacingLg),
+        const SizedBox(height: CognithorTheme.spacingLg),
 
         // Learning activity chart
         NeonCard(
-          tint: JarvisTheme.sectionDashboard,
+          tint: CognithorTheme.sectionDashboard,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.show_chart, size: 18, color: JarvisTheme.sectionDashboard),
+                  const Icon(Icons.show_chart, size: 18, color: CognithorTheme.sectionDashboard),
                   const SizedBox(width: 8),
                   Text(l.learningTitle, style: theme.textTheme.titleMedium),
                 ],
@@ -278,13 +278,13 @@ class _LearningScreenState extends State<LearningScreen> {
 
         // Confidence history
         NeonCard(
-          tint: JarvisTheme.sectionDashboard,
+          tint: CognithorTheme.sectionDashboard,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.history, size: 18, color: JarvisTheme.sectionDashboard),
+                  const Icon(Icons.history, size: 18, color: CognithorTheme.sectionDashboard),
                   const SizedBox(width: 8),
                   Text(l.confidenceHistory, style: theme.textTheme.titleMedium),
                 ],
@@ -292,7 +292,7 @@ class _LearningScreenState extends State<LearningScreen> {
               const SizedBox(height: 8),
               _confidenceHistory.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.all(JarvisTheme.spacing),
+                  padding: const EdgeInsets.all(CognithorTheme.spacing),
                   child: Text(l.noData,
                       style: theme.textTheme.bodySmall),
                 )
@@ -315,8 +315,8 @@ class _LearningScreenState extends State<LearningScreen> {
                             ? Icons.arrow_upward
                             : Icons.arrow_downward,
                         color: increased
-                            ? JarvisTheme.green
-                            : JarvisTheme.red,
+                            ? CognithorTheme.green
+                            : CognithorTheme.red,
                         size: 18,
                       ),
                       title: Text(entity,
@@ -339,13 +339,13 @@ class _LearningScreenState extends State<LearningScreen> {
 
         // Watch directories
         NeonCard(
-          tint: JarvisTheme.sectionDashboard,
+          tint: CognithorTheme.sectionDashboard,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.folder_open, size: 18, color: JarvisTheme.sectionDashboard),
+                  const Icon(Icons.folder_open, size: 18, color: CognithorTheme.sectionDashboard),
                   const SizedBox(width: 8),
                   Text(l.watchDirectories, style: theme.textTheme.titleMedium),
                 ],
@@ -353,7 +353,7 @@ class _LearningScreenState extends State<LearningScreen> {
               const SizedBox(height: 8),
               if (_directories.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.all(JarvisTheme.spacing),
+                  padding: const EdgeInsets.all(CognithorTheme.spacing),
                   child: Text(l.noData, style: theme.textTheme.bodySmall),
                 )
               else
@@ -375,7 +375,7 @@ class _LearningScreenState extends State<LearningScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: JarvisTheme.spacingSm,
+        horizontal: CognithorTheme.spacingSm,
       ),
       child: Row(
         children: [
@@ -383,13 +383,13 @@ class _LearningScreenState extends State<LearningScreen> {
             message: exists ? l.directoryExists : l.directoryMissing,
             child: Icon(
               exists ? Icons.check_circle : Icons.error_outline,
-              color: exists ? JarvisTheme.green : JarvisTheme.red,
+              color: exists ? CognithorTheme.green : CognithorTheme.red,
               size: 18,
             ),
           ),
-          const SizedBox(width: JarvisTheme.spacingSm),
+          const SizedBox(width: CognithorTheme.spacingSm),
           Expanded(
-            child: JarvisToggleField(
+            child: CognithorToggleField(
               label: path,
               value: enabled,
               onChanged: (v) => _toggleDirectory(index, v),
@@ -450,12 +450,12 @@ class _LearningScreenState extends State<LearningScreen> {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: JarvisTheme.accent,
+            color: CognithorTheme.accent,
             barWidth: 2,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: JarvisTheme.accent.withValues(alpha: 0.1),
+              color: CognithorTheme.accent.withValues(alpha: 0.1),
             ),
           ),
         ],
@@ -469,14 +469,14 @@ class _LearningScreenState extends State<LearningScreen> {
 
   Widget _buildGaps(AppLocalizations l) {
     if (_gaps.isEmpty) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.check_circle_outline,
         title: l.noGaps,
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(JarvisTheme.spacing),
+      padding: const EdgeInsets.all(CognithorTheme.spacing),
       itemCount: _gaps.length,
       itemBuilder: (context, index) {
         final gap = _gaps[index];
@@ -498,7 +498,7 @@ class _LearningScreenState extends State<LearningScreen> {
 
   Widget _buildQueue(AppLocalizations l) {
     if (_queue.isEmpty) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.explore_off,
         title: l.noTasks,
       );
@@ -507,7 +507,7 @@ class _LearningScreenState extends State<LearningScreen> {
     final theme = Theme.of(context);
 
     return ListView.builder(
-      padding: const EdgeInsets.all(JarvisTheme.spacing),
+      padding: const EdgeInsets.all(CognithorTheme.spacing),
       itemCount: _queue.length,
       itemBuilder: (context, index) {
         final task = _queue[index];
@@ -520,22 +520,22 @@ class _LearningScreenState extends State<LearningScreen> {
         final status = (task['status'] ?? 'pending').toString();
 
         final priorityColor = switch (priority) {
-          'high' => JarvisTheme.red,
-          'medium' => JarvisTheme.orange,
-          _ => JarvisTheme.green,
+          'high' => CognithorTheme.red,
+          'medium' => CognithorTheme.orange,
+          _ => CognithorTheme.green,
         };
 
         final statusColor = switch (status) {
-          'running' => JarvisTheme.accent,
-          'completed' => JarvisTheme.green,
-          'failed' => JarvisTheme.red,
-          _ => JarvisTheme.textSecondary,
+          'running' => CognithorTheme.accent,
+          'completed' => CognithorTheme.green,
+          'failed' => CognithorTheme.red,
+          _ => CognithorTheme.textSecondary,
         };
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: NeonCard(
-          tint: JarvisTheme.sectionDashboard,
+          tint: CognithorTheme.sectionDashboard,
           glowOnHover: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,7 +550,7 @@ class _LearningScreenState extends State<LearningScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  JarvisStatusBadge(
+                  CognithorStatusBadge(
                     label: status,
                     color: statusColor,
                   ),
@@ -559,7 +559,7 @@ class _LearningScreenState extends State<LearningScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  JarvisStatusBadge(
+                  CognithorStatusBadge(
                     label: '${l.priority}: $priority',
                     color: priorityColor,
                     icon: Icons.flag,
@@ -684,7 +684,7 @@ class _LearningScreenState extends State<LearningScreen> {
         Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(JarvisTheme.spacing),
+              padding: const EdgeInsets.all(CognithorTheme.spacing),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: l.search,
@@ -697,13 +697,13 @@ class _LearningScreenState extends State<LearningScreen> {
             ),
             Expanded(
               child: _qaPairs.isEmpty
-                  ? JarvisEmptyState(
+                  ? CognithorEmptyState(
                       icon: Icons.quiz_outlined,
                       title: l.noQAPairs,
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: JarvisTheme.spacing,
+                        horizontal: CognithorTheme.spacing,
                       ),
                       itemCount: _qaPairs.length,
                       itemBuilder: (context, index) {
@@ -722,7 +722,7 @@ class _LearningScreenState extends State<LearningScreen> {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: NeonCard(
-                          tint: JarvisTheme.sectionDashboard,
+                          tint: CognithorTheme.sectionDashboard,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -738,15 +738,15 @@ class _LearningScreenState extends State<LearningScreen> {
                               Row(
                                 children: [
                                   if (topic.isNotEmpty)
-                                    JarvisStatusBadge(
+                                    CognithorStatusBadge(
                                       label: topic,
-                                      color: JarvisTheme.accent,
+                                      color: CognithorTheme.accent,
                                     ),
                                   if (isVerified) ...[
                                     const SizedBox(width: 8),
-                                    JarvisStatusBadge(
+                                    CognithorStatusBadge(
                                       label: l.verified,
-                                      color: JarvisTheme.green,
+                                      color: CognithorTheme.green,
                                       icon: Icons.check,
                                     ),
                                   ],
@@ -775,7 +775,7 @@ class _LearningScreenState extends State<LearningScreen> {
                                         value: conf.clamp(0.0, 1.0),
                                         backgroundColor:
                                             theme.dividerColor,
-                                        color: JarvisTheme.accent,
+                                        color: CognithorTheme.accent,
                                         minHeight: 6,
                                       ),
                                     ),
@@ -817,8 +817,8 @@ class _LearningScreenState extends State<LearningScreen> {
           ],
         ),
         Positioned(
-          bottom: JarvisTheme.spacing,
-          right: JarvisTheme.spacing,
+          bottom: CognithorTheme.spacing,
+          right: CognithorTheme.spacing,
           child: FloatingActionButton(
             onPressed: () => _showAddQADialog(l),
             child: const Icon(Icons.add),
@@ -857,10 +857,10 @@ class _LearningScreenState extends State<LearningScreen> {
 
   Color _lineageActionColor(String action) {
     return switch (action) {
-      'created' => JarvisTheme.green,
-      'updated' => JarvisTheme.accent,
-      'decayed' => JarvisTheme.red,
-      _ => JarvisTheme.textSecondary,
+      'created' => CognithorTheme.green,
+      'updated' => CognithorTheme.accent,
+      'decayed' => CognithorTheme.red,
+      _ => CognithorTheme.textSecondary,
     };
   }
 
@@ -880,7 +880,7 @@ class _LearningScreenState extends State<LearningScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(JarvisTheme.spacing),
+          padding: const EdgeInsets.all(CognithorTheme.spacing),
           child: Row(
             children: [
               Expanded(
@@ -918,7 +918,7 @@ class _LearningScreenState extends State<LearningScreen> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: JarvisTheme.spacing,
+            horizontal: CognithorTheme.spacing,
           ),
           child: Align(
             alignment: Alignment.centerLeft,
@@ -933,13 +933,13 @@ class _LearningScreenState extends State<LearningScreen> {
         const SizedBox(height: 8),
         Expanded(
           child: _lineageEntries.isEmpty
-              ? JarvisEmptyState(
+              ? CognithorEmptyState(
                   icon: Icons.account_tree_outlined,
                   title: l.noLineage,
                 )
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: JarvisTheme.spacing,
+                    horizontal: CognithorTheme.spacing,
                   ),
                   itemCount: _lineageEntries.length,
                   itemBuilder: (context, index) {
@@ -989,14 +989,14 @@ class _LearningScreenState extends State<LearningScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: NeonCard(
-                              tint: JarvisTheme.sectionDashboard,
+                              tint: CognithorTheme.sectionDashboard,
                               child: Row(
                                 children: [
                                   Icon(
                                     _sourceTypeIcon(sourceType),
                                     size: 16,
                                     color:
-                                        JarvisTheme.textSecondary,
+                                        CognithorTheme.textSecondary,
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
@@ -1074,16 +1074,16 @@ class _GapCard extends StatelessWidget {
     final status = (gap['status'] ?? 'open').toString();
 
     final statusColor = switch (status) {
-      'exploring' => JarvisTheme.accent,
-      'resolved' => JarvisTheme.green,
-      'dismissed' => JarvisTheme.textSecondary,
-      _ => JarvisTheme.orange,
+      'exploring' => CognithorTheme.accent,
+      'resolved' => CognithorTheme.green,
+      'dismissed' => CognithorTheme.textSecondary,
+      _ => CognithorTheme.orange,
     };
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: NeonCard(
-        tint: JarvisTheme.sectionDashboard,
+        tint: CognithorTheme.sectionDashboard,
         glowOnHover: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1100,7 +1100,7 @@ class _GapCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              JarvisStatusBadge(label: status, color: statusColor),
+              CognithorStatusBadge(label: status, color: statusColor),
             ],
           ),
           if (topic.isNotEmpty) ...[
@@ -1123,7 +1123,7 @@ class _GapCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: importance.clamp(0.0, 1.0),
                     backgroundColor: theme.dividerColor,
-                    color: JarvisTheme.accent,
+                    color: CognithorTheme.accent,
                     minHeight: 6,
                   ),
                 ),
@@ -1151,7 +1151,7 @@ class _GapCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: curiosityScore.clamp(0.0, 1.0),
                     backgroundColor: theme.dividerColor,
-                    color: JarvisTheme.orange,
+                    color: CognithorTheme.orange,
                     minHeight: 6,
                   ),
                 ),
@@ -1176,7 +1176,7 @@ class _GapCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               NeonGlow(
-                color: JarvisTheme.sectionDashboard,
+                color: CognithorTheme.sectionDashboard,
                 intensity: 0.2,
                 blurRadius: 8,
                 child: ElevatedButton.icon(

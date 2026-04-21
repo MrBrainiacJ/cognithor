@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisChip extends StatelessWidget {
-  const JarvisChip({
+class CognithorChip extends StatelessWidget {
+  const CognithorChip({
     super.key,
     required this.label,
     this.color,
@@ -19,7 +19,7 @@ class JarvisChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = color ?? JarvisTheme.accent;
+    final chipColor = color ?? CognithorTheme.accent;
 
     return GestureDetector(
       onTap: onTap,
@@ -27,14 +27,14 @@ class JarvisChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: chipColor.withAlpha(38),
-          borderRadius: BorderRadius.circular(JarvisTheme.chipRadius),
+          borderRadius: BorderRadius.circular(CognithorTheme.chipRadius),
           border: selected ? Border.all(color: chipColor, width: 1.5) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: JarvisTheme.iconSizeSm, color: chipColor),
+              Icon(icon, size: CognithorTheme.iconSizeSm, color: chipColor),
               const SizedBox(width: 4),
             ],
             Text(

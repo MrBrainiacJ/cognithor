@@ -4,17 +4,17 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/security_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 import 'package:cognithor_ui/widgets/neon_glow.dart';
-import 'package:cognithor_ui/widgets/jarvis_chip.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_list_tile.dart';
-import 'package:cognithor_ui/widgets/jarvis_progress_bar.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
-import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
-import 'package:cognithor_ui/widgets/jarvis_tab_bar.dart';
+import 'package:cognithor_ui/widgets/cognithor_chip.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_list_tile.dart';
+import 'package:cognithor_ui/widgets/cognithor_progress_bar.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_status_badge.dart';
+import 'package:cognithor_ui/widgets/cognithor_tab_bar.dart';
 
 class SecurityScreen extends StatefulWidget {
   const SecurityScreen({super.key});
@@ -88,7 +88,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
     }
 
     if (sec.error != null && !_initialLoaded) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.security,
         title: l.securityTitle,
         subtitle: sec.error,
@@ -117,7 +117,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: JarvisTabBar(
+          child: CognithorTabBar(
             tabs: tabs,
             icons: icons,
             selectedIndex: _tabIndex,
@@ -168,29 +168,29 @@ class _SecurityScreenState extends State<SecurityScreen> {
           spacing: 10,
           runSpacing: 10,
           children: [
-            JarvisStat(
+            CognithorStat(
               label: l.decisionsTitle,
               value: totalDecisions,
               icon: Icons.gavel,
-              color: JarvisTheme.accent,
+              color: CognithorTheme.accent,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.flaggedCount,
               value: flagged,
               icon: Icons.flag,
-              color: JarvisTheme.orange,
+              color: CognithorTheme.orange,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.approvalRate,
               value: '${(approvalRate * 100).toStringAsFixed(1)}%',
               icon: Icons.check_circle,
-              color: JarvisTheme.green,
+              color: CognithorTheme.green,
             ),
-            JarvisStat(
+            CognithorStat(
               label: l.confidence,
               value: avgConfidence,
               icon: Icons.speed,
-              color: JarvisTheme.accent,
+              color: CognithorTheme.accent,
             ),
           ],
         ),
@@ -198,51 +198,51 @@ class _SecurityScreenState extends State<SecurityScreen> {
 
         // Approval rate bar
         NeonCard(
-          tint: JarvisTheme.sectionAdmin,
+          tint: CognithorTheme.sectionAdmin,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.bar_chart, size: 18, color: JarvisTheme.sectionAdmin),
+                  const Icon(Icons.bar_chart, size: 18, color: CognithorTheme.sectionAdmin),
                   const SizedBox(width: 8),
                   Text(l.approvalRate, style: Theme.of(context).textTheme.titleMedium),
                 ],
               ),
               const SizedBox(height: 8),
-              JarvisProgressBar(
+              CognithorProgressBar(
                 value: approvalRate,
                 label: '${(approvalRate * 100).toStringAsFixed(1)}%',
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
             ],
           ),
         ),
 
         // Remediations
-        JarvisSection(title: l.remediations),
+        CognithorSection(title: l.remediations),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            JarvisStatusBadge(
+            CognithorStatusBadge(
               label: '${l.openStatus}: $open',
-              color: JarvisTheme.accent,
+              color: CognithorTheme.accent,
               icon: Icons.pending,
             ),
-            JarvisStatusBadge(
+            CognithorStatusBadge(
               label: '${l.inProgressStatus}: $inProgress',
-              color: JarvisTheme.orange,
+              color: CognithorTheme.orange,
               icon: Icons.autorenew,
             ),
-            JarvisStatusBadge(
+            CognithorStatusBadge(
               label: '${l.resolvedStatus}: $resolved',
-              color: JarvisTheme.green,
+              color: CognithorTheme.green,
               icon: Icons.check,
             ),
-            JarvisStatusBadge(
+            CognithorStatusBadge(
               label: '${l.overdueStatus}: $overdue',
-              color: JarvisTheme.red,
+              color: CognithorTheme.red,
               icon: Icons.warning,
             ),
           ],
@@ -250,18 +250,18 @@ class _SecurityScreenState extends State<SecurityScreen> {
         const SizedBox(height: 16),
 
         // Compliance badges
-        JarvisSection(title: l.complianceReport),
+        CognithorSection(title: l.complianceReport),
         Row(
           children: [
-            JarvisStatusBadge(
+            CognithorStatusBadge(
               label: l.euAiAct,
-              color: euAiAct ? JarvisTheme.green : JarvisTheme.red,
+              color: euAiAct ? CognithorTheme.green : CognithorTheme.red,
               icon: euAiAct ? Icons.check_circle : Icons.cancel,
             ),
             const SizedBox(width: 8),
-            JarvisStatusBadge(
+            CognithorStatusBadge(
               label: l.dsgvo,
-              color: dsgvo ? JarvisTheme.green : JarvisTheme.red,
+              color: dsgvo ? CognithorTheme.green : CognithorTheme.red,
               icon: dsgvo ? Icons.check_circle : Icons.cancel,
             ),
           ],
@@ -284,31 +284,31 @@ class _SecurityScreenState extends State<SecurityScreen> {
       children: [
         // Auth stats summary
         if (authData.isNotEmpty) ...[
-          JarvisSection(title: l.statusLabel),
+          CognithorSection(title: l.statusLabel),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
-              JarvisStat(
+              CognithorStat(
                 label: l.activeSessions,
                 value: authData['active_sessions']?.toString() ?? '0',
                 icon: Icons.people,
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.total,
                 value: authData['total_auth']?.toString() ?? '0',
                 icon: Icons.key,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
             ],
           ),
           const SizedBox(height: 16),
         ],
 
-        JarvisSection(title: l.rolesTitle),
+        CognithorSection(title: l.rolesTitle),
         if (rolesList.isEmpty)
-          JarvisEmptyState(
+          CognithorEmptyState(
             icon: Icons.people_outline,
             title: l.noData,
           ),
@@ -335,19 +335,19 @@ class _SecurityScreenState extends State<SecurityScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        JarvisSection(title: l.scanStatus),
+        CognithorSection(title: l.scanStatus),
         NeonCard(
-          tint: JarvisTheme.sectionAdmin,
+          tint: CognithorTheme.sectionAdmin,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  JarvisStatusBadge(
+                  CognithorStatusBadge(
                     label: available
                         ? l.enabled
                         : l.scanNotAvailable,
-                    color: available ? JarvisTheme.green : JarvisTheme.red,
+                    color: available ? CognithorTheme.green : CognithorTheme.red,
                     icon: available ? Icons.check_circle : Icons.cancel,
                   ),
                 ],
@@ -364,7 +364,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         ),
         const SizedBox(height: 8),
         NeonGlow(
-          color: JarvisTheme.sectionAdmin,
+          color: CognithorTheme.sectionAdmin,
           intensity: 0.2,
           blurRadius: 8,
           child: ElevatedButton.icon(
@@ -379,9 +379,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
         ),
         if (results != null) ...[
           const SizedBox(height: 16),
-          JarvisSection(title: l.scanResults),
+          CognithorSection(title: l.scanResults),
           NeonCard(
-            tint: JarvisTheme.sectionAdmin,
+            tint: CognithorTheme.sectionAdmin,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: results.entries.map<Widget>((e) {
@@ -501,7 +501,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
         // Entries list
         Expanded(
           child: entries.isEmpty
-              ? JarvisEmptyState(
+              ? CognithorEmptyState(
                   icon: Icons.list_alt,
                   title: l.noAuditEntries,
                 )
@@ -518,7 +518,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                     final ts = entry['timestamp']?.toString() ?? '';
                     final severity = entry['severity']?.toString() ?? 'info';
 
-                    return JarvisListTile(
+                    return CognithorListTile(
                       title: action,
                       subtitle: '${l.actor}: $actor  |  $ts',
                       leading: Icon(
@@ -526,7 +526,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                         color: _severityColor(severity),
                         size: 20,
                       ),
-                      trailing: JarvisStatusBadge(
+                      trailing: CognithorStatusBadge(
                         label: severity,
                         color: _severityColor(severity),
                       ),
@@ -540,11 +540,11 @@ class _SecurityScreenState extends State<SecurityScreen> {
 
   Color _severityColor(String severity) {
     return switch (severity) {
-      'critical' => JarvisTheme.red,
-      'error' => JarvisTheme.red,
-      'warning' => JarvisTheme.orange,
-      'info' => JarvisTheme.info,
-      _ => JarvisTheme.textSecondary,
+      'critical' => CognithorTheme.red,
+      'error' => CognithorTheme.red,
+      'warning' => CognithorTheme.orange,
+      'info' => CognithorTheme.info,
+      _ => CognithorTheme.textSecondary,
     };
   }
 
@@ -583,19 +583,19 @@ class _RoleCardState extends State<_RoleCard> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: NeonCard(
-        tint: JarvisTheme.sectionAdmin,
+        tint: CognithorTheme.sectionAdmin,
         glowOnHover: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.shield, size: 18, color: JarvisTheme.sectionAdmin),
+                const Icon(Icons.shield, size: 18, color: CognithorTheme.sectionAdmin),
                 const SizedBox(width: 8),
                 Expanded(child: Text(widget.name, style: Theme.of(context).textTheme.titleMedium)),
-                JarvisChip(
+                CognithorChip(
                   label: '${widget.permissions.length} ${l.permissions}',
-                  color: JarvisTheme.accent,
+                  color: CognithorTheme.accent,
                 ),
                 IconButton(
                   icon: Icon(
@@ -613,7 +613,7 @@ class _RoleCardState extends State<_RoleCard> {
                 runSpacing: 6,
                 children: widget.permissions
                     .map<Widget>(
-                      (p) => JarvisChip(label: p.toString()),
+                      (p) => CognithorChip(label: p.toString()),
                     )
                     .toList(),
               ),

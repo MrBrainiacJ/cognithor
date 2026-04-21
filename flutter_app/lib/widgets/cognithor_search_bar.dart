@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisSearchBar extends StatefulWidget {
-  const JarvisSearchBar({
+class CognithorSearchBar extends StatefulWidget {
+  const CognithorSearchBar({
     super.key,
     this.hintText = 'Search…',
     this.onChanged,
@@ -18,10 +18,10 @@ class JarvisSearchBar extends StatefulWidget {
   final TextEditingController? controller;
 
   @override
-  State<JarvisSearchBar> createState() => _JarvisSearchBarState();
+  State<CognithorSearchBar> createState() => _CognithorSearchBarState();
 }
 
-class _JarvisSearchBarState extends State<JarvisSearchBar> {
+class _CognithorSearchBarState extends State<CognithorSearchBar> {
   late final TextEditingController _controller;
   Timer? _debounce;
 
@@ -71,30 +71,30 @@ class _JarvisSearchBarState extends State<JarvisSearchBar> {
         fillColor: theme.cardColor,
         prefixIcon: Icon(
           Icons.search,
-          color: JarvisTheme.textSecondary,
-          size: JarvisTheme.iconSizeMd,
+          color: CognithorTheme.textSecondary,
+          size: CognithorTheme.iconSizeMd,
         ),
         suffixIcon: _controller.text.isNotEmpty
             ? IconButton(
                 icon: Icon(
                   Icons.clear,
-                  color: JarvisTheme.textSecondary,
-                  size: JarvisTheme.iconSizeSm,
+                  color: CognithorTheme.textSecondary,
+                  size: CognithorTheme.iconSizeSm,
                 ),
                 onPressed: _clear,
               )
             : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+          borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
           borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+          borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
           borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
-          borderSide: BorderSide(color: JarvisTheme.accent),
+          borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
+          borderSide: BorderSide(color: CognithorTheme.accent),
         ),
       ),
     );

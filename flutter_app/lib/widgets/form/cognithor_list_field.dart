@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisListField extends StatefulWidget {
-  const JarvisListField({
+class CognithorListField extends StatefulWidget {
+  const CognithorListField({
     super.key,
     required this.label,
     required this.value,
@@ -19,10 +19,10 @@ class JarvisListField extends StatefulWidget {
   final String? placeholder;
 
   @override
-  State<JarvisListField> createState() => _JarvisListFieldState();
+  State<CognithorListField> createState() => _CognithorListFieldState();
 }
 
-class _JarvisListFieldState extends State<JarvisListField> {
+class _CognithorListFieldState extends State<CognithorListField> {
   final _ctrl = TextEditingController();
 
   void _add() {
@@ -57,7 +57,7 @@ class _JarvisListFieldState extends State<JarvisListField> {
             const SizedBox(height: 2),
             Text(widget.description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           Row(
@@ -76,7 +76,7 @@ class _JarvisListFieldState extends State<JarvisListField> {
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: Icon(Icons.add, color: JarvisTheme.accent),
+                icon: Icon(Icons.add, color: CognithorTheme.accent),
                 onPressed: _add,
                 tooltip: AppLocalizations.of(context).addItem,
               ),
@@ -104,7 +104,7 @@ class _JarvisListFieldState extends State<JarvisListField> {
                     InkWell(
                       onTap: () => _remove(i),
                       child: Icon(Icons.close,
-                          size: 16, color: JarvisTheme.textSecondary),
+                          size: 16, color: CognithorTheme.textSecondary),
                     ),
                   ],
                 ),

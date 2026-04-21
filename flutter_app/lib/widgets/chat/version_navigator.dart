@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// Claude-style version navigator: "< 1/2 >" arrows for edited messages.
 class VersionNavigator extends StatelessWidget {
@@ -31,7 +31,7 @@ class VersionNavigator extends StatelessWidget {
             '${currentVersion + 1} / $totalVersions',
             style: TextStyle(
               fontSize: 11,
-              color: JarvisTheme.textSecondary,
+              color: CognithorTheme.textSecondary,
               fontFamily: 'monospace',
             ),
           ),
@@ -62,7 +62,7 @@ class _NavButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 16,
-          color: enabled ? JarvisTheme.textSecondary : JarvisTheme.textTertiary,
+          color: enabled ? CognithorTheme.textSecondary : CognithorTheme.textTertiary,
         ),
       ),
     );

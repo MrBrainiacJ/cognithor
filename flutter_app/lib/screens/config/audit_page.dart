@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class AuditPage extends StatefulWidget {
   const AuditPage({super.key});
@@ -86,7 +86,7 @@ class _AuditPageState extends State<AuditPage> {
                     : Icons.warning,
                 color: _verifyResult!['status'] == 'intact'
                     ? Colors.green
-                    : JarvisTheme.orange,
+                    : CognithorTheme.orange,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -107,7 +107,7 @@ class _AuditPageState extends State<AuditPage> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               'Chain broken at line ${_verifyResult!['broken_at_line']}',
-              style: TextStyle(color: JarvisTheme.red, fontSize: 12),
+              style: TextStyle(color: CognithorTheme.red, fontSize: 12),
             ),
           ),
         const SizedBox(height: 24),
@@ -124,7 +124,7 @@ class _AuditPageState extends State<AuditPage> {
             style: Theme.of(context)
                 .textTheme
                 .bodySmall
-                ?.copyWith(color: JarvisTheme.textSecondary),
+                ?.copyWith(color: CognithorTheme.textSecondary),
           ),
           const SizedBox(height: 8),
           if ((_timestampsResult!['timestamps'] as List?)?.isNotEmpty ==
@@ -205,7 +205,7 @@ class _AuditPageState extends State<AuditPage> {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: JarvisTheme.accent,
+            color: CognithorTheme.accent,
             fontWeight: FontWeight.w600,
           ),
     );

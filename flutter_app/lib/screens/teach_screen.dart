@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 import 'package:cognithor_ui/widgets/neon_glow.dart';
 
@@ -256,7 +256,7 @@ class _TeachScreenState extends State<TeachScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(JarvisTheme.spacing),
+        padding: const EdgeInsets.all(CognithorTheme.spacing),
         children: [
           // Input cards
           if (isWide)
@@ -265,18 +265,18 @@ class _TeachScreenState extends State<TeachScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(child: _buildFileCard(l)),
-                  const SizedBox(width: JarvisTheme.spacing),
+                  const SizedBox(width: CognithorTheme.spacing),
                   Expanded(child: _buildUrlCard(l)),
-                  const SizedBox(width: JarvisTheme.spacing),
+                  const SizedBox(width: CognithorTheme.spacing),
                   Expanded(child: _buildYoutubeCard(l)),
                 ],
               ),
             )
           else ...[
             _buildFileCard(l),
-            const SizedBox(height: JarvisTheme.spacing),
+            const SizedBox(height: CognithorTheme.spacing),
             _buildUrlCard(l),
-            const SizedBox(height: JarvisTheme.spacing),
+            const SizedBox(height: CognithorTheme.spacing),
             _buildYoutubeCard(l),
           ],
 
@@ -296,7 +296,7 @@ class _TeachScreenState extends State<TeachScreen> {
             )),
           ],
 
-          const SizedBox(height: JarvisTheme.spacingLg),
+          const SizedBox(height: CognithorTheme.spacingLg),
 
           // History section
           _buildHistorySection(l),
@@ -314,19 +314,19 @@ class _TeachScreenState extends State<TeachScreen> {
     final colorScheme = theme.colorScheme;
 
     return NeonCard(
-      tint: JarvisTheme.sectionDashboard,
-      padding: const EdgeInsets.all(JarvisTheme.spacing),
+      tint: CognithorTheme.sectionDashboard,
+      padding: const EdgeInsets.all(CognithorTheme.spacing),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                const Icon(Icons.cloud_upload, color: JarvisTheme.sectionDashboard),
+                const Icon(Icons.cloud_upload, color: CognithorTheme.sectionDashboard),
                 const SizedBox(width: 8),
                 Text(l.uploadFile, style: theme.textTheme.titleMedium),
               ],
             ),
-            const SizedBox(height: JarvisTheme.spacing),
+            const SizedBox(height: CognithorTheme.spacing),
 
             // Drop zone
             GestureDetector(
@@ -339,7 +339,7 @@ class _TeachScreenState extends State<TeachScreen> {
                     width: 1.5,
                     strokeAlign: BorderSide.strokeAlignInside,
                   ),
-                  borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+                  borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
                 ),
                 child: Center(
                   child: _fileUploading
@@ -350,21 +350,21 @@ class _TeachScreenState extends State<TeachScreen> {
                             Icon(
                               Icons.cloud_upload_outlined,
                               size: 36,
-                              color: JarvisTheme.textSecondary,
+                              color: CognithorTheme.textSecondary,
                             ),
                             const SizedBox(height: 8),
                             Text(
                               l.dropFilesHere,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: JarvisTheme.textSecondary,
+                                color: CognithorTheme.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'PDF, DOCX, TXT, MD, PNG, JPG, CSV, JSON',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: JarvisTheme.textTertiary,
+                                color: CognithorTheme.textTertiary,
                               ),
                             ),
                           ],
@@ -374,7 +374,7 @@ class _TeachScreenState extends State<TeachScreen> {
             ),
 
             if (_selectedFilename != null) ...[
-              const SizedBox(height: JarvisTheme.spacingSm),
+              const SizedBox(height: CognithorTheme.spacingSm),
               Row(
                 children: [
                   const Icon(Icons.insert_drive_file, size: 16),
@@ -393,7 +393,7 @@ class _TeachScreenState extends State<TeachScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: JarvisTheme.spacingSm),
+              const SizedBox(height: CognithorTheme.spacingSm),
               Row(
                 children: [
                   Text(l.learnPriority, style: theme.textTheme.bodySmall),
@@ -413,7 +413,7 @@ class _TeachScreenState extends State<TeachScreen> {
 
             // Result
             if (_fileResult != null) ...[
-              const SizedBox(height: JarvisTheme.spacingSm),
+              const SizedBox(height: CognithorTheme.spacingSm),
               _buildResultBadge(
                 _fileSuccess!,
                 _fileSuccess!
@@ -434,19 +434,19 @@ class _TeachScreenState extends State<TeachScreen> {
     final theme = Theme.of(context);
 
     return NeonCard(
-      tint: JarvisTheme.sectionDashboard,
-      padding: const EdgeInsets.all(JarvisTheme.spacing),
+      tint: CognithorTheme.sectionDashboard,
+      padding: const EdgeInsets.all(CognithorTheme.spacing),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                const Icon(Icons.link, color: JarvisTheme.sectionDashboard),
+                const Icon(Icons.link, color: CognithorTheme.sectionDashboard),
                 const SizedBox(width: 8),
                 Text(l.learnFromUrl, style: theme.textTheme.titleMedium),
               ],
             ),
-            const SizedBox(height: JarvisTheme.spacing),
+            const SizedBox(height: CognithorTheme.spacing),
             TextField(
               controller: _urlController,
               decoration: InputDecoration(
@@ -456,9 +456,9 @@ class _TeachScreenState extends State<TeachScreen> {
               ),
               onSubmitted: (_) => _learnFromUrl(),
             ),
-            const SizedBox(height: JarvisTheme.spacingSm),
+            const SizedBox(height: CognithorTheme.spacingSm),
             NeonGlow(
-              color: JarvisTheme.sectionDashboard,
+              color: CognithorTheme.sectionDashboard,
               intensity: 0.2,
               blurRadius: 8,
               child: FilledButton.icon(
@@ -475,7 +475,7 @@ class _TeachScreenState extends State<TeachScreen> {
               ),
             ),
             ),
-            const SizedBox(height: JarvisTheme.spacingSm),
+            const SizedBox(height: CognithorTheme.spacingSm),
             Row(
               children: [
                 Text(l.learnPriority, style: theme.textTheme.bodySmall),
@@ -494,7 +494,7 @@ class _TeachScreenState extends State<TeachScreen> {
 
             // Result
             if (_urlResult != null) ...[
-              const SizedBox(height: JarvisTheme.spacingSm),
+              const SizedBox(height: CognithorTheme.spacingSm),
               _buildResultBadge(
                 _urlSuccess!,
                 _urlSuccess!
@@ -515,19 +515,19 @@ class _TeachScreenState extends State<TeachScreen> {
     final theme = Theme.of(context);
 
     return NeonCard(
-      tint: JarvisTheme.sectionDashboard,
-      padding: const EdgeInsets.all(JarvisTheme.spacing),
+      tint: CognithorTheme.sectionDashboard,
+      padding: const EdgeInsets.all(CognithorTheme.spacing),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                const Icon(Icons.play_circle, color: JarvisTheme.sectionDashboard),
+                const Icon(Icons.play_circle, color: CognithorTheme.sectionDashboard),
                 const SizedBox(width: 8),
                 Text(l.learnFromYoutube, style: theme.textTheme.titleMedium),
               ],
             ),
-            const SizedBox(height: JarvisTheme.spacing),
+            const SizedBox(height: CognithorTheme.spacing),
             TextField(
               controller: _youtubeController,
               decoration: InputDecoration(
@@ -537,7 +537,7 @@ class _TeachScreenState extends State<TeachScreen> {
               ),
               onSubmitted: (_) => _learnFromYoutube(),
             ),
-            const SizedBox(height: JarvisTheme.spacingSm),
+            const SizedBox(height: CognithorTheme.spacingSm),
             FilledButton.icon(
               onPressed: _youtubeProcessing ? null : _learnFromYoutube,
               icon: _youtubeProcessing
@@ -553,7 +553,7 @@ class _TeachScreenState extends State<TeachScreen> {
                     : l.learnFromYoutube,
               ),
             ),
-            const SizedBox(height: JarvisTheme.spacingSm),
+            const SizedBox(height: CognithorTheme.spacingSm),
             Row(
               children: [
                 Text(l.learnPriority, style: theme.textTheme.bodySmall),
@@ -572,7 +572,7 @@ class _TeachScreenState extends State<TeachScreen> {
 
             // Result
             if (_youtubeResult != null) ...[
-              const SizedBox(height: JarvisTheme.spacingSm),
+              const SizedBox(height: CognithorTheme.spacingSm),
               _buildResultBadge(
                 _youtubeSuccess!,
                 _youtubeSuccess!
@@ -606,7 +606,7 @@ class _TeachScreenState extends State<TeachScreen> {
         // Header row
         Row(
           children: [
-            Icon(Icons.history, color: JarvisTheme.textSecondary),
+            Icon(Icons.history, color: CognithorTheme.textSecondary),
             const SizedBox(width: 8),
             Text(l.learningHistory, style: theme.textTheme.titleMedium),
             const Spacer(),
@@ -620,18 +620,18 @@ class _TeachScreenState extends State<TeachScreen> {
             ),
           ],
         ),
-        const SizedBox(height: JarvisTheme.spacingSm),
+        const SizedBox(height: CognithorTheme.spacingSm),
 
         if (_historyLoading)
           const Center(child: CircularProgressIndicator())
         else if (filtered.isEmpty)
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(JarvisTheme.spacingLg),
+              padding: const EdgeInsets.all(CognithorTheme.spacingLg),
               child: Text(
                 l.noData,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: JarvisTheme.textSecondary,
+                  color: CognithorTheme.textSecondary,
                 ),
               ),
             ),
@@ -679,7 +679,7 @@ class _TeachScreenState extends State<TeachScreen> {
     final isOk = status == 'success' || status == 'done';
 
     return ListTile(
-      leading: Icon(icon, color: JarvisTheme.textSecondary),
+      leading: Icon(icon, color: CognithorTheme.textSecondary),
       title: Text(
         name,
         maxLines: 1,
@@ -694,14 +694,14 @@ class _TeachScreenState extends State<TeachScreen> {
               l.chunksLearned('$chunks'),
               style: TextStyle(
                 fontSize: 12,
-                color: JarvisTheme.textSecondary,
+                color: CognithorTheme.textSecondary,
               ),
             ),
           const SizedBox(width: 8),
           Icon(
             isOk ? Icons.check_circle : Icons.error,
             size: 18,
-            color: isOk ? JarvisTheme.green : JarvisTheme.red,
+            color: isOk ? CognithorTheme.green : CognithorTheme.red,
           ),
         ],
       ),
@@ -715,13 +715,13 @@ class _TeachScreenState extends State<TeachScreen> {
   Widget _buildResultBadge(bool success, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: JarvisTheme.spacingSm,
-        vertical: JarvisTheme.spacingXs,
+        horizontal: CognithorTheme.spacingSm,
+        vertical: CognithorTheme.spacingXs,
       ),
       decoration: BoxDecoration(
-        color: (success ? JarvisTheme.green : JarvisTheme.red)
+        color: (success ? CognithorTheme.green : CognithorTheme.red)
             .withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(JarvisTheme.buttonRadius),
+        borderRadius: BorderRadius.circular(CognithorTheme.buttonRadius),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -729,7 +729,7 @@ class _TeachScreenState extends State<TeachScreen> {
           Icon(
             success ? Icons.check_circle : Icons.error,
             size: 16,
-            color: success ? JarvisTheme.green : JarvisTheme.red,
+            color: success ? CognithorTheme.green : CognithorTheme.red,
           ),
           const SizedBox(width: 6),
           Flexible(
@@ -737,7 +737,7 @@ class _TeachScreenState extends State<TeachScreen> {
               text,
               style: TextStyle(
                 fontSize: 12,
-                color: success ? JarvisTheme.green : JarvisTheme.red,
+                color: success ? CognithorTheme.green : CognithorTheme.red,
               ),
             ),
           ),

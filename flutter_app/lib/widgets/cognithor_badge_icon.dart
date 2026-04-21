@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisBadgeIcon extends StatelessWidget {
-  const JarvisBadgeIcon({
+class CognithorBadgeIcon extends StatelessWidget {
+  const CognithorBadgeIcon({
     super.key,
     required this.icon,
     this.count = 0,
@@ -18,7 +18,7 @@ class JarvisBadgeIcon extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Icon(icon, color: color ?? JarvisTheme.textSecondary, size: JarvisTheme.iconSizeMd),
+        Icon(icon, color: color ?? CognithorTheme.textSecondary, size: CognithorTheme.iconSizeMd),
         if (count > 0)
           Positioned(
             right: -6,
@@ -27,8 +27,8 @@ class JarvisBadgeIcon extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               decoration: BoxDecoration(
-                color: JarvisTheme.red,
-                borderRadius: BorderRadius.circular(JarvisTheme.chipRadius),
+                color: CognithorTheme.red,
+                borderRadius: BorderRadius.circular(CognithorTheme.chipRadius),
               ),
               child: Center(
                 child: Text(

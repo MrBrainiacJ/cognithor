@@ -1,11 +1,11 @@
-/// Jarvis design system — centralized colors, spacing, typography.
+/// Cognithor design system — centralized colors, spacing, typography.
 /// Sci-Fi Command Center aesthetic with Cyberpunk-Neon palette.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-abstract final class JarvisTheme {
+abstract final class CognithorTheme {
   // ── Primary Accents ─────────────────────────────────────
   static const _violet = Color(0xFF8B5CF6); // Neon Violett (main)
   static const _violetLight = Color(0xFFA78BFA);

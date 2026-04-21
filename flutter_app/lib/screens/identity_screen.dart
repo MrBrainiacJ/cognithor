@@ -3,13 +3,13 @@ import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 import 'package:cognithor_ui/widgets/neon_glow.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
-import 'package:cognithor_ui/widgets/jarvis_status_badge.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_status_badge.dart';
 
 class IdentityScreen extends StatefulWidget {
   const IdentityScreen({super.key});
@@ -74,7 +74,7 @@ class _IdentityScreenState extends State<IdentityScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(result['error'] as String? ?? 'Error'),
-            backgroundColor: JarvisTheme.red,
+            backgroundColor: CognithorTheme.red,
           ),
         );
       } else {
@@ -84,7 +84,7 @@ class _IdentityScreenState extends State<IdentityScreen> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(e.toString()),
-          backgroundColor: JarvisTheme.red,
+          backgroundColor: CognithorTheme.red,
         ),
       );
     }
@@ -105,7 +105,7 @@ class _IdentityScreenState extends State<IdentityScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: JarvisTheme.red,
+              backgroundColor: CognithorTheme.red,
             ),
             child: Text(l.identityReset),
           ),
@@ -135,7 +135,7 @@ class _IdentityScreenState extends State<IdentityScreen> {
     }
 
     if (!_available || _state == null) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.psychology_outlined,
         title: l.identityNotAvailable,
         subtitle: _error ?? l.identityInstallHint,
@@ -156,16 +156,16 @@ class _IdentityScreenState extends State<IdentityScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadState,
-      color: JarvisTheme.accent,
+      color: CognithorTheme.accent,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Status badge
           Row(
             children: [
-              JarvisStatusBadge(
+              CognithorStatusBadge(
                 label: isFrozen ? l.identityFrozen : l.identityActive,
-                color: isFrozen ? JarvisTheme.orange : JarvisTheme.green,
+                color: isFrozen ? CognithorTheme.orange : CognithorTheme.green,
                 icon: isFrozen ? Icons.ac_unit : Icons.check_circle,
               ),
             ],
@@ -177,42 +177,42 @@ class _IdentityScreenState extends State<IdentityScreen> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              JarvisStat(
+              CognithorStat(
                 label: l.identityEnergy,
                 value: energy,
                 icon: Icons.bolt,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.identityInteractions,
                 value: interactions,
                 icon: Icons.forum,
-                color: JarvisTheme.green,
+                color: CognithorTheme.green,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.identityMemories,
                 value: memories,
                 icon: Icons.memory,
-                color: JarvisTheme.orange,
+                color: CognithorTheme.orange,
               ),
-              JarvisStat(
+              CognithorStat(
                 label: l.identityCharacterStrength,
                 value: characterStrength,
                 icon: Icons.shield,
-                color: JarvisTheme.accent,
+                color: CognithorTheme.accent,
               ),
             ],
           ),
           const SizedBox(height: 24),
 
           // Actions
-          JarvisSection(title: l.identity),
+          CognithorSection(title: l.identity),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               NeonGlow(
-                color: JarvisTheme.sectionIdentity,
+                color: CognithorTheme.sectionIdentity,
                 intensity: 0.25,
                 blurRadius: 10,
                 child: ElevatedButton.icon(
@@ -224,30 +224,30 @@ class _IdentityScreenState extends State<IdentityScreen> {
               if (isFrozen)
                 OutlinedButton.icon(
                   onPressed: () => _performAction('unfreeze'),
-                  icon: Icon(Icons.lock_open, size: 18, color: JarvisTheme.green),
+                  icon: Icon(Icons.lock_open, size: 18, color: CognithorTheme.green),
                   label: Text(l.identityUnfreeze),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: JarvisTheme.green,
-                    side: BorderSide(color: JarvisTheme.green),
+                    foregroundColor: CognithorTheme.green,
+                    side: BorderSide(color: CognithorTheme.green),
                   ),
                 )
               else
                 OutlinedButton.icon(
                   onPressed: () => _performAction('freeze'),
-                  icon: Icon(Icons.ac_unit, size: 18, color: JarvisTheme.orange),
+                  icon: Icon(Icons.ac_unit, size: 18, color: CognithorTheme.orange),
                   label: Text(l.identityFreeze),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: JarvisTheme.orange,
-                    side: BorderSide(color: JarvisTheme.orange),
+                    foregroundColor: CognithorTheme.orange,
+                    side: BorderSide(color: CognithorTheme.orange),
                   ),
                 ),
               OutlinedButton.icon(
                 onPressed: _confirmReset,
-                icon: Icon(Icons.restart_alt, size: 18, color: JarvisTheme.red),
+                icon: Icon(Icons.restart_alt, size: 18, color: CognithorTheme.red),
                 label: Text(l.identityReset),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: JarvisTheme.red,
-                  side: BorderSide(color: JarvisTheme.red),
+                  foregroundColor: CognithorTheme.red,
+                  side: BorderSide(color: CognithorTheme.red),
                 ),
               ),
             ],
@@ -256,9 +256,9 @@ class _IdentityScreenState extends State<IdentityScreen> {
           // Genesis anchors
           if (anchors.isNotEmpty) ...[
             const SizedBox(height: 24),
-            JarvisSection(title: l.identityGenesisAnchors),
+            CognithorSection(title: l.identityGenesisAnchors),
             NeonCard(
-              tint: JarvisTheme.sectionIdentity,
+              tint: CognithorTheme.sectionIdentity,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: anchors.map<Widget>((anchor) {
@@ -270,7 +270,7 @@ class _IdentityScreenState extends State<IdentityScreen> {
                         const Icon(
                           Icons.anchor,
                           size: 14,
-                          color: JarvisTheme.sectionIdentity,
+                          color: CognithorTheme.sectionIdentity,
                         ),
                         const SizedBox(width: 8),
                         Expanded(

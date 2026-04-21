@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/providers/admin_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_toast.dart';
+import 'package:cognithor_ui/widgets/cognithor_toast.dart';
 
 /// Full-screen agent editor for creating and editing agent profiles.
 class AgentEditorScreen extends StatefulWidget {
@@ -117,11 +117,11 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
                           return ListTile(
                             dense: true,
                             selected: isCurrent,
-                            selectedColor: JarvisTheme.sectionAdmin,
+                            selectedColor: CognithorTheme.sectionAdmin,
                             leading: Icon(
                               isCurrent ? Icons.check_circle : Icons.circle_outlined,
                               size: 18,
-                              color: isCurrent ? JarvisTheme.sectionAdmin : null,
+                              color: isCurrent ? CognithorTheme.sectionAdmin : null,
                             ),
                             title: Text(name, style: const TextStyle(fontSize: 13)),
                             onTap: () => Navigator.pop(ctx, name),
@@ -260,14 +260,14 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
 
     if (success) {
       _isDirty = false;
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         _isEditing ? l.agentSaved : l.agentCreated,
         type: ToastType.success,
       );
       Navigator.of(context).pop(true);
     } else {
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         admin.error ?? 'Error',
         type: ToastType.error,
@@ -279,7 +279,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
     final l = AppLocalizations.of(context);
 
     if (widget.agentName == 'jarvis') {
-      JarvisToast.show(context, l.cannotDeleteDefault, type: ToastType.error);
+      CognithorToast.show(context, l.cannotDeleteDefault, type: ToastType.error);
       return;
     }
 
@@ -296,7 +296,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: JarvisTheme.red,
+              backgroundColor: CognithorTheme.red,
             ),
             child: Text(l.delete),
           ),
@@ -313,10 +313,10 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
 
     if (success) {
       _isDirty = false;
-      JarvisToast.show(context, l.agentDeleted, type: ToastType.success);
+      CognithorToast.show(context, l.agentDeleted, type: ToastType.success);
       Navigator.of(context).pop(true);
     } else {
-      JarvisToast.show(
+      CognithorToast.show(
         context,
         admin.error ?? 'Error',
         type: ToastType.error,
@@ -405,7 +405,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
           _SectionHeader(title: l.metadata, icon: Icons.info_outline),
           const SizedBox(height: 8),
           NeonCard(
-            tint: JarvisTheme.sectionAdmin,
+            tint: CognithorTheme.sectionAdmin,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -511,7 +511,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
                   min: 0.0,
                   max: 2.0,
                   divisions: 20,
-                  activeColor: JarvisTheme.sectionAdmin,
+                  activeColor: CognithorTheme.sectionAdmin,
                   label: _temperature.toStringAsFixed(1),
                   onChanged: (v) {
                     setState(() {
@@ -553,7 +553,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
                       child: SwitchListTile(
                         title: Text(l.enabled),
                         value: _enabled,
-                        activeThumbColor: JarvisTheme.sectionAdmin,
+                        activeThumbColor: CognithorTheme.sectionAdmin,
                         contentPadding: EdgeInsets.zero,
                         onChanged: (v) {
                           setState(() {
@@ -578,7 +578,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
           ),
           const SizedBox(height: 8),
           NeonCard(
-            tint: JarvisTheme.sectionAdmin,
+            tint: CognithorTheme.sectionAdmin,
             child: TextFormField(
               controller: _systemPromptCtrl,
               decoration: InputDecoration(
@@ -589,7 +589,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
               ),
               maxLines: null,
               minLines: 10,
-              style: JarvisTheme.monoTextTheme.bodyMedium?.copyWith(
+              style: CognithorTheme.monoTextTheme.bodyMedium?.copyWith(
                 fontSize: 13,
                 height: 1.6,
               ),
@@ -605,7 +605,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
           ),
           const SizedBox(height: 8),
           NeonCard(
-            tint: JarvisTheme.sectionAdmin,
+            tint: CognithorTheme.sectionAdmin,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -639,7 +639,7 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
           ),
           const SizedBox(height: 8),
           NeonCard(
-            tint: JarvisTheme.sectionAdmin,
+            tint: CognithorTheme.sectionAdmin,
             child: Row(
               children: [
                 SizedBox(
@@ -688,12 +688,12 @@ class _AgentEditorScreenState extends State<AgentEditorScreen> {
             Center(
               child: OutlinedButton.icon(
                 onPressed: _delete,
-                icon: Icon(Icons.delete_outline, color: JarvisTheme.red),
+                icon: Icon(Icons.delete_outline, color: CognithorTheme.red),
                 label: Text(l.deleteAgent),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: JarvisTheme.red,
+                  foregroundColor: CognithorTheme.red,
                   side: BorderSide(
-                      color: JarvisTheme.red.withValues(alpha: 0.5)),
+                      color: CognithorTheme.red.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(
                       horizontal: 24, vertical: 12),
                 ),
@@ -733,12 +733,12 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: JarvisTheme.sectionAdmin),
+        Icon(icon, size: 18, color: CognithorTheme.sectionAdmin),
         const SizedBox(width: 8),
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: JarvisTheme.sectionAdmin,
+                color: CognithorTheme.sectionAdmin,
                 fontWeight: FontWeight.w600,
               ),
         ),

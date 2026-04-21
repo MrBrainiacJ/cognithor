@@ -1,4 +1,4 @@
-/// Jarvis WebSocket service.
+/// Cognithor WebSocket service.
 ///
 /// Implements the full 21-message-type protocol defined in
 /// FLUTTER_API_CONTRACT.md.  Handles auth handshake, heartbeat,

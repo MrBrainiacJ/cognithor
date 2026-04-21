@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisReadOnlyField extends StatelessWidget {
-  const JarvisReadOnlyField({
+class CognithorReadOnlyField extends StatelessWidget {
+  const CognithorReadOnlyField({
     super.key,
     required this.label,
     required this.value,
@@ -26,7 +26,7 @@ class JarvisReadOnlyField extends StatelessWidget {
             const SizedBox(height: 2),
             Text(description!,
                 style: theme.textTheme.bodySmall
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ],
           const SizedBox(height: 6),
           Container(
@@ -39,7 +39,7 @@ class JarvisReadOnlyField extends StatelessWidget {
             ),
             child: Text(value,
                 style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: JarvisTheme.textSecondary)),
+                    ?.copyWith(color: CognithorTheme.textSecondary)),
           ),
         ],
       ),

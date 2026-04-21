@@ -5,12 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/admin_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/screens/agent_editor_screen.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
-import 'package:cognithor_ui/widgets/jarvis_chip.dart';
-import 'package:cognithor_ui/widgets/jarvis_empty_state.dart';
-import 'package:cognithor_ui/widgets/jarvis_section.dart';
-import 'package:cognithor_ui/widgets/jarvis_stat.dart';
+import 'package:cognithor_ui/widgets/cognithor_chip.dart';
+import 'package:cognithor_ui/widgets/cognithor_empty_state.dart';
+import 'package:cognithor_ui/widgets/cognithor_section.dart';
+import 'package:cognithor_ui/widgets/cognithor_stat.dart';
 
 class AgentsScreen extends StatefulWidget {
   const AgentsScreen({super.key});
@@ -71,7 +71,7 @@ class _AgentsScreenState extends State<AgentsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: JarvisTheme.red),
+            style: TextButton.styleFrom(foregroundColor: CognithorTheme.red),
             child: Text(l.delete),
           ),
         ],
@@ -101,7 +101,7 @@ class _AgentsScreenState extends State<AgentsScreen> {
     }
 
     if (admin.error != null && admin.agents.isEmpty) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.smart_toy_outlined,
         title: l.agentsTitle,
         subtitle: admin.error,
@@ -114,7 +114,7 @@ class _AgentsScreenState extends State<AgentsScreen> {
     }
 
     if (admin.agents.isEmpty) {
-      return JarvisEmptyState(
+      return CognithorEmptyState(
         icon: Icons.smart_toy_outlined,
         title: l.noAgents,
         action: ElevatedButton.icon(
@@ -128,7 +128,7 @@ class _AgentsScreenState extends State<AgentsScreen> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () => context.read<AdminProvider>().loadAgents(),
-        color: JarvisTheme.accent,
+        color: CognithorTheme.accent,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -137,17 +137,17 @@ class _AgentsScreenState extends State<AgentsScreen> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                JarvisStat(
+                CognithorStat(
                   label: l.agentsTitle,
                   value: admin.agents.length.toString(),
                   icon: Icons.smart_toy,
-                  color: JarvisTheme.accent,
+                  color: CognithorTheme.accent,
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
-            JarvisSection(title: l.agentsTitle),
+            CognithorSection(title: l.agentsTitle),
             ...admin.agents.map<Widget>((agent) {
               final a = agent as Map<String, dynamic>? ?? {};
               return _AgentCard(
@@ -164,7 +164,7 @@ class _AgentsScreenState extends State<AgentsScreen> {
         onPressed: () => _openEditor(null),
         icon: const Icon(Icons.add),
         label: Text(l.newAgent),
-        backgroundColor: JarvisTheme.sectionAdmin,
+        backgroundColor: CognithorTheme.sectionAdmin,
       ),
     );
   }
@@ -201,21 +201,21 @@ class _AgentCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: NeonCard(
-        tint: JarvisTheme.sectionAdmin,
+        tint: CognithorTheme.sectionAdmin,
         glowOnHover: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.smart_toy, size: 18, color: JarvisTheme.sectionAdmin),
+                const Icon(Icons.smart_toy, size: 18, color: CognithorTheme.sectionAdmin),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(name, style: theme.textTheme.titleMedium),
                 ),
                 Switch(
                   value: enabled,
-                  activeTrackColor: JarvisTheme.sectionAdmin,
+                  activeTrackColor: CognithorTheme.sectionAdmin,
                   onChanged: onToggle,
                 ),
                 const SizedBox(width: 4),
@@ -230,7 +230,7 @@ class _AgentCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete_outline, size: 18, color: JarvisTheme.red),
+                  icon: Icon(Icons.delete_outline, size: 18, color: CognithorTheme.red),
                   onPressed: onDelete,
                   tooltip: l.delete,
                   padding: EdgeInsets.zero,
@@ -270,9 +270,9 @@ class _AgentCard extends StatelessWidget {
                 runSpacing: 6,
                 children: allowed
                     .map<Widget>(
-                      (t) => JarvisChip(
+                      (t) => CognithorChip(
                         label: t.toString(),
-                        color: JarvisTheme.green,
+                        color: CognithorTheme.green,
                       ),
                     )
                     .toList(),
@@ -287,9 +287,9 @@ class _AgentCard extends StatelessWidget {
                 runSpacing: 6,
                 children: blocked
                     .map<Widget>(
-                      (t) => JarvisChip(
+                      (t) => CognithorChip(
                         label: t.toString(),
-                        color: JarvisTheme.red,
+                        color: CognithorTheme.red,
                       ),
                     )
                     .toList(),
@@ -305,12 +305,12 @@ class _AgentCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: JarvisTheme.textSecondary),
+        Icon(icon, size: 14, color: CognithorTheme.textSecondary),
         const SizedBox(width: 4),
         Text(
           '$label: $value',
           style: TextStyle(
-            color: JarvisTheme.textSecondary,
+            color: CognithorTheme.textSecondary,
             fontSize: 12,
           ),
         ),

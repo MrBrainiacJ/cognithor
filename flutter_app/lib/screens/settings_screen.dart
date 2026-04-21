@@ -3,7 +3,7 @@ import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'package:cognithor_ui/providers/connection_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -52,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               await conn.setServerUrl(_urlController.text);
               if (context.mounted &&
-                  conn.state == JarvisConnectionState.connected) {
+                  conn.state == CognithorConnectionState.connected) {
                 Navigator.of(context).pop();
               }
             },
@@ -67,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
-                  ?.copyWith(color: JarvisTheme.accent),
+                  ?.copyWith(color: CognithorTheme.accent),
             ),
         ],
       ),

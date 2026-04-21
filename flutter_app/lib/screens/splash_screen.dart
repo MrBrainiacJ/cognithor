@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cognithor_ui/providers/admin_provider.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart'
-    show ConnectionProvider, JarvisConnectionState;
+    show ConnectionProvider, CognithorConnectionState;
 import 'package:cognithor_ui/providers/memory_provider.dart';
 import 'package:cognithor_ui/providers/security_provider.dart';
 import 'package:cognithor_ui/providers/sessions_provider.dart';
@@ -15,7 +15,7 @@ import 'package:cognithor_ui/providers/skills_provider.dart';
 import 'package:cognithor_ui/providers/workflow_provider.dart';
 import 'package:cognithor_ui/providers/packs_provider.dart';
 import 'package:cognithor_ui/providers/research_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/screens/main_shell.dart';
 import 'package:cognithor_ui/screens/settings_screen.dart';
 import 'package:cognithor_ui/screens/setup_wizard_screen.dart';
@@ -83,7 +83,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final l = AppLocalizations.of(context);
 
     // Auto-navigate when connected — only once via _navigating guard
-    if (conn.state == JarvisConnectionState.connected && !_navigating) {
+    if (conn.state == CognithorConnectionState.connected && !_navigating) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _onConnected());
     }
 
@@ -100,26 +100,26 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontSize: 48,
                       fontWeight: FontWeight.w700,
-                      color: JarvisTheme.accent,
+                      color: CognithorTheme.accent,
                       letterSpacing: 4,
                     ),
               ),
               const SizedBox(height: 32),
 
-              if (conn.state == JarvisConnectionState.connecting) ...[
+              if (conn.state == CognithorConnectionState.connecting) ...[
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
                 Text(l.connecting,
                     style: Theme.of(context).textTheme.bodyMedium),
               ],
 
-              if (conn.state == JarvisConnectionState.error) ...[
+              if (conn.state == CognithorConnectionState.error) ...[
                 Icon(
                   conn.versionMismatch
                       ? Icons.system_update_alt
                       : Icons.cloud_off,
                   size: 48,
-                  color: JarvisTheme.red,
+                  color: CognithorTheme.red,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -129,7 +129,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge
-                      ?.copyWith(color: JarvisTheme.red),
+                      ?.copyWith(color: CognithorTheme.red),
                 ),
                 const SizedBox(height: 8),
                 if (conn.versionMismatch) ...[
@@ -174,15 +174,15 @@ class _SplashScreenState extends State<SplashScreen> {
                       icon: const Icon(Icons.settings),
                       label: Text(l.settings),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: JarvisTheme.accent,
-                        side: BorderSide(color: JarvisTheme.accent),
+                        foregroundColor: CognithorTheme.accent,
+                        side: BorderSide(color: CognithorTheme.accent),
                       ),
                     ),
                   ],
                 ),
               ],
 
-              if (conn.state == JarvisConnectionState.disconnected) ...[
+              if (conn.state == CognithorConnectionState.disconnected) ...[
                 Text(l.connecting,
                     style: Theme.of(context).textTheme.bodyMedium),
               ],

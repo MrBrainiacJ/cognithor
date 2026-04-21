@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class JarvisStatusBadge extends StatelessWidget {
-  const JarvisStatusBadge({
+class CognithorStatusBadge extends StatelessWidget {
+  const CognithorStatusBadge({
     super.key,
     required this.label,
     required this.color,

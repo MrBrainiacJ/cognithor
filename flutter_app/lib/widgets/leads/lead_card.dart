@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/reddit_leads_provider.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:cognithor_ui/widgets/neon_card.dart';
 
 class LeadCard extends StatelessWidget {
@@ -19,24 +19,24 @@ class LeadCard extends StatelessWidget {
   final VoidCallback? onArchive;
 
   Color _scoreColor(int score) {
-    if (score >= 80) return JarvisTheme.green;
-    if (score >= 60) return JarvisTheme.accent;
+    if (score >= 80) return CognithorTheme.green;
+    if (score >= 60) return CognithorTheme.accent;
     if (score >= 40) return Colors.orange;
-    return JarvisTheme.red;
+    return CognithorTheme.red;
   }
 
   Color _statusColor(String status) {
     switch (status) {
       case 'new':
-        return JarvisTheme.accent;
+        return CognithorTheme.accent;
       case 'reviewed':
         return Colors.orange;
       case 'replied':
-        return JarvisTheme.green;
+        return CognithorTheme.green;
       case 'archived':
-        return JarvisTheme.textSecondary;
+        return CognithorTheme.textSecondary;
       default:
-        return JarvisTheme.textSecondary;
+        return CognithorTheme.textSecondary;
     }
   }
 
@@ -97,7 +97,7 @@ class LeadCard extends StatelessWidget {
                 Text(
                   'r/${lead.subreddit}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: JarvisTheme.textSecondary,
+                    color: CognithorTheme.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -133,7 +133,7 @@ class LeadCard extends StatelessWidget {
             // Meta row
             DefaultTextStyle(
               style: theme.textTheme.bodySmall?.copyWith(
-                    color: JarvisTheme.textSecondary,
+                    color: CognithorTheme.textSecondary,
                     fontSize: 11,
                   ) ??
                   const TextStyle(fontSize: 11),
@@ -159,11 +159,11 @@ class LeadCard extends StatelessWidget {
                     TextButton.icon(
                       onPressed: onArchive,
                       icon: Icon(Icons.archive_outlined,
-                          size: 14, color: JarvisTheme.textSecondary),
+                          size: 14, color: CognithorTheme.textSecondary),
                       label: Text(l.archiveLead,
                           style: TextStyle(
                               fontSize: 11,
-                              color: JarvisTheme.textSecondary)),
+                              color: CognithorTheme.textSecondary)),
                       style: TextButton.styleFrom(
                           padding:
                               const EdgeInsets.symmetric(horizontal: 8)),

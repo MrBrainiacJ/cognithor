@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
-class JarvisCodeBlock extends StatelessWidget {
-  const JarvisCodeBlock({
+class CognithorCodeBlock extends StatelessWidget {
+  const CognithorCodeBlock({
     super.key,
     required this.code,
     this.language,
@@ -20,8 +20,8 @@ class JarvisCodeBlock extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: JarvisTheme.codeBlockBg,
-        borderRadius: BorderRadius.circular(JarvisTheme.cardRadius),
+        color: CognithorTheme.codeBlockBg,
+        borderRadius: BorderRadius.circular(CognithorTheme.cardRadius),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
@@ -34,7 +34,7 @@ class JarvisCodeBlock extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(JarvisTheme.cardRadius),
+                top: Radius.circular(CognithorTheme.cardRadius),
               ),
             ),
             child: Row(
@@ -43,7 +43,7 @@ class JarvisCodeBlock extends StatelessWidget {
                   Text(
                     language!,
                     style: TextStyle(
-                      color: JarvisTheme.textSecondary,
+                      color: CognithorTheme.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -51,8 +51,8 @@ class JarvisCodeBlock extends StatelessWidget {
                 IconButton(
                   icon: Icon(
                     Icons.copy,
-                    size: JarvisTheme.iconSizeSm,
-                    color: JarvisTheme.textSecondary,
+                    size: CognithorTheme.iconSizeSm,
+                    color: CognithorTheme.textSecondary,
                   ),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: code));
@@ -79,7 +79,7 @@ class JarvisCodeBlock extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 13,
-                color: JarvisTheme.textPrimary,
+                color: CognithorTheme.textPrimary,
                 height: 1.5,
               ),
             ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cognithor_ui/providers/connection_provider.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 class BudgetPage extends StatefulWidget {
   const BudgetPage({super.key});
@@ -84,9 +84,9 @@ class _BudgetPageState extends State<BudgetPage> {
   }
 
   Color _usageColor(double pct) {
-    if (pct > 80) return JarvisTheme.red;
-    if (pct > 60) return JarvisTheme.orange;
-    return JarvisTheme.green;
+    if (pct > 80) return CognithorTheme.red;
+    if (pct > 60) return CognithorTheme.orange;
+    return CognithorTheme.green;
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
@@ -104,9 +104,9 @@ class _BudgetPageState extends State<BudgetPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: JarvisTheme.red),
+            Icon(Icons.error_outline, size: 48, color: CognithorTheme.red),
             const SizedBox(height: 16),
-            Text(_error!, style: TextStyle(color: JarvisTheme.textSecondary)),
+            Text(_error!, style: TextStyle(color: CognithorTheme.textSecondary)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _loadAll,
@@ -158,7 +158,7 @@ class _BudgetPageState extends State<BudgetPage> {
             Row(
               children: [
                 Icon(Icons.account_balance_wallet,
-                    size: 20, color: JarvisTheme.accent),
+                    size: 20, color: CognithorTheme.accent),
                 const SizedBox(width: 8),
                 const Text(
                   'Cost Overview',
@@ -169,9 +169,9 @@ class _BudgetPageState extends State<BudgetPage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                _costTile('Today', today, JarvisTheme.green),
-                _costTile('This Week', week, JarvisTheme.orange),
-                _costTile('This Month', month, JarvisTheme.accent),
+                _costTile('Today', today, CognithorTheme.green),
+                _costTile('This Week', week, CognithorTheme.orange),
+                _costTile('This Month', month, CognithorTheme.accent),
               ],
             ),
           ],
@@ -186,7 +186,7 @@ class _BudgetPageState extends State<BudgetPage> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: JarvisTheme.textSecondary),
+            style: TextStyle(fontSize: 12, color: CognithorTheme.textSecondary),
           ),
           const SizedBox(height: 6),
           Text(
@@ -230,7 +230,7 @@ class _BudgetPageState extends State<BudgetPage> {
           child: Center(
             child: Text(
               'No agent cost data yet',
-              style: TextStyle(color: JarvisTheme.textSecondary),
+              style: TextStyle(color: CognithorTheme.textSecondary),
             ),
           ),
         ),
@@ -247,7 +247,7 @@ class _BudgetPageState extends State<BudgetPage> {
             headingTextStyle: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 12,
-              color: JarvisTheme.textSecondary,
+              color: CognithorTheme.textSecondary,
             ),
             dataTextStyle: const TextStyle(fontSize: 13),
             columns: const [
@@ -267,13 +267,13 @@ class _BudgetPageState extends State<BudgetPage> {
               Color statusColor;
               IconData statusIcon;
               if (!ok) {
-                statusColor = JarvisTheme.red;
+                statusColor = CognithorTheme.red;
                 statusIcon = Icons.error;
               } else if (warn) {
-                statusColor = JarvisTheme.orange;
+                statusColor = CognithorTheme.orange;
                 statusIcon = Icons.warning;
               } else {
-                statusColor = JarvisTheme.green;
+                statusColor = CognithorTheme.green;
                 statusIcon = Icons.check_circle;
               }
 
@@ -285,7 +285,7 @@ class _BudgetPageState extends State<BudgetPage> {
                 DataCell(Text(_fmtCost(agentsMonth[name]))),
                 DataCell(Text(
                     limit != null ? _fmtCost(limit) : '--',
-                    style: TextStyle(color: JarvisTheme.textSecondary))),
+                    style: TextStyle(color: CognithorTheme.textSecondary))),
                 DataCell(Icon(statusIcon, color: statusColor, size: 18)),
               ]);
             }).toList(),
@@ -320,7 +320,7 @@ class _BudgetPageState extends State<BudgetPage> {
             Row(
               children: [
                 Icon(Icons.monitor_heart,
-                    size: 20, color: JarvisTheme.accent),
+                    size: 20, color: CognithorTheme.accent),
                 const SizedBox(width: 8),
                 const Text(
                   'System Resources',
@@ -370,7 +370,7 @@ class _BudgetPageState extends State<BudgetPage> {
 
     return Row(
       children: [
-        Icon(icon, size: 18, color: JarvisTheme.textSecondary),
+        Icon(icon, size: 18, color: CognithorTheme.textSecondary),
         const SizedBox(width: 8),
         SizedBox(
           width: 36,
@@ -379,7 +379,7 @@ class _BudgetPageState extends State<BudgetPage> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: JarvisTheme.textSecondary,
+              color: CognithorTheme.textSecondary,
             ),
           ),
         ),
@@ -426,8 +426,8 @@ class _BudgetPageState extends State<BudgetPage> {
         (_evolutionData?['recent_results'] as List<dynamic>?) ?? [];
 
     final statusColor = running
-        ? (isIdle ? JarvisTheme.orange : JarvisTheme.green)
-        : JarvisTheme.textSecondary;
+        ? (isIdle ? CognithorTheme.orange : CognithorTheme.green)
+        : CognithorTheme.textSecondary;
     final statusLabel = running
         ? (isIdle ? 'Idle' : 'Running')
         : 'Stopped';
@@ -441,7 +441,7 @@ class _BudgetPageState extends State<BudgetPage> {
             Row(
               children: [
                 Icon(Icons.auto_awesome,
-                    size: 20, color: JarvisTheme.accent),
+                    size: 20, color: CognithorTheme.accent),
                 const SizedBox(width: 8),
                 const Text(
                   'Evolution Engine',
@@ -484,7 +484,7 @@ class _BudgetPageState extends State<BudgetPage> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: JarvisTheme.textSecondary,
+                  color: CognithorTheme.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -500,8 +500,8 @@ class _BudgetPageState extends State<BudgetPage> {
                         success ? Icons.check_circle : Icons.cancel,
                         size: 14,
                         color: success
-                            ? JarvisTheme.green
-                            : JarvisTheme.red,
+                            ? CognithorTheme.green
+                            : CognithorTheme.red,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -538,7 +538,7 @@ class _BudgetPageState extends State<BudgetPage> {
             label,
             style: TextStyle(
               fontSize: 11,
-              color: JarvisTheme.textSecondary,
+              color: CognithorTheme.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),

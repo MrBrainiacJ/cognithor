@@ -36,7 +36,7 @@ class _AtlPageState extends State<AtlPage> {
           padding: const EdgeInsets.all(16),
           children: [
             // ── Master Toggle ──
-            JarvisToggleField(
+            CognithorToggleField(
               label: 'ATL Enabled',
               description:
                   'Autonomous Thinking Loop — Cognithor thinks proactively '
@@ -49,7 +49,7 @@ class _AtlPageState extends State<AtlPage> {
               const SizedBox(height: 8),
 
               // ── Interval ──
-              JarvisSliderField(
+              CognithorSliderField(
                 label: 'Thinking Interval (minutes)',
                 description:
                     'How often ATL runs a thinking cycle when the system is idle.',
@@ -62,7 +62,7 @@ class _AtlPageState extends State<AtlPage> {
               ),
 
               // ── Max Actions ──
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Max Actions per Cycle',
                 value: (atl['max_actions_per_cycle'] as num?) ?? 3,
                 min: 1,
@@ -72,7 +72,7 @@ class _AtlPageState extends State<AtlPage> {
               ),
 
               // ── Risk Ceiling ──
-              JarvisSelectField.fromStrings(
+              CognithorSelectField.fromStrings(
                 label: 'Risk Ceiling',
                 value: (atl['risk_ceiling'] ?? 'YELLOW').toString(),
                 options: const ['GREEN', 'YELLOW'],
@@ -80,7 +80,7 @@ class _AtlPageState extends State<AtlPage> {
               ),
 
               // ── Token Budget ──
-              JarvisNumberField(
+              CognithorNumberField(
                 label: 'Max Tokens per Cycle',
                 value: (atl['max_tokens_per_cycle'] as num?) ?? 4000,
                 min: 1000,
@@ -142,13 +142,13 @@ class _AtlPageState extends State<AtlPage> {
               const Divider(height: 32),
 
               // ── Notification ──
-              JarvisTextField(
+              CognithorTextField(
                 label: 'Notification Channel',
                 value: (atl['notification_channel'] ?? '').toString(),
                 onChanged: (v) =>
                     cfg.set('atl.notification_channel', v),
               ),
-              JarvisSelectField.fromStrings(
+              CognithorSelectField.fromStrings(
                 label: 'Notification Level',
                 value:
                     (atl['notification_level'] ?? 'important').toString(),

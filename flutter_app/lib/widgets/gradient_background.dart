@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:cognithor_ui/theme/jarvis_theme.dart';
+import 'package:cognithor_ui/theme/cognithor_theme.dart';
 
 /// A subtle animated gradient background placed behind [child].
 ///
@@ -103,7 +103,7 @@ class _GradientPainter extends CustomPainter {
   }
 
   void _paintDark(Canvas canvas, Size size) {
-    final accentColor = JarvisTheme.accent;
+    final accentColor = CognithorTheme.accent;
 
     // Top-right glow — slowly orbits.
     final center1 = Offset(
