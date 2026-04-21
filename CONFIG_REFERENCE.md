@@ -1,8 +1,8 @@
 # Configuration Reference
 
-Cognithor uses a YAML configuration file at `~/.jarvis/config.yaml`. Settings cascade in three layers:
+Cognithor uses a YAML configuration file at `~/.cognithor/config.yaml`. Settings cascade in three layers:
 
-1. **Defaults** (defined in `src/jarvis/config.py`)
+1. **Defaults** (defined in `src/cognithor/config.py`)
 2. **config.yaml** (overrides defaults)
 3. **Environment variables** `COGNITHOR_*` (overrides everything)
 
@@ -19,7 +19,7 @@ The configuration file is automatically created on first start.
 | `language` | string | `"de"` | `COGNITHOR_LANGUAGE` | UI language for error messages, greetings, status texts. Supports any installed i18n pack (en, de, zh, ar). |
 | `owner_name` | string | `"User"` | `COGNITHOR_OWNER_NAME` | Owner name used in prompts and CORE.md personalization. |
 | `operation_mode` | string | `"auto"` | `COGNITHOR_OPERATION_MODE` | Operation mode: `offline`, `online`, `hybrid`, `auto`. Auto-detects from API keys. |
-| `jarvis_home` | path | `~/.jarvis` | `COGNITHOR_HOME` | Base directory for all Cognithor data. |
+| `cognithor_home` | path | `~/.cognithor` | `COGNITHOR_HOME` | Base directory for all Cognithor data. |
 | `version` | string | *(from package)* | -- | Read-only. Current package version. |
 
 ---
@@ -165,7 +165,7 @@ Section key: `gatekeeper`
 
 | Key | Type | Default | Range | Description |
 |-----|------|---------|-------|-------------|
-| `policies_dir` | string | `"policies"` | -- | Policies directory (relative to jarvis_home). |
+| `policies_dir` | string | `"policies"` | -- | Policies directory (relative to cognithor_home). |
 | `default_risk_level` | string | `"yellow"` | green/yellow/orange/red | Default risk level for unknown tools. |
 | `max_blocked_retries` | int | `3` | 1--10 | Max retries when gatekeeper blocks an action. |
 
@@ -399,7 +399,7 @@ Section key: `calendar`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | bool | `false` | Enable/disable calendar tools. |
-| `ics_path` | string | `""` | Path to local ICS file (default: `~/.jarvis/calendar.ics`). |
+| `ics_path` | string | `""` | Path to local ICS file (default: `~/.cognithor/calendar.ics`). |
 | `caldav_url` | string | `""` | CalDAV server URL (optional). |
 | `username` | string | `""` | CalDAV username. |
 | `password_env` | string | `"COGNITHOR_CALENDAR_PASSWORD"` | Env var name for CalDAV password. |
@@ -414,7 +414,7 @@ Section key: `vault`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | bool | `true` | Enable/disable the vault system. |
-| `path` | string | `"~/.jarvis/vault"` | Vault directory path. Auto-created on first use. |
+| `path` | string | `"~/.cognithor/vault"` | Vault directory path. Auto-created on first use. |
 | `auto_save_research` | bool | `false` | Automatically save web research results to vault. |
 | `default_folders` | dict | *(see below)* | Mapping of logical folder names to directory names. |
 
@@ -443,7 +443,7 @@ Section key: `identity`
 | Key | Type | Default | Range | Description |
 |-----|------|---------|-------|-------------|
 | `enabled` | bool | `true` | -- | Enable/disable Identity Layer (Immortal Mind Protocol). |
-| `identity_id` | string | `"jarvis"` | -- | Default identity ID. |
+| `identity_id` | string | `"cognithor"` | -- | Default identity ID. |
 | `checkpoint_every_n` | int | `5` | 1--50 | Consolidate every N interactions. |
 | `checkpoint_interval_minutes` | int | `10` | 1--120 | Consolidate every N minutes. |
 | `narrative_reflect_every_n` | int | `50` | 10--500 | Narrative self-reflection every N interactions. |
@@ -565,7 +565,7 @@ Section key: `channels`
 | `irc_enabled` | bool | `false` | Enable IRC bot. |
 | `irc_server` | string | `""` | IRC server hostname. |
 | `irc_port` | int | `6667` | IRC server port. |
-| `irc_nick` | string | `"JarvisBot"` | IRC nickname. |
+| `irc_nick` | string | `"CognithorBot"` | IRC nickname. |
 | `irc_channels` | list | `[]` | IRC channels to join. |
 
 ### Twitch
@@ -592,7 +592,7 @@ Section key: `channels.voice_config`
 | `elevenlabs_voice_id` | string | `"hJAaR77ekN23CNyp0byH"` | ElevenLabs voice ID. |
 | `elevenlabs_model` | string | `"eleven_multilingual_v2"` | ElevenLabs model. |
 | `wake_word_enabled` | bool | `true` | Enable wake word detection. |
-| `wake_word` | string | `"jarvis"` | Wake word. |
+| `wake_word` | string | `"cognithor"` | Wake word. |
 | `wake_word_backend` | string | `"browser"` | Wake word backend: `browser`, `vosk`, `porcupine`. |
 | `talk_mode_enabled` | bool | `false` | Enable continuous talk mode. |
 | `talk_mode_auto_listen` | bool | `false` | Auto-listen after TTS finishes. |
@@ -606,7 +606,7 @@ Section key: `security`
 | Key | Type | Default | Range | Description |
 |-----|------|---------|-------|-------------|
 | `max_iterations` | int | `25` | 1--50 | Max agent loop iterations per request. |
-| `allowed_paths` | list | `["~/.jarvis/", "<tempdir>/jarvis/"]` | -- | Allowed file access paths (gatekeeper enforced). |
+| `allowed_paths` | list | `["~/.cognithor/", "<tempdir>/cognithor/"]` | -- | Allowed file access paths (gatekeeper enforced). |
 | `allow_project_dir` | bool | `true` | -- | Automatically add project directory to allowed_paths. |
 | `blocked_commands` | list | *(destructive patterns)* | -- | Regex patterns for blocked shell commands. |
 | `credential_patterns` | list | *(credential patterns)* | -- | Regex patterns for credential detection. |
@@ -628,7 +628,7 @@ Section key: `security.mtls`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | bool | `false` | Enable mutual TLS for WebUI API. |
-| `certs_dir` | string | `""` | Certificate directory (default: `~/.jarvis/certs/`). |
+| `certs_dir` | string | `""` | Certificate directory (default: `~/.cognithor/certs/`). |
 | `auto_generate` | bool | `true` | Auto-generate certificates on first start. |
 
 ---
@@ -642,8 +642,8 @@ Section key: `database`
 | `backend` | string | `"sqlite"` | -- | Database backend: `sqlite` or `postgresql`. |
 | `pg_host` | string | `"localhost"` | -- | PostgreSQL host. |
 | `pg_port` | int | `5432` | 1--65535 | PostgreSQL port. |
-| `pg_dbname` | string | `"jarvis"` | -- | PostgreSQL database name. |
-| `pg_user` | string | `"jarvis"` | -- | PostgreSQL user. |
+| `pg_dbname` | string | `"cognithor"` | -- | PostgreSQL database name. |
+| `pg_user` | string | `"cognithor"` | -- | PostgreSQL user. |
 | `pg_password` | string | `""` | -- | PostgreSQL password. |
 | `pg_pool_min` | int | `2` | 1--50 | Min connection pool size. |
 | `pg_pool_max` | int | `10` | 1--100 | Max connection pool size. |
@@ -688,7 +688,7 @@ Section key: `heartbeat`
 |-----|------|---------|-------|-------------|
 | `enabled` | bool | `false` | -- | Enable periodic heartbeat. |
 | `interval_minutes` | int | `30` | 1--1440 | Interval between heartbeats (minutes). |
-| `checklist_file` | string | `"HEARTBEAT.md"` | -- | Checklist file in jarvis_home. |
+| `checklist_file` | string | `"HEARTBEAT.md"` | -- | Checklist file in cognithor_home. |
 | `channel` | string | `"cli"` | -- | Channel for heartbeat messages. |
 | `model` | string | `"qwen3:8b"` | -- | Model for heartbeat communication. |
 
@@ -700,7 +700,7 @@ Section key: `plugins`
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `skills_dir` | string | `"skills"` | Skills directory (relative to jarvis_home). |
+| `skills_dir` | string | `"skills"` | Skills directory (relative to cognithor_home). |
 | `auto_update` | bool | `false` | Auto-update installed plugins on startup. |
 
 ---
@@ -712,7 +712,7 @@ Section key: `marketplace`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | bool | `true` | Enable Skill Marketplace. |
-| `db_path` | string | `""` | Marketplace DB path (empty = `~/.jarvis/marketplace.db`). |
+| `db_path` | string | `""` | Marketplace DB path (empty = `~/.cognithor/marketplace.db`). |
 | `auto_update` | bool | `false` | Auto-update installed skills. |
 | `require_signatures` | bool | `true` | Only install signed skills. |
 | `auto_seed` | bool | `true` | Seed marketplace with built-in procedures on first start. |
@@ -840,7 +840,7 @@ export COGNITHOR_OLLAMA_TIMEOUT_SECONDS=180
 export COGNITHOR_PLANNER_MAX_ITERATIONS=15
 ```
 
-Channel tokens are typically set in `~/.jarvis/.env`:
+Channel tokens are typically set in `~/.cognithor/.env`:
 
 ```bash
 COGNITHOR_TELEGRAM_TOKEN=123456:ABC...

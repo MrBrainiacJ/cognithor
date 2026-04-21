@@ -28,7 +28,7 @@ The identity system ensures that Cognithor has a stable, evolving personality th
 The core principle: **identity is not static**. Like human personality, it crystallizes over time through interactions. Early interactions shape personality more (low character strength = malleable). As character strength grows, personality resists change -- mirroring human maturation.
 
 ```
-src/jarvis/identity/
+src/cognithor/identity/
   adapter.py                    # IdentityLayer -- facade for Cognithor
   llm_bridge.py                 # CognithorLLMBridge -- adapts Cognithor's LLM for CognitioEngine
   cognitio/
@@ -364,23 +364,23 @@ Triggers: NarrativeSelf differential (every 50 interactions), ExistentialLayer c
 
 | File | Description |
 |------|-------------|
-| `src/jarvis/identity/adapter.py` | IdentityLayer facade -- the only interface Cognithor uses |
-| `src/jarvis/identity/llm_bridge.py` | Adapts Cognithor's UnifiedLLMClient for CognitioEngine |
-| `src/jarvis/identity/cognitio/engine.py` | CognitioEngine -- main orchestrator, Genesis Anchors defined here |
-| `src/jarvis/identity/cognitio/memory.py` | MemoryRecord, MemoryStore, MemoryType, MemoryValence, MemoryStatus |
-| `src/jarvis/identity/cognitio/character.py` | CharacterManager, PersonalityVector, RelationalProfile, BeliefCrisis, CognitiveState |
-| `src/jarvis/identity/cognitio/emotion_shield.py` | EmotionShield -- manipulation protection |
-| `src/jarvis/identity/cognitio/reality_check.py` | RealityCheck -- hallucination defense, jailbreak detection |
-| `src/jarvis/identity/cognitio/vector_store.py` | VectorStore -- ChromaDB ANN search |
-| `src/jarvis/identity/cognitio/working_memory.py` | WorkingMemory -- SQLite short-term store |
-| `src/jarvis/identity/cognitio/attention.py` | MultiHeadAttention -- salience-weighted retrieval |
-| `src/jarvis/identity/cognitio/biases.py` | BiasEngine -- cognitive bias simulation |
-| `src/jarvis/identity/cognitio/narrative.py` | NarrativeSelf -- identity narrative generation |
-| `src/jarvis/identity/cognitio/existential.py` | ExistentialLayer -- mortality awareness |
-| `src/jarvis/identity/cognitio/dream.py` | DreamCycle -- offline memory consolidation |
-| `src/jarvis/identity/cognitio/somatic.py` | SomaticState -- energy and arousal |
-| `src/jarvis/identity/cognitio/temporal.py` | TemporalDensityTracker -- interaction density |
-| `src/jarvis/identity/cognitio/predictive.py` | PredictiveEngine -- prediction error tracking |
-| `src/jarvis/identity/cognitio/garbage_collector.py` | GarbageCollector -- memory pruning |
-| `src/jarvis/identity/cognitio/embeddings.py` | EmbeddingEngine -- text to vector |
-| `src/jarvis/identity/cognitio/epistemic.py` | EpistemicMap -- knowledge confidence |
+| `src/cognithor/identity/adapter.py` | IdentityLayer facade -- the only interface Cognithor uses |
+| `src/cognithor/identity/llm_bridge.py` | Adapts Cognithor's UnifiedLLMClient for CognitioEngine |
+| `src/cognithor/identity/cognitio/engine.py` | CognitioEngine -- main orchestrator, Genesis Anchors defined here |
+| `src/cognithor/identity/cognitio/memory.py` | MemoryRecord, MemoryStore, MemoryType, MemoryValence, MemoryStatus |
+| `src/cognithor/identity/cognitio/character.py` | CharacterManager, PersonalityVector, RelationalProfile, BeliefCrisis, CognitiveState |
+| `src/cognithor/identity/cognitio/emotion_shield.py` | EmotionShield -- manipulation protection |
+| `src/cognithor/identity/cognitio/reality_check.py` | RealityCheck -- hallucination defense, jailbreak detection |
+| `src/cognithor/identity/cognitio/vector_store.py` | VectorStore -- ChromaDB ANN search |
+| `src/cognithor/identity/cognitio/working_memory.py` | WorkingMemory -- SQLite short-term store |
+| `src/cognithor/identity/cognitio/attention.py` | MultiHeadAttention -- salience-weighted retrieval |
+| `src/cognithor/identity/cognitio/biases.py` | BiasEngine -- cognitive bias simulation |
+| `src/cognithor/identity/cognitio/narrative.py` | NarrativeSelf -- identity narrative generation |
+| `src/cognithor/identity/cognitio/existential.py` | ExistentialLayer -- mortality awareness |
+| `src/cognithor/identity/cognitio/dream.py` | DreamCycle -- offline memory consolidation |
+| `src/cognithor/identity/cognitio/somatic.py` | SomaticState -- energy and arousal |
+| `src/cognithor/identity/cognitio/temporal.py` | TemporalDensityTracker -- interaction density |
+| `src/cognithor/identity/cognitio/predictive.py` | PredictiveEngine -- prediction error tracking |
+| `src/cognithor/identity/cognitio/garbage_collector.py` | GarbageCollector -- memory pruning |
+| `src/cognithor/identity/cognitio/embeddings.py` | EmbeddingEngine -- text to vector |
+| `src/cognithor/identity/cognitio/epistemic.py` | EpistemicMap -- knowledge confidence |

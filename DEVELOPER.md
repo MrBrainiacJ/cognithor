@@ -22,7 +22,7 @@
 
 ```
 cognithor/
-├── src/jarvis/                 # Main source package
+├── src/cognithor/              # Main source package
 │   ├── __main__.py             # CLI entry point
 │   ├── config.py               # 3-layer config cascade
 │   ├── models.py               # Shared Pydantic dataclasses
@@ -89,8 +89,8 @@ cognithor/
 
 ```bash
 # 1. Clone
-git clone https://github.com/Alex8791-cyber/jarvis.git
-cd jarvis
+git clone https://github.com/Alex8791-cyber/cognithor.git
+cd cognithor
 
 # 2. Create virtual environment
 python -m venv .venv
@@ -108,7 +108,7 @@ ollama pull nomic-embed-text       # Embeddings
 python scripts/preflight_check.py
 
 # 6. Start Cognithor
-python -m jarvis
+python -m cognithor
 ```
 
 ### UI Development
@@ -119,7 +119,7 @@ npm install
 npm run dev                        # Starts Vite + auto-launches backend
 ```
 
-The Vite `jarvisLauncher` plugin manages the backend lifecycle on port 8741.
+The Vite `cognithorLauncher` plugin manages the backend lifecycle on port 8741.
 
 ---
 
@@ -131,13 +131,13 @@ MCP tools follow a consistent registration pattern. Each tool module has:
 
 ### Step-by-Step
 
-**1. Create your tool module** in `src/jarvis/mcp/`:
+**1. Create your tool module** in `src/cognithor/mcp/`:
 
 ```python
-# src/jarvis/mcp/my_tools.py
+# src/cognithor/mcp/my_tools.py
 from __future__ import annotations
 
-from jarvis.utils.logging import get_logger
+from cognithor.utils.logging import get_logger
 
 log = get_logger(__name__)
 
@@ -174,16 +174,16 @@ def register_my_tools(mcp_client, config) -> MyTools:
     return tools
 ```
 
-**2. Wire into gateway initialization** in `src/jarvis/gateway/phases/tools.py`:
+**2. Wire into gateway initialization** in `src/cognithor/gateway/phases/tools.py`:
 
 ```python
-from jarvis.mcp.my_tools import register_my_tools
+from cognithor.mcp.my_tools import register_my_tools
 
 # Inside init_tools():
 register_my_tools(mcp_client, config)
 ```
 
-**3. Register with the Gatekeeper** in `src/jarvis/core/gatekeeper.py`:
+**3. Register with the Gatekeeper** in `src/cognithor/core/gatekeeper.py`:
 
 Add your tool to the appropriate risk set in `_classify_risk()`:
 
@@ -239,8 +239,8 @@ class Channel(ABC):
 ### Minimal Example
 
 ```python
-# src/jarvis/channels/my_channel.py
-from jarvis.channels.base import Channel, StatusType
+# src/cognithor/channels/my_channel.py
+from cognithor.channels.base import Channel, StatusType
 
 class MyChannel(Channel):
     @property
@@ -323,8 +323,8 @@ Describe the situations where this skill should activate.
 | Location | Type | Loaded |
 |----------|------|--------|
 | `data/procedures/` | Built-in | Always |
-| `~/.jarvis/skills/` | User custom | Always |
-| `~/.jarvis/skills/community/` | Marketplace | If installed |
+| `~/.cognithor/skills/` | User custom | Always |
+| `~/.cognithor/skills/community/` | Marketplace | If installed |
 
 ### How Matching Works
 
@@ -400,7 +400,7 @@ pytest tests/ -m "not slow and not integration"
 pytest tests/test_planner.py -v
 
 # With coverage
-pytest tests/ --cov=src/jarvis --cov-report=html
+pytest tests/ --cov=src/cognithor --cov-report=html
 ```
 
 ### Configuration
@@ -473,7 +473,7 @@ def test_audit_writes():
 ```python
 @pytest.fixture(autouse=True)
 def reset_coding_override():
-    from jarvis.core.model_router import _coding_override_var
+    from cognithor.core.model_router import _coding_override_var
     token = _coding_override_var.set(None)
     yield
     _coding_override_var.reset(token)
@@ -535,7 +535,7 @@ except ValueError:
 ### Structured Logging
 
 ```python
-from jarvis.utils.logging import get_logger
+from cognithor.utils.logging import get_logger
 log = get_logger(__name__)
 
 log.info("tool_registered", name="hello_world", category="greeting")
@@ -545,7 +545,7 @@ log.error("tool_failed", name="hello_world", error=str(exc))
 ### i18n Translations
 
 ```python
-from jarvis.i18n import t
+from cognithor.i18n import t
 
 msg = t("error.timeout")                          # Simple lookup
 msg = t("error.rate_limited", service="Ollama")   # With interpolation
