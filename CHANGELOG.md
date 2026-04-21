@@ -5,10 +5,10 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
-## [unreleased]
+## [0.92.3] -- 2026-04-21
 
 ### Added
-- **Observer Audit Layer**. New LLM-based response quality check that runs
+- **Observer Audit Layer** (#118). New LLM-based response quality check that runs
   after the existing regex-based `ResponseValidator`. Audits every response
   across four dimensions — Hallucination, Sycophancy, Laziness, Tool-Ignorance
   — with per-dimension retry strategies:
@@ -19,13 +19,79 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   prefix. Config: `observer.*` section + `models.observer`. See
   `CONFIG_REFERENCE.md` for all options. Circuit breaker disables the Observer
   after consecutive failures; audit records persist to
-  `~/.cognithor/db/observer_audits.db`.
+  `~/.cognithor/db/observer_audits.db`. Dedicated `qwen3:32b` audit model with
+  graceful degraded-mode fallback to the planner model when observer model
+  is not installed. 96%+ test coverage on observer modules.
+- **Structured skill documentation** (#117, #123, #124). All 5 core SKILL.md
+  files upgraded from 3-line stubs to structured docs with YAML frontmatter,
+  Steps, Examples, Error Handling, and Troubleshooting tables. External
+  contribution from @rohan-tessl.
 
 ### Changed
 - **Breaking**: `Planner.formulate_response()` now returns `ResponseEnvelope`
   (with optional `PGEReloopDirective`) instead of a plain `str`. All in-tree
   callers updated. Downstream integrations must dereference
   `envelope.content`.
+- **Complete Jarvis → Cognithor rebrand** (#121, #125, #128):
+    - Python: `JarvisConfig` → `CognithorConfig`, `jarvis_home` → `cognithor_home`
+      (202 call sites, 159 attribute accesses). Backward-compat aliases added
+      in #121 then removed in #125 after confirming zero external consumers.
+    - Flutter: `JarvisApp`, `JarvisTheme`, and 15 other widget/service classes
+      renamed to `Cognithor*`. 28 source files renamed (`jarvis_*.dart` →
+      `cognithor_*.dart`). All 4 ARB i18n files (en/de/ar/zh) + regenerated
+      l10n updated. 1635 → 19 remaining refs (backend-contract identifiers
+      that require coordinated backend+frontend migration).
+    - YAML auto-migration for existing user configs with legacy `jarvis_home:` key.
+    - `JARVIS_*` env var prefix still accepted as legacy alias.
+- **Documentation sweep** (#119, #126, #129). README, QUICKSTART, FAQ,
+  ARCHITECTURE, CHANNELS_GUIDE, DEVELOPER, CONFIG_REFERENCE, TROUBLESHOOTING,
+  DATABASE, IDENTITY, and install scripts now show `COGNITHOR_*` env vars,
+  paths, and identifiers as primary. Observer mentioned in README status
+  table, ARCHITECTURE PGE section, and FAQ.
+
+### Fixed
+- **install.sh silently stopped during Flutter check on Arch Linux** (#120,
+  closes Reddit feedback item 1). Root cause was `python -c "import jarvis"`
+  post-install verify, which failed since the package rename. The subsequent
+  `fatal "Installation failed"` exit scrolled past the Flutter output, making
+  it look like a Flutter problem.
+- **`JARVIS_HOME` / `COGNITHOR_HOME` env vars crashed config load** (#119,
+  closes Reddit feedback item 3). Config's `_apply_env_overrides` mapped the
+  single-word env var to a rejected `home` field under Pydantic
+  `extra="forbid"`. Now correctly aliases to the real `cognithor_home` field.
+- **`/config` CLI command crashed with asyncio error** (#120, closes Reddit
+  feedback item 4). `prompt_toolkit.prompt()` was called synchronously from
+  an async handler. Now wrapped in `asyncio.to_thread()`.
+- **No auto-config creation on first run** (#120, closes Reddit feedback
+  item 5). Transitive fix from item 1: `setup_directories()` runs `cognithor
+  --init-only` to materialize `config.yaml`, but only after
+  `install_cognithor()` succeeds. Fixing item 1 fixes item 5.
+- **`pysqlcipher3` install failed on macOS** (#127, closes #116). Generic
+  helper passed Debian package name `libsqlcipher-dev` to brew, which
+  fuzzy-matched to the unrelated `libserdes` formula. Now resolves per-PM:
+  `libsqlcipher-dev` (apt), `sqlcipher-devel` (dnf), `sqlcipher`
+  (pacman/brew).
+- **Flaky `test_full_lifecycle` on Windows** (#123). Windows `time.time()` has
+  ~15.6ms resolution; a fast-executing recorder lifecycle produces
+  `started_at == finished_at`. Changed strict `>` assertion to `>=`.
+- **`_call_llm_audit` used wrong kwarg name** (in #121 live tests). Passed
+  `format="json"` but `OllamaClient.chat()` expects `format_json=True`.
+  Observer was silently failing-open in production. Fixed before first ship.
+- **Pre-existing `_migrate_jarvis_home` bug** where `src` and `dst` pointed
+  at the same path (migration no-op for users with legacy `~/.jarvis/`).
+  Fixed as side effect of the rebrand.
+
+## [0.92.2] -- 2026-04-19
+
+See GitHub release notes for details.
+
+## [0.92.1] -- 2026-04-18
+
+See GitHub release notes for details.
+
+## [0.92.0] -- 2026-04-16
+
+See GitHub release notes for details.
 
 ## [0.91.0] -- 2026-04-12
 
