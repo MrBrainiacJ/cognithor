@@ -103,7 +103,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String connectionErrorDetail(String url) {
-    return '请确认 Jarvis 后端正在 $url 运行';
+    return '请确认 Cognithor 后端正在 $url 运行';
   }
 
   @override
@@ -1987,10 +1987,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stopBackend => '停止后端';
 
   @override
-  String get stopBackendDescription => '停止 Jarvis 后端。你需要手动重新启动。';
+  String get stopBackendDescription => '停止 Cognithor 后端。你需要手动重新启动。';
 
   @override
-  String get stopBackendConfirmBody => '这将停止 Jarvis 后端进程。你需要通过命令行手动重新启动。';
+  String get stopBackendConfirmBody => '这将停止 Cognithor 后端进程。你需要通过命令行手动重新启动。';
 
   @override
   String get backendStopped => '后端已停止。请手动重新启动。';
@@ -2006,7 +2006,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get factoryResetNotImpl =>
-      '后端尚未实现恢复出厂设置功能。要手动重置，请删除 config.yaml 并重新启动 Jarvis。';
+      '后端尚未实现恢复出厂设置功能。要手动重置，请删除 config.yaml 并重新启动 Cognithor。';
 
   @override
   String get ok => '确定';

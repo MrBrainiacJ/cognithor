@@ -103,7 +103,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String connectionErrorDetail(String url) {
-    return 'Pruefe ob das Jarvis-Backend unter $url laeuft';
+    return 'Pruefe ob das Cognithor-Backend unter $url laeuft';
   }
 
   @override
@@ -1997,11 +1997,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stopBackendDescription =>
-      'Das Jarvis-Backend stoppen. Du musst es manuell neu starten.';
+      'Das Cognithor-Backend stoppen. Du musst es manuell neu starten.';
 
   @override
   String get stopBackendConfirmBody =>
-      'Dies stoppt den Jarvis-Backend-Prozess. Du musst ihn manuell ueber die Kommandozeile neu starten.';
+      'Dies stoppt den Cognithor-Backend-Prozess. Du musst ihn manuell ueber die Kommandozeile neu starten.';
 
   @override
   String get backendStopped => 'Backend gestoppt. Bitte manuell neu starten.';
@@ -2019,7 +2019,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get factoryResetNotImpl =>
-      'Werkseinstellungen sind noch nicht im Backend implementiert. Zum manuellen Zuruecksetzen loesche deine config.yaml und starte Jarvis neu.';
+      'Werkseinstellungen sind noch nicht im Backend implementiert. Zum manuellen Zuruecksetzen loesche deine config.yaml und starte Cognithor neu.';
 
   @override
   String get ok => 'OK';
