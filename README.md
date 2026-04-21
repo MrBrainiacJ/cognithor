@@ -87,6 +87,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 | **CLI Config TUI** | Stable — Interactive terminal config editor (rich + prompt_toolkit), model discovery |
 | **AST-Based Security** | Stable — Python AST + bashlex shell analysis replacing regex-based guards |
 | **OSINT / HIM Module** | Beta — person/project/org investigation with trust scoring |
+| **Observer Audit Layer** | Stable — post-response LLM quality check across 4 dimensions (hallucinations, sycophancy, laziness, tool-ignorance); triggers regeneration or full PGE re-loop; fails open |
 
 **What the test suite covers:** Unit tests, integration tests, real-life scenario tests, and live Ollama tests for all modules. The 13,000+ tests verify code correctness in controlled environments.
 
@@ -702,12 +703,12 @@ docker compose -f docker-compose.prod.yml --profile nginx up -d      # + Nginx T
 docker compose -f docker-compose.prod.yml --profile monitoring up -d # + Prometheus + Grafana
 ```
 
-Services: Jarvis (headless) + WebUI + Ollama + optional PostgreSQL (pgvector) + optional Nginx reverse proxy + optional Prometheus/Grafana monitoring. GPU support via nvidia-container-toolkit (uncomment in compose file).
+Services: Cognithor (headless) + WebUI + Ollama + optional PostgreSQL (pgvector) + optional Nginx reverse proxy + optional Prometheus/Grafana monitoring. GPU support via nvidia-container-toolkit (uncomment in compose file).
 
 ### Bare-Metal Server (Ubuntu/Debian)
 
 ```bash
-sudo bash deploy/install-server.sh --domain jarvis.example.com --email admin@example.com
+sudo bash deploy/install-server.sh --domain cognithor.example.com --email admin@example.com
 # Or with self-signed cert:
 sudo bash deploy/install-server.sh --domain test.local --self-signed
 ```

@@ -24,7 +24,7 @@
 ### ImportError on launch
 
 ```
-ModuleNotFoundError: No module named 'jarvis'
+ModuleNotFoundError: No module named 'cognithor'
 ```
 
 Install in editable mode:
@@ -65,7 +65,7 @@ taskkill /PID <PID> /F
 
 Or use a different port:
 ```bash
-python -m jarvis --api-port 8742
+python -m cognithor --api-port 8742
 ```
 
 ### Preflight check fails
@@ -120,7 +120,7 @@ ollama pull qwen3:32b
 
 Use smaller models:
 ```yaml
-# ~/.jarvis/config.yaml
+# ~/.cognithor/config.yaml
 models:
   planner:
     name: qwen3:14b    # Instead of 32b
@@ -272,7 +272,7 @@ File operations are restricted to `allowed_paths` in config:
 ```yaml
 security:
   allowed_paths:
-    - ~/.jarvis
+    - ~/.cognithor
     - ~/Documents
     - /path/to/project
 ```
@@ -299,7 +299,7 @@ executor:
    ```bash
    ollama list | grep nomic-embed
    ```
-3. Re-index if needed (memory is stored in `~/.jarvis/memory/`)
+3. Re-index if needed (memory is stored in `~/.cognithor/memory/`)
 
 ### Episodic memory growing too large
 
@@ -391,15 +391,15 @@ curl -X POST http://localhost:8741/api/v1/evolution/run \
 
 ### Telegram bot not responding
 
-1. Check token: `echo $JARVIS_TELEGRAM_TOKEN`
+1. Check token: `echo $COGNITHOR_TELEGRAM_TOKEN`
 2. Verify bot is started in config:
    ```yaml
    channels:
      telegram:
        enabled: true
    ```
-3. Check allowed users: `JARVIS_TELEGRAM_ALLOWED_USERS=123456,789012`
-4. Review logs: `tail -f ~/.jarvis/logs/jarvis.log | grep telegram`
+3. Check allowed users: `COGNITHOR_TELEGRAM_ALLOWED_USERS=123456,789012`
+4. Review logs: `tail -f ~/.cognithor/logs/cognithor.log | grep telegram`
 
 ### Discord/Slack connection fails
 
@@ -447,14 +447,14 @@ Pydantic strict mode rejects unknown keys. Check for typos in config field names
 
 ### Environment variable override not working
 
-Environment variables must be prefixed with `JARVIS_`:
+Environment variables must be prefixed with `COGNITHOR_`:
 ```bash
-export JARVIS_LOG_LEVEL=DEBUG
-export JARVIS_LANGUAGE=en
-export JARVIS_API_TOKEN=my-secret-token
+export COGNITHOR_LOG_LEVEL=DEBUG
+export COGNITHOR_LANGUAGE=en
+export COGNITHOR_API_TOKEN=my-secret-token
 ```
 
-The 3-layer cascade is: defaults -> `config.yaml` -> `JARVIS_*` env vars.
+The 3-layer cascade is: defaults -> `config.yaml` -> `COGNITHOR_*` env vars.
 Env vars always win.
 
 ---
@@ -517,9 +517,9 @@ Enable long paths in Windows:
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1
 ```
 
-Or use shorter `JARVIS_HOME`:
+Or use a shorter `COGNITHOR_HOME`:
 ```bash
-set JARVIS_HOME=C:\jarvis
+set COGNITHOR_HOME=C:\cognithor
 ```
 
 ### Python executable portability
