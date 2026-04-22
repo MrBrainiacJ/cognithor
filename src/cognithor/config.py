@@ -1962,6 +1962,54 @@ class MtlsConfig(BaseModel):
     auto_generate: bool = Field(default=True, description="Zertifikate automatisch generieren")
 
 
+class PIIRedactorConfig(BaseModel):
+    """Local PII redactor applied to outbound LLM messages.
+
+    Runs inside the OllamaClient wrapper before a chat() request reaches
+    the provider. Default-off so existing behavior is unchanged.
+    See ``src/cognithor/security/pii_redactor.py`` for the regex patterns.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = Field(
+        default=False,
+        description=(
+            "When True, PII is stripped from LLM chat messages before "
+            "being sent. Uses regex patterns by default."
+        ),
+    )
+    categories: list[
+        Literal["email", "phone", "api_key", "credit_card", "ssn", "iban", "private_key"]
+    ] = Field(
+        default_factory=lambda: [
+            "email",
+            "phone",
+            "api_key",
+            "credit_card",
+            "ssn",
+            "iban",
+            "private_key",
+        ],
+        description="Which PII categories to redact. Empty list = all disabled.",
+    )
+    replacement_template: str = Field(
+        default="[REDACTED:{category}]",
+        description=(
+            "Template used to replace each match. ``{category}`` is "
+            "substituted with the detected category name."
+        ),
+    )
+    log_redactions: bool = Field(
+        default=True,
+        description=(
+            "Emit a structured log event per chat() call listing the "
+            "categories redacted and the count. Never logs the raw "
+            "matched values."
+        ),
+    )
+
+
 class SecurityConfig(BaseModel):
     """Sicherheits-Konfiguration. [B§11]"""
 
@@ -2029,6 +2077,9 @@ class SecurityConfig(BaseModel):
 
     # Shell-Pfad-Validierung
     shell_validate_paths: bool = Field(default=True)
+
+    # PII redactor for outbound LLM traffic (opt-in)
+    pii_redactor: PIIRedactorConfig = Field(default_factory=PIIRedactorConfig)
 
 
 class AuditConfig(BaseModel):

@@ -104,6 +104,22 @@ class OllamaClient:
         self._keep_alive = config.ollama.keep_alive
         self._client: httpx.AsyncClient | None = None
 
+        # PII redactor — opt-in via config.security.pii_redactor.enabled.
+        # Instantiate once here so the regex patterns compile exactly
+        # once per OllamaClient lifetime.
+        self._pii_redactor = None
+        pii_cfg = config.security.pii_redactor
+        if pii_cfg.enabled and pii_cfg.categories:
+            from cognithor.security.pii_redactor import PIIRedactor
+
+            self._pii_redactor = PIIRedactor(
+                categories=pii_cfg.categories,
+                replacement_template=pii_cfg.replacement_template,
+            )
+            self._pii_log_redactions = pii_cfg.log_redactions
+        else:
+            self._pii_log_redactions = False
+
     async def _ensure_client(self) -> httpx.AsyncClient:
         """Lazy-Initialisierung des HTTP-Clients."""
         if self._client is None or self._client.is_closed:
@@ -185,6 +201,20 @@ class OllamaClient:
         """
         client = await self._ensure_client()
 
+        # Strip PII from outbound messages if redactor is enabled.
+        if self._pii_redactor is not None:
+            messages, matches = self._pii_redactor.redact_messages(messages)
+            if matches and self._pii_log_redactions:
+                by_cat: dict[str, int] = {}
+                for m in matches:
+                    by_cat[m.category] = by_cat.get(m.category, 0) + 1
+                log.info(
+                    "pii_redacted_in_chat",
+                    model=model,
+                    total=len(matches),
+                    by_category=by_cat,
+                )
+
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -260,6 +290,20 @@ class OllamaClient:
             Einzelne Text-Tokens als Strings.
         """
         client = await self._ensure_client()
+
+        # Mirror the same PII redaction as the non-streaming path.
+        if self._pii_redactor is not None:
+            messages, matches = self._pii_redactor.redact_messages(messages)
+            if matches and self._pii_log_redactions:
+                by_cat: dict[str, int] = {}
+                for m in matches:
+                    by_cat[m.category] = by_cat.get(m.category, 0) + 1
+                log.info(
+                    "pii_redacted_in_chat_stream",
+                    model=model,
+                    total=len(matches),
+                    by_category=by_cat,
+                )
 
         payload: dict[str, Any] = {
             "model": model,
