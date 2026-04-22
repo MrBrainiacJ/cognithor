@@ -5,18 +5,18 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
-## [unreleased]
+## [0.92.4] -- 2026-04-22
 
 ### Added
-- **Local PII redactor** (closes community discussion in #122). Opt-in
-  regex-based redaction of outbound LLM messages. Seven categories —
-  `email`, `phone`, `api_key` (OpenAI/Anthropic/GitHub/AWS/Google/Slack/HF),
-  `credit_card` (Luhn-validated), `ssn`, `iban`, `private_key` (PEM blocks).
-  Runs inside `OllamaClient.chat()` so every LLM call is covered (Planner,
-  Observer, Reflector, browser vision). Default-off for backward compat;
-  enable via `security.pii_redactor.enabled`. Zero external calls, zero
-  telemetry — matches Cognithor's local-first promise. Optional spaCy NER
-  mode reserved for later (names/orgs/locations).
+- **Local PII redactor** (closes #122). Opt-in regex-based redaction of
+  outbound LLM messages. Seven categories — `email`, `phone`, `api_key`
+  (OpenAI/Anthropic/GitHub/AWS/Google/Slack/HF), `credit_card` (Luhn-
+  validated), `ssn`, `iban`, `private_key` (PEM blocks). Runs inside
+  `OllamaClient.chat()` so every LLM call is covered (Planner, Observer,
+  Reflector, browser vision). Default-off for backward compat; enable via
+  `security.pii_redactor.enabled`. Zero external calls, zero telemetry —
+  matches Cognithor's local-first promise. Optional spaCy NER mode reserved
+  for later (names/orgs/locations). Co-designed with @teodorofodocrispin-cmyk.
 
 ## [0.92.3] -- 2026-04-21
 
