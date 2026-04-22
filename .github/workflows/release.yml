@@ -162,6 +162,14 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
+      - name: Rename launcher asset for clarity
+        # Cognithor.exe is the .NET launcher shell alone (no bundled Python /
+        # Flutter), not the full installer. On the public release page the
+        # name "Cognithor.exe" next to "CognithorSetup-*.exe" confused users
+        # who didn't know which to download. Rename so the purpose and
+        # version are obvious, matching the existing CognithorSetup-* pattern.
+        run: mv artifacts/launcher/Cognithor.exe "artifacts/launcher/CognithorLauncher-${{ steps.version.outputs.version }}.exe"
+
       - name: Generate release notes
         id: notes
         shell: bash
@@ -212,4 +220,4 @@ jobs:
           generate_release_notes: false
           files: |
             artifacts/installer/CognithorSetup-*.exe
-            artifacts/launcher/Cognithor.exe
+            artifacts/launcher/CognithorLauncher-*.exe
