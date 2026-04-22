@@ -196,6 +196,117 @@ class TestOllamaClient:
 
 
 # ============================================================================
+# PII redactor integration in OllamaClient
+# ============================================================================
+
+
+class TestOllamaClientPIIRedactor:
+    """Verifies PII redactor plumbs through OllamaClient.chat() + chat_stream()."""
+
+    @pytest.mark.asyncio
+    async def test_default_config_no_redaction(self, client: OllamaClient) -> None:
+        """With default config (pii_redactor.enabled=False) the original
+        message must reach the HTTP payload unchanged."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "message": {"role": "assistant", "content": "ok"},
+        }
+        with patch.object(client, "_ensure_client") as mock_ensure:
+            mock_http = AsyncMock()
+            mock_http.post = AsyncMock(return_value=mock_response)
+            mock_ensure.return_value = mock_http
+            await client.chat(
+                model="qwen3:32b",
+                messages=[{"role": "user", "content": "mail me at alice@foo.com"}],
+            )
+            sent_payload = mock_http.post.call_args.kwargs["json"]
+            assert sent_payload["messages"][0]["content"] == "mail me at alice@foo.com"
+
+    @pytest.mark.asyncio
+    async def test_enabled_redacts_before_send(self, config: CognithorConfig) -> None:
+        """When enabled, PII is redacted from the payload that reaches
+        Ollama — the raw email never leaves the process."""
+        from cognithor.config import PIIRedactorConfig
+
+        config.security.pii_redactor = PIIRedactorConfig(enabled=True)
+        pii_client = OllamaClient(config)
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "message": {"role": "assistant", "content": "ok"},
+        }
+        with patch.object(pii_client, "_ensure_client") as mock_ensure:
+            mock_http = AsyncMock()
+            mock_http.post = AsyncMock(return_value=mock_response)
+            mock_ensure.return_value = mock_http
+            await pii_client.chat(
+                model="qwen3:32b",
+                messages=[
+                    {"role": "user", "content": "my email is alice@foo.com ok?"},
+                ],
+            )
+            sent_payload = mock_http.post.call_args.kwargs["json"]
+            content = sent_payload["messages"][0]["content"]
+            assert "alice@foo.com" not in content
+            assert "[REDACTED:email]" in content
+
+    @pytest.mark.asyncio
+    async def test_category_filter_respected(self, config: CognithorConfig) -> None:
+        """Config's categories list narrows what gets redacted."""
+        from cognithor.config import PIIRedactorConfig
+
+        config.security.pii_redactor = PIIRedactorConfig(enabled=True, categories=["email"])
+        pii_client = OllamaClient(config)
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "message": {"role": "assistant", "content": "ok"},
+        }
+        with patch.object(pii_client, "_ensure_client") as mock_ensure:
+            mock_http = AsyncMock()
+            mock_http.post = AsyncMock(return_value=mock_response)
+            mock_ensure.return_value = mock_http
+            await pii_client.chat(
+                model="qwen3:32b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": "email alice@foo.com ssn 123-45-6789",
+                    },
+                ],
+            )
+            content = mock_http.post.call_args.kwargs["json"]["messages"][0]["content"]
+            # Email redacted, SSN preserved (not in categories list).
+            assert "alice@foo.com" not in content
+            assert "123-45-6789" in content
+
+    @pytest.mark.asyncio
+    async def test_does_not_mutate_caller_messages(self, config: CognithorConfig) -> None:
+        """The caller's messages list must not be mutated in place."""
+        from cognithor.config import PIIRedactorConfig
+
+        config.security.pii_redactor = PIIRedactorConfig(enabled=True)
+        pii_client = OllamaClient(config)
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "message": {"role": "assistant", "content": "ok"},
+        }
+        caller_messages = [{"role": "user", "content": "alice@foo.com"}]
+        with patch.object(pii_client, "_ensure_client") as mock_ensure:
+            mock_http = AsyncMock()
+            mock_http.post = AsyncMock(return_value=mock_response)
+            mock_ensure.return_value = mock_http
+            await pii_client.chat(model="qwen3:32b", messages=caller_messages)
+        # Caller's dict must be untouched.
+        assert caller_messages[0]["content"] == "alice@foo.com"
+
+
+# ============================================================================
 # messages_to_ollama Konvertierung
 # ============================================================================
 

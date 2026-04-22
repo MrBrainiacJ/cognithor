@@ -631,6 +631,38 @@ Section key: `security.mtls`
 | `certs_dir` | string | `""` | Certificate directory (default: `~/.cognithor/certs/`). |
 | `auto_generate` | bool | `true` | Auto-generate certificates on first start. |
 
+### PII Redactor
+
+Section key: `security.pii_redactor`
+
+Local PII redaction applied to outbound LLM messages. Runs inside `OllamaClient.chat()` so every LLM call (Planner, Observer, Reflector, browser vision) is covered. Default-off for backward compatibility; enable to strip emails, phone numbers, API keys, credit cards, SSNs, IBANs, and PEM-encoded private keys from chat messages before they leave the process.
+
+Zero external calls — regex patterns compile once per client lifetime. Credit-card matches are Luhn-validated to avoid false positives on random numeric sequences.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `enabled` | bool | `false` | Master switch. When true, PII is stripped from LLM chat messages before sending. |
+| `categories` | list[str] | *(all seven)* | Which categories to redact. Valid: `email`, `phone`, `api_key`, `credit_card`, `ssn`, `iban`, `private_key`. |
+| `replacement_template` | string | `"[REDACTED:{category}]"` | Template for replacement. `{category}` is substituted with the matched category name. |
+| `log_redactions` | bool | `true` | Emit `pii_redacted_in_chat` structured log events with per-category counts. Never logs raw matched values. |
+
+Example config:
+
+```yaml
+security:
+  pii_redactor:
+    enabled: true
+    categories: ["email", "phone", "api_key", "credit_card"]
+    replacement_template: "<<PII>>"
+    log_redactions: true
+```
+
+Notes:
+- Patterns are intentionally conservative — better false-negative than false-positive (a mangled user message is worse than a missed redaction).
+- `api_key` only matches known prefixes (`sk-*`, `gho_*`, `AKIA*`, `AIza*`, etc.) to avoid redacting random base64 strings in code reviews.
+- The redactor returns the caller's message list unchanged if no matches are found — no allocation overhead on clean messages.
+- Optional spaCy NER mode (for names/orgs/locations) is reserved for a future release.
+
 ---
 
 ## Database
