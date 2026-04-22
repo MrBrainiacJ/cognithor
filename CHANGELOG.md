@@ -5,7 +5,7 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.92.5] -- 2026-04-22
 
 ### Added
 - **Qwen3.6 model registry + installer** (`cognithor models install <name>`).
@@ -55,13 +55,6 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   programmatic construction in tests still catches typos — only the
   user-supplied YAML is self-healing.
 
-### Deferred
-- **Video input** is explicitly deferred. Qwen3.6-27B (VLM) can process
-  video frames, but Ollama's `/api/chat` endpoint does not support video
-  input. End-to-end video would require a direct Transformers/vLLM
-  backend — tracked separately.
-
-### Fixed (continued)
 - **Flutter version mismatch overlay blocked the app on every 0.92.x
   installer** (reported on #131 by @PCAssistSoftware). The Flutter
   frontend hard-coded `kFrontendVersion = '0.91.0'` in
@@ -70,9 +63,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   0.92.x install reported itself as 0.91 to the backend, tripped the
   major.minor compatibility check, and wedged users behind the "Version
   Mismatch" overlay with no way out. Both constants are now bumped to
-  0.92.4 and a new `tests/test_flutter_version_sync.py` cross-checks the
-  Flutter version against `cognithor.__version__` so CI fails loudly if
-  a future release bump forgets Flutter.
+  match `cognithor.__version__` and a new
+  `tests/test_flutter_version_sync.py` cross-checks the Flutter version
+  against the Python `__version__` so CI fails loudly if a future
+  release bump forgets Flutter.
+
+### Deferred
+- **Video input** is explicitly deferred. Qwen3.6-27B (VLM) can process
+  video frames, but Ollama's `/api/chat` endpoint does not support video
+  input. End-to-end video would require a direct Transformers/vLLM
+  backend — tracked separately.
 
 ## [0.92.4] -- 2026-04-22
 
