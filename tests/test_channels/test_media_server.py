@@ -203,3 +203,57 @@ class TestServePathTraversal:
             assert r.content == b"legit video bytes"
         finally:
             await srv.stop()
+
+
+class TestSaveUploadConcurrency:
+    def test_many_concurrent_saves_stay_within_quota(self, tmp_path: Path):
+        """Many concurrent save_upload calls must not race past the quota
+        check. Invariant: after all threads complete, media_dir total bytes
+        is at or below quota.
+
+        Without a lock, two or more threads can each compute `current` before
+        the others write, both pass the "will fit" check, and then all write
+        their bytes — leaving the directory above quota. Ten concurrent
+        1 MB saves against a 6 MB quota reliably exercise the race.
+        """
+        import threading
+
+        from cognithor.channels.media_server import MediaUploadServer
+        from cognithor.config import CognithorConfig, VLLMConfig
+
+        cfg = CognithorConfig(
+            cognithor_home=tmp_path,
+            vllm=VLLMConfig(
+                enabled=True,
+                video_max_upload_mb=10,
+                video_quota_gb=1,
+            ),
+        )
+        srv = MediaUploadServer(cfg)
+        srv._port = 4711
+        srv._quota_bytes = 6 * 1024 * 1024  # 6 MB quota for the test
+
+        data = b"\x00" * (1 * 1024 * 1024)  # 1 MB each
+
+        errors: list[Exception] = []
+
+        def worker() -> None:
+            try:
+                srv.save_upload(data, "mp4")
+            except Exception as exc:
+                errors.append(exc)
+
+        threads = [threading.Thread(target=worker) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        total = sum(
+            f.stat().st_size
+            for f in srv._media_dir.iterdir()
+            if f.is_file() and f.suffix.lower() == ".mp4"
+        )
+        assert total <= srv._quota_bytes, (
+            f"Concurrent uploads exceeded quota: {total} bytes > {srv._quota_bytes} bytes quota"
+        )

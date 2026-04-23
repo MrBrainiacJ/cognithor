@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import socket
+import threading
 import uuid as _uuid
 from typing import TYPE_CHECKING
 
@@ -28,6 +29,8 @@ from cognithor.core.llm_backend import (
 from cognithor.utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from cognithor.config import CognithorConfig
 
 log = get_logger(__name__)
@@ -53,6 +56,10 @@ class MediaUploadServer:
         self._port: int | None = None
         self._server = None  # filled by start() in Task 7
         self._serve_task: asyncio.Task | None = None
+        # Guards the evict+write critical section in save_upload. save_upload
+        # is called from async FastAPI handlers via asyncio.to_thread, so
+        # threading.Lock (not asyncio.Lock) is the right primitive here.
+        self._lock = threading.Lock()
 
     def save_upload(self, data: bytes, ext: str) -> str:
         """Store ``data`` under ``<uuid>.<ext>`` in the media dir, return uuid.
@@ -83,12 +90,14 @@ class MediaUploadServer:
                 recovery_hint="Raise config.vllm.video_quota_gb or shrink the file.",
             )
 
-        # LRU eviction until the new file fits
-        self._evict_until_fits(len(data))
-
-        uuid_str = _uuid.uuid4().hex
-        path = self._media_dir / f"{uuid_str}.{ext_lower}"
-        path.write_bytes(data)
+        # LRU eviction + write must be atomic relative to other save_upload
+        # calls, otherwise two concurrent uploads can both pass the quota
+        # check and both write, leaving the directory above quota.
+        with self._lock:
+            self._evict_until_fits(len(data))
+            uuid_str = _uuid.uuid4().hex
+            path = self._media_dir / f"{uuid_str}.{ext_lower}"
+            path.write_bytes(data)
         log.info(
             "video_upload_saved",
             uuid=uuid_str,
@@ -98,16 +107,30 @@ class MediaUploadServer:
         return uuid_str
 
     def _evict_until_fits(self, incoming_bytes: int) -> None:
-        """Delete oldest files (by mtime) until adding ``incoming_bytes`` fits under quota."""
-        files = [f for f in self._media_dir.iterdir() if f.is_file()]
-        current = sum(f.stat().st_size for f in files)
+        """Delete oldest files (by mtime) until adding ``incoming_bytes`` fits under quota.
+
+        Snapshots (path, size, mtime) once per file to avoid racy double-stat
+        calls (the file could vanish between two stat() invocations on a
+        busy directory).
+        """
+        entries: list[tuple[Path, int, float]] = []
+        for p in self._media_dir.iterdir():
+            if not p.is_file():
+                continue
+            try:
+                st = p.stat()
+            except OSError:
+                continue
+            entries.append((p, st.st_size, st.st_mtime))
+
+        current = sum(size for _, size, _ in entries)
         if current + incoming_bytes <= self._quota_bytes:
             return
-        files.sort(key=lambda f: f.stat().st_mtime)  # oldest first
-        for f in files:
+
+        entries.sort(key=lambda e: e[2])  # oldest first
+        for f, size, _ in entries:
             if current + incoming_bytes <= self._quota_bytes:
                 break
-            size = f.stat().st_size
             try:
                 f.unlink()
             except OSError as exc:
