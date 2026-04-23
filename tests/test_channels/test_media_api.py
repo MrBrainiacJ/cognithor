@@ -82,6 +82,39 @@ class TestThumbEndpoint:
         assert r.status_code == 404
 
 
+class TestThumbPathTraversal:
+    def test_thumb_rejects_absolute_path(self, client: TestClient):
+        r = client.get("/api/media/thumb//etc/passwd")
+        # The double-slash after /thumb/ does NOT collapse in Starlette
+        # routing, so this request hits no route and returns 404. If the
+        # router ever starts normalizing slashes, the filename reaching
+        # the handler would be "etc/passwd" — which must then be rejected
+        # with 400. Either outcome is an acceptable "reject".
+        assert r.status_code in (400, 404)
+
+    def test_thumb_rejects_parent_traversal(self, client: TestClient):
+        r = client.get("/api/media/thumb/..%2F..%2Fetc%2Fpasswd")
+        assert r.status_code in (400, 404)  # either path-reject or not-found
+
+    def test_thumb_rejects_backslash_on_windows(self, client: TestClient):
+        r = client.get("/api/media/thumb/..%5C..%5Csecret.txt")
+        assert r.status_code in (400, 404)
+
+    def test_thumb_rejects_absolute_windows_path(self, client: TestClient):
+        r = client.get("/api/media/thumb/C:%5CWindows%5Csystem32%5Ccmd.exe")
+        assert r.status_code in (400, 404)
+
+    def test_thumb_accepts_legitimate_uuid_filename(self, client: TestClient, tmp_path: Path):
+        """After hardening, legit {uuid}.jpg still works."""
+        # Pre-plant a thumbnail
+        uuid = "abc123def456"
+        media_dir = tmp_path / "media" / "vllm-uploads"
+        media_dir.mkdir(parents=True, exist_ok=True)
+        (media_dir / f"{uuid}.jpg").write_bytes(b"\xff\xd8\xff\xe0fake")
+        r = client.get(f"/api/media/thumb/{uuid}.jpg")
+        assert r.status_code == 200
+
+
 class TestUploadDoesNotBlockEventLoop:
     @pytest.mark.asyncio
     async def test_concurrent_requests_not_serialized_by_subprocess(self, tmp_path: Path):

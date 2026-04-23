@@ -85,10 +85,15 @@ async def upload_video(request: Request, file: UploadFile = File(...)) -> dict: 
 
 @media_router.get("/thumb/{filename}")
 async def thumb(request: Request, filename: str) -> FileResponse:
-    if "/" in filename or ".." in filename:
-        raise HTTPException(status_code=400, detail="invalid filename")
     media_server: MediaUploadServer = request.app.state.media_server
-    path = media_server._media_dir / filename
+    media_dir = media_server._media_dir
+    path = media_dir / filename
+    try:
+        resolved = path.resolve()
+        if not resolved.is_relative_to(media_dir.resolve()):
+            raise HTTPException(status_code=400, detail="invalid filename")
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="invalid filename") from exc
     if not path.is_file():
         raise HTTPException(status_code=404, detail="not found")
     return FileResponse(path, media_type="image/jpeg")

@@ -160,10 +160,18 @@ class MediaUploadServer:
 
         @app.get("/media/{filename}")
         async def serve(filename: str) -> FileResponse:
-            # Very strict: no paths, only flat <uuid>.<ext> names
-            if "/" in filename or ".." in filename:
-                raise HTTPException(status_code=400, detail="invalid filename")
-            path = self._media_dir / filename
+            # Defense-in-depth: resolve the full path and verify it's still
+            # inside media_dir. Substring checks like `"/" in filename` miss
+            # Windows absolute paths (e.g. `C:\Windows\...`) because pathlib
+            # treats absolute args as replacing the base.
+            media_dir = self._media_dir
+            path = media_dir / filename
+            try:
+                resolved = path.resolve()
+                if not resolved.is_relative_to(media_dir.resolve()):
+                    raise HTTPException(status_code=400, detail="invalid filename")
+            except (OSError, ValueError) as exc:
+                raise HTTPException(status_code=400, detail="invalid filename") from exc
             if not path.is_file():
                 raise HTTPException(status_code=404, detail="not found")
             return FileResponse(path)

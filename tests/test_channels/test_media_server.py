@@ -132,3 +132,74 @@ class TestLifecycle:
         port2 = await srv2.start()
         assert port2 > 0
         await srv2.stop()
+
+
+class TestServePathTraversal:
+    @pytest.mark.asyncio
+    async def test_serve_rejects_parent_traversal(self, tmp_path: Path):
+        import httpx
+
+        from cognithor.config import CognithorConfig, VLLMConfig
+
+        cfg = CognithorConfig(
+            cognithor_home=tmp_path,
+            vllm=VLLMConfig(enabled=True, video_max_upload_mb=10, video_quota_gb=1),
+        )
+        srv = MediaUploadServer(cfg)
+        port = await srv.start()
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"http://127.0.0.1:{port}/media/..%2F..%2Fetc%2Fpasswd",
+                    timeout=5.0,
+                )
+            assert r.status_code in (400, 404)
+        finally:
+            await srv.stop()
+
+    @pytest.mark.asyncio
+    async def test_serve_rejects_backslash_traversal(self, tmp_path: Path):
+        import httpx
+
+        from cognithor.config import CognithorConfig, VLLMConfig
+
+        cfg = CognithorConfig(
+            cognithor_home=tmp_path,
+            vllm=VLLMConfig(enabled=True, video_max_upload_mb=10, video_quota_gb=1),
+        )
+        srv = MediaUploadServer(cfg)
+        port = await srv.start()
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"http://127.0.0.1:{port}/media/..%5C..%5Csecret.txt",
+                    timeout=5.0,
+                )
+            assert r.status_code in (400, 404)
+        finally:
+            await srv.stop()
+
+    @pytest.mark.asyncio
+    async def test_serve_accepts_legitimate_uuid(self, tmp_path: Path):
+        """After hardening, legit {uuid}.mp4 still works."""
+        import httpx
+
+        from cognithor.config import CognithorConfig, VLLMConfig
+
+        cfg = CognithorConfig(
+            cognithor_home=tmp_path,
+            vllm=VLLMConfig(enabled=True, video_max_upload_mb=10, video_quota_gb=1),
+        )
+        srv = MediaUploadServer(cfg)
+        port = await srv.start()
+        try:
+            uuid = srv.save_upload(b"legit video bytes", "mp4")
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"http://127.0.0.1:{port}/media/{uuid}.mp4",
+                    timeout=5.0,
+                )
+            assert r.status_code == 200
+            assert r.content == b"legit video bytes"
+        finally:
+            await srv.stop()
