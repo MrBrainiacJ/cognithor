@@ -1100,6 +1100,16 @@ class Gateway:
                     self._vllm_orchestrator.media_url = f"http://host.docker.internal:{port}"
             except Exception:
                 log.warning("media_server_start_failed", exc_info=True)
+
+        # Bug C1-r3: publish the Gateway-owned VLLMOrchestrator (with media_url
+        # wired above) + MediaUploadServer onto every already-registered
+        # channel's FastAPI app.state. This is the defensive path for when a
+        # channel was registered BEFORE initialize(). The common path —
+        # register_channel() after initialize() — is handled by
+        # register_channel() itself via _publish_app_state.
+        for channel in self._channels.values():
+            self._publish_app_state(channel)
+
         if self._video_cleanup is not None:
             try:
                 await self._video_cleanup.start()
@@ -1334,7 +1344,27 @@ class Gateway:
         # Wire up cancel callback for channels that support it (e.g. WebUI)
         if hasattr(channel, "_cancel_callback"):
             channel._cancel_callback = self.cancel_session
+        # Bug C1-r3: expose Gateway-owned VLLMOrchestrator + MediaUploadServer
+        # onto channel.app.state so the backends_api and media_api routers see
+        # the same instances as the Gateway (media_url + media_server are
+        # already wired by initialize()). Channels are typically registered
+        # AFTER initialize(), so this is the primary wiring path; the duplicate
+        # loop in initialize() handles the reverse ordering defensively.
+        self._publish_app_state(channel)
         log.info("channel_registered", channel=channel.name)
+
+    def _publish_app_state(self, channel: Channel) -> None:
+        """Copy Gateway-owned singletons onto channel.app.state (idempotent)."""
+        app = getattr(channel, "app", None)
+        if app is None:
+            return
+        try:
+            if getattr(self, "_vllm_orchestrator", None) is not None:
+                app.state.vllm_orchestrator = self._vllm_orchestrator
+            if getattr(self, "_media_server", None) is not None:
+                app.state.media_server = self._media_server
+        except Exception:
+            log.debug("app_state_wiring_failed", channel=channel.name, exc_info=True)
 
     async def start(self) -> None:
         """Startet den Gateway und alle Channels + Cron."""
