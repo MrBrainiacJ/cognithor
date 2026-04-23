@@ -1,6 +1,6 @@
 # Video Input via vLLM — Design Spec
 
-**Status:** Brainstorming approved 2026-04-23, ready for implementation plan.
+**Status:** Day-1 spike complete (2026-04-23), gate **APPROVED**. Ready for implementation plan Tasks 2–23.
 
 **Goal:** Let Cognithor users attach or paste videos in the chat, have them analyzed end-to-end by Qwen3.6-27B (or any vLLM-served VLM with video support), and receive a response referring to visual content across time. No frame-extraction workarounds — this rides on vLLM's native `video_url` content-item, which Qwen3.6-27B's modelcard explicitly supports.
 
@@ -19,6 +19,43 @@
 | 5 | **Fail-flow:** Hybrid pre-flight gate + post-send error (Option Z) | Cheap local pre-flight (is vLLM the active backend?) prevents wasted uploads; runtime breaker state checked on send for DEGRADED. Videos never silent-fallback to Ollama |
 | 6 | **Cleanup policy:** Session-lifetime + 24 h hard cap (Option Y) | Follow-up questions about the same video work during the session; nothing accumulates forever |
 | 7 | **Single video per chat turn** (not multi-video) | vLLM's `extra_body.mm_processor_kwargs.video` is one config, not per-video. Allowing 2+ videos in a turn would force us to either use the most-conservative bucket (losing detail on short clips) or reject the request. YAGNI: single-video covers every realistic use-case for v1 |
+
+---
+
+## Spike Findings (2026-04-23) — Plan Amendments
+
+See [`docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md`](../spikes/2026-04-23-video-input-vllm-spike-findings.md) for the full run log.
+
+| # | Original assumption | Reality | Plan change |
+|---|---------------------|---------|-------------|
+| A | `vllm/vllm-openai:v0.19.1` runs Qwen3.6-27B-NVFP4 | v0.19.1 **crashes at warmup** — FLA Gated-Delta-Net tensor format mismatch + NVFP4 loader missing `FlashInferCutlassNvFp4LinearKernel` on SM120. Fix is only in `cu130-nightly`. | **Pin base image to `vllm/vllm-openai:cu130-nightly`**. Tagged releases adopted when `FlashInferCutlassNvFp4LinearKernel` lands in a stable tag. |
+| B | `extra_body.mm_processor_kwargs.video.{fps,num_frames}` is the correct shape | Confirmed ✅ — vLLM accepted this AND a flat form. Spec's nested shape is safe and preferred (more explicit). | No change. |
+| C | vLLM may have a `--allowed-media-domains` policy that blocks `host.docker.internal` | No allowlist enforced by default ✅. Any HTTP URL is fetched by vLLM's client. | No `--allowed-media-domains` flag needed in `VLLMOrchestrator`. |
+| D | Public HTTPS video URLs are a reliable fallback path | ❌ Some CDNs (Google Cloud Storage public bucket) return 403 to vLLM's container HTTP client. Local-HTTP-upload is **empirically the safer path**. | User-facing fail message for 4xx during URL paste must hint at the option to upload instead. Other spec decisions unchanged. |
+| E | 27B model fits on 32 GB RTX 5090 at native 262K context | ❌ Even NVFP4 weights = 28.25 GiB. `--gpu-memory-utilization 0.94` is the ceiling (free VRAM is 30.12 GiB after Windows compositor overhead). With `--cpu-offload-gb 4` we stabilize at **max-model-len 16384**, max-num-seqs 2. | Default profile for 32 GB class: 16 K context, 2 parallel sequences. Document the trade-off (max 60-sec-at-fps=4 video per turn, which covers 95 % of use cases). |
+| F | ffprobe HTTP timing < 2 s budget is realistic | Not empirically tested in the spike (local-HTTP server wasn't spun up). Spec's 30 s default HTTP timeout remains conservative. | Move empirical verification to Task 2 (VideoSamplingResolver). If budget proves wrong, tune there. |
+
+**Working baseline (single-GPU RTX 5090, 32 GB):**
+
+```bash
+docker run -d --name vllm --gpus all \
+  --add-host host.docker.internal:host-gateway \
+  -v cognithor-hf-cache:/root/.cache/huggingface \
+  -p 8000:8000 \
+  vllm/vllm-openai:cu130-nightly \
+  --model mmangkad/Qwen3.6-27B-NVFP4 \
+  --max-model-len 16384 \
+  --max-num-seqs 2 \
+  --max-num-batched-tokens 2048 \
+  --gpu-memory-utilization 0.94 \
+  --cpu-offload-gb 4 \
+  --enforce-eager \
+  --reasoning-parser qwen3 \
+  --trust-remote-code \
+  --media-io-kwargs '{"video": {"num_frames": -1}}'
+```
+
+Load time ~2 min. VRAM stabilizes at 30.9 / 32 GiB. End-to-end video inference (8 frames from BigBuckBunny 10 s 1 MB clip + German description prompt) produces a grounded response.
 
 ---
 
@@ -217,7 +254,7 @@ class VLLMConfig(BaseModel):
 
 ### vLLM Container Launch Flag
 
-`VLLMOrchestrator.start_container()` adds two flags:
+`VLLMOrchestrator.start_container()` generates the command below. Flags marked **[spike]** are empirically required on 32 GB consumer GPUs (RTX 5090) per the 2026-04-23 spike; on larger GPUs they can be loosened via `VLLMConfig`.
 
 ```bash
 docker run -d \
@@ -227,13 +264,27 @@ docker run -d \
     -e HF_TOKEN=$token \
     -p $port:8000 \
     --label cognithor.managed=true \
-    $image \
+    vllm/vllm-openai:cu130-nightly \
     --model $model \
+    --max-model-len $max_model_len \
+    --max-num-seqs $max_num_seqs \
+    --max-num-batched-tokens $max_num_batched_tokens \
+    --gpu-memory-utilization $gpu_memory_utilization \
+    --cpu-offload-gb $cpu_offload_gb \
+    --enforce-eager \
+    --reasoning-parser qwen3 \
+    --trust-remote-code \
     --media-io-kwargs '{"video": {"num_frames": -1}}'
 ```
 
 - `--add-host host.docker.internal:host-gateway` — makes the Docker container able to reach the host's MediaUploadServer port via `http://host.docker.internal:$media_port/...`. On Docker Desktop Windows/macOS it's already provided, but on Linux Docker CE it isn't — this flag makes behavior uniform.
 - `--media-io-kwargs '{"video": {"num_frames": -1}}'` — tells vLLM "use no server-side default for video sampling; let each request specify via `extra_body.mm_processor_kwargs.video`". Without this, vLLM falls back to model-default sampling which can't be overridden per request.
+- **[spike]** `vllm/vllm-openai:cu130-nightly` (not `:v0.19.1`) — the `v0.19.1` tag is missing `FlashInferCutlassNvFp4LinearKernel` and the `apply_vllm_mapper` fix that stops the Qwen3NextGatedDeltaNet loader from misbinding NVFP4-quantized weights on SM120. The nightly ships both. Adopt a tagged release once it lands upstream.
+- **[spike]** `--max-model-len 16384 --max-num-seqs 2 --max-num-batched-tokens 2048` (32 GB GPU profile) — KV-cache init OOMs at native 262 K context with NVFP4 weights. 16 K context comfortably covers 60 s of adaptive-sampled video (30 frames × ~280 tokens + prompt headroom).
+- **[spike]** `--gpu-memory-utilization 0.94 --cpu-offload-gb 4` — `0.95` fails the startup check because Windows compositor overhead leaves only ~30.12 GiB free on a 32 GiB card. `0.94` passes; the 4 GiB CPU offload recovers enough room for KV cache blocks. Higher-tier GPUs (A100/H100) can use `0.90` with no offload.
+- **[spike]** `--enforce-eager` — disables CUDA graph capture. Graphs need additional VRAM during warmup and this model + setup already sits at 97 % utilization. Eager mode trades ~10 % throughput for stable warmup. Drop once a larger-VRAM profile is available.
+- `--reasoning-parser qwen3` — required so vLLM routes Qwen's thinking-mode tokens correctly. Without it, responses come back with empty `content` when `enable_thinking=true` is the implicit default.
+- `--trust-remote-code` — Qwen3.6 ships a custom `Qwen3NextGatedDeltaNet` module in the tokenizer/processor config. Required.
 
 ---
 
@@ -453,11 +504,11 @@ Total ≈ 7.5 days = **1.5 weeks** calendar. Day-1 spike is a go/no-go gate: if 
 
 Three of these are genuine implementation-time unknowns that MUST be resolved before serious code is written (the first implementation task is a dedicated spike). The others are lower-risk polish questions.
 
-### High-priority spikes (plan Day 1)
+### High-priority spikes (plan Day 1) — RESOLVED 2026-04-23
 
-- **`extra_body.mm_processor_kwargs.video` exact wire shape**: extrapolated from the Qwen3.5 vLLM recipe. Real vLLM may use a different nesting (`extra_body.mm_processor_kwargs.fps` flat, `extra_body.video_kwargs`, etc.). Without the correct shape, nothing works. Day-1 spike: grep vLLM's `entrypoints/openai/serving_chat.py` in the pinned image version + smoke-test against a local vLLM container to capture the actual on-the-wire shape for both `fps` and `num_frames` cases. Adjust the spec if the finding differs.
-- **vLLM `--allowed-media-domains` / fetch policy**: newer vLLM versions may restrict which HTTP hosts the container will fetch from. If the default is strict, `host.docker.internal:<media-port>` is rejected and all local uploads break. Day-1 spike: verify on the pinned image. If restrictive, add `--allowed-media-domains host.docker.internal` (or equivalent) to `VLLMOrchestrator.start_container()`.
-- **`ffprobe` remote-HTTP behavior**: I bumped the default HTTP timeout to 30 s, but some servers refuse `Range: bytes=0-N` or return chunked encoding that ffprobe handles slowly. Day-1 spike: test against three representative URLs (Qwen OSS sample, a CloudFront-hosted mp4, a local-net static-server) and document observed timings. If 30 s is still too tight, surface a UI hint during URL-paste "fetching metadata…" while probe runs.
+- ✅ **`extra_body.mm_processor_kwargs.video` exact wire shape**: verified against `mmangkad/Qwen3.6-27B-NVFP4` on `cu130-nightly`. Nested shape `{"video": {"fps": N}}` / `{"video": {"num_frames": N}}` accepted; flat form also accepted. Spec's nested shape is safe.
+- ✅ **vLLM `--allowed-media-domains` / fetch policy**: no allowlist enforced. Arbitrary HTTPS URLs work. Separately, *some CDNs* (observed: GCS public buckets) return 403 to vLLM's container client — handled by spec's local-HTTP-upload path.
+- ⏸️ **`ffprobe` remote-HTTP behavior**: deferred to Task 2 (`VideoSamplingResolver`). The 30 s HTTP timeout default remains; empirical calibration happens during unit-test-driven implementation.
 
 ### Lower-priority, plan-level details
 

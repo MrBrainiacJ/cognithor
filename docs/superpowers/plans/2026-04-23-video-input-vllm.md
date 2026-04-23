@@ -70,170 +70,22 @@ python -m ruff format --check <files>
 
 ---
 
-## Task 1: Day-1 Spike — Verify vLLM Wire Shape + Media-Domain Policy + ffprobe Timing
+## Task 1: Day-1 Spike — ✅ COMPLETE 2026-04-23
 
-**Files:**
-- Create: `docs/vllm-video-spike-notes.md` (findings doc)
-- No production code in this task. Goal: capture ground truth before any design assumption is turned into code.
+**Findings:** [`docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md`](../spikes/2026-04-23-video-input-vllm-spike-findings.md)
 
-**Why this task blocks everything else:** if the spike reveals that `extra_body.mm_processor_kwargs.video` has a different shape or that vLLM's fetch allowlist rejects `host.docker.internal`, later task code would need to be rewritten. Spike first, design-adjust if needed, then build.
+**Gate:** 🟢 APPROVED — proceed to Task 2.
 
-- [ ] **Step 1: Start a local vLLM container with Qwen2.5-VL-7B-Instruct for probing**
+**Key outcomes that propagate into later tasks:**
 
-```bash
-# Pull the pinned image from PR #137 (already local if that PR's installer was used)
-docker pull vllm/vllm-openai:v0.19.1
+1. **Base image must be `vllm/vllm-openai:cu130-nightly`** (not `:v0.19.1`). v0.19.1 crashes Qwen3.6-27B-NVFP4 at warmup; the fix is shipped in `cu130-nightly` only. See Task 10 for the full `docker run` line.
+2. **Wire shape** `extra_body.mm_processor_kwargs.video.{fps | num_frames}` is accepted as specced. No change to Task 9.
+3. **Fetch policy** — vLLM has no allowlist; any HTTPS URL works. `--allowed-media-domains` NOT needed. Task 10 keeps `--add-host host.docker.internal:host-gateway`.
+4. **Fetch resilience** — some public CDNs (observed: GCS) return 403 to the container's HTTP client. Spec's local-HTTP-upload path is empirically validated as the safer common case. Task 13's user-facing fail message should include a "try uploading instead" hint when a URL fetch returns 4xx.
+5. **VRAM ceiling on 32 GB GPUs** — the launcher default profile **must** use `--max-model-len 16384 --max-num-seqs 2 --max-num-batched-tokens 2048 --gpu-memory-utilization 0.94 --cpu-offload-gb 4 --enforce-eager`. Larger GPUs relax these — see Task 5 for the config fields and Task 10 for the flag generation.
+6. **ffprobe HTTP timing** — not empirically measured in the spike. Task 3's unit tests + `resolve_sampling()` integration test are the new gate for the 30 s default.
 
-# Start with media-io-kwargs from the spec AND --allowed-media-domains OPEN to start
-docker run --rm -d --name vllm-spike \
-    --gpus all \
-    --add-host host.docker.internal:host-gateway \
-    -v cognithor-hf-cache:/root/.cache/huggingface \
-    -e HF_TOKEN="$HF_TOKEN" \
-    -p 8765:8000 \
-    vllm/vllm-openai:v0.19.1 \
-    --model Qwen/Qwen2.5-VL-7B-Instruct \
-    --media-io-kwargs '{"video": {"num_frames": -1}}'
-
-# Wait for /health (up to 3 minutes for first-time model load)
-for i in $(seq 1 90); do
-  if curl -sf http://localhost:8765/health > /dev/null; then
-    echo "vLLM ready after ${i} tries"
-    break
-  fi
-  sleep 2
-done
-```
-
-Expected: `vLLM ready after N tries` printed. If it fails after 90 tries, first diagnose normally (check `docker logs vllm-spike` for model-load errors) — this is not the spike target.
-
-- [ ] **Step 2: Send a real video-URL request and capture the exact `extra_body` shape**
-
-Use Qwen's own sample URL from the modelcard:
-
-```bash
-curl -X POST http://localhost:8765/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
-    "messages": [
-      {"role": "user", "content": [
-        {"type": "video_url", "video_url": {"url": "https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3.5/demo/video/N1cdUjctpG8.mp4"}},
-        {"type": "text", "text": "What is in this video?"}
-      ]}
-    ],
-    "extra_body": {"mm_processor_kwargs": {"video": {"fps": 1}}}
-  }'
-```
-
-Record in `docs/vllm-video-spike-notes.md`:
-- HTTP status
-- Response body (first 500 chars of content field)
-- If 400 or 422: the error message. Then try these alternative shapes one at a time and record which succeeds:
-  - `"extra_body": {"mm_processor_kwargs": {"fps": 1}}` (flat, no "video" nest)
-  - `"extra_body": {"video_kwargs": {"fps": 1}}` (different key)
-  - `"mm_processor_kwargs": {"video": {"fps": 1}}` (no `extra_body` wrapper — top-level)
-
-- [ ] **Step 3: Do the same with `num_frames=32` instead of `fps=1`**
-
-Same request, replace `{"fps": 1}` with `{"num_frames": 32}`. Record the success shape.
-
-- [ ] **Step 4: Verify `host.docker.internal` fetch policy**
-
-Start a tiny HTTP static server on the host:
-
-```bash
-# In a separate shell, at the repo root:
-python -c "
-import http.server, socketserver
-from pathlib import Path
-PORT = 4712
-DIR = Path.home() / 'Downloads'   # any dir with a small mp4
-import os; os.chdir(DIR)
-httpd = socketserver.TCPServer(('127.0.0.1', PORT), http.server.SimpleHTTPRequestHandler)
-print(f'serving {DIR} on http://127.0.0.1:{PORT}')
-httpd.serve_forever()
-"
-```
-
-Put any 10-second MP4 in `~/Downloads/test-clip.mp4`. Now from the container:
-
-```bash
-curl -X POST http://localhost:8765/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen2.5-VL-7B-Instruct",
-    "messages": [
-      {"role": "user", "content": [
-        {"type": "video_url", "video_url": {"url": "http://host.docker.internal:4712/test-clip.mp4"}},
-        {"type": "text", "text": "Describe this."}
-      ]}
-    ],
-    "extra_body": {"mm_processor_kwargs": {"video": {"fps": 2}}}
-  }'
-```
-
-Record in spike notes:
-- Success → our transport (B2) works without `--allowed-media-domains`
-- Connection-refused / DNS error → `host.docker.internal` resolution needs the `--add-host` flag we already included. Re-run without the flag to confirm
-- 403 / policy-rejected → vLLM has a fetch allowlist. Find the CLI flag (search `docker exec vllm-spike python -c "import vllm; print(vllm.__file__)"` then grep the installed source for `allowed_media_domains`)
-
-- [ ] **Step 5: Measure ffprobe HTTP timing against three URL classes**
-
-```bash
-# Install ffmpeg if not present: apt install ffmpeg OR winget install ffmpeg
-time ffprobe -v error -show_entries format=duration -of json "https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3.5/demo/video/N1cdUjctpG8.mp4"
-time ffprobe -v error -show_entries format=duration -of json "http://host.docker.internal:4712/test-clip.mp4"
-# A big remote one — pick any .mp4 > 500 MB you can find, e.g., archive.org
-time ffprobe -v error -show_entries format=duration -of json "<big-remote-mp4-url>"
-```
-
-Record the three `real` times. If any exceeds the spec default (30 s HTTP), update `VLLMConfig.video_ffprobe_http_timeout_seconds` default in Task 8 accordingly. If all three are under 10 s, consider lowering the default to 15 s for faster user-feedback on stuck URLs.
-
-- [ ] **Step 6: Write the findings doc**
-
-Create `docs/vllm-video-spike-notes.md` with this structure:
-
-```markdown
-# vLLM Video-Input Spike (2026-04-23)
-
-## Environment
-- Image: vllm/vllm-openai:v0.19.1 (or whichever is current)
-- Model used: Qwen/Qwen2.5-VL-7B-Instruct
-- GPU: <your dev card>
-- Docker: <docker --version output>
-
-## Finding 1 — extra_body.mm_processor_kwargs.video wire shape
-**Winning shape:** <exact JSON that worked>
-**Shapes that failed:** <list with error messages>
-
-## Finding 2 — vLLM fetch allowlist
-**Default behavior:** <allows host.docker.internal / blocks>
-**CLI flag needed (if any):** <e.g. --allowed-media-domains ...>
-
-## Finding 3 — ffprobe HTTP timings
-| URL class | Real time | Notes |
-|-----------|-----------|-------|
-| Qwen OSS sample | Xs | |
-| host.docker.internal local | Xs | |
-| 500+ MB remote | Xs | |
-
-**Recommended video_ffprobe_http_timeout_seconds default:** <value, ≥ max observed>
-
-## Spec-impact summary
-- <bulleted list of what stays, what must change>
-- <if any design decision is invalidated, STOP and escalate to design>
-```
-
-- [ ] **Step 7: Commit the findings doc**
-
-```bash
-docker rm -f vllm-spike
-git add docs/vllm-video-spike-notes.md
-git commit -m "docs(spike): vLLM video-input wire shape + fetch policy findings"
-```
-
-**🔴 GATE: If Finding 1 or Finding 2 invalidates a spec assumption, STOP here. Update the spec, return for re-review, then resume at Task 2.** If both findings match the spec's assumptions, proceed.
+No production code committed in this task.
 
 ---
 
@@ -748,6 +600,39 @@ class TestVLLMConfigVideoFields:
     def test_upload_mb_upper_bound(self):
         with pytest.raises(ValidationError):
             VLLMConfig(video_max_upload_mb=999999)
+
+
+class TestVLLMConfigLauncherFields:
+    """Flags that the spike identified as required for 32 GB-class GPUs.
+    Defaults match the spike's working RTX 5090 profile."""
+
+    def test_launcher_defaults_match_spike_profile(self):
+        c = VLLMConfig()
+        assert c.max_model_len == 16384
+        assert c.max_num_seqs == 2
+        assert c.max_num_batched_tokens == 2048
+        assert c.gpu_memory_utilization == 0.94
+        assert c.cpu_offload_gb == 4
+        assert c.enforce_eager is True
+
+    def test_gpu_util_must_be_in_open_unit_interval(self):
+        with pytest.raises(ValidationError):
+            VLLMConfig(gpu_memory_utilization=0.0)
+        with pytest.raises(ValidationError):
+            VLLMConfig(gpu_memory_utilization=1.01)
+
+    def test_larger_gpu_profile(self):
+        """User with an A100 loosens the defaults."""
+        c = VLLMConfig(
+            max_model_len=65536,
+            max_num_seqs=8,
+            gpu_memory_utilization=0.90,
+            cpu_offload_gb=0,
+            enforce_eager=False,
+        )
+        assert c.max_model_len == 65536
+        assert c.cpu_offload_gb == 0
+        assert c.enforce_eager is False
 ```
 
 - [ ] **Step 2: Run — expect `AttributeError` on `video_sampling_mode`**
@@ -776,7 +661,18 @@ Inside `VLLMConfig`, after the existing `request_timeout_seconds` field:
     video_max_upload_mb: int = Field(default=500, ge=1, le=5000)
     video_quota_gb: int = Field(default=5, ge=1, le=100)
     video_upload_ttl_hours: int = Field(default=24, ge=1, le=168)
+
+    # Launcher flags for the vLLM `docker run` command (see Day-1 spike findings).
+    # Defaults target a 32 GB-class consumer GPU (RTX 5090) — loosen on larger cards.
+    max_model_len: int = Field(default=16384, ge=2048, le=1_010_000)
+    max_num_seqs: int = Field(default=2, ge=1, le=256)
+    max_num_batched_tokens: int = Field(default=2048, ge=512, le=131072)
+    gpu_memory_utilization: float = Field(default=0.94, gt=0.0, le=1.0)
+    cpu_offload_gb: int = Field(default=4, ge=0, le=128)
+    enforce_eager: bool = Field(default=True)
 ```
+
+**Rationale for the defaults (documented in the field descriptions / user guide):** the spike verified that a 32 GB RTX 5090 running Qwen3.6-27B-NVFP4 stabilizes at exactly these values. On A100/H100 (80 GB), users override `gpu_memory_utilization=0.90`, `cpu_offload_gb=0`, `enforce_eager=False`, `max_model_len=65536+` via the CognithorConfig cascade (config.yaml or `COGNITHOR_VLLM__*` env vars). The installer wizard (Task 21) writes the right profile based on the auto-detected VRAM bucket.
 
 - [ ] **Step 4: Run — expect all pass**
 
@@ -1565,12 +1461,12 @@ class TestChatWithVideo:
             status_code=200,
             json={
                 "choices": [{"message": {"content": "A drone flying over a field."}}],
-                "model": "Qwen/Qwen3.6-27B-FP8",
+                "model": "mmangkad/Qwen3.6-27B-NVFP4",
                 "usage": {"prompt_tokens": 100, "completion_tokens": 10, "total_tokens": 110},
             },
         )
         resp = await backend.chat(
-            model="Qwen/Qwen3.6-27B-FP8",
+            model="mmangkad/Qwen3.6-27B-NVFP4",
             messages=[{"role": "user", "content": "What's in this clip?"}],
             video={"url": "http://host.docker.internal:4711/media/abc.mp4", "sampling": {"fps": 2.0}},
         )
@@ -1731,55 +1627,82 @@ git commit -m "feat(vllm): VLLMBackend.chat(video=...) with mm_processor_kwargs 
 ## Task 10: VLLMOrchestrator — docker run Flags for Video
 
 **Files:**
-- Modify: `src/cognithor/core/vllm_orchestrator.py` (extend `start_container()` with `--media-io-kwargs` + `--add-host`)
+- Modify: `src/cognithor/core/vllm_orchestrator.py` (extend `start_container()` with all spike-required flags)
 - Modify: `tests/test_core/test_vllm_orchestrator.py` (add `TestStartContainerVideoFlags`)
+
+Per the Day-1 spike findings, the `docker run` command must now include the full set of flags that made Qwen3.6-27B-NVFP4 stable on RTX 5090 (32 GB). The image default changes from `v0.19.1` to `cu130-nightly` and the config fields from Task 5 feed most of the values.
 
 - [ ] **Step 1: Append test class**
 
 ```python
 class TestStartContainerVideoFlags:
-    def test_docker_run_includes_media_io_kwargs(self):
+    def _run_start(self, **orch_kwargs):
         from unittest.mock import MagicMock, patch
         from cognithor.core.vllm_orchestrator import VLLMOrchestrator
-
         with patch.object(VLLMOrchestrator, "_port_available", return_value=True), \
              patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")) as run_mock, \
              patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True):
-            orch = VLLMOrchestrator(docker_image="vllm/vllm-openai:v0.19.1", port=8000, hf_token="")
-            orch.start_container("Qwen/Qwen2.5-VL-7B-Instruct")
+            orch = VLLMOrchestrator(**orch_kwargs)
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
+        return run_mock.call_args[0][0]
 
-        args = run_mock.call_args[0][0]
-        # --media-io-kwargs flag is present with the num_frames=-1 default
+    def test_default_image_is_cu130_nightly(self):
+        args = self._run_start(port=8000)
+        assert "vllm/vllm-openai:cu130-nightly" in args
+
+    def test_docker_run_includes_media_io_kwargs(self):
+        args = self._run_start(port=8000)
         idx = args.index("--media-io-kwargs")
         assert '"video"' in args[idx + 1]
         assert '"num_frames": -1' in args[idx + 1]
 
     def test_docker_run_includes_add_host(self):
-        from unittest.mock import MagicMock, patch
-        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
-
-        with patch.object(VLLMOrchestrator, "_port_available", return_value=True), \
-             patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")) as run_mock, \
-             patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True):
-            orch = VLLMOrchestrator(port=8000)
-            orch.start_container("Qwen/Qwen2.5-VL-7B-Instruct")
-        args = run_mock.call_args[0][0]
+        args = self._run_start(port=8000)
         assert "--add-host" in args
         idx = args.index("--add-host")
         assert args[idx + 1] == "host.docker.internal:host-gateway"
 
+    def test_docker_run_includes_spike_stability_flags(self):
+        args = self._run_start(port=8000)
+        assert "--max-model-len" in args and args[args.index("--max-model-len") + 1] == "16384"
+        assert "--max-num-seqs" in args and args[args.index("--max-num-seqs") + 1] == "2"
+        assert "--max-num-batched-tokens" in args and args[args.index("--max-num-batched-tokens") + 1] == "2048"
+        assert "--gpu-memory-utilization" in args and args[args.index("--gpu-memory-utilization") + 1] == "0.94"
+        assert "--cpu-offload-gb" in args and args[args.index("--cpu-offload-gb") + 1] == "4"
+        assert "--enforce-eager" in args
+        assert "--reasoning-parser" in args and args[args.index("--reasoning-parser") + 1] == "qwen3"
+        assert "--trust-remote-code" in args
+
     def test_docker_run_includes_media_url_env_when_port_given(self):
         from unittest.mock import MagicMock, patch
         from cognithor.core.vllm_orchestrator import VLLMOrchestrator
-
         with patch.object(VLLMOrchestrator, "_port_available", return_value=True), \
              patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")) as run_mock, \
              patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True):
             orch = VLLMOrchestrator(port=8000)
-            orch.media_url = "http://host.docker.internal:4711"  # orchestrator learns this from the media server
-            orch.start_container("Qwen/Qwen2.5-VL-7B-Instruct")
+            orch.media_url = "http://host.docker.internal:4711"
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
         args = run_mock.call_args[0][0]
         assert any("COGNITHOR_MEDIA_URL=http://host.docker.internal:4711" in a for a in args)
+
+    def test_overrides_from_vllm_config(self):
+        """A 40 GB-class GPU loosens the defaults — orchestrator reads from VLLMConfig."""
+        from cognithor.config import VLLMConfig
+        cfg = VLLMConfig(
+            max_model_len=65536,
+            max_num_seqs=8,
+            max_num_batched_tokens=8192,
+            gpu_memory_utilization=0.90,
+            cpu_offload_gb=0,
+            enforce_eager=False,
+        )
+        args = self._run_start(port=8000, config=cfg)
+        assert args[args.index("--max-model-len") + 1] == "65536"
+        assert args[args.index("--gpu-memory-utilization") + 1] == "0.9"
+        # --cpu-offload-gb must be OMITTED when 0 (vLLM complains if 0 is passed)
+        assert "--cpu-offload-gb" not in args
+        # --enforce-eager must be OMITTED when disabled
+        assert "--enforce-eager" not in args
 ```
 
 - [ ] **Step 2: Run — expect failures**
@@ -1790,12 +1713,13 @@ python -m pytest tests/test_core/test_vllm_orchestrator.py::TestStartContainerVi
 
 - [ ] **Step 3: Extend `VLLMOrchestrator.start_container()` in `src/cognithor/core/vllm_orchestrator.py`**
 
-Add a new attribute `self.media_url: str | None = None` to `__init__`. Modify the `cmd` list in `start_container` to insert the new flags (before `self.docker_image`):
+Update the `__init__` default image to `vllm/vllm-openai:cu130-nightly`. Add `self.media_url: str | None = None`. Accept a `config: VLLMConfig | None = None` parameter with the defaults carried from the config (see Task 5). Build the command:
 
 ```python
 def start_container(self, model: str, *, health_timeout: int | None = None) -> ContainerInfo:
     # ... existing port-resolve logic ...
 
+    cfg = self._config  # VLLMConfig, see Task 5
     cmd = [
         "docker", "run", "-d",
         "--gpus", "all",
@@ -1808,10 +1732,20 @@ def start_container(self, model: str, *, health_timeout: int | None = None) -> C
     if self.media_url:
         cmd.extend(["-e", f"COGNITHOR_MEDIA_URL={self.media_url}"])
     cmd.extend([
-        self.docker_image,
+        self.docker_image,  # defaults to "vllm/vllm-openai:cu130-nightly"
         "--model", model,
+        "--max-model-len", str(cfg.max_model_len),
+        "--max-num-seqs", str(cfg.max_num_seqs),
+        "--max-num-batched-tokens", str(cfg.max_num_batched_tokens),
+        "--gpu-memory-utilization", f"{cfg.gpu_memory_utilization:g}",
+        "--reasoning-parser", "qwen3",
+        "--trust-remote-code",
         "--media-io-kwargs", '{"video": {"num_frames": -1}}',
     ])
+    if cfg.cpu_offload_gb > 0:
+        cmd.extend(["--cpu-offload-gb", str(cfg.cpu_offload_gb)])
+    if cfg.enforce_eager:
+        cmd.append("--enforce-eager")
     # ... rest of existing body (subprocess.run + health wait) ...
 ```
 
@@ -1827,7 +1761,7 @@ python -m pytest tests/test_core/test_vllm_orchestrator.py -v
 python -m ruff check src/cognithor/core/vllm_orchestrator.py tests/test_core/test_vllm_orchestrator.py
 python -m ruff format --check src/cognithor/core/vllm_orchestrator.py tests/test_core/test_vllm_orchestrator.py
 git add src/cognithor/core/vllm_orchestrator.py tests/test_core/test_vllm_orchestrator.py
-git commit -m "feat(vllm): orchestrator adds --media-io-kwargs + --add-host + COGNITHOR_MEDIA_URL for video"
+git commit -m "feat(vllm): orchestrator switches to cu130-nightly + spike stability flags"
 ```
 
 ---
@@ -1913,7 +1847,7 @@ async def test_video_attachment_also_routes_to_vision_model(
     self, planner_with_mocks
 ):
     from cognithor.models import WorkingMemory
-    planner_with_mocks._config.vision_model_detail = "Qwen/Qwen3.6-27B-FP8"
+    planner_with_mocks._config.vision_model_detail = "mmangkad/Qwen3.6-27B-NVFP4"
     wm = WorkingMemory(session_id="s1")
     wm.video_attachment = {
         "url": "http://host.docker.internal:4711/media/abc.mp4",
@@ -1927,7 +1861,7 @@ async def test_video_attachment_also_routes_to_vision_model(
     )
 
     call = planner_with_mocks._ollama.chat.call_args
-    assert call.kwargs.get("model") == "Qwen/Qwen3.6-27B-FP8"
+    assert call.kwargs.get("model") == "mmangkad/Qwen3.6-27B-NVFP4"
     assert call.kwargs.get("video") is not None
     assert call.kwargs["video"]["url"].endswith("abc.mp4")
 ```
