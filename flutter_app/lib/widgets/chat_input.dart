@@ -173,32 +173,13 @@ class _ChatInputState extends State<ChatInput> {
   }
 
   Future<void> _showUrlDialog() async {
-    final controller = TextEditingController();
+    // Use a stateful dialog widget so the TextEditingController is owned
+    // by the dialog's State and disposed in its own dispose() lifecycle.
+    // Previously the controller was allocated here and leaked — every
+    // dialog open created an undisposed controller. (Bug I2-r3)
     final url = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('URL einfügen'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: TextInputType.url,
-          decoration: const InputDecoration(
-            hintText: 'https://example.com/clip.mp4',
-            helperText: 'Direkter Link zu .mp4 / .webm / .mov / .mkv / .avi',
-          ),
-          onSubmitted: (v) => Navigator.of(ctx).pop(v.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('Abbrechen'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('Hinzufügen'),
-          ),
-        ],
-      ),
+      builder: (ctx) => const _UrlInputDialog(),
     );
 
     if (url == null || url.isEmpty) return;
@@ -387,6 +368,56 @@ class _ChatInputState extends State<ChatInput> {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Stateful dialog body for `_showUrlDialog`.
+///
+/// Owns its `TextEditingController` so disposal happens via the normal
+/// `State.dispose()` lifecycle. Fixes Bug I2-r3: controller leak when
+/// the parent widget allocated the controller itself and failed to
+/// dispose it.
+class _UrlInputDialog extends StatefulWidget {
+  const _UrlInputDialog();
+
+  @override
+  State<_UrlInputDialog> createState() => _UrlInputDialogState();
+}
+
+class _UrlInputDialogState extends State<_UrlInputDialog> {
+  final TextEditingController controller = TextEditingController();
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('URL einfügen'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        keyboardType: TextInputType.url,
+        decoration: const InputDecoration(
+          hintText: 'https://example.com/clip.mp4',
+          helperText: 'Direkter Link zu .mp4 / .webm / .mov / .mkv / .avi',
+        ),
+        onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(null),
+          child: const Text('Abbrechen'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+          child: const Text('Hinzufügen'),
+        ),
+      ],
     );
   }
 }

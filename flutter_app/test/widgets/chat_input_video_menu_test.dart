@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
 import 'package:cognithor_ui/providers/chat_provider.dart';
 import 'package:cognithor_ui/providers/llm_backend_provider.dart';
@@ -136,5 +138,26 @@ void main() {
 
     expect(find.textContaining('Ungültige URL'), findsOneWidget);
     expect(cp.pendingVideoAttachment, isNull);
+  });
+
+  test('URL dialog disposes TextEditingController to prevent leak', () {
+    // Source-level regression: this is the simplest way to prove the fix
+    // stays in place. A missing dispose() would leak one controller per
+    // dialog open. Bug I2-r3 was fixed by moving the controller into a
+    // StatefulWidget (`_UrlInputDialog`) whose State.dispose() releases it.
+    final source = File('lib/widgets/chat_input.dart').readAsStringSync();
+
+    // Source must still allocate a TextEditingController for the URL input.
+    expect(source.contains('TextEditingController()'), isTrue,
+        reason: 'URL dialog must allocate a TextEditingController');
+
+    // Scope the dispose check to the stateful URL-input dialog widget.
+    final urlDialogStart = source.indexOf('_UrlInputDialogState');
+    expect(urlDialogStart, greaterThan(-1),
+        reason: '_UrlInputDialogState must own the controller lifecycle');
+
+    final tail = source.substring(urlDialogStart);
+    expect(tail.contains('controller.dispose()'), isTrue,
+        reason: 'Dialog must dispose its TextEditingController (Bug I2-r3)');
   });
 }
