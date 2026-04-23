@@ -88,6 +88,49 @@ def _attach_images_to_last_user(
     return new_messages
 
 
+def _attach_video_to_last_user(
+    messages: list[dict[str, Any]],
+    video: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Attach a single video to the last user message and build the
+    mm_processor_kwargs payload for vLLM's extra_body.
+
+    Args:
+        messages: Ollama-shaped chat messages. Not mutated.
+        video: ``{"url": str, "sampling": {"fps": float} | {"num_frames": int}}``
+
+    Returns:
+        ``(new_messages, extra_body_update)`` where
+        - ``new_messages``: a fresh list with the last user message's content
+          replaced by a list of content items: ``[video_url, (optional) text]``
+        - ``extra_body_update``: ``{"mm_processor_kwargs": {"video": <sampling>}}``
+          ready to merge into the outgoing chat-completion body.
+    """
+    new_messages = [dict(m) for m in messages]
+
+    # Find last user message (create one if none exists)
+    for i in range(len(new_messages) - 1, -1, -1):
+        if new_messages[i].get("role") == "user":
+            last = new_messages[i]
+            break
+    else:
+        last = {"role": "user", "content": ""}
+        new_messages.append(last)
+
+    existing = last.get("content", "")
+    text_part = existing if isinstance(existing, str) else ""
+    content_items: list[dict[str, Any]] = [
+        {"type": "video_url", "video_url": {"url": video["url"]}},
+    ]
+    if text_part:
+        content_items.append({"type": "text", "text": text_part})
+
+    last["content"] = content_items
+
+    extra_body = {"mm_processor_kwargs": {"video": video["sampling"]}}
+    return new_messages, extra_body
+
+
 class VLLMBackend(LLMBackend):
     """vLLM OpenAI-compat adapter."""
 
@@ -148,6 +191,7 @@ class VLLMBackend(LLMBackend):
         top_p: float = 0.9,
         format_json: bool = False,
         images: list[str] | None = None,
+        video: dict[str, Any] | None = None,
     ) -> ChatResponse:
         """Send a chat-completion request to vLLM.
 
@@ -159,6 +203,11 @@ class VLLMBackend(LLMBackend):
         if images:
             messages = _attach_images_to_last_user(messages, images)
 
+        extra_body: dict[str, Any] = {}
+        if video is not None:
+            messages, video_extra = _attach_video_to_last_user(messages, video)
+            extra_body.update(video_extra)
+
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -169,6 +218,8 @@ class VLLMBackend(LLMBackend):
             payload["tools"] = tools
         if format_json:
             payload["response_format"] = {"type": "json_object"}
+        if extra_body:
+            payload["extra_body"] = extra_body
 
         client = await self._ensure_client()
         try:
