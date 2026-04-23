@@ -22,6 +22,7 @@ from typing import Any, Literal
 
 import httpx
 
+from cognithor.config import VLLMConfig
 from cognithor.core.llm_backend import VLLMDockerError, VLLMHardwareError, VLLMNotReadyError
 from cognithor.utils.logging import get_logger
 
@@ -131,12 +132,15 @@ class VLLMOrchestrator:
         port: int = 8000,
         hf_token: str = "",
         log_ring_size: int = 500,
+        config: VLLMConfig | None = None,
     ) -> None:
         self.docker_image = docker_image
         self.port = port
         self._hf_token = hf_token
         self.state = VLLMState()
         self._log_ring: collections.deque[str] = collections.deque(maxlen=log_ring_size)
+        self._config: VLLMConfig = config if config is not None else VLLMConfig()
+        self.media_url: str | None = None
 
     def get_logs(self) -> list[str]:
         """Snapshot of the container-log ring buffer."""
@@ -368,12 +372,15 @@ class VLLMOrchestrator:
                 recovery_hint="Stop other services or change config.vllm.port.",
             )
 
+        cfg = self._config
         cmd = [
             "docker",
             "run",
             "-d",
             "--gpus",
             "all",
+            "--add-host",
+            "host.docker.internal:host-gateway",
             "-v",
             "cognithor-hf-cache:/root/.cache/huggingface",
             "-e",
@@ -382,10 +389,33 @@ class VLLMOrchestrator:
             f"{port}:8000",
             "--label",
             "cognithor.managed=true",
-            self.docker_image,
-            "--model",
-            model,
         ]
+        if self.media_url:
+            cmd.extend(["-e", f"COGNITHOR_MEDIA_URL={self.media_url}"])
+        cmd.extend(
+            [
+                self.docker_image,
+                "--model",
+                model,
+                "--max-model-len",
+                str(cfg.max_model_len),
+                "--max-num-seqs",
+                str(cfg.max_num_seqs),
+                "--max-num-batched-tokens",
+                str(cfg.max_num_batched_tokens),
+                "--gpu-memory-utilization",
+                f"{cfg.gpu_memory_utilization:g}",
+                "--reasoning-parser",
+                "qwen3",
+                "--trust-remote-code",
+                "--media-io-kwargs",
+                '{"video": {"num_frames": -1}}',
+            ]
+        )
+        if cfg.cpu_offload_gb > 0:
+            cmd.extend(["--cpu-offload-gb", str(cfg.cpu_offload_gb)])
+        if cfg.enforce_eager:
+            cmd.append("--enforce-eager")
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if result.returncode != 0:
             raise VLLMNotReadyError(

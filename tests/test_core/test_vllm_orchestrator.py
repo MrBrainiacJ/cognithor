@@ -338,3 +338,90 @@ class TestStatusAggregator:
         # Mutating the returned copy must not leak back into orch.state
         snapshot.hardware_ok = False
         assert orch.state.hardware_ok is True
+
+
+class TestStartContainerVideoFlags:
+    def _run_start(self, **orch_kwargs):
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")) as run_mock,
+            patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True),
+        ):
+            orch = VLLMOrchestrator(**orch_kwargs)
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
+        return run_mock.call_args[0][0]
+
+    def test_default_image_is_cu130_nightly(self):
+        args = self._run_start(port=8000)
+        assert "vllm/vllm-openai:cu130-nightly" in args
+
+    def test_docker_run_includes_media_io_kwargs(self):
+        args = self._run_start(port=8000)
+        idx = args.index("--media-io-kwargs")
+        assert '"video"' in args[idx + 1]
+        assert '"num_frames": -1' in args[idx + 1]
+
+    def test_docker_run_includes_add_host(self):
+        args = self._run_start(port=8000)
+        assert "--add-host" in args
+        idx = args.index("--add-host")
+        assert args[idx + 1] == "host.docker.internal:host-gateway"
+
+    def test_docker_run_includes_spike_stability_flags(self):
+        args = self._run_start(port=8000)
+        assert "--max-model-len" in args and args[args.index("--max-model-len") + 1] == "16384"
+        assert "--max-num-seqs" in args and args[args.index("--max-num-seqs") + 1] == "2"
+        assert (
+            "--max-num-batched-tokens" in args
+            and args[args.index("--max-num-batched-tokens") + 1] == "2048"
+        )
+        assert (
+            "--gpu-memory-utilization" in args
+            and args[args.index("--gpu-memory-utilization") + 1] == "0.94"
+        )
+        assert "--cpu-offload-gb" in args and args[args.index("--cpu-offload-gb") + 1] == "4"
+        assert "--enforce-eager" in args
+        assert (
+            "--reasoning-parser" in args and args[args.index("--reasoning-parser") + 1] == "qwen3"
+        )
+        assert "--trust-remote-code" in args
+
+    def test_docker_run_includes_media_url_env_when_port_given(self):
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")) as run_mock,
+            patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True),
+        ):
+            orch = VLLMOrchestrator(port=8000)
+            orch.media_url = "http://host.docker.internal:4711"
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
+        args = run_mock.call_args[0][0]
+        assert any("COGNITHOR_MEDIA_URL=http://host.docker.internal:4711" in a for a in args)
+
+    def test_overrides_from_vllm_config(self):
+        """A 40 GB-class GPU loosens the defaults — orchestrator reads from VLLMConfig."""
+        from cognithor.config import VLLMConfig
+
+        cfg = VLLMConfig(
+            max_model_len=65536,
+            max_num_seqs=8,
+            max_num_batched_tokens=8192,
+            gpu_memory_utilization=0.90,
+            cpu_offload_gb=0,
+            enforce_eager=False,
+        )
+        args = self._run_start(port=8000, config=cfg)
+        assert args[args.index("--max-model-len") + 1] == "65536"
+        assert args[args.index("--gpu-memory-utilization") + 1] == "0.9"
+        # --cpu-offload-gb must be OMITTED when 0 (vLLM complains if 0 is passed)
+        assert "--cpu-offload-gb" not in args
+        # --enforce-eager must be OMITTED when disabled
+        assert "--enforce-eager" not in args
