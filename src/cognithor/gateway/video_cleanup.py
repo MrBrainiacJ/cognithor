@@ -38,7 +38,18 @@ class VideoCleanupWorker:
         self._stop_event = asyncio.Event()
 
     async def start(self) -> None:
-        """Run TTL sweep once at start, then kick off the periodic sweep loop."""
+        """Run TTL sweep once at start, then kick off the periodic sweep loop.
+
+        Idempotent: if a sweep task is already running, skip the restart so
+        retry paths (e.g. after a partial media-server bind failure) don't
+        orphan the first task. A previous task that has already finished is
+        cleared before a fresh one is scheduled.
+        """
+        if self._sweep_task is not None and not self._sweep_task.done():
+            log.debug("video_cleanup_already_started")
+            return
+        # If there's a previous finished task, clear it before creating a new one.
+        self._sweep_task = None
         await self._sweep_once()
         self._stop_event.clear()
         self._sweep_task = asyncio.create_task(self._run_periodic())

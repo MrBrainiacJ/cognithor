@@ -108,3 +108,30 @@ class TestStartStop:
         await worker.start()
         await worker.stop()
         await worker.stop()  # second stop must not raise
+
+
+class TestStartIdempotent:
+    @pytest.mark.asyncio
+    async def test_double_start_does_not_leak_second_task(self, tmp_path: Path):
+        """Regression for Bug C2-r3: start() called twice must not orphan the
+        first sweep task. Without the idempotency guard, the first _sweep_task
+        reference is overwritten and the task runs forever."""
+        worker = VideoCleanupWorker(media_dir=tmp_path, ttl_hours=24, sweep_interval_sec=0.05)
+        await worker.start()
+        first_task = worker._sweep_task
+        assert first_task is not None
+
+        # Second start() must either return the same task or leave the first one
+        # intact and not running in parallel with a second one.
+        await worker.start()
+        second_task = worker._sweep_task
+
+        # Either the same task object OR the first task has been cleanly
+        # cancelled/replaced. The concrete invariant: no more than ONE active
+        # sweep task exists.
+        assert first_task is second_task or first_task.done(), (
+            "Second start() orphaned the first sweep task: "
+            f"first_task.done={first_task.done()}, different-object={first_task is not second_task}"
+        )
+
+        await worker.stop()
