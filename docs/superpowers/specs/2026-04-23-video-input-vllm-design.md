@@ -32,7 +32,7 @@ Video input rides on the existing `VLLMBackend` from PR #137 — no new backend,
 
 Existing code changed:
 
-- `VLLMBackend.chat()` — new `video: str | None = None` kwarg alongside the existing `images`. A sibling helper `_attach_video_to_last_user()` produces **one** OpenAI `video_url` content item (single video per turn, Decision 7). If the caller passes a video, the backend also attaches the pre-resolved sampling payload to `extra_body.mm_processor_kwargs.video`.
+- `VLLMBackend.chat()` — new `video: dict | None = None` kwarg alongside the existing `images`. Shape: `{"url": str, "sampling": {"fps": float} | {"num_frames": int}}`. A sibling helper `_attach_video_to_last_user()` produces **one** OpenAI `video_url` content item (single video per turn, Decision 7) and attaches the pre-resolved sampling payload to `extra_body.mm_processor_kwargs.video`.
 - `VLLMOrchestrator.start_container()` — `docker run` command gains `--media-io-kwargs '{"video": {"num_frames": -1}}'` so per-request sampling via `extra_body.mm_processor_kwargs` actually takes effect. Also adds `--add-host host.docker.internal:host-gateway` for the Docker-in-Linux case (requires Docker ≥ 20.10; documented in prerequisites).
 - `WorkingMemory` — new `video_attachment: dict | None` field holding `{"url": str, "sampling": {"fps": 2} | {"num_frames": 32}}`. `Planner.formulate_response()` routes to `config.vision_model_detail` when `image_attachments` is non-empty **or** `video_attachment` is not None.
 - Gateway — at the start of each chat turn, extracts at-most-one video-extension attachment from the incoming message into `WorkingMemory.video_attachment` (rejects additional videos with an error to the client), and registers the upload with `VideoCleanupWorker` under the current `session_id`.
@@ -60,7 +60,17 @@ class MediaUploadServer:
     async def stop(self) -> None: ...
     def save_upload(self, data: bytes, ext: str) -> str:
         """Store `data` in `~/.cognithor/media/vllm-uploads/<uuid>.<ext>`,
-        return the uuid. Raises if the 500 MB per-file cap is exceeded."""
+        return the uuid.
+
+        Raises:
+            MediaUploadTooLargeError: if `len(data)` exceeds `video_max_upload_mb`.
+            MediaUploadUnsupportedFormatError: if `ext` not in allow-list.
+            MediaUploadQuotaExceededError: if the upload would exceed `video_quota_gb`
+                AND LRU eviction of older files wouldn't free enough space.
+
+        Before writing, if `len(data) + current_dir_size > quota`, oldest files
+        (by mtime) are evicted one by one until there is room.
+        """
     def public_url(self, uuid: str) -> str:
         """Return `http://host.docker.internal:<port>/media/<uuid>.<ext>`"""
     def delete(self, uuid: str) -> None: ...
@@ -284,11 +294,11 @@ docker run -d \
 
 ### Flow D — Session Close / Cleanup
 
-1. User closes the chat tab, or closes Cognithor entirely, or the session times out (default 24 h).
+1. User closes the chat tab or closes Cognithor entirely.
 2. Gateway calls `video_cleanup_worker.on_session_close(session_id)`.
-3. Worker looks up all `VideoUploadRecord` rows for that `session_id` in SQLite, deletes the files (and sidecar thumbnails), deletes the rows.
-4. Separate periodic sweep (60 s interval) enforces the hard 24 h TTL regardless of session state.
-5. App start: `on_app_start_gc` scans `~/.cognithor/media/vllm-uploads/`, deletes orphan files (files-without-registry-row, which means Cognithor crashed mid-upload). Then runs the TTL sweep once.
+3. Worker reads `self._by_session[session_id]` (in-memory), deletes each referenced file + its sidecar thumbnail, removes the session entry.
+4. Separate periodic sweep (60 s interval) deletes any file in `media_dir` whose mtime is older than `ttl_hours` (24 h default) — session-independent, authoritative.
+5. App start: the sweep runs once immediately before entering the 60 s loop, catching any files left over from a crashed previous run (their mtime is already > 24 h or will be shortly). No registry, no orphan concept — the filesystem mtime IS the source of truth.
 
 ---
 
@@ -310,7 +320,7 @@ docker run -d \
 ### Runtime Errors
 
 - vLLM returns HTTP 400 "context length exceeded" because a video exploded the token budget (e.g., custom model with different token-per-frame ratio than we expected) → propagates as `LLMBadRequestError` → red bubble with recovery hint: "Try a shorter video clip or set `vllm.video_sampling_mode: fixed_32` in config."
-- `docker pull` during first-time `start_container` fetches an image without `host.docker.internal` support → `add-host` flag kicks in, vLLM can reach media server.
+- Container started without the `--add-host host.docker.internal:host-gateway` flag (e.g., someone ran `docker run` manually, `reuse_existing()` adopts it) → vLLM inside the container can't resolve `host.docker.internal` on Linux, fetches fail with DNS error → `VLLMNotReadyError` with recovery hint: "Restart vLLM from LLM Backends settings to pick up host-gateway config."
 - URL paste but the remote server returns 404 / 5xx when vLLM tries to fetch → vLLM raises its own error → we pass through as `VLLMNotReadyError` with a hint about checking the URL.
 
 ### Circuit Breaker (reuses existing `cognithor.utils.circuit_breaker.CircuitBreaker`)
@@ -321,7 +331,7 @@ No changes to the breaker itself. `MediaUploadError` subclasses are added to `ex
 
 - `MediaUploadServer` binds `127.0.0.1` only. Never exposed on a non-loopback interface. Documented explicitly.
 - Sidecar thumbnails are deleted alongside the video on cleanup.
-- Uploaded files live under `~/.cognithor/media/vllm-uploads/` with 600 permissions (user-only read).
+- Uploaded files live under `~/.cognithor/media/vllm-uploads/` with user-only read permissions: `0o600` on POSIX (`chmod 600`), and a restrictive ACL on Windows (inherits from `%LOCALAPPDATA%\Cognithor\` which is already user-scoped by default).
 
 ---
 
@@ -347,10 +357,10 @@ No changes to the breaker itself. `MediaUploadError` subclasses are added to `ex
   - Quota exceeded → oldest file LRU-evicted, log message, new file saved
   - `public_url()` returns the expected `host.docker.internal` URL
 - **`tests/test_gateway/test_video_cleanup.py`** — worker
-  - `register_upload` → row appears in SQLite + file exists
-  - `on_session_close` deletes all session files
-  - `on_app_start_gc` removes orphans (file on disk, no DB row)
-  - 24 h hard TTL fires even if session is still "active"
+  - `register_upload` → uuid appears in `_by_session[session_id]`
+  - `on_session_close` deletes all files linked to the session, removes the session entry
+  - Periodic sweep deletes files whose mtime is older than `ttl_hours` — independent of session state (tested by patching `os.path.getmtime`)
+  - Start-up sweep catches leftover files from a crashed previous run (tested by creating old-mtime files in a tmp dir before `worker.start()`)
 
 ### Integration Layer
 
@@ -385,7 +395,7 @@ Added to `docs/vllm-manual-test.md` (from PR #137) as a new section:
 ## Dependencies & Prerequisites
 
 **Python (in-repo):**
-- No new pip packages. Uses existing `httpx`, `fastapi`, `pydantic`, `structlog`, stdlib `subprocess` / `asyncio` / `sqlite3` / `uuid`.
+- No new pip packages. Uses existing `httpx`, `fastapi`, `pydantic`, `structlog`, stdlib `subprocess` / `asyncio` / `uuid` / `pathlib`.
 
 **User environment:**
 - `ffmpeg` + `ffprobe` — **bundled on Windows** (LGPL build in installer), expected in `$PATH` on Linux/macOS (documented in the user guide). Graceful degradation when absent: videos still work, just with fixed `num_frames=32` sampling and no thumbnails.
