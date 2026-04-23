@@ -36,6 +36,25 @@ def _build_fake_vllm_app() -> FastAPI:
                 yield "data: [DONE]\n\n"
 
             return StreamingResponse(gen(), media_type="text/event-stream")
+
+        last_msg = body["messages"][-1]
+        content = last_msg.get("content")
+        if isinstance(content, list):
+            has_video = any(c.get("type") == "video_url" for c in content)
+            if has_video:
+                video_url = next(
+                    c["video_url"]["url"] for c in content if c.get("type") == "video_url"
+                )
+                extra = body.get("extra_body", {})
+                mm_video = extra.get("mm_processor_kwargs", {}).get("video", {})
+                return {
+                    "choices": [
+                        {"message": {"content": f"Saw video {video_url} with sampling {mm_video}"}}
+                    ],
+                    "model": body["model"],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+                }
+
         return {
             "choices": [{"message": {"content": "echo: " + body["messages"][-1]["content"]}}],
             "model": body["model"],
@@ -116,5 +135,21 @@ class TestVLLMBackendEndToEnd:
         try:
             models = await backend.list_models()
             assert "fake-model" in models
+        finally:
+            await backend.close()
+
+
+class TestVLLMBackendVideoEndToEnd:
+    @pytest.mark.asyncio
+    async def test_video_roundtrip_preserves_url_and_sampling(self, fake_server):
+        backend = VLLMBackend(base_url=f"http://127.0.0.1:{fake_server}/v1")
+        try:
+            resp = await backend.chat(
+                model="fake-model",
+                messages=[{"role": "user", "content": "describe"}],
+                video={"url": "http://example.com/clip.mp4", "sampling": {"fps": 2.0}},
+            )
+            assert "http://example.com/clip.mp4" in resp.content
+            assert "fps" in resp.content
         finally:
             await backend.close()
