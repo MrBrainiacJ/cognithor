@@ -28,7 +28,7 @@ class TestVideoSamplingDataclass:
 
     def test_as_mm_kwargs_raises_when_neither(self):
         s = VideoSampling()  # both None
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="neither fps nor num_frames"):
             s.as_mm_kwargs()
 
 

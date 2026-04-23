@@ -1,10 +1,8 @@
-"""Video sampling: pick fps or num_frames for a vLLM `video_url` request.
+"""Video sampling: map video duration to fps/num_frames for a vLLM request.
 
-Uses ffprobe to detect duration, then maps to the bucket table from the
-spec (docs/superpowers/specs/2026-04-23-video-input-vllm-design.md).
-
-This module is pure-logic-plus-subprocess. `_bucket_for_duration` is
-pure; `resolve_sampling` (added in Task 3) is the I/O entry point.
+Maps duration to the bucket table from
+docs/superpowers/specs/2026-04-23-video-input-vllm-design.md.
+Pure logic only; I/O entry point ``resolve_sampling`` is added in Task 3.
 """
 
 from __future__ import annotations
