@@ -323,7 +323,8 @@ def step_ffmpeg() -> Path:
             print(f"  [OK] ffmpeg/bin/ normalized (was {wrapped_bins[0]})")
         else:
             raise RuntimeError(
-                f"Unexpected ffmpeg archive layout — found {len(wrapped_bins)} bin dirs: {wrapped_bins}"
+                f"Unexpected ffmpeg archive layout — "
+                f"found {len(wrapped_bins)} bin dirs: {wrapped_bins}"
             )
 
     # Verify the build is LGPL (not GPL)
