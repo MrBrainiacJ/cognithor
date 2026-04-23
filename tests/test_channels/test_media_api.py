@@ -80,3 +80,80 @@ class TestThumbEndpoint:
     def test_thumb_returns_404_for_missing(self, client: TestClient):
         r = client.get("/api/media/thumb/not-a-real-uuid.jpg")
         assert r.status_code == 404
+
+
+class TestUploadDoesNotBlockEventLoop:
+    @pytest.mark.asyncio
+    async def test_concurrent_requests_not_serialized_by_subprocess(self, tmp_path: Path):
+        """When ffprobe/ffmpeg are slow, concurrent upload requests must
+        not serialize on the event loop.
+
+        We drive this by patching resolve_sampling to sleep (simulating
+        ffprobe hanging on a slow HTTP URL) and firing two uploads
+        concurrently. If the handler runs subprocess.run directly on the
+        loop, total wall time ~ 2*sleep. With asyncio.to_thread it's ~
+        1*sleep."""
+        import asyncio as _asyncio
+        import time
+
+        from cognithor.channels.media_server import MediaUploadServer
+        from cognithor.config import CognithorConfig, VLLMConfig
+        from cognithor.core.video_sampling import VideoSampling
+
+        cfg = CognithorConfig(
+            cognithor_home=tmp_path,
+            vllm=VLLMConfig(enabled=True, video_max_upload_mb=10, video_quota_gb=1),
+        )
+        ms = MediaUploadServer(cfg)
+        ms._port = 4711
+        from cognithor.channels.media_api import build_media_app
+
+        app = build_media_app(config=cfg, media_server=ms)
+
+        sleep_seconds = 0.5
+
+        def _slow_sampling(*args, **kwargs) -> VideoSampling:
+            time.sleep(sleep_seconds)  # blocking sync sleep - a proxy for ffprobe
+            return VideoSampling(fps=1.0, duration_sec=10.0)
+
+        with (
+            patch(
+                "cognithor.channels.media_api.resolve_sampling",
+                side_effect=_slow_sampling,
+            ),
+            patch(
+                "cognithor.channels.media_api._extract_thumbnail",
+                return_value=True,
+            ),
+        ):
+            # TestClient runs in a separate thread so we can't use it for
+            # concurrent-async testing. Instead use httpx.AsyncClient against
+            # an ASGITransport.
+            from httpx import ASGITransport, AsyncClient
+
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                start = time.perf_counter()
+                responses = await _asyncio.gather(
+                    client.post(
+                        "/api/media/upload",
+                        files={"file": ("a.mp4", b"\x00" * 2048, "video/mp4")},
+                    ),
+                    client.post(
+                        "/api/media/upload",
+                        files={"file": ("b.mp4", b"\x00" * 2048, "video/mp4")},
+                    ),
+                )
+                elapsed = time.perf_counter() - start
+
+        for r in responses:
+            assert r.status_code == 200, r.text
+
+        # With asyncio.to_thread: ~sleep_seconds (parallel) + overhead
+        # Without: ~2*sleep_seconds (serialized)
+        # Tolerance: pass if < 1.6*sleep_seconds (i.e. strictly less than
+        # serial execution, accounting for thread-pool startup).
+        assert elapsed < 1.6 * sleep_seconds, (
+            f"Upload handler appears to serialize: {elapsed:.2f}s for two 0.5s uploads "
+            f"(expected ~0.5s parallel, got {elapsed:.2f}s)"
+        )

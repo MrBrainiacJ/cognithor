@@ -3,11 +3,13 @@
 Separate from the MediaUploadServer (which only serves vLLM fetches). These
 endpoints are invoked by the Flutter client and run on the main Cognithor API
 port. They delegate the actual storage to MediaUploadServer.save_upload and
-run ffprobe/ffmpeg synchronously (both complete in <200 ms for typical videos).
+run ffprobe/ffmpeg via asyncio.to_thread so the uvicorn event loop stays
+responsive even for 500 MB uploads or slow remote URLs.
 """
 
 from __future__ import annotations
 
+import asyncio
 import shutil
 import subprocess
 from pathlib import Path
@@ -56,13 +58,15 @@ async def upload_video(request: Request, file: UploadFile = File(...)) -> dict: 
 
     saved_path = media_server._media_dir / f"{uuid}.{ext.lower()}"
 
-    _extract_thumbnail(
+    await asyncio.to_thread(
+        _extract_thumbnail,
         saved_path,
         media_server._media_dir / f"{uuid}.jpg",
         ffmpeg_path="ffmpeg",
     )
 
-    sampling = resolve_sampling(
+    sampling = await asyncio.to_thread(
+        resolve_sampling,
         str(saved_path),
         ffprobe_path=config.vllm.video_ffprobe_path,
         timeout_seconds=config.vllm.video_ffprobe_timeout_seconds,
