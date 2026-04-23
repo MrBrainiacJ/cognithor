@@ -74,8 +74,19 @@ def _attach_images_to_last_user(
     for i in range(len(new_messages) - 1, -1, -1):
         if new_messages[i].get("role") == "user":
             existing = new_messages[i].get("content")
-            text_part = existing if isinstance(existing, str) else ""
-            content_list: list[dict[str, Any]] = []
+            if isinstance(existing, list):
+                # Pre-existing list content (e.g. a prior video attachment in
+                # the same turn): extract the text item and preserve all other
+                # non-text items so they are not silently dropped.
+                text_part = next(
+                    (c["text"] for c in existing if c.get("type") == "text"),
+                    "",
+                )
+                preserved_items = [c for c in existing if c.get("type") != "text"]
+            else:
+                text_part = existing if isinstance(existing, str) else ""
+                preserved_items = []
+            content_list: list[dict[str, Any]] = list(preserved_items)
             if text_part:
                 content_list.append({"type": "text", "text": text_part})
             for url in encoded:
