@@ -291,9 +291,12 @@ def step_ffmpeg() -> Path:
 
     dest_zip = BUILD_DIR / "downloads" / "ffmpeg.zip"
     extract_dir = BUILD_DIR / "ffmpeg"
+    # Canonical path expected by the .iss — no subfolder, Inno Setup's
+    # directory wildcard semantics are brittle on nested patterns.
+    canonical_bin = extract_dir / "bin"
 
-    if extract_dir.exists():
-        print("  [SKIP] ffmpeg/ already extracted")
+    if canonical_bin.exists() and (canonical_bin / "ffmpeg.exe").is_file():
+        print("  [SKIP] ffmpeg/bin/ already normalized")
     else:
         download(FFMPEG_LGPL_URL, dest_zip, "ffmpeg LGPL build")
         extract_dir.mkdir(parents=True, exist_ok=True)
@@ -301,23 +304,47 @@ def step_ffmpeg() -> Path:
             z.extractall(extract_dir)
         print("  [OK] ffmpeg extracted")
 
-    # BtbN archives have a single top-level folder; find bin/ffmpeg.exe
-    for p in extract_dir.rglob("ffmpeg.exe"):
-        result = subprocess.run([str(p), "-version"], capture_output=True, text=True, check=False)
-        combined = result.stdout + result.stderr
-        first_config_line = next(
-            (line for line in combined.splitlines() if "configuration" in line), ""
-        )
-        if "--enable-gpl" in first_config_line:
+        # BtbN archives wrap everything in a single top-level folder like
+        # `ffmpeg-master-latest-win64-lgpl-shared/`. Flatten it so the .iss
+        # can reference `build\ffmpeg\bin\*.exe` without wildcards.
+        wrapped_bins = list(extract_dir.glob("*/bin"))
+        if not wrapped_bins:
+            # Already flat — nothing to do
+            pass
+        elif len(wrapped_bins) == 1:
+            src_bin = wrapped_bins[0]
+            if canonical_bin.exists():
+                shutil.rmtree(canonical_bin)
+            shutil.move(str(src_bin), str(canonical_bin))
+            # Clean up the now-empty wrapper dir
+            wrapper = src_bin.parent
+            if wrapper.is_dir() and not any(wrapper.iterdir()):
+                wrapper.rmdir()
+            print(f"  [OK] ffmpeg/bin/ normalized (was {wrapped_bins[0]})")
+        else:
             raise RuntimeError(
-                f"Downloaded ffmpeg is a GPL build (configuration: "
-                f"{first_config_line!r}). GPL would contaminate "
-                "Cognithor's Apache-2.0 license. Use the LGPL variant."
+                f"Unexpected ffmpeg archive layout — found {len(wrapped_bins)} bin dirs: {wrapped_bins}"
             )
-        print(f"  [OK] ffmpeg bin: {p.parent}")
-        return p.parent  # bin/
 
-    raise RuntimeError("ffmpeg.exe not found after extraction")
+    # Verify the build is LGPL (not GPL)
+    ffmpeg_exe = canonical_bin / "ffmpeg.exe"
+    if not ffmpeg_exe.is_file():
+        raise RuntimeError(f"ffmpeg.exe not found at canonical path: {ffmpeg_exe}")
+    result = subprocess.run(
+        [str(ffmpeg_exe), "-version"], capture_output=True, text=True, check=False
+    )
+    combined = result.stdout + result.stderr
+    first_config_line = next(
+        (line for line in combined.splitlines() if "configuration" in line), ""
+    )
+    if "--enable-gpl" in first_config_line:
+        raise RuntimeError(
+            f"Downloaded ffmpeg is a GPL build (configuration: "
+            f"{first_config_line!r}). GPL would contaminate "
+            "Cognithor's Apache-2.0 license. Use the LGPL variant."
+        )
+    print(f"  [OK] ffmpeg bin: {canonical_bin}")
+    return canonical_bin
 
 
 def step_launcher() -> Path:
