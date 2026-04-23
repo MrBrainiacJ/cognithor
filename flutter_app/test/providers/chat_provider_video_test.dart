@@ -41,5 +41,37 @@ void main() {
       final p = ChatProvider();
       expect(p.handlePastedTextForVideoUrl('https://x.com/clip.MP4'), isTrue);
     });
+
+    test('strips query string from filename but preserves full URL', () {
+      final p = ChatProvider();
+      final ok = p.handlePastedTextForVideoUrl(
+        'https://cdn.example.com/clip.mp4?token=abc&exp=12345',
+      );
+      expect(ok, isTrue);
+      expect(
+        p.pendingVideoAttachment!['url'],
+        'https://cdn.example.com/clip.mp4?token=abc&exp=12345',
+      );
+      expect(p.pendingVideoAttachment!['filename'], 'clip.mp4');
+    });
+
+    test('strips fragment from filename', () {
+      final p = ChatProvider();
+      final ok = p.handlePastedTextForVideoUrl(
+        'https://x.com/video.webm#t=10,20',
+      );
+      expect(ok, isTrue);
+      expect(p.pendingVideoAttachment!['filename'], 'video.webm');
+    });
+
+    test('strips both query and fragment from filename', () {
+      final p = ChatProvider();
+      final ok = p.handlePastedTextForVideoUrl(
+        'https://x.com/clip.mov?x=1#frag',
+      );
+      expect(ok, isTrue);
+      expect(p.pendingVideoAttachment!['filename'], 'clip.mov');
+      expect(p.pendingVideoAttachment!['url'], 'https://x.com/clip.mov?x=1#frag');
+    });
   });
 }

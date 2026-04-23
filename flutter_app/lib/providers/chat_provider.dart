@@ -236,15 +236,19 @@ class ChatProvider extends ChangeNotifier {
   /// Returns true if the pasted text was consumed as a video URL attachment.
   bool handlePastedTextForVideoUrl(String text) {
     final pattern = RegExp(
-      r'^\s*(https?://\S+\.(?:mp4|webm|mov|mkv|avi))\s*$',
+      r'^\s*(https?://\S+?\.(?:mp4|webm|mov|mkv|avi)(?:[?#]\S*)?)\s*$',
       caseSensitive: false,
     );
     final m = pattern.firstMatch(text);
     if (m == null) return false;
+    final rawUrl = m.group(1)!;
+    // Filename is derived from the URL path only — strip query + fragment.
+    final pathOnly = rawUrl.split('?').first.split('#').first;
+    final derivedFilename = pathOnly.split('/').last;
     _pendingVideoAttachment = {
       'kind': 'video',
-      'url': m.group(1),
-      'filename': m.group(1)!.split('/').last,
+      'url': rawUrl, // keep full URL with query/fragment for fetching
+      'filename': derivedFilename,
       'thumb_url': null,
     };
     notifyListeners();
