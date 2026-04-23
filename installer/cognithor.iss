@@ -79,6 +79,11 @@ Source: "{#BuildDir}\Cognithor.exe"; DestDir: "{app}"; Components: core; Flags: 
 ; Ollama
 Source: "{#OllamaDir}\*"; DestDir: "{app}\ollama"; Components: ollama; Flags: ignoreversion recursesubdirs createallsubdirs
 
+; ffmpeg (LGPL) — video input support
+Source: "build\ffmpeg\*\bin\ffmpeg.exe"; DestDir: "{localappdata}\Cognithor\ffmpeg"; Flags: ignoreversion
+Source: "build\ffmpeg\*\bin\ffprobe.exe"; DestDir: "{localappdata}\Cognithor\ffmpeg"; Flags: ignoreversion
+Source: "build\ffmpeg\*\bin\*.dll"; DestDir: "{localappdata}\Cognithor\ffmpeg"; Flags: ignoreversion skipifsourcedoesntexist
+
 ; Flutter UI — web build (served via backend)
 Source: "{#BuildDir}\flutter_web\*"; DestDir: "{app}\flutter_app\web"; Components: flutter; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 

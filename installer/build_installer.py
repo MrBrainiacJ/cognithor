@@ -37,6 +37,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = PROJECT_ROOT / "installer" / "build"
 DIST_DIR = PROJECT_ROOT / "installer" / "dist"
 
+FFMPEG_LGPL_URL = (
+    "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/"
+    "ffmpeg-master-latest-win64-lgpl-shared.zip"
+)
+
 COGNITHOR_VERSION = None  # read from pyproject.toml
 
 
@@ -275,6 +280,46 @@ def step_flutter_desktop() -> Path | None:
     return None
 
 
+def step_ffmpeg() -> Path:
+    """Step 3c: Download BtbN's LGPL-licensed ffmpeg+ffprobe build and return the bin dir.
+
+    Raises RuntimeError if the downloaded build is accidentally GPL — GPL would
+    contaminate Cognithor's Apache-2.0 license. Verified via the ``--enable-gpl``
+    check in ffmpeg's self-reported configuration.
+    """
+    print("\n=== Step 3c: ffmpeg (LGPL) ===")
+
+    dest_zip = BUILD_DIR / "downloads" / "ffmpeg.zip"
+    extract_dir = BUILD_DIR / "ffmpeg"
+
+    if extract_dir.exists():
+        print("  [SKIP] ffmpeg/ already extracted")
+    else:
+        download(FFMPEG_LGPL_URL, dest_zip, "ffmpeg LGPL build")
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(dest_zip) as z:
+            z.extractall(extract_dir)
+        print("  [OK] ffmpeg extracted")
+
+    # BtbN archives have a single top-level folder; find bin/ffmpeg.exe
+    for p in extract_dir.rglob("ffmpeg.exe"):
+        result = subprocess.run([str(p), "-version"], capture_output=True, text=True, check=False)
+        combined = result.stdout + result.stderr
+        first_config_line = next(
+            (line for line in combined.splitlines() if "configuration" in line), ""
+        )
+        if "--enable-gpl" in first_config_line:
+            raise RuntimeError(
+                f"Downloaded ffmpeg is a GPL build (configuration: "
+                f"{first_config_line!r}). GPL would contaminate "
+                "Cognithor's Apache-2.0 license. Use the LGPL variant."
+            )
+        print(f"  [OK] ffmpeg bin: {p.parent}")
+        return p.parent  # bin/
+
+    raise RuntimeError("ffmpeg.exe not found after extraction")
+
+
 def step_launcher() -> Path:
     """Step 4: Create launcher batch script."""
     print("\n=== Step 4: Launcher ===")
@@ -300,7 +345,7 @@ def step_launcher() -> Path:
         'if "!PYTHON!"=="" (\r\n'
         "    where python >nul 2>&1\r\n"
         "    if not errorlevel 1 (\r\n"
-        '        for /f "delims=" %%P in (\'where python\') do (\r\n'
+        "        for /f \"delims=\" %%P in ('where python') do (\r\n"
         '            if "!PYTHON!"=="" set "PYTHON=%%P"\r\n'
         "        )\r\n"
         "    )\r\n"
@@ -520,7 +565,9 @@ def step_inno_setup(
         reverse=True,
     )
     if installers:
-        print(f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)")
+        print(
+            f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
+        )
         return installers[0]
 
     return Path("")
@@ -556,6 +603,7 @@ def main() -> int:
 
     python_dir = step_python_embed()
     ollama_dir = step_ollama()
+    step_ffmpeg()
 
     if skip_flutter:
         flutter_dir = BUILD_DIR / "flutter_web" if (BUILD_DIR / "flutter_web").exists() else None
