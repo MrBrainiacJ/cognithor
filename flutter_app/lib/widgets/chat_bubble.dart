@@ -50,7 +50,9 @@ class ChatBubble extends StatelessWidget {
     const baseColor = CognithorTheme.sectionChat;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    final isVideo = metadata['kind'] == 'video';
+
+    final textBubble = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isDark
@@ -114,6 +116,133 @@ class ChatBubble extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (isVideo) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildVideoPreview(context, metadata),
+          const SizedBox(height: 6),
+          textBubble,
+        ],
+      );
+    }
+
+    return textBubble;
+  }
+
+  // ── Video Preview ────────────────────────────────────────────────────
+  Widget _buildVideoPreview(
+      BuildContext context, Map<String, dynamic> meta) {
+    final filename = meta['filename'] as String? ?? 'video';
+    final durationSec = (meta['duration_sec'] as num?)?.toDouble() ?? 0.0;
+    final sampling =
+        meta['sampling'] as Map<String, dynamic>? ?? const {};
+    final thumbUrl = meta['thumb_url'] as String?;
+
+    final samplingLabel = sampling.containsKey('fps')
+        ? 'fps=${sampling['fps']}'
+        : 'num_frames=${sampling['num_frames'] ?? '?'}';
+
+    final mins = (durationSec / 60).floor();
+    final secs = (durationSec % 60).floor();
+    final durationLabel = '$mins:${secs.toString().padLeft(2, '0')}';
+
+    String? fullThumbUrl;
+    if (thumbUrl != null) {
+      fullThumbUrl = thumbUrl;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context)
+                .colorScheme
+                .primary
+                .withValues(alpha: 0.15),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withValues(alpha: 0.4),
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 96,
+                height: 54,
+                child: Container(
+                  color: Colors.grey.shade800,
+                  child: fullThumbUrl != null
+                      ? Image.network(
+                          fullThumbUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, err, stack) => const Center(
+                            child: Text(
+                              '\u{1F3AC}',
+                              style: TextStyle(fontSize: 22),
+                            ),
+                          ),
+                        )
+                      : const Center(
+                          child: Text(
+                            '\u{1F3AC}',
+                            style: TextStyle(fontSize: 22),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      filename,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$durationLabel \u00B7 $samplingLabel',
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey.shade400),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (durationSec > 15 * 60)
+          Container(
+            key: const ValueKey('video-long-banner'),
+            margin: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.15),
+              border: const Border(
+                  left: BorderSide(color: Colors.orange, width: 3)),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'Video ${(durationSec / 60).round()} min \u2014 nur 32 Frames werden gesampled. '
+              'Zerlege in 5-Min-Clips f\u00FCr mehr Detail.',
+              style:
+                  const TextStyle(fontSize: 11, color: Colors.orange),
+            ),
+          ),
+      ],
     );
   }
 
