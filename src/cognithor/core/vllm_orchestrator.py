@@ -127,7 +127,7 @@ class VLLMOrchestrator:
     def __init__(
         self,
         *,
-        docker_image: str = "vllm/vllm-openai:v0.19.1",
+        docker_image: str = "vllm/vllm-openai:cu130-nightly",
         port: int = 8000,
         hf_token: str = "",
         log_ring_size: int = 500,

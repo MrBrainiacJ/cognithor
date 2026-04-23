@@ -69,10 +69,11 @@ has crashed or become unresponsive for 3 consecutive requests. Text chats
 transparently route through Ollama; image requests will error out until vLLM
 recovers. Check `docker logs <container-id>` for the cause.
 
-**I have a Qwen3.6 model selected but it fails to start**: vLLM stable
-(v0.19.1) does not yet support the Qwen3.6 architecture. Workaround: set
-`config.vllm.docker_image` to `vllm/vllm-openai:nightly` and restart. Cognithor
-will adopt the new image on the next container start.
+**I have a Qwen3.6 model selected but it fails to start**: Ensure
+`config.vllm.docker_image` is set to `vllm/vllm-openai:cu130-nightly` (the
+default since the Day-1 spike). Earlier stable tags (e.g. v0.19.1) crash
+Qwen3.6-27B-NVFP4 at warmup on SM120. Cognithor will adopt a newer tagged
+release once `FlashInferCutlassNvFp4LinearKernel` lands upstream.
 
 ## Advanced Configuration
 
@@ -82,7 +83,7 @@ will adopt the new image on the next container start.
 |-------|---------|---------|
 | `enabled` | `false` | Master on/off |
 | `model` | `""` (auto) | HF repo id. Empty → orchestrator picks best per GPU |
-| `docker_image` | `vllm/vllm-openai:v0.19.1` | Override to bleed-edge |
+| `docker_image` | `vllm/vllm-openai:cu130-nightly` | Override to a specific tag |
 | `port` | `8000` | Host port (falls back 8001..8009 if busy) |
 | `auto_stop_on_close` | `false` | Stop container when Cognithor quits |
 | `skip_hardware_check` | `false` | Override for unusual setups |

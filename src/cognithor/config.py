@@ -2559,7 +2559,7 @@ class VLLMConfig(BaseModel):
 
     enabled: bool = Field(default=False)
     model: str = Field(default="")
-    docker_image: str = Field(default="vllm/vllm-openai:v0.19.1")
+    docker_image: str = Field(default="vllm/vllm-openai:cu130-nightly")
     port: int = Field(default=8000, ge=1024, le=65535)
     auto_stop_on_close: bool = Field(default=False)
     skip_hardware_check: bool = Field(default=False)

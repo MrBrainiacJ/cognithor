@@ -69,11 +69,11 @@ class TestDataclasses:
 class TestOrchestratorInit:
     def test_orchestrator_constructs_with_config(self):
         orch = VLLMOrchestrator(
-            docker_image="vllm/vllm-openai:v0.19.1",
+            docker_image="vllm/vllm-openai:cu130-nightly",
             port=8000,
             hf_token="hf_test",
         )
-        assert orch.docker_image == "vllm/vllm-openai:v0.19.1"
+        assert orch.docker_image == "vllm/vllm-openai:cu130-nightly"
         assert orch.port == 8000
         assert orch._hf_token == "hf_test"
         assert orch.state.hardware_ok is False
@@ -181,7 +181,7 @@ class TestPullImage:
             '{"status":"Pulling from vllm/vllm-openai","id":"latest"}\n',
             '{"status":"Downloading","progressDetail":{"current":1000000,"total":10000000},"id":"abc123"}\n',
             '{"status":"Download complete","id":"abc123"}\n',
-            '{"status":"Status: Downloaded newer image for vllm/vllm-openai:v0.19.1"}\n',
+            '{"status":"Status: Downloaded newer image for vllm/vllm-openai:cu130-nightly"}\n',
         ]
         mock_proc = MagicMock()
         mock_proc.stdout = iter(json_lines)
@@ -194,7 +194,7 @@ class TestPullImage:
             events.append(ev)
 
         with patch("subprocess.Popen", return_value=mock_proc):
-            VLLMOrchestrator().pull_image("vllm/vllm-openai:v0.19.1", progress_callback=cb)
+            VLLMOrchestrator().pull_image("vllm/vllm-openai:cu130-nightly", progress_callback=cb)
 
         assert any(e.get("status") == "Downloading" for e in events)
         assert any("current" in (e.get("progressDetail") or {}) for e in events)
@@ -231,7 +231,7 @@ class TestStartContainer:
         ):
             run_mock.return_value = MagicMock(returncode=0, stdout="abc123def456")
             orch = VLLMOrchestrator(
-                docker_image="vllm/vllm-openai:v0.19.1", port=8000, hf_token="hf_x"
+                docker_image="vllm/vllm-openai:cu130-nightly", port=8000, hf_token="hf_x"
             )
             info = orch.start_container("Qwen/Qwen3.6-27B-FP8")
 
@@ -241,7 +241,7 @@ class TestStartContainer:
         assert "--gpus" in args and "all" in args
         assert any("HF_TOKEN=hf_x" in a for a in args)
         assert any("cognithor.managed=true" in a for a in args)
-        assert any("vllm-openai:v0.19.1" in a for a in args)
+        assert any("vllm-openai:cu130-nightly" in a for a in args)
         assert "Qwen/Qwen3.6-27B-FP8" in args
         assert info.port == 8000
         assert info.model == "Qwen/Qwen3.6-27B-FP8"
@@ -312,7 +312,8 @@ class TestStopAndReuse:
     def test_reuse_existing_returns_info(self):
         ps_stdout = (
             '{"ID":"abc123def456","Ports":"0.0.0.0:8000->8000/tcp",'
-            '"Image":"vllm/vllm-openai:v0.19.1","Command":"... --model Qwen/Qwen3.6-27B-FP8 ..."}\n'
+            '"Image":"vllm/vllm-openai:cu130-nightly",'
+            '"Command":"... --model Qwen/Qwen3.6-27B-FP8 ..."}\n'
         )
         with patch("subprocess.run", return_value=MagicMock(returncode=0, stdout=ps_stdout)):
             info = VLLMOrchestrator().reuse_existing()

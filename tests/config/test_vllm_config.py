@@ -12,7 +12,7 @@ class TestVLLMConfig:
         c = VLLMConfig()
         assert c.enabled is False
         assert c.model == ""
-        assert c.docker_image == "vllm/vllm-openai:v0.19.1"
+        assert c.docker_image == "vllm/vllm-openai:cu130-nightly"
         assert c.port == 8000
         assert c.auto_stop_on_close is False
         assert c.skip_hardware_check is False
