@@ -30,6 +30,19 @@ log = get_logger(__name__)
 
 ProgressCallback = Callable[[dict[str, Any]], None] | None
 
+
+def _redact_hf_token(cmd: list[str]) -> list[str]:
+    """Return a copy of cmd with any HF_TOKEN=<value> element replaced by
+    HF_TOKEN=<redacted>. The token is never exposed in log output."""
+    redacted: list[str] = []
+    for item in cmd:
+        if item.startswith("HF_TOKEN="):
+            redacted.append("HF_TOKEN=<redacted>")
+        else:
+            redacted.append(item)
+    return redacted
+
+
 Priority = Literal["premium", "standard", "fallback"]
 Capability = Literal["vision", "text"]
 
@@ -416,8 +429,24 @@ class VLLMOrchestrator:
             cmd.extend(["--cpu-offload-gb", str(cfg.cpu_offload_gb)])
         if cfg.enforce_eager:
             cmd.append("--enforce-eager")
+
+        # Redact HF_TOKEN before logging — it's in the cmd list as "HF_TOKEN=<value>"
+        _cmd_for_log = _redact_hf_token(cmd)
+        log.info(
+            "vllm_docker_run_starting",
+            model=model,
+            image=self.docker_image,
+            port=port,
+            media_url=self.media_url,
+            cmd=_cmd_for_log,
+        )
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if result.returncode != 0:
+            log.error(
+                "vllm_docker_run_failed",
+                returncode=result.returncode,
+                stderr=result.stderr.strip()[:500],
+            )
             raise VLLMNotReadyError(
                 f"docker run failed: {result.stderr.strip()}",
                 recovery_hint="Check Docker Desktop logs.",

@@ -425,3 +425,74 @@ class TestStartContainerVideoFlags:
         assert "--cpu-offload-gb" not in args
         # --enforce-eager must be OMITTED when disabled
         assert "--enforce-eager" not in args
+
+
+class TestStartContainerLogging:
+    def test_start_container_logs_command_with_token_redacted(self):
+        """Regression for Bug I4-r3: admins must see the full docker run cmd
+        in logs when debugging a failed vLLM start — but HF_TOKEN value must
+        be redacted."""
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")),
+            patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True),
+            patch("cognithor.core.vllm_orchestrator.log") as mock_log,
+        ):
+            orch = VLLMOrchestrator(port=8000)
+            orch._hf_token = "hf_secret_very_long_token_xyz"
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
+
+        # log.info must be called with the docker cmd
+        info_calls = [
+            call
+            for call in mock_log.info.call_args_list
+            if call.args and "vllm_docker_run_starting" in call.args[0]
+        ]
+        assert info_calls, "Expected log.info('vllm_docker_run_starting', ...) call"
+        call = info_calls[0]
+        cmd_kwarg = call.kwargs.get("cmd")
+        assert cmd_kwarg is not None, "Log call must include cmd= kwarg"
+        cmd_str = " ".join(cmd_kwarg)
+        # HF_TOKEN value must NOT appear in the log cmd
+        assert "hf_secret_very_long_token_xyz" not in cmd_str, (
+            f"HF_TOKEN leaked into log cmd: {cmd_str}"
+        )
+        assert "HF_TOKEN=<redacted>" in cmd_str, (
+            f"Expected HF_TOKEN=<redacted> placeholder in log cmd, got: {cmd_str}"
+        )
+
+    def test_start_container_logs_error_on_failed_run(self):
+        """A failed docker run must produce a log.error with returncode + stderr,
+        not just the bubbled-up exception."""
+        import contextlib
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.llm_backend import VLLMNotReadyError
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch(
+                "subprocess.run",
+                return_value=MagicMock(
+                    returncode=125,
+                    stdout="",
+                    stderr="no such image: foo/bar",
+                ),
+            ),
+            patch("cognithor.core.vllm_orchestrator.log") as mock_log,
+        ):
+            orch = VLLMOrchestrator(port=8000)
+            with contextlib.suppress(VLLMNotReadyError):
+                orch.start_container("foo/bar")
+
+        error_calls = [
+            call
+            for call in mock_log.error.call_args_list
+            if call.args and "vllm_docker_run_failed" in call.args[0]
+        ]
+        assert error_calls, "Expected log.error('vllm_docker_run_failed', ...) on failed run"
