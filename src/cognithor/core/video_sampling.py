@@ -7,8 +7,16 @@ Pure logic only; I/O entry point ``resolve_sampling`` is added in Task 3.
 
 from __future__ import annotations
 
+import json as _json
+import subprocess
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
+
+from cognithor.utils.logging import get_logger
+
+log = get_logger(__name__)
+
+_MAX_PLAUSIBLE_DURATION_SEC = 86400.0  # 24 hours; anything bigger is almost certainly garbage
 
 
 @dataclass(frozen=True)
@@ -63,3 +71,83 @@ def _bucket_for_duration(duration_sec: float) -> VideoSampling:
     # 5 min - 15 min AND > 15 min both use num_frames=32; UI banner is
     # a display concern not a sampling one.
     return VideoSampling(num_frames=32, duration_sec=duration_sec)
+
+
+SamplingOverride = Literal["adaptive", "fixed_32", "fixed_64", "fps_1"]
+
+
+def resolve_sampling(
+    source: str,
+    *,
+    ffprobe_path: str = "ffprobe",
+    timeout_seconds: int = 5,
+    http_timeout_seconds: int = 30,
+    override: SamplingOverride = "adaptive",
+) -> VideoSampling:
+    """Resolve a video source URL or local path to a VideoSampling.
+
+    For ``override != "adaptive"``, returns a fixed sampling without touching
+    ffprobe. For adaptive, runs ffprobe with the appropriate timeout
+    (``timeout_seconds`` for local paths, ``http_timeout_seconds`` for URLs)
+    and falls back to ``VideoSampling(num_frames=32)`` on any failure.
+    """
+    if override == "fixed_32":
+        return VideoSampling(num_frames=32)
+    if override == "fixed_64":
+        return VideoSampling(num_frames=64)
+    if override == "fps_1":
+        return VideoSampling(fps=1.0)
+
+    is_http = source.lower().startswith(("http://", "https://"))
+    timeout = http_timeout_seconds if is_http else timeout_seconds
+
+    cmd = [
+        ffprobe_path,
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "json",
+        source,
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        log.warning("video_ffprobe_missing", recovery="fallback to num_frames=32")
+        return VideoSampling(num_frames=32)
+    except subprocess.TimeoutExpired:
+        log.warning(
+            "video_duration_detection_timeout",
+            source=_redact_source(source),
+            timeout_seconds=timeout,
+        )
+        return VideoSampling(num_frames=32)
+
+    if result.returncode != 0:
+        log.warning(
+            "video_ffprobe_failed",
+            returncode=result.returncode,
+            stderr=result.stderr.strip()[:200],
+        )
+        return VideoSampling(num_frames=32)
+
+    try:
+        data = _json.loads(result.stdout)
+        duration = float(data["format"]["duration"])
+    except (_json.JSONDecodeError, KeyError, ValueError, TypeError):
+        log.warning("video_ffprobe_unparseable", stdout=result.stdout[:200])
+        return VideoSampling(num_frames=32)
+
+    if duration <= 0 or duration > _MAX_PLAUSIBLE_DURATION_SEC:
+        log.warning("video_duration_implausible", duration=duration)
+        return VideoSampling(num_frames=32)
+
+    return _bucket_for_duration(duration)
+
+
+def _redact_source(source: str) -> str:
+    """Strip query strings from URLs so we don't log credentials / tokens."""
+    if "?" in source:
+        return source.split("?", 1)[0] + "?…"
+    return source

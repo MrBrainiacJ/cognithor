@@ -67,3 +67,103 @@ class TestBucketForDuration:
         assert s.fps is None
         s = _bucket_for_duration(-5.0)
         assert s.num_frames == 32
+
+
+from unittest.mock import MagicMock, patch
+
+from cognithor.core.video_sampling import resolve_sampling
+
+
+class TestResolveSampling:
+    def _mk_probe_stdout(self, duration: float) -> str:
+        import json as _json
+
+        return _json.dumps({"format": {"duration": str(duration)}})
+
+    def test_adaptive_short_clip(self):
+        mock = MagicMock(returncode=0, stdout=self._mk_probe_stdout(5.0))
+        with patch("subprocess.run", return_value=mock):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.fps == 3.0
+        assert s.num_frames is None
+        assert s.duration_sec == 5.0
+
+    def test_adaptive_long_clip(self):
+        mock = MagicMock(returncode=0, stdout=self._mk_probe_stdout(1800.0))
+        with patch("subprocess.run", return_value=mock):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.num_frames == 32
+        assert s.duration_sec == 1800.0
+
+    def test_ffprobe_missing_falls_back_to_num_frames_32(self):
+        with patch("subprocess.run", side_effect=FileNotFoundError):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.num_frames == 32
+        assert s.fps is None
+        assert s.duration_sec is None
+
+    def test_ffprobe_timeout_falls_back(self):
+        import subprocess as _sp
+
+        with patch("subprocess.run", side_effect=_sp.TimeoutExpired(cmd="ffprobe", timeout=5)):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.num_frames == 32
+
+    def test_ffprobe_nonzero_returncode_falls_back(self):
+        mock = MagicMock(returncode=1, stdout="", stderr="file not found")
+        with patch("subprocess.run", return_value=mock):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.num_frames == 32
+
+    def test_ffprobe_unparseable_json_falls_back(self):
+        mock = MagicMock(returncode=0, stdout="not json at all")
+        with patch("subprocess.run", return_value=mock):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.num_frames == 32
+
+    def test_ffprobe_negative_duration_falls_back(self):
+        mock = MagicMock(returncode=0, stdout=self._mk_probe_stdout(-1.0))
+        with patch("subprocess.run", return_value=mock):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.num_frames == 32
+
+    def test_ffprobe_duration_over_24h_falls_back(self):
+        mock = MagicMock(returncode=0, stdout=self._mk_probe_stdout(100_000.0))
+        with patch("subprocess.run", return_value=mock):
+            s = resolve_sampling("/tmp/x.mp4")
+        assert s.num_frames == 32
+
+    def test_override_fixed_32_skips_ffprobe(self):
+        with patch("subprocess.run") as run_mock:
+            s = resolve_sampling("/tmp/x.mp4", override="fixed_32")
+        assert s.num_frames == 32
+        assert s.fps is None
+        run_mock.assert_not_called()
+
+    def test_override_fixed_64_skips_ffprobe(self):
+        with patch("subprocess.run") as run_mock:
+            s = resolve_sampling("/tmp/x.mp4", override="fixed_64")
+        assert s.num_frames == 64
+        run_mock.assert_not_called()
+
+    def test_override_fps_1_skips_ffprobe(self):
+        with patch("subprocess.run") as run_mock:
+            s = resolve_sampling("/tmp/x.mp4", override="fps_1")
+        assert s.fps == 1.0
+        run_mock.assert_not_called()
+
+    def test_http_url_uses_http_timeout(self):
+        mock = MagicMock(returncode=0, stdout=self._mk_probe_stdout(45.0))
+        with patch("subprocess.run", return_value=mock) as run_mock:
+            resolve_sampling(
+                "https://example.com/clip.mp4",
+                timeout_seconds=5,
+                http_timeout_seconds=30,
+            )
+        assert run_mock.call_args.kwargs["timeout"] == 30
+
+    def test_local_path_uses_local_timeout(self):
+        mock = MagicMock(returncode=0, stdout=self._mk_probe_stdout(45.0))
+        with patch("subprocess.run", return_value=mock) as run_mock:
+            resolve_sampling("/tmp/x.mp4", timeout_seconds=5, http_timeout_seconds=30)
+        assert run_mock.call_args.kwargs["timeout"] == 5
