@@ -836,8 +836,15 @@ class TestBrowserAgentMocked:
         from cognithor.browser.agent import BrowserAgent
 
         agent = BrowserAgent()
-        with pytest.raises(RuntimeError, match="not started"):
-            asyncio.get_event_loop().run_until_complete(agent.click("#x"))
+        # Python 3.12+: asyncio.get_event_loop() without a running loop
+        # raises its own RuntimeError before reaching the agent. Create
+        # an explicit loop so the test actually exercises agent.click().
+        loop = asyncio.new_event_loop()
+        try:
+            with pytest.raises(RuntimeError, match="not started"):
+                loop.run_until_complete(agent.click("#x"))
+        finally:
+            loop.close()
 
     # ── Stats ────────────────────────────────────────────────────
 
