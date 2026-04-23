@@ -18,6 +18,7 @@
 | 4 | **Flutter attach UX:** Paperclip menu with explicit "Video hochladen" entry (Option A) | Discoverability without disruption. Dedicated video button (B) is too intrusive for the 95 % who never use it; automatic MIME-detection (C) hides the capability |
 | 5 | **Fail-flow:** Hybrid pre-flight gate + post-send error (Option Z) | Cheap local pre-flight (is vLLM the active backend?) prevents wasted uploads; runtime breaker state checked on send for DEGRADED. Videos never silent-fallback to Ollama |
 | 6 | **Cleanup policy:** Session-lifetime + 24 h hard cap (Option Y) | Follow-up questions about the same video work during the session; nothing accumulates forever |
+| 7 | **Single video per chat turn** (not multi-video) | vLLM's `extra_body.mm_processor_kwargs.video` is one config, not per-video. Allowing 2+ videos in a turn would force us to either use the most-conservative bucket (losing detail on short clips) or reject the request. YAGNI: single-video covers every realistic use-case for v1 |
 
 ---
 
@@ -27,15 +28,15 @@ Video input rides on the existing `VLLMBackend` from PR #137 — no new backend,
 
 - **`MediaUploadServer`** (`src/cognithor/channels/media_server.py`) — minimal FastAPI app with a static-mount on `/media/<uuid>.ext`, running on its own localhost port (not the main Cognithor API port). vLLM inside the Docker container fetches uploaded videos via `http://host.docker.internal:<media-port>/media/<uuid>.mp4`.
 - **`VideoSamplingResolver`** (`src/cognithor/core/video_sampling.py`) — pure function wrapping `ffprobe` for duration detection, with a bucket table that maps duration → `{"fps": N}` or `{"num_frames": N}`. Graceful fallback to `{"num_frames": 32}` on any probe failure.
-- **`VideoCleanupWorker`** (`src/cognithor/gateway/video_cleanup.py`) — async task in the Gateway that tracks per-session uploads, deletes on session close, runs a GC sweep on app start, and enforces a 5 GB quota via LRU eviction. 24 h hard TTL as an ultimate safety net.
+- **`VideoCleanupWorker`** (`src/cognithor/gateway/video_cleanup.py`) — async task in the Gateway tracking per-session uploads in an in-memory `dict[session_id, list[uuid]]`. Deletes files on session close. Periodic 60 s sweep enforces the 24 h hard TTL. App-start sweep scans the uploads directory and removes any file not referenced by a live session + older than the TTL. No persistent state — if Cognithor crashes with uploads in flight, the next app-start sweep catches them via TTL. Keeps the worker to ~80 LOC.
 
 Existing code changed:
 
-- `VLLMBackend.chat()` — new `videos: list[str]` kwarg alongside the existing `images`. A sibling helper `_attach_videos_to_last_user()` produces OpenAI `video_url` content items instead of `image_url`.
-- `VLLMOrchestrator.start_container()` — `docker run` command gains `--media-io-kwargs '{"video": {"num_frames": -1}}'` so per-request sampling via `extra_body.mm_processor_kwargs` actually takes effect. Also adds `--add-host host.docker.internal:host-gateway` for the Docker-in-Linux case.
-- `WorkingMemory` — new `video_attachments: list[str]` field. `Planner.formulate_response()` routes to `config.vision_model_detail` when **either** `image_attachments` or `video_attachments` is non-empty.
-- Gateway — at the start of each chat turn, extracts video-extension attachments from the incoming message into `WorkingMemory.video_attachments`, and registers them with the `VideoCleanupWorker` under the current `session_id`.
-- Flutter `chat_input.dart` — Paperclip becomes a `PopupMenuButton` with entries for Image / Video / File / URL.
+- `VLLMBackend.chat()` — new `video: str | None = None` kwarg alongside the existing `images`. A sibling helper `_attach_video_to_last_user()` produces **one** OpenAI `video_url` content item (single video per turn, Decision 7). If the caller passes a video, the backend also attaches the pre-resolved sampling payload to `extra_body.mm_processor_kwargs.video`.
+- `VLLMOrchestrator.start_container()` — `docker run` command gains `--media-io-kwargs '{"video": {"num_frames": -1}}'` so per-request sampling via `extra_body.mm_processor_kwargs` actually takes effect. Also adds `--add-host host.docker.internal:host-gateway` for the Docker-in-Linux case (requires Docker ≥ 20.10; documented in prerequisites).
+- `WorkingMemory` — new `video_attachment: dict | None` field holding `{"url": str, "sampling": {"fps": 2} | {"num_frames": 32}}`. `Planner.formulate_response()` routes to `config.vision_model_detail` when `image_attachments` is non-empty **or** `video_attachment` is not None.
+- Gateway — at the start of each chat turn, extracts at-most-one video-extension attachment from the incoming message into `WorkingMemory.video_attachment` (rejects additional videos with an error to the client), and registers the upload with `VideoCleanupWorker` under the current `session_id`.
+- Flutter `chat_input.dart` — Paperclip becomes a `PopupMenuButton` with entries for Image / Video / File / URL. "Video hochladen" is disabled once the pending message already holds a video attachment (visual tooltip: "Ein Video pro Nachricht. Sende oder entferne erst das aktuelle.").
 
 Video requests never fall back to Ollama — if vLLM is DEGRADED, the `chat()` path raises `VLLMNotReadyError` and the Flutter Gateway renders a red error bubble. This matches the existing image-request fail-flow from PR #137.
 
@@ -116,54 +117,58 @@ For `override="fixed_32"` / `"fixed_64"` / `"fps_1"` → skip ffprobe, return co
 
 ### Video Cleanup
 
-**`src/cognithor/gateway/video_cleanup.py` — ~150 LOC, new**
+**`src/cognithor/gateway/video_cleanup.py` — ~80 LOC, new**
 
-State in an in-memory dict + SQLite mirror at `~/.cognithor/db/video_uploads.db` so we recover on crash:
+No persistent state. In-memory `dict[session_id, list[uuid]]` plus filesystem-based TTL enforcement — simpler and correct even after a crash:
 
 ```python
-@dataclass
-class VideoUploadRecord:
-    uuid: str
-    filename: str
-    session_id: str
-    uploaded_at: datetime
-    bytes: int
-
-
 class VideoCleanupWorker:
+    def __init__(self, media_dir: Path, ttl_hours: int = 24) -> None:
+        self._media_dir = media_dir
+        self._ttl_hours = ttl_hours
+        self._by_session: dict[str, list[str]] = {}
+        self._sweep_task: asyncio.Task | None = None
+
     async def start(self) -> None:
-        """Run GC on app-start, start the 60-second periodic 24h-TTL sweep."""
+        """Run TTL sweep once at start (catches files left over from a crashed
+        previous run — pure filesystem-mtime-based, no registry needed), then
+        kick off the periodic 60 s sweep."""
     async def stop(self) -> None: ...
 
-    async def register_upload(self, uuid: str, filename: str, session_id: str, bytes_: int) -> None: ...
+    def register_upload(self, uuid: str, session_id: str) -> None: ...
     async def on_session_close(self, session_id: str) -> None:
         """Delete all uploads linked to this session."""
-    async def on_app_start_gc(self) -> None:
-        """Scan the uploads dir, delete files not in the SQLite registry
-        (crashed-mid-upload recovery), and delete any file older than 24h."""
-    async def periodic_sweep(self) -> None:
-        """Hard TTL enforcement: delete files older than 24h regardless of session."""
+    async def _periodic_sweep(self) -> None:
+        """Every 60 s: scan media_dir, delete files whose mtime is older than ttl_hours."""
 ```
 
-Quota enforcement is **not** in the cleanup worker — it lives in `MediaUploadServer.save_upload` (LRU-evict when adding a new file would exceed 5 GB).
+**Why no SQLite:** the 24 h TTL sweep is authoritative — any file older than `ttl_hours` gets deleted regardless of session state. Session-close cleanup is a nice-to-have optimization for users who close and reopen Cognithor within the TTL window; if it misses one (e.g. crash before `on_session_close` fires), the TTL sweep picks it up within an hour. No crash-recovery registry needed, ~80 LOC saved.
+
+Quota enforcement is **not** in the cleanup worker — it lives in `MediaUploadServer.save_upload` (LRU-evict when adding a new file would exceed 5 GB, ordered by mtime).
 
 ### Backend Layer — `VLLMBackend.chat()` Extension
 
-Add `videos: list[str] | None = None` parameter. Implementation mirrors `_attach_images_to_last_user` from PR #137:
+Add `video: dict | None = None` parameter (single video per turn, Decision 7). Implementation mirrors `_attach_images_to_last_user` from PR #137:
 
 ```python
-def _attach_videos_to_last_user(
+def _attach_video_to_last_user(
     messages: list[dict[str, Any]],
-    videos: list[dict[str, str]],  # [{"url": "...", "sampling": {"fps": 2}}]
-) -> tuple[list[dict[str, Any]], list[dict]]:
-    """Returns (new_messages, extra_body_mm_kwargs) — both non-empty only when videos present.
+    video: dict[str, Any],  # {"url": "...", "sampling": {"fps": 2}} | {"url": "...", "sampling": {"num_frames": 32}}
+) -> tuple[list[dict[str, Any]], dict]:
+    """Returns (new_messages, extra_body_mm_kwargs).
 
-    Messages get {"type":"video_url","video_url":{"url":"..."}} content items.
-    extra_body_mm_kwargs is the per-request sampling payload for vLLM.
+    new_messages: last user message gets a {"type":"video_url","video_url":{"url":"..."}}
+    content item prepended to the existing text parts.
+
+    extra_body_mm_kwargs: {"mm_processor_kwargs": {"video": {"fps": 2}}}
+    — the per-request sampling payload for vLLM, ready to merge into the
+    outgoing chat-completion body.
     """
 ```
 
-`VLLMBackend.chat()` callers pass videos as `list[dict]` with pre-resolved sampling (Gateway resolves via `VideoSamplingResolver` before the call). Why pre-resolved? Separation — the backend shouldn't know about `ffprobe`, it just formats payloads.
+Callers pass the video dict with pre-resolved sampling (Gateway resolves via `VideoSamplingResolver` before the call). Why pre-resolved? Separation — the backend shouldn't know about `ffprobe`, it just formats payloads.
+
+Multi-video turns are rejected one layer up: if `WorkingMemory.video_attachment` is already set when the Gateway encounters a second video in the incoming message, it surfaces a user-visible validation error ("Ein Video pro Nachricht") and drops the extra. The backend never sees more than one video.
 
 ### Config Layer
 
@@ -175,6 +180,13 @@ class VLLMConfig(BaseModel):
     video_sampling_mode: Literal["adaptive", "fixed_32", "fixed_64", "fps_1"] = "adaptive"
     video_ffprobe_path: str = "ffprobe"  # override to absolute path on Windows
     video_ffprobe_timeout_seconds: int = Field(default=5, ge=1, le=30)
+    """Local file ffprobe timeout (reads are fast, usually <100 ms)."""
+
+    video_ffprobe_http_timeout_seconds: int = Field(default=30, ge=5, le=120)
+    """Remote URL ffprobe timeout. Higher default because HTTP header fetches
+    on slow networks or large files can take longer — ffprobe streams the MP4
+    header which for some servers + 2 GB files means ~20-30 s just to reach
+    the duration metadata."""
     video_max_upload_mb: int = Field(default=500, ge=1, le=5000)
     video_quota_gb: int = Field(default=5, ge=1, le=100)
     video_upload_ttl_hours: int = Field(default=24, ge=1, le=168)
@@ -229,9 +241,9 @@ docker run -d \
    - Returns `{"uuid": "...", "url": "http://host.docker.internal:<p>/media/<uuid>.mp4", "duration_sec": 93.5, "sampling": {"fps": 1.0}, "thumb_url": "/api/media/thumb/<uuid>.jpg"}`
 5. Flutter adds a message-metadata entry: `{"kind": "video", "uuid": "...", "filename": "drone.mp4", "duration_sec": 93.5, "sampling": {"fps": 1.0}, "thumb_url": "..."}`. Renders the video bubble preview (thumbnail + meta).
 6. User types prompt, hits send. `chat_provider.sendMessage` includes the video metadata in the WebSocket message.
-7. Gateway pulls video attachment(s) out, stuffs them into `WorkingMemory.video_attachments` as `[{"url": "...", "sampling": {"fps": 1.0}}]`. Registers the upload with `VideoCleanupWorker` under the current `session_id`.
-8. Planner sees non-empty `video_attachments` → selects `config.vision_model_detail` → calls `unified_llm.chat(..., videos=working_memory.video_attachments)`.
-9. `VLLMBackend.chat()` wraps with circuit breaker, `_attach_videos_to_last_user` builds the OpenAI payload:
+7. Gateway pulls the single video attachment out (rejecting any additional videos with a user-visible validation error), stuffs it into `WorkingMemory.video_attachment` as `{"url": "...", "sampling": {"fps": 1.0}}`. Registers the upload with `VideoCleanupWorker` under the current `session_id`.
+8. Planner sees non-None `video_attachment` → selects `config.vision_model_detail` → calls `unified_llm.chat(..., video=working_memory.video_attachment)`.
+9. `VLLMBackend.chat()` wraps with circuit breaker, `_attach_video_to_last_user` builds the OpenAI payload:
    ```json
    {
      "model": "Qwen/Qwen3.6-27B-FP8",
@@ -254,8 +266,8 @@ docker run -d \
 
 1. User pastes `https://example.com/clip.mp4` as plain text in the chat input.
 2. On send, Flutter's `chat_provider` detects the URL via regex (allow-list of video extensions), treats it as a video reference (no upload needed).
-3. Cognithor backend receives the chat request with `working_memory.video_attachments = [{"url": "https://example.com/clip.mp4", "sampling": null}]`.
-4. `VideoSamplingResolver.resolve_sampling("https://...")` — `ffprobe` accepts HTTP URLs directly — returns the adaptive bucket sampling.
+3. Cognithor backend receives the chat request with `working_memory.video_attachment = {"url": "https://example.com/clip.mp4", "sampling": null}`.
+4. `VideoSamplingResolver.resolve_sampling("https://...")` — `ffprobe` accepts HTTP URLs directly (with the higher `video_ffprobe_http_timeout_seconds` of 30 s) — returns the adaptive bucket sampling.
 5. From step 8 onwards, identical to Flow A. The URL is just passed through; vLLM fetches from the remote origin instead of `host.docker.internal`.
 
 ### Flow C — Fail Flow (vLLM DEGRADED Mid-Session)
@@ -263,7 +275,7 @@ docker run -d \
 1. User has attached a video and clicks send. Pre-flight passed (vLLM was active when Paperclip was opened).
 2. `VLLMBackend.chat()` inside `CircuitBreaker.call(...)` — breaker may be `CLOSED`, `OPEN`, or `HALF_OPEN`.
 3. If `OPEN` (or raises `VLLMNotReadyError` on actual send): `UnifiedLLMClient` catches, inspects the request kind.
-4. Because `video_attachments` is non-empty, **no silent fallback** to Ollama. The error propagates as a red bubble in chat:
+4. Because `video_attachment` is not None, **no silent fallback** to Ollama. The error propagates as a red bubble in chat:
    ```
    ⚠ vLLM offline — Video kann nicht verarbeitet werden.
    Versuch's in ~X s erneut oder starte vLLM neu unter Settings → LLM Backends.
@@ -324,10 +336,10 @@ No changes to the breaker itself. `MediaUploadError` subclasses are added to `ex
   - ffprobe returns negative / absurd duration → fallback
   - `override="fixed_32"` skips ffprobe entirely
   - All 6 bucket boundaries (< 10 s, 10–30 s, 30 s – 2 min, 2–5 min, 5–15 min, > 15 min) have a dedicated test
-- **`tests/test_core/test_vllm_backend_videos.py`** — `VLLMBackend.chat(videos=...)` against `pytest-httpx`
-  - Single video → correct `video_url` content item + `extra_body.mm_processor_kwargs.video`
-  - Video + image mixed → both content items present, video's `extra_body` dominates
-  - Video only, no text → synthetic text part added or prompt stays as-is (verify which vLLM accepts)
+- **`tests/test_core/test_vllm_backend_video.py`** — `VLLMBackend.chat(video=...)` against `pytest-httpx`
+  - Single video → correct `video_url` content item + `extra_body.mm_processor_kwargs.video` in outgoing payload
+  - Video + image mixed → both content items present in last user message, video's `extra_body.mm_processor_kwargs.video` is set
+  - Video only, no text → the text part stays empty-string (verify vLLM accepts this; fallback: synthetic single-space text)
 - **`tests/test_channels/test_media_server.py`** — `MediaUploadServer` against a `TestClient`
   - Upload within size cap → success, file on disk
   - Upload over 500 MB → 413 Payload Too Large
@@ -342,7 +354,7 @@ No changes to the breaker itself. `MediaUploadError` subclasses are added to `ex
 
 ### Integration Layer
 
-- **`tests/test_integration/test_vllm_video_fake_server.py`** — extends the fake vLLM server from PR #137 to return a stubbed video response. Verifies that `VLLMBackend.chat(videos=[...])` produces a wire-shape that the fake server can parse and respond to.
+- **`tests/test_integration/test_vllm_video_fake_server.py`** — extends the fake vLLM server from PR #137 to return a stubbed video response. Verifies that `VLLMBackend.chat(video={"url": ..., "sampling": ...})` produces a wire-shape that the fake server can parse and respond to.
 
 ### Flutter Layer
 
@@ -377,7 +389,8 @@ Added to `docs/vllm-manual-test.md` (from PR #137) as a new section:
 
 **User environment:**
 - `ffmpeg` + `ffprobe` — **bundled on Windows** (LGPL build in installer), expected in `$PATH` on Linux/macOS (documented in the user guide). Graceful degradation when absent: videos still work, just with fixed `num_frames=32` sampling and no thumbnails.
-- Docker Desktop + vLLM (already prerequisites from PR #137).
+- **Docker Engine ≥ 20.10** (released Dec 2020). Earlier versions don't recognize `host-gateway` as a value for `--add-host` and the container can't reach the local media server on Linux. On Docker Desktop (Windows/macOS) the flag is redundant but harmless. Documented as a prerequisite bump in the user guide.
+- vLLM (already a prerequisite from PR #137).
 - A vLLM-served model with video capability. Currently confirmed: `Qwen/Qwen3.6-27B` variants, `Qwen/Qwen2.5-VL-7B-Instruct`, `Qwen/Qwen3.6-35B-A3B` variants. Models without video support return HTTP 400 on video requests — handled via `LLMBadRequestError`.
 
 **CI:** unchanged — no GPU, no real video processing, all tests mock `ffprobe` and vLLM.
@@ -388,7 +401,7 @@ Added to `docs/vllm-manual-test.md` (from PR #137) as a new section:
 
 **In scope:**
 - `MediaUploadServer` + cleanup worker + sampling resolver
-- `VLLMBackend.chat(videos=...)` extension + per-request `extra_body.mm_processor_kwargs.video`
+- `VLLMBackend.chat(video=...)` extension (single video) + per-request `extra_body.mm_processor_kwargs.video`
 - Flutter paperclip popup-menu + video bubble + URL detection on paste
 - `docker run` flag additions (`--media-io-kwargs`, `--add-host host.docker.internal:host-gateway`)
 - Session-lifetime + 24 h cleanup
@@ -402,7 +415,7 @@ Added to `docs/vllm-manual-test.md` (from PR #137) as a new section:
 - Per-session quota (5 GB is global across all sessions).
 - WebM VP9 and AV1 specifically — should work because they're in LGPL ffmpeg, but not explicitly listed in manual test matrix.
 - Streaming video input (live feed): vLLM accepts only complete-file URLs, not rtmp/hls/webrtc streams.
-- Multiple videos per single chat turn: technically supported by the spec (`videos: list[str]`), but manual-test matrix covers single-video cases only in v1.
+- Multiple videos per single chat turn: **not supported in v1** (Decision 7). The API is single-video (`video: dict | None`), and the Gateway rejects a second video on the same turn with a user-visible validation error. Adding multi-video later requires either accepting a common-sampling trade-off or solving the `extra_body.mm_processor_kwargs.video` per-video problem at the vLLM layer — separate design work if the use-case materializes.
 
 ---
 
@@ -410,23 +423,35 @@ Added to `docs/vllm-manual-test.md` (from PR #137) as a new section:
 
 **~1.5 calendar weeks (7–8 working days), single engineer.**
 
+- **Day-1 spike** — verify `extra_body.mm_processor_kwargs.video` shape + vLLM media-domain fetch policy + ffprobe HTTP timing (see Open Questions): 0.5 day
 - `VideoSamplingResolver` + unit tests: 1 day
 - `MediaUploadServer` + unit tests + integration wiring: 1 day
-- `VideoCleanupWorker` + unit tests + session hooks: 1 day
-- `VLLMBackend.chat(videos=...)` + `_attach_videos_to_last_user` + integration test against the fake server: 1 day
+- `VideoCleanupWorker` (simplified: in-memory + filesystem TTL, no SQLite) + unit tests + session hooks: 0.5 day
+- `VLLMBackend.chat(video=...)` + `_attach_video_to_last_user` + integration test against the fake server: 1 day
 - Config extension (`VLLMConfig` additions) + `VLLMOrchestrator` `docker run` flag changes: 0.5 day
-- Flutter paperclip popup-menu + video bubble + URL-paste detection + widget tests: 1.5 days
+- Flutter paperclip popup-menu + video bubble + URL-paste detection + "Ein Video pro Nachricht"-state + widget tests: 1.5 days
 - Windows installer ffmpeg bundling + CI verification step: 0.5 day
 - Docs (user-guide section + manual-test matrix entries) + CHANGELOG: 0.5 day
 - Manual smoke test on real NVIDIA hardware + fixes: 0.5 day
 - Buffer / polish / PR cycle / spec-reviewer loops: 0.5 day
 
-Total ≈ 7.5 days = **1.5 weeks** calendar, assuming PR #137's vLLM backend lands cleanly and no vLLM-side surprises.
+Total ≈ 7.5 days = **1.5 weeks** calendar. Day-1 spike is a go/no-go gate: if `extra_body` shape or media-domain policy requires a significantly different approach, the estimate and design come back to the table before further work.
 
 ---
 
 ## Open Questions Deferred to Plan
 
-- **`extra_body.mm_processor_kwargs.video` exact shape**: I extrapolated this from the Qwen3.5 vLLM recipe. The first implementation task must run against the fake server with known-good shapes (captured from vLLM upstream docs at implementation time) and adjust if the nesting differs. Plan includes a spike task to verify on day 1.
-- **ffmpeg LGPL-build source**: will pick between BtbN's and Gyan's LGPL builds based on which has smaller size + broader codec support at implementation time.
-- **Session-ID propagation into `MediaUploadServer`**: the media server itself shouldn't know about sessions (single responsibility), so the upload endpoint in `channels/api.py` is where `session_id` is captured from the WebSocket context and passed to `VideoCleanupWorker.register_upload`. The exact wiring is a plan-level detail.
+Three of these are genuine implementation-time unknowns that MUST be resolved before serious code is written (the first implementation task is a dedicated spike). The others are lower-risk polish questions.
+
+### High-priority spikes (plan Day 1)
+
+- **`extra_body.mm_processor_kwargs.video` exact wire shape**: extrapolated from the Qwen3.5 vLLM recipe. Real vLLM may use a different nesting (`extra_body.mm_processor_kwargs.fps` flat, `extra_body.video_kwargs`, etc.). Without the correct shape, nothing works. Day-1 spike: grep vLLM's `entrypoints/openai/serving_chat.py` in the pinned image version + smoke-test against a local vLLM container to capture the actual on-the-wire shape for both `fps` and `num_frames` cases. Adjust the spec if the finding differs.
+- **vLLM `--allowed-media-domains` / fetch policy**: newer vLLM versions may restrict which HTTP hosts the container will fetch from. If the default is strict, `host.docker.internal:<media-port>` is rejected and all local uploads break. Day-1 spike: verify on the pinned image. If restrictive, add `--allowed-media-domains host.docker.internal` (or equivalent) to `VLLMOrchestrator.start_container()`.
+- **`ffprobe` remote-HTTP behavior**: I bumped the default HTTP timeout to 30 s, but some servers refuse `Range: bytes=0-N` or return chunked encoding that ffprobe handles slowly. Day-1 spike: test against three representative URLs (Qwen OSS sample, a CloudFront-hosted mp4, a local-net static-server) and document observed timings. If 30 s is still too tight, surface a UI hint during URL-paste "fetching metadata…" while probe runs.
+
+### Lower-priority, plan-level details
+
+- **ffmpeg LGPL-build source**: pick between BtbN's and Gyan's LGPL builds based on which has smaller size + broader codec support at implementation time.
+- **Session-ID propagation into `MediaUploadServer`**: the media server itself shouldn't know about sessions (single responsibility), so the upload endpoint in `channels/api.py` is where `session_id` is captured from the WebSocket context and passed to `VideoCleanupWorker.register_upload`.
+- **vLLM response for "video + empty text"**: if the user attaches a video without typing a prompt, the last user message has only a `video_url` content item. Some LLM APIs reject messages with no text. Test at implementation time; fallback is to inject a synthetic single-space text part.
+- **Thumbnail frame selection**: currently specced as "first frame". First frame is often a black intro / logo. Consider extracting at 10% or midpoint instead. Pure UX polish, not a correctness question.
