@@ -240,6 +240,7 @@ ignore = [
 "__init__.py" = ["F401"]  # Re-exports in __init__.py are intentional
 "tests/test_install_fixes.py" = ["E501"]  # Embedded shell/JS scripts in strings
 "tests/test_packs/test_installer.py" = ["TC003"]  # Path used in runtime test bodies via pytest fixtures
+"tests/test_gateway/test_video_cleanup.py" = ["TC003"]  # Path used in runtime test bodies via pytest fixtures
 
 [tool.mypy]
 python_version = "3.12"
