@@ -107,17 +107,32 @@ class _ChatInputState extends State<ChatInput> {
     // POST is in flight — otherwise a quick Enter ships a naked text
     // message and orphans the pending video onto the NEXT message.
     setState(() => _isUploading = true);
+    Object? uploadError;
     try {
       await context.read<ChatProvider>().sendVideo(file.path!, file.name);
     } catch (e) {
-      if (mounted) {
+      uploadError = e;
+    }
+
+    if (!mounted) return;
+
+    // See Bug I1-r2: defer the _isUploading=false reset to the next frame
+    // so ChatProvider.notifyListeners() (fired inside sendVideo after it
+    // set _pendingVideoAttachment) has already rebuilt the tree before
+    // the send button's guard is lifted. Without this deferral there is
+    // a one-frame window where _isUploading is false but the build has
+    // not yet consumed the provider update, leaving the UI briefly
+    // inconsistent. The error snackbar is shown in the same post-frame
+    // callback so its timing matches the UI state transition.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _isUploading = false);
+      if (uploadError != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Video upload fehlgeschlagen: $e')),
+          SnackBar(content: Text('Video upload fehlgeschlagen: $uploadError')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isUploading = false);
-    }
+    });
   }
 
   Future<void> _pickFile() async {
