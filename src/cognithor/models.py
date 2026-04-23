@@ -496,6 +496,14 @@ class WorkingMemory(BaseModel):
     # Paths to image attachments on this turn. Routed to vision_model_detail
     # by the Planner when non-empty. Cleared by the Gateway after one turn.
     image_attachments: list[str] = Field(default_factory=list)
+    video_attachment: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Per-turn video attachment: "
+            "{'url': str, 'sampling': {'fps': float} | {'num_frames': int}}. "
+            "At most one video per chat turn (see video-input spec 2026-04-23)."
+        ),
+    )
 
     @property
     def usage_ratio(self) -> float:
@@ -571,10 +579,11 @@ class WorkingMemory(BaseModel):
         self.active_plan = None
         self.injected_memories = []
         self.injected_procedures = []
-        # image_attachments are per-turn — the Gateway sets them from the
-        # incoming message before each turn, so clearing here avoids bleed
-        # from the previous turn.
+        # image_attachments and video_attachment are per-turn — the Gateway
+        # sets them from the incoming message before each turn, so clearing
+        # here avoids bleed from the previous turn.
         self.image_attachments = []
+        self.video_attachment = None
 
 
 # ============================================================================
