@@ -92,3 +92,64 @@ release once `FlashInferCutlassNvFp4LinearKernel` lands upstream.
 HF token for gated models: set `huggingface_api_key` at the top level of
 `config.yaml` (or via the OS keyring) — Cognithor passes it to the container
 automatically as `HF_TOKEN`.
+
+## Video Input
+
+With vLLM active and a video-capable model loaded (Qwen3.6-27B, Qwen2.5-VL-7B-Instruct,
+Qwen3.6-35B-A3B, or any VLM vLLM recognizes as video-capable), you can attach a single
+video per chat turn.
+
+### Two ways to attach
+
+**Local file**: paperclip → "Video hochladen" → pick a `.mp4` / `.webm` / `.mov` /
+`.mkv` / `.avi` (max 500 MB per file, 5 GB total quota).
+
+**URL paste**: paste a direct video URL in the chat input. Cognithor detects URLs
+ending in a recognized video extension and treats them as a video attachment. YouTube
+links are **not** supported — use a direct `.mp4` link.
+
+### What happens under the hood
+
+1. Local uploads are stored temporarily at `~/.cognithor/media/vllm-uploads/<uuid>.<ext>`,
+   served to the vLLM container over a localhost-only HTTP server.
+2. `ffprobe` detects video duration and Cognithor picks an adaptive frame sampling rate:
+   short clips (< 10 s) get `fps=3`, longer clips get fewer frames spread across the
+   full duration.
+3. vLLM fetches the video, samples frames internally, and feeds them to the VLM.
+4. Uploads are deleted when the chat session closes, or automatically after 24 hours,
+   whichever comes first.
+
+### Troubleshooting
+
+**"Video hochladen" entry is greyed out**: the active backend is not vLLM. Settings →
+LLM Backends → tap vLLM → "Make active".
+
+**Upload fails with "too big"**: max 500 MB per file. Raise `config.vllm.video_max_upload_mb`
+or trim the clip.
+
+**Chat replies "vLLM offline — Video kann nicht verarbeitet werden"**: vLLM is DEGRADED.
+Unlike text chat (which falls back to Ollama), videos can't fall back — Ollama has no
+vision. Wait ~60 s for the circuit breaker to probe vLLM again, or restart vLLM from
+LLM Backends settings.
+
+**Long-video banner appears**: videos longer than 15 min only get 32 frames sampled
+(one every ~30 s for a 15-min video, sparser for longer). For detailed temporal
+reasoning, trim to 5-min chunks.
+
+**`ffprobe not found` warning in logs**: install ffmpeg on Linux/macOS via
+`apt install ffmpeg` / `brew install ffmpeg`. Windows installer bundles it. Without
+ffprobe, Cognithor falls back to 32 frames for every video regardless of length.
+
+### Advanced configuration
+
+`~/.cognithor/config.yaml` `vllm:` section:
+
+| Field | Default | Purpose |
+|-------|---------|---------|
+| `video_sampling_mode` | `adaptive` | `adaptive` / `fixed_32` / `fixed_64` / `fps_1` |
+| `video_ffprobe_path` | `ffprobe` | override to absolute path if not in `$PATH` |
+| `video_ffprobe_timeout_seconds` | `5` | local-file duration detection timeout |
+| `video_ffprobe_http_timeout_seconds` | `30` | URL duration detection timeout |
+| `video_max_upload_mb` | `500` | per-file hard cap |
+| `video_quota_gb` | `5` | total disk budget; oldest files evicted first |
+| `video_upload_ttl_hours` | `24` | automatic cleanup after this many hours |
