@@ -42,3 +42,36 @@ class TestBackendTypeEnum:
         from cognithor.core.llm_backend import LLMBackendType
 
         assert "vllm" in {t.value for t in LLMBackendType}
+
+
+class TestMediaUploadErrors:
+    def test_media_upload_error_is_llm_backend_error(self):
+        from cognithor.core.llm_backend import LLMBackendError, MediaUploadError
+
+        assert issubclass(MediaUploadError, LLMBackendError)
+
+    def test_too_large_inherits(self):
+        from cognithor.core.llm_backend import MediaUploadError, MediaUploadTooLargeError
+
+        assert issubclass(MediaUploadTooLargeError, MediaUploadError)
+        err = MediaUploadTooLargeError("file is 600 MB, max is 500 MB", status_code=413)
+        assert err.status_code == 413
+
+    def test_unsupported_format_inherits(self):
+        from cognithor.core.llm_backend import MediaUploadError, MediaUploadUnsupportedFormatError
+
+        assert issubclass(MediaUploadUnsupportedFormatError, MediaUploadError)
+
+    def test_quota_exceeded_inherits(self):
+        from cognithor.core.llm_backend import MediaUploadError, MediaUploadQuotaExceededError
+
+        assert issubclass(MediaUploadQuotaExceededError, MediaUploadError)
+
+    def test_all_carry_recovery_hint(self):
+        from cognithor.core.llm_backend import MediaUploadTooLargeError
+
+        err = MediaUploadTooLargeError(
+            "too big",
+            recovery_hint="Shorten or downscale the clip before uploading.",
+        )
+        assert err.recovery_hint == "Shorten or downscale the clip before uploading."
