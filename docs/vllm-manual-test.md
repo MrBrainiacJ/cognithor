@@ -87,6 +87,62 @@ Pick the row matching your dev hardware and run those steps:
 - Chat with vision. Expect: tokens stream noticeably faster than FP8 on the
   same hardware (NVFP4 uses native tensor cores).
 
+## 9. Video upload flow (RTX 5090 only — requires video-capable VLM)
+
+Prerequisites: vLLM running with `Qwen/Qwen3.6-27B` (any variant that vLLM has
+confirmed video support for).
+
+- Paperclip → "Video hochladen" → pick a ~30 s `.mp4` (e.g., the Qwen OSS sample
+  downloaded locally).
+- Expect: bubble shows thumbnail + filename + `0:30 · fps=2`.
+- Send: "What happens in this video?".
+- Expect: answer describes the clip's content within 10–20 s.
+
+## 10. Video URL paste
+
+- Paste `https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3.5/demo/video/N1cdUjctpG8.mp4`.
+- Expect: input field clears, bubble shows a thumbnail-less video card.
+- Send: "Describe what you see".
+- Expect: answer describes the Qwen demo video.
+
+## 11. Long-video banner + 32-frame sampling
+
+- Upload a > 15-min video.
+- Expect: bubble shows the orange `Video N min — nur 32 Frames werden gesampled` banner.
+- Send: "Summarize the main topics".
+- Expect: answer is coarse but topically correct.
+
+## 12. Video + DEGRADED vLLM
+
+- While chatting: `docker stop $(docker ps -q --filter label=cognithor.managed=true)`.
+- Send a video request.
+- Expect: red error bubble "vLLM offline — Video kann nicht verarbeitet werden".
+- `docker start <container-id>`; wait 60 s; re-send.
+- Expect: normal response.
+
+## 13. Cleanup on session close
+
+- Upload a video; note the uuid in `~/.cognithor/media/vllm-uploads/`.
+- Close Cognithor.
+- Expect: `~/.cognithor/media/vllm-uploads/` is empty, OR contains only files whose
+  mtime is < 24 h old from a prior test run (run 14 to verify cleanup actually works).
+
+## 14. Cleanup on TTL expiry (simulated)
+
+- Upload a video.
+- `touch -d "2 days ago" ~/.cognithor/media/vllm-uploads/<uuid>.*` (sets mtime into the past).
+- Restart Cognithor.
+- Expect: the file is gone within 60 s (periodic sweep), or immediately on start
+  (start-time sweep).
+
+## 15. Second video in same turn is rejected
+
+- Attach one video (paperclip → video).
+- Try to attach a second video (paperclip again — the "Video hochladen" entry
+  should still be enabled only if the pending message has no video yet).
+- Expect: either the menu entry is disabled with a tooltip "Ein Video pro Nachricht",
+  or the second attach attempt produces a snackbar error.
+
 ## Reporting
 
 If any step fails, capture:
