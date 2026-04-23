@@ -5433,8 +5433,14 @@ class Gateway:
 
         This is called periodically (guarded by _CLEANUP_INTERVAL_SECONDS) to
         prevent unbounded growth of the in-memory session and working-memory dicts.
+
+        When a VideoCleanupWorker is configured, each evicted session_id is also
+        dispatched to :meth:`VideoCleanupWorker.on_session_close` so that any
+        uploaded video files registered against that session are deleted
+        immediately, instead of waiting for the 24 h TTL sweep.
         """
         now = time.monotonic()
+        evicted_session_ids: list[str] = []
         with self._session_lock:
             stale_keys = [
                 key
@@ -5445,9 +5451,39 @@ class Gateway:
                 session = self._sessions.pop(key, None)
                 if session:
                     self._working_memories.pop(session.session_id, None)
+                    evicted_session_ids.append(session.session_id)
                 self._session_last_accessed.pop(key, None)
         if stale_keys:
             log.info("stale_sessions_cleaned", count=len(stale_keys))
+        # Session-lifetime video cleanup: fire VideoCleanupWorker.on_session_close
+        # for each evicted session so registered uploads are deleted now rather
+        # than waiting up to 24 h for the TTL sweep. on_session_close is a
+        # coroutine; schedule it as a background task if we are on an event
+        # loop, otherwise the TTL sweep remains a safety net.
+        video_cleanup = getattr(self, "_video_cleanup", None)
+        if evicted_session_ids and video_cleanup is not None:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                # Called from a thread or context with no running loop —
+                # rely on the TTL sweep to reclaim the orphaned uploads.
+                loop = None
+            if loop is not None:
+                background_tasks = getattr(self, "_background_tasks", None)
+                for sid in evicted_session_ids:
+                    try:
+                        task = loop.create_task(video_cleanup.on_session_close(sid))
+                        # Track to keep a strong reference and avoid "Task was
+                        # destroyed but it is pending" warnings.
+                        if background_tasks is not None:
+                            background_tasks.add(task)
+                            task.add_done_callback(background_tasks.discard)
+                    except Exception:
+                        log.debug(
+                            "video_cleanup_schedule_failed",
+                            session_id=sid,
+                            exc_info=True,
+                        )
         self._last_session_cleanup = now
 
     def _maybe_cleanup_sessions(self) -> None:
