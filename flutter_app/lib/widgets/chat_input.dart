@@ -172,8 +172,49 @@ class _ChatInputState extends State<ChatInput> {
     }
   }
 
-  void _showUrlDialog() {
-    // TODO: implement URL insertion dialog
+  Future<void> _showUrlDialog() async {
+    final controller = TextEditingController();
+    final url = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('URL einfügen'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.url,
+          decoration: const InputDecoration(
+            hintText: 'https://example.com/clip.mp4',
+            helperText: 'Direkter Link zu .mp4 / .webm / .mov / .mkv / .avi',
+          ),
+          onSubmitted: (v) => Navigator.of(ctx).pop(v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Hinzufügen'),
+          ),
+        ],
+      ),
+    );
+
+    if (url == null || url.isEmpty) return;
+    if (!mounted) return;
+
+    final provider = context.read<ChatProvider>();
+    final accepted = provider.handlePastedTextForVideoUrl(url);
+    if (!accepted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ungültige URL — direkt auf .mp4/.webm/.mov/.mkv/.avi endend erforderlich.',
+          ),
+        ),
+      );
+    }
   }
 
   @override

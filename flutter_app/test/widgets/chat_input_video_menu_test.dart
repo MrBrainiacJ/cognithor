@@ -78,4 +78,63 @@ void main() {
     );
     expect(videoItem.enabled, isFalse);
   });
+
+  testWidgets('URL dialog accepts valid video URL and sets pending attachment',
+      (tester) async {
+    final bp = _mkBackendProvider('vllm');
+    final cp = _mkChatProvider();
+    await tester.pumpWidget(_wrap(
+      ChatInput(onSend: (_) {}, onCancel: () {}),
+      bp,
+      cp,
+    ));
+
+    await tester.tap(find.byKey(const ValueKey('chat-input-paperclip')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('URL einfügen'));
+    await tester.pumpAndSettle();
+
+    // Dialog should be open (title + menu entry both contain "URL einfügen")
+    expect(find.text('URL einfügen'), findsAtLeastNWidgets(1));
+    // Scope the TextField lookup to the dialog — the ChatInput's own
+    // TextField is also in the tree.
+    final dialogField = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+    expect(dialogField, findsOneWidget);
+
+    await tester.enterText(dialogField, 'https://x.com/clip.mp4');
+    await tester.tap(find.text('Hinzufügen'));
+    await tester.pumpAndSettle();
+
+    expect(cp.pendingVideoAttachment, isNotNull);
+    expect(cp.pendingVideoAttachment!['url'], 'https://x.com/clip.mp4');
+  });
+
+  testWidgets('URL dialog rejects non-video URL with snackbar', (tester) async {
+    final bp = _mkBackendProvider('vllm');
+    final cp = _mkChatProvider();
+    await tester.pumpWidget(_wrap(
+      ChatInput(onSend: (_) {}, onCancel: () {}),
+      bp,
+      cp,
+    ));
+
+    await tester.tap(find.byKey(const ValueKey('chat-input-paperclip')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('URL einfügen'));
+    await tester.pumpAndSettle();
+
+    final dialogField = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(dialogField, 'https://example.com/page.html');
+    await tester.tap(find.text('Hinzufügen'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Ungültige URL'), findsOneWidget);
+    expect(cp.pendingVideoAttachment, isNull);
+  });
 }
