@@ -96,6 +96,30 @@ class LLMBadRequestError(LLMBackendError):
     """
 
 
+class MediaUploadError(LLMBackendError):
+    """Upload of a media file (video in v1) could not be accepted by the
+    local media server. User-side problem, not a vLLM/backend fault —
+    excluded from circuit-breaker failure counting in UnifiedLLMClient.
+    """
+
+
+class MediaUploadTooLargeError(MediaUploadError):
+    """Upload exceeds ``config.vllm.video_max_upload_mb``."""
+
+
+class MediaUploadUnsupportedFormatError(MediaUploadError):
+    """File extension not in the allow-list (.mp4, .webm, .mov, .mkv, .avi)."""
+
+
+class MediaUploadQuotaExceededError(MediaUploadError):
+    """Would exceed ``config.vllm.video_quota_gb`` even after LRU eviction.
+
+    This can only happen if the single upload is larger than the entire
+    quota — otherwise LRU eviction always makes room. Practically means
+    the user needs to raise ``video_quota_gb`` or shrink the file.
+    """
+
+
 class VLLMNotReadyError(LLMBackendError):
     """vLLM container not running or model not loaded."""
 

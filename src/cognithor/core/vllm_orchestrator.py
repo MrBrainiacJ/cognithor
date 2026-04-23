@@ -22,12 +22,26 @@ from typing import Any, Literal
 
 import httpx
 
+from cognithor.config import VLLMConfig
 from cognithor.core.llm_backend import VLLMDockerError, VLLMHardwareError, VLLMNotReadyError
 from cognithor.utils.logging import get_logger
 
 log = get_logger(__name__)
 
 ProgressCallback = Callable[[dict[str, Any]], None] | None
+
+
+def _redact_hf_token(cmd: list[str]) -> list[str]:
+    """Return a copy of cmd with any HF_TOKEN=<value> element replaced by
+    HF_TOKEN=<redacted>. The token is never exposed in log output."""
+    redacted: list[str] = []
+    for item in cmd:
+        if item.startswith("HF_TOKEN="):
+            redacted.append("HF_TOKEN=<redacted>")
+        else:
+            redacted.append(item)
+    return redacted
+
 
 Priority = Literal["premium", "standard", "fallback"]
 Capability = Literal["vision", "text"]
@@ -127,16 +141,19 @@ class VLLMOrchestrator:
     def __init__(
         self,
         *,
-        docker_image: str = "vllm/vllm-openai:v0.19.1",
+        docker_image: str = "vllm/vllm-openai:cu130-nightly",
         port: int = 8000,
         hf_token: str = "",
         log_ring_size: int = 500,
+        config: VLLMConfig | None = None,
     ) -> None:
         self.docker_image = docker_image
         self.port = port
         self._hf_token = hf_token
         self.state = VLLMState()
         self._log_ring: collections.deque[str] = collections.deque(maxlen=log_ring_size)
+        self._config: VLLMConfig = config if config is not None else VLLMConfig()
+        self.media_url: str | None = None
 
     def get_logs(self) -> list[str]:
         """Snapshot of the container-log ring buffer."""
@@ -368,12 +385,15 @@ class VLLMOrchestrator:
                 recovery_hint="Stop other services or change config.vllm.port.",
             )
 
+        cfg = self._config
         cmd = [
             "docker",
             "run",
             "-d",
             "--gpus",
             "all",
+            "--add-host",
+            "host.docker.internal:host-gateway",
             "-v",
             "cognithor-hf-cache:/root/.cache/huggingface",
             "-e",
@@ -382,12 +402,51 @@ class VLLMOrchestrator:
             f"{port}:8000",
             "--label",
             "cognithor.managed=true",
-            self.docker_image,
-            "--model",
-            model,
         ]
+        if self.media_url:
+            cmd.extend(["-e", f"COGNITHOR_MEDIA_URL={self.media_url}"])
+        cmd.extend(
+            [
+                self.docker_image,
+                "--model",
+                model,
+                "--max-model-len",
+                str(cfg.max_model_len),
+                "--max-num-seqs",
+                str(cfg.max_num_seqs),
+                "--max-num-batched-tokens",
+                str(cfg.max_num_batched_tokens),
+                "--gpu-memory-utilization",
+                f"{cfg.gpu_memory_utilization:g}",
+                "--reasoning-parser",
+                "qwen3",
+                "--trust-remote-code",
+                "--media-io-kwargs",
+                '{"video": {"num_frames": -1}}',
+            ]
+        )
+        if cfg.cpu_offload_gb > 0:
+            cmd.extend(["--cpu-offload-gb", str(cfg.cpu_offload_gb)])
+        if cfg.enforce_eager:
+            cmd.append("--enforce-eager")
+
+        # Redact HF_TOKEN before logging — it's in the cmd list as "HF_TOKEN=<value>"
+        _cmd_for_log = _redact_hf_token(cmd)
+        log.info(
+            "vllm_docker_run_starting",
+            model=model,
+            image=self.docker_image,
+            port=port,
+            media_url=self.media_url,
+            cmd=_cmd_for_log,
+        )
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if result.returncode != 0:
+            log.error(
+                "vllm_docker_run_failed",
+                returncode=result.returncode,
+                stderr=result.stderr.strip()[:500],
+            )
             raise VLLMNotReadyError(
                 f"docker run failed: {result.stderr.strip()}",
                 recovery_hint="Check Docker Desktop logs.",

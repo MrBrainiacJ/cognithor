@@ -66,8 +66,29 @@ def _get_orchestrator(config: CognithorConfig) -> VLLMOrchestrator:
             docker_image=config.vllm.docker_image,
             port=config.vllm.port,
             hf_token=config.huggingface_api_key,
+            config=config.vllm,
         )
     return _orchestrator_cache[key]
+
+
+def _resolve_orchestrator(request: Request) -> VLLMOrchestrator:
+    """Return the VLLMOrchestrator for this request.
+
+    Prefers the Gateway-owned instance registered on ``app.state.vllm_orchestrator``
+    (which has ``media_url`` wired after the MediaUploadServer starts). Falls back
+    to the module-level cache only in standalone API mode, when no Gateway is
+    attached to the app (e.g. test fixtures, future headless-daemon mode).
+
+    Bug C1-r3: without this unification the backends_api endpoints and the
+    Gateway held two separate VLLMOrchestrator instances, so ``start_container``
+    launched vLLM without ``-e COGNITHOR_MEDIA_URL=...`` and the container
+    could not fetch uploaded media.
+    """
+    orch = getattr(request.app.state, "vllm_orchestrator", None)
+    if orch is not None:
+        return orch
+    config: CognithorConfig = request.app.state.config
+    return _get_orchestrator(config)
 
 
 @backends_router.get("")
@@ -81,7 +102,7 @@ async def list_backends(request: Request) -> dict:
             "status": "ready",
         }
     ]
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
     st = orch.status()
     if st.container_running:
         vllm_status = "ready"
@@ -102,8 +123,7 @@ async def list_backends(request: Request) -> dict:
 @backends_router.get("/vllm/status")
 async def vllm_status(request: Request) -> dict:
     """Return the current VLLMState as JSON for the Flutter setup page."""
-    config: CognithorConfig = request.app.state.config
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
     st = orch.status()
     hw = None
     if st.hardware_info:
@@ -125,8 +145,7 @@ async def vllm_status(request: Request) -> dict:
 
 @backends_router.post("/vllm/check-hardware")
 async def check_hardware_endpoint(request: Request) -> dict:
-    config: CognithorConfig = request.app.state.config
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
     try:
         info = orch.check_hardware()
     except Exception as exc:
@@ -150,8 +169,7 @@ async def check_hardware_endpoint(request: Request) -> dict:
 
 @backends_router.post("/vllm/start")
 async def vllm_start(request: Request, body: StartRequest) -> dict:
-    config: CognithorConfig = request.app.state.config
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
     try:
         info = orch.start_container(body.model)
     except Exception as exc:
@@ -175,8 +193,7 @@ async def vllm_start(request: Request, body: StartRequest) -> dict:
 
 @backends_router.post("/vllm/stop")
 async def vllm_stop(request: Request) -> dict:
-    config: CognithorConfig = request.app.state.config
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
     orch.stop_container()
     return {"status": "stopped"}
 
@@ -196,8 +213,7 @@ async def set_active_backend(request: Request, body: SetActiveRequest) -> dict:
 
 @backends_router.get("/vllm/logs")
 async def vllm_logs(request: Request) -> dict:
-    config: CognithorConfig = request.app.state.config
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
     return {"lines": orch.get_logs()}
 
 
@@ -216,8 +232,7 @@ async def vllm_available_models(request: Request) -> dict:
 
     from cognithor.core.vllm_orchestrator import ModelEntry
 
-    config: CognithorConfig = request.app.state.config
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
 
     registry_path = Path(__file__).resolve().parents[1] / "cli" / "model_registry.json"
     registry_data = _json.loads(registry_path.read_text(encoding="utf-8"))
@@ -260,7 +275,7 @@ async def vllm_available_models(request: Request) -> dict:
 async def vllm_pull_image(request: Request) -> StreamingResponse:
     """Stream docker-pull progress to the client as SSE."""
     config: CognithorConfig = request.app.state.config
-    orch = _get_orchestrator(config)
+    orch = _resolve_orchestrator(request)
 
     queue: asyncio.Queue[dict | None] = asyncio.Queue()
 

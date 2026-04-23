@@ -340,6 +340,15 @@ class APIChannel(Channel):
         except Exception as exc:
             log.warning("backends_router_include_failed", error=str(exc))
 
+        # Include the media router for Flutter upload + thumbnail endpoints.
+        # Note: app.state.media_server is set by Gateway at startup (Task 15).
+        try:
+            from cognithor.channels.media_api import media_router as _media_router
+
+            app.include_router(_media_router)
+        except Exception as exc:
+            log.warning("media_router_include_failed", error=str(exc))
+
         return app
 
     @property

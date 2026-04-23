@@ -43,6 +43,20 @@ jobs:
         env:
           ISCC_PATH: "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe"
 
+      - name: Verify bundled ffmpeg is LGPL (not GPL)
+        shell: pwsh
+        run: |
+          $ffmpeg = Get-ChildItem -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+          if (-not $ffmpeg) { throw "ffmpeg.exe not found in build output" }
+          $version = & $ffmpeg.FullName -version 2>&1 | Out-String
+          if ($version -match '--enable-gpl') {
+            throw "Bundled ffmpeg is a GPL build — Cognithor is Apache-2.0. Use LGPL variant."
+          }
+          if ($version -notmatch '--enable-version3') {
+            Write-Warning "Bundled ffmpeg does not claim LGPL v3 — double-check the build source"
+          }
+          Write-Host "ffmpeg build is LGPL-compatible"
+
       - name: Find installer EXE
         id: find_exe
         run: |

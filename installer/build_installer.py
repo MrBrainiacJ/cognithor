@@ -37,6 +37,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = PROJECT_ROOT / "installer" / "build"
 DIST_DIR = PROJECT_ROOT / "installer" / "dist"
 
+FFMPEG_LGPL_URL = (
+    "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/"
+    "ffmpeg-master-latest-win64-lgpl-shared.zip"
+)
+
 COGNITHOR_VERSION = None  # read from pyproject.toml
 
 
@@ -236,7 +241,7 @@ def step_flutter_desktop() -> Path | None:
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(desktop_build, dest)
-        print(f"  [OK] Pre-built Flutter desktop copied")
+        print("  [OK] Pre-built Flutter desktop copied")
         return dest
 
     flutter_bin = shutil.which("flutter")
@@ -275,6 +280,74 @@ def step_flutter_desktop() -> Path | None:
     return None
 
 
+def step_ffmpeg() -> Path:
+    """Step 3c: Download BtbN's LGPL-licensed ffmpeg+ffprobe build and return the bin dir.
+
+    Raises RuntimeError if the downloaded build is accidentally GPL — GPL would
+    contaminate Cognithor's Apache-2.0 license. Verified via the ``--enable-gpl``
+    check in ffmpeg's self-reported configuration.
+    """
+    print("\n=== Step 3c: ffmpeg (LGPL) ===")
+
+    dest_zip = BUILD_DIR / "downloads" / "ffmpeg.zip"
+    extract_dir = BUILD_DIR / "ffmpeg"
+    # Canonical path expected by the .iss — no subfolder, Inno Setup's
+    # directory wildcard semantics are brittle on nested patterns.
+    canonical_bin = extract_dir / "bin"
+
+    if canonical_bin.exists() and (canonical_bin / "ffmpeg.exe").is_file():
+        print("  [SKIP] ffmpeg/bin/ already normalized")
+    else:
+        download(FFMPEG_LGPL_URL, dest_zip, "ffmpeg LGPL build")
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(dest_zip) as z:
+            z.extractall(extract_dir)
+        print("  [OK] ffmpeg extracted")
+
+        # BtbN archives wrap everything in a single top-level folder like
+        # `ffmpeg-master-latest-win64-lgpl-shared/`. Flatten it so the .iss
+        # can reference `build\ffmpeg\bin\*.exe` without wildcards.
+        wrapped_bins = list(extract_dir.glob("*/bin"))
+        if not wrapped_bins:
+            # Already flat — nothing to do
+            pass
+        elif len(wrapped_bins) == 1:
+            src_bin = wrapped_bins[0]
+            if canonical_bin.exists():
+                shutil.rmtree(canonical_bin)
+            shutil.move(str(src_bin), str(canonical_bin))
+            # Clean up the now-empty wrapper dir
+            wrapper = src_bin.parent
+            if wrapper.is_dir() and not any(wrapper.iterdir()):
+                wrapper.rmdir()
+            print(f"  [OK] ffmpeg/bin/ normalized (was {wrapped_bins[0]})")
+        else:
+            raise RuntimeError(
+                f"Unexpected ffmpeg archive layout — "
+                f"found {len(wrapped_bins)} bin dirs: {wrapped_bins}"
+            )
+
+    # Verify the build is LGPL (not GPL)
+    ffmpeg_exe = canonical_bin / "ffmpeg.exe"
+    if not ffmpeg_exe.is_file():
+        raise RuntimeError(f"ffmpeg.exe not found at canonical path: {ffmpeg_exe}")
+    result = subprocess.run(
+        [str(ffmpeg_exe), "-version"], capture_output=True, text=True, check=False
+    )
+    combined = result.stdout + result.stderr
+    first_config_line = next(
+        (line for line in combined.splitlines() if "configuration" in line), ""
+    )
+    if "--enable-gpl" in first_config_line:
+        raise RuntimeError(
+            f"Downloaded ffmpeg is a GPL build (configuration: "
+            f"{first_config_line!r}). GPL would contaminate "
+            "Cognithor's Apache-2.0 license. Use the LGPL variant."
+        )
+    print(f"  [OK] ffmpeg bin: {canonical_bin}")
+    return canonical_bin
+
+
 def step_launcher() -> Path:
     """Step 4: Create launcher batch script."""
     print("\n=== Step 4: Launcher ===")
@@ -296,11 +369,12 @@ def step_launcher() -> Path:
         "REM   2. `python` / `py` on PATH\r\n"
         "REM   3. Well-known install paths (user+machine, 3.13/3.12)\r\n"
         'set "PYTHON="\r\n'
-        'if exist "%COGNITHOR_HOME%python\\python.exe" set "PYTHON=%COGNITHOR_HOME%python\\python.exe"\r\n'
+        'if exist "%COGNITHOR_HOME%python\\python.exe" '
+        'set "PYTHON=%COGNITHOR_HOME%python\\python.exe"\r\n'
         'if "!PYTHON!"=="" (\r\n'
         "    where python >nul 2>&1\r\n"
         "    if not errorlevel 1 (\r\n"
-        '        for /f "delims=" %%P in (\'where python\') do (\r\n'
+        "        for /f \"delims=\" %%P in ('where python') do (\r\n"
         '            if "!PYTHON!"=="" set "PYTHON=%%P"\r\n'
         "        )\r\n"
         "    )\r\n"
@@ -380,7 +454,8 @@ def step_launcher() -> Path:
         '    if exist "%PYTHONW%" (\r\n'
         '        start "" "%PYTHONW%" -m cognithor --no-cli --api-port 8741\r\n'
         "    ) else (\r\n"
-        '        start "Cognithor Server" cmd /k ""%PYTHON%" -m cognithor --no-cli --api-port 8741"\r\n'
+        '        start "Cognithor Server" '
+        'cmd /k ""%PYTHON%" -m cognithor --no-cli --api-port 8741"\r\n'
         "    )\r\n"
         "    echo Waiting for Cognithor to start...\r\n"
         "    set RETRIES=0\r\n"
@@ -520,7 +595,10 @@ def step_inno_setup(
         reverse=True,
     )
     if installers:
-        print(f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)")
+        print(
+            f"  [OK] Installer: {installers[0]} "
+            f"({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
+        )
         return installers[0]
 
     return Path("")
@@ -556,6 +634,7 @@ def main() -> int:
 
     python_dir = step_python_embed()
     ollama_dir = step_ollama()
+    step_ffmpeg()
 
     if skip_flutter:
         flutter_dir = BUILD_DIR / "flutter_web" if (BUILD_DIR / "flutter_web").exists() else None

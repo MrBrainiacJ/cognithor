@@ -5,6 +5,105 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [0.92.7] -- 2026-04-23
+
+### Added
+- **Video input via vLLM** — attach a local video (`.mp4` / `.webm` / `.mov` / `.mkv` /
+  `.avi`) or paste a direct video URL in chat; Qwen3.6-27B (or any vLLM-served
+  video-capable VLM) analyzes it end-to-end. Native vLLM `video_url` content
+  type — no frame-extraction workarounds. Adaptive frame sampling based on
+  duration (fps=3 for clips under 10 s, num_frames=32 for videos over 5 min)
+  via `ffprobe`. Single video per chat turn. Local uploads served to vLLM over
+  a 127.0.0.1-only HTTP file server. Videos are cleaned up when the chat
+  session closes and auto-expire after 24 h. Video requests on a DEGRADED vLLM
+  produce a hard error — no silent fallback to Ollama (Ollama has no vision).
+  Windows installer now bundles an LGPL-licensed ffmpeg build. See
+  `docs/vllm-user-guide.md` and `docs/superpowers/specs/2026-04-23-video-input-vllm-design.md`.
+- **Flutter URL-einfügen dialog** — paperclip → "URL einfügen" opens an
+  AlertDialog for a direct video URL (adds to Decision 1 of the video-input
+  spec). Delegates validation to `ChatProvider.handlePastedTextForVideoUrl`.
+- **Structured logging for docker run** — `VLLMOrchestrator.start_container`
+  emits `log.info("vllm_docker_run_starting", cmd=..., model=..., port=...)`
+  before `subprocess.run` and `log.error("vllm_docker_run_failed", ...)` on
+  non-zero exit. HF_TOKEN values are redacted. Makes fragile-startup
+  debugging possible without a local debugger.
+
+### Changed
+- Cognithor now requires Docker Engine ≥ 20.10 when using vLLM on Linux
+  (host-gateway flag for `--add-host` was added in 20.10). Docker Desktop
+  versions are all fine.
+- Flutter paperclip in the chat input is now a popup menu with explicit
+  entries for Image / Video / File / URL instead of a single file picker.
+- Default `vllm/vllm-openai` image flipped from `v0.19.1` to `cu130-nightly`
+  because the tagged release crashes Qwen3.6-27B-NVFP4 at warmup on SM120;
+  the nightly ships the `FlashInferCutlassNvFp4LinearKernel` fix. See
+  `docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md`.
+- `VLLMOrchestrator` now threads the live `VLLMConfig` through both
+  construction sites (`backends_api._get_orchestrator` and
+  `Gateway.__init__`) so user overrides of `max_model_len`,
+  `gpu_memory_utilization`, `cpu_offload_gb`, `enforce_eager` actually
+  reach the `docker run` command. Previously both sites fell back to
+  `VLLMConfig()` defaults silently.
+- Backend code paths unify on a single `VLLMOrchestrator` instance via
+  `app.state.vllm_orchestrator`. Previously `backends_api` had its own
+  cache, and the UI's "Start vLLM" button hit that second instance which
+  never had `media_url` wired — leaving the container unable to fetch
+  uploads. Fallback cache retained for standalone-API mode.
+
+### Fixed
+- **Video helper preserves text on multi-modal turns** — both
+  `_attach_video_to_last_user` and `_attach_images_to_last_user` now
+  handle list-form content (a prior image/video attachment in the same
+  turn). Previously the text was silently dropped to `""` and the
+  model received only the media with no question.
+- **Flutter send-button race during upload** — `_pickVideo` now tracks
+  `_isUploading`, the Send button becomes a progress indicator, and
+  `_submit` short-circuits until the multipart POST completes. Also
+  defers the `_isUploading = false` reset to a `WidgetsBinding`
+  post-frame callback so the Send tree has rebuilt before the guard
+  lifts.
+- **ffprobe / ffmpeg no longer block the event loop** — the FastAPI
+  `/api/media/upload` handler and the Gateway per-turn handler both
+  offload the blocking `subprocess.run` calls via `asyncio.to_thread`.
+  Concurrent uploads stop serialising on the uvicorn worker.
+- **Path-traversal guard hardened** — `/media/{filename}` endpoints on
+  both the Flutter-facing `/api/media/thumb` and the vLLM-facing
+  MediaUploadServer now verify `resolved.is_relative_to(media_dir)`
+  instead of substring-checking `"/" in filename or ".." in filename`.
+  The old guard let `C:%5CWindows%5Csystem32%5Ccmd.exe` through on
+  Windows because `pathlib` resolves absolute paths as replacements.
+- **Quota TOCTOU** — `MediaUploadServer.save_upload` is now protected by
+  a `threading.Lock` over the evict-and-write critical section. Two
+  concurrent uploads can no longer both pass the quota check
+  independently, leave the dir above quota, and silently accept a
+  third party's eviction.
+- **Session-close cleanup wired** — `Gateway._cleanup_stale_sessions`
+  now dispatches `VideoCleanupWorker.on_session_close(session_id)`
+  via `loop.create_task` when a running loop is available. Previously
+  the 24 h TTL sweep was the only deletion path; videos from closed
+  sessions persisted until then.
+- **VideoCleanupWorker.start() is idempotent** — second calls without
+  an intervening `stop()` no longer orphan the first sweep task.
+- **URL paste filename strips query + fragment** — `clip.mp4?token=abc`
+  now derives `filename="clip.mp4"` while the full URL (including
+  query/fragment for fetching) remains intact in the pending
+  attachment. The regex also now accepts URLs with `?` or `#` after
+  the extension — previously it rejected them entirely.
+- **chat_stream accepts video kwarg** — `VLLMBackend.chat_stream` now
+  threads `video=` through the same way `chat()` does. A future caller
+  routing video through the streaming path no longer silently drops
+  the attachment.
+- **URL-dialog TextEditingController lifecycle** — moved into a
+  `_UrlInputDialog` StatefulWidget so its `dispose` runs after the
+  dialog's exit animation.
+- **KeyboardListener FocusNode lifecycle** — promoted from inline
+  `FocusNode()` in `build()` (leaked every rebuild) to a `late final`
+  state field initialised in `initState`, disposed in `dispose`.
+- **Quota-exceeded recovery hint** — the 507 response for
+  `MediaUploadQuotaExceededError` now includes `recovery_hint` so the
+  client can surface actionable guidance. Previously the generic
+  `MediaUploadError` branch dropped it.
+
 ## [0.92.6] -- 2026-04-23
 
 ### Added

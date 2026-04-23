@@ -5,7 +5,9 @@
 library;
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show ChangeNotifier, debugPrint, kDebugMode;
+import 'dart:io';
+import 'package:flutter/foundation.dart' show ChangeNotifier, debugPrint, kDebugMode, kIsWeb;
+import 'package:http/http.dart' as http;
 import 'package:cognithor_ui/services/websocket_service.dart';
 
 // ---------------------------------------------------------------------------
@@ -94,10 +96,24 @@ void _log(String msg) {
 }
 
 class ChatProvider extends ChangeNotifier {
-  ChatProvider();
+  ChatProvider({this.apiBaseUrl = 'http://localhost:8741', http.Client? httpClient})
+      : _http = httpClient ?? http.Client();
+
+  /// REST base URL used for media upload (e.g. `http://localhost:8741`).
+  final String apiBaseUrl;
+
+  /// HTTP client — injected for testability.
+  final http.Client _http;
 
   WebSocketService? _ws;
   bool _listenersRegistered = false;
+
+  // ---------------------------------------------------------------------------
+  // Pending video attachment
+  // ---------------------------------------------------------------------------
+
+  Map<String, dynamic>? _pendingVideoAttachment;
+  Map<String, dynamic>? get pendingVideoAttachment => _pendingVideoAttachment;
 
   /// Bind to a WebSocket service and register listeners.
   /// Safe to call multiple times — only registers once per WS instance.
@@ -146,15 +162,102 @@ class ChatProvider extends ChangeNotifier {
 
   void sendMessage(String text) {
     _log('[Chat] sendMessage: "$text" (messages.length=${messages.length})');
-    messages.add(ChatMessage(role: MessageRole.user, text: text));
+
+    // Merge any pending video attachment into the WS metadata.
+    final videoMeta = _pendingVideoAttachment;
+    _pendingVideoAttachment = null;
+
+    messages.add(ChatMessage(
+      role: MessageRole.user,
+      text: text,
+      metadata: videoMeta != null ? {'video_attachment': videoMeta} : const {},
+    ));
+
     if (_ws != null) {
-      _ws!.sendMessage(text);
+      _ws!.sendMessage(
+        text,
+        metadata: videoMeta != null ? {'video_attachment': videoMeta} : null,
+      );
     } else {
       _log('[Chat] WARN: no WebSocket attached — message not sent');
     }
     statusText = '';
     isWaitingForResponse = true;
     _log('[Chat] notifyListeners (messages.length=${messages.length})');
+    notifyListeners();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Video upload + URL-paste detection
+  // ---------------------------------------------------------------------------
+
+  /// Multipart-uploads [localPath] to `/api/media/upload` and stores the
+  /// returned upload descriptor as [pendingVideoAttachment].
+  /// On Flutter Web [localPath] is unused; bytes must come from FilePicker.
+  Future<void> sendVideo(String localPath, String filename) async {
+    final uri = Uri.parse('$apiBaseUrl/api/media/upload');
+
+    late http.Response resp;
+    if (kIsWeb) {
+      // On web there is no dart:io File access; caller is expected to use
+      // sendVideoBytes() instead. Throw early so callers notice.
+      throw UnsupportedError(
+        'sendVideo(localPath) is not supported on Flutter Web. '
+        'Use sendVideoBytes() instead.',
+      );
+    } else {
+      final bytes = await File(localPath).readAsBytes();
+      final request = http.MultipartRequest('POST', uri)
+        ..files.add(
+            http.MultipartFile.fromBytes('file', bytes, filename: filename));
+      final streamed = await _http.send(request);
+      resp = await http.Response.fromStream(streamed);
+    }
+
+    if (resp.statusCode != 200) {
+      throw Exception(
+          'Upload failed: HTTP ${resp.statusCode} — ${resp.body}');
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+
+    _pendingVideoAttachment = {
+      'kind': 'video',
+      'uuid': body['uuid'],
+      'url': body['url'],
+      'filename': filename,
+      'duration_sec': body['duration_sec'],
+      'sampling': body['sampling'],
+      'thumb_url': body['thumb_url'],
+    };
+    notifyListeners();
+  }
+
+  /// URL-paste detection — call from TextField onChanged.
+  /// Returns true if the pasted text was consumed as a video URL attachment.
+  bool handlePastedTextForVideoUrl(String text) {
+    final pattern = RegExp(
+      r'^\s*(https?://\S+?\.(?:mp4|webm|mov|mkv|avi)(?:[?#]\S*)?)\s*$',
+      caseSensitive: false,
+    );
+    final m = pattern.firstMatch(text);
+    if (m == null) return false;
+    final rawUrl = m.group(1)!;
+    // Filename is derived from the URL path only — strip query + fragment.
+    final pathOnly = rawUrl.split('?').first.split('#').first;
+    final derivedFilename = pathOnly.split('/').last;
+    _pendingVideoAttachment = {
+      'kind': 'video',
+      'url': rawUrl, // keep full URL with query/fragment for fetching
+      'filename': derivedFilename,
+      'thumb_url': null,
+    };
+    notifyListeners();
+    return true;
+  }
+
+  /// Clear any pending video attachment (e.g. user dismisses the preview).
+  void clearPendingVideo() {
+    _pendingVideoAttachment = null;
     notifyListeners();
   }
 
@@ -406,6 +509,7 @@ class ChatProvider extends ChangeNotifier {
     planDetail = null;
     preFlightData = null;
     agentLog.clear();
+    _pendingVideoAttachment = null;
     notifyListeners();
   }
 
@@ -440,6 +544,7 @@ class ChatProvider extends ChangeNotifier {
     planDetail = null;
     preFlightData = null;
     agentLog.clear();
+    _pendingVideoAttachment = null;
     notifyListeners();
   }
 

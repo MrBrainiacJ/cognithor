@@ -74,8 +74,19 @@ def _attach_images_to_last_user(
     for i in range(len(new_messages) - 1, -1, -1):
         if new_messages[i].get("role") == "user":
             existing = new_messages[i].get("content")
-            text_part = existing if isinstance(existing, str) else ""
-            content_list: list[dict[str, Any]] = []
+            if isinstance(existing, list):
+                # Pre-existing list content (e.g. a prior video attachment in
+                # the same turn): extract the text item and preserve all other
+                # non-text items so they are not silently dropped.
+                text_part = next(
+                    (c["text"] for c in existing if c.get("type") == "text"),
+                    "",
+                )
+                preserved_items = [c for c in existing if c.get("type") != "text"]
+            else:
+                text_part = existing if isinstance(existing, str) else ""
+                preserved_items = []
+            content_list: list[dict[str, Any]] = list(preserved_items)
             if text_part:
                 content_list.append({"type": "text", "text": text_part})
             for url in encoded:
@@ -86,6 +97,62 @@ def _attach_images_to_last_user(
         content_list = [{"type": "image_url", "image_url": {"url": u}} for u in encoded]
         new_messages.append({"role": "user", "content": content_list})
     return new_messages
+
+
+def _attach_video_to_last_user(
+    messages: list[dict[str, Any]],
+    video: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Attach a single video to the last user message and build the
+    mm_processor_kwargs payload for vLLM's extra_body.
+
+    Args:
+        messages: Ollama-shaped chat messages. Not mutated.
+        video: ``{"url": str, "sampling": {"fps": float} | {"num_frames": int}}``
+
+    Returns:
+        ``(new_messages, extra_body_update)`` where
+        - ``new_messages``: a fresh list with the last user message's content
+          replaced by a list of content items: ``[video_url, (optional) text]``
+        - ``extra_body_update``: ``{"mm_processor_kwargs": {"video": <sampling>}}``
+          ready to merge into the outgoing chat-completion body.
+    """
+    new_messages = [dict(m) for m in messages]
+
+    # Find last user message index (create one if none exists)
+    last_idx: int | None = None
+    for i in range(len(new_messages) - 1, -1, -1):
+        if new_messages[i].get("role") == "user":
+            last_idx = i
+            break
+    if last_idx is None:
+        new_messages.append({"role": "user", "content": ""})
+        last_idx = len(new_messages) - 1
+
+    existing = new_messages[last_idx].get("content", "")
+    if isinstance(existing, list):
+        # Pre-existing list content (e.g. prior image attachment in same turn):
+        # extract the text item and preserve all other non-text items.
+        text_part = next(
+            (c["text"] for c in existing if c.get("type") == "text"),
+            "",
+        )
+        preserved_items = [c for c in existing if c.get("type") != "text"]
+    else:
+        text_part = existing if isinstance(existing, str) else ""
+        preserved_items = []
+
+    content_items: list[dict[str, Any]] = [
+        {"type": "video_url", "video_url": {"url": video["url"]}},
+        *preserved_items,
+    ]
+    if text_part:
+        content_items.append({"type": "text", "text": text_part})
+
+    new_messages[last_idx] = {**new_messages[last_idx], "content": content_items}
+
+    extra_body = {"mm_processor_kwargs": {"video": video["sampling"]}}
+    return new_messages, extra_body
 
 
 class VLLMBackend(LLMBackend):
@@ -148,6 +215,7 @@ class VLLMBackend(LLMBackend):
         top_p: float = 0.9,
         format_json: bool = False,
         images: list[str] | None = None,
+        video: dict[str, Any] | None = None,
     ) -> ChatResponse:
         """Send a chat-completion request to vLLM.
 
@@ -159,6 +227,11 @@ class VLLMBackend(LLMBackend):
         if images:
             messages = _attach_images_to_last_user(messages, images)
 
+        extra_body: dict[str, Any] = {}
+        if video is not None:
+            messages, video_extra = _attach_video_to_last_user(messages, video)
+            extra_body.update(video_extra)
+
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -169,6 +242,8 @@ class VLLMBackend(LLMBackend):
             payload["tools"] = tools
         if format_json:
             payload["response_format"] = {"type": "json_object"}
+        if extra_body:
+            payload["extra_body"] = extra_body
 
         client = await self._ensure_client()
         try:
@@ -216,18 +291,32 @@ class VLLMBackend(LLMBackend):
         temperature: float = 0.7,
         top_p: float = 0.9,
         images: list[str] | None = None,
+        video: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
-        """Stream response tokens from vLLM. Parses OpenAI SSE format."""
+        """Stream response tokens from vLLM. Parses OpenAI SSE format.
+
+        ``video`` is a dict ``{url, sampling}`` per the video-input spec
+        (2026-04-23). Exactly zero or one video per turn. Streaming responses
+        for video are structurally identical to text responses — vLLM returns
+        SSE tokens as it decodes.
+        """
         if images:
             messages = _attach_images_to_last_user(messages, images)
 
-        payload = {
+        extra_body: dict[str, Any] = {}
+        if video is not None:
+            messages, video_extra = _attach_video_to_last_user(messages, video)
+            extra_body.update(video_extra)
+
+        payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
             "top_p": top_p,
             "stream": True,
         }
+        if extra_body:
+            payload["extra_body"] = extra_body
         client = await self._ensure_client()
         try:
             async with client.stream(

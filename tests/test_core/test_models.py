@@ -729,6 +729,27 @@ class TestWorkingMemoryExtended:
         assert len(wm.injected_procedures) == 0
         assert len(wm.injected_memories) == 0
 
+    def test_working_memory_has_video_attachment_default_none(self) -> None:
+        from cognithor.models import WorkingMemory
+
+        wm = WorkingMemory(session_id="s1")
+        assert wm.video_attachment is None
+
+    def test_working_memory_video_attachment_accepts_dict(self) -> None:
+        from cognithor.models import WorkingMemory
+
+        wm = WorkingMemory(session_id="s1")
+        wm.video_attachment = {"url": "http://x/a.mp4", "sampling": {"fps": 2.0}}
+        assert wm.video_attachment["url"] == "http://x/a.mp4"
+
+    def test_working_memory_clear_for_new_request_resets_video(self) -> None:
+        from cognithor.models import WorkingMemory
+
+        wm = WorkingMemory(session_id="s1")
+        wm.video_attachment = {"url": "http://x/a.mp4", "sampling": {"fps": 1.0}}
+        wm.clear_for_new_request()
+        assert wm.video_attachment is None
+
 
 class TestMessageChannel:
     """Message mit optionalem Channel-Feld."""

@@ -503,7 +503,9 @@ async def main() -> int:
         results["LLM Direkte Antwort"] = await test_llm_direct_response(
             cognithor_home, args.model, args.verbose
         )
-        results["LLM Tool-Plan"] = await test_llm_tool_plan(cognithor_home, args.model, args.verbose)
+        results["LLM Tool-Plan"] = await test_llm_tool_plan(
+            cognithor_home, args.model, args.verbose
+        )
         results["Gateway E2E"] = await test_full_gateway(cognithor_home, args.model, args.verbose)
     elif args.skip_llm:
         print_step("⏭️", "LLM-Tests übersprungen (--skip-llm)")

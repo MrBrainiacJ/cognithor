@@ -1,6 +1,5 @@
 """Tests fuer Wetter Abfrage."""
 
-import pytest
 from .skill import WetterAbfrageSkill
 
 

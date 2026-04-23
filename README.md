@@ -133,6 +133,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 - **Security** — Platform-adaptive sandbox (bubblewrap on Linux, subprocess+timeout fallback), AST-based Python/Shell code analysis (Python `ast.NodeVisitor` + `bashlex` parser), SHA-256 audit chain, credential vault, runtime token encryption (Fernet AES-256), Gatekeeper policy engine with GREEN/YELLOW/ORANGE/RED risk classification (not independently audited — see [Status & Maturity](#status--maturity))
 - **Knowledge Vault** — Obsidian-compatible Markdown vault with YAML frontmatter, tags, `[[backlinks]]`, full-text search
 - **Document Analysis** — LLM-powered structured analysis of PDF/DOCX/HTML (summary, risks, action items, decisions)
+- **Video Input** — Attach local videos (`.mp4` / `.webm` / `.mov` / `.mkv` / `.avi`) or paste direct video URLs; Qwen3.6-27B (or any video-capable VLM) analyzes them end-to-end via vLLM's native `video_url` content type. Adaptive frame sampling (fps=3 for short clips, `num_frames=32` for long) via `ffprobe`. Single video per turn, served from a 127.0.0.1-only HTTP file server, 24h auto-cleanup. Requires vLLM backend — Windows installer bundles LGPL ffmpeg. See [`docs/vllm-user-guide.md`](docs/vllm-user-guide.md).
 - **Model Context Protocol (MCP)** — 145+ tools across 14 modules (filesystem, shell, memory, web, browser, media, vault, synthesis, code, skills, documents, reddit, social, kanban, identity) + A2A delegation
 - **Computer Use** — Complete desktop automation: screenshots, clicking, typing, scrolling, dragging, Windows UI Automation via pywinauto for exact element coordinates, 3-layer security, adaptive wait
 - **ARC-AGI-3 Benchmark Agent** — Compete in ARC Prize 2026: 13/25 games solved (24 levels), 4 solver families (ClusterClick, SequenceClick+SimA*, KeyboardDFS, SmartExplorer), persistent game profiles, multimodal vision (qwen3-vl)
@@ -816,6 +817,12 @@ Copyright 2026 Alexander Soellner
 ---
 
 ## What's New
+
+### v0.92.7 (2026-04-23)
+- **Video input via vLLM** — end-to-end video analysis in chat using Qwen3.6-27B or any vLLM-served VLM. Paperclip → "Video hochladen" or paste a direct `.mp4`/`.webm`/`.mov`/`.mkv`/`.avi` URL. Adaptive frame sampling via `ffprobe` (short clips: `fps=3`, long clips: `num_frames=32`), 500 MB per-file cap + 5 GB quota with LRU eviction, session-lifetime + 24 h TTL cleanup, no silent fallback to Ollama (Ollama has no vision). Windows installer now bundles LGPL ffmpeg + CI verifies the GPL-free build. See [`docs/vllm-user-guide.md`](docs/vllm-user-guide.md).
+- **Default vLLM image flipped to `cu130-nightly`** — the tagged `v0.19.1` crashes Qwen3.6-27B-NVFP4 at warmup on SM120 (Blackwell / RTX 50xx). The nightly ships the `FlashInferCutlassNvFp4LinearKernel` fix. Day-1 spike findings at [`docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md`](docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md).
+- **Orchestrator unified** — `backends_api` and `Gateway` now share a single `VLLMOrchestrator` instance via `app.state`, so `media_url` wired after the media server starts actually reaches the `docker run` command.
+- **14,118 Python tests + 31 Flutter tests passing** (+180 new for this release), 0 failures, 0 ruff errors.
 
 ### v0.92.2 (2026-04-19)
 - **Windows Launcher Hardening** — `Cognithor.exe` (the .NET tray app) no longer vanishes silently on startup. All exceptions in the AppShell constructor are now caught, logged to `%LOCALAPPDATA%\Cognithor\launcher-crash.log`, and shown via MessageBox. Previously a missing `python\python.exe` (e.g. AV quarantine) would throw `FileNotFoundException` before `Application.Run()` started the message loop, making the process disappear from Task Manager with no trace.

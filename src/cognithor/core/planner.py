@@ -1048,7 +1048,9 @@ class Planner:
         # through the detail vision model so the VLM can actually see them.
         # Falls back to the text planner model when no attachments.
         image_paths = list(working_memory.image_attachments or [])
-        if image_paths and getattr(self._config, "vision_model_detail", None):
+        video_attach = working_memory.video_attachment
+        has_visual = image_paths or video_attach is not None
+        if has_visual and getattr(self._config, "vision_model_detail", None):
             model = self._config.vision_model_detail
         else:
             model = self._router.select_model("summarization", "medium")
@@ -1076,6 +1078,7 @@ class Planner:
                 messages=messages,
                 session_id=working_memory.session_id,
                 images=image_paths or None,
+                video=video_attach,
             )
             if content is None:
                 # Both LLM attempts failed — existing fallback behavior.
@@ -1269,12 +1272,16 @@ class Planner:
         messages: list[dict[str, Any]],
         session_id: str,
         images: list[str] | None = None,
+        video: dict[str, Any] | None = None,
     ) -> str | None:
         """Call ollama.chat with 2 attempts. Returns None if both fail (caller uses fallback).
 
         When ``images`` is non-empty the call routes to a VLM (see
         ``OllamaClient.chat`` — attaches base64-encoded images to the
         last user message per Ollama's multimodal API).
+
+        When ``video`` is non-None the call routes to a VLM that supports
+        video input (vLLM backend) — the dict is forwarded verbatim.
         """
         for _fmt_attempt in range(2):
             try:
@@ -1283,6 +1290,7 @@ class Planner:
                     messages=messages,
                     options=self._build_llm_options(),
                     images=images,
+                    video=video,
                 )
                 self._record_cost(response, model, session_id=session_id)
                 return response.get("message", {}).get("content", "")

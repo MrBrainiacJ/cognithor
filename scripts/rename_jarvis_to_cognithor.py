@@ -22,8 +22,6 @@ What it does NOT touch:
 
 from __future__ import annotations
 
-import os
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -43,7 +41,9 @@ stats: dict[str, int] = {
 }
 
 
-def replace_in_file(path: Path, replacements: list[tuple[str, str]], skip_patterns: list[str] | None = None) -> int:
+def replace_in_file(
+    path: Path, replacements: list[tuple[str, str]], skip_patterns: list[str] | None = None
+) -> int:
     """Apply replacements to a file. Returns count of replacements made."""
     try:
         content = path.read_text(encoding="utf-8")
@@ -95,7 +95,7 @@ def step_git_mv():
         sys.exit(1)
 
     subprocess.run(["git", "mv", str(src_jarvis), str(src_cognithor)], check=True, cwd=ROOT)
-    print(f"  [OK] Renamed src/jarvis/ -> src/cognithor/")
+    print("  [OK] Renamed src/jarvis/ -> src/cognithor/")
 
 
 def step_python_imports():
@@ -183,7 +183,7 @@ def step_home_paths():
         ('".jarvis"', '".cognithor"'),
         ("'.jarvis'", "'.cognithor'"),
         ("/.jarvis/", "/.cognithor/"),
-        ("/.jarvis\"", "/.cognithor\""),
+        ('/.jarvis"', '/.cognithor"'),
         ("\\.jarvis\\", "\\.cognithor\\"),
         ("~/.jarvis", "~/.cognithor"),
     ]
@@ -255,7 +255,9 @@ def step_pyproject():
     original = content
 
     # Package directory
-    content = content.replace('packages = ["src/jarvis"]', 'packages = ["src/cognithor", "src/jarvis"]')
+    content = content.replace(
+        'packages = ["src/jarvis"]', 'packages = ["src/cognithor", "src/jarvis"]'
+    )
 
     # Entry points: keep jarvis as alias, update module path
     content = content.replace(
@@ -294,11 +296,15 @@ def step_readme():
     ]
 
     # Do NOT replace "Jarvis" personality name or historical references
-    count = replace_in_file(readme, replacements, skip_patterns=[
-        "Think of it as",  # "local Jarvis" analogy
-        "personal",  # "personal AI assistant"
-        "Jarvis --",  # Banner
-    ])
+    count = replace_in_file(
+        readme,
+        replacements,
+        skip_patterns=[
+            "Think of it as",  # "local Jarvis" analogy
+            "personal",  # "personal AI assistant"
+            "Jarvis --",  # Banner
+        ],
+    )
     print(f"  [OK] {count} README replacements")
 
 
@@ -317,7 +323,7 @@ def step_compat_shim():
         "import warnings\n"
         "\n"
         "warnings.warn(\n"
-        '    "The \'jarvis\' package is deprecated. Use \'import cognithor\' instead.",\n'
+        "    \"The 'jarvis' package is deprecated. Use 'import cognithor' instead.\",\n"
         "    DeprecationWarning,\n"
         "    stacklevel=2,\n"
         ")\n"

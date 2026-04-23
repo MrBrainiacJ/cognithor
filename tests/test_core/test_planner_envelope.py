@@ -142,3 +142,24 @@ class TestVisionRouting:
         call = planner_with_mocks._ollama.chat.call_args
         assert call.kwargs.get("images") is None
         planner_with_mocks._router.select_model.assert_called()
+
+    async def test_video_attachment_also_routes_to_vision_model(self, planner_with_mocks):
+        from cognithor.models import WorkingMemory
+
+        planner_with_mocks._config.vision_model_detail = "mmangkad/Qwen3.6-27B-NVFP4"
+        wm = WorkingMemory(session_id="s1")
+        wm.video_attachment = {
+            "url": "http://host.docker.internal:4711/media/abc.mp4",
+            "sampling": {"fps": 1.0},
+        }
+
+        await planner_with_mocks.formulate_response(
+            user_message="Describe the video",
+            results=[],
+            working_memory=wm,
+        )
+
+        call = planner_with_mocks._ollama.chat.call_args
+        assert call.kwargs.get("model") == "mmangkad/Qwen3.6-27B-NVFP4"
+        assert call.kwargs.get("video") is not None
+        assert call.kwargs["video"]["url"].endswith("abc.mp4")

@@ -57,7 +57,7 @@ def _compare_versions(a: str, b: str) -> int:
         return [int(x) for x in re.findall(r"\d+", v)]
 
     pa, pb = parts(a), parts(b)
-    for x, y in zip(pa, pb):
+    for x, y in zip(pa, pb, strict=False):
         if x != y:
             return x - y
     return len(pa) - len(pb)

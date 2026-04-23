@@ -195,3 +195,61 @@ class TestVLLMBackendEmbed:
         )
         with pytest.raises(LLMBadRequestError):
             await backend.embed(model="qwen-chat-only", text="hello")
+
+
+class TestAttachImagesWithListContent:
+    """Regression for Bug-5-r4: _attach_images_to_last_user must behave the
+    same way _attach_video_to_last_user does when the last user message
+    already has list-form content."""
+
+    def test_preserves_text_when_last_user_has_list_content(self, tmp_path):
+        from cognithor.core.vllm_backend import _attach_images_to_last_user
+
+        img = tmp_path / "pic.png"
+        img.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "video_url", "video_url": {"url": "http://x/clip.mp4"}},
+                    {"type": "text", "text": "Was ist im Bild und Video?"},
+                ],
+            }
+        ]
+        result = _attach_images_to_last_user(messages, [str(img)])
+        last = result[-1]
+        assert isinstance(last["content"], list)
+        # Text must survive
+        assert any(
+            c.get("type") == "text" and c["text"] == "Was ist im Bild und Video?"
+            for c in last["content"]
+        )
+        # Pre-existing video_url must survive
+        assert any(
+            c.get("type") == "video_url" and c["video_url"]["url"] == "http://x/clip.mp4"
+            for c in last["content"]
+        )
+        # New image_url must be present
+        assert any(
+            c.get("type") == "image_url"
+            and c["image_url"]["url"].startswith("data:image/png;base64,")
+            for c in last["content"]
+        )
+
+    def test_list_without_text_does_not_inject_empty_text(self, tmp_path):
+        from cognithor.core.vllm_backend import _attach_images_to_last_user
+
+        img = tmp_path / "pic.png"
+        img.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "video_url", "video_url": {"url": "http://x/clip.mp4"}},
+                ],
+            }
+        ]
+        result = _attach_images_to_last_user(messages, [str(img)])
+        last = result[-1]
+        texts = [c for c in last["content"] if c.get("type") == "text"]
+        assert texts == []

@@ -69,11 +69,11 @@ class TestDataclasses:
 class TestOrchestratorInit:
     def test_orchestrator_constructs_with_config(self):
         orch = VLLMOrchestrator(
-            docker_image="vllm/vllm-openai:v0.19.1",
+            docker_image="vllm/vllm-openai:cu130-nightly",
             port=8000,
             hf_token="hf_test",
         )
-        assert orch.docker_image == "vllm/vllm-openai:v0.19.1"
+        assert orch.docker_image == "vllm/vllm-openai:cu130-nightly"
         assert orch.port == 8000
         assert orch._hf_token == "hf_test"
         assert orch.state.hardware_ok is False
@@ -181,7 +181,7 @@ class TestPullImage:
             '{"status":"Pulling from vllm/vllm-openai","id":"latest"}\n',
             '{"status":"Downloading","progressDetail":{"current":1000000,"total":10000000},"id":"abc123"}\n',
             '{"status":"Download complete","id":"abc123"}\n',
-            '{"status":"Status: Downloaded newer image for vllm/vllm-openai:v0.19.1"}\n',
+            '{"status":"Status: Downloaded newer image for vllm/vllm-openai:cu130-nightly"}\n',
         ]
         mock_proc = MagicMock()
         mock_proc.stdout = iter(json_lines)
@@ -194,7 +194,7 @@ class TestPullImage:
             events.append(ev)
 
         with patch("subprocess.Popen", return_value=mock_proc):
-            VLLMOrchestrator().pull_image("vllm/vllm-openai:v0.19.1", progress_callback=cb)
+            VLLMOrchestrator().pull_image("vllm/vllm-openai:cu130-nightly", progress_callback=cb)
 
         assert any(e.get("status") == "Downloading" for e in events)
         assert any("current" in (e.get("progressDetail") or {}) for e in events)
@@ -231,7 +231,7 @@ class TestStartContainer:
         ):
             run_mock.return_value = MagicMock(returncode=0, stdout="abc123def456")
             orch = VLLMOrchestrator(
-                docker_image="vllm/vllm-openai:v0.19.1", port=8000, hf_token="hf_x"
+                docker_image="vllm/vllm-openai:cu130-nightly", port=8000, hf_token="hf_x"
             )
             info = orch.start_container("Qwen/Qwen3.6-27B-FP8")
 
@@ -241,7 +241,7 @@ class TestStartContainer:
         assert "--gpus" in args and "all" in args
         assert any("HF_TOKEN=hf_x" in a for a in args)
         assert any("cognithor.managed=true" in a for a in args)
-        assert any("vllm-openai:v0.19.1" in a for a in args)
+        assert any("vllm-openai:cu130-nightly" in a for a in args)
         assert "Qwen/Qwen3.6-27B-FP8" in args
         assert info.port == 8000
         assert info.model == "Qwen/Qwen3.6-27B-FP8"
@@ -312,7 +312,8 @@ class TestStopAndReuse:
     def test_reuse_existing_returns_info(self):
         ps_stdout = (
             '{"ID":"abc123def456","Ports":"0.0.0.0:8000->8000/tcp",'
-            '"Image":"vllm/vllm-openai:v0.19.1","Command":"... --model Qwen/Qwen3.6-27B-FP8 ..."}\n'
+            '"Image":"vllm/vllm-openai:cu130-nightly",'
+            '"Command":"... --model Qwen/Qwen3.6-27B-FP8 ..."}\n'
         )
         with patch("subprocess.run", return_value=MagicMock(returncode=0, stdout=ps_stdout)):
             info = VLLMOrchestrator().reuse_existing()
@@ -337,3 +338,161 @@ class TestStatusAggregator:
         # Mutating the returned copy must not leak back into orch.state
         snapshot.hardware_ok = False
         assert orch.state.hardware_ok is True
+
+
+class TestStartContainerVideoFlags:
+    def _run_start(self, **orch_kwargs):
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")) as run_mock,
+            patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True),
+        ):
+            orch = VLLMOrchestrator(**orch_kwargs)
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
+        return run_mock.call_args[0][0]
+
+    def test_default_image_is_cu130_nightly(self):
+        args = self._run_start(port=8000)
+        assert "vllm/vllm-openai:cu130-nightly" in args
+
+    def test_docker_run_includes_media_io_kwargs(self):
+        args = self._run_start(port=8000)
+        idx = args.index("--media-io-kwargs")
+        assert '"video"' in args[idx + 1]
+        assert '"num_frames": -1' in args[idx + 1]
+
+    def test_docker_run_includes_add_host(self):
+        args = self._run_start(port=8000)
+        assert "--add-host" in args
+        idx = args.index("--add-host")
+        assert args[idx + 1] == "host.docker.internal:host-gateway"
+
+    def test_docker_run_includes_spike_stability_flags(self):
+        args = self._run_start(port=8000)
+        assert "--max-model-len" in args and args[args.index("--max-model-len") + 1] == "16384"
+        assert "--max-num-seqs" in args and args[args.index("--max-num-seqs") + 1] == "2"
+        assert (
+            "--max-num-batched-tokens" in args
+            and args[args.index("--max-num-batched-tokens") + 1] == "2048"
+        )
+        assert (
+            "--gpu-memory-utilization" in args
+            and args[args.index("--gpu-memory-utilization") + 1] == "0.94"
+        )
+        assert "--cpu-offload-gb" in args and args[args.index("--cpu-offload-gb") + 1] == "4"
+        assert "--enforce-eager" in args
+        assert (
+            "--reasoning-parser" in args and args[args.index("--reasoning-parser") + 1] == "qwen3"
+        )
+        assert "--trust-remote-code" in args
+
+    def test_docker_run_includes_media_url_env_when_port_given(self):
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")) as run_mock,
+            patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True),
+        ):
+            orch = VLLMOrchestrator(port=8000)
+            orch.media_url = "http://host.docker.internal:4711"
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
+        args = run_mock.call_args[0][0]
+        assert any("COGNITHOR_MEDIA_URL=http://host.docker.internal:4711" in a for a in args)
+
+    def test_overrides_from_vllm_config(self):
+        """A 40 GB-class GPU loosens the defaults — orchestrator reads from VLLMConfig."""
+        from cognithor.config import VLLMConfig
+
+        cfg = VLLMConfig(
+            max_model_len=65536,
+            max_num_seqs=8,
+            max_num_batched_tokens=8192,
+            gpu_memory_utilization=0.90,
+            cpu_offload_gb=0,
+            enforce_eager=False,
+        )
+        args = self._run_start(port=8000, config=cfg)
+        assert args[args.index("--max-model-len") + 1] == "65536"
+        assert args[args.index("--gpu-memory-utilization") + 1] == "0.9"
+        # --cpu-offload-gb must be OMITTED when 0 (vLLM complains if 0 is passed)
+        assert "--cpu-offload-gb" not in args
+        # --enforce-eager must be OMITTED when disabled
+        assert "--enforce-eager" not in args
+
+
+class TestStartContainerLogging:
+    def test_start_container_logs_command_with_token_redacted(self):
+        """Regression for Bug I4-r3: admins must see the full docker run cmd
+        in logs when debugging a failed vLLM start — but HF_TOKEN value must
+        be redacted."""
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="cid")),
+            patch.object(VLLMOrchestrator, "_wait_for_health", return_value=True),
+            patch("cognithor.core.vllm_orchestrator.log") as mock_log,
+        ):
+            orch = VLLMOrchestrator(port=8000)
+            orch._hf_token = "hf_secret_very_long_token_xyz"
+            orch.start_container("mmangkad/Qwen3.6-27B-NVFP4")
+
+        # log.info must be called with the docker cmd
+        info_calls = [
+            call
+            for call in mock_log.info.call_args_list
+            if call.args and "vllm_docker_run_starting" in call.args[0]
+        ]
+        assert info_calls, "Expected log.info('vllm_docker_run_starting', ...) call"
+        call = info_calls[0]
+        cmd_kwarg = call.kwargs.get("cmd")
+        assert cmd_kwarg is not None, "Log call must include cmd= kwarg"
+        cmd_str = " ".join(cmd_kwarg)
+        # HF_TOKEN value must NOT appear in the log cmd
+        assert "hf_secret_very_long_token_xyz" not in cmd_str, (
+            f"HF_TOKEN leaked into log cmd: {cmd_str}"
+        )
+        assert "HF_TOKEN=<redacted>" in cmd_str, (
+            f"Expected HF_TOKEN=<redacted> placeholder in log cmd, got: {cmd_str}"
+        )
+
+    def test_start_container_logs_error_on_failed_run(self):
+        """A failed docker run must produce a log.error with returncode + stderr,
+        not just the bubbled-up exception."""
+        import contextlib
+        from unittest.mock import MagicMock, patch
+
+        from cognithor.core.llm_backend import VLLMNotReadyError
+        from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+        with (
+            patch.object(VLLMOrchestrator, "_port_available", return_value=True),
+            patch(
+                "subprocess.run",
+                return_value=MagicMock(
+                    returncode=125,
+                    stdout="",
+                    stderr="no such image: foo/bar",
+                ),
+            ),
+            patch("cognithor.core.vllm_orchestrator.log") as mock_log,
+        ):
+            orch = VLLMOrchestrator(port=8000)
+            with contextlib.suppress(VLLMNotReadyError):
+                orch.start_container("foo/bar")
+
+        error_calls = [
+            call
+            for call in mock_log.error.call_args_list
+            if call.args and "vllm_docker_run_failed" in call.args[0]
+        ]
+        assert error_calls, "Expected log.error('vllm_docker_run_failed', ...) on failed run"
