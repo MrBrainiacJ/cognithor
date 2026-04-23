@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/llm_backend_provider.dart';
 import 'package:cognithor_ui/providers/voice_provider.dart';
 import 'package:cognithor_ui/theme/cognithor_theme.dart';
 import 'package:provider/provider.dart';
@@ -53,6 +54,42 @@ class _ChatInputState extends State<ChatInput> {
     _focusNode.requestFocus();
   }
 
+  Future<void> _pickImage() async {
+    if (widget.onFile == null) return;
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
+      );
+      if (result == null) return;
+      final file = result.files.single;
+      if (file.bytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context).fileReadError)),
+          );
+        }
+        return;
+      }
+      setState(() => _isUploading = true);
+      final b64 = base64Encode(file.bytes!);
+      widget.onFile!(file.name, file.extension ?? 'bin', b64);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).uploadError(e.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    // Implemented in Task 18 — connects ChatProvider.sendVideo
+  }
+
   Future<void> _pickFile() async {
     if (widget.onFile == null) return;
     try {
@@ -61,7 +98,6 @@ class _ChatInputState extends State<ChatInput> {
         type: FileType.custom,
         allowedExtensions: [
           'pdf', 'txt', 'md', 'csv', 'json', 'xml', 'yaml', 'yml',
-          'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp',
           'doc', 'docx', 'xls', 'xlsx', 'pptx',
           'py', 'js', 'ts', 'dart', 'html', 'css',
           'zip', 'tar', 'gz',
@@ -91,6 +127,10 @@ class _ChatInputState extends State<ChatInput> {
     }
   }
 
+  void _showUrlDialog() {
+    // TODO: implement URL insertion dialog
+  }
+
   @override
   void dispose() {
     _ownController?.dispose();
@@ -117,26 +157,79 @@ class _ChatInputState extends State<ChatInput> {
       ),
       child: Row(
         children: [
-          // Attach file button
-          if (widget.onFile != null)
-            _isUploading
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : IconButton(
-                    onPressed: widget.isProcessing ? null : _pickFile,
-                    icon: Icon(
-                      Icons.attach_file,
-                      color: CognithorTheme.textSecondary,
-                    ),
-                    tooltip: l.attachFile,
-                    iconSize: 22,
+          // Attach file / media button
+          if (_isUploading)
+            const Padding(
+              padding: EdgeInsets.all(12),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else
+            PopupMenuButton<String>(
+              key: const ValueKey('chat-input-paperclip'),
+              icon: Icon(Icons.attach_file, color: CognithorTheme.textSecondary),
+              iconSize: 22,
+              tooltip: l.attachFile,
+              enabled: !widget.isProcessing,
+              onSelected: (value) async {
+                switch (value) {
+                  case 'image':
+                    await _pickImage();
+                    break;
+                  case 'video':
+                    await _pickVideo();
+                    break;
+                  case 'file':
+                    await _pickFile();
+                    break;
+                  case 'url':
+                    _showUrlDialog();
+                    break;
+                }
+              },
+              itemBuilder: (context) {
+                final activeBackend =
+                    context.read<LlmBackendProvider>().active;
+                final vllmActive = activeBackend == 'vllm';
+                return [
+                  const PopupMenuItem<String>(
+                    value: 'image',
+                    child: Text('Bild hochladen'),
                   ),
+                  PopupMenuItem<String>(
+                    value: 'video',
+                    enabled: vllmActive,
+                    child: Tooltip(
+                      message: vllmActive
+                          ? 'Video hochladen (nur mit vLLM-Backend)'
+                          : 'Video-Analyse erfordert vLLM — unter Settings → LLM Backends wechseln.',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Video hochladen'),
+                          if (!vllmActive)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 6),
+                              child: Icon(Icons.lock, size: 14, color: Colors.grey),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'file',
+                    child: Text('Datei hochladen'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'url',
+                    child: Text('URL einfügen'),
+                  ),
+                ];
+              },
+            ),
 
           // Text field
           Expanded(
