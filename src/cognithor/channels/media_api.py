@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse
 
 from cognithor.core.llm_backend import (
     MediaUploadError,
+    MediaUploadQuotaExceededError,
     MediaUploadTooLargeError,
     MediaUploadUnsupportedFormatError,
 )
@@ -53,6 +54,11 @@ async def upload_video(request: Request, file: UploadFile = File(...)) -> dict: 
         ) from exc
     except MediaUploadUnsupportedFormatError as exc:
         raise HTTPException(status_code=400, detail={"message": str(exc)}) from exc
+    except MediaUploadQuotaExceededError as exc:
+        raise HTTPException(
+            status_code=507,
+            detail={"message": str(exc), "recovery_hint": exc.recovery_hint},
+        ) from exc
     except MediaUploadError as exc:
         raise HTTPException(status_code=507, detail={"message": str(exc)}) from exc
 

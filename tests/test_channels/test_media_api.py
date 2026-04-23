@@ -190,3 +190,36 @@ class TestUploadDoesNotBlockEventLoop:
             f"Upload handler appears to serialize: {elapsed:.2f}s for two 0.5s uploads "
             f"(expected ~0.5s parallel, got {elapsed:.2f}s)"
         )
+
+
+class TestUploadQuotaExceededSurfacesRecoveryHint:
+    def test_quota_exceeded_response_includes_recovery_hint(
+        self, client: TestClient, tmp_path: Path
+    ):
+        """Regression for Bug-4-r4: MediaUploadQuotaExceededError's
+        recovery_hint must reach the client, not be dropped by the generic
+        MediaUploadError catch branch."""
+        from cognithor.core.llm_backend import MediaUploadQuotaExceededError
+
+        # Patch save_upload on the actual media_server instance owned by the
+        # FastAPI app state — `media_api` does not re-export MediaUploadServer,
+        # and patching the class globally does not reach the live instance
+        # method lookup.
+        media_server = client.app.state.media_server
+        with patch.object(
+            media_server,
+            "save_upload",
+            side_effect=MediaUploadQuotaExceededError(
+                "Upload alone (2048.0 MB) exceeds the full quota (1.0 GB)",
+                status_code=413,
+                recovery_hint="Raise config.vllm.video_quota_gb or shrink the file.",
+            ),
+        ):
+            r = client.post(
+                "/api/media/upload",
+                files={"file": ("huge.mp4", b"\x00" * 2048, "video/mp4")},
+            )
+        assert r.status_code == 507
+        detail = r.json().get("detail", {})
+        assert "recovery_hint" in detail, f"Expected recovery_hint in detail: {detail}"
+        assert "video_quota_gb" in detail["recovery_hint"]
