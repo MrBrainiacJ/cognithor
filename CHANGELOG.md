@@ -5,7 +5,7 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.92.6] -- 2026-04-23
 
 ### Added
 - **vLLM as opt-in LLM backend** with full Flutter-driven lifecycle (install,
