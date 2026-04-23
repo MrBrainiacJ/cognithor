@@ -66,6 +66,7 @@ def _get_orchestrator(config: CognithorConfig) -> VLLMOrchestrator:
             docker_image=config.vllm.docker_image,
             port=config.vllm.port,
             hf_token=config.huggingface_api_key,
+            config=config.vllm,
         )
     return _orchestrator_cache[key]
 

@@ -262,6 +262,7 @@ class Gateway:
                 docker_image=self._config.vllm.docker_image,
                 port=self._config.vllm.port,
                 hf_token=self._config.huggingface_api_key,
+                config=self._config.vllm,
             )
             from cognithor.channels.media_server import MediaUploadServer
             from cognithor.gateway.video_cleanup import VideoCleanupWorker
