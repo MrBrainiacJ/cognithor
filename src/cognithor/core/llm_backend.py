@@ -43,6 +43,7 @@ class LLMBackendType(StrEnum):
     GEMINI = "gemini"
     LMSTUDIO = "lmstudio"
     CLAUDE_CODE = "claude-code"
+    VLLM = "vllm"
 
 
 @dataclass
@@ -75,9 +76,36 @@ class EmbedResponse:
 class LLMBackendError(Exception):
     """Error communicating with the LLM backend."""
 
-    def __init__(self, message: str, *, status_code: int | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        recovery_hint: str = "",
+    ) -> None:
         super().__init__(message)
         self.status_code = status_code
+        self.recovery_hint = recovery_hint
+
+
+class LLMBadRequestError(LLMBackendError):
+    """Wraps HTTP 400 responses — user/context problem, not a backend fault.
+
+    Excluded from circuit-breaker failure counting via ``excluded_exceptions``
+    when the breaker is wired in ``UnifiedLLMClient``.
+    """
+
+
+class VLLMNotReadyError(LLMBackendError):
+    """vLLM container not running or model not loaded."""
+
+
+class VLLMHardwareError(LLMBackendError):
+    """NVIDIA GPU not detected, VRAM insufficient, or unsupported compute capability."""
+
+
+class VLLMDockerError(LLMBackendError):
+    """Docker Desktop unreachable or wrong version."""
 
 
 # ============================================================================
@@ -1452,10 +1480,11 @@ def create_backend(config: CognithorConfig) -> LLMBackend:
                 timeout=config.ollama.timeout_seconds,
             )
         case "vllm":
-            return OpenAIBackend(
-                api_key=getattr(config, "vllm_api_key", "") or "vllm",
-                base_url=getattr(config, "vllm_base_url", "http://localhost:8000/v1"),
-                timeout=config.ollama.timeout_seconds,
+            from cognithor.core.vllm_backend import VLLMBackend
+
+            return VLLMBackend(
+                base_url=f"http://localhost:{config.vllm.port}/v1",
+                timeout=config.vllm.request_timeout_seconds,
             )
         case "llama_cpp":
             return OpenAIBackend(

@@ -181,6 +181,18 @@ class Gateway:
         self._background_tasks: set[asyncio.Task[Any]] = set()
         self._pattern_record_timestamps: list[float] = []
 
+        # vLLM orchestrator — created lazily if enabled; lifecycle hooks use this
+        if self._config.vllm.enabled:
+            from cognithor.core.vllm_orchestrator import VLLMOrchestrator
+
+            self._vllm_orchestrator = VLLMOrchestrator(
+                docker_image=self._config.vllm.docker_image,
+                port=self._config.vllm.port,
+                hf_token=self._config.huggingface_api_key,
+            )
+        else:
+            self._vllm_orchestrator = None
+
         # Declare all subsystem attributes via phase modules
         apply_phase(self, declare_core_attrs(self._config))
         apply_phase(self, declare_security_attrs(self._config))
@@ -1683,6 +1695,29 @@ class Gateway:
                 log.debug("auto_update_skipped", reason=str(exc))
             await asyncio.sleep(86400)  # Daily
 
+    def on_startup_vllm(self):
+        """Called during init. If a cognithor-managed vLLM container is
+        already running (from a previous session with auto_stop_on_close=False,
+        or because the user ran the container manually), adopt it — no restart."""
+        if not self._config.vllm.enabled or self._vllm_orchestrator is None:
+            return None
+        try:
+            return self._vllm_orchestrator.reuse_existing()
+        except Exception as exc:
+            log.warning("vllm_reuse_existing_failed", error=str(exc))
+            return None
+
+    def on_shutdown_vllm(self) -> None:
+        """Called on Gateway.shutdown(). Stops the container only if the user
+        has opted in via config.vllm.auto_stop_on_close."""
+        if not self._config.vllm.enabled or self._vllm_orchestrator is None:
+            return
+        if self._config.vllm.auto_stop_on_close:
+            try:
+                self._vllm_orchestrator.stop_container()
+            except Exception as exc:
+                log.warning("vllm_shutdown_failed", error=str(exc))
+
     async def shutdown(self) -> None:
         """Faehrt den Gateway sauber herunter mit Session-Persistierung."""
         log.info("gateway_shutdown_start")
@@ -1818,6 +1853,17 @@ class Gateway:
             await self._llm.close()
 
         log.info("gateway_shutdown_complete")
+
+    def rebuild_llm_client(self, new_backend_type: str) -> None:
+        """Re-init UnifiedLLMClient for a new backend type.
+
+        Called from the FastAPI /api/backends/active endpoint when the user
+        switches backends from the Flutter UI. No app restart needed.
+        """
+        from cognithor.core.unified_llm import UnifiedLLMClient
+
+        self._config.llm_backend_type = new_backend_type
+        self._llm = UnifiedLLMClient.create(self._config)
 
     async def execute_workflow(self, workflow_yaml: str) -> dict[str, Any]:
         """Execute a workflow via the DAG WorkflowEngine.
