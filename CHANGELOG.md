@@ -21,6 +21,28 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   `/api/backends/vllm/*` including SSE-streamed pull progress. User guide
   at `docs/vllm-user-guide.md`, manual test recipe at
   `docs/vllm-manual-test.md`.
+- **Video input via vLLM** — attach a local video (`.mp4` / `.webm` / `.mov` / `.mkv` /
+  `.avi`) or paste a direct video URL in chat; Qwen3.6-27B (or any vLLM-served
+  video-capable VLM) analyzes it end-to-end. Native vLLM `video_url` content
+  type — no frame-extraction workarounds. Adaptive frame sampling based on
+  duration (fps=3 for clips under 10 s, num_frames=32 for videos over 5 min)
+  via `ffprobe`. Single video per chat turn. Local uploads served to vLLM over
+  a 127.0.0.1-only HTTP file server. Videos are cleaned up when the chat
+  session closes and auto-expire after 24 h. Video requests on a DEGRADED vLLM
+  produce a hard error — no silent fallback to Ollama (Ollama has no vision).
+  Windows installer now bundles an LGPL-licensed ffmpeg build. See
+  `docs/vllm-user-guide.md` and `docs/superpowers/specs/2026-04-23-video-input-vllm-design.md`.
+
+### Changed
+- Cognithor now requires Docker Engine ≥ 20.10 when using vLLM on Linux
+  (host-gateway flag for `--add-host` was added in 20.10). Docker Desktop
+  versions are all fine.
+- Flutter paperclip in the chat input is now a popup menu with explicit
+  entries for Image / Video / File / URL instead of a single file picker.
+- Default `vllm/vllm-openai` image flipped from `v0.19.1` to `cu130-nightly`
+  because the tagged release crashes Qwen3.6-27B-NVFP4 at warmup on SM120;
+  the nightly ships the `FlashInferCutlassNvFp4LinearKernel` fix. See
+  `docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md`.
 
 ### Fixed
 - **Language change in Settings now actually changes the chat response
