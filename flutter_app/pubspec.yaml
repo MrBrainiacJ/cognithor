@@ -76,6 +76,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # Needed by chat_input_upload_race_test to mock FilePicker.platform via
+  # MockPlatformInterfaceMixin (bypasses the platform-interface token check).
+  plugin_platform_interface: ^2.1.0
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

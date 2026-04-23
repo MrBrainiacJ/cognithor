@@ -48,6 +48,11 @@ class _ChatInputState extends State<ChatInput> {
       widget.focusNode ?? (_ownFocusNode ??= FocusNode());
 
   void _submit() {
+    // Guard against the send-during-upload race: if a video upload is
+    // still in flight, _pendingVideoAttachment is not yet populated,
+    // so letting the text message go now would orphan the video onto
+    // the NEXT message. See C2 regression test.
+    if (_isUploading) return;
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     widget.onSend(text);
@@ -97,6 +102,11 @@ class _ChatInputState extends State<ChatInput> {
     final file = result.files.first;
     if (file.path == null) return;
     if (!mounted) return;
+    // Track the upload in _isUploading so the Send button and the
+    // _submit() guard can both block user input while the multipart
+    // POST is in flight — otherwise a quick Enter ships a naked text
+    // message and orphans the pending video onto the NEXT message.
+    setState(() => _isUploading = true);
     try {
       await context.read<ChatProvider>().sendVideo(file.path!, file.name);
     } catch (e) {
@@ -105,6 +115,8 @@ class _ChatInputState extends State<ChatInput> {
           SnackBar(content: Text('Video upload fehlgeschlagen: $e')),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
@@ -307,9 +319,15 @@ class _ChatInputState extends State<ChatInput> {
             )
           else
             IconButton(
-              onPressed: _submit,
-              icon: Icon(Icons.send, color: CognithorTheme.accent),
-              tooltip: l.send,
+              onPressed: _isUploading ? null : _submit,
+              icon: _isUploading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(Icons.send, color: CognithorTheme.accent),
+              tooltip: _isUploading ? 'Upload läuft…' : l.send,
             ),
         ],
       ),
