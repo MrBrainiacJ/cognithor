@@ -61,6 +61,55 @@ class TestAttachVideoHelper:
         assert messages[0]["content"] == "orig"
         assert isinstance(messages[0]["content"], str)
 
+    def test_preserves_text_when_last_user_already_has_list_content(self):
+        """Regression: a prior image in the same turn makes content a list.
+        The video helper must extract the text from that list, not drop it."""
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": "http://x/pic.png"}},
+                    {"type": "text", "text": "Was ist auf dem Bild und im Video?"},
+                ],
+            }
+        ]
+        video = {"url": "http://x/a.mp4", "sampling": {"fps": 2.0}}
+        new_messages, mm_kwargs = _attach_video_to_last_user(messages, video)
+
+        last = new_messages[-1]
+        assert last["role"] == "user"
+        assert isinstance(last["content"], list)
+        # The video must be present
+        assert any(c.get("type") == "video_url" for c in last["content"])
+        # The text must survive
+        assert any(
+            c.get("type") == "text" and c["text"] == "Was ist auf dem Bild und im Video?"
+            for c in last["content"]
+        )
+        # The pre-existing image must survive
+        assert any(
+            c.get("type") == "image_url" and c["image_url"]["url"] == "http://x/pic.png"
+            for c in last["content"]
+        )
+
+    def test_list_content_without_text_does_not_inject_empty_text(self):
+        """If the existing list has no text item, the helper should not append
+        a zero-length text content item."""
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": "http://x/pic.png"}},
+                ],
+            }
+        ]
+        video = {"url": "http://x/a.mp4", "sampling": {"fps": 1.0}}
+        new_messages, _ = _attach_video_to_last_user(messages, video)
+
+        last = new_messages[-1]
+        texts = [c for c in last["content"] if c.get("type") == "text"]
+        assert len(texts) == 0
+
 
 class TestChatWithVideo:
     @pytest.mark.asyncio

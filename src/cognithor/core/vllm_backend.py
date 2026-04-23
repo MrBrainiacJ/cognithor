@@ -108,24 +108,37 @@ def _attach_video_to_last_user(
     """
     new_messages = [dict(m) for m in messages]
 
-    # Find last user message (create one if none exists)
+    # Find last user message index (create one if none exists)
+    last_idx: int | None = None
     for i in range(len(new_messages) - 1, -1, -1):
         if new_messages[i].get("role") == "user":
-            last = new_messages[i]
+            last_idx = i
             break
-    else:
-        last = {"role": "user", "content": ""}
-        new_messages.append(last)
+    if last_idx is None:
+        new_messages.append({"role": "user", "content": ""})
+        last_idx = len(new_messages) - 1
 
-    existing = last.get("content", "")
-    text_part = existing if isinstance(existing, str) else ""
+    existing = new_messages[last_idx].get("content", "")
+    if isinstance(existing, list):
+        # Pre-existing list content (e.g. prior image attachment in same turn):
+        # extract the text item and preserve all other non-text items.
+        text_part = next(
+            (c["text"] for c in existing if c.get("type") == "text"),
+            "",
+        )
+        preserved_items = [c for c in existing if c.get("type") != "text"]
+    else:
+        text_part = existing if isinstance(existing, str) else ""
+        preserved_items = []
+
     content_items: list[dict[str, Any]] = [
         {"type": "video_url", "video_url": {"url": video["url"]}},
+        *preserved_items,
     ]
     if text_part:
         content_items.append({"type": "text", "text": text_part})
 
-    last["content"] = content_items
+    new_messages[last_idx] = {**new_messages[last_idx], "content": content_items}
 
     extra_body = {"mm_processor_kwargs": {"video": video["sampling"]}}
     return new_messages, extra_body
