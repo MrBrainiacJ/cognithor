@@ -2565,6 +2565,26 @@ class VLLMConfig(BaseModel):
     skip_hardware_check: bool = Field(default=False)
     request_timeout_seconds: int = Field(default=60, ge=5, le=600)
 
+    # Video-input (from video-input-vllm spec 2026-04-23)
+    video_sampling_mode: Literal["adaptive", "fixed_32", "fixed_64", "fps_1"] = Field(
+        default="adaptive"
+    )
+    video_ffprobe_path: str = Field(default="ffprobe")
+    video_ffprobe_timeout_seconds: int = Field(default=5, ge=1, le=30)
+    video_ffprobe_http_timeout_seconds: int = Field(default=30, ge=5, le=120)
+    video_max_upload_mb: int = Field(default=500, ge=1, le=5000)
+    video_quota_gb: int = Field(default=5, ge=1, le=100)
+    video_upload_ttl_hours: int = Field(default=24, ge=1, le=168)
+
+    # Launcher flags for the vLLM `docker run` command (see Day-1 spike findings).
+    # Defaults target a 32 GB-class consumer GPU (RTX 5090) — loosen on larger cards.
+    max_model_len: int = Field(default=16384, ge=2048, le=1_010_000)
+    max_num_seqs: int = Field(default=2, ge=1, le=256)
+    max_num_batched_tokens: int = Field(default=2048, ge=512, le=131072)
+    gpu_memory_utilization: float = Field(default=0.94, gt=0.0, le=1.0)
+    cpu_offload_gb: int = Field(default=4, ge=0, le=128)
+    enforce_eager: bool = Field(default=True)
+
 
 # ============================================================================
 # Haupt-Konfiguration
