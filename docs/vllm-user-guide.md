@@ -153,3 +153,28 @@ ffprobe, Cognithor falls back to 32 frames for every video regardless of length.
 | `video_max_upload_mb` | `500` | per-file hard cap |
 | `video_quota_gb` | `5` | total disk budget; oldest files evicted first |
 | `video_upload_ttl_hours` | `24` | automatic cleanup after this many hours |
+
+### Known limitation: rolling Docker image tag
+
+Cognithor currently pins the vLLM image to `vllm/vllm-openai:cu130-nightly` — a
+rolling tag that the vLLM project rebuilds daily. A breaking upstream change can
+silently change behavior the next time Docker pulls the image.
+
+**Symptoms of a bad pull**: video requests that worked yesterday return HTTP 500,
+or the vLLM container fails to start after a fresh `docker pull`, or Qwen responses
+become gibberish.
+
+**Mitigation**:
+1. Pin to a specific digest via Docker Desktop's Images panel (or `docker image tag
+   vllm/vllm-openai@sha256:<digest> cognithor-pinned-vllm` and override
+   `config.vllm.docker_image: cognithor-pinned-vllm` in `~/.cognithor/config.yaml`).
+2. Before a fresh `docker pull`, take note of the current digest with
+   `docker inspect vllm/vllm-openai:cu130-nightly --format='{{.Id}}'` so you can
+   roll back to the previous image via Docker Desktop if the new pull breaks.
+3. Watch the [vLLM releases page](https://github.com/vllm-project/vllm/releases)
+   — once a tagged release ships the `FlashInferCutlassNvFp4LinearKernel` fix
+   for SM120, switch `config.vllm.docker_image` to that stable tag.
+
+This limitation is tracked as a follow-up in the video-input spike findings; a
+future Cognithor release will add automatic digest-pinning during the installer
+wizard.

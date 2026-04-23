@@ -273,3 +273,32 @@ _Filled in after all three tests complete._
 - [vLLM bug #38643: FLA format mismatch (benign per maintainers)](https://github.com/vllm-project/vllm/issues/38643)
 - [vLLM bug #38980: ModelOpt NVFP4 loader key mismatch](https://github.com/vllm-project/vllm/issues/38980)
 - [Working Qwen3.5-35B-A3B-GPTQ-Int4 on RTX 5090 with video, 194 tok/s](https://huggingface.co/Qwen/Qwen3.5-35B-A3B-GPTQ-Int4/discussions/3)
+
+---
+
+## Known follow-ups
+
+### cu130-nightly is a rolling tag
+
+The Day-1 spike proved the `cu130-nightly` image works today. The tag itself is
+rolling — the vLLM project publishes a new build daily. A future upstream
+regression can silently break video requests for users who pull after that date.
+
+**Short-term workaround**: users pin to a specific digest manually. Documented
+in `docs/vllm-user-guide.md` under "Known limitation".
+
+**Medium-term fix**: either
+1. Wait for a tagged vLLM release that ships `FlashInferCutlassNvFp4LinearKernel`
+   (the SM120 NVFP4 kernel fix) and switch the default to that tag. Check
+   vllm-project/vllm releases periodically.
+2. Add a `vllm.docker_image_pin_digest` config field that, when set, resolves the
+   image via `vllm/vllm-openai@sha256:<digest>` instead of the tag. Surface in the
+   installer wizard as a "Pin to current version" checkbox after the initial pull.
+
+**Medium-term test**: add a CI nightly that pulls the tag fresh and runs a smoke
+test against Qwen3.6-27B-NVFP4. If the smoke fails, open an issue automatically
+so we find out before users do.
+
+Priority: **medium**. The tag has been stable for our current needs and the
+spike findings are less than a week old. Re-evaluate before the next Cognithor
+release.
