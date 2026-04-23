@@ -216,6 +216,7 @@ class UnifiedLLMClient:
         options: dict[str, Any] | None = None,
         backend_override: str = "",
         images: list[str] | None = None,
+        video: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Chat-Completion im Ollama-Response-Format.
 
@@ -312,6 +313,8 @@ class UnifiedLLMClient:
 
         # Via LLMBackend
         is_image_request = bool(images)
+        is_video_request = video is not None
+        is_vision_request = is_image_request or is_video_request
         effective_backend_type = getattr(effective_backend, "backend_type", self._backend_type)
         if hasattr(effective_backend_type, "value"):
             effective_backend_type = effective_backend_type.value
@@ -327,17 +330,19 @@ class UnifiedLLMClient:
             }
             if images is not None:
                 backend_call_kwargs["images"] = images
+            if video is not None:
+                backend_call_kwargs["video"] = video
             response = await breaker.call(effective_backend.chat(**backend_call_kwargs))
         except LLMBadRequestError:
             self._refresh_status()
             raise
         except (VLLMNotReadyError, CircuitBreakerOpen) as exc:
             self._refresh_status()
-            if is_image_request:
-                # Images cannot be processed by Ollama fallback — hard error
+            if is_vision_request:
+                # Images and video cannot be processed by Ollama fallback — hard error
                 if isinstance(exc, CircuitBreakerOpen):
                     raise VLLMNotReadyError(
-                        "vLLM offline — cannot process image",
+                        "vLLM offline — vision/video request cannot be processed",
                         recovery_hint="Start vLLM from LLM Backends settings.",
                     ) from exc
                 raise
