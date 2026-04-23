@@ -160,4 +160,29 @@ void main() {
     expect(tail.contains('controller.dispose()'), isTrue,
         reason: 'Dialog must dispose its TextEditingController (Bug I2-r3)');
   });
+
+  test('chat_input does not allocate FocusNode inline in build()', () {
+    final source = File('lib/widgets/chat_input.dart').readAsStringSync();
+
+    // Find the build() method body. A robust way: find the first occurrence
+    // of "Widget build(BuildContext context)" and scan forward.
+    final buildStart = source.indexOf('Widget build(BuildContext context)');
+    expect(buildStart, greaterThan(-1),
+        reason: 'ChatInput must have a build() method');
+
+    // Take everything from build() to the end of the method — rough, but
+    // enough: the next top-level `Widget ` or end-of-class is the boundary.
+    final rest = source.substring(buildStart);
+    final buildEnd = rest.indexOf('\n  }');  // state-class indent + closing brace
+    final buildBody = buildEnd == -1 ? rest : rest.substring(0, buildEnd);
+
+    expect(
+      buildBody.contains('FocusNode()'),
+      isFalse,
+      reason:
+          'FocusNode() must not be allocated inline in build() — it leaks '
+          'on every rebuild. Promote to a state field disposed in dispose() '
+          '(Bug-2 round 4).',
+    );
+  });
 }

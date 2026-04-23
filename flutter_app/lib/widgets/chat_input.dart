@@ -40,7 +40,17 @@ class ChatInput extends StatefulWidget {
 class _ChatInputState extends State<ChatInput> {
   TextEditingController? _ownController;
   FocusNode? _ownFocusNode;
+  // Dedicated FocusNode for the KeyboardListener wrapping the TextField.
+  // Must be owned by State (not rebuilt inline in build()) or every rebuild
+  // leaks a ChangeNotifier holding native resources. (Bug-2 round 4)
+  late final FocusNode _keyboardListenerFocusNode;
   bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _keyboardListenerFocusNode = FocusNode();
+  }
 
   TextEditingController get _controller =>
       widget.controller ?? (_ownController ??= TextEditingController());
@@ -200,6 +210,7 @@ class _ChatInputState extends State<ChatInput> {
 
   @override
   void dispose() {
+    _keyboardListenerFocusNode.dispose();
     _ownController?.dispose();
     _ownFocusNode?.dispose();
     super.dispose();
@@ -301,7 +312,7 @@ class _ChatInputState extends State<ChatInput> {
           // Text field
           Expanded(
             child: KeyboardListener(
-              focusNode: FocusNode(),
+              focusNode: _keyboardListenerFocusNode,
               onKeyEvent: (event) {
                 if (event is KeyDownEvent &&
                     event.logicalKey == LogicalKeyboardKey.enter &&
