@@ -10,9 +10,15 @@ live in companion methods `start()` / `stop()` added in Task 7.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
+import socket
 import uuid as _uuid
 from typing import TYPE_CHECKING
+
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 
 from cognithor.core.llm_backend import (
     MediaUploadQuotaExceededError,
@@ -46,6 +52,7 @@ class MediaUploadServer:
         self._quota_bytes = config.vllm.video_quota_gb * 1024 * 1024 * 1024
         self._port: int | None = None
         self._server = None  # filled by start() in Task 7
+        self._serve_task: asyncio.Task | None = None
 
     def save_upload(self, data: bytes, ext: str) -> str:
         """Store ``data`` under ``<uuid>.<ext>`` in the media dir, return uuid.
@@ -138,4 +145,55 @@ class MediaUploadServer:
         ext_lower = ext.lower().lstrip(".")
         return f"http://host.docker.internal:{self._port}/media/{uuid}.{ext_lower}"
 
-    # start() / stop() added in Task 7
+    async def start(self) -> int:
+        """Bind to 127.0.0.1:<ephemeral>, serve /media/<uuid>.<ext> as static files.
+
+        Returns the bound port. Call ``await stop()`` at shutdown.
+        """
+        # Pick an ephemeral port ourselves so we can tell the orchestrator before
+        # uvicorn actually binds (uvicorn accepts 0 but only reports after start).
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.bind(("127.0.0.1", 0))
+            self._port = probe.getsockname()[1]
+
+        app = FastAPI(title="Cognithor MediaUploadServer", openapi_url=None, docs_url=None)
+
+        @app.get("/media/{filename}")
+        async def serve(filename: str) -> FileResponse:
+            # Very strict: no paths, only flat <uuid>.<ext> names
+            if "/" in filename or ".." in filename:
+                raise HTTPException(status_code=400, detail="invalid filename")
+            path = self._media_dir / filename
+            if not path.is_file():
+                raise HTTPException(status_code=404, detail="not found")
+            return FileResponse(path)
+
+        config = uvicorn.Config(
+            app,
+            host="127.0.0.1",
+            port=self._port,
+            log_level="warning",
+            access_log=False,
+        )
+        self._server = uvicorn.Server(config)
+        self._serve_task = asyncio.create_task(self._server.serve())
+        # Wait for startup (server.started flips true when uvicorn is ready)
+        for _ in range(50):
+            if self._server.started:
+                break
+            await asyncio.sleep(0.05)
+        log.info("media_server_started", port=self._port)
+        return self._port
+
+    async def stop(self) -> None:
+        """Shut down the uvicorn serving loop. Idempotent."""
+        if self._server is None:
+            return
+        self._server.should_exit = True
+        try:
+            await self._serve_task
+        except Exception as exc:
+            log.warning("media_server_stop_error", error=str(exc))
+        self._server = None
+        self._serve_task = None
+        log.info("media_server_stopped")

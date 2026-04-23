@@ -89,3 +89,46 @@ class TestDelete:
 
     def test_delete_of_missing_is_noop(self, server: MediaUploadServer):
         server.delete("nonexistent-uuid-abc", "mp4")  # must not raise
+
+
+class TestLifecycle:
+    @pytest.mark.asyncio
+    async def test_start_binds_ephemeral_port_serves_media(self, tmp_path: Path):
+        import httpx
+
+        from cognithor.config import CognithorConfig, VLLMConfig
+
+        cfg = CognithorConfig(
+            cognithor_home=tmp_path,
+            vllm=VLLMConfig(enabled=True, video_max_upload_mb=10, video_quota_gb=1),
+        )
+        srv = MediaUploadServer(cfg)
+        port = await srv.start()
+        try:
+            assert port > 0
+            uuid = srv.save_upload(b"hello video world", "mp4")
+            url = f"http://127.0.0.1:{port}/media/{uuid}.mp4"
+            async with httpx.AsyncClient() as client:
+                r = await client.get(url, timeout=5.0)
+            assert r.status_code == 200
+            assert r.content == b"hello video world"
+        finally:
+            await srv.stop()
+
+    @pytest.mark.asyncio
+    async def test_start_stop_is_idempotent(self, tmp_path: Path):
+        from cognithor.config import CognithorConfig, VLLMConfig
+
+        cfg = CognithorConfig(
+            cognithor_home=tmp_path,
+            vllm=VLLMConfig(enabled=True),
+        )
+        srv = MediaUploadServer(cfg)
+        await srv.start()
+        await srv.stop()
+        await srv.stop()  # second stop must not raise
+        # Restart on a fresh instance
+        srv2 = MediaUploadServer(cfg)
+        port2 = await srv2.start()
+        assert port2 > 0
+        await srv2.stop()
