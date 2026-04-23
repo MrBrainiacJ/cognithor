@@ -241,7 +241,7 @@ def step_flutter_desktop() -> Path | None:
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(desktop_build, dest)
-        print(f"  [OK] Pre-built Flutter desktop copied")
+        print("  [OK] Pre-built Flutter desktop copied")
         return dest
 
     flutter_bin = shutil.which("flutter")
@@ -341,7 +341,8 @@ def step_launcher() -> Path:
         "REM   2. `python` / `py` on PATH\r\n"
         "REM   3. Well-known install paths (user+machine, 3.13/3.12)\r\n"
         'set "PYTHON="\r\n'
-        'if exist "%COGNITHOR_HOME%python\\python.exe" set "PYTHON=%COGNITHOR_HOME%python\\python.exe"\r\n'
+        'if exist "%COGNITHOR_HOME%python\\python.exe" '
+        'set "PYTHON=%COGNITHOR_HOME%python\\python.exe"\r\n'
         'if "!PYTHON!"=="" (\r\n'
         "    where python >nul 2>&1\r\n"
         "    if not errorlevel 1 (\r\n"
@@ -425,7 +426,8 @@ def step_launcher() -> Path:
         '    if exist "%PYTHONW%" (\r\n'
         '        start "" "%PYTHONW%" -m cognithor --no-cli --api-port 8741\r\n'
         "    ) else (\r\n"
-        '        start "Cognithor Server" cmd /k ""%PYTHON%" -m cognithor --no-cli --api-port 8741"\r\n'
+        '        start "Cognithor Server" '
+        'cmd /k ""%PYTHON%" -m cognithor --no-cli --api-port 8741"\r\n'
         "    )\r\n"
         "    echo Waiting for Cognithor to start...\r\n"
         "    set RETRIES=0\r\n"
@@ -566,7 +568,8 @@ def step_inno_setup(
     )
     if installers:
         print(
-            f"  [OK] Installer: {installers[0]} ({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
+            f"  [OK] Installer: {installers[0]} "
+            f"({installers[0].stat().st_size / 1024 / 1024:.0f} MB)"
         )
         return installers[0]
 

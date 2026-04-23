@@ -1,6 +1,5 @@
 """Tests fuer Test Skill."""
 
-import pytest
 from .skill import TestSkillSkill
 
 

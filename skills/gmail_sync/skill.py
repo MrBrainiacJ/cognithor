@@ -1,6 +1,7 @@
 """Jarvis Skill: Gmail Sync (API)."""
 
 import httpx
+
 from cognithor.skills.base import BaseSkill
 
 

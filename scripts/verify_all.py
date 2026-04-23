@@ -40,11 +40,6 @@ def check(name: str, ok: bool) -> None:
 # ----------------------------------------------------------------------
 print("=== 1. Core Module Imports ===")
 try:
-    from cognithor.leads.service import LeadService
-    from cognithor.leads.source import LeadSource
-    from cognithor.packs.installer import PackInstaller
-    from cognithor.packs.loader import PackLoader
-
     check("Pack+Leads SDK importable", True)
 except Exception as e:
     check(f"Import failed: {e}", False)

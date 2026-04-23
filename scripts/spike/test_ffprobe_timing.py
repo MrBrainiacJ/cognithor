@@ -76,7 +76,9 @@ def main() -> int:
                 if s.get("codec_type") == "video":
                     codec = s.get("codec_name")
                     break
-        p = Probe(name=name, url=url, wall_ms=wall, ok=ok, duration=dur, codec=codec, stderr_tail=err)
+        p = Probe(
+            name=name, url=url, wall_ms=wall, ok=ok, duration=dur, codec=codec, stderr_tail=err
+        )
         results.append(p)
         print(f"    wall={wall:.1f}ms ok={ok} dur={dur} codec={codec}")
         if err and not ok:

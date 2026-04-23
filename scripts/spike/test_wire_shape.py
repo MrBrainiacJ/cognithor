@@ -16,7 +16,9 @@ import httpx
 
 BASE_URL = "http://127.0.0.1:8765/v1"
 # 10 sec, 1 MB BigBuckBunny 360p from test-videos.co.uk (returns HTTP 200 from inside container)
-VIDEO_URL = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+VIDEO_URL = (
+    "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+)
 MODEL_ID_ENV_KEY = "SPIKE_MODEL_ID"
 
 
