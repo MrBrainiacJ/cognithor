@@ -2888,7 +2888,9 @@ class Gateway:
             wm.image_attachments = images
             if video_path is not None:
                 try:
-                    wm.video_attachment = _build_video_attachment(video_path, self._config)
+                    wm.video_attachment = await asyncio.to_thread(
+                        _build_video_attachment, video_path, self._config
+                    )
                     uuid = _extract_uuid_from_path(video_path)
                     if uuid is not None and self._video_cleanup is not None:
                         self._video_cleanup.register_upload(uuid, session.session_id)
