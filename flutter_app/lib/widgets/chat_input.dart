@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cognithor_ui/l10n/generated/app_localizations.dart';
+import 'package:cognithor_ui/providers/chat_provider.dart';
 import 'package:cognithor_ui/providers/llm_backend_provider.dart';
 import 'package:cognithor_ui/providers/voice_provider.dart';
 import 'package:cognithor_ui/theme/cognithor_theme.dart';
@@ -87,7 +88,24 @@ class _ChatInputState extends State<ChatInput> {
   }
 
   Future<void> _pickVideo() async {
-    // Implemented in Task 18 — connects ChatProvider.sendVideo
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp4', 'webm', 'mov', 'mkv', 'avi'],
+      withData: false,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.path == null) return;
+    if (!mounted) return;
+    try {
+      await context.read<ChatProvider>().sendVideo(file.path!, file.name);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Video upload fehlgeschlagen: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _pickFile() async {
