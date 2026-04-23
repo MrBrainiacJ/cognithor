@@ -166,3 +166,70 @@ class TestChatWithVideo:
         )
         body = _json.loads(httpx_mock.get_requests()[0].content)
         assert "extra_body" not in body or "mm_processor_kwargs" not in body.get("extra_body", {})
+
+
+class TestChatStreamWithVideo:
+    @pytest.mark.asyncio
+    async def test_chat_stream_sends_video_url_and_mm_kwargs(
+        self, backend: VLLMBackend, httpx_mock: HTTPXMock
+    ):
+        """chat_stream must thread video kwarg into the SSE request body
+        the same way chat() does."""
+        # A minimal valid SSE response: one data chunk + [DONE]
+        sse_body = b'data: {"choices":[{"delta":{"content":"A"},"index":0}]}\n\ndata: [DONE]\n\n'
+        httpx_mock.add_response(
+            url=f"{BASE_URL}/chat/completions",
+            status_code=200,
+            content=sse_body,
+            headers={"content-type": "text/event-stream"},
+        )
+
+        chunks: list[str] = []
+        async for chunk in backend.chat_stream(
+            model="mmangkad/Qwen3.6-27B-NVFP4",
+            messages=[{"role": "user", "content": "What's in this clip?"}],
+            video={
+                "url": "http://host.docker.internal:4711/media/abc.mp4",
+                "sampling": {"fps": 2.0},
+            },
+        ):
+            chunks.append(chunk)
+
+        # Collected at least one chunk
+        assert chunks
+
+        request = httpx_mock.get_requests()[0]
+        body = _json.loads(request.content)
+
+        last_msg = body["messages"][-1]
+        assert isinstance(last_msg["content"], list)
+        assert any(
+            c.get("type") == "video_url"
+            and c["video_url"]["url"] == "http://host.docker.internal:4711/media/abc.mp4"
+            for c in last_msg["content"]
+        )
+        assert body["extra_body"]["mm_processor_kwargs"]["video"] == {"fps": 2.0}
+        assert body.get("stream") is True
+
+    @pytest.mark.asyncio
+    async def test_chat_stream_without_video_does_not_set_extra_body(
+        self, backend: VLLMBackend, httpx_mock: HTTPXMock
+    ):
+        """Regression: text-only streaming requests must not grow an extra_body
+        they don't need."""
+        sse_body = b'data: {"choices":[{"delta":{"content":"ok"},"index":0}]}\n\ndata: [DONE]\n\n'
+        httpx_mock.add_response(
+            url=f"{BASE_URL}/chat/completions",
+            status_code=200,
+            content=sse_body,
+            headers={"content-type": "text/event-stream"},
+        )
+
+        async for _ in backend.chat_stream(
+            model="x",
+            messages=[{"role": "user", "content": "hi"}],
+        ):
+            pass
+
+        body = _json.loads(httpx_mock.get_requests()[0].content)
+        assert "extra_body" not in body or "mm_processor_kwargs" not in body.get("extra_body", {})

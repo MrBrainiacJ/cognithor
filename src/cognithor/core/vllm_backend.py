@@ -280,18 +280,32 @@ class VLLMBackend(LLMBackend):
         temperature: float = 0.7,
         top_p: float = 0.9,
         images: list[str] | None = None,
+        video: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
-        """Stream response tokens from vLLM. Parses OpenAI SSE format."""
+        """Stream response tokens from vLLM. Parses OpenAI SSE format.
+
+        ``video`` is a dict ``{url, sampling}`` per the video-input spec
+        (2026-04-23). Exactly zero or one video per turn. Streaming responses
+        for video are structurally identical to text responses — vLLM returns
+        SSE tokens as it decodes.
+        """
         if images:
             messages = _attach_images_to_last_user(messages, images)
 
-        payload = {
+        extra_body: dict[str, Any] = {}
+        if video is not None:
+            messages, video_extra = _attach_video_to_last_user(messages, video)
+            extra_body.update(video_extra)
+
+        payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
             "top_p": top_p,
             "stream": True,
         }
+        if extra_body:
+            payload["extra_body"] = extra_body
         client = await self._ensure_client()
         try:
             async with client.stream(
