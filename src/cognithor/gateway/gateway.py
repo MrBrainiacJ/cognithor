@@ -157,6 +157,77 @@ def _sanitize_broken_llm_output(text: str) -> str:
     return cleaned.strip()
 
 
+# ── Video attachment classification ──────────────────────────────────────────
+
+_IMAGE_EXTS = frozenset({".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"})
+_VIDEO_EXTS = frozenset({".mp4", ".webm", ".mov", ".mkv", ".avi"})
+
+
+def _classify_attachments(
+    attachments: list[str],
+) -> tuple[list[str], str | None, list[str]]:
+    """Split an attachment list into images / one video / rejected extra videos.
+
+    Returns:
+        (image_attachments, first_video_or_None, rejected_extra_videos)
+
+    Single-video-per-turn policy (spec Decision 7): the first video in the
+    list wins; any additional videos go into ``rejected_extra_videos`` so the
+    caller can surface a user-visible validation error.
+    """
+    images: list[str] = []
+    video: str | None = None
+    rejected: list[str] = []
+    for path in attachments:
+        ext = ""
+        if "." in path:
+            ext = "." + path.rsplit(".", 1)[-1].lower()
+        if ext in _IMAGE_EXTS:
+            images.append(path)
+        elif ext in _VIDEO_EXTS:
+            if video is None:
+                video = path
+            else:
+                rejected.append(path)
+    return images, video, rejected
+
+
+def _build_video_attachment(source: str, config: CognithorConfig) -> dict[str, Any]:
+    """Turn a local path OR URL into a {'url': ..., 'sampling': ...} dict
+    suitable for WorkingMemory.video_attachment.
+
+    URLs are passed through verbatim. Local paths must already be uploaded
+    via /api/media/upload in production — the Flutter client does this.
+    But if a raw local path arrives (e.g. from a future direct-path code
+    path or a test), we still produce a sane sampling without a URL.
+    """
+    from cognithor.core.video_sampling import resolve_sampling
+
+    sampling = resolve_sampling(
+        source,
+        ffprobe_path=config.vllm.video_ffprobe_path,
+        timeout_seconds=config.vllm.video_ffprobe_timeout_seconds,
+        http_timeout_seconds=config.vllm.video_ffprobe_http_timeout_seconds,
+        override=config.vllm.video_sampling_mode,
+    )
+    return {"url": source, "sampling": sampling.as_mm_kwargs()}
+
+
+def _extract_uuid_from_path(source: str) -> str | None:
+    """Pull a UUID out of ``http://.../media/<uuid>.<ext>`` or ``<uuid>.<ext>``.
+
+    Returns None for non-matching forms (e.g. external URLs like
+    https://example.com/clip.mp4). The UUID is used to register the upload
+    with VideoCleanupWorker; external URLs don't need cleanup.
+    """
+    basename = source.rsplit("/", 1)[-1]
+    stem = basename.rsplit(".", 1)[0]
+    # UUIDs from uuid4().hex are 32 hex chars
+    if len(stem) == 32 and all(c in "0123456789abcdef" for c in stem):
+        return stem
+    return None
+
+
 class Gateway:
     """Central entry point. Connects all Cognithor subsystems. [B§9.1]"""
 
@@ -182,6 +253,8 @@ class Gateway:
         self._pattern_record_timestamps: list[float] = []
 
         # vLLM orchestrator — created lazily if enabled; lifecycle hooks use this
+        self._media_server = None
+        self._video_cleanup = None
         if self._config.vllm.enabled:
             from cognithor.core.vllm_orchestrator import VLLMOrchestrator
 
@@ -189,6 +262,14 @@ class Gateway:
                 docker_image=self._config.vllm.docker_image,
                 port=self._config.vllm.port,
                 hf_token=self._config.huggingface_api_key,
+            )
+            from cognithor.channels.media_server import MediaUploadServer
+            from cognithor.gateway.video_cleanup import VideoCleanupWorker
+
+            self._media_server = MediaUploadServer(self._config)
+            self._video_cleanup = VideoCleanupWorker(
+                media_dir=self._media_server._media_dir,
+                ttl_hours=self._config.vllm.video_upload_ttl_hours,
             )
         else:
             self._vllm_orchestrator = None
@@ -1010,6 +1091,20 @@ class Gateway:
         # V6: Wire tool registry into Gatekeeper for per-tool risk annotations
         if self._gatekeeper and hasattr(self._mcp_client, "_tool_registry"):
             self._gatekeeper.set_tool_registry(self._mcp_client._tool_registry)
+
+        # vLLM media server + cleanup worker lifecycle
+        if self._media_server is not None:
+            try:
+                port = await self._media_server.start()
+                if self._vllm_orchestrator is not None:
+                    self._vllm_orchestrator.media_url = f"http://host.docker.internal:{port}"
+            except Exception:
+                log.warning("media_server_start_failed", exc_info=True)
+        if self._video_cleanup is not None:
+            try:
+                await self._video_cleanup.start()
+            except Exception:
+                log.warning("video_cleanup_start_failed", exc_info=True)
 
         log.info(
             "gateway_init_complete",
@@ -1843,6 +1938,18 @@ class Gateway:
                 self._user_pref_store.close()
             except Exception:
                 log.debug("user_pref_store_close_skipped", exc_info=True)
+
+        # vLLM video cleanup + media server teardown
+        if self._video_cleanup is not None:
+            try:
+                await self._video_cleanup.stop()
+            except Exception:
+                log.debug("video_cleanup_stop_skipped", exc_info=True)
+        if self._media_server is not None:
+            try:
+                await self._media_server.stop()
+            except Exception:
+                log.debug("media_server_stop_skipped", exc_info=True)
 
         # MCP-Client trennen
         if self._mcp_client:
@@ -2774,13 +2881,27 @@ class Gateway:
         wm = self._get_or_create_working_memory(session)
         wm.clear_for_new_request()
 
-        # Route image attachments to the VLM for this turn. Cleared by
+        # Route image/video attachments to the VLM for this turn. Cleared by
         # clear_for_new_request() so it only affects the current turn.
-        _IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
         if msg.attachments:
-            wm.image_attachments = [
-                a for a in msg.attachments if any(a.lower().endswith(ext) for ext in _IMAGE_EXTS)
-            ]
+            images, video_path, rejected_videos = _classify_attachments(msg.attachments)
+            wm.image_attachments = images
+            if video_path is not None:
+                try:
+                    wm.video_attachment = _build_video_attachment(video_path, self._config)
+                    uuid = _extract_uuid_from_path(video_path)
+                    if uuid is not None and self._video_cleanup is not None:
+                        self._video_cleanup.register_upload(uuid, session.session_id)
+                except Exception:
+                    log.warning("video_attachment_build_failed", path=video_path, exc_info=True)
+            if rejected_videos:
+                log.warning(
+                    "video_validation_extras_rejected",
+                    session_id=session.session_id,
+                    rejected=rejected_videos,
+                )
+        else:
+            wm.image_attachments = []
 
         # Start explainability trail for this request
         _expl_trail_id: str | None = None
