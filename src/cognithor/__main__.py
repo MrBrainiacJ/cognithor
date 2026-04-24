@@ -1082,6 +1082,26 @@ def main() -> None:
                 except Exception:
                     log.debug("evolution_api_registration_failed", exc_info=True)
 
+                # Claude Code Hook Bridge API
+                # Accepts HTTP-type hook calls from Claude Code (~/.claude/settings.json)
+                # and routes them through Gatekeeper + Observer.
+                try:
+                    from cognithor.gateway.claude_code_hooks import (
+                        create_claude_code_hooks_router,
+                    )
+
+                    api_app.include_router(
+                        create_claude_code_hooks_router(
+                            gatekeeper=getattr(gateway, "_gatekeeper", None),
+                            observer=getattr(gateway, "_observer", None),
+                            hook_runner=getattr(gateway, "_tool_hook_runner", None),
+                            config=config,
+                        )
+                    )
+                    log.info("claude_code_hooks_api_registered")
+                except Exception:
+                    log.debug("claude_code_hooks_api_registration_failed", exc_info=True)
+
                 # ── WebSocket Chat-Endpoint ──────────────────────────────
                 import json as _json
 
