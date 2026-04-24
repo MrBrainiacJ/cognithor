@@ -8,6 +8,7 @@ version = "0.92.7"
 description = "Cognithor · Agent OS — Local-first autonomous agent operating system"
 readme = "README.md"
 license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.12"
 authors = [
     { name = "Alexander Söllner" },
@@ -241,6 +242,14 @@ ignore = [
 "tests/test_install_fixes.py" = ["E501"]  # Embedded shell/JS scripts in strings
 "tests/test_packs/test_installer.py" = ["TC003"]  # Path used in runtime test bodies via pytest fixtures
 "tests/test_gateway/test_video_cleanup.py" = ["TC003"]  # Path used in runtime test bodies via pytest fixtures
+"src/cognithor/crew/task.py" = ["TC001"]  # CrewAgent must be imported at runtime for Pydantic model_rebuild()
+"src/cognithor/crew/compiler.py" = ["TC001"]  # CrewAgent/CrewTask/CrewProcess used at runtime in pure-function signatures
+"src/cognithor/crew/compiler_hierarchical.py" = ["TC001"]  # CrewAgent/CrewTask used at runtime in pure-function signatures
+"src/cognithor/crew/crew.py" = ["TC001"]  # CrewAgent/CrewTask/CrewProcess must be imported at runtime for Pydantic validation
+
+[tool.coverage.report]
+fail_under = 89
+show_missing = true
 
 [tool.mypy]
 python_version = "3.12"
