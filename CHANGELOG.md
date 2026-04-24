@@ -5,7 +5,7 @@ All notable changes to Cognithor are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.93.0] -- 2026-04-24
 
 ### Added
 - **`cognithor.crew` — Crew-Layer (Feature 1 of v1.0 adoption)** — high-level
