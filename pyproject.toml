@@ -44,6 +44,8 @@ dependencies = [
     "cryptography>=46.0.5",
     # .env file loading
     "python-dotenv>=1.0,<2",
+    # Crew-Layer template scaffolder (Feature 3)
+    "jinja2>=3.1,<4",
 ]
 
 [project.optional-dependencies]
@@ -188,6 +190,9 @@ jarvis = "cognithor.__main__:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/cognithor"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/cognithor/crew/templates" = "cognithor/crew/templates"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
@@ -196,6 +201,7 @@ markers = [
     "slow: marks tests as slow",
     "integration: marks tests requiring external services",
     "security_contract: marks security contract invariant tests",
+    "benchmark: performance budget tests (spec §8.5)",
 ]
 filterwarnings = [
     # starlette uses deprecated multipart import — third-party, can't fix
@@ -210,6 +216,10 @@ filterwarnings = [
 target-version = "py312"
 line-length = 100
 src = ["src", "tests"]
+# Crew scaffolder templates are Jinja2 source trees, not Python packages —
+# they use ``{{ project_name }}`` in directory/file names and ship ``.jinja``
+# templates that aren't valid Python until rendered.
+extend-exclude = ["src/cognithor/crew/templates"]
 
 [tool.ruff.lint]
 select = [
