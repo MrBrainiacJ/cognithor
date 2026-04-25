@@ -7,12 +7,14 @@ mocked Gatekeeper / Observer / ToolHookRunner collaborators.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from dataclasses import dataclass, field
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from cognithor.gateway.claude_code_hooks import build_claude_code_hooks_app
+from cognithor.hitl.types import ApprovalResponse, ApprovalStatus
 from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel
 
 
@@ -296,3 +298,117 @@ class TestHealth:
         assert data["ok"] is True
         assert data["gatekeeper"] is True
         assert data["observer"] is False
+        assert data["approval_manager"] is False
+        assert "hitl_timeout_seconds" in data
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# APPROVE → HITL routing
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class _StubRequest:
+    request_id: str = "apr_stub"
+    status: ApprovalStatus = ApprovalStatus.PENDING
+
+
+@dataclass
+class _StubTask:
+    request: _StubRequest = field(default_factory=_StubRequest)
+    responses: list[ApprovalResponse] = field(default_factory=list)
+
+
+def _make_approval_manager(*, final_status: ApprovalStatus, comment: str = "") -> MagicMock:
+    """Build an ApprovalManager mock that resolves to the given final status."""
+    mgr = MagicMock()
+    request = _StubRequest(request_id="apr_test")
+    mgr.create_request = AsyncMock(return_value=request)
+
+    task = _StubTask(request=_StubRequest(request_id="apr_test", status=final_status))
+    if comment:
+        task.responses.append(
+            ApprovalResponse(decision=final_status, reviewer="tester", comment=comment)
+        )
+    mgr.wait_for_resolution = AsyncMock(return_value=task)
+    return mgr
+
+
+class TestApproveRouting:
+    def test_approved_status_maps_to_allow(self, gatekeeper_approving):
+        mgr = _make_approval_manager(
+            final_status=ApprovalStatus.APPROVED, comment="ok by reviewer"
+        )
+        app = build_claude_code_hooks_app(
+            gatekeeper=gatekeeper_approving, approval_manager=mgr
+        )
+        client = TestClient(app)
+        r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
+        out = r.json()["hookSpecificOutput"]
+        assert out["permissionDecision"] == "allow"
+        assert "HITL approved" in out["permissionDecisionReason"]
+        assert "ok by reviewer" in out["permissionDecisionReason"]
+        mgr.create_request.assert_awaited_once()
+        mgr.wait_for_resolution.assert_awaited_once()
+
+    def test_rejected_status_maps_to_deny(self, gatekeeper_approving):
+        mgr = _make_approval_manager(
+            final_status=ApprovalStatus.REJECTED, comment="too risky"
+        )
+        app = build_claude_code_hooks_app(
+            gatekeeper=gatekeeper_approving, approval_manager=mgr
+        )
+        client = TestClient(app)
+        r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
+        out = r.json()["hookSpecificOutput"]
+        assert out["permissionDecision"] == "deny"
+        assert "HITL rejected" in out["permissionDecisionReason"]
+        assert "too risky" in out["permissionDecisionReason"]
+
+    def test_timed_out_status_denies_for_safety(self, gatekeeper_approving):
+        mgr = _make_approval_manager(final_status=ApprovalStatus.TIMED_OUT)
+        app = build_claude_code_hooks_app(
+            gatekeeper=gatekeeper_approving, approval_manager=mgr
+        )
+        client = TestClient(app)
+        r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
+        out = r.json()["hookSpecificOutput"]
+        assert out["permissionDecision"] == "deny"
+        assert "unresolved" in out["permissionDecisionReason"]
+
+    def test_no_approval_manager_falls_back_to_ask(self, gatekeeper_approving):
+        app = build_claude_code_hooks_app(
+            gatekeeper=gatekeeper_approving, approval_manager=None
+        )
+        client = TestClient(app)
+        r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
+        out = r.json()["hookSpecificOutput"]
+        assert out["permissionDecision"] == "ask"
+
+    def test_approval_manager_create_failure_falls_back_to_ask(
+        self, gatekeeper_approving
+    ):
+        mgr = MagicMock()
+        mgr.create_request = AsyncMock(side_effect=RuntimeError("notifier offline"))
+        app = build_claude_code_hooks_app(
+            gatekeeper=gatekeeper_approving, approval_manager=mgr
+        )
+        client = TestClient(app)
+        r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
+        out = r.json()["hookSpecificOutput"]
+        assert out["permissionDecision"] == "ask"
+
+    def test_approval_manager_wait_failure_denies_for_safety(
+        self, gatekeeper_approving
+    ):
+        mgr = MagicMock()
+        mgr.create_request = AsyncMock(return_value=_StubRequest(request_id="apr_x"))
+        mgr.wait_for_resolution = AsyncMock(side_effect=RuntimeError("event loop dead"))
+        app = build_claude_code_hooks_app(
+            gatekeeper=gatekeeper_approving, approval_manager=mgr
+        )
+        client = TestClient(app)
+        r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
+        out = r.json()["hookSpecificOutput"]
+        assert out["permissionDecision"] == "deny"
+        assert "wait error" in out["permissionDecisionReason"]

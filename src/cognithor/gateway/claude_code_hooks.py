@@ -24,10 +24,16 @@ Design notes:
 - Per-step Observer audit is intentionally cheap (exit-code / error string
   heuristics). The full four-dimension Observer audit runs only on ``Stop``
   because it issues an LLM call and is too expensive per tool.
-- ``GateStatus.APPROVE`` currently maps to ``"ask"``, delegating the
-  user-in-the-loop back to Claude Code's native prompt. A future iteration
-  can route APPROVE through ``ApprovalManager`` (Telegram/webhook) and
-  block the HTTP response until resolution.
+- ``GateStatus.APPROVE`` is routed through ``ApprovalManager`` when one is
+  wired: the bridge creates a HITL request with an ``AUTO_REJECT``
+  escalation policy and awaits resolution within a short timeout (default
+  25s, under Claude Code's typical 30s hook timeout). Mapping:
+  APPROVED→allow, REJECTED→deny (this is also the path taken when the
+  approver does not respond before the timeout, since AUTO_REJECT turns
+  silence into a rejection). All other terminal states (TIMED_OUT after
+  max_escalations, ESCALATED, CANCELED, DELEGATED, still-PENDING) are
+  treated as "deny for safety". If no manager is available, the bridge
+  falls back to Claude Code's native ``"ask"``.
 """
 
 from __future__ import annotations
@@ -52,8 +58,15 @@ if TYPE_CHECKING:
     from cognithor.core.gatekeeper import Gatekeeper
     from cognithor.core.observer import ObserverAudit
     from cognithor.core.tool_hooks import ToolHookRunner
+    from cognithor.hitl.manager import ApprovalManager
 
 log = get_logger(__name__)
+
+
+# Default HITL timeout (seconds). Kept under typical Claude Code hook
+# timeouts (30s for HTTP) so the bridge response always wins. Override per
+# router via ``hitl_timeout_seconds``.
+DEFAULT_HITL_TIMEOUT_SECONDS = 25.0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -225,8 +238,10 @@ def create_claude_code_hooks_router(
     gatekeeper: Gatekeeper | None,
     observer: ObserverAudit | None,
     hook_runner: ToolHookRunner | None = None,
+    approval_manager: ApprovalManager | None = None,
     config: CognithorConfig | None = None,
     tracker: _SessionTracker | None = None,
+    hitl_timeout_seconds: float = DEFAULT_HITL_TIMEOUT_SECONDS,
 ) -> APIRouter:
     """Build the Claude Code hook bridge router.
 
@@ -244,6 +259,8 @@ def create_claude_code_hooks_router(
             "gatekeeper": gatekeeper is not None,
             "observer": observer is not None,
             "hook_runner": hook_runner is not None,
+            "approval_manager": approval_manager is not None,
+            "hitl_timeout_seconds": hitl_timeout_seconds,
             "tracked_sessions": len(session_tracker._contexts),
         }
 
@@ -285,13 +302,22 @@ def create_claude_code_hooks_router(
 
         if decision.is_allowed:
             cc_decision = "allow"
+            reason_override: str | None = None
         elif decision.needs_approval:
-            # TODO: route APPROVE through ApprovalManager (HITL) and block until resolved.
-            cc_decision = "ask"
+            cc_decision, reason_override = await _route_approval(
+                approval_manager=approval_manager,
+                decision=decision,
+                tool_name=body.tool_name,
+                tool_input=body.tool_input,
+                session_id=body.session_id,
+                cwd=body.cwd,
+                timeout_seconds=hitl_timeout_seconds,
+            )
         else:
             cc_decision = "deny"
+            reason_override = None
 
-        reason = decision.reason or (
+        reason = reason_override or decision.reason or (
             f"Gatekeeper status={decision.status.value} risk={decision.risk_level.value}"
         )
 
@@ -457,7 +483,9 @@ def build_claude_code_hooks_app(
     gatekeeper: Gatekeeper | None = None,
     observer: ObserverAudit | None = None,
     hook_runner: ToolHookRunner | None = None,
+    approval_manager: ApprovalManager | None = None,
     config: CognithorConfig | None = None,
+    hitl_timeout_seconds: float = DEFAULT_HITL_TIMEOUT_SECONDS,
 ) -> FastAPI:
     """Minimal FastAPI app exposing just the claude-code-hooks router.
 
@@ -469,12 +497,15 @@ def build_claude_code_hooks_app(
     app.state.gatekeeper = gatekeeper
     app.state.observer = observer
     app.state.hook_runner = hook_runner
+    app.state.approval_manager = approval_manager
     app.include_router(
         create_claude_code_hooks_router(
             gatekeeper=gatekeeper,
             observer=observer,
             hook_runner=hook_runner,
+            approval_manager=approval_manager,
             config=config,
+            hitl_timeout_seconds=hitl_timeout_seconds,
         )
     )
     return app
@@ -493,6 +524,109 @@ def _allow(reason: str) -> dict[str, Any]:
             "permissionDecisionReason": reason,
         }
     }
+
+
+async def _route_approval(
+    *,
+    approval_manager: ApprovalManager | None,
+    decision: Any,
+    tool_name: str,
+    tool_input: dict[str, Any],
+    session_id: str,
+    cwd: str,
+    timeout_seconds: float,
+) -> tuple[str, str | None]:
+    """Route a Gatekeeper APPROVE through HITL.
+
+    Returns ``(cc_decision, reason_override_or_None)``. Falls back to
+    ``"ask"`` if no manager is wired or HITL itself errors.
+    """
+    if approval_manager is None:
+        return "ask", None
+
+    # Lazy import: HITL types are only needed when an approval is actually
+    # requested, and avoids circulars at module load time.
+    try:
+        from cognithor.hitl.types import (
+            ApprovalStatus,
+            EscalationAction,
+            EscalationPolicy,
+            HITLConfig,
+            HITLNodeKind,
+            ReviewPriority,
+        )
+    except Exception:
+        log.debug("claude_code_hitl_import_failed", exc_info=True)
+        return "ask", None
+
+    risk_value = getattr(getattr(decision, "risk_level", None), "value", "unknown")
+    cfg = HITLConfig(
+        node_kind=HITLNodeKind.APPROVAL,
+        title=f"Claude Code: {tool_name}",
+        description=(decision.reason or f"Gatekeeper risk={risk_value}")[:500],
+        priority=(
+            ReviewPriority.HIGH if risk_value in ("orange", "red") else ReviewPriority.NORMAL
+        ),
+        escalation=EscalationPolicy(
+            timeout_seconds=int(max(1.0, timeout_seconds)),
+            action=EscalationAction.AUTO_REJECT,
+        ),
+    )
+
+    try:
+        request = await approval_manager.create_request(
+            execution_id=f"claude-code:{session_id[:12]}",
+            graph_name="claude-code-hooks",
+            node_name="pre-tool-use",
+            config=cfg,
+            context={
+                "tool_name": tool_name,
+                "tool_input": tool_input,
+                "session_id": session_id,
+                "cwd": cwd,
+                "risk_level": risk_value,
+                "policy": getattr(decision, "policy_name", "") or "",
+                "gatekeeper_reason": decision.reason or "",
+            },
+        )
+    except Exception as exc:
+        log.warning("claude_code_hitl_create_failed", error=str(exc))
+        return "ask", None
+
+    try:
+        task = await approval_manager.wait_for_resolution(
+            request.request_id, timeout=timeout_seconds
+        )
+    except Exception as exc:
+        log.warning("claude_code_hitl_wait_failed", error=str(exc))
+        return "deny", f"HITL wait error -- denying for safety: {exc!s}"
+
+    if task is None:
+        return "deny", "HITL request not found -- denying for safety"
+
+    status = task.request.status
+    log.info(
+        "claude_code_hitl_resolved",
+        request=request.request_id,
+        status=getattr(status, "value", str(status)),
+        tool=tool_name,
+        session=session_id[:8],
+    )
+
+    if status == ApprovalStatus.APPROVED:
+        comment = ""
+        if task.responses:
+            comment = task.responses[-1].comment or ""
+        reason = "HITL approved" + (f": {comment}" if comment else "")
+        return "allow", reason
+    if status == ApprovalStatus.REJECTED:
+        comment = ""
+        if task.responses:
+            comment = task.responses[-1].comment or ""
+        reason = "HITL rejected" + (f": {comment}" if comment else "")
+        return "deny", reason
+    # TIMED_OUT, ESCALATED, CANCELED, DELEGATED, PENDING -> safe default
+    return "deny", f"HITL unresolved (status={getattr(status, 'value', str(status))}) -- denying for safety"
 
 
 __all__ = [
