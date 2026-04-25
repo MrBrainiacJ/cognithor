@@ -833,6 +833,21 @@ Copyright 2026 Alexander Soellner
 
 ## What's New
 
+### v0.94.0 — AutoGen Strategy Adoption (2026-04-25)
+
+- **`cognithor.compat.autogen`** — source-compat shim for `autogen-agentchat==0.7.5`.
+  Search-and-replace migration path for AutoGen-AgentChat code onto Cognithor's
+  PGE-Trinity. See [migration guide](src/cognithor/compat/autogen/README.md).
+- **`cognithor_bench/`** — reproducible Multi-Agent benchmark scaffold with
+  `cognithor-bench run|tabulate` console tool and Cognithor / AutoGen adapters.
+- **`examples/insurance-agent-pack/`** — standalone-installable DACH insurance
+  pre-advisory reference pack with visible ComplianceGatekeeper PGE-demo.
+- **Architecture Decision Records** — first ADR
+  ([0001 — PGE Trinity vs Group Chat](docs/adr/0001-pge-trinity-vs-group-chat.md))
+  documents why Cognithor doesn't adopt SelectorGroupChat / Swarm patterns.
+- **Competitive analysis docs** — comparison with AutoGen, MAF, LangGraph,
+  CrewAI under [`docs/competitive-analysis/`](docs/competitive-analysis/README.md).
+
 ### v0.92.7 (2026-04-23)
 - **Video input via vLLM** — end-to-end video analysis in chat using Qwen3.6-27B or any vLLM-served VLM. Paperclip → "Video hochladen" or paste a direct `.mp4`/`.webm`/`.mov`/`.mkv`/`.avi` URL. Adaptive frame sampling via `ffprobe` (short clips: `fps=3`, long clips: `num_frames=32`), 500 MB per-file cap + 5 GB quota with LRU eviction, session-lifetime + 24 h TTL cleanup, no silent fallback to Ollama (Ollama has no vision). Windows installer now bundles LGPL ffmpeg + CI verifies the GPL-free build. See [`docs/vllm-user-guide.md`](docs/vllm-user-guide.md).
 - **Default vLLM image flipped to `cu130-nightly`** — the tagged `v0.19.1` crashes Qwen3.6-27B-NVFP4 at warmup on SM120 (Blackwell / RTX 50xx). The nightly ships the `FlashInferCutlassNvFp4LinearKernel` fix. Day-1 spike findings at [`docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md`](docs/superpowers/spikes/2026-04-23-video-input-vllm-spike-findings.md).
