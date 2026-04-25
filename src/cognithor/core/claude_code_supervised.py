@@ -45,6 +45,13 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
+from cognithor.core.llm_backend import (
+    ChatResponse,
+    EmbedResponse,
+    LLMBackend,
+    LLMBackendError,
+    LLMBackendType,
+)
 from cognithor.models import ToolResult
 from cognithor.utils.logging import get_logger
 
@@ -292,13 +299,16 @@ class ClaudeCodeSupervisor:
         proc.stdin.close()
 
         turn = TurnResult(turn=turn_idx, prompt=prompt)
+        # Maps tool_use_id -> index in turn.tool_results so tool_result blocks
+        # can be paired even when several tool_use blocks ran in parallel.
+        pending: dict[str, int] = {}
 
         try:
             async for event in _read_ndjson(
                 proc.stdout, timeout_seconds=self._per_turn_timeout_seconds
             ):
                 turn.raw_events.append(event)
-                self._absorb_event(turn, event)
+                self._absorb_event(turn, event, pending=pending)
         except asyncio.TimeoutError:
             turn.is_error = True
             turn.error = f"turn exceeded per_turn_timeout_seconds={self._per_turn_timeout_seconds}"
@@ -326,7 +336,13 @@ class ClaudeCodeSupervisor:
         turn.duration_ms = int((time.monotonic() - start) * 1000)
         return turn
 
-    def _absorb_event(self, turn: TurnResult, event: dict[str, Any]) -> None:
+    def _absorb_event(
+        self,
+        turn: TurnResult,
+        event: dict[str, Any],
+        *,
+        pending: dict[str, int],
+    ) -> None:
         etype = event.get("type")
         if etype == "system" and event.get("subtype") == "init":
             turn.session_id = event.get("session_id", turn.session_id) or turn.session_id
@@ -341,7 +357,9 @@ class ClaudeCodeSupervisor:
                     turn.assistant_text = block["text"]
                 elif block.get("type") == "tool_use":
                     # Pair with tool_result when it arrives; we pre-seed a
-                    # placeholder so ordering is preserved.
+                    # placeholder so ordering is preserved and remember its
+                    # index by tool_use_id for parallel-call correctness.
+                    tool_use_id = str(block.get("id") or "")
                     turn.tool_results.append(
                         ToolResult(
                             tool_name=str(block.get("name", "")),
@@ -349,6 +367,8 @@ class ClaudeCodeSupervisor:
                             is_error=False,
                         )
                     )
+                    if tool_use_id:
+                        pending[tool_use_id] = len(turn.tool_results) - 1
             return
 
         if etype == "user":
@@ -357,27 +377,28 @@ class ClaudeCodeSupervisor:
             for block in _iter_content(msg):
                 if block.get("type") != "tool_result":
                     continue
-                tool_use_id = block.get("tool_use_id", "")
+                tool_use_id = str(block.get("tool_use_id") or "")
                 content = _tool_result_text(block.get("content"))
                 is_error = bool(block.get("is_error"))
-                # Find the most recent placeholder without content and fill it.
-                for existing in reversed(turn.tool_results):
-                    if existing.content == "" and not existing.is_error:
-                        filled = ToolResult(
-                            tool_name=existing.tool_name,
-                            content=content,
-                            is_error=is_error,
-                            error_message=content if is_error else None,
-                        )
-                        turn.tool_results.remove(existing)
-                        turn.tool_results.append(filled)
-                        break
+
+                idx = pending.pop(tool_use_id, None)
+                if idx is not None and 0 <= idx < len(turn.tool_results):
+                    placeholder = turn.tool_results[idx]
+                    turn.tool_results[idx] = ToolResult(
+                        tool_name=placeholder.tool_name,
+                        content=content,
+                        is_error=is_error,
+                        error_message=content if is_error else None,
+                    )
                 else:
+                    # Result without a known tool_use predecessor (e.g. id
+                    # missing / out-of-order): append a best-effort record.
                     turn.tool_results.append(
                         ToolResult(
                             tool_name=tool_use_id or "unknown",
                             content=content,
                             is_error=is_error,
+                            error_message=content if is_error else None,
                         )
                     )
             return
@@ -533,9 +554,178 @@ def _default_followup_prompt(turn: TurnResult) -> str:
 
 
 __all__ = [
+    "ClaudeCodeSupervisedBackend",
     "ClaudeCodeSupervisor",
     "GoalEvaluation",
     "GoalEvaluator",
     "SupervisorResult",
     "TurnResult",
 ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Backend wrapper -- exposes the supervisor as a regular LLMBackend so it
+# can be selected via LLMBackendType.CLAUDE_CODE_SUPERVISED.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class ClaudeCodeSupervisedBackend(LLMBackend):
+    """LLMBackend adapter around ``ClaudeCodeSupervisor``.
+
+    Behaves like ``ClaudeCodeBackend`` for the caller (chat + list_models +
+    is_available + close) but each ``chat()`` call drives one or more
+    supervised turns. ``max_turns=1`` makes it functionally identical to
+    the plain Claude Code backend; higher values + a goal evaluator turn it
+    into an autonomous loop.
+
+    Streaming is supported on a coarse granularity: each turn's final
+    assistant text is yielded as a single chunk, prefixed with a separator
+    on multi-turn runs. Token-by-token streaming would require a different
+    transport than ``stream-json`` and is intentionally out of scope here.
+    """
+
+    def __init__(
+        self,
+        *,
+        model: str = "sonnet",
+        claude_path: str | None = None,
+        observer: ObserverAudit | None = None,
+        goal_evaluator: GoalEvaluator | None = None,
+        max_turns: int = 1,
+        max_duration_seconds: int = 1800,
+        max_cost_usd: float = 5.0,
+        per_turn_timeout_seconds: int = 600,
+        working_directory: str | None = None,
+        extra_cli_args: list[str] | None = None,
+        env: dict[str, str] | None = None,
+    ) -> None:
+        self._model = model
+        self._claude_path = claude_path or shutil.which("claude") or "claude"
+        self._observer = observer
+        self._goal_evaluator = goal_evaluator
+        self._max_turns = max(1, max_turns)
+        self._max_duration_seconds = max_duration_seconds
+        self._max_cost_usd = max_cost_usd
+        self._per_turn_timeout_seconds = per_turn_timeout_seconds
+        self._working_directory = working_directory
+        self._extra_cli_args = list(extra_cli_args or [])
+        self._env = env
+
+    @property
+    def backend_type(self) -> LLMBackendType:
+        return LLMBackendType.CLAUDE_CODE_SUPERVISED
+
+    def _build_supervisor(self, model: str) -> ClaudeCodeSupervisor:
+        return ClaudeCodeSupervisor(
+            model=model or self._model,
+            claude_path=self._claude_path,
+            observer=self._observer,
+            goal_evaluator=self._goal_evaluator,
+            max_turns=self._max_turns,
+            max_duration_seconds=self._max_duration_seconds,
+            max_cost_usd=self._max_cost_usd,
+            per_turn_timeout_seconds=self._per_turn_timeout_seconds,
+            working_directory=self._working_directory,
+            extra_cli_args=self._extra_cli_args,
+            env=self._env,
+        )
+
+    @staticmethod
+    def _flatten_messages(messages: list[dict[str, Any]]) -> str:
+        parts: list[str] = []
+        for msg in messages:
+            role = str(msg.get("role", "user"))
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                content = "\n".join(
+                    block.get("text", "")
+                    for block in content
+                    if isinstance(block, dict) and block.get("type") == "text"
+                )
+            if not isinstance(content, str):
+                content = str(content)
+            if role == "system":
+                parts.append(f"[Context]: {content}")
+            elif role == "assistant":
+                parts.append(f"[Previous response]: {content}")
+            else:
+                parts.append(content)
+        return "\n\n".join(p for p in parts if p)
+
+    async def chat(
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        *,
+        tools: list[dict[str, Any]] | None = None,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+        format_json: bool = False,
+    ) -> ChatResponse:
+        prompt = self._flatten_messages(messages)
+        supervisor = self._build_supervisor(model)
+        result = await supervisor.run(prompt)
+        if result.verdict == "abort" and not result.final_text:
+            raise LLMBackendError(
+                f"Supervised Claude Code aborted: {result.reason}",
+            )
+        return ChatResponse(
+            content=result.final_text,
+            model=(model or self._model),
+            usage=None,
+            raw={
+                "verdict": result.verdict,
+                "reason": result.reason,
+                "turns": [
+                    {
+                        "turn": t.turn,
+                        "cost_usd": t.cost_usd,
+                        "duration_ms": t.duration_ms,
+                        "tool_count": len(t.tool_results),
+                        "is_error": t.is_error,
+                    }
+                    for t in result.turns
+                ],
+                "total_cost_usd": result.total_cost_usd,
+                "total_duration_ms": result.total_duration_ms,
+            },
+        )
+
+    async def chat_stream(
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        *,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> AsyncIterator[str]:
+        # Coarse-grained streaming: yield each turn's final text. Stays
+        # within the LLMBackend contract without requiring token-level
+        # parsing of stream-json content blocks.
+        result = await self.chat(model, messages, temperature=temperature, top_p=top_p)
+        yield result.content
+
+    async def embed(self, model: str, text: str) -> EmbedResponse:
+        raise LLMBackendError(
+            "Claude Code (supervised) does not support embeddings. "
+            "Use Ollama or OpenAI for embedding fallback.",
+        )
+
+    async def is_available(self) -> bool:
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                self._claude_path,
+                "--version",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, _ = await asyncio.wait_for(proc.communicate(), timeout=5)
+            return proc.returncode == 0
+        except Exception:
+            return False
+
+    async def list_models(self) -> list[str]:
+        return ["opus", "sonnet", "haiku"]
+
+    async def close(self) -> None:
+        return None

@@ -15,10 +15,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from cognithor.core.claude_code_supervised import (
+    ClaudeCodeSupervisedBackend,
     ClaudeCodeSupervisor,
     GoalEvaluation,
     SupervisorResult,
 )
+from cognithor.core.llm_backend import ChatResponse, LLMBackendError, LLMBackendType
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -254,3 +256,167 @@ class TestClaudeMissing:
         assert len(result.turns) == 1
         assert result.turns[0].is_error is True
         assert "claude CLI not found" in (result.turns[0].error or "")
+
+
+class TestParallelToolPairing:
+    @pytest.mark.asyncio
+    async def test_parallel_tool_use_paired_by_id(self):
+        """Two tool_use blocks issued in parallel must each receive their
+        own tool_result by id, not by ordering heuristic."""
+        events = [
+            {"type": "system", "subtype": "init", "session_id": "s", "cwd": "/w"},
+            {
+                "type": "assistant",
+                "message": {
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": "tu_a",
+                            "name": "Read",
+                            "input": {"path": "a.txt"},
+                        },
+                        {
+                            "type": "tool_use",
+                            "id": "tu_b",
+                            "name": "Read",
+                            "input": {"path": "b.txt"},
+                        },
+                    ],
+                },
+            },
+            # Results come back out-of-order on purpose: tu_b before tu_a.
+            {
+                "type": "user",
+                "message": {
+                    "content": [
+                        {"type": "tool_result", "tool_use_id": "tu_b", "content": "B-content"},
+                    ],
+                },
+            },
+            {
+                "type": "user",
+                "message": {
+                    "content": [
+                        {"type": "tool_result", "tool_use_id": "tu_a", "content": "A-content"},
+                    ],
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {"content": [{"type": "text", "text": "both read"}]},
+            },
+            {
+                "type": "result",
+                "subtype": "success",
+                "total_cost_usd": 0.0,
+                "result": "both read",
+                "is_error": False,
+            },
+        ]
+        proc = _FakeProc(events)
+        with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):
+            sup = ClaudeCodeSupervisor(
+                claude_path="claude",
+                goal_evaluator=AsyncMock(return_value=GoalEvaluation(verdict="done")),
+            )
+            result = await sup.run("read both")
+
+        assert result.verdict == "done"
+        results = result.turns[0].tool_results
+        assert len(results) == 2
+        # Order preserved from tool_use emission (tu_a first), but content
+        # is paired by id, not by arrival order of tool_result blocks.
+        assert results[0].tool_name == "Read" and results[0].content == "A-content"
+        assert results[1].tool_name == "Read" and results[1].content == "B-content"
+
+    @pytest.mark.asyncio
+    async def test_tool_result_without_matching_id_appended_best_effort(self):
+        events = [
+            {"type": "system", "subtype": "init", "session_id": "s", "cwd": "/w"},
+            {
+                "type": "user",
+                "message": {
+                    "content": [
+                        {"type": "tool_result", "tool_use_id": "orphan", "content": "lost"},
+                    ],
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {"content": [{"type": "text", "text": "ok"}]},
+            },
+            {"type": "result", "subtype": "success", "total_cost_usd": 0.0, "result": "ok", "is_error": False},
+        ]
+        proc = _FakeProc(events)
+        with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):
+            sup = ClaudeCodeSupervisor(
+                claude_path="claude",
+                goal_evaluator=AsyncMock(return_value=GoalEvaluation(verdict="done")),
+            )
+            result = await sup.run("orphan")
+        results = result.turns[0].tool_results
+        assert len(results) == 1
+        assert results[0].tool_name == "orphan"
+        assert results[0].content == "lost"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ClaudeCodeSupervisedBackend (LLMBackend wrapper)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestSupervisedBackend:
+    def test_backend_type(self):
+        b = ClaudeCodeSupervisedBackend()
+        assert b.backend_type == LLMBackendType.CLAUDE_CODE_SUPERVISED
+
+    @pytest.mark.asyncio
+    async def test_list_models(self):
+        b = ClaudeCodeSupervisedBackend()
+        assert "sonnet" in await b.list_models()
+
+    @pytest.mark.asyncio
+    async def test_chat_runs_one_supervised_turn(self):
+        proc = _FakeProc(_script_events(text="hi-from-supervisor", cost=0.005))
+        with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):
+            b = ClaudeCodeSupervisedBackend(claude_path="claude")
+            resp = await b.chat("sonnet", [{"role": "user", "content": "hi"}])
+        assert isinstance(resp, ChatResponse)
+        assert resp.content == "hi-from-supervisor"
+        assert resp.model == "sonnet"
+        assert resp.raw is not None
+        assert resp.raw["verdict"] == "done"
+        assert resp.raw["total_cost_usd"] == pytest.approx(0.005)
+
+    @pytest.mark.asyncio
+    async def test_chat_flattens_system_and_assistant_messages(self):
+        proc = _FakeProc(_script_events(text="ok"))
+        with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):
+            b = ClaudeCodeSupervisedBackend(claude_path="claude")
+            await b.chat(
+                "sonnet",
+                [
+                    {"role": "system", "content": "be terse"},
+                    {"role": "user", "content": "hi"},
+                    {"role": "assistant", "content": "yes?"},
+                    {"role": "user", "content": "do x"},
+                ],
+            )
+        # The flattened prompt should have appeared in the user-frame written to stdin.
+        sent = b"".join(proc.stdin.buffer).decode()
+        assert "[Context]: be terse" in sent
+        assert "[Previous response]: yes?" in sent
+        assert "do x" in sent
+
+    @pytest.mark.asyncio
+    async def test_chat_aborted_without_text_raises_backend_error(self):
+        with patch("asyncio.create_subprocess_exec", AsyncMock(side_effect=FileNotFoundError())):
+            b = ClaudeCodeSupervisedBackend(claude_path="missing")
+            with pytest.raises(LLMBackendError):
+                await b.chat("sonnet", [{"role": "user", "content": "x"}])
+
+    @pytest.mark.asyncio
+    async def test_embed_raises(self):
+        b = ClaudeCodeSupervisedBackend()
+        with pytest.raises(LLMBackendError):
+            await b.embed("any", "text")
