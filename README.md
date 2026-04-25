@@ -178,6 +178,7 @@ What makes it different from other local AI tools is that Cognithor is not just 
 - **uv Installer Support** — Automatic uv detection for 10x faster installs, transparent pip fallback
 - **Observer Audit Layer** — Every response audited against 4 quality dimensions (hallucination, sycophancy, laziness, tool-ignorance) with differentiated retry strategies. Runs locally with qwen3:32b.
 - **Integrations Catalog** — Auto-generated from `src/cognithor/mcp/` — see [`docs/integrations/catalog.json`](docs/integrations/catalog.json). DACH-specific: sevDesk REST connector (accounting).
+- **Competitive Analysis** — [`docs/competitive-analysis/`](docs/competitive-analysis/README.md) — Cognithor vs AutoGen / MAF / LangGraph / CrewAI.
 - **13,000+ tests** · **89% coverage** · **0 lint errors** · **0 CodeQL alerts**
 
 ## Architecture
@@ -271,6 +272,17 @@ User Goal → CUTaskDecomposer → Sub-Tasks
 ```
 
 Cognithor can control your desktop like a human: take screenshots, analyze them with a vision model, click at pixel coordinates, type text, scroll, and drag. Phase 3 adds Windows UI Automation via pywinauto, which reads the OS accessibility tree to get exact element coordinates without relying on vision alone. A 3-layer security model (allowlist + gatekeeper + tool enforcer) ensures destructive operations require explicit approval.
+
+### Architecture Decision Records
+
+- [`docs/adr/0001-pge-trinity-vs-group-chat.md`](docs/adr/0001-pge-trinity-vs-group-chat.md)
+  — Why Cognithor uses Planner/Gatekeeper/Executor instead of conversational
+  GroupChat patterns.
+
+### Comparison with Other Frameworks
+
+- [`docs/competitive-analysis/`](docs/competitive-analysis/README.md) —
+  Cognithor vs AutoGen, Microsoft Agent Framework, LangGraph, CrewAI.
 
 ## LLM Providers
 
