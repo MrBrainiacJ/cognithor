@@ -7,16 +7,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
+## [0.94.0] — 2026-04-25
 
-- `docs/competitive-analysis/` — comparison docs for AutoGen, MAF, LangGraph, CrewAI (WP1).
-- `docs/adr/0001-pge-trinity-vs-group-chat.md` — first Architecture Decision Record (WP5).
-- `cognithor_bench/` — reproducible Multi-Agent benchmark scaffold (WP4).
-  CLI: `cognithor-bench run|tabulate`. Default adapter: Cognithor; opt-in
-  AutoGen adapter via `pip install cognithor[autogen]`. Bundled smoke
-  scenarios under `cognithor_bench/src/cognithor_bench/scenarios/`.
-- `pyproject.toml` — new `[autogen]` extra (`autogen-agentchat==0.7.5`)
-  as the single pin-point for v0.94.0's source-compat shim and bench adapter.
+### Added — AutoGen Strategy Adoption
+
 - `cognithor.compat.autogen` — source-compatibility shim for
   `autogen-agentchat==0.7.5` (WP2). Search-and-replace import
   migration from AutoGen-AgentChat to Cognithor; 1-shot path uses
@@ -24,11 +18,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   Supported: `AssistantAgent`, `RoundRobinGroupChat`, message + termination
   classes, `OpenAIChatCompletionClient` wrapper. Not supported by design:
   `SelectorGroupChat`, `Swarm`, `MagenticOneGroupChat` (see ADR 0001).
-- `NOTICE` — AutoGen-MIT attribution under "Third-party attributions".
+- `cognithor_bench/` — reproducible Multi-Agent benchmark scaffold (WP4).
+  CLI: `cognithor-bench run|tabulate`. Default adapter: Cognithor; opt-in
+  AutoGen adapter via `pip install cognithor[autogen]`. Bundled smoke
+  scenarios under `cognithor_bench/src/cognithor_bench/scenarios/`.
 - `examples/insurance-agent-pack/` — DACH insurance pre-advisory reference
   pack (WP3). Standalone `pip install ./examples/insurance-agent-pack/`.
   4 agents (NeedsAssessor, PolicyAnalyst with PDF tool-use, ComplianceGatekeeper
   as visible PGE-demo, ReportGenerator). §34d-NEUTRAL — see DISCLAIMER.md.
+- `docs/competitive-analysis/` — comparison docs for AutoGen, MAF, LangGraph, CrewAI (WP1).
+- `docs/adr/0001-pge-trinity-vs-group-chat.md` — first Architecture Decision Record (WP5).
+- `NOTICE` — AutoGen-MIT attribution under "Third-party attributions".
+- `pyproject.toml` — new `[autogen]` extra (`autogen-agentchat==0.7.5`)
+  as the single pin-point for v0.94.0's source-compat shim and bench adapter.
 - `pyproject.toml` `[dev]` extra — registers `insurance-agent-pack` editable.
 
 ## [0.93.0] -- 2026-04-24
