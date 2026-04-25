@@ -57,11 +57,12 @@ dev = [
     "hypothesis>=6.0,<7",
     "ruff>=0.9,<1",
     "mypy>=1.14,<2",
-    # WP4: Local cognithor-bench submodule, shipped as a separate package
-    # but installed editable for tests. See cognithor_bench/pyproject.toml.
-    "cognithor-bench @ file:./cognithor_bench",
-    # WP3: Reference insurance-agent-pack — installed editable for tests.
-    "insurance-agent-pack @ file:./examples/insurance-agent-pack",
+    # NOTE: Local sub-packages (cognithor-bench, insurance-agent-pack) are
+    # NOT listed here because direct file references are forbidden in
+    # PyPI-published metadata (see PyPI rejection of v0.94.0 publish).
+    # Install them separately in dev/CI:
+    #   pip install -e ./cognithor_bench
+    #   pip install -e ./examples/insurance-agent-pack
 ]
 memory = [
     "numpy>=2.0,<3",
@@ -199,12 +200,6 @@ Repository = "https://github.com/Alex8791-cyber/cognithor"
 [project.scripts]
 cognithor = "cognithor.__main__:main"
 jarvis = "cognithor.__main__:main"
-
-[tool.hatch.metadata]
-# Allow `cognithor-bench @ file:./cognithor_bench` direct-reference in [dev]
-# extra. Hatch refuses direct refs by default since they are not PyPI-installable;
-# `cognithor-bench` is intentionally a local-only dev dependency, never published.
-allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cognithor"]

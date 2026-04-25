@@ -72,6 +72,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+          # Local sub-packages (direct-refs forbidden in published [dev] extra)
+          pip install -e ./cognithor_bench
+          pip install -e ./examples/insurance-agent-pack
 
       - name: Install optional dependency groups
         run: |
