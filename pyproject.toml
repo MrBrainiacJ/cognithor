@@ -57,6 +57,9 @@ dev = [
     "hypothesis>=6.0,<7",
     "ruff>=0.9,<1",
     "mypy>=1.14,<2",
+    # WP4: Local cognithor-bench submodule, shipped as a separate package
+    # but installed editable for tests. See cognithor_bench/pyproject.toml.
+    "cognithor-bench @ file:./cognithor_bench",
 ]
 memory = [
     "numpy>=2.0,<3",
@@ -171,6 +174,14 @@ arc-gpu = [
     "cognithor[arc]",
     "torch>=2.2.0",
 ]
+autogen = [
+    # Single pin-point for AutoGen-source-compat shim.
+    # Referenced by:
+    #   - tests/test_compat/test_autogen/ (signature parity, behaviour tests)
+    #   - cognithor_bench/src/cognithor_bench/adapters/autogen_adapter.py (lazy import)
+    # See spec §6 (Single Pin-Point) and §8.4 acceptance criteria.
+    "autogen-agentchat==0.7.5",
+]
 all = [
     "cognithor[memory,vector,mcp,telegram,web,search,cron,documents,identity,desktop,arc,encryption]",
 ]
@@ -186,6 +197,12 @@ Repository = "https://github.com/Alex8791-cyber/cognithor"
 [project.scripts]
 cognithor = "cognithor.__main__:main"
 jarvis = "cognithor.__main__:main"
+
+[tool.hatch.metadata]
+# Allow `cognithor-bench @ file:./cognithor_bench` direct-reference in [dev]
+# extra. Hatch refuses direct refs by default since they are not PyPI-installable;
+# `cognithor-bench` is intentionally a local-only dev dependency, never published.
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cognithor"]
