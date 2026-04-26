@@ -38,6 +38,7 @@ the Observer. The caller's goal-evaluator then decides re-prompt vs halt.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import shutil
 import time
@@ -309,17 +310,15 @@ class ClaudeCodeSupervisor:
             ):
                 turn.raw_events.append(event)
                 self._absorb_event(turn, event, pending=pending)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             turn.is_error = True
             turn.error = f"turn exceeded per_turn_timeout_seconds={self._per_turn_timeout_seconds}"
-            try:
+            with contextlib.suppress(ProcessLookupError):
                 proc.kill()
-            except ProcessLookupError:
-                pass
 
         try:
             await asyncio.wait_for(proc.wait(), timeout=5.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             proc.kill()
             await proc.wait()
 
@@ -406,7 +405,7 @@ class ClaudeCodeSupervisor:
         if etype == "result":
             subtype = event.get("subtype", "")
             cost = event.get("total_cost_usd")
-            if isinstance(cost, (int, float)):
+            if isinstance(cost, int | float):
                 turn.cost_usd = float(cost)
             if subtype not in ("success",):
                 turn.is_error = True
@@ -487,10 +486,10 @@ async def _read_ndjson(
     while True:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise asyncio.TimeoutError()
+            raise TimeoutError()
         try:
             line = await asyncio.wait_for(stream.readline(), timeout=remaining)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise
         if not line:
             return

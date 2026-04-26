@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -21,7 +21,6 @@ from cognithor.core.claude_code_supervised import (
     SupervisorResult,
 )
 from cognithor.core.llm_backend import ChatResponse, LLMBackendError, LLMBackendType
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fake subprocess plumbing
@@ -119,7 +118,13 @@ def _script_events_with_tool(
             "type": "assistant",
             "message": {"content": [{"type": "text", "text": text}]},
         },
-        {"type": "result", "subtype": "success", "total_cost_usd": 0.02, "result": text, "is_error": False},
+        {
+            "type": "result",
+            "subtype": "success",
+            "total_cost_usd": 0.02,
+            "result": text,
+            "is_error": False,
+        },
     ]
 
 
@@ -345,7 +350,13 @@ class TestParallelToolPairing:
                 "type": "assistant",
                 "message": {"content": [{"type": "text", "text": "ok"}]},
             },
-            {"type": "result", "subtype": "success", "total_cost_usd": 0.0, "result": "ok", "is_error": False},
+            {
+                "type": "result",
+                "subtype": "success",
+                "total_cost_usd": 0.0,
+                "result": "ok",
+                "is_error": False,
+            },
         ]
         proc = _FakeProc(events)
         with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):

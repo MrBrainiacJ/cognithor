@@ -1098,8 +1098,14 @@ def main() -> None:
                         try:
                             from cognithor.core.tool_hooks import (
                                 HookEvent as _HookEvent,
+                            )
+                            from cognithor.core.tool_hooks import (
                                 ToolHookRunner as _ToolHookRunner,
+                            )
+                            from cognithor.core.tool_hooks import (
                                 audit_logging_hook as _audit_logging_hook,
+                            )
+                            from cognithor.core.tool_hooks import (
                                 secret_redacting_hook as _secret_redacting_hook,
                             )
 

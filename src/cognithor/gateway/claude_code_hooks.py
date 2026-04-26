@@ -626,15 +626,16 @@ async def _route_approval(
         reason = "HITL rejected" + (f": {comment}" if comment else "")
         return "deny", reason
     # TIMED_OUT, ESCALATED, CANCELED, DELEGATED, PENDING -> safe default
-    return "deny", f"HITL unresolved (status={getattr(status, 'value', str(status))}) -- denying for safety"
+    status_repr = getattr(status, "value", str(status))
+    return "deny", f"HITL unresolved (status={status_repr}) -- denying for safety"
 
 
 __all__ = [
-    "CCPreToolUseInput",
     "CCPostToolUseInput",
-    "CCStopInput",
-    "CCSessionStartInput",
+    "CCPreToolUseInput",
     "CCSessionEndInput",
+    "CCSessionStartInput",
+    "CCStopInput",
     "build_claude_code_hooks_app",
     "create_claude_code_hooks_router",
 ]

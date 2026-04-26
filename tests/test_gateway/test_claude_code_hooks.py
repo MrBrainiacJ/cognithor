@@ -17,7 +17,6 @@ from cognithor.gateway.claude_code_hooks import build_claude_code_hooks_app
 from cognithor.hitl.types import ApprovalResponse, ApprovalStatus
 from cognithor.models import GateDecision, GateStatus, PlannedAction, RiskLevel
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Fixtures
 # ─────────────────────────────────────────────────────────────────────────────
