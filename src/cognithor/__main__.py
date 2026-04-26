@@ -1082,6 +1082,61 @@ def main() -> None:
                 except Exception:
                     log.debug("evolution_api_registration_failed", exc_info=True)
 
+                # Claude Code Hook Bridge API
+                # Accepts HTTP-type hook calls from Claude Code (~/.claude/settings.json)
+                # and routes them through Gatekeeper + Observer + HITL.
+                try:
+                    from cognithor.gateway.claude_code_hooks import (
+                        create_claude_code_hooks_router,
+                    )
+
+                    # Bootstrap a default ToolHookRunner with the standard
+                    # Cognithor pre/post hooks if the gateway hasn't published
+                    # one (current phases don't expose the runner directly).
+                    _cc_hook_runner = getattr(gateway, "_tool_hook_runner", None)
+                    if _cc_hook_runner is None:
+                        try:
+                            from cognithor.core.tool_hooks import (
+                                HookEvent as _HookEvent,
+                            )
+                            from cognithor.core.tool_hooks import (
+                                ToolHookRunner as _ToolHookRunner,
+                            )
+                            from cognithor.core.tool_hooks import (
+                                audit_logging_hook as _audit_logging_hook,
+                            )
+                            from cognithor.core.tool_hooks import (
+                                secret_redacting_hook as _secret_redacting_hook,
+                            )
+
+                            _cc_hook_runner = _ToolHookRunner()
+                            _cc_hook_runner.register(
+                                _HookEvent.PRE_TOOL_USE,
+                                "secret_redacting",
+                                _secret_redacting_hook,
+                            )
+                            _cc_hook_runner.register(
+                                _HookEvent.POST_TOOL_USE,
+                                "audit_logging",
+                                _audit_logging_hook,
+                            )
+                        except Exception:
+                            log.debug("claude_code_default_hook_runner_failed", exc_info=True)
+                            _cc_hook_runner = None
+
+                    api_app.include_router(
+                        create_claude_code_hooks_router(
+                            gatekeeper=getattr(gateway, "_gatekeeper", None),
+                            observer=getattr(gateway, "_observer", None),
+                            hook_runner=_cc_hook_runner,
+                            approval_manager=getattr(gateway, "_hitl_manager", None),
+                            config=config,
+                        )
+                    )
+                    log.info("claude_code_hooks_api_registered")
+                except Exception:
+                    log.debug("claude_code_hooks_api_registration_failed", exc_info=True)
+
                 # ── WebSocket Chat-Endpoint ──────────────────────────────
                 import json as _json
 

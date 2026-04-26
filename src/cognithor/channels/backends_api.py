@@ -48,6 +48,7 @@ class SetActiveRequest(BaseModel):
         "vllm",
         "llama_cpp",
         "claude-code",
+        "claude-code-supervised",
     ]
 
 

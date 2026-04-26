@@ -43,6 +43,7 @@ class LLMBackendType(StrEnum):
     GEMINI = "gemini"
     LMSTUDIO = "lmstudio"
     CLAUDE_CODE = "claude-code"
+    CLAUDE_CODE_SUPERVISED = "claude-code-supervised"
     VLLM = "vllm"
 
 
@@ -1520,6 +1521,17 @@ def create_backend(config: CognithorConfig) -> LLMBackend:
             return ClaudeCodeBackend(
                 model=getattr(config.models.planner, "name", "sonnet"),
                 timeout=600,  # Claude Code needs more time for complex tasks
+            )
+        case "claude-code-supervised":
+            # Lazy import to avoid pulling the supervised module at top-level
+            # (it imports back from this module).
+            from cognithor.core.claude_code_supervised import (
+                ClaudeCodeSupervisedBackend,
+            )
+
+            return ClaudeCodeSupervisedBackend(
+                model=getattr(config.models.planner, "name", "sonnet"),
+                per_turn_timeout_seconds=600,
             )
         case _:
             return OllamaBackend(
