@@ -317,8 +317,10 @@ def create_claude_code_hooks_router(
             cc_decision = "deny"
             reason_override = None
 
-        reason = reason_override or decision.reason or (
-            f"Gatekeeper status={decision.status.value} risk={decision.risk_level.value}"
+        reason = (
+            reason_override
+            or decision.reason
+            or (f"Gatekeeper status={decision.status.value} risk={decision.risk_level.value}")
         )
 
         output: dict[str, Any] = {
@@ -422,17 +424,13 @@ def create_claude_code_hooks_router(
             tool_count=len(history),
         )
 
-        out: dict[str, Any] = {
-            "hookSpecificOutput": {"hookEventName": "Stop"}
-        }
+        out: dict[str, Any] = {"hookSpecificOutput": {"hookEventName": "Stop"}}
         if not audit.overall_passed and audit.retry_strategy in (
             "response_regen",
             "pge_reloop",
         ):
             failed_reasons = [
-                f"{dim.name}: {dim.reason}"
-                for dim in audit.dimensions.values()
-                if not dim.passed
+                f"{dim.name}: {dim.reason}" for dim in audit.dimensions.values() if not dim.passed
             ]
             reason = "; ".join(failed_reasons[:3]) or "observer flagged issues"
             out["decision"] = "block"

@@ -1121,9 +1121,7 @@ def main() -> None:
                                 _audit_logging_hook,
                             )
                         except Exception:
-                            log.debug(
-                                "claude_code_default_hook_runner_failed", exc_info=True
-                            )
+                            log.debug("claude_code_default_hook_runner_failed", exc_info=True)
                             _cc_hook_runner = None
 
                     api_app.include_router(

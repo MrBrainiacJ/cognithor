@@ -335,12 +335,8 @@ def _make_approval_manager(*, final_status: ApprovalStatus, comment: str = "") -
 
 class TestApproveRouting:
     def test_approved_status_maps_to_allow(self, gatekeeper_approving):
-        mgr = _make_approval_manager(
-            final_status=ApprovalStatus.APPROVED, comment="ok by reviewer"
-        )
-        app = build_claude_code_hooks_app(
-            gatekeeper=gatekeeper_approving, approval_manager=mgr
-        )
+        mgr = _make_approval_manager(final_status=ApprovalStatus.APPROVED, comment="ok by reviewer")
+        app = build_claude_code_hooks_app(gatekeeper=gatekeeper_approving, approval_manager=mgr)
         client = TestClient(app)
         r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
         out = r.json()["hookSpecificOutput"]
@@ -351,12 +347,8 @@ class TestApproveRouting:
         mgr.wait_for_resolution.assert_awaited_once()
 
     def test_rejected_status_maps_to_deny(self, gatekeeper_approving):
-        mgr = _make_approval_manager(
-            final_status=ApprovalStatus.REJECTED, comment="too risky"
-        )
-        app = build_claude_code_hooks_app(
-            gatekeeper=gatekeeper_approving, approval_manager=mgr
-        )
+        mgr = _make_approval_manager(final_status=ApprovalStatus.REJECTED, comment="too risky")
+        app = build_claude_code_hooks_app(gatekeeper=gatekeeper_approving, approval_manager=mgr)
         client = TestClient(app)
         r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
         out = r.json()["hookSpecificOutput"]
@@ -366,9 +358,7 @@ class TestApproveRouting:
 
     def test_timed_out_status_denies_for_safety(self, gatekeeper_approving):
         mgr = _make_approval_manager(final_status=ApprovalStatus.TIMED_OUT)
-        app = build_claude_code_hooks_app(
-            gatekeeper=gatekeeper_approving, approval_manager=mgr
-        )
+        app = build_claude_code_hooks_app(gatekeeper=gatekeeper_approving, approval_manager=mgr)
         client = TestClient(app)
         r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
         out = r.json()["hookSpecificOutput"]
@@ -376,36 +366,26 @@ class TestApproveRouting:
         assert "unresolved" in out["permissionDecisionReason"]
 
     def test_no_approval_manager_falls_back_to_ask(self, gatekeeper_approving):
-        app = build_claude_code_hooks_app(
-            gatekeeper=gatekeeper_approving, approval_manager=None
-        )
+        app = build_claude_code_hooks_app(gatekeeper=gatekeeper_approving, approval_manager=None)
         client = TestClient(app)
         r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
         out = r.json()["hookSpecificOutput"]
         assert out["permissionDecision"] == "ask"
 
-    def test_approval_manager_create_failure_falls_back_to_ask(
-        self, gatekeeper_approving
-    ):
+    def test_approval_manager_create_failure_falls_back_to_ask(self, gatekeeper_approving):
         mgr = MagicMock()
         mgr.create_request = AsyncMock(side_effect=RuntimeError("notifier offline"))
-        app = build_claude_code_hooks_app(
-            gatekeeper=gatekeeper_approving, approval_manager=mgr
-        )
+        app = build_claude_code_hooks_app(gatekeeper=gatekeeper_approving, approval_manager=mgr)
         client = TestClient(app)
         r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
         out = r.json()["hookSpecificOutput"]
         assert out["permissionDecision"] == "ask"
 
-    def test_approval_manager_wait_failure_denies_for_safety(
-        self, gatekeeper_approving
-    ):
+    def test_approval_manager_wait_failure_denies_for_safety(self, gatekeeper_approving):
         mgr = MagicMock()
         mgr.create_request = AsyncMock(return_value=_StubRequest(request_id="apr_x"))
         mgr.wait_for_resolution = AsyncMock(side_effect=RuntimeError("event loop dead"))
-        app = build_claude_code_hooks_app(
-            gatekeeper=gatekeeper_approving, approval_manager=mgr
-        )
+        app = build_claude_code_hooks_app(gatekeeper=gatekeeper_approving, approval_manager=mgr)
         client = TestClient(app)
         r = client.post("/api/claude-hooks/pre-tool-use", json=_payload())
         out = r.json()["hookSpecificOutput"]

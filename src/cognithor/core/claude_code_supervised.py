@@ -414,9 +414,7 @@ class ClaudeCodeSupervisor:
                 turn.assistant_text = event["result"]
             return
 
-    async def _evaluate(
-        self, *, user_intent: str, turns: list[TurnResult]
-    ) -> GoalEvaluation:
+    async def _evaluate(self, *, user_intent: str, turns: list[TurnResult]) -> GoalEvaluation:
         if self._goal_evaluator is not None:
             try:
                 return await self._goal_evaluator(turns)
@@ -449,9 +447,7 @@ class ClaudeCodeSupervisor:
                     "The previous attempt was flagged by the Observer audit: "
                     f"{reasons}. Address the specific issues and retry."
                 )
-                return GoalEvaluation(
-                    verdict="continue", next_prompt=followup, reason=reasons
-                )
+                return GoalEvaluation(verdict="continue", next_prompt=followup, reason=reasons)
 
         return GoalEvaluation(verdict="done", reason="single-turn completion")
 
@@ -546,8 +542,7 @@ def _default_followup_prompt(turn: TurnResult) -> str:
         if errs:
             snippet = (errs[0].error_message or errs[0].content or "")[:240]
             return (
-                "The last turn produced an error: "
-                f"{snippet}\nFix it and continue toward the goal."
+                f"The last turn produced an error: {snippet}\nFix it and continue toward the goal."
             )
     return "Continue toward the goal. If you believe the goal is reached, state 'DONE'."
 

@@ -197,9 +197,7 @@ class TestBudgets:
 
     @pytest.mark.asyncio
     async def test_max_cost_enforced(self):
-        proc_factory = AsyncMock(
-            side_effect=lambda *a, **kw: _FakeProc(_script_events(cost=10.0))
-        )
+        proc_factory = AsyncMock(side_effect=lambda *a, **kw: _FakeProc(_script_events(cost=10.0)))
         with patch("asyncio.create_subprocess_exec", proc_factory):
             sup = ClaudeCodeSupervisor(
                 claude_path="claude",
@@ -221,9 +219,7 @@ class TestEvaluatorVerdicts:
         proc = _FakeProc(_script_events(text="first"))
         with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):
             evaluator = AsyncMock(return_value=GoalEvaluation(verdict="done", reason="satisfied"))
-            sup = ClaudeCodeSupervisor(
-                claude_path="claude", goal_evaluator=evaluator, max_turns=5
-            )
+            sup = ClaudeCodeSupervisor(claude_path="claude", goal_evaluator=evaluator, max_turns=5)
             result = await sup.run("query")
 
         assert result.verdict == "done"
