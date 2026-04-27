@@ -833,6 +833,23 @@ Copyright 2026 Alexander Soellner
 
 ## What's New
 
+### v0.95.0 — Trace-UI (2026-04-27)
+
+- **Live-Visibility for running Crews** — new Flutter Trace-UI screen with master-detail
+  list + timeline-log + per-agent stats sidebar. Owner-gated.
+- **`cognithor.crew.trace_bus.TraceBus`** — in-process pub/sub hooked into
+  `compiler.append_audit()`; broadcasts crew lifecycle + per-trace events to
+  WebSocket subscribers without changing the Hashline-Guard JSONL persistence.
+- **REST endpoints `/api/crew/traces`, `/trace/{id}`, `/trace/{id}/stats`** — read
+  the existing audit chain for replay + history. Corruption-tolerant; surfaces
+  skipped-line counts via `meta`.
+- **WebSocket message types `crew_lifecycle_subscribe` / `crew_subscribe` /
+  `crew_unsubscribe`** for live event streaming. Disconnect auto-cleans.
+- **AutoGen-Shim coverage verified** — `cognithor.compat.autogen.AssistantAgent.run()`
+  routes through `cognithor.crew.Crew` so AutoGen-shim runs surface in Trace-UI.
+- **Owner-Token gating** — `cognithor.security.owner.require_owner` reads
+  `COGNITHOR_OWNER_USER_ID` env (fallback: `pyproject.toml` author name).
+
 ### v0.94.0 — AutoGen Strategy Adoption (2026-04-25)
 
 - **`cognithor.compat.autogen`** — source-compat shim for `autogen-agentchat==0.7.5`.
