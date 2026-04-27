@@ -55,6 +55,13 @@ abstract final class WsType {
 
   // Kanban
   static const kanbanUpdate = 'kanban_update';
+
+  // Crew / Trace
+  static const String crewLifecycle = 'crew_lifecycle';
+  static const String crewEvent = 'crew_event';
+  static const String crewLifecycleSubscribe = 'crew_lifecycle_subscribe';
+  static const String crewSubscribe = 'crew_subscribe';
+  static const String crewUnsubscribe = 'crew_unsubscribe';
 }
 
 // ---------------------------------------------------------------------------
@@ -68,10 +75,7 @@ typedef WsMessageCallback = void Function(Map<String, dynamic> message);
 // ---------------------------------------------------------------------------
 
 class WebSocketService {
-  WebSocketService({
-    required this.apiClient,
-    required this.wsBaseUrl,
-  });
+  WebSocketService({required this.apiClient, required this.wsBaseUrl});
 
   final ApiClient apiClient;
 
@@ -168,10 +172,7 @@ class WebSocketService {
       'type': WsType.userMessage,
       'text': '[Voice message]',
       'session_id': _sessionId,
-      'metadata': {
-        'audio_base64': base64Audio,
-        'audio_type': mimeType,
-      },
+      'metadata': {'audio_base64': base64Audio, 'audio_type': mimeType},
     });
   }
 
@@ -188,21 +189,24 @@ class WebSocketService {
     if (ok) {
       _log('[WS] approval_response sent: id=$requestId approved=$approved');
     } else {
-      _log('[WS] approval_response DROPPED: id=$requestId approved=$approved (channel null)');
+      _log(
+        '[WS] approval_response DROPPED: id=$requestId approved=$approved (channel null)',
+      );
     }
     return ok;
   }
 
   /// Cancel the current operation.
   void cancelOperation() {
-    _send({
-      'type': WsType.cancel,
-      'session_id': _sessionId,
-    });
+    _send({'type': WsType.cancel, 'session_id': _sessionId});
   }
 
   /// Send thumbs up/down feedback for a message.
-  void sendFeedback(int rating, String messageId, {String assistantResponse = ''}) {
+  void sendFeedback(
+    int rating,
+    String messageId, {
+    String assistantResponse = '',
+  }) {
     _send({
       'type': WsType.feedback,
       'rating': rating,
@@ -219,6 +223,13 @@ class WebSocketService {
       'feedback_id': feedbackId,
       'comment': comment,
     });
+  }
+
+  /// Send an arbitrary outbound frame. Used by feature services
+  /// (e.g. TraceService) to dispatch their own message types.
+  /// Returns `true` if written to the socket, `false` if dropped (no channel).
+  bool send(Map<String, dynamic> frame) {
+    return _send({...frame, 'session_id': _sessionId});
   }
 
   // ---------------------------------------------------------------------------
@@ -336,7 +347,9 @@ class WebSocketService {
   /// approval_response path) must check the return value and retry.
   bool _send(Map<String, dynamic> msg) {
     if (_channel == null) {
-      _log('[WS] WARN: _send called but _channel is null (type=${msg['type']})');
+      _log(
+        '[WS] WARN: _send called but _channel is null (type=${msg['type']})',
+      );
       return false;
     }
     final type = msg['type'] as String? ?? '?';
