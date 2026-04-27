@@ -7,17 +7,18 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
+## [0.95.0] — 2026-04-27
 
-- `cognithor.crew.trace_bus.TraceBus` — in-process pub/sub for crew audit events. Hooks `compiler.append_audit()` to live-broadcast crew_* events via lifecycle stream + per-trace topic subscriptions. Backpressure: drop-oldest at 1000-event queue cap (WP1 of v0.95.0 Trace-UI).
-- `cognithor.security.owner.require_owner()` — owner-token gating for Trace-UI surfaces. Reads `COGNITHOR_OWNER_USER_ID` env var with `pyproject.toml` author-name fallback.
-- Three FastAPI endpoints under `/api/crew/`: `traces` (list), `trace/{id}` (full events), `trace/{id}/stats` (aggregates). Owner-gated via `X-Cognithor-User` header. Reads `~/.cognithor/logs/audit.jsonl` directly; corrupt lines are skipped with the count surfaced via `meta.skipped_lines` (WP2 of v0.95.0 Trace-UI).
-- `docs/api/crew-traces.md` — endpoint reference.
-- WebSocket message types `crew_lifecycle_subscribe`, `crew_subscribe`, `crew_unsubscribe` for live Crew event streaming. Owner-gated; non-owner subscribes receive `{type:"error", code:"owner_only"}` and are ignored. Disconnect auto-cleans all subscriptions (WP3 of v0.95.0 Trace-UI).
-- Outbound frames: `{type:"crew_lifecycle", payload:<event>}` for lifecycle stream, `{type:"crew_event", payload:<event>}` for per-trace topic stream.
-- Flutter Trace-UI: `TraceListScreen` (master) + `TraceDetailScreen` (detail) with vertical timeline-log + stats sidebar (per-agent token breakdown, guardrail summary, elapsed). REST-fetch on open, WebSocket subscribe for live updates, auto-cleanup on unpin/disconnect (WP4 of v0.95.0).
-- `tests/test_compat/test_autogen/test_trace_emission.py` — verifies `cognithor.compat.autogen.AssistantAgent.run()` routes through `cognithor.crew.Crew` so AutoGen-shim runs surface in Trace-UI (WP5 of v0.95.0).
+### Added — Trace-UI
+
+- `cognithor.crew.trace_bus.TraceBus` — in-process pub/sub for crew audit events. Hooks `compiler.append_audit()` to live-broadcast crew_* events via lifecycle stream + per-trace topic subscriptions. Backpressure: drop-oldest at 1000-event queue cap. (WP1)
+- `cognithor.security.owner.require_owner()` — owner-token gating for Trace-UI surfaces. Reads `COGNITHOR_OWNER_USER_ID` env var with `pyproject.toml` author-name fallback. (WP1)
+- Three FastAPI endpoints under `/api/crew/`: `traces` (list with status/since/limit filters), `trace/{id}` (full events), `trace/{id}/stats` (aggregates). Owner-gated via `X-Cognithor-User` header. Reads `~/.cognithor/logs/audit.jsonl` directly with corruption-tolerant parsing. (WP2)
+- WebSocket message types `crew_lifecycle_subscribe`, `crew_subscribe`, `crew_unsubscribe` for live Crew event streaming. Owner-gated; non-owner subscribes receive `{type:"error", code:"owner_only"}` and are ignored. Disconnect auto-cleans all subscriptions. Outbound frames: `{type:"crew_lifecycle", payload:<event>}` and `{type:"crew_event", payload:<event>}`. (WP3)
+- Flutter Trace-UI: `TraceListScreen` (master) + `TraceDetailScreen` (detail) with vertical timeline-log + stats sidebar (per-agent token breakdown, guardrail summary, elapsed). REST-fetch on open, WebSocket subscribe for live updates, auto-cleanup on unpin/disconnect. (WP4)
+- AutoGen-Shim coverage — `cognithor.compat.autogen.AssistantAgent.run()` verified to route through `cognithor.crew.Crew`, so AutoGen-shim runs surface in Trace-UI. (WP5)
 - New i18n keys: `navTraces`, `traceStatus*`, `traceFilter*`, `traceEmpty`, `traceNotFound` (en + de + ar + zh).
+- `docs/api/crew-traces.md` — endpoint reference.
 
 ## [0.94.1] — 2026-04-26
 
