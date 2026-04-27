@@ -22,13 +22,16 @@ import contextlib
 import json
 import os
 import time
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from cognithor.channels.base import Channel, MessageHandler, StatusType
+from cognithor.crew.trace_bus import SubscriptionHandle, TraceBus, get_trace_bus
 from cognithor.models import IncomingMessage, OutgoingMessage, PlannedAction
+from cognithor.security.owner import OwnerRequiredError, require_owner
 from cognithor.security.rate_limiter import RateLimiter
 from cognithor.security.token_store import get_token_store
 from cognithor.utils.logging import get_logger
@@ -75,6 +78,121 @@ class WSMessageType:
     ERROR = "error"
     PONG = "pong"
     IDENTITY_STATE = "identity_state"
+
+
+# ============================================================================
+# Trace-UI subscription state
+# ============================================================================
+
+
+@dataclass
+class TraceSubscriberState:
+    """Per-WebSocket-session state tracking active TraceBus subscriptions.
+
+    Stored on the session object so we can cleanly unsubscribe everything
+    when the WebSocket disconnects.
+    """
+
+    lifecycle_handle: SubscriptionHandle | None = None
+    topic_handles: dict[str, SubscriptionHandle] = field(default_factory=dict)
+
+    def clear_all(self, bus: TraceBus) -> None:
+        """Unsubscribe everything this session is subscribed to."""
+        if self.lifecycle_handle is not None:
+            bus.unsubscribe(self.lifecycle_handle)
+            self.lifecycle_handle = None
+        for handle in list(self.topic_handles.values()):
+            bus.unsubscribe(handle)
+        self.topic_handles.clear()
+
+
+# Bounded queue size for trace subscribers; matches TraceBus default.
+_TRACE_QUEUE_MAXSIZE = 1000
+
+
+async def handle_trace_subscribe_message(
+    *,
+    message: dict[str, Any],
+    state: TraceSubscriberState,
+    bus: TraceBus,
+    user_id: str | None,
+    sender: Any,
+) -> str | None:
+    """Handle a crew_*_subscribe / crew_unsubscribe message.
+
+    Returns None on success, or a short error code string on failure
+    (also sent to the client via `sender` as an error frame).
+    """
+    msg_type = message.get("type")
+    if msg_type not in {
+        "crew_lifecycle_subscribe",
+        "crew_subscribe",
+        "crew_unsubscribe",
+    }:
+        return "unknown_message_type"
+
+    # Owner-gate every trace WS message.
+    try:
+        require_owner(user_id)
+    except OwnerRequiredError:
+        await sender({"type": "error", "code": "owner_only", "context": msg_type})
+        return "owner_only"
+
+    if msg_type == "crew_lifecycle_subscribe":
+        if state.lifecycle_handle is None:
+            queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=_TRACE_QUEUE_MAXSIZE)
+            state.lifecycle_handle = bus.subscribe_lifecycle(queue)
+        return None
+
+    if msg_type == "crew_subscribe":
+        trace_id = message.get("trace_id")
+        if not isinstance(trace_id, str) or not trace_id:
+            await sender({"type": "error", "code": "invalid_trace_id"})
+            return "invalid_trace_id"
+        if trace_id in state.topic_handles:
+            return None  # idempotent
+        queue = asyncio.Queue(maxsize=_TRACE_QUEUE_MAXSIZE)
+        state.topic_handles[trace_id] = bus.subscribe(trace_id, queue)
+        return None
+
+    if msg_type == "crew_unsubscribe":
+        trace_id = message.get("trace_id")
+        if not isinstance(trace_id, str) or not trace_id:
+            return None  # silently ignore
+        handle = state.topic_handles.pop(trace_id, None)
+        if handle is not None:
+            bus.unsubscribe(handle)
+        return None
+
+    return "unknown_message_type"  # unreachable
+
+
+async def pump_queue_to_websocket(
+    queue: asyncio.Queue[dict[str, Any]],
+    sender: Any,
+    frame_type: str,
+) -> None:
+    """Drain a subscriber queue, wrap each record in `{type, payload}`, and send.
+
+    Runs as an asyncio Task; cancel to stop. On send-error, logs and
+    continues — the pump should outlive transient WebSocket hiccups
+    (the outer connection-handler will cancel us if the WS is truly dead).
+    """
+    while True:
+        try:
+            record = await queue.get()
+        except asyncio.CancelledError:
+            raise
+        try:
+            await sender({"type": frame_type, "payload": record})
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # pump must survive sender errors
+            log.warning(
+                "trace_ws_send_failed type=%s err=%s",
+                frame_type,
+                type(exc).__name__,
+            )
 
 
 # ============================================================================
@@ -452,10 +570,73 @@ class WebUIChannel(Channel):
                 self._connections[session_id] = websocket
                 log.info("ws_connected", session_id=session_id)
 
+                trace_state = TraceSubscriberState()
+                trace_pumps: list[asyncio.Task[None]] = []
+                trace_bus = get_trace_bus()
+                # Owner identity for WS auth: WebUI uses a shared API token,
+                # so all sessions share user_id="web_user". Operators wanting
+                # access to live Crew traces must set COGNITHOR_OWNER_USER_ID=web_user.
+                trace_user_id = "web_user"
+
                 try:
                     while True:
                         data = await websocket.receive_text()
                         msg = json.loads(data)
+                        msg_type = msg.get("type", "")
+                        if msg_type in {
+                            "crew_lifecycle_subscribe",
+                            "crew_subscribe",
+                            "crew_unsubscribe",
+                        }:
+                            err = await handle_trace_subscribe_message(
+                                message=msg,
+                                state=trace_state,
+                                bus=trace_bus,
+                                user_id=trace_user_id,
+                                sender=websocket.send_json,
+                            )
+                            if err is None and msg_type == "crew_lifecycle_subscribe":
+                                if trace_state.lifecycle_handle is not None and not any(
+                                    getattr(t, "_trace_pump_topic", None) == "__lifecycle__"
+                                    for t in trace_pumps
+                                ):
+                                    queue = trace_state.lifecycle_handle.queue
+                                    task = asyncio.create_task(
+                                        pump_queue_to_websocket(
+                                            queue, websocket.send_json, "crew_lifecycle"
+                                        )
+                                    )
+                                    task._trace_pump_topic = "__lifecycle__"  # type: ignore[attr-defined]
+                                    trace_pumps.append(task)
+                            elif err is None and msg_type == "crew_subscribe":
+                                trace_id = msg.get("trace_id")
+                                # Pump-existence check mirrors the lifecycle branch above:
+                                # handle_trace_subscribe_message is idempotent on re-subscribe, so
+                                # we must not spawn a second pump for the same topic.
+                                if (
+                                    isinstance(trace_id, str)
+                                    and trace_id in trace_state.topic_handles
+                                    and not any(
+                                        getattr(t, "_trace_pump_topic", None) == trace_id
+                                        for t in trace_pumps
+                                    )
+                                ):
+                                    queue = trace_state.topic_handles[trace_id].queue
+                                    task = asyncio.create_task(
+                                        pump_queue_to_websocket(
+                                            queue, websocket.send_json, "crew_event"
+                                        )
+                                    )
+                                    task._trace_pump_topic = trace_id  # type: ignore[attr-defined]
+                                    trace_pumps.append(task)
+                            elif err is None and msg_type == "crew_unsubscribe":
+                                trace_id = msg.get("trace_id")
+                                for t in list(trace_pumps):
+                                    if getattr(t, "_trace_pump_topic", None) == trace_id:
+                                        t.cancel()
+                                        trace_pumps.remove(t)
+                            # crew_* handled — do NOT fall through to _handle_ws_message
+                            continue
                         await self._handle_ws_message(websocket, session_id, msg)
                 except WebSocketDisconnect:
                     log.info("ws_disconnected", session_id=session_id)
@@ -470,6 +651,9 @@ class WebUIChannel(Channel):
                 except Exception as exc:
                     log.error("ws_error", error=str(exc), session_id=session_id)
                 finally:
+                    for task in trace_pumps:
+                        task.cancel()
+                    trace_state.clear_all(trace_bus)
                     self._connections.pop(session_id, None)
 
             # --- Config-API Routes ---
