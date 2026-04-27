@@ -1,6 +1,6 @@
 """Cognithor · Agent OS -- Local-first autonomous agent operating system."""
 
-__version__ = "0.94.1"
+__version__ = "0.95.0"
 __author__ = "Alexander Söllner"
 
 # ── Centralized branding — single source of truth for banner + version ──
