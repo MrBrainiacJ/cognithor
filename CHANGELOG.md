@@ -7,10 +7,40 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.96.0] — 2026-05-01 — "ARC-AGI-3 Pass"
+
+### Added — PSE Phase-2 ARC-AGI-3 capability
+
+- **100 % success on the committed `cognithor_bench/arc_agi3` corpus** (20 tasks: 8 train + 4 held-out + 8 hard). Up from 75 % in v0.95.0. Reproduce: `python -m cognithor.channels.program_synthesis.synthesis.arc_baseline_runner --subset hard`.
+- Five new object-level DSL primitives (registry 61 → 66): `tile_3x`, `remove_singletons`, `count_components`, `recolor_by_component_size`, `unique_colors_diagonal`.
+- ARC-AGI-3 corpus loader (`synthesis/arc_corpus.py`) — accepts canonical ARC schema, manifest-driven subset filtering, SHA-256 corpus pinning for CI drift detection.
+- Sprint-7 cascade-generalisation runner — exhaustive 1-3 step composition of unary primitives + 2-step recolor cascades.
+
+### Added — Phase-2 production wiring
+
+- `synthesis/wired_engine.py` (`WiredPhase2Engine`) — Phase-1 ↔ Phase-2 async adapter (EnumerativeSearch + Refiner pipeline + verifier).
+- `synthesis/benchmark_runner.py` `--phase2` flag for A/B comparison; `--arc-corpus PATH --arc-subset NAME` to target any ARC corpus.
+- `phase2/verifier_evaluator.py` — end-to-end 5-factor verifier (demo_pass / partial_pixel / invariants / triviality / suspicion).
+- 20-Task Leak-Free fixture set + nightly cron (`.github/workflows/pse-phase2-benchmark.yml`, daily 03:00 UTC, ≥ 10 PP regression gate).
+
+### Fixed
+
+- `tests/test_security/test_tls_config.py` — replaced `subprocess.run(["openssl", ...])` with in-process `cryptography` library. Eliminates 11 occasional Win-py3.12 failures observed in 16 000-test single-process full-repo runs.
+
+### Score trajectory (cognithor_bench/arc_agi3 hard subset)
+
+| Stage | Approach | Score |
+|---|---|---|
+| v0.95.0 baseline | Phase-1 EnumerativeSearch alone | 12.5 % |
+| Sprint-5 | + WiredPhase2Engine local-edit | 12.5 % |
+| Sprint-6 | + Symbolic-Repair recolor cascade | 25.0 % |
+| Sprint-7 | + Generalised unary-chain cascade | 50.0 % |
+| **v0.96.0** | **+ 5 object-level DSL primitives** | **100.0 %** |
+
 ### Removed
 
-- `src/cognithor/benchmark/` (in-process `BenchmarkRunner` / `RegressionDetector` / `BenchmarkReport` framework, ~863 LOC) archived to `archive/cognithor_internal_benchmark/`. No production callers in 18+ days; the canonical benchmark home is the top-level `cognithor_bench/` package (own `pyproject.toml`, `cognithor-bench` CLI, Cognithor + AutoGen adapters). See `docs/audits/2026-04-28-benchmark-archive-recommendation.md`.
-- `tests/test_benchmark/` archived alongside the source. Suite no longer runs in CI.
+- `src/cognithor/benchmark/` archived to `archive/cognithor_internal_benchmark/` (in-process framework, ~863 LOC). Canonical benchmark home is the top-level `cognithor_bench/` package.
+- `tests/test_benchmark/` archived; no longer in CI.
 
 ## [0.95.0] — 2026-04-27
 

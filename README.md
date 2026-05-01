@@ -832,6 +832,23 @@ Copyright 2026 Alexander Soellner
 
 ## What's New
 
+### v0.96.0 — ARC-AGI-3 Pass (2026-05-01)
+
+- **100 % success on the committed `cognithor_bench/arc_agi3` corpus** (20 tasks: train + held-out + hard).
+  Up from 75 % in v0.95.0. Reproduce with:
+  `python -m cognithor.channels.program_synthesis.synthesis.arc_baseline_runner --subset hard`
+- **5 new object-level DSL primitives** (registry 61 → 66): `tile_3x`, `remove_singletons`,
+  `count_components`, `recolor_by_component_size`, `unique_colors_diagonal`.
+- **Phase-2 Production-Wiring**: `WiredPhase2Engine` glues Phase-1 EnumerativeSearch
+  with the Sprint-1 Refiner pipeline. New CLI flags `--phase2 --arc-corpus PATH
+  --arc-subset NAME` for A/B benchmarking.
+- **End-to-end 5-factor verifier** (demo_pass / partial_pixel / invariants /
+  triviality / suspicion) per spec §7.3.3.
+- **Nightly Phase-2 benchmark workflow** with 10 PP regression gate.
+- **Score trajectory**: hard subset went 12.5 % → 25 % → 50 % → 100 % over Sprints 5-8.
+- **Fix**: `test_tls_config.py` no longer uses `openssl` subprocess (eliminates 11
+  occasional Win-py3.12 failures in 16k-test full-repo runs).
+
 ### v0.95.0 — Trace-UI (2026-04-27)
 
 - **Live-Visibility for running Crews** — new Flutter Trace-UI screen with master-detail
